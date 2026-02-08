@@ -29,15 +29,36 @@ const initialInventory = [
     { id: '6', product: 'Silk Blend', stock: 25, price: '₦8,500', status: 'In Stock', category: 'Material' },
     { id: '7', product: 'Velvet (Red)', stock: 12, price: '₦6,800', status: 'In Stock', category: 'Fabric' },
     { id: '8', product: 'Velvet (Black)', stock: 8, price: '₦6,800', status: 'In Stock', category: 'Fabric' },
+    { id: '9', product: 'Chiffon (Pink)', stock: 22, price: '₦3,500', status: 'In Stock', category: 'Fabric' },
+    { id: '10', product: 'Chiffon (Blue)', stock: 15, price: '₦3,500', status: 'In Stock', category: 'Fabric' },
+    { id: '11', product: 'Button Set (Gold)', stock: 150, price: '₦1,200', status: 'In Stock', category: 'Material' },
+    { id: '12', product: 'Zipper (YKK Black)', stock: 4, price: '₦400', status: 'Low Stock', category: 'Material' },
 ]
 
 export default function InventoryPage() {
     const isMobile = useIsMobile()
     const [inventory, setInventory] = React.useState(initialInventory)
     const [search, setSearch] = React.useState("")
-    const [selectedStatus, setSelectedStatus] = React.useState<string | null>(null)
+    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [isAddOpen, setIsAddOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<any>(null)
+
+    const filterGroups = [
+        {
+            title: "Status",
+            options: [
+                { label: "In Stock", value: "In Stock" },
+                { label: "Low Stock", value: "Low Stock" },
+            ]
+        },
+        {
+            title: "Category",
+            options: [
+                { label: "Fabric", value: "Fabric" },
+                { label: "Material", value: "Material" },
+            ]
+        }
+    ]
 
     // Form states
     const [formData, setFormData] = React.useState({ product: "", stock: 0, price: "", category: "Fabric" })
@@ -50,8 +71,14 @@ export default function InventoryPage() {
 
     const filteredInventory = inventory.filter(item => {
         const matchesSearch = item.product.toLowerCase().includes(search.toLowerCase())
-        const matchesStatus = !selectedStatus || item.status === selectedStatus
-        return matchesSearch && matchesStatus
+
+        const activeStatuses = selectedFilters.filter(f => filterGroups[0].options.some(o => o.value === f))
+        const activeCategories = selectedFilters.filter(f => filterGroups[1].options.some(o => o.value === f))
+
+        const matchesStatus = activeStatuses.length === 0 || activeStatuses.includes(item.status)
+        const matchesCategory = activeCategories.length === 0 || activeCategories.includes(item.category)
+
+        return matchesSearch && matchesStatus && matchesCategory
     })
 
     const handleAdd = (e: React.FormEvent) => {
@@ -141,7 +168,10 @@ export default function InventoryPage() {
                         setFormData({ product: "", stock: 0, price: "", category: "Fabric" })
                         setIsAddOpen(true)
                     }}
-                    onFilterClick={() => setSelectedStatus(selectedStatus ? null : 'Low Stock')}
+                    filterGroups={filterGroups}
+                    selectedFilterValues={selectedFilters}
+                    onFilterSelectionChange={setSelectedFilters}
+                    onFilterClear={() => setSelectedFilters([])}
                 />
 
                 <InsightWhisper insight={intelligenceWhisper} />

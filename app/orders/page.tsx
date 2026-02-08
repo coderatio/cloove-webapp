@@ -33,8 +33,19 @@ export default function OrdersPage() {
     const isMobile = useIsMobile()
     const [orders, setOrders] = React.useState(initialOrders)
     const [search, setSearch] = React.useState("")
-    const [filterStatus, setFilterStatus] = React.useState<string | null>(null)
+    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [viewingOrder, setViewingOrder] = React.useState<any>(null)
+
+    const filterGroups = [
+        {
+            title: "Order Status",
+            options: [
+                { label: "Completed", value: "Completed" },
+                { label: "Pending", value: "Pending" },
+                { label: "Cancelled", value: "Cancelled" },
+            ]
+        }
+    ]
 
     const completedOrdersValue = orders
         .filter(o => o.status === 'Completed')
@@ -42,7 +53,7 @@ export default function OrdersPage() {
 
     const filteredOrders = orders.filter(o => {
         const matchesSearch = o.customer.toLowerCase().includes(search.toLowerCase()) || o.id.includes(search)
-        const matchesStatus = !filterStatus || o.status === filterStatus
+        const matchesStatus = selectedFilters.length === 0 || selectedFilters.includes(o.status)
         return matchesSearch && matchesStatus
     })
 
@@ -98,7 +109,10 @@ export default function OrdersPage() {
                     searchValue={search}
                     onSearchChange={setSearch}
                     searchPlaceholder="Search by customer or order ID..."
-                    onFilterClick={() => setFilterStatus(filterStatus ? null : 'Pending')}
+                    filterGroups={filterGroups}
+                    selectedFilterValues={selectedFilters}
+                    onFilterSelectionChange={setSelectedFilters}
+                    onFilterClear={() => setSelectedFilters([])}
                 />
 
                 <InsightWhisper insight={intelligenceWhisper} />

@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Search, Filter, Plus } from "lucide-react"
+import { Search, Plus } from "lucide-react"
 import { Button } from "../ui/button"
 import { cn } from "../../lib/utils"
+import { FilterPopover, FilterGroup } from "./FilterPopover"
 
 interface ManagementHeaderProps {
     title: string
@@ -11,7 +12,10 @@ interface ManagementHeaderProps {
     searchValue: string
     onSearchChange: (value: string) => void
     searchPlaceholder?: string
-    onFilterClick?: () => void
+    filterGroups?: FilterGroup[]
+    selectedFilterValues?: string[]
+    onFilterSelectionChange?: (values: string[]) => void
+    onFilterClear?: () => void
     addButtonLabel?: string
     onAddClick?: () => void
     className?: string
@@ -23,7 +27,10 @@ export function ManagementHeader({
     searchValue,
     onSearchChange,
     searchPlaceholder = "Search...",
-    onFilterClick,
+    filterGroups,
+    selectedFilterValues = [],
+    onFilterSelectionChange,
+    onFilterClear,
     addButtonLabel,
     onAddClick,
     className
@@ -65,15 +72,13 @@ export function ManagementHeader({
                         className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/40 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all placeholder:text-brand-accent/30 text-brand-deep dark:text-brand-cream"
                     />
                 </div>
-                {onFilterClick && (
-                    <Button
-                        variant="outline"
-                        onClick={onFilterClick}
-                        className="rounded-2xl h-[46px] border-brand-deep/5 dark:border-white/5 px-4 text-brand-accent/60 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5"
-                    >
-                        <Filter className="w-4 h-4 mr-2" />
-                        Filter
-                    </Button>
+                {filterGroups && onFilterSelectionChange && onFilterClear && (
+                    <FilterPopover
+                        groups={filterGroups}
+                        selectedValues={selectedFilterValues}
+                        onSelectionChange={onFilterSelectionChange}
+                        onClear={onFilterClear}
+                    />
                 )}
             </div>
         </div>

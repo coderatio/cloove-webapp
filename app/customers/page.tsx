@@ -33,9 +33,19 @@ export default function CustomersPage() {
     const isMobile = useIsMobile()
     const [customers, setCustomers] = React.useState(initialCustomers)
     const [search, setSearch] = React.useState("")
-    const [filterDebt, setFilterDebt] = React.useState(false)
+    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [isAddOpen, setIsAddOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<any>(null)
+
+    const filterGroups = [
+        {
+            title: "Account Status",
+            options: [
+                { label: "Has Debt", value: "owing" },
+                { label: "Up to Date", value: "clean" },
+            ]
+        }
+    ]
 
     // Form states
     const [formData, setFormData] = React.useState({ name: "", owing: "—" })
@@ -49,8 +59,11 @@ export default function CustomersPage() {
 
     const filteredCustomers = customers.filter(c => {
         const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase())
-        const matchesDebt = !filterDebt || c.owing !== '—'
-        return matchesSearch && matchesDebt
+        const isOwing = c.owing !== '—'
+        const matchesFilter = selectedFilters.length === 0 ||
+            (selectedFilters.includes("owing") && isOwing) ||
+            (selectedFilters.includes("clean") && !isOwing)
+        return matchesSearch && matchesFilter
     })
 
     const handleAdd = (e: React.FormEvent) => {
@@ -124,7 +137,10 @@ export default function CustomersPage() {
                         setFormData({ name: "", owing: "—" })
                         setIsAddOpen(true)
                     }}
-                    onFilterClick={() => setFilterDebt(!filterDebt)}
+                    filterGroups={filterGroups}
+                    selectedFilterValues={selectedFilters}
+                    onFilterSelectionChange={setSelectedFilters}
+                    onFilterClear={() => setSelectedFilters([])}
                 />
 
                 <InsightWhisper insight={intelligenceWhisper} />
