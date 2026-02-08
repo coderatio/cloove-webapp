@@ -1,86 +1,110 @@
 "use client"
 
+import * as React from 'react'
 import DataTable from '../components/DataTable'
 import { useIsMobile } from '../hooks/useMediaQuery'
 import { PageTransition } from '../components/layout/page-transition'
 import { ListCard } from '../components/ui/list-card'
 import { GlassCard } from '../components/ui/glass-card'
-import { Filter, ShoppingBag, CheckCircle2 } from 'lucide-react'
-import { Button } from '../components/ui/button'
+import { ShoppingBag, TrendingUp, Trash2, ReceiptText } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
+import { ManagementHeader } from '../components/shared/ManagementHeader'
+import { InsightWhisper } from '../components/dashboard/InsightWhisper'
+import { Button } from '../components/ui/button'
+import {
+    Drawer,
+    DrawerContent,
+    DrawerStickyHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerClose,
+} from "../components/ui/drawer"
 
-const mockOrders = [
-    { id: '1', date: 'Today, 2:34 PM', customer: 'Mrs. Adebayo', items: 3, amount: '₦12,500', status: 'Paid' },
-    { id: '2', date: 'Today, 1:15 PM', customer: 'Walk-in', items: 1, amount: '₦4,200', status: 'Paid' },
-    { id: '3', date: 'Today, 11:42 AM', customer: 'Fatima Shop', items: 5, amount: '₦28,000', status: 'Pending' },
-    { id: '4', date: 'Yesterday', customer: 'Chief Okonkwo', items: 2, amount: '₦8,500', status: 'Pending' },
-    { id: '5', date: 'Yesterday', customer: 'Walk-in', items: 1, amount: '₦3,800', status: 'Paid' },
-    { id: '6', date: 'Feb 5', customer: 'Mrs. Adebayo', items: 4, amount: '₦15,000', status: 'Pending' },
-    { id: '7', date: 'Feb 5', customer: 'Blessing Stores', items: 2, amount: '₦9,200', status: 'Paid' },
-    { id: '8', date: 'Feb 4', customer: 'Walk-in', items: 1, amount: '₦2,500', status: 'Paid' },
-]
-
-// Fix columns type to be compatible with DataTable
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const columns: any[] = [
-    {
-        key: 'date',
-        header: 'Date',
-        render: (value: string) => <span className="text-muted-foreground text-sm">{value}</span>
-    },
-    {
-        key: 'customer',
-        header: 'Customer',
-        render: (value: string) => <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
-    },
-    { key: 'items', header: 'Items' },
-    {
-        key: 'amount',
-        header: 'Amount',
-        render: (value: string) => <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">{value}</span>
-    },
-    {
-        key: 'status',
-        header: 'Status',
-        render: (value: string) => (
-            <span className={cn(
-                "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5",
-                value === 'Paid'
-                    ? 'bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream'
-                    : 'bg-zinc-100 text-zinc-600 dark:bg-white/5 dark:text-white/60'
-            )}>
-                {value === 'Paid' && <CheckCircle2 className="w-3 h-3" />}
-                {value}
-            </span>
-        )
-    },
+const initialOrders = [
+    { id: '1', customer: 'Mrs. Adebayo', items: '3 items', total: '₦15,000', status: 'Completed', date: '10:30 AM' },
+    { id: '2', customer: 'Chief Okonkwo', items: '5 items', total: '₦42,500', status: 'Pending', date: '09:15 AM' },
+    { id: '3', customer: 'Fatima Shop', items: '2 items', total: '₦8,000', status: 'Completed', date: 'Yesterday' },
+    { id: '4', customer: 'Blessing Stores', items: '12 items', total: '₦124,000', status: 'Completed', date: 'Yesterday' },
+    { id: '5', customer: 'Mama Tunde', items: '4 items', total: '₦12,800', status: 'Pending', date: 'Feb 5' },
+    { id: '6', customer: 'Grace Fashion', items: '1 item', total: '₦4,500', status: 'Cancelled', date: 'Feb 4' },
 ]
 
 export default function OrdersPage() {
     const isMobile = useIsMobile()
-    const totalOrders = mockOrders.length
-    const paidOrders = mockOrders.filter(o => o.status === 'Paid').length
+    const [orders, setOrders] = React.useState(initialOrders)
+    const [search, setSearch] = React.useState("")
+    const [filterStatus, setFilterStatus] = React.useState<string | null>(null)
+    const [viewingOrder, setViewingOrder] = React.useState<any>(null)
+
+    const completedOrdersValue = orders
+        .filter(o => o.status === 'Completed')
+        .reduce((acc, curr) => acc + (parseInt(curr.total.replace(/[^0-9]/g, '')) || 0), 0)
+
+    const filteredOrders = orders.filter(o => {
+        const matchesSearch = o.customer.toLowerCase().includes(search.toLowerCase()) || o.id.includes(search)
+        const matchesStatus = !filterStatus || o.status === filterStatus
+        return matchesSearch && matchesStatus
+    })
+
+    const handleDelete = (id: string) => {
+        setOrders(orders.filter(o => o.id !== id))
+        setViewingOrder(null)
+    }
+
+    const columns: any[] = [
+        {
+            key: 'id',
+            header: 'Order ID',
+            render: (value: string) => <span className="font-mono text-xs text-brand-accent/40">#{value.padStart(4, '0')}</span>
+        },
+        {
+            key: 'customer',
+            header: 'Customer',
+            render: (value: string) => <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
+        },
+        { key: 'items', header: 'Items' },
+        {
+            key: 'total',
+            header: 'Total',
+            render: (value: string) => <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">{value}</span>
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            render: (value: string) => (
+                <span className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                    value === 'Completed' ? "bg-brand-green/10 text-brand-green dark:bg-brand-green/20" :
+                        value === 'Pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                            "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                )}>
+                    {value}
+                </span>
+            )
+        },
+        { key: 'date', header: 'Time' },
+    ]
+
+    const intelligenceWhisper = orders.some(o => o.status === 'Pending')
+        ? `You have **${orders.filter(o => o.status === 'Pending').length} pending orders** awaiting fulfillment. Ensuring prompt delivery builds customer trust.`
+        : `All orders have been successfully fulfilled. Your operations are running smoothly today.`
 
     return (
         <PageTransition>
-            <div className="max-w-4xl mx-auto space-y-6 pb-24">
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                    <div className="flex flex-col gap-2">
-                        <h1 className="font-serif text-4xl font-medium tracking-tight text-brand-deep dark:text-brand-cream">
-                            Orders
-                        </h1>
-                        <p className="text-brand-deep/60 dark:text-brand-cream/60">
-                            View and manage your recent sales.
-                        </p>
-                    </div>
-                    <Button variant="outline" size="sm" className="gap-2 hidden md:flex border-brand-deep/10 hover:bg-brand-deep/5 text-brand-deep dark:border-white/10 dark:text-brand-cream dark:hover:bg-white/5">
-                        <Filter className="h-4 w-4" /> Filter
-                    </Button>
-                </div>
+            <div className="max-w-4xl mx-auto space-y-8 pb-24">
+                <ManagementHeader
+                    title="Orders"
+                    description="Monitor your sales pipeline, track order fulfillment, and review historical transactions."
+                    searchValue={search}
+                    onSearchChange={setSearch}
+                    searchPlaceholder="Search by customer or order ID..."
+                    onFilterClick={() => setFilterStatus(filterStatus ? null : 'Pending')}
+                />
+
+                <InsightWhisper insight={intelligenceWhisper} />
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <ShoppingBag className="w-24 h-24" />
@@ -89,50 +113,131 @@ export default function OrdersPage() {
                             <ShoppingBag className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Orders</p>
-                            <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{totalOrders}</p>
+                            <p className="text-sm font-medium text-brand-accent/40 uppercase tracking-wider">Today's Orders</p>
+                            <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{orders.filter(o => o.date.includes(':') || o.date === 'Today').length}</p>
                         </div>
                     </GlassCard>
 
-                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
-                        <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <CheckCircle2 className="w-24 h-24 text-brand-green" />
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group border-brand-green/20">
+                        <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-brand-green">
+                            <TrendingUp className="w-24 h-24" />
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
-                            <CheckCircle2 className="h-6 w-6" />
+                        <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green">
+                            <TrendingUp className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-deep/70 dark:text-brand-cream/70 uppercase tracking-wider">Paid Orders</p>
-                            <div className="flex items-baseline gap-2">
-                                <p className="text-2xl font-serif font-medium text-brand-green dark:text-brand-gold">{paidOrders}</p>
-                                <span className="text-sm text-muted-foreground">completed</span>
-                            </div>
+                            <p className="text-sm font-medium text-brand-green/60 uppercase tracking-wider">Revenue (Today)</p>
+                            <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">₦{completedOrdersValue.toLocaleString()}</p>
                         </div>
                     </GlassCard>
                 </div>
 
                 {/* Main Content */}
                 {isMobile ? (
-                    <div className="space-y-3 pb-24">
-                        <p className="text-sm font-medium text-muted-foreground px-1">Recent Orders</p>
-                        {mockOrders.map((order, index) => (
+                    <div className="space-y-3">
+                        <p className="text-sm font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Recent Transactions</p>
+                        {filteredOrders.map((order, index) => (
                             <ListCard
                                 key={order.id}
                                 title={order.customer}
-                                subtitle={order.date}
+                                subtitle={`${order.items} • ${order.date}`}
                                 status={order.status}
-                                statusColor={order.status === 'Paid' ? 'success' : 'neutral'} // Changed from 'warning' to 'neutral' for cleaner look
-                                value={order.amount}
-                                valueLabel={`${order.items} items`}
+                                statusColor={order.status === 'Completed' ? 'success' : order.status === 'Pending' ? 'warning' : 'danger'}
+                                value={order.total}
                                 delay={index * 0.05}
+                                onClick={() => setViewingOrder(order)}
                             />
                         ))}
                     </div>
                 ) : (
-                    <div className="glass-panel p-1 rounded-2xl overflow-hidden">
-                        <DataTable columns={columns} data={mockOrders} emptyMessage="No orders found" />
-                    </div>
+                    <GlassCard className="overflow-hidden border-brand-deep/5 dark:border-white/5">
+                        <DataTable
+                            columns={columns}
+                            data={filteredOrders}
+                            emptyMessage="No orders found"
+                            onRowClick={(item) => setViewingOrder(item)}
+                        />
+                    </GlassCard>
                 )}
+
+                {/* Order Detail Drawer */}
+                <Drawer
+                    open={!!viewingOrder}
+                    onOpenChange={(open) => !open && setViewingOrder(null)}
+                >
+                    <DrawerContent>
+                        <DrawerStickyHeader>
+                            <DrawerTitle>Order Details</DrawerTitle>
+                            <DrawerDescription>
+                                Transaction #{viewingOrder?.id.padStart(4, '0')} for {viewingOrder?.customer}
+                            </DrawerDescription>
+                        </DrawerStickyHeader>
+
+                        <div className="p-8 pb-12 overflow-y-auto">
+                            <div className="max-w-lg mx-auto space-y-8">
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Itemized List</h3>
+                                    <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 border-brand-deep/5">
+                                        <div className="p-4 flex justify-between items-center">
+                                            <div>
+                                                <p className="font-medium text-brand-deep dark:text-brand-cream">Ankara Fabric (Blue)</p>
+                                                <p className="text-xs text-brand-accent/40">2 units x ₦4,500</p>
+                                            </div>
+                                            <p className="font-serif text-brand-deep dark:text-brand-cream">₦9,000</p>
+                                        </div>
+                                        <div className="p-4 flex justify-between items-center">
+                                            <div>
+                                                <p className="font-medium text-brand-deep dark:text-brand-cream">Silk Blend</p>
+                                                <p className="text-xs text-brand-accent/40">1 unit x ₦6,000</p>
+                                            </div>
+                                            <p className="font-serif text-brand-deep dark:text-brand-cream">₦6,000</p>
+                                        </div>
+                                        <div className="p-4 flex justify-between items-center bg-brand-deep/5 dark:bg-white/5">
+                                            <p className="font-bold text-xs uppercase tracking-widest text-brand-accent/60">Total Amount</p>
+                                            <p className="text-xl font-serif font-medium text-brand-green dark:text-brand-gold">₦15,000</p>
+                                        </div>
+                                    </GlassCard>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Payment Information</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <GlassCard className="p-4">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 mb-1">Status</p>
+                                            <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">{viewingOrder?.status}</p>
+                                        </GlassCard>
+                                        <GlassCard className="p-4">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 mb-1">Method</p>
+                                            <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">Bank Transfer</p>
+                                        </GlassCard>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-6">
+                                    <Button variant="outline" className="flex-1 rounded-2xl h-14 border-brand-deep/5">
+                                        <ReceiptText className="w-4 h-4 mr-2" />
+                                        Print Receipt
+                                    </Button>
+                                    <DrawerClose asChild>
+                                        <Button className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
+                                            Done
+                                        </Button>
+                                    </DrawerClose>
+                                </div>
+
+                                <div className="pt-6 border-t border-brand-deep/5 dark:border-white/5 mt-6">
+                                    <button
+                                        onClick={() => handleDelete(viewingOrder?.id)}
+                                        className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold text-rose-500/60 hover:text-rose-500 transition-all uppercase tracking-widest"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Cancel & Delete Order
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </DrawerContent>
+                </Drawer>
             </div>
         </PageTransition>
     )
