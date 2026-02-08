@@ -30,7 +30,7 @@ export function ActionRow({ items, className }: ActionRowProps) {
                 >
                     <Link href={item.href} className="block h-full">
                         <div className={cn(
-                            "glass-panel rounded-2xl p-4 md:p-5 h-full transition-all hover:-translate-y-1 hover:shadow-md group",
+                            "glass-panel rounded-3xl p-4 md:p-5 h-full transition-all hover:-translate-y-1 hover:shadow-md group",
                             item.type === 'urgent' && "border-danger/20 hover:border-danger/40 bg-danger/5",
                             item.type === 'warning' && "border-warning/20 hover:border-warning/40 bg-warning/5",
                             item.type === 'info' && "border-brand-border/50 hover:border-brand-green/30"

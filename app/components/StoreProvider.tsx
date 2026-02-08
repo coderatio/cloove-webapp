@@ -31,6 +31,7 @@ interface StoreContextType {
     stores: Store[]
     currentStore: Store
     setCurrentStore: (store: Store) => void
+    ownerName: string
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
@@ -39,7 +40,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const [currentStore, setCurrentStore] = useState<Store>(mockStores[0])
 
     return (
-        <StoreContext.Provider value={{ allStores, stores: mockStores, currentStore, setCurrentStore }}>
+        <StoreContext.Provider value={{
+            allStores,
+            stores: mockStores,
+            currentStore,
+            setCurrentStore,
+            ownerName: "Josiah"
+        }}>
             {children}
         </StoreContext.Provider>
     )

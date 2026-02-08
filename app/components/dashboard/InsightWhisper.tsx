@@ -20,7 +20,7 @@ export function InsightWhisper({ insight, actionLabel, actionLink, className }: 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className={cn("glass-panel rounded-2xl p-6 md:p-8 border-l-4 border-l-brand-gold relative", className)}
+            className={cn("glass-panel rounded-[30px] p-6 md:p-8 border-l-4 border-l-brand-gold relative", className)}
         >
             <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                 <div className="flex-shrink-0">

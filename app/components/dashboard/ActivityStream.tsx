@@ -41,14 +41,14 @@ export function ActivityStream({ activities, className }: ActivityStreamProps) {
                 </button>
             </div>
 
-            <div className="glass-panel rounded-2xl p-2 space-y-1">
+            <div className="glass-panel rounded-[30px] p-2 space-y-1">
                 {activities.map((item, index) => (
                     <motion.div
                         key={item.id}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 + (index * 0.05) }}
-                        className="flex items-center gap-4 p-3 hover:bg-white/40 dark:hover:bg-white/5 rounded-xl transition-colors group cursor-default"
+                        className="flex items-center gap-4 p-3 hover:bg-white/40 dark:hover:bg-white/5 rounded-2xl transition-colors group cursor-default"
                     >
                         <ActivityIcon type={item.type} />
 

@@ -58,7 +58,7 @@ const businessData = {
 }
 
 export default function Home() {
-  const { currentStore } = useStore()
+  const { currentStore, ownerName } = useStore()
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   // Aggregate or Filter Data
@@ -98,15 +98,23 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-baseline justify-between"
+            className="flex items-end justify-between"
           >
             <div>
-              <p className="text-sm text-brand-accent/80 dark:text-brand-cream/80 font-medium">
+              <p className="text-sm text-brand-accent/80 dark:text-brand-cream/80 font-medium mb-1 capitalize">
                 {isDesktop ? 'Good afternoon,' : 'Welcome,'}
               </p>
-              <h1 className="font-serif text-3xl md:text-3xl text-brand-deep dark:text-brand-cream">
-                {currentStore.name}
+              <h1 className="font-serif text-3xl md:text-4xl text-brand-deep dark:text-brand-cream">
+                {ownerName}
               </h1>
+            </div>
+
+            {/* Store Badge */}
+            <div className="hidden md:flex flex-col items-end">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/20 mb-1">Current Store</span>
+              <div className="px-3 py-1 rounded-full bg-brand-green/5 dark:bg-brand-gold/10 border border-brand-green/10 dark:border-brand-gold/10">
+                <span className="text-xs font-semibold text-brand-green dark:text-brand-gold">{currentStore.name}</span>
+              </div>
             </div>
           </motion.div>
         </header>
