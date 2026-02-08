@@ -17,7 +17,7 @@ const dashboardData = {
   trendDirection: "up" as const,
   insight: (
     <>
-      You sold more <span className="text-brand-green font-bold">rice</span> this week significantly. Great job.
+      You sold more <span className="text-brand-green dark:text-brand-gold font-bold">rice</span> this week significantly. Great job.
     </>
   ),
   actions: [
@@ -76,10 +76,10 @@ export default function Home() {
             className="flex items-baseline justify-between"
           >
             <div>
-              <p className="text-sm text-brand-accent/80 font-medium">
+              <p className="text-sm text-brand-accent/80 dark:text-brand-cream/80 font-medium">
                 {isDesktop ? 'Good afternoon,' : 'Welcome,'}
               </p>
-              <h1 className="font-serif text-3xl md:text-3xl text-brand-deep">
+              <h1 className="font-serif text-3xl md:text-3xl text-brand-deep dark:text-brand-cream">
                 {currentStore.name}
               </h1>
             </div>
@@ -107,7 +107,7 @@ export default function Home() {
 
         {/* Quick Actions - The "Control" */}
         <section>
-          <h3 className="font-serif text-lg text-brand-deep mb-4 px-2">Needs Attention</h3>
+          <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream mb-4 px-2">Needs Attention</h3>
           <ActionRow items={dashboardData.actions} />
         </section>
 

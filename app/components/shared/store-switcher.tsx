@@ -27,8 +27,8 @@ export function StoreSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
                 <button
                     onClick={() => setOpen(!open)}
                     className={cn(
-                        "flex w-full items-center gap-2 rounded-xl border border-border/50 bg-background/50 p-2 shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-                        isCollapsed && "justify-center border-0 bg-transparent shadow-none p-0"
+                        "flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10 text-brand-cream",
+                        isCollapsed && "justify-center border-0 bg-transparent p-0"
                     )}
                 >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white">
@@ -37,7 +37,7 @@ export function StoreSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
                     {!isCollapsed && (
                         <>
                             <div className="flex flex-1 flex-col items-start overflow-hidden">
-                                <span className="text-xs font-medium text-muted-foreground">Store</span>
+                                <span className="text-xs font-medium text-brand-cream/70">Store</span>
                                 <span className="truncate text-sm font-bold leading-none">{currentStore.name}</span>
                             </div>
                             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -48,8 +48,8 @@ export function StoreSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
                 {open && !isCollapsed && (
                     <>
                         <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-                        <div className="absolute top-full left-0 z-50 mt-2 w-full min-w-[200px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-md animate-in fade-in zoom-in-95 data-[side=bottom]:slide-in-from-top-2 bg-white dark:bg-black/90 backdrop-blur-md">
-                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Select Store</div>
+                        <div className="absolute top-full left-0 z-50 mt-2 w-full min-w-[200px] overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-md animate-in fade-in zoom-in-95 data-[side=bottom]:slide-in-from-top-2 bg-white dark:bg-black/90 text-brand-deep dark:text-brand-cream backdrop-blur-md">
+                            <div className="px-2 py-1.5 text-xs font-semibold text-brand-deep/50 dark:text-brand-cream/50">Select Store</div>
                             {stores.map((store) => (
                                 <button
                                     key={store.id}
@@ -58,8 +58,8 @@ export function StoreSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
                                         setOpen(false)
                                     }}
                                     className={cn(
-                                        "relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-                                        store.id === currentStore.id && "bg-accent/50 text-accent-foreground"
+                                        "relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-brand-green/5 dark:hover:bg-brand-cream/10 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                                        store.id === currentStore.id && "bg-brand-green/10 text-brand-deep dark:bg-brand-cream/20 dark:text-brand-cream"
                                     )}
                                 >
                                     <Store className="mr-2 h-4 w-4 opacity-50" />

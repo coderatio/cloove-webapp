@@ -28,7 +28,7 @@ export function InsightWhisper({ insight, actionLabel, actionLink, className }: 
                 </div>
 
                 <div className="flex-1">
-                    <p className="text-lg md:text-xl text-brand-deep leading-relaxed font-medium">
+                    <p className="text-lg md:text-xl text-brand-deep dark:text-brand-cream/90 leading-relaxed font-medium">
                         {insight}
                     </p>
                 </div>
@@ -37,7 +37,7 @@ export function InsightWhisper({ insight, actionLabel, actionLink, className }: 
                     <div className="flex-shrink-0 pt-2 md:pt-0">
                         <Link
                             href={actionLink}
-                            className="inline-flex items-center gap-2 text-sm font-medium text-brand-accent hover:text-brand-deep transition-colors group"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-brand-accent hover:text-brand-deep dark:text-brand-cream dark:hover:text-brand-gold transition-colors group"
                         >
                             {actionLabel}
                             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

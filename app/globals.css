@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ─────────────────────────────────────────────────────────────────────────────
    CLOOVE DESIGN SYSTEM
    Philosophy: Calm, Intelligent, Trustworthy. Invisible Power.
@@ -123,6 +125,30 @@
 :root {
   --background: var(--color-cloove-cream);
   --foreground: var(--color-cloove-deep);
+}
+
+.dark {
+  --background: var(--color-cloove-deep);
+  --foreground: var(--color-cloove-cream);
+
+  /* Semantic Overrides for Dark Mode */
+  --color-surface: #083326;
+  /* Slightly lighter than deep base */
+  --color-surface-alt: #0b3d2e;
+  --color-surface-hover: #0e4536;
+
+  --color-text-primary: var(--color-cloove-cream);
+  --color-text-secondary: #a3c2b8;
+  --color-text-muted: #6e8e84;
+
+  --color-cloove-border: rgba(255, 255, 255, 0.1);
+  --color-input: rgba(255, 255, 255, 0.1);
+
+  /* Shadcn/UI mapping updates */
+  --color-border: var(--color-cloove-border);
+  --color-input: var(--color-input);
+  --color-muted: var(--color-surface-alt);
+  --color-muted-foreground: var(--color-text-muted);
 }
 
 * {

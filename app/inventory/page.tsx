@@ -89,7 +89,7 @@ export default function InventoryPage() {
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Package className="w-24 h-24" />
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-deep dark:text-brand-cream">
+                        <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
                             <Package className="h-6 w-6" />
                         </div>
                         <div>

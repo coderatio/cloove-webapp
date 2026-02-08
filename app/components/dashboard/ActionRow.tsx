@@ -38,17 +38,17 @@ export function ActionRow({ items, className }: ActionRowProps) {
                             <div className="flex items-start justify-between mb-3">
                                 <span className={cn(
                                     "p-2 rounded-xl",
-                                    item.type === 'urgent' && "bg-danger/10 text-danger",
-                                    item.type === 'warning' && "bg-warning/10 text-warning",
-                                    item.type === 'info' && "bg-brand-green/10 text-brand-green"
+                                    item.type === 'urgent' && "bg-danger/10 text-danger dark:bg-danger/20 dark:text-red-400",
+                                    item.type === 'warning' && "bg-warning/10 text-warning dark:bg-warning/20 dark:text-amber-400",
+                                    item.type === 'info' && "bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream"
                                 )}>
                                     {item.icon || <AlertCircle className="w-4 h-4" />}
                                 </span>
-                                <span className="font-serif text-2xl font-medium text-brand-deep">
+                                <span className="font-serif text-2xl font-medium text-brand-deep dark:text-brand-cream">
                                     {item.count}
                                 </span>
                             </div>
-                            <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                            <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground dark:text-brand-cream/70 dark:group-hover:text-brand-cream transition-colors">
                                 {item.label}
                             </p>
                         </div>

@@ -85,7 +85,7 @@ export default function OrdersPage() {
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <ShoppingBag className="w-24 h-24" />
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-deep dark:text-brand-cream">
+                        <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
                             <ShoppingBag className="h-6 w-6" />
                         </div>
                         <div>
@@ -98,7 +98,7 @@ export default function OrdersPage() {
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <CheckCircle2 className="w-24 h-24 text-brand-green" />
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-deep dark:text-brand-cream">
+                        <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
                             <CheckCircle2 className="h-6 w-6" />
                         </div>
                         <div>

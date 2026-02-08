@@ -73,7 +73,7 @@ export default function CustomersPage() {
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Users className="w-24 h-24" />
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-deep dark:text-brand-cream">
+                        <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
                             <Users className="h-6 w-6" />
                         </div>
                         <div>
@@ -94,7 +94,7 @@ export default function CustomersPage() {
                                 <p className="text-sm font-medium text-brand-deep/70 uppercase tracking-wider">Payments Pending</p>
                                 <div className="flex items-baseline gap-2">
                                     <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-gold">{owingCustomers}</p>
-                                    <span className="text-sm text-brand-deep/60">owing {totalDebt}</span>
+                                    <span className="text-sm text-brand-deep/60 dark:text-brand-cream/60">owing {totalDebt}</span>
                                 </div>
                             </div>
                         </GlassCard>

@@ -40,7 +40,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         <motion.aside
             initial={false}
             animate={{ width: isCollapsed ? 80 : 280 }}
-            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-[20px] bg-brand-deep shadow-2xl overflow-hidden transition-all duration-300"
+            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-[20px] bg-brand-deep dark:bg-[#021a12] shadow-2xl overflow-hidden transition-all duration-300"
         >
             {/* Background Texture/Gradient for depth */}
             <div className="absolute inset-0 pointer-events-none">
