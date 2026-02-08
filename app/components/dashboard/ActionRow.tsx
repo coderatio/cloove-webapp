@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
+import { GlassCard } from "../ui/glass-card"
 
 interface ActionItem {
     label: string
@@ -29,12 +30,13 @@ export function ActionRow({ items, className }: ActionRowProps) {
                     transition={{ delay: 0.3 + (index * 0.1) }}
                 >
                     <Link href={item.href} className="block h-full">
-                        <div className={cn(
-                            "glass-panel rounded-3xl p-4 md:p-5 h-full transition-all hover:-translate-y-1 hover:shadow-md group",
-                            item.type === 'urgent' && "border-danger/20 hover:border-danger/40 bg-danger/5",
-                            item.type === 'warning' && "border-warning/20 hover:border-warning/40 bg-warning/5",
-                            item.type === 'info' && "border-brand-border/50 hover:border-brand-green/30"
-                        )}>
+                        <GlassCard className={cn(
+                            "rounded-3xl p-4 md:p-5 h-full transition-all group",
+                            item.type === 'urgent' && "border-danger/20 hover:border-danger/40 dark:bg-red-500/5",
+                            item.type === 'warning' && "border-warning/20 hover:border-warning/40 dark:bg-amber-500/5",
+                            item.type === 'info' && "border-brand-border/50 hover:border-brand-green/30",
+                            className
+                        )} hoverEffect>
                             <div className="flex items-start justify-between mb-3">
                                 <span className={cn(
                                     "p-2 rounded-xl",
@@ -51,7 +53,7 @@ export function ActionRow({ items, className }: ActionRowProps) {
                             <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground dark:text-brand-cream/70 dark:group-hover:text-brand-cream transition-colors">
                                 {item.label}
                             </p>
-                        </div>
+                        </GlassCard>
                     </Link>
                 </motion.div>
             ))}

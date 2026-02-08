@@ -24,21 +24,24 @@ import { useState, useEffect } from "react"
 import { AnimatePresence } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { VerificationModal } from "./VerificationModal"
+import { GlassCard } from "../ui/glass-card"
+import { AddMoneyModal } from "./AddMoneyModal"
 
 export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) {
     const [currentSlide, setCurrentSlide] = useState(0) // 0: Wallet, 1: Sales
     const [isVerificationOpen, setIsVerificationOpen] = useState(false)
+    const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false)
     const [isWalletVerified, setIsWalletVerified] = useState(wallet?.isVerified || false)
 
     // Auto-slide every 8 seconds, paused when modal is open
     useEffect(() => {
-        if (isVerificationOpen) return
+        if (isVerificationOpen || isAddMoneyOpen) return
 
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev === 0 ? 1 : 0))
         }, 8000)
         return () => clearInterval(timer)
-    }, [isVerificationOpen])
+    }, [isVerificationOpen, isAddMoneyOpen])
 
     const toggleSlide = () => setCurrentSlide((prev) => (prev === 0 ? 1 : 0))
     const handleVerifySuccess = () => {
@@ -54,7 +57,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
     }
 
     return (
-        <div className={cn("glass-panel rounded-[32px] p-8 md:px-12 md:py-16 text-center relative overflow-hidden group min-h-[480px] md:h-[520px] flex flex-col justify-center transition-[height] duration-500 ease-in-out", className)}>
+        <GlassCard className={cn("rounded-[32px] p-8 md:px-12 md:py-12 text-center relative overflow-hidden group min-h-[380px] md:h-[420px] flex flex-col justify-center transition-[height] duration-500 ease-in-out", className)}>
             <div className="absolute inset-0 bg-gradient-to-tr from-brand-gold/5 via-transparent to-brand-green/5 opacity-50 pointer-events-none" />
 
             <div className="relative z-10 w-full mb-8">
@@ -79,26 +82,12 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                         {walletData.balance}
                                     </h2>
 
-                                    {/* Account Details */}
-                                    <div className="mb-8 px-5 py-3 rounded-2xl bg-brand-deep/[0.03] dark:bg-white/[0.03] border border-brand-deep/5 dark:border-white/5 backdrop-blur-sm group/acc hover:border-brand-deep/10 dark:hover:border-white/10 transition-colors">
-                                        <p className="text-[10px] uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40 mb-1.5 font-bold">Virtual Account • Wema Bank</p>
-                                        <div className="flex items-center justify-center gap-3">
-                                            <p className="text-base font-mono font-bold text-brand-deep dark:text-brand-cream tracking-widest">
-                                                0123456789
-                                            </p>
-                                            <button
-                                                onClick={() => navigator.clipboard.writeText("0123456789")}
-                                                className="p-1.5 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-brand-cream/5 text-brand-deep/30 dark:text-brand-cream/30 hover:text-brand-deep/60 dark:hover:text-brand-cream/60 transition-all"
-                                                title="Copy account number"
-                                            >
-                                                <Copy className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-
                                     {/* Actions */}
-                                    <div className="flex items-center gap-4">
-                                        <Button className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-11 px-8 shadow-lg shadow-brand-deep/10 dark:shadow-brand-gold/10 font-bold active:scale-95 transition-all hover:brightness-110">
+                                    <div className="flex items-center gap-4 mt-8">
+                                        <Button
+                                            onClick={() => setIsAddMoneyOpen(true)}
+                                            className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-11 px-8 shadow-lg shadow-brand-deep/10 dark:shadow-brand-gold/10 font-bold active:scale-95 transition-all hover:brightness-110"
+                                        >
                                             <Plus className="w-4 h-4 mr-2" /> Add Money
                                         </Button>
                                         <Button variant="outline" className="rounded-full border-brand-deep/10 dark:border-white/10 text-brand-deep/60 dark:text-brand-cream/60 hover:text-brand-deep dark:hover:text-brand-cream h-11 px-8 backdrop-blur-sm hover:bg-brand-deep/[0.03] dark:hover:bg-white/[0.03] active:scale-95 transition-all">
@@ -177,6 +166,11 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                 onOpenChange={setIsVerificationOpen}
                 onComplete={handleVerifySuccess}
             />
-        </div>
+            <AddMoneyModal
+                isOpen={isAddMoneyOpen}
+                onOpenChange={setIsAddMoneyOpen}
+                walletData={walletData}
+            />
+        </GlassCard>
     )
 }

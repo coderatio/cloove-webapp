@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { ArrowDownLeft, ShoppingBag, CreditCard, UserPlus } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import { GlassCard } from "../ui/glass-card"
 
 export interface ActivityItem {
     id: string
@@ -41,7 +42,7 @@ export function ActivityStream({ activities, className }: ActivityStreamProps) {
                 </button>
             </div>
 
-            <div className="glass-panel rounded-[30px] p-2 space-y-1">
+            <GlassCard className="rounded-[32px] p-2 space-y-1 overflow-visible">
                 {activities.map((item, index) => (
                     <motion.div
                         key={item.id}
@@ -72,7 +73,7 @@ export function ActivityStream({ activities, className }: ActivityStreamProps) {
                         )}
                     </motion.div>
                 ))}
-            </div>
+            </GlassCard>
         </div>
     )
 }
