@@ -23,7 +23,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useTheme } from "next-themes"
-import { StoreSwitcher } from "../shared/store-switcher"
+import { BusinessSwitcher } from "../shared/BusinessSwitcher"
 import { Button } from "../ui/button"
 import { toast } from "sonner"
 
@@ -119,7 +119,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
                 {/* Store Switcher */}
                 <div className={cn("px-4 pb-8 transition-all", isCollapsed && "px-2")}>
-                    <StoreSwitcher isCollapsed={isCollapsed} />
+                    <BusinessSwitcher isCollapsed={isCollapsed} />
                 </div>
 
                 {/* Nav Items Grouped */}

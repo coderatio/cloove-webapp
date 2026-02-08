@@ -26,7 +26,7 @@ const mockStores: Store[] = [
     { id: '3', name: 'Abuja Store', location: 'Wuse 2', isDefault: false },
 ]
 
-interface StoreContextType {
+interface BusinessContextType {
     businessName: string
     businessLogo?: string
     allStores: Store
@@ -39,9 +39,9 @@ interface StoreContextType {
     deleteStore: (id: string) => void
 }
 
-const StoreContext = createContext<StoreContextType | undefined>(undefined)
+const BusinessContext = createContext<BusinessContextType | undefined>(undefined)
 
-export function StoreProvider({ children }: { children: ReactNode }) {
+export function BusinessProvider({ children }: { children: ReactNode }) {
     const [stores, setStores] = useState<Store[]>(mockStores)
     const [currentStore, setCurrentStore] = useState<Store>(mockStores[0])
 
@@ -72,7 +72,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <StoreContext.Provider value={{
+        <BusinessContext.Provider value={{
             businessName: "Cloove Fashion",
             allStores,
             stores,
@@ -84,14 +84,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             deleteStore
         }}>
             {children}
-        </StoreContext.Provider>
+        </BusinessContext.Provider>
     )
 }
 
-export function useStore() {
-    const context = useContext(StoreContext)
+export function useBusiness() {
+    const context = useContext(BusinessContext)
     if (context === undefined) {
-        throw new Error('useStore must be used within a StoreProvider')
+        throw new Error('useBusiness must be used within a BusinessProvider')
     }
     return context
 }

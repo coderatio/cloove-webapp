@@ -10,7 +10,7 @@ import { ShoppingBag, TrendingUp, Trash2, ReceiptText } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '../components/shared/ManagementHeader'
 import { InsightWhisper } from '../components/dashboard/InsightWhisper'
-import { useStore } from '../components/StoreProvider'
+import { useBusiness } from '../components/BusinessProvider'
 import { Button } from '../components/ui/button'
 import { FilterPopover } from '../components/shared/FilterPopover'
 import { TableSearch } from '../components/shared/TableSearch'
@@ -34,7 +34,7 @@ const initialOrders = [
 
 export default function OrdersPage() {
     const isMobile = useIsMobile()
-    const { stores, currentStore, setCurrentStore } = useStore()
+    const { stores, currentStore, setCurrentStore } = useBusiness()
     const [orders, setOrders] = React.useState(initialOrders)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])

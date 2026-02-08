@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { PageTransition } from "../components/layout/page-transition"
 import { GlassCard } from "../components/ui/glass-card"
-import { useStore } from "../components/StoreProvider"
+import { useBusiness } from "../components/BusinessProvider"
 import {
     MapPin,
     Plus,
@@ -34,8 +34,8 @@ const mockStoreActivities = [
     { id: '3', type: 'sale' as const, description: 'Stock updated: Peak Milk', amount: '+24 units', timeAgo: '3 hours ago' },
 ]
 
-export default function StoresPage() {
-    const { stores, addStore, updateStore, deleteStore } = useStore()
+export default function StoresManagementPage() {
+    const { stores, addStore, updateStore, deleteStore } = useBusiness()
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [editingStore, setEditingStore] = useState<any>(null)
     const [viewingActivities, setViewingActivities] = useState<any>(null)

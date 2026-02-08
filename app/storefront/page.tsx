@@ -6,11 +6,11 @@ import { GlassCard } from "../components/ui/glass-card"
 import { Button } from "../components/ui/button"
 import Link from "next/link"
 import { Copy, ExternalLink, QrCode, Share2, Eye, ShoppingCart, TrendingUp } from "lucide-react"
-import { useStore } from "../components/StoreProvider"
+import { useBusiness } from "../components/BusinessProvider"
 import { toast } from "sonner"
 
 export default function StorefrontOverview() {
-    const { currentStore } = useStore()
+    const { currentStore } = useBusiness()
     const [isCopied, setIsCopied] = useState(false)
 
     // Mock data based on current store

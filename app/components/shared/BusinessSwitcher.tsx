@@ -14,11 +14,11 @@ import {
     DrawerTrigger,
 } from "../ui/drawer"
 
-import { useStore, ALL_STORES_ID } from "../StoreProvider"
+import { useBusiness, ALL_STORES_ID } from "../BusinessProvider"
 import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 
-export function StoreSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }) {
-    const { stores, currentStore, setCurrentStore } = useStore()
+export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }) {
+    const { stores, currentStore, setCurrentStore } = useBusiness()
     const [open, setOpen] = React.useState(false)
     const isDesktop = useMediaQuery("(min-width: 768px)")
 

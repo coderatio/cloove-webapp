@@ -10,7 +10,7 @@ import { AlertTriangle, Package, Trash2 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '../components/shared/ManagementHeader'
 import { InsightWhisper } from '../components/dashboard/InsightWhisper'
-import { useStore } from '../components/StoreProvider'
+import { useBusiness } from '../components/BusinessProvider'
 import { Button } from '../components/ui/button'
 import { FilterPopover } from '../components/shared/FilterPopover'
 import { TableSearch } from '../components/shared/TableSearch'
@@ -40,7 +40,7 @@ const initialInventory = [
 
 export default function InventoryPage() {
     const isMobile = useIsMobile()
-    const { stores, currentStore, setCurrentStore } = useStore()
+    const { stores, currentStore, setCurrentStore } = useBusiness()
     const [inventory, setInventory] = React.useState(initialInventory)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])

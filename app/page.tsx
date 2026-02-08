@@ -1,6 +1,6 @@
 "use client"
 
-import { useStore, ALL_STORES_ID } from './components/StoreProvider'
+import { useBusiness, ALL_STORES_ID } from './components/BusinessProvider'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { PageTransition } from "./components/layout/page-transition"
 import { motion } from "framer-motion"
@@ -57,8 +57,8 @@ const businessData = {
   insight: "Your overall business performance is **up by 12%**. Consider restocking in Ikeja soon."
 }
 
-export default function Home() {
-  const { currentStore, ownerName } = useStore()
+export default function Dashboard() {
+  const { currentStore, ownerName } = useBusiness()
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   // Aggregate or Filter Data

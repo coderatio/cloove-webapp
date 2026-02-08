@@ -3,7 +3,7 @@
 import * as React from "react"
 import { MobileNav } from "./mobile-nav"
 import { Sidebar } from "./sidebar"
-import { StoreSwitcher } from "../shared/store-switcher"
+import { BusinessSwitcher } from "../shared/BusinessSwitcher"
 import { usePathname } from "next/navigation"
 
 interface AppLayoutProps {
@@ -54,7 +54,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green text-brand-cream shadow-sm">
                                 <span className="font-serif font-bold">C</span>
                             </div>
-                            <StoreSwitcher />
+                            <BusinessSwitcher />
                         </div>
                     </div>
                 )}
