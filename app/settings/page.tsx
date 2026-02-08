@@ -87,7 +87,7 @@ export default function SettingsPage() {
                 {/* Common Save Bar */}
                 <div className="fixed bottom-8 right-8 z-30">
                     <Button
-                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep px-8 h-14 shadow-2xl hover:scale-105 transition-all font-bold"
+                        className="rounded-full bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 px-8 h-14 shadow-2xl hover:scale-105 transition-all font-bold"
                     >
                         <Save className="w-4 h-4 mr-2" />
                         Save Changes
