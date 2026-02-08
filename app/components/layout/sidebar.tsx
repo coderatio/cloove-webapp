@@ -14,7 +14,8 @@ import {
     Moon,
     Sun,
     LayoutGrid,
-    Banknote
+    Banknote,
+    Store
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useTheme } from "next-themes"
@@ -29,6 +30,7 @@ const navItems = [
     { href: "/customers", icon: Users, label: "Customers" },
     { href: "/inventory", icon: Package, label: "Inventory" },
     { href: "/stores", icon: LayoutGrid, label: "Stores" },
+    { href: "/storefront", icon: Store, label: "Storefront" },
 ]
 
 interface SidebarProps {
