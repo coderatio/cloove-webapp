@@ -72,7 +72,7 @@ export default function InventoryPage() {
 
     return (
         <PageTransition>
-            <div className="space-y-6">
+            <div className="max-w-4xl mx-auto space-y-6 pb-24">
                 {/* Header Section */}
                 <div className="flex flex-col gap-2">
                     <h1 className="font-serif text-4xl font-medium tracking-tight text-brand-deep dark:text-brand-cream">

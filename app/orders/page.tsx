@@ -63,7 +63,7 @@ export default function OrdersPage() {
 
     return (
         <PageTransition>
-            <div className="space-y-6">
+            <div className="max-w-4xl mx-auto space-y-6 pb-24">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     <div className="flex flex-col gap-2">
