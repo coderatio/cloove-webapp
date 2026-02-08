@@ -19,8 +19,8 @@ const storeData: Record<string, any> = {
       { label: "Low Stock", count: 1, type: "warning", href: "/inventory", icon: <Package className="w-4 h-4" /> },
     ],
     activities: [
-      { id: "s1-1", type: "sale", description: "Rice Bag (50kg)", amount: "₦12,000", timeAgo: "2m ago", customer: "Walk-in" },
-      { id: "s1-2", type: "payment", description: "Debt Payment", amount: "₦5,000", timeAgo: "1h ago", customer: "Johnson" },
+      { id: "s1-1", type: "sale", description: "Rice Bag (50kg)", amount: "₦12,000", timeAgo: "2m ago", customer: "Walk-in", href: "/orders" },
+      { id: "s1-2", type: "payment", description: "Debt Payment", amount: "₦5,000", timeAgo: "1h ago", customer: "Johnson", href: "/finance" },
     ],
     insight: "You sold more **rice** this week significantly in Main Store."
   },
@@ -31,7 +31,7 @@ const storeData: Record<string, any> = {
       { label: "Low Stock", count: 4, type: "warning", href: "/inventory", icon: <Package className="w-4 h-4" /> },
     ],
     activities: [
-      { id: "s2-1", type: "sale", description: "Vegetable Oil", amount: "₦8,500", timeAgo: "15m ago", customer: "Bode" },
+      { id: "s2-1", type: "sale", description: "Vegetable Oil", amount: "₦8,500", timeAgo: "15m ago", customer: "Bode", href: "/orders" },
     ],
     insight: "Ikeja branch is seeing a **40% increase** in foot traffic today."
   },
@@ -41,7 +41,7 @@ const storeData: Record<string, any> = {
       { label: "Overdue Debts", count: 3, type: "urgent", href: "/customers", icon: <AlertCircle className="w-4 h-4" /> },
     ],
     activities: [
-      { id: "s3-1", type: "debt", description: "New Debt Recorded", amount: "₦2,500", timeAgo: "3h ago", customer: "Mama Nkechi" },
+      { id: "s3-1", type: "debt", description: "New Debt Recorded", amount: "₦2,500", timeAgo: "3h ago", customer: "Mama Nkechi", href: "/finance" },
     ],
     insight: "Abuja store has **3 unpaid debts** that are over a week old."
   }
