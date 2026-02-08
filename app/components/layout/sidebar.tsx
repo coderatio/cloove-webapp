@@ -1,5 +1,5 @@
-"use client"
 
+import Image from "next/image"
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -22,6 +22,12 @@ import {
     LogOut
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/app/components/ui/tooltip"
 import { useTheme } from "next-themes"
 import { BusinessSwitcher } from "../shared/BusinessSwitcher"
 import { Button } from "../ui/button"
@@ -99,8 +105,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 {/* Header */}
                 <div className={cn("flex items-center p-6 mb-2", isCollapsed ? "justify-center" : "justify-between")}>
                     <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-gold to-brand-gold/80 text-brand-deep shadow-lg shadow-brand-gold/10">
-                            <span className="font-serif text-xl font-bold">C</span>
+                        <div className="relative h-8 w-8 shrink-0">
+                            <Image
+                                src="/images/logo-white.png"
+                                alt="Cloove"
+                                fill
+                                className="object-contain"
+                            />
                         </div>
                         <AnimatePresence>
                             {!isCollapsed && (
@@ -136,44 +147,52 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                     const isActive = pathname === item.href
 
                                     return (
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            className={cn(
-                                                "group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
-                                                isActive
-                                                    ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
-                                                    : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
-                                            )}
-                                        >
-                                            <item.icon
-                                                className={cn(
-                                                    "h-5 w-5 shrink-0 transition-colors",
-                                                    isActive ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
-                                                )}
-                                            />
+                                        <Tooltip key={item.href} delayDuration={0}>
+                                            <TooltipTrigger asChild>
+                                                <Link
+                                                    href={item.href}
+                                                    className={cn(
+                                                        "group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                                                        isActive
+                                                            ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
+                                                            : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                                                    )}
+                                                >
+                                                    <item.icon
+                                                        className={cn(
+                                                            "h-5 w-5 shrink-0 transition-colors",
+                                                            isActive ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                                        )}
+                                                    />
 
-                                            <AnimatePresence mode="wait">
-                                                {!isCollapsed && (
-                                                    <motion.span
-                                                        initial={{ opacity: 0, x: -5 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        exit={{ opacity: 0, x: -5 }}
-                                                        className="whitespace-nowrap"
-                                                    >
-                                                        {item.label}
-                                                    </motion.span>
-                                                )}
-                                            </AnimatePresence>
+                                                    <AnimatePresence mode="wait">
+                                                        {!isCollapsed && (
+                                                            <motion.span
+                                                                initial={{ opacity: 0, x: -5 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                exit={{ opacity: 0, x: -5 }}
+                                                                className="whitespace-nowrap"
+                                                            >
+                                                                {item.label}
+                                                            </motion.span>
+                                                        )}
+                                                    </AnimatePresence>
 
-                                            {isActive && !isCollapsed && (
-                                                <motion.div
-                                                    layoutId="sidebar-active"
-                                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
-                                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                                />
+                                                    {isActive && !isCollapsed && (
+                                                        <motion.div
+                                                            layoutId="sidebar-active"
+                                                            className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
+                                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                                        />
+                                                    )}
+                                                </Link>
+                                            </TooltipTrigger>
+                                            {isCollapsed && (
+                                                <TooltipContent side="right">
+                                                    {item.label}
+                                                </TooltipContent>
                                             )}
-                                        </Link>
+                                        </Tooltip>
                                     )
                                 })}
                             </div>

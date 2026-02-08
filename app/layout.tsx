@@ -5,6 +5,7 @@ import { ThemeProvider } from "./components/providers/theme-provider";
 import { BusinessProvider } from "./components/BusinessProvider";
 import AppLayout from "./components/layout/AppLayout";
 import { Toaster } from "./components/ui/sonner";
+import { TooltipProvider } from "./components/ui/tooltip";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -51,22 +52,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-      </head>
-      <body className={`${jakarta.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className={`${jakarta.variable} ${playfair.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <BusinessProvider>
-            <AppLayout>
-              {children}
-            </AppLayout>
-            <Toaster />
-          </BusinessProvider>
+          <TooltipProvider>
+            <BusinessProvider>
+              <AppLayout>
+                {children}
+              </AppLayout>
+              <Toaster />
+            </BusinessProvider>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
