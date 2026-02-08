@@ -4,6 +4,7 @@ import * as React from "react"
 import { MobileNav } from "./mobile-nav"
 import { Sidebar } from "./sidebar"
 import { StoreSwitcher } from "../shared/store-switcher"
+import { usePathname } from "next/navigation"
 
 interface AppLayoutProps {
     children: React.ReactNode
@@ -18,6 +19,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
     React.useEffect(() => {
         setMounted(true)
     }, [])
+
+    const pathname = usePathname()
+    const isAssistantPage = pathname === "/assistant"
 
     if (!mounted) {
         return (
@@ -43,15 +47,17 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
                 )}
             >
-                {/* Mobile Header */}
-                <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-white/10">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green text-brand-cream">
-                            <span className="font-serif font-bold">C</span>
+                {/* Mobile Header - Hide on Assistant Page */}
+                {!isAssistantPage && (
+                    <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-white/10 dark:border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green text-brand-cream shadow-sm">
+                                <span className="font-serif font-bold">C</span>
+                            </div>
+                            <StoreSwitcher />
                         </div>
-                        <StoreSwitcher />
                     </div>
-                </div>
+                )}
 
                 <div className="px-4 pb-24 pt-4 md:p-0">
                     {children}

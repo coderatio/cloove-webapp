@@ -56,10 +56,10 @@ export default function AssistantPage() {
 
     return (
         <PageTransition>
-            <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] relative">
+            <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] relative md:pt-0">
 
                 {/* Header - Minimalist */}
-                <div className="flex-shrink-0 mb-6 text-center md:text-left">
+                <div className="flex-shrink-0 mb-6 text-center md:text-left mt-8 md:mt-0">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 text-brand-gold text-xs font-medium mb-3 border border-brand-gold/20">
                         <Sparkles className="w-3 h-3" />
                         <span>Cloove Intelligence</span>
