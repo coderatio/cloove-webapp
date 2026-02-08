@@ -28,7 +28,7 @@ const moreItems = [
     { href: "/inventory", icon: Package, label: "Inventory" },
     { href: "/staff", icon: ShieldCheck, label: "Staff" },
     { href: "/storefront", icon: ShoppingBag, label: "Storefront" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    // { href: "/settings", icon: Settings, label: "Settings" },
     // { href: "/help", icon: HelpCircle, label: "Help & Support" },
 ]
 
