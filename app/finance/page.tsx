@@ -115,7 +115,7 @@ export default function FinancePage() {
         {
             key: 'id',
             header: 'TX ID',
-            render: (value: string) => <span className="font-mono text-[10px] text-brand-accent/40">{value}</span>
+            render: (value: string) => <span className="font-mono text-[10px] text-brand-accent/40 dark:text-brand-cream/40">{value}</span>
         },
         {
             key: 'customer',
@@ -123,7 +123,7 @@ export default function FinancePage() {
             render: (value: string, row: any) => (
                 <div className="flex flex-col">
                     <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
-                    <span className="text-[10px] text-brand-accent/40">{row.method}</span>
+                    <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40">{row.method}</span>
                 </div>
             )
         },
@@ -145,13 +145,13 @@ export default function FinancePage() {
             render: (value: string) => (
                 <div className="flex items-center gap-1.5">
                     {value === 'Cleared' ? (
-                        <CheckCircle2 className="w-3 h-3 text-brand-green" />
+                        <CheckCircle2 className="w-3 h-3 text-brand-green dark:text-emerald-400" />
                     ) : (
                         <Clock className="w-3 h-3 text-amber-500 animate-pulse" />
                     )}
                     <span className={cn(
                         "text-[10px] font-bold uppercase tracking-wider",
-                        value === 'Cleared' ? "text-brand-green" : "text-amber-600 dark:text-amber-400"
+                        value === 'Cleared' ? "text-brand-green dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
                     )}>
                         {value}
                     </span>
@@ -243,25 +243,25 @@ export default function FinancePage() {
                         <div className="lg:col-span-4 space-y-4 h-full">
                             <GlassCard className="p-8 h-full bg-brand-deep/[0.02] dark:bg-white/[0.02] border-brand-deep/5 flex flex-col justify-between min-h-[400px]">
                                 <div>
-                                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 mb-8 border-b border-brand-deep/5 pb-4">Financial Utils</h3>
+                                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 mb-8 border-b border-brand-deep/5 pb-4">Financial Utils</h3>
                                     <div className="space-y-3">
                                         <button className="w-full flex items-center justify-between p-5 rounded-3xl bg-white/80 dark:bg-white/5 border border-brand-deep/5 hover:border-brand-gold/30 hover:shadow-xl transition-all text-left group active:scale-95">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-brand-green/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
-                                                    <Receipt className="w-5 h-5 text-brand-accent/40 group-hover:text-brand-gold transition-colors" />
+                                                <div className="h-10 w-10 rounded-xl bg-brand-green/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
+                                                    <Receipt className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
                                                 </div>
                                                 <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream/80">Tax Report</span>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                                         </button>
                                         <button className="w-full flex items-center justify-between p-5 rounded-3xl bg-white/80 dark:bg-white/5 border border-brand-deep/5 hover:border-brand-gold/30 hover:shadow-xl transition-all text-left group active:scale-95">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-brand-green/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
-                                                    <Banknote className="w-5 h-5 text-brand-accent/40 group-hover:text-brand-gold transition-colors" />
+                                                <div className="h-10 w-10 rounded-xl bg-brand-green/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
+                                                    <Banknote className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
                                                 </div>
                                                 <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream/80">Statements</span>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                                         </button>
                                     </div>
                                 </div>
@@ -354,7 +354,7 @@ export default function FinancePage() {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-lg">{viewingTx?.status}</p>
-                                                <p className="text-xs text-brand-accent/40">Verified via {viewingTx?.method}</p>
+                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">Verified via {viewingTx?.method}</p>
                                             </div>
                                         </div>
                                         {viewingTx?.status === 'Pending' && (
