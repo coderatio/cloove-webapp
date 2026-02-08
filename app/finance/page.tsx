@@ -206,7 +206,7 @@ export default function FinancePage() {
                                 </div>
 
                                 <div className="relative z-10 flex gap-4">
-                                    <Button className="flex-1 h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
+                                    <Button className="flex-1 h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
                                         <ArrowUpRight className="w-6 h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
                                         Withdraw
                                     </Button>
@@ -245,7 +245,7 @@ export default function FinancePage() {
                                 <div>
                                     <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 mb-8 border-b border-brand-deep/5 pb-4">Financial Utils</h3>
                                     <div className="space-y-3">
-                                        <button className="w-full flex items-center justify-between p-5 rounded-3xl bg-white/80 dark:bg-white/5 border border-brand-deep/5 hover:border-brand-gold/30 hover:shadow-xl transition-all text-left group active:scale-95">
+                                        <button className="w-full cursor-pointer flex items-center justify-between p-5 rounded-3xl bg-white/80 dark:bg-white/5 border border-brand-deep/5 hover:border-brand-gold/30 hover:shadow-xl transition-all text-left group active:scale-95">
                                             <div className="flex items-center gap-4">
                                                 <div className="h-10 w-10 rounded-xl bg-brand-green/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
                                                     <Receipt className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
@@ -254,7 +254,7 @@ export default function FinancePage() {
                                             </div>
                                             <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                                         </button>
-                                        <button className="w-full flex items-center justify-between p-5 rounded-3xl bg-white/80 dark:bg-white/5 border border-brand-deep/5 hover:border-brand-gold/30 hover:shadow-xl transition-all text-left group active:scale-95">
+                                        <button className="w-full cursor-pointer flex items-center justify-between p-5 rounded-3xl bg-white/80 dark:bg-white/5 border border-brand-deep/5 hover:border-brand-gold/30 hover:shadow-xl transition-all text-left group active:scale-95">
                                             <div className="flex items-center gap-4">
                                                 <div className="h-10 w-10 rounded-xl bg-brand-green/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
                                                     <Banknote className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
@@ -390,13 +390,13 @@ export default function FinancePage() {
                                     {viewingTx?.status === 'Pending' ? (
                                         <Button
                                             onClick={handleClearManual}
-                                            className="flex-1 h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl"
+                                            className="flex-1 h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 dark:hover:text-brand-deep font-bold shadow-xl"
                                         >
                                             Mark as Cleared Manually
                                         </Button>
                                     ) : (
                                         <DrawerClose asChild>
-                                            <Button className="flex-1 h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
+                                            <Button className="flex-1 h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep dark:hover:text-brand-deep font-bold shadow-xl">
                                                 Done
                                             </Button>
                                         </DrawerClose>

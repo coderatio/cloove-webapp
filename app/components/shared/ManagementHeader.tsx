@@ -51,7 +51,7 @@ export function ManagementHeader({
                 {addButtonLabel && onAddClick && (
                     <Button
                         onClick={onAddClick}
-                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:scale-105 transition-all shadow-lg h-12 px-6"
+                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg h-12 px-6"
                     >
                         <Plus className="w-4 h-4 mr-2" />
                         {addButtonLabel}
@@ -63,7 +63,7 @@ export function ManagementHeader({
                 <div className="flex items-center gap-3">
                     <div className="relative flex-1 group">
                         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                            <Search className="w-4 h-4 text-brand-accent/40 group-focus-within:text-brand-green transition-colors" />
+                            <Search className="w-4 h-4 text-brand-accent/40 group-focus-within:text-brand-green dark:text-brand-gold dark:group-focus-within:text-brand-gold transition-colors" />
                         </div>
                         <input
                             type="text"

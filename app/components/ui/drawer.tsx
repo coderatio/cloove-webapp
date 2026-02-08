@@ -76,7 +76,7 @@ const DrawerStickyHeader = ({
             </div>
             {showClose && (
                 <DrawerClose asChild>
-                    <button className="p-2 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0">
+                    <button className="p-2 bg-brand-deep/5 cursor-pointer dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0">
                         <X className="w-6 h-6" />
                     </button>
                 </DrawerClose>

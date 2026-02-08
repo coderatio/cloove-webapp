@@ -196,14 +196,14 @@ export default function StaffManagementPage() {
                                         >
                                             <div className={cn(
                                                 "w-10 h-10 rounded-xl mb-3 flex items-center justify-center transition-colors",
-                                                (editingStaff?.role || 'STAFF') === role ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/5 text-brand-accent/40"
+                                                (editingStaff?.role || 'STAFF') === role ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/5 text-brand-accent/40 dark:text-white/40"
                                             )}>
                                                 {role === 'ACCOUNTANT' ? <Shield className="w-5 h-5" /> : <UserCog className="w-5 h-5" />}
                                             </div>
                                             <div className="font-bold text-sm tracking-wide">{role}</div>
                                             <div className={cn(
-                                                "text-[10px] mt-1 opacity-60",
-                                                (editingStaff?.role || 'STAFF') === role ? "text-brand-gold" : "text-brand-accent"
+                                                "text-[10px] mt-1 opacity-60 text-sm truncate",
+                                                (editingStaff?.role || 'STAFF') === role ? "text-brand-gold" : "text-brand-accent dark:text-white/80"
                                             )}>
                                                 {role === 'ACCOUNTANT'
                                                     ? "Full access to financials and expenses."
@@ -246,7 +246,7 @@ export default function StaffManagementPage() {
                                 </DrawerClose>
                                 <Button
                                     onClick={handleSave}
-                                    className="flex-2 h-12 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold px-8 shadow-xl hover:scale-[1.02] transition-all"
+                                    className="flex-2 h-12 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 font-bold px-8 shadow-xl hover:scale-[1.02] transition-all"
                                 >
                                     <Save className="w-4 h-4 mr-2" />
                                     {editingStaff ? "Save Changes" : "Send Invite"}
