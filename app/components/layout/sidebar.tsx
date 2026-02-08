@@ -13,7 +13,8 @@ import {
     ChevronLeft,
     Moon,
     Sun,
-    LayoutGrid
+    LayoutGrid,
+    Banknote
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useTheme } from "next-themes"
@@ -24,6 +25,7 @@ const navItems = [
     { href: "/", icon: Home, label: "Overview" },
     { href: "/assistant", icon: MessageSquare, label: "Assistant" },
     { href: "/orders", icon: ShoppingBag, label: "Orders" },
+    { href: "/finance", icon: Banknote, label: "Finance" },
     { href: "/customers", icon: Users, label: "Customers" },
     { href: "/inventory", icon: Package, label: "Inventory" },
     { href: "/stores", icon: LayoutGrid, label: "Stores" },

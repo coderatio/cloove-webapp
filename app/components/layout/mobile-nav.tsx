@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, MessageSquare, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid } from "lucide-react"
+import { Home, MessageSquare, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid, Banknote } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
     Drawer,
@@ -19,10 +19,11 @@ const mainNavItems = [
 ]
 
 const secondaryNavItems = [
-    { href: "/customers", icon: Users, label: "Debtors" },
+    { href: "/finance", icon: Banknote, label: "Finance" },
 ]
 
 const moreItems = [
+    { href: "/customers", icon: Users, label: "Customers" },
     { href: "/stores", icon: LayoutGrid, label: "Manage Stores" },
     { href: "/inventory", icon: Package, label: "Inventory" },
     { href: "/notifications", icon: Bell, label: "Notifications" },
