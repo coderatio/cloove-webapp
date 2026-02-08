@@ -6,10 +6,11 @@ import { Button } from "../../components/ui/button"
 import { Switch } from "../../components/ui/switch"
 import { Input } from "../../components/ui/input"
 import { AtSign, Globe, Instagram, Phone, Save, Twitter, MessageCircle } from "lucide-react"
+import { toast } from "sonner"
 
 export default function StorefrontSettings() {
     return (
-        <div className="space-y-8 max-w-3xl">
+        <div className="space-y-8 max-w-5xl">
             {/* General Settings */}
             <section className="space-y-4">
                 <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">General Configuration</h2>
@@ -111,8 +112,13 @@ export default function StorefrontSettings() {
                 </GlassCard>
             </section>
 
+
+
             <div className="sticky bottom-4 flex justify-end">
-                <Button className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-14 shadow-xl hover:scale-105 transition-all">
+                <Button
+                    onClick={() => toast.success("Store settings saved successfully")}
+                    className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-14 shadow-xl hover:scale-105 transition-all"
+                >
                     <Save className="w-4 h-4 mr-2" />
                     Save Configuration
                 </Button>

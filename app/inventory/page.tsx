@@ -158,7 +158,7 @@ export default function InventoryPage() {
 
     return (
         <PageTransition>
-            <div className="max-w-4xl mx-auto space-y-8 pb-24">
+            <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Inventory"
                     description="Track your stock levels, manage product catalog, and monitor inventory value."

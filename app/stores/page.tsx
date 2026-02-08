@@ -75,7 +75,7 @@ export default function StoresPage() {
 
     return (
         <PageTransition>
-            <div className="max-w-4xl mx-auto space-y-8 pb-10">
+            <div className="max-w-5xl mx-auto space-y-8 pb-10">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>

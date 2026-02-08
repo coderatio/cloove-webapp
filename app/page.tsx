@@ -91,7 +91,7 @@ export default function Home() {
 
   return (
     <PageTransition>
-      <div className="max-w-4xl mx-auto space-y-8 pb-20">
+      <div className="max-w-5xl mx-auto space-y-8 pb-20">
 
         {/* Header - Simple & Clean */}
         <header className="pt-4 px-2">

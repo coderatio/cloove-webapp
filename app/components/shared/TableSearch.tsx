@@ -18,7 +18,7 @@ export function TableSearch({
     className
 }: TableSearchProps) {
     return (
-        <div className={cn("relative group min-w-[300px]", className)}>
+        <div className={cn("relative group flex-1 md:min-w-[300px] min-w-0", className)}>
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                 <Search className="w-4 h-4 text-brand-accent/40 group-focus-within:text-brand-green transition-colors" />
             </div>

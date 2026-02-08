@@ -101,10 +101,10 @@ export function StoreSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
     return (
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-                <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium backdrop-blur-sm text-brand-cream ring-1 ring-white/5">
-                    <Store className="h-3.5 w-3.5 text-brand-cream/60" />
+                <button className="flex items-center gap-2 rounded-full border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 px-3 py-1.5 text-sm font-medium backdrop-blur-sm text-brand-deep dark:text-brand-cream ring-1 ring-black/5 dark:ring-white/5 shadow-sm">
+                    <Store className="h-3.5 w-3.5 text-brand-deep/60 dark:text-brand-cream/60" />
                     <span className="max-w-[100px] truncate">{currentStore.name}</span>
-                    <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                    <ChevronsUpDown className="h-3 w-3 opacity-40 dark:opacity-50" />
                 </button>
             </DrawerTrigger>
             <DrawerContent>

@@ -41,7 +41,7 @@ export function ListCard({
             transition={{ delay, duration: 0.3 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
-            className="relative overflow-hidden rounded-xl border border-white/20 bg-white/60 dark:bg-white/5 p-4 shadow-sm backdrop-blur-md transition-all hover:bg-white/80 dark:hover:bg-white/10"
+            className="relative overflow-hidden rounded-3xl border border-brand-deep/10 bg-white/60 dark:bg-white/5 p-4 shadow-sm backdrop-blur-md transition-all hover:bg-white/80 dark:hover:bg-white/10"
         >
             <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0 pr-4">

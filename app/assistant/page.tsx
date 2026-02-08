@@ -71,7 +71,7 @@ export default function AssistantPage() {
     return (
         <PageTransition>
             {/* Mobile: Full height (100dvh). Desktop: Calculated height. */}
-            <div className="flex flex-col h-[100dvh] md:h-[calc(100vh-100px)] relative md:pt-0 pb-20 md:pb-0 max-w-4xl mx-auto">
+            <div className="flex flex-col h-[100dvh] md:h-[calc(100vh-100px)] relative md:pt-0 pb-20 md:pb-0 max-w-5xl mx-auto">
 
                 {/* Header - Minimalist (Hidden on Mobile) */}
                 <div className="flex-shrink-0 mb-6 text-center md:text-left mt-8 md:mt-0 hidden md:block">

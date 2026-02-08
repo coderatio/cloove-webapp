@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { GlassCard } from "../../components/ui/glass-card"
 import { Button } from "../../components/ui/button"
 import { Upload, Check, Palette, Smartphone, RefreshCw } from "lucide-react"
+import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 
 const themeColors = [
@@ -93,8 +94,13 @@ export default function StorefrontCustomization() {
                     </GlassCard>
                 </section>
 
+
+
                 <div className="flex justify-end pt-4">
-                    <Button className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-12 shadow-xl hover:scale-105 transition-all">
+                    <Button
+                        onClick={() => toast.success("Storefront theme updated successfully")}
+                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-12 shadow-xl hover:scale-105 transition-all"
+                    >
                         Save Changes
                     </Button>
                 </div>
