@@ -2,17 +2,17 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { PageTransition } from '../components/layout/page-transition'
-import { useMediaQuery } from '../hooks/useMediaQuery'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, Sparkles, Bot, User } from 'lucide-react'
+import { Sparkles, Bot, User, ArrowUp } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Button } from '../components/ui/button'
+import { GlassCard } from '../components/ui/glass-card'
 
 const initialMessages = [
     {
         id: 1,
         role: 'assistant' as const,
-        content: "Hi! I'm here to help you understand your business. Ask me anything."
+        content: "Hello. I'm analysing your store's performance. How can I help you today?"
     },
     {
         id: 2,
@@ -22,14 +22,13 @@ const initialMessages = [
     {
         id: 3,
         role: 'assistant' as const,
-        content: "You made ₦127,800 this week from 34 orders. That's 23% more than last week! Wednesday was your busiest day."
+        content: "You've made ₦127,800 this week from 34 orders. That's a 23% increase from last week. Wednesday was your substantial day."
     },
 ]
 
 export default function AssistantPage() {
     const [messages, setMessages] = useState(initialMessages)
     const [input, setInput] = useState('')
-    const isDesktop = useMediaQuery("(min-width: 768px)")
     const chatEndRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -49,7 +48,7 @@ export default function AssistantPage() {
             const aiMsg = {
                 id: Date.now() + 1,
                 role: 'assistant' as const,
-                content: "I'm analyzing your data... (This is a premium demo response)"
+                content: "I'm checking your latest data..."
             }
             setMessages(prev => [...prev, aiMsg])
         }, 1000)
@@ -57,80 +56,79 @@ export default function AssistantPage() {
 
     return (
         <PageTransition>
-            <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)]">
-                <header className="mb-4 flex-shrink-0 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                            <Sparkles className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                            <h1 className="font-serif text-2xl md:text-3xl font-semibold tracking-tight">
-                                Business Assistant
-                            </h1>
-                            <p className="text-sm text-muted-foreground">Powered by Cloove AI</p>
-                        </div>
-                    </div>
-                </header>
+            <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] relative">
 
-                <div className="flex-1 overflow-hidden relative rounded-2xl border border-white/20 bg-white/40 dark:bg-black/20 backdrop-blur-md shadow-inner flex flex-col">
-                    <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                        <AnimatePresence initial={false}>
-                            {messages.map((msg) => (
-                                <motion.div
-                                    key={msg.id}
-                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    transition={{ type: "spring", bounce: 0.4 }}
-                                    className={cn("flex w-full", msg.role === 'user' ? "justify-end" : "justify-start")}
-                                >
+                {/* Header - Minimalist */}
+                <div className="flex-shrink-0 mb-6 text-center md:text-left">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 text-brand-gold text-xs font-medium mb-3 border border-brand-gold/20">
+                        <Sparkles className="w-3 h-3" />
+                        <span>Cloove Intelligence</span>
+                    </div>
+                    <h1 className="font-serif text-3xl md:text-4xl font-medium text-brand-deep dark:text-brand-cream">
+                        Assistant
+                    </h1>
+                </div>
+
+                {/* Chat Area */}
+                <div className="flex-1 overflow-y-auto space-y-6 pb-4 scrollbar-hide">
+                    <AnimatePresence initial={false}>
+                        {messages.map((msg) => (
+                            <motion.div
+                                key={msg.id}
+                                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                className={cn("flex w-full", msg.role === 'user' ? "justify-end" : "justify-start")}
+                            >
+                                <div className={cn(
+                                    "max-w-[85%] md:max-w-[70%] text-sm md:text-base leading-relaxed p-5 rounded-2xl shadow-sm relative overflow-hidden group transition-all",
+                                    msg.role === 'user'
+                                        ? "bg-brand-deep text-brand-cream rounded-br-sm dark:bg-brand-gold dark:text-brand-deep"
+                                        : "bg-white/80 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 text-brand-deep dark:text-brand-cream rounded-bl-sm"
+                                )}>
+                                    {/* Icon Indicator */}
                                     <div className={cn(
-                                        "max-w-[85%] md:max-w-[70%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm flex gap-3",
-                                        msg.role === 'user'
-                                            ? "bg-emerald-600 text-white rounded-br-sm"
-                                            : "bg-white dark:bg-zinc-800 text-foreground rounded-bl-sm border border-border/50"
+                                        "absolute top-4 w-6 h-6 rounded-full flex items-center justify-center opacity-50",
+                                        msg.role === 'user' ? "right-4 bg-white/10" : "left-4 bg-brand-deep/5 dark:bg-white/10"
                                     )}>
-                                        {/* Icons inside bubbles */}
-                                        {msg.role === 'assistant' ? (
-                                            <Bot className="h-5 w-5 shrink-0 mt-0.5 text-indigo-500" />
-                                        ) : (
-                                            <User className="h-5 w-5 shrink-0 mt-0.5 text-white/80" />
-                                        )}
-                                        <div>
-                                            {msg.content}
-                                        </div>
+                                        {msg.role === 'assistant' ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
                                     </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                        <div ref={chatEndRef} />
-                    </div>
 
-                    <div className="p-4 bg-white/60 dark:bg-black/40 border-t border-white/10 backdrop-blur-xl">
-                        <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
-                            <div className="relative flex-1">
-                                <input
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Ask about sales, debts, or inventory..."
-                                    className="w-full h-12 rounded-xl border border-border/50 bg-background/50 pl-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-sm"
-                                />
-                            </div>
+                                    <div className={cn("relative z-10", msg.role === 'assistant' ? "pl-8" : "pr-8")}>
+                                        {msg.content}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                    <div ref={chatEndRef} />
+                </div>
+
+                {/* Input Area - Floating Glass */}
+                <div className="pt-4 sticky bottom-0 z-20">
+                    <GlassCard className="p-2 flex items-center gap-2 rounded-full border-brand-deep/5 dark:border-white/10 bg-white/60 dark:bg-black/40 shadow-xl backdrop-blur-xl">
+                        <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-2 pl-4">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                placeholder="Ask about your business..."
+                                className="flex-1 bg-transparent border-none outline-none focus:ring-0 text-brand-deep dark:text-brand-cream placeholder:text-brand-deep/40 dark:placeholder:text-brand-cream/40 h-10 text-base"
+                            />
                             <Button
                                 size="icon"
                                 type="submit"
                                 className={cn(
-                                    "h-12 w-12 rounded-xl transition-all shadow-lg",
+                                    "h-10 w-10 rounded-full transition-all shrink-0",
                                     input.trim()
-                                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
-                                        : "bg-muted text-muted-foreground opacity-50 cursor-not-allowed"
+                                        ? "bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep"
+                                        : "bg-zinc-100 text-zinc-400 dark:bg-white/10 dark:text-white/40"
                                 )}
                                 disabled={!input.trim()}
                             >
-                                <Send className="h-5 w-5" />
+                                <ArrowUp className="h-5 w-5" />
                             </Button>
                         </form>
-                    </div>
+                    </GlassCard>
                 </div>
             </div>
         </PageTransition>

@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -28,10 +27,14 @@ const navItems = [
     { href: "/inventory", icon: Package, label: "Inventory" },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+    isCollapsed: boolean;
+    setIsCollapsed: (value: boolean) => void;
+}
+
+export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname()
     const { theme, setTheme } = useTheme()
-    const [isCollapsed, setIsCollapsed] = useState(false)
 
     return (
         <motion.aside
