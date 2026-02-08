@@ -1,6 +1,7 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { PageTransition } from "../components/layout/page-transition"
 import { GlassCard } from "../components/ui/glass-card"
 import { useStore } from "../components/StoreProvider"
@@ -10,13 +11,57 @@ import {
     Settings2,
     Store as StoreIcon,
     ChevronRight,
-    Search
+    Search,
+    Clock,
+    X
 } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { cn } from "../lib/utils"
+import { Drawer as VaulDrawer } from "vaul"
+import { ActivityStream } from "../components/dashboard/ActivityStream"
+
+// Mock activities for detailed view
+const mockStoreActivities = [
+    { id: '1', type: 'sale' as const, description: 'New order for Bag of Rice', amount: '₦45,000', timeAgo: '2 mins ago' },
+    { id: '2', type: 'payment' as const, description: 'Debt payment from Musa', amount: '₦12,000', timeAgo: '1 hour ago' },
+    { id: '3', type: 'sale' as const, description: 'Stock updated: Peak Milk', amount: '+24 units', timeAgo: '3 hours ago' },
+]
 
 export default function StoresPage() {
-    const { stores } = useStore()
+    const { stores, addStore, updateStore, deleteStore } = useStore()
+    const [isAddOpen, setIsAddOpen] = useState(false)
+    const [editingStore, setEditingStore] = useState<any>(null)
+    const [viewingActivities, setViewingActivities] = useState<any>(null)
+
+    // Form states
+    const [newName, setNewName] = useState("")
+    const [newLocation, setNewLocation] = useState("")
+
+    const handleAdd = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (newName.trim()) {
+            addStore(newName, newLocation)
+            setNewName("")
+            setNewLocation("")
+            setIsAddOpen(false)
+        }
+    }
+
+    const handleUpdate = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (editingStore && newName.trim()) {
+            updateStore(editingStore.id, { name: newName, location: newLocation })
+            setEditingStore(null)
+            setNewName("")
+            setNewLocation("")
+        }
+    }
+
+    const openEdit = (store: any) => {
+        setEditingStore(store)
+        setNewName(store.name)
+        setNewLocation(store.location || "")
+    }
 
     // Filter out the virtual "All Stores" for management
     const actualStores = stores.filter(s => s.id !== 'all-stores')
@@ -34,7 +79,10 @@ export default function StoresPage() {
                             Add, edit, and organize your business locations. Each store maintains its own inventory and staff.
                         </p>
                     </div>
-                    <Button className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:scale-105 transition-all shadow-lg">
+                    <Button
+                        onClick={() => setIsAddOpen(true)}
+                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:scale-105 transition-all shadow-lg"
+                    >
                         <Plus className="w-4 h-4 mr-2" />
                         Add New Store
                     </Button>
@@ -61,7 +109,7 @@ export default function StoresPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
                         >
-                            <GlassCard className="p-6 h-full group hover:shadow-2xl transition-all duration-500 border-l-4 border-l-brand-green">
+                            <GlassCard className="p-6 h-full group hover:shadow-2xl transition-all duration-500 border-l-4 border-l-brand-green relative overflow-hidden">
                                 <div className="flex items-start justify-between mb-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green group-hover:scale-110 transition-transform">
@@ -96,11 +144,20 @@ export default function StoresPage() {
                                 </div>
 
                                 <div className="mt-8 flex items-center gap-3">
-                                    <Button variant="outline" className="flex-1 rounded-xl border-brand-accent/10 hover:bg-brand-accent/5 dark:border-white/10 dark:hover:bg-white/5 transition-all text-sm font-semibold">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => openEdit(store)}
+                                        className="flex-1 rounded-xl border-brand-accent/10 hover:bg-brand-accent/5 dark:border-white/10 dark:hover:bg-white/5 transition-all text-sm font-semibold"
+                                    >
                                         <Settings2 className="w-4 h-4 mr-2" />
-                                        Settings
+                                        Store Settings
                                     </Button>
-                                    <Button variant="ghost" className="rounded-xl hover:bg-brand-green/5 text-brand-green dark:hover:bg-brand-gold/5 dark:text-brand-gold p-2">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setViewingActivities(store)}
+                                        title="View Activity Feed"
+                                        className="rounded-xl hover:bg-brand-green/5 text-brand-green dark:hover:bg-brand-gold/5 dark:text-brand-gold p-2 transition-all"
+                                    >
                                         <ChevronRight className="w-5 h-5" />
                                     </Button>
                                 </div>
@@ -113,6 +170,7 @@ export default function StoresPage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: actualStores.length * 0.1 }}
+                        onClick={() => setIsAddOpen(true)}
                         className="cursor-pointer group"
                     >
                         <div className="h-full min-h-[220px] rounded-[30px] border-2 border-dashed border-brand-accent/10 dark:border-white/10 flex flex-col items-center justify-center gap-4 hover:border-brand-green/40 dark:hover:border-brand-gold/40 hover:bg-white/40 dark:hover:bg-white/5 transition-all group-active:scale-[0.98]">
@@ -125,6 +183,134 @@ export default function StoresPage() {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* Add/Edit Store Drawer */}
+                <VaulDrawer.Root
+                    open={isAddOpen || !!editingStore}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setIsAddOpen(false);
+                            setEditingStore(null);
+                            setNewName("");
+                            setNewLocation("");
+                        }
+                    }}
+                >
+                    <VaulDrawer.Portal>
+                        <VaulDrawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+                        <VaulDrawer.Content className="fixed bottom-0 inset-x-0 z-50 mt-24 flex h-fit max-w-4xl mx-auto flex-col rounded-t-[32px] bg-brand-cream dark:bg-[#021a12] outline-none">
+                            <div className="p-8 pb-12">
+                                <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10" />
+                                <div className="space-y-6 max-w-lg mx-auto">
+                                    <div className="text-center space-y-2">
+                                        <VaulDrawer.Title className="font-serif text-3xl font-medium text-brand-deep dark:text-brand-cream">
+                                            {editingStore ? "Edit Branch" : "Add New Branch"}
+                                        </VaulDrawer.Title>
+                                        <VaulDrawer.Description className="text-brand-accent/60 dark:text-brand-cream/60">
+                                            {editingStore ? "Update details for this location." : "Expand your business with a new location."}
+                                        </VaulDrawer.Description>
+                                    </div>
+
+                                    <form onSubmit={editingStore ? handleUpdate : handleAdd} className="space-y-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Store Name</label>
+                                            <input
+                                                autoFocus
+                                                value={newName}
+                                                onChange={(e) => setNewName(e.target.value)}
+                                                placeholder="e.g. Victoria Island Branch"
+                                                className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Location</label>
+                                            <input
+                                                value={newLocation}
+                                                onChange={(e) => setNewLocation(e.target.value)}
+                                                placeholder="e.g. 15 Admiralty Way, Lekki"
+                                                className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-4 pt-4">
+                                            <VaulDrawer.Close asChild>
+                                                <Button variant="outline" className="flex-1 rounded-2xl h-14">Cancel</Button>
+                                            </VaulDrawer.Close>
+                                            <Button type="submit" className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
+                                                {editingStore ? "Save Changes" : "Create Store"}
+                                            </Button>
+                                        </div>
+                                    </form>
+
+                                    {editingStore && (
+                                        <div className="pt-4 flex justify-center">
+                                            <button
+                                                onClick={() => {
+                                                    deleteStore(editingStore.id);
+                                                    setEditingStore(null);
+                                                }}
+                                                className="text-xs font-bold text-danger/60 hover:text-danger hover:underline transition-all"
+                                            >
+                                                Remove this location from business
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </VaulDrawer.Content>
+                    </VaulDrawer.Portal>
+                </VaulDrawer.Root>
+
+                {/* Activity Detail Drawer */}
+                <VaulDrawer.Root
+                    open={!!viewingActivities}
+                    onOpenChange={(open) => !open && setViewingActivities(null)}
+                >
+                    <VaulDrawer.Portal>
+                        <VaulDrawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+                        <VaulDrawer.Content className="fixed bottom-0 inset-x-0 z-50 mt-24 flex h-fit max-h-[90vh] max-w-4xl mx-auto flex-col rounded-t-[32px] bg-brand-cream dark:bg-[#021a12] outline-none overflow-hidden">
+                            <div className="flex-1 overflow-y-auto p-8 pb-12">
+                                <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10" />
+                                <div className="max-w-lg mx-auto space-y-8">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <VaulDrawer.Title className="font-serif text-3xl font-medium text-brand-deep dark:text-brand-cream">
+                                                {viewingActivities?.name}
+                                            </VaulDrawer.Title>
+                                            <VaulDrawer.Description className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                                                Recent activity and updates
+                                            </VaulDrawer.Description>
+                                        </div>
+                                        <VaulDrawer.Close asChild>
+                                            <button className="p-2 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors">
+                                                <X className="w-6 h-6" />
+                                            </button>
+                                        </VaulDrawer.Close>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Live Feed</h3>
+                                        <ActivityStream activities={mockStoreActivities} />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Location Details</h3>
+                                        <GlassCard className="p-6 space-y-4">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-brand-accent/60">Branch Address</span>
+                                                <span className="font-medium text-brand-deep dark:text-brand-cream">{viewingActivities?.location}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-brand-accent/60">Manager</span>
+                                                <span className="font-medium text-brand-deep dark:text-brand-cream">Bolanle Ade</span>
+                                            </div>
+                                        </GlassCard>
+                                    </div>
+                                </div>
+                            </div>
+                        </VaulDrawer.Content>
+                    </VaulDrawer.Portal>
+                </VaulDrawer.Root>
             </div>
         </PageTransition>
     )
