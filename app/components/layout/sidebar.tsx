@@ -13,9 +13,7 @@ import {
     ChevronRight,
     ChevronLeft,
     Moon,
-    Sun,
-    LogOut,
-    UserCircle
+    Sun
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useTheme } from "next-themes"
@@ -35,105 +33,135 @@ export function Sidebar() {
     const { theme, setTheme } = useTheme()
     const [isCollapsed, setIsCollapsed] = useState(false)
 
-    // Use a layout effect or similar to check persisted state in real app, 
-    // but state is fine for now
-
     return (
         <motion.aside
             initial={false}
             animate={{ width: isCollapsed ? 80 : 280 }}
-            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-2xl border border-white/20 bg-white/80 dark:bg-black/40 backdrop-blur-xl shadow-xl"
+            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-[20px] bg-brand-deep shadow-2xl overflow-hidden transition-all duration-300"
         >
-            {/* Header */}
-            <div className={cn("flex items-center p-4", isCollapsed ? "justify-center" : "justify-between gap-4")}>
-                <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-green to-brand-accent text-brand-cream shadow-inner">
-                        <span className="font-serif text-xl font-bold">C</span>
-                    </div>
-                    {!isCollapsed && (
-                        <motion.span
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="font-serif text-xl font-semibold tracking-tight whitespace-nowrap"
-                        >
-                            Cloove
-                        </motion.span>
-                    )}
-                </div>
+            {/* Background Texture/Gradient for depth */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-green/20 blur-[80px] rounded-full mix-blend-overlay" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-green/10 blur-[60px] rounded-full" />
             </div>
 
-            {/* Store Switcher */}
-            <div className="px-3 pb-6">
-                <StoreSwitcher isCollapsed={isCollapsed} />
-            </div>
-
-            {/* Nav Items */}
-            <nav className="flex-1 space-y-2 px-3">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href
-
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors hover:bg-brand-green/5 dark:hover:bg-brand-green/20",
-                                isActive
-                                    ? "bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream"
-                                    : "text-muted-foreground"
-                            )}
-                        >
-                            <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-brand-green dark:text-brand-gold")} />
+            <div className="relative z-10 flex flex-col h-full text-brand-cream">
+                {/* Header */}
+                <div className={cn("flex items-center p-6 mb-2", isCollapsed ? "justify-center" : "justify-between")}>
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-gold to-brand-gold/80 text-brand-deep shadow-lg shadow-brand-gold/10">
+                            <span className="font-serif text-xl font-bold">C</span>
+                        </div>
+                        <AnimatePresence>
                             {!isCollapsed && (
                                 <motion.span
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    className="whitespace-nowrap"
+                                    exit={{ opacity: 0, x: -10 }}
+                                    className="font-serif text-2xl font-medium tracking-tight whitespace-nowrap text-brand-cream"
                                 >
-                                    {item.label}
+                                    Cloove
                                 </motion.span>
                             )}
-
-                            {/* Tooltip for collapsed state could go here */}
-                        </Link>
-                    )
-                })}
-            </nav>
-
-            {/* Footer Actions */}
-            <div className="border-t border-border/40 p-3 space-y-2">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-full justify-start px-2 hover:bg-transparent"
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                >
-                    <div className={cn("flex items-center justify-center rounded-lg p-2 transition-colors hover:bg-brand-green/5 dark:hover:bg-brand-green/20", isCollapsed ? "w-10" : "w-auto")}>
-                        {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                        </AnimatePresence>
                     </div>
-                    {!isCollapsed && <span className="ml-2 text-sm font-medium">Toggle Theme</span>}
-                </Button>
+                </div>
 
-                <Button
-                    variant="ghost"
-                    className={cn("w-full justify-start px-2 gap-3", isCollapsed && "justify-center")}
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                >
-                    {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-                    {!isCollapsed && <span>Collapse</span>}
-                </Button>
+                {/* Store Switcher */}
+                <div className={cn("px-4 pb-8 transition-all", isCollapsed && "px-2")}>
+                    <StoreSwitcher isCollapsed={isCollapsed} />
+                </div>
 
-                <div className={cn("mt-4 flex items-center gap-3 rounded-xl bg-black/5 dark:bg-white/5 p-2", isCollapsed && "justify-center p-0 bg-transparent")}>
-                    <div className="h-8 w-8 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center font-medium text-xs">
-                        AO
-                    </div>
-                    {!isCollapsed && (
-                        <div className="flex flex-col overflow-hidden">
-                            <span className="text-xs font-semibold truncate">Amaka Okoro</span>
-                            <span className="text-[10px] text-muted-foreground truncate">Owner</span>
+                {/* Nav Items */}
+                <nav className="flex-1 space-y-2 px-4">
+                    {navItems.map((item) => {
+                        const isActive = pathname === item.href
+
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    "group relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200",
+                                    isActive
+                                        ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
+                                        : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                                )}
+                            >
+                                <item.icon
+                                    className={cn(
+                                        "h-5 w-5 shrink-0 transition-colors",
+                                        isActive ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                    )}
+                                />
+
+                                <AnimatePresence mode="wait">
+                                    {!isCollapsed && (
+                                        <motion.span
+                                            initial={{ opacity: 0, x: -5 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            exit={{ opacity: 0, x: -5 }}
+                                            className="whitespace-nowrap"
+                                        >
+                                            {item.label}
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
+
+                                {isActive && !isCollapsed && (
+                                    <motion.div
+                                        layoutId="sidebar-active"
+                                        className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    />
+                                )}
+                            </Link>
+                        )
+                    })}
+                </nav>
+
+                {/* Footer */}
+                <div className="mt-auto p-4 border-t border-white/10 space-y-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                            "w-full justify-start text-brand-cream/70 hover:text-brand-cream hover:bg-white/5",
+                            isCollapsed && "justify-center px-0"
+                        )}
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    >
+                        {theme === "dark" ? <Sun className="h-5 w-5 shrink-0" /> : <Moon className="h-5 w-5 shrink-0" />}
+                        {!isCollapsed && <span className="ml-3">Theme</span>}
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                            "w-full justify-start text-brand-cream/70 hover:text-brand-cream hover:bg-white/5",
+                            isCollapsed && "justify-center px-0"
+                        )}
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                    >
+                        {isCollapsed ? <ChevronRight className="h-5 w-5 shrink-0" /> : <ChevronLeft className="h-5 w-5 shrink-0" />}
+                        {!isCollapsed && <span className="ml-3">Collapse</span>}
+                    </Button>
+
+                    <div className={cn(
+                        "mt-4 flex items-center gap-3 rounded-xl bg-black/20 p-2 border border-white/5",
+                        isCollapsed && "justify-center p-1 bg-transparent border-0"
+                    )}>
+                        <div className="h-8 w-8 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center font-bold text-xs shadow-md">
+                            AO
                         </div>
-                    )}
+                        {!isCollapsed && (
+                            <div className="flex flex-col overflow-hidden">
+                                <span className="text-xs font-semibold truncate text-brand-cream">Amaka Okoro</span>
+                                <span className="text-[10px] text-brand-cream/60 truncate">Owner</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </motion.aside>
