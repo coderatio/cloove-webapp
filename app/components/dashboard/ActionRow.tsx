@@ -31,7 +31,7 @@ export function ActionRow({ items, className }: ActionRowProps) {
                 >
                     <Link href={item.href} className="block h-full">
                         <GlassCard className={cn(
-                            "rounded-3xl p-4 md:p-5 h-full transition-all group",
+                            "rounded-[32px] p-4 md:p-5 h-full transition-all group",
                             item.type === 'urgent' && "border-danger/20 hover:border-danger/40 dark:bg-red-500/5",
                             item.type === 'warning' && "border-warning/20 hover:border-warning/40 dark:bg-amber-500/5",
                             item.type === 'info' && "border-brand-border/50 hover:border-brand-green/30",

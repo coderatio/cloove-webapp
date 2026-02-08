@@ -199,7 +199,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
 
                             <Button
                                 onClick={startVerification}
-                                className="w-full h-14 rounded-2xl bg-brand-deep dark:bg-brand-gold hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 text-brand-gold dark:text-brand-deep font-bold text-lg shadow-2xl transition-all group active:scale-95"
+                                className="w-full h-14 rounded-2xl bg-brand-deep dark:bg-brand-gold hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 text-brand-gold dark:text-brand-deep dark:hover:text-brand-deep font-bold text-lg shadow-2xl transition-all group active:scale-95"
                             >
                                 Verify My Identity
                                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />

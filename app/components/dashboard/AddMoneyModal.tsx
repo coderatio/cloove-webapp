@@ -146,7 +146,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
                             <div className="p-4 rounded-xl bg-brand-green/5 border border-brand-green/10">
                                 <p className="text-xs text-brand-green leading-relaxed"> Transferred funds typically reflect within <span className="font-bold">2-5 minutes</span>. Bank network delays may apply. </p>
                             </div>
-                            <Button onClick={resetModal} className="w-full h-14 rounded-2xl bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep font-bold"> Done </Button>
+                            <Button onClick={resetModal} className="w-full h-14 rounded-2xl bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep font-bold hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep"> Done </Button>
                         </motion.div>
                     )}
 
@@ -168,7 +168,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
                                 </div>
                                 <Button
                                     onClick={() => handleCopy("https://clove.me/adebayo-textiles")}
-                                    className="w-full rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep"
+                                    className="w-full rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep"
                                 >
                                     {copied ? "Copied!" : "Copy Link"}
                                 </Button>

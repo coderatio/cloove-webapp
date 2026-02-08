@@ -42,7 +42,7 @@ export function ActivityStream({ activities, className }: ActivityStreamProps) {
                 </button>
             </div>
 
-            <GlassCard className="rounded-[32px] p-2 space-y-1 overflow-visible">
+            <GlassCard className="rounded-[32px] p-2 space-y-1">
                 {activities.map((item, index) => (
                     <motion.div
                         key={item.id}

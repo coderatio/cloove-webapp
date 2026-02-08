@@ -86,7 +86,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                     <div className="flex items-center gap-4 mt-8">
                                         <Button
                                             onClick={() => setIsAddMoneyOpen(true)}
-                                            className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-11 px-8 shadow-lg shadow-brand-deep/10 dark:shadow-brand-gold/10 font-bold active:scale-95 transition-all hover:brightness-110"
+                                            className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-11 px-8 shadow-lg shadow-brand-deep/10 dark:shadow-brand-gold/10 font-bold active:scale-95 transition-all hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep"
                                         >
                                             <Plus className="w-4 h-4 mr-2" /> Add Money
                                         </Button>

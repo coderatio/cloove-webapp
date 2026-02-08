@@ -18,7 +18,7 @@ interface InsightWhisperProps {
 export function InsightWhisper({ insight, actionLabel, actionLink, className }: InsightWhisperProps) {
     return (
         <GlassCard
-            className={cn("rounded-[30px] p-6 md:p-8 border-l-4 border-l-brand-gold relative", className)}
+            className={cn("rounded-[32px] p-6 md:p-8 border-l-4 border-l-brand-gold relative", className)}
         >
             <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
                 <div className="flex-shrink-0">
