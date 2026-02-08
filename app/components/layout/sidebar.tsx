@@ -15,22 +15,44 @@ import {
     Sun,
     LayoutGrid,
     Banknote,
-    Store
+    Store,
+    ShieldCheck
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useTheme } from "next-themes"
 import { StoreSwitcher } from "../shared/store-switcher"
 import { Button } from "../ui/button"
 
-const navItems = [
-    { href: "/", icon: Home, label: "Overview" },
-    { href: "/assistant", icon: MessageSquare, label: "Assistant" },
-    { href: "/orders", icon: ShoppingBag, label: "Orders" },
-    { href: "/finance", icon: Banknote, label: "Finance" },
-    { href: "/customers", icon: Users, label: "Customers" },
-    { href: "/inventory", icon: Package, label: "Inventory" },
-    { href: "/stores", icon: LayoutGrid, label: "Stores" },
-    { href: "/storefront", icon: Store, label: "Storefront" },
+const navGroups = [
+    {
+        label: "Main",
+        items: [
+            { href: "/", icon: Home, label: "Overview" },
+            { href: "/assistant", icon: MessageSquare, label: "Assistant" },
+        ]
+    },
+    {
+        label: "Sales & Finance",
+        items: [
+            { href: "/orders", icon: ShoppingBag, label: "Orders" },
+            { href: "/finance", icon: Banknote, label: "Finance" },
+            { href: "/customers", icon: Users, label: "Customers" },
+        ]
+    },
+    {
+        label: "Operations",
+        items: [
+            { href: "/inventory", icon: Package, label: "Inventory" },
+            { href: "/stores", icon: LayoutGrid, label: "Stores" },
+        ]
+    },
+    {
+        label: "Management",
+        items: [
+            { href: "/storefront", icon: Store, label: "Storefront" },
+            { href: "/staff", icon: ShieldCheck, label: "Staff" },
+        ]
+    }
 ]
 
 interface SidebarProps {
@@ -81,52 +103,67 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                     <StoreSwitcher isCollapsed={isCollapsed} />
                 </div>
 
-                {/* Nav Items */}
-                <nav className="flex-1 space-y-2 px-4">
-                    {navItems.map((item) => {
-                        const isActive = pathname === item.href
+                {/* Nav Items Grouped */}
+                <nav className="flex-1 space-y-6 px-4 overflow-y-auto scrollbar-hide">
+                    {navGroups.map((group) => (
+                        <div key={group.label} className="space-y-1">
+                            {!isCollapsed && (
+                                <h3 className="px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-cream/50 mb-3">
+                                    {group.label}
+                                </h3>
+                            )}
+                            <div className="space-y-1">
+                                {group.items.map((item) => {
+                                    const isActive = pathname === item.href
 
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={cn(
-                                    "group relative flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200",
-                                    isActive
-                                        ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
-                                        : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
-                                )}
-                            >
-                                <item.icon
-                                    className={cn(
-                                        "h-5 w-5 shrink-0 transition-colors",
-                                        isActive ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
-                                    )}
-                                />
-
-                                <AnimatePresence mode="wait">
-                                    {!isCollapsed && (
-                                        <motion.span
-                                            initial={{ opacity: 0, x: -5 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -5 }}
-                                            className="whitespace-nowrap"
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className={cn(
+                                                "group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                                                isActive
+                                                    ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
+                                                    : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                                            )}
                                         >
-                                            {item.label}
-                                        </motion.span>
-                                    )}
-                                </AnimatePresence>
+                                            <item.icon
+                                                className={cn(
+                                                    "h-5 w-5 shrink-0 transition-colors",
+                                                    isActive ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                                )}
+                                            />
 
-                                {isActive && !isCollapsed && (
-                                    <motion.div
-                                        layoutId="sidebar-active"
-                                        className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                    />
-                                )}
-                            </Link>
-                        )
-                    })}
+                                            <AnimatePresence mode="wait">
+                                                {!isCollapsed && (
+                                                    <motion.span
+                                                        initial={{ opacity: 0, x: -5 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, x: -5 }}
+                                                        className="whitespace-nowrap"
+                                                    >
+                                                        {item.label}
+                                                    </motion.span>
+                                                )}
+                                            </AnimatePresence>
+
+                                            {isActive && !isCollapsed && (
+                                                <motion.div
+                                                    layoutId="sidebar-active"
+                                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
+                                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                                />
+                                            )}
+                                        </Link>
+                                    )
+                                })}
+                            </div>
+                            {/* Divider for grouped look when collapsed */}
+                            {isCollapsed && group !== navGroups[navGroups.length - 1] && (
+                                <div className="mx-4 my-4 h-px bg-white/5" />
+                            )}
+                        </div>
+                    ))}
                 </nav>
 
                 {/* Footer */}
