@@ -12,7 +12,8 @@ import {
     ChevronRight,
     ChevronLeft,
     Moon,
-    Sun
+    Sun,
+    LayoutGrid
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useTheme } from "next-themes"
@@ -25,6 +26,7 @@ const navItems = [
     { href: "/orders", icon: ShoppingBag, label: "Orders" },
     { href: "/customers", icon: Users, label: "Customers" },
     { href: "/inventory", icon: Package, label: "Inventory" },
+    { href: "/stores", icon: LayoutGrid, label: "Stores" },
 ]
 
 interface SidebarProps {
@@ -155,13 +157,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         "mt-4 flex items-center gap-3 rounded-xl bg-black/20 p-2 border border-white/5",
                         isCollapsed && "justify-center p-1 bg-transparent border-0"
                     )}>
-                        <div className="h-8 w-8 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center font-bold text-xs shadow-md">
-                            AO
+                        <div className="h-8 w-8 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center font-bold text-xs shadow-md uppercase">
+                            JO
                         </div>
                         {!isCollapsed && (
                             <div className="flex flex-col overflow-hidden">
-                                <span className="text-xs font-semibold truncate text-brand-cream">Amaka Okoro</span>
-                                <span className="text-[10px] text-brand-cream/60 truncate">Owner</span>
+                                <span className="text-xs font-semibold truncate text-brand-cream">Josiah AO</span>
+                                <span className="text-[10px] text-brand-cream/60 truncate">Business Owner</span>
                             </div>
                         )}
                     </div>
