@@ -16,7 +16,8 @@ import {
     LayoutGrid,
     Banknote,
     Store,
-    ShieldCheck
+    ShieldCheck,
+    Settings
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useTheme } from "next-themes"
@@ -51,6 +52,7 @@ const navGroups = [
         items: [
             { href: "/storefront", icon: Store, label: "Storefront" },
             { href: "/staff", icon: ShieldCheck, label: "Staff" },
+            { href: "/settings", icon: Settings, label: "Settings" },
         ]
     }
 ]
@@ -194,10 +196,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         {!isCollapsed && <span className="ml-3">Collapse</span>}
                     </Button>
 
-                    <div className={cn(
-                        "mt-4 flex items-center gap-3 rounded-xl bg-black/20 p-2 border border-white/5",
-                        isCollapsed && "justify-center p-1 bg-transparent border-0"
-                    )}>
+                    <Link
+                        href="/settings"
+                        className={cn(
+                            "mt-4 flex items-center gap-3 rounded-xl bg-black/20 p-2 border border-white/5 transition-all hover:bg-white/5",
+                            isCollapsed && "justify-center p-1 bg-transparent border-0"
+                        )}
+                    >
                         <div className="h-8 w-8 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center font-bold text-xs shadow-md uppercase">
                             JO
                         </div>
@@ -207,7 +212,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 <span className="text-[10px] text-brand-cream/60 truncate">Business Owner</span>
                             </div>
                         )}
-                    </div>
+                    </Link>
                 </div>
             </div>
         </motion.aside>
