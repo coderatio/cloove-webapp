@@ -58,7 +58,7 @@ const businessData = {
 }
 
 export default function Dashboard() {
-  const { currentStore, ownerName } = useBusiness()
+  const { currentStore, ownerName, businessName } = useBusiness()
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   // Aggregate or Filter Data
@@ -109,11 +109,11 @@ export default function Dashboard() {
               </h1>
             </div>
 
-            {/* Store Badge */}
+            {/* Business Badge */}
             <div className="hidden md:flex flex-col items-end">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/20 mb-1">Current Store</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/20 mb-1">Current Business</span>
               <div className="px-3 py-1 rounded-full bg-brand-green/5 dark:bg-brand-gold/10 border border-brand-green/10 dark:border-brand-gold/10">
-                <span className="text-xs font-semibold text-brand-green dark:text-brand-gold">{currentStore.name}</span>
+                <span className="text-xs font-semibold text-brand-green dark:text-brand-gold">{businessName}</span>
               </div>
             </div>
           </motion.div>
