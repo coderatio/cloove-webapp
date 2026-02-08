@@ -11,6 +11,8 @@ import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '../components/shared/ManagementHeader'
 import { InsightWhisper } from '../components/dashboard/InsightWhisper'
 import { Button } from '../components/ui/button'
+import { FilterPopover } from '../components/shared/FilterPopover'
+import { TableSearch } from '../components/shared/TableSearch'
 import {
     Drawer,
     DrawerContent,
@@ -160,18 +162,11 @@ export default function InventoryPage() {
                 <ManagementHeader
                     title="Inventory"
                     description="Track your stock levels, manage product catalog, and monitor inventory value."
-                    searchValue={search}
-                    onSearchChange={setSearch}
-                    searchPlaceholder="Search products by name..."
                     addButtonLabel="Add Product"
                     onAddClick={() => {
                         setFormData({ product: "", stock: 0, price: "", category: "Fabric" })
                         setIsAddOpen(true)
                     }}
-                    filterGroups={filterGroups}
-                    selectedFilterValues={selectedFilters}
-                    onFilterSelectionChange={setSelectedFilters}
-                    onFilterClear={() => setSelectedFilters([])}
                 />
 
                 <InsightWhisper insight={intelligenceWhisper} />
@@ -208,9 +203,28 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Main Content */}
+                <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30 ml-1">Product List</p>
+
+                        <div className="flex items-center gap-3">
+                            <TableSearch
+                                value={search}
+                                onChange={setSearch}
+                                placeholder="Search products..."
+                            />
+                            <FilterPopover
+                                groups={filterGroups}
+                                selectedValues={selectedFilters}
+                                onSelectionChange={setSelectedFilters}
+                                onClear={() => setSelectedFilters([])}
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 {isMobile ? (
                     <div className="space-y-3">
-                        <p className="text-sm font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Product List</p>
                         {filteredInventory.map((product, index) => (
                             <ListCard
                                 key={product.id}

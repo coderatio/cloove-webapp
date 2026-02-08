@@ -14,7 +14,6 @@ import {
     CheckCircle2,
     Clock,
     MoreHorizontal,
-    Search,
     Filter,
     ArrowRightLeft,
     Banknote,
@@ -35,6 +34,8 @@ import {
     DrawerClose,
 } from "../components/ui/drawer"
 import { motion, AnimatePresence } from 'framer-motion'
+import { FilterPopover } from '../components/shared/FilterPopover'
+import { TableSearch } from '../components/shared/TableSearch'
 
 const initialTransactions = [
     { id: 'TX-9021', type: 'Credit', amount: '₦45,000', customer: 'Mrs. Adebayo', status: 'Cleared', date: 'Today, 10:30 AM', method: 'Bank Transfer' },
@@ -164,13 +165,6 @@ export default function FinancePage() {
                 <ManagementHeader
                     title="Finance"
                     description="Monitor cash flow, manage your business wallet, and reconcile transactions effortlessly."
-                    searchValue={search}
-                    onSearchChange={setSearch}
-                    searchPlaceholder="Search by ID or customer..."
-                    filterGroups={filterGroups}
-                    selectedFilterValues={selectedFilters}
-                    onFilterSelectionChange={setSelectedFilters}
-                    onFilterClear={() => setSelectedFilters([])}
                 />
 
                 <div className="space-y-6">
@@ -277,8 +271,24 @@ export default function FinancePage() {
                 </div>
 
                 {/* Main Transaction List */}
-                <div className="space-y-4">
-                    <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Recent Transactions</p>
+                <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30 ml-1">Recent Transactions</p>
+
+                        <div className="flex items-center gap-3">
+                            <TableSearch
+                                value={search}
+                                onChange={setSearch}
+                                placeholder="Search transactions..."
+                            />
+                            <FilterPopover
+                                groups={filterGroups}
+                                selectedValues={selectedFilters}
+                                onSelectionChange={setSelectedFilters}
+                                onClear={() => setSelectedFilters([])}
+                            />
+                        </div>
+                    </div>
                     {isMobile ? (
                         <div className="space-y-3">
                             {filteredTransactions.map((tx, index) => (

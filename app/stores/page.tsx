@@ -11,13 +11,13 @@ import {
     Settings2,
     Store as StoreIcon,
     ChevronRight,
-    Search,
     Clock,
     X
 } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { cn } from "../lib/utils"
 import { ActivityStream } from "../components/dashboard/ActivityStream"
+import { TableSearch } from "../components/shared/TableSearch"
 import {
     Drawer,
     DrawerContent,
@@ -96,16 +96,12 @@ export default function StoresPage() {
                 </div>
 
                 {/* Search & Filter - Minimalist */}
-                <div className="relative group">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                        <Search className="w-4 h-4 text-brand-accent/40 group-focus-within:text-brand-green transition-colors" />
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Search locations..."
-                        className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/40 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all placeholder:text-brand-accent/30"
-                    />
-                </div>
+                <TableSearch
+                    value={""} // Search logic not yet implemented in mock state but UI consistency is maintained
+                    onChange={() => { }}
+                    placeholder="Search locations..."
+                    className="w-full"
+                />
 
                 {/* Stores Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

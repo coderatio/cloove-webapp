@@ -11,6 +11,8 @@ import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '../components/shared/ManagementHeader'
 import { InsightWhisper } from '../components/dashboard/InsightWhisper'
 import { Button } from '../components/ui/button'
+import { FilterPopover } from '../components/shared/FilterPopover'
+import { TableSearch } from '../components/shared/TableSearch'
 import {
     Drawer,
     DrawerContent,
@@ -129,18 +131,11 @@ export default function CustomersPage() {
                 <ManagementHeader
                     title="Customers"
                     description="Manage your relationships, track sales history, and stay on top of overdue payments."
-                    searchValue={search}
-                    onSearchChange={setSearch}
-                    searchPlaceholder="Search customers by name..."
                     addButtonLabel="Add Customer"
                     onAddClick={() => {
                         setFormData({ name: "", owing: "—" })
                         setIsAddOpen(true)
                     }}
-                    filterGroups={filterGroups}
-                    selectedFilterValues={selectedFilters}
-                    onFilterSelectionChange={setSelectedFilters}
-                    onFilterClear={() => setSelectedFilters([])}
                 />
 
                 <InsightWhisper insight={intelligenceWhisper} />
@@ -181,9 +176,28 @@ export default function CustomersPage() {
                 </div>
 
                 {/* Main Content */}
+                <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30 ml-1">Relationship List</p>
+
+                        <div className="flex items-center gap-3 font-sans">
+                            <TableSearch
+                                value={search}
+                                onChange={setSearch}
+                                placeholder="Search by name..."
+                            />
+                            <FilterPopover
+                                groups={filterGroups}
+                                selectedValues={selectedFilters}
+                                onSelectionChange={setSelectedFilters}
+                                onClear={() => setSelectedFilters([])}
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 {isMobile ? (
                     <div className="space-y-3">
-                        <p className="text-sm font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Relationship List</p>
                         {filteredCustomers.map((customer, index) => (
                             <ListCard
                                 key={customer.id}

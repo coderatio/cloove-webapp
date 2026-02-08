@@ -9,8 +9,8 @@ import { FilterPopover, FilterGroup } from "./FilterPopover"
 interface ManagementHeaderProps {
     title: string
     description?: string
-    searchValue: string
-    onSearchChange: (value: string) => void
+    searchValue?: string
+    onSearchChange?: (value: string) => void
     searchPlaceholder?: string
     filterGroups?: FilterGroup[]
     selectedFilterValues?: string[]
@@ -59,28 +59,30 @@ export function ManagementHeader({
                 )}
             </div>
 
-            <div className="flex items-center gap-3">
-                <div className="relative flex-1 group">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                        <Search className="w-4 h-4 text-brand-accent/40 group-focus-within:text-brand-green transition-colors" />
+            {searchValue !== undefined && onSearchChange && (
+                <div className="flex items-center gap-3">
+                    <div className="relative flex-1 group">
+                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                            <Search className="w-4 h-4 text-brand-accent/40 group-focus-within:text-brand-green transition-colors" />
+                        </div>
+                        <input
+                            type="text"
+                            value={searchValue}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            placeholder={searchPlaceholder}
+                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/40 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all placeholder:text-brand-accent/30 text-brand-deep dark:text-brand-cream"
+                        />
                     </div>
-                    <input
-                        type="text"
-                        value={searchValue}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        placeholder={searchPlaceholder}
-                        className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/40 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all placeholder:text-brand-accent/30 text-brand-deep dark:text-brand-cream"
-                    />
+                    {filterGroups && onFilterSelectionChange && onFilterClear && (
+                        <FilterPopover
+                            groups={filterGroups}
+                            selectedValues={selectedFilterValues}
+                            onSelectionChange={onFilterSelectionChange}
+                            onClear={onFilterClear}
+                        />
+                    )}
                 </div>
-                {filterGroups && onFilterSelectionChange && onFilterClear && (
-                    <FilterPopover
-                        groups={filterGroups}
-                        selectedValues={selectedFilterValues}
-                        onSelectionChange={onFilterSelectionChange}
-                        onClear={onFilterClear}
-                    />
-                )}
-            </div>
+            )}
         </div>
     )
 }
