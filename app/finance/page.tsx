@@ -197,25 +197,23 @@ export default function FinancePage() {
                                     <Wallet className="w-48 h-48 text-brand-gold" />
                                 </div>
 
-                                <div className="relative z-10 space-y-8">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
-                                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30">Business Balance</p>
-                                        </div>
-                                        <h2 className="text-6xl font-serif font-medium text-brand-deep dark:text-brand-cream tracking-tight">{walletBalance}</h2>
+                                <div className="relative z-10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30">Business Balance</p>
                                     </div>
+                                    <h2 className="text-6xl font-serif font-medium text-brand-deep dark:text-brand-cream tracking-tight">{walletBalance}</h2>
+                                </div>
 
-                                    <div className="flex gap-4">
-                                        <Button className="flex-1 h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
-                                            <ArrowUpRight className="w-6 h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
-                                            Withdraw
-                                        </Button>
-                                        <Button variant="outline" className="flex-1 h-16 rounded-2xl border-brand-deep/10 bg-white/50 dark:bg-white/5 font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
-                                            <ArrowDownRight className="w-6 h-6 text-brand-green" />
-                                            Add Funds
-                                        </Button>
-                                    </div>
+                                <div className="relative z-10 flex gap-4">
+                                    <Button className="flex-1 h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
+                                        <ArrowUpRight className="w-6 h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
+                                        Withdraw
+                                    </Button>
+                                    <Button variant="outline" className="flex-1 h-16 rounded-2xl border-brand-deep/10 bg-white/50 dark:bg-white/5 font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
+                                        <ArrowDownRight className="w-6 h-6 text-brand-green" />
+                                        Add Funds
+                                    </Button>
                                 </div>
                             </GlassCard>
 
