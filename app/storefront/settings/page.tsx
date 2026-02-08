@@ -10,7 +10,7 @@ import { toast } from "sonner"
 
 export default function StorefrontSettings() {
     return (
-        <div className="space-y-8 max-w-5xl">
+        <div className="space-y-8 max-w-5xl mx-auto">
             {/* General Settings */}
             <section className="space-y-4">
                 <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">General Configuration</h2>
