@@ -24,12 +24,12 @@ const secondaryNavItems = [
 
 const moreItems = [
     { href: "/customers", icon: Users, label: "Customers" },
-    { href: "/stores", icon: LayoutGrid, label: "Manage Stores" },
+    { href: "/stores", icon: LayoutGrid, label: "Stores" },
     { href: "/inventory", icon: Package, label: "Inventory" },
-    { href: "/staff", icon: ShieldCheck, label: "Staff Management" },
-    { href: "/notifications", icon: Bell, label: "Notifications" },
+    { href: "/staff", icon: ShieldCheck, label: "Staff" },
+    { href: "/storefront", icon: ShoppingBag, label: "Storefront" },
     { href: "/settings", icon: Settings, label: "Settings" },
-    { href: "/help", icon: HelpCircle, label: "Help & Support" },
+    // { href: "/help", icon: HelpCircle, label: "Help & Support" },
 ]
 
 export function MobileNav() {
@@ -159,7 +159,7 @@ export function MobileNav() {
                     </DrawerStickyHeader>
                     <div className="p-6 pb-12">
                         <div className="grid grid-cols-2 gap-4">
-                            {[...mainNavItems, ...secondaryNavItems, ...moreItems].map((item) => (
+                            {[...mainNavItems, ...moreItems].map((item) => (
                                 <Link
                                     key={item.href}
                                     href={item.href}

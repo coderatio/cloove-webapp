@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import * as React from "react"
 import { MobileNav } from "./mobile-nav"
 import { Sidebar } from "./sidebar"
@@ -51,8 +52,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 {!isAssistantPage && (
                     <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-white/10 dark:border-white/5">
                         <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green text-brand-cream shadow-sm">
-                                <span className="font-serif font-bold">C</span>
+                            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green text-brand-cream shadow-sm overflow-hidden">
+                                <Image
+                                    src="/images/logo-white.png"
+                                    alt="Cloove"
+                                    fill
+                                    className="object-contain p-1.5"
+                                />
                             </div>
                             <BusinessSwitcher />
                         </div>
