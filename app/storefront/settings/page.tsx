@@ -29,7 +29,7 @@ export default function StorefrontSettings() {
                             <span className="text-brand-deep/60 dark:text-brand-cream/60 font-mono text-sm">clooveai.com/b/</span>
                             <Input
                                 defaultValue="adebayo-textiles"
-                                className="font-mono text-brand-green font-medium border-brand-deep/5 dark:border-white/10 dark:bg-white/5 h-12 rounded-xl flex-1"
+                                className="font-mono text-brand-green dark:text-emerald-400 font-medium border-brand-deep/5 dark:border-white/10 dark:bg-white/5 h-12 rounded-xl flex-1"
                             />
                         </div>
                     </div>
@@ -112,7 +112,7 @@ export default function StorefrontSettings() {
             </section>
 
             <div className="sticky bottom-4 flex justify-end">
-                <Button className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold px-8 h-14 shadow-xl hover:scale-105 transition-all">
+                <Button className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-14 shadow-xl hover:scale-105 transition-all">
                     <Save className="w-4 h-4 mr-2" />
                     Save Configuration
                 </Button>

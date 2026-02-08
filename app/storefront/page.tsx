@@ -43,7 +43,7 @@ export default function StorefrontOverview() {
                             <Button
                                 size="sm"
                                 onClick={handleCopy}
-                                className="h-9 px-4 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-lg hover:scale-105 transition-all"
+                                className="h-9 px-4 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold shadow-lg hover:scale-105 transition-all"
                             >
                                 {isCopied ? "Copied!" : "Copy"}
                             </Button>
@@ -79,7 +79,7 @@ export default function StorefrontOverview() {
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Store Views (Today)</p>
                     <div className="space-y-1">
                         <p className="text-3xl font-serif text-brand-deep dark:text-brand-cream">128</p>
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-brand-green">
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-brand-green dark:text-emerald-400">
                             <TrendingUp className="w-3 h-3" />
                             <span>+12% vs yesterday</span>
                         </div>
@@ -127,23 +127,23 @@ export default function StorefrontOverview() {
                     </div>
 
                     <div className="space-y-3">
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-green/5 dark:bg-brand-green/10 border border-brand-green/10">
-                            <div className="h-5 w-5 rounded-full bg-brand-green/20 flex items-center justify-center text-brand-green text-[10px] font-bold">✓</div>
-                            <span className="text-sm font-medium text-brand-deep dark:text-brand-cream line-through opacity-60">Create your store URL</span>
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-green/5 dark:bg-emerald-400/10 border border-brand-green/10 dark:border-emerald-400/20">
+                            <div className="h-5 w-5 rounded-full bg-brand-green/20 dark:bg-emerald-400/20 flex items-center justify-center text-brand-green dark:text-emerald-400 text-[10px] font-bold">✓</div>
+                            <span className="text-sm font-medium text-brand-deep dark:text-emerald-400/80 line-through opacity-60 dark:opacity-80">Create your store URL</span>
                         </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-green/5 dark:bg-brand-green/10 border border-brand-green/10">
-                            <div className="h-5 w-5 rounded-full bg-brand-green/20 flex items-center justify-center text-brand-green text-[10px] font-bold">✓</div>
-                            <span className="text-sm font-medium text-brand-deep dark:text-brand-cream line-through opacity-60">Add first 5 products</span>
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-green/5 dark:bg-emerald-400/10 border border-brand-green/10 dark:border-emerald-400/20">
+                            <div className="h-5 w-5 rounded-full bg-brand-green/20 dark:bg-emerald-400/20 flex items-center justify-center text-brand-green dark:text-emerald-400 text-[10px] font-bold">✓</div>
+                            <span className="text-sm font-medium text-brand-deep dark:text-emerald-400/80 line-through opacity-60 dark:opacity-80">Add first 5 products</span>
                         </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-cream/40 dark:bg-white/5 border border-brand-deep/5 hover:bg-brand-cream/60 transition-colors cursor-pointer group">
-                            <div className="h-5 w-5 rounded-full border border-brand-deep/20 dark:border-white/20 group-hover:border-brand-deep/40" />
-                            <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">Add a store logo and cover image</span>
-                            <Button size="sm" variant="ghost" className="ml-auto text-xs h-7">Start</Button>
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-cream/40 dark:bg-white/5 border border-brand-deep/5 hover:bg-brand-cream/60 dark:hover:bg-emerald-400/5 dark:hover:border-emerald-400/20 transition-all cursor-pointer group">
+                            <div className="h-5 w-5 rounded-full border border-brand-deep/20 dark:border-white/40 group-hover:border-brand-deep/40 dark:group-hover:border-emerald-400 transition-colors" />
+                            <span className="text-sm font-medium text-brand-deep dark:text-brand-cream group-hover:dark:text-white transition-colors">Add a store logo and cover image</span>
+                            <Button size="sm" variant="ghost" className="ml-auto text-xs h-7 text-brand-deep dark:text-emerald-400 font-bold hover:bg-brand-deep/5 dark:hover:bg-emerald-400/10">Start</Button>
                         </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-cream/40 dark:bg-white/5 border border-brand-deep/5 hover:bg-brand-cream/60 transition-colors cursor-pointer group">
-                            <div className="h-5 w-5 rounded-full border border-brand-deep/20 dark:border-white/20 group-hover:border-brand-deep/40" />
-                            <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">Configure "About Us" page</span>
-                            <Button size="sm" variant="ghost" className="ml-auto text-xs h-7">Start</Button>
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-cream/40 dark:bg-white/5 border border-brand-deep/5 hover:bg-brand-cream/60 dark:hover:bg-emerald-400/5 dark:hover:border-emerald-400/20 transition-all cursor-pointer group">
+                            <div className="h-5 w-5 rounded-full border border-brand-deep/20 dark:border-white/40 group-hover:border-brand-deep/40 dark:group-hover:border-emerald-400 transition-colors" />
+                            <span className="text-sm font-medium text-brand-deep dark:text-brand-cream group-hover:dark:text-white transition-colors">Configure "About Us" page</span>
+                            <Button size="sm" variant="ghost" className="ml-auto text-xs h-7 text-brand-deep dark:text-emerald-400 font-bold hover:bg-brand-deep/5 dark:hover:bg-emerald-400/10">Start</Button>
                         </div>
                     </div>
                 </GlassCard>

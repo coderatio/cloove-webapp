@@ -27,7 +27,7 @@ export default function StorefrontCustomization() {
                 {/* Brand Identity */}
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-brand-green/10 text-brand-green">
+                        <div className="p-2 rounded-lg bg-brand-green/10 text-brand-green dark:bg-emerald-400/10 dark:text-emerald-400">
                             <Palette className="w-5 h-5" />
                         </div>
                         <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Brand Identity</h2>
@@ -41,7 +41,7 @@ export default function StorefrontCustomization() {
                                     {logo ? (
                                         <img src={logo} alt="Logo" className="w-full h-full object-cover" />
                                     ) : (
-                                        <span className="text-xs text-brand-accent/40 dark:text-white/40 font-medium group-hover:text-brand-green transition-colors">Upload</span>
+                                        <span className="text-xs text-brand-accent/40 dark:text-white/40 font-medium group-hover:text-brand-green dark:group-hover:text-emerald-400 transition-colors">Upload</span>
                                     )}
                                     {logo && (
                                         <button
@@ -94,7 +94,7 @@ export default function StorefrontCustomization() {
                 </section>
 
                 <div className="flex justify-end pt-4">
-                    <Button className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold px-8 h-12 shadow-xl hover:scale-105 transition-all">
+                    <Button className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-12 shadow-xl hover:scale-105 transition-all">
                         Save Changes
                     </Button>
                 </div>
