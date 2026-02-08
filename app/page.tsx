@@ -12,9 +12,17 @@ import { Package, Clock, AlertCircle } from "lucide-react"
 
 // Mock Data
 const dashboardData = {
-  totalSales: "₦1,250,000",
-  trend: "+12% vs last week",
-  trendDirection: "up" as const,
+  wallet: {
+    balance: "₦0.00",
+    isVerified: false,
+    label: "Wallet Balance"
+  },
+  sales: {
+    value: "₦1,250,000",
+    trend: "+12% vs last week",
+    trendDirection: "up" as const,
+    label: "Total Sales (This Week)"
+  },
   insight: (
     <>
       You sold more <span className="text-brand-green dark:text-brand-gold font-bold">rice</span> this week significantly. Great job.
@@ -89,10 +97,8 @@ export default function Home() {
         {/* Hero Section - The "Pulse" */}
         <section>
           <DashboardHero
-            value={dashboardData.totalSales}
-            trend={dashboardData.trend}
-            trendDirection={dashboardData.trendDirection}
-            label="Total Sales (This Week)"
+            sales={dashboardData.sales}
+            wallet={dashboardData.wallet}
           />
         </section>
 
