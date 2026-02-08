@@ -24,6 +24,7 @@ import {
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '../components/shared/ManagementHeader'
 import { InsightWhisper } from '../components/dashboard/InsightWhisper'
+import { useStore } from '../components/StoreProvider'
 import { Button } from '../components/ui/button'
 import {
     Drawer,
@@ -49,6 +50,7 @@ const initialTransactions = [
 
 export default function FinancePage() {
     const isMobile = useIsMobile()
+    const { stores, currentStore, setCurrentStore } = useStore()
     const [transactions, setTransactions] = React.useState(initialTransactions)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
@@ -56,6 +58,10 @@ export default function FinancePage() {
     const [isRequerying, setIsRequerying] = React.useState(false)
 
     const filterGroups = [
+        {
+            title: "Store Location",
+            options: stores.map(s => ({ label: s.name, value: s.id }))
+        },
         {
             title: "Transaction Status",
             options: [
@@ -80,7 +86,7 @@ export default function FinancePage() {
 
     const filteredTransactions = transactions.filter(t => {
         const matchesSearch = t.customer.toLowerCase().includes(search.toLowerCase()) || t.id.toLowerCase().includes(search.toLowerCase())
-        const matchesFilters = selectedFilters.length === 0 || selectedFilters.includes(t.status) || selectedFilters.includes(t.type)
+        const matchesFilters = selectedFilters.length === 0 || selectedFilters.includes(t.status) || selectedFilters.includes(t.type) || selectedFilters.includes(currentStore.id)
         return matchesSearch && matchesFilters
     })
 
@@ -164,7 +170,7 @@ export default function FinancePage() {
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Finance"
-                    description="Monitor cash flow, manage your business wallet, and reconcile transactions effortlessly."
+                    description={`Monitor cash flow and reconcile transactions for ${currentStore.name}.`}
                 />
 
                 <div className="space-y-6">

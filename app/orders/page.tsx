@@ -10,6 +10,7 @@ import { ShoppingBag, TrendingUp, Trash2, ReceiptText } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '../components/shared/ManagementHeader'
 import { InsightWhisper } from '../components/dashboard/InsightWhisper'
+import { useStore } from '../components/StoreProvider'
 import { Button } from '../components/ui/button'
 import { FilterPopover } from '../components/shared/FilterPopover'
 import { TableSearch } from '../components/shared/TableSearch'
@@ -33,12 +34,17 @@ const initialOrders = [
 
 export default function OrdersPage() {
     const isMobile = useIsMobile()
+    const { stores, currentStore, setCurrentStore } = useStore()
     const [orders, setOrders] = React.useState(initialOrders)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [viewingOrder, setViewingOrder] = React.useState<any>(null)
 
     const filterGroups = [
+        {
+            title: "Store Location",
+            options: stores.map(s => ({ label: s.name, value: s.id }))
+        },
         {
             title: "Order Status",
             options: [
@@ -107,7 +113,7 @@ export default function OrdersPage() {
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Orders"
-                    description="Monitor your sales pipeline, track order fulfillment, and review historical transactions."
+                    description={`Monitor sales pipeline and track order fulfillment for ${currentStore.name}.`}
                 />
 
                 <InsightWhisper insight={intelligenceWhisper} />

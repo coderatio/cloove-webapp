@@ -27,6 +27,8 @@ const mockStores: Store[] = [
 ]
 
 interface StoreContextType {
+    businessName: string
+    businessLogo?: string
     allStores: Store
     stores: Store[]
     currentStore: Store
@@ -71,6 +73,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     return (
         <StoreContext.Provider value={{
+            businessName: "Cloove Fashion",
             allStores,
             stores,
             currentStore,

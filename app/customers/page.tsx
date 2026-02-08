@@ -10,6 +10,7 @@ import { AlertCircle, Users, Trash2 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '../components/shared/ManagementHeader'
 import { InsightWhisper } from '../components/dashboard/InsightWhisper'
+import { useStore } from '../components/StoreProvider'
 import { Button } from '../components/ui/button'
 import { FilterPopover } from '../components/shared/FilterPopover'
 import { TableSearch } from '../components/shared/TableSearch'
@@ -33,6 +34,7 @@ const initialCustomers = [
 
 export default function CustomersPage() {
     const isMobile = useIsMobile()
+    const { stores, currentStore, setCurrentStore } = useStore()
     const [customers, setCustomers] = React.useState(initialCustomers)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
@@ -40,6 +42,10 @@ export default function CustomersPage() {
     const [editingItem, setEditingItem] = React.useState<any>(null)
 
     const filterGroups = [
+        {
+            title: "Store Location",
+            options: stores.map(s => ({ label: s.name, value: s.id }))
+        },
         {
             title: "Account Status",
             options: [
@@ -130,7 +136,7 @@ export default function CustomersPage() {
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Customers"
-                    description="Manage your relationships, track sales history, and stay on top of overdue payments."
+                    description={`Manage customer relationships and track credit history for ${currentStore.name}.`}
                     addButtonLabel="Add Customer"
                     onAddClick={() => {
                         setFormData({ name: "", owing: "—" })
@@ -296,6 +302,6 @@ export default function CustomersPage() {
                     </DrawerContent>
                 </Drawer>
             </div>
-        </PageTransition>
+        </PageTransition >
     )
 }

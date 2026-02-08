@@ -10,6 +10,7 @@ import { AlertTriangle, Package, Trash2 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '../components/shared/ManagementHeader'
 import { InsightWhisper } from '../components/dashboard/InsightWhisper'
+import { useStore } from '../components/StoreProvider'
 import { Button } from '../components/ui/button'
 import { FilterPopover } from '../components/shared/FilterPopover'
 import { TableSearch } from '../components/shared/TableSearch'
@@ -39,6 +40,7 @@ const initialInventory = [
 
 export default function InventoryPage() {
     const isMobile = useIsMobile()
+    const { stores, currentStore, setCurrentStore } = useStore()
     const [inventory, setInventory] = React.useState(initialInventory)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
@@ -46,6 +48,10 @@ export default function InventoryPage() {
     const [editingItem, setEditingItem] = React.useState<any>(null)
 
     const filterGroups = [
+        {
+            title: "Store Location",
+            options: stores.map(s => ({ label: s.name, value: s.id }))
+        },
         {
             title: "Status",
             options: [
@@ -74,13 +80,15 @@ export default function InventoryPage() {
     const filteredInventory = inventory.filter(item => {
         const matchesSearch = item.product.toLowerCase().includes(search.toLowerCase())
 
-        const activeStatuses = selectedFilters.filter(f => filterGroups[0].options.some(o => o.value === f))
-        const activeCategories = selectedFilters.filter(f => filterGroups[1].options.some(o => o.value === f))
+        const activeStores = selectedFilters.filter(f => filterGroups[0].options.some(o => o.value === f))
+        const activeStatuses = selectedFilters.filter(f => filterGroups[1].options.some(o => o.value === f))
+        const activeCategories = selectedFilters.filter(f => filterGroups[2].options.some(o => o.value === f))
 
+        const matchesStore = activeStores.length === 0 || activeStores.includes(currentStore.id) // Simplified for mock
         const matchesStatus = activeStatuses.length === 0 || activeStatuses.includes(item.status)
         const matchesCategory = activeCategories.length === 0 || activeCategories.includes(item.category)
 
-        return matchesSearch && matchesStatus && matchesCategory
+        return matchesSearch && matchesStatus && matchesCategory && matchesStore
     })
 
     const handleAdd = (e: React.FormEvent) => {
@@ -161,7 +169,7 @@ export default function InventoryPage() {
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Inventory"
-                    description="Track your stock levels, manage product catalog, and monitor inventory value."
+                    description={`Track stock levels for ${currentStore.name}. Manage product catalog and monitor inventory value.`}
                     addButtonLabel="Add Product"
                     onAddClick={() => {
                         setFormData({ product: "", stock: 0, price: "", category: "Fabric" })
