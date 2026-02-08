@@ -12,6 +12,7 @@ const initialMessages = [
     {
         id: 1,
         role: 'assistant' as const,
+        title: "Assistant",
         content: "Hello. I'm analysing your store's performance. How can I help you today?"
     },
     {
@@ -22,9 +23,20 @@ const initialMessages = [
     {
         id: 3,
         role: 'assistant' as const,
+        title: "Weekly Performance",
         content: "You've made ₦127,800 this week from 34 orders. That's a 23% increase from last week. Wednesday was your substantial day."
     },
 ]
+
+// Helper to simulate smart title generation
+const getSmartTitle = (content: string) => {
+    if (content.toLowerCase().includes("checking") || content.toLowerCase().includes("analysing")) return "System Status"
+    if (content.toLowerCase().includes("sales") || content.includes("₦")) return "Sales Report"
+    if (content.toLowerCase().includes("stock") || content.toLowerCase().includes("inventory")) return "Inventory Update"
+    if (content.toLowerCase().includes("debt") || content.toLowerCase().includes("owing")) return "Debtor Analysis"
+    // Fallback to first 3 words
+    return content.split(' ').slice(0, 3).join(' ') + "..."
+}
 
 export default function AssistantPage() {
     const [messages, setMessages] = useState(initialMessages)
@@ -48,6 +60,7 @@ export default function AssistantPage() {
             const aiMsg = {
                 id: Date.now() + 1,
                 role: 'assistant' as const,
+                title: "Processing Data",
                 content: "I'm checking your latest data..."
             }
             setMessages(prev => [...prev, aiMsg])
@@ -56,10 +69,11 @@ export default function AssistantPage() {
 
     return (
         <PageTransition>
-            <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-100px)] relative md:pt-0">
+            {/* Mobile: Full height (100dvh). Desktop: Calculated height. */}
+            <div className="flex flex-col h-[100dvh] md:h-[calc(100vh-100px)] relative md:pt-0 pb-20 md:pb-0 max-w-4xl mx-auto">
 
-                {/* Header - Minimalist */}
-                <div className="flex-shrink-0 mb-6 text-center md:text-left mt-8 md:mt-0">
+                {/* Header - Minimalist (Hidden on Mobile) */}
+                <div className="flex-shrink-0 mb-6 text-center md:text-left mt-8 md:mt-0 hidden md:block">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 text-brand-gold text-xs font-medium mb-3 border border-brand-gold/20">
                         <Sparkles className="w-3 h-3" />
                         <span>Cloove Intelligence</span>
@@ -80,20 +94,28 @@ export default function AssistantPage() {
                                 className={cn("flex w-full", msg.role === 'user' ? "justify-end" : "justify-start")}
                             >
                                 <div className={cn(
-                                    "max-w-[85%] md:max-w-[70%] text-sm md:text-base leading-relaxed p-5 rounded-2xl shadow-sm relative overflow-hidden group transition-all",
+                                    "text-sm md:text-base leading-relaxed relative overflow-hidden transition-all",
                                     msg.role === 'user'
-                                        ? "bg-brand-deep text-brand-cream rounded-br-sm dark:bg-brand-gold dark:text-brand-deep"
-                                        : "bg-white/80 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 text-brand-deep dark:text-brand-cream rounded-bl-sm"
+                                        ? "bg-brand-deep text-brand-cream rounded-2xl rounded-br-sm dark:bg-brand-gold dark:text-brand-deep shadow-sm max-w-[85%] md:max-w-[70%] p-5"
+                                        : "w-full bg-transparent text-brand-deep dark:text-brand-cream px-1"
                                 )}>
-                                    {/* Icon Indicator */}
-                                    <div className={cn(
-                                        "absolute top-4 w-6 h-6 rounded-full flex items-center justify-center opacity-50",
-                                        msg.role === 'user' ? "right-4 bg-white/10" : "left-4 bg-brand-deep/5 dark:bg-white/10"
-                                    )}>
-                                        {msg.role === 'assistant' ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
-                                    </div>
+                                    {/* User Icon Indicator */}
+                                    {/* {msg.role === 'user' && (
+                                        <div className="absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center opacity-50 bg-white/10">
+                                            <User className="w-3 h-3" />
+                                        </div>
+                                    )} */}
 
-                                    <div className={cn("relative z-10", msg.role === 'assistant' ? "pl-8" : "pr-8")}>
+                                    {/* Assistant Title - Dynamic Gradient */}
+                                    {msg.role === 'assistant' && (
+                                        <div className="mb-2">
+                                            <span className="block text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-brand-deep to-brand-green dark:from-brand-green dark:to-brand-cream bg-clip-text text-transparent w-fit">
+                                                {(msg as any).title || getSmartTitle(msg.content)}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className={cn("relative z-10", msg.role === 'user' ? "pr-8" : "")}>
                                         {msg.content}
                                     </div>
                                 </div>
@@ -104,7 +126,7 @@ export default function AssistantPage() {
                 </div>
 
                 {/* Input Area - Floating Glass */}
-                <div className="pt-4 sticky bottom-0 z-20">
+                <div className="fixed bottom-4 left-4 right-4 z-20 md:sticky md:bottom-8 border-t-0 md:border-t-0 md:w-full">
                     <GlassCard className="p-2 flex items-center gap-2 rounded-full border-brand-deep/5 dark:border-white/10 bg-white/60 dark:bg-black/40 shadow-xl backdrop-blur-xl">
                         <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-2 pl-4">
                             <input

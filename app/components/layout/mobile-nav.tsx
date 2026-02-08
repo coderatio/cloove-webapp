@@ -26,7 +26,7 @@ export function MobileNav() {
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="fixed bottom-6 right-6 z-50 md:hidden"
+                className="fixed top-6 right-6 z-50 md:hidden"
             >
                 <button
                     onClick={() => setIsMenuOpen(true)}

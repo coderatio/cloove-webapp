@@ -59,7 +59,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     </div>
                 )}
 
-                <div className="px-4 pb-24 pt-4 md:p-0">
+                <div className={cn("px-4 pt-4 md:p-0", isAssistantPage ? "pb-0" : "pb-24")}>
                     {children}
                 </div>
             </main>
