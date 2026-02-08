@@ -18,6 +18,7 @@ const mockInventory = [
     { id: '8', product: 'Velvet (Black)', stock: 8, price: '₦6,800', status: 'In Stock' },
 ]
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const columns: any[] = [
     { key: 'product', header: 'Product' },
     {

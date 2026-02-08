@@ -5,7 +5,6 @@ import { useIsMobile } from '../hooks/useMediaQuery'
 import { PageTransition } from '../components/layout/page-transition'
 import { ListCard } from '../components/ui/list-card'
 import { GlassCard } from '../components/ui/glass-card'
-import { motion } from 'framer-motion'
 import { Filter } from 'lucide-react'
 import { Button } from '../components/ui/button'
 
@@ -21,6 +20,7 @@ const mockOrders = [
 ]
 
 // Fix columns type to be compatible with DataTable
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const columns: any[] = [
     { key: 'date', header: 'Date' },
     { key: 'customer', header: 'Customer' },

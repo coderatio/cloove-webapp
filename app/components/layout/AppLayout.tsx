@@ -3,7 +3,6 @@
 import * as React from "react"
 import { MobileNav } from "./mobile-nav"
 import { Sidebar } from "./sidebar"
-import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 import { StoreSwitcher } from "../shared/store-switcher"
 import { UserCircle } from "lucide-react"
 
@@ -12,7 +11,6 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-    const isDesktop = useMediaQuery("(min-width: 768px)")
     const [mounted, setMounted] = React.useState(false)
 
     React.useEffect(() => {
@@ -28,11 +26,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
 
     return (
-        <div className="min-h-screen bg-[#fdfcf8] dark:bg-[#070e0b] text-foreground transition-colors duration-300">
+        <div className="min-h-screen bg-brand-cream dark:bg-brand-deep text-foreground transition-colors duration-300">
             {/* Background Gradient Mesh (Optional "Premium" touch) */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-400/20 blur-3xl filter" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-amber-400/20 blur-3xl filter" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-green/20 blur-3xl filter" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/20 blur-3xl filter" />
             </div>
 
             <Sidebar />
@@ -41,7 +39,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 {/* Mobile Header */}
                 <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-white/10">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-900 text-emerald-100">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green text-brand-cream">
                             <span className="font-serif font-bold">C</span>
                         </div>
                         <StoreSwitcher />

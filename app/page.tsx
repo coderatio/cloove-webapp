@@ -1,37 +1,63 @@
 "use client"
 
-import { GlassCard } from "./components/ui/glass-card"
-import Link from 'next/link'
 import { useStore } from './components/StoreProvider'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import { PageTransition } from "./components/layout/page-transition"
 import { motion } from "framer-motion"
-import { ArrowRight, TrendingUp, AlertTriangle, Package, CheckCircle2 } from "lucide-react"
+import { DashboardHero } from "./components/dashboard/DashboardHero"
+import { InsightWhisper } from "./components/dashboard/InsightWhisper"
+import { ActionRow } from "./components/dashboard/ActionRow"
+import { ActivityStream, ActivityItem } from "./components/dashboard/ActivityStream"
+import { Package, Clock, AlertCircle } from "lucide-react"
 
-// Mock data
-const mockData = {
-  todaySales: '₦45,200',
-  orderCount: 12,
-  unpaidAmount: '₦28,500',
-  unpaidCustomers: 3,
-  topProduct: 'Ankara Fabric',
-  topProductSales: 8,
-  lowStockItems: 2,
-}
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
+// Mock Data
+const dashboardData = {
+  totalSales: "₦1,250,000",
+  trend: "+12% vs last week",
+  trendDirection: "up" as const,
+  insight: (
+    <>
+      You sold more <span className="text-brand-green font-bold">rice</span> this week significantly. Great job.
+    </>
+  ),
+  actions: [
+    { label: "Pending Orders", count: 3, type: "urgent" as const, href: "/orders", icon: <Clock className="w-4 h-4" /> },
+    { label: "Low Stock", count: 2, type: "warning" as const, href: "/inventory", icon: <Package className="w-4 h-4" /> },
+    { label: "Overdue Debts", count: 5, type: "urgent" as const, href: "/customers", icon: <AlertCircle className="w-4 h-4" /> },
+  ],
+  activities: [
+    {
+      id: "1",
+      type: "sale" as const,
+      description: "Rice Bag (50kg)",
+      amount: "₦12,000",
+      timeAgo: "2m ago",
+      customer: "Walk-in"
+    },
+    {
+      id: "2",
+      type: "payment" as const,
+      description: "Debt Payment",
+      amount: "₦5,000",
+      timeAgo: "1h ago",
+      customer: "Johnson"
+    },
+    {
+      id: "3",
+      type: "debt" as const,
+      description: "New Debt Recorded",
+      amount: "₦2,500",
+      timeAgo: "3h ago",
+      customer: "Mama Nkechi"
+    },
+    {
+      id: "4",
+      type: "customer" as const,
+      description: "New Customer Added",
+      timeAgo: "5h ago",
+      customer: "Chinedu Okeke"
     }
-  }
-}
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
+  ] as ActivityItem[]
 }
 
 export default function Home() {
@@ -40,159 +66,57 @@ export default function Home() {
 
   return (
     <PageTransition>
-      {/* Header */}
-      <header className="mb-8 pl-1">
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          <p className="text-sm font-medium text-muted-foreground mb-1">
-            {isDesktop ? 'Good afternoon,' : currentStore.name}
-          </p>
-          <h1 className="font-serif text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-            Business Overview
-          </h1>
-        </motion.div>
-      </header>
+      <div className="max-w-3xl mx-auto space-y-8 pb-20">
 
-      {/* Key Metrics */}
-      <motion.section
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
-      >
-        <motion.div variants={item}>
-          <GlassCard hoverEffect className="p-5 h-full flex flex-col justify-between group cursor-pointer border-l-4 border-l-emerald-500">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Today's Sales</span>
-              <TrendingUp className="h-4 w-4 text-emerald-500" />
-            </div>
+        {/* Header - Simple & Clean */}
+        <header className="pt-4 px-2">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-baseline justify-between"
+          >
             <div>
-              <div className="font-serif text-2xl md:text-3xl font-medium text-foreground group-hover:scale-105 transition-transform origin-left">
-                {mockData.todaySales}
-              </div>
-              <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1 font-medium bg-emerald-100 dark:bg-emerald-900/30 inline-block px-2 py-0.5 rounded-full">
-                +12% vs yesterday
-              </div>
+              <p className="text-sm text-brand-accent/80 font-medium">
+                {isDesktop ? 'Good afternoon,' : 'Welcome,'}
+              </p>
+              <h1 className="font-serif text-3xl md:text-3xl text-brand-deep">
+                {currentStore.name}
+              </h1>
             </div>
-          </GlassCard>
-        </motion.div>
+          </motion.div>
+        </header>
 
-        <motion.div variants={item}>
-          <GlassCard hoverEffect className="p-5 h-full flex flex-col justify-between group cursor-pointer border-l-4 border-l-amber-500">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Unpaid</span>
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-            </div>
-            <div>
-              <div className="font-serif text-2xl md:text-3xl font-medium text-foreground group-hover:scale-105 transition-transform origin-left">
-                {mockData.unpaidAmount}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {mockData.unpaidCustomers} customers owing
-              </div>
-            </div>
-          </GlassCard>
-        </motion.div>
+        {/* Hero Section - The "Pulse" */}
+        <section>
+          <DashboardHero
+            value={dashboardData.totalSales}
+            trend={dashboardData.trend}
+            trendDirection={dashboardData.trendDirection}
+            label="Total Sales (This Week)"
+          />
+        </section>
 
-        <motion.div variants={item}>
-          <GlassCard hoverEffect className="p-5 h-full flex flex-col justify-between group cursor-pointer">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Top Product</span>
-              <CheckCircle2 className="h-4 w-4 text-blue-500" />
-            </div>
-            <div>
-              <div className="font-serif text-xl md:text-2xl font-medium text-foreground truncate group-hover:scale-105 transition-transform origin-left">
-                {mockData.topProduct}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {mockData.topProductSales} units sold today
-              </div>
-            </div>
-          </GlassCard>
-        </motion.div>
+        {/* Insight Whisper - The "Intelligence" */}
+        <section>
+          <InsightWhisper
+            insight={dashboardData.insight}
+            actionLabel="View Report"
+            actionLink="/assistant"
+          />
+        </section>
 
-        <motion.div variants={item}>
-          <GlassCard hoverEffect className="p-5 h-full flex flex-col justify-between group cursor-pointer border-l-4 border-l-rose-500 bg-rose-50/50 dark:bg-rose-950/10">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Low Stock</span>
-              <Package className="h-4 w-4 text-rose-500" />
-            </div>
-            <div>
-              <div className="font-serif text-2xl md:text-3xl font-medium text-foreground group-hover:scale-105 transition-transform origin-left">
-                {mockData.lowStockItems}
-              </div>
-              <div className="text-xs text-rose-600 dark:text-rose-400 mt-1 font-medium">
-                Restock needed
-              </div>
-            </div>
-          </GlassCard>
-        </motion.div>
-      </motion.section>
+        {/* Quick Actions - The "Control" */}
+        <section>
+          <h3 className="font-serif text-lg text-brand-deep mb-4 px-2">Needs Attention</h3>
+          <ActionRow items={dashboardData.actions} />
+        </section>
 
-      {/* AI Insight */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="mb-8"
-      >
-        <GlassCard className="p-6 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
-            <TrendingUp className="h-32 w-32 rotate-12" />
-          </div>
+        {/* Activity Stream - The "Truth" */}
+        <section>
+          <ActivityStream activities={dashboardData.activities} />
+        </section>
 
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
-                <span className="text-[10px] text-white font-bold">AI</span>
-              </div>
-              <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Insight</span>
-            </div>
-
-            <p className="text-lg md:text-xl text-foreground font-medium leading-relaxed max-w-2xl">
-              "You made <span className="text-emerald-600 dark:text-emerald-400 font-bold">23% more sales</span> this week. {isDesktop && 'Ankara Fabric is your bestseller — consider restocking soon.'}"
-            </p>
-
-            <Link
-              href="/assistant"
-              className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group/link"
-            >
-              Detailed report
-              <ArrowRight className="h-4 w-4 transition-transform group-hover/link:translate-x-1" />
-            </Link>
-          </div>
-        </GlassCard>
-      </motion.section>
-
-      {/* Quick Actions (Desktop only mostly) */}
-      {isDesktop && (
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <h2 className="text-lg font-semibold mb-4 text-foreground px-1">Quick Actions</h2>
-          <div className="flex gap-4">
-            <Link href="/orders" className="flex-1 group">
-              <GlassCard hoverEffect className="p-4 flex items-center justify-center gap-2 bg-white/40 dark:bg-white/5 border-dashed border-2 border-border/50 group-hover:border-solid hover:border-emerald-500/50">
-                <span className="font-medium">View all orders</span>
-              </GlassCard>
-            </Link>
-            <Link href="/customers" className="flex-1 group">
-              <GlassCard hoverEffect className="p-4 flex items-center justify-center gap-2 bg-white/40 dark:bg-white/5 border-dashed border-2 border-border/50 group-hover:border-solid hover:border-amber-500/50">
-                <span className="font-medium">See who owes you</span>
-              </GlassCard>
-            </Link>
-            <Link href="/inventory" className="flex-1 group">
-              <GlassCard hoverEffect className="p-4 flex items-center justify-center gap-2 bg-white/40 dark:bg-white/5 border-dashed border-2 border-border/50 group-hover:border-solid hover:border-rose-500/50">
-                <span className="font-medium">Check inventory</span>
-              </GlassCard>
-            </Link>
-          </div>
-        </motion.section>
-      )}
+      </div>
     </PageTransition>
   )
 }

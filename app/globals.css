@@ -65,6 +65,55 @@
   --color-border: var(--color-cloove-border);
   --color-input: var(--color-cloove-border);
   --color-ring: var(--color-cloove-green);
+
+  /* Website Brand Tokens Port */
+  --color-brand-deep: #062c21;
+  --color-brand-green: #0b3d2e;
+  --color-brand-gold: #d4af37;
+  --color-brand-cream: #fdfcf8;
+  --color-brand-accent: #1e4d3f;
+
+  /* Ported Animations & Keyframes */
+  --animate-spin-slow: spin 8s linear infinite;
+  --animate-float: custom-float 6s ease-in-out infinite;
+  --animate-slide-in: slideIn 0.3s ease-out;
+  --animate-pulse-glow: pulse-glow 2s infinite;
+
+  @keyframes custom-float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pulse-glow {
+
+    0%,
+    100% {
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+    }
+
+    50% {
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+    }
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -148,8 +197,56 @@ h6 {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   LAYOUT UTILITIES
+   LAYOUT UTILITIES & PORTED CLASSES
    ───────────────────────────────────────────────────────────────────────────── */
+
+.glass-nav {
+  background: rgba(253, 252, 248, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(11, 61, 46, 0.05);
+}
+
+.dark .glass-nav {
+  background: rgba(2, 26, 18, 0.85);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 4px 6px -1px rgba(6, 44, 33, 0.02),
+    0 2px 4px -1px rgba(6, 44, 33, 0.02),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.dark .glass-panel {
+  background: rgba(6, 44, 33, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.hero-gradient {
+  background: radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--color-brand-green), white 95%) 0%, var(--color-brand-cream) 100%);
+}
+
+.dark .hero-gradient {
+  background: radial-gradient(circle at 70% 30%, var(--color-brand-deep) 0%, var(--background) 100%);
+}
+
+.bento-card {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+.bento-card:hover {
+  transform: translateY(-8px);
+}
 
 .dashboard-layout {
   display: flex;

@@ -17,6 +17,7 @@ const mockCustomers = [
 ]
 
 // Fix columns type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const columns: any[] = [
     { key: 'name', header: 'Customer' },
     { key: 'orders', header: 'Orders' },

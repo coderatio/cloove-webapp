@@ -47,7 +47,7 @@ export function Sidebar() {
             {/* Header */}
             <div className={cn("flex items-center p-4", isCollapsed ? "justify-center" : "justify-between gap-4")}>
                 <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-800 to-emerald-950 text-emerald-100 shadow-inner">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-green to-brand-accent text-brand-cream shadow-inner">
                         <span className="font-serif text-xl font-bold">C</span>
                     </div>
                     {!isCollapsed && (
@@ -78,13 +78,13 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20",
+                                "group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors hover:bg-brand-green/5 dark:hover:bg-brand-green/20",
                                 isActive
-                                    ? "bg-emerald-900/5 text-emerald-900 dark:bg-emerald-400/10 dark:text-emerald-100"
+                                    ? "bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream"
                                     : "text-muted-foreground"
                             )}
                         >
-                            <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-emerald-700 dark:text-emerald-400")} />
+                            <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-brand-green dark:text-brand-gold")} />
                             {!isCollapsed && (
                                 <motion.span
                                     initial={{ opacity: 0, x: -10 }}
@@ -109,7 +109,7 @@ export function Sidebar() {
                     className="w-full justify-start px-2 hover:bg-transparent"
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 >
-                    <div className={cn("flex items-center justify-center rounded-lg p-2 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/20", isCollapsed ? "w-10" : "w-auto")}>
+                    <div className={cn("flex items-center justify-center rounded-lg p-2 transition-colors hover:bg-brand-green/5 dark:hover:bg-brand-green/20", isCollapsed ? "w-10" : "w-auto")}>
                         {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                     </div>
                     {!isCollapsed && <span className="ml-2 text-sm font-medium">Toggle Theme</span>}
@@ -125,7 +125,7 @@ export function Sidebar() {
                 </Button>
 
                 <div className={cn("mt-4 flex items-center gap-3 rounded-xl bg-black/5 dark:bg-white/5 p-2", isCollapsed && "justify-center p-0 bg-transparent")}>
-                    <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-medium text-xs">
+                    <div className="h-8 w-8 rounded-full bg-brand-green/20 text-brand-green flex items-center justify-center font-medium text-xs">
                         AO
                     </div>
                     {!isCollapsed && (
