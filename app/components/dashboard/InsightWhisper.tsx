@@ -5,8 +5,10 @@ import { Sparkles, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
 
+import { Markdown } from "../ui/markdown"
+
 interface InsightWhisperProps {
-    insight: React.ReactNode
+    insight: string
     actionLabel?: string
     actionLink?: string
     className?: string
@@ -28,9 +30,9 @@ export function InsightWhisper({ insight, actionLabel, actionLink, className }: 
                 </div>
 
                 <div className="flex-1">
-                    <p className="text-lg md:text-xl text-brand-deep dark:text-brand-cream/90 leading-relaxed font-medium">
-                        {insight}
-                    </p>
+                    <div className="text-lg md:text-xl text-brand-deep dark:text-brand-cream/90 leading-relaxed font-medium transition-all">
+                        <Markdown content={insight} />
+                    </div>
                 </div>
 
                 {actionLabel && actionLink && (

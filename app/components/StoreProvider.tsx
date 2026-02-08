@@ -9,14 +9,25 @@ interface Store {
     isDefault: boolean
 }
 
+// Virtual "All Stores" constant
+export const ALL_STORES_ID = 'all-stores'
+
+const allStores: Store = {
+    id: ALL_STORES_ID,
+    name: 'All Stores',
+    isDefault: false
+}
+
 // Mock stores data
 const mockStores: Store[] = [
+    allStores,
     { id: '1', name: 'Main Store', location: 'Lekki Phase 1', isDefault: true },
     { id: '2', name: 'Ikeja Branch', location: 'Computer Village', isDefault: false },
     { id: '3', name: 'Abuja Store', location: 'Wuse 2', isDefault: false },
 ]
 
 interface StoreContextType {
+    allStores: Store
     stores: Store[]
     currentStore: Store
     setCurrentStore: (store: Store) => void
@@ -28,7 +39,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const [currentStore, setCurrentStore] = useState<Store>(mockStores[0])
 
     return (
-        <StoreContext.Provider value={{ stores: mockStores, currentStore, setCurrentStore }}>
+        <StoreContext.Provider value={{ allStores, stores: mockStores, currentStore, setCurrentStore }}>
             {children}
         </StoreContext.Provider>
     )

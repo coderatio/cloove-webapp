@@ -7,6 +7,7 @@ import { Sparkles, Bot, User, ArrowUp } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { Button } from '../components/ui/button'
 import { GlassCard } from '../components/ui/glass-card'
+import { Markdown } from '../components/ui/markdown'
 
 const initialMessages = [
     {
@@ -116,7 +117,10 @@ export default function AssistantPage() {
                                     )}
 
                                     <div className={cn("relative z-10", msg.role === 'user' ? "pr-8" : "")}>
-                                        {msg.content}
+                                        <Markdown
+                                            content={msg.content}
+                                            className={msg.role === 'user' ? "text-brand-cream dark:text-brand-deep prose-invert" : ""}
+                                        />
                                     </div>
                                 </div>
                             </motion.div>
