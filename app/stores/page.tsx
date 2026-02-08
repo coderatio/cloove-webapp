@@ -150,7 +150,7 @@ export default function StoresPage() {
                                         className="flex-1 rounded-xl border-brand-accent/10 hover:bg-brand-accent/5 dark:border-white/10 dark:hover:bg-white/5 transition-all text-sm font-semibold"
                                     >
                                         <Settings2 className="w-4 h-4 mr-2" />
-                                        Store Settings
+                                        Settings
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -268,26 +268,30 @@ export default function StoresPage() {
                 >
                     <VaulDrawer.Portal>
                         <VaulDrawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
-                        <VaulDrawer.Content className="fixed bottom-0 inset-x-0 z-50 mt-24 flex h-fit max-h-[90vh] max-w-4xl mx-auto flex-col rounded-t-[32px] bg-brand-cream dark:bg-[#021a12] outline-none overflow-hidden">
-                            <div className="flex-1 overflow-y-auto p-8 pb-12">
-                                <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10" />
-                                <div className="max-w-lg mx-auto space-y-8">
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
-                                            <VaulDrawer.Title className="font-serif text-3xl font-medium text-brand-deep dark:text-brand-cream">
-                                                {viewingActivities?.name}
-                                            </VaulDrawer.Title>
-                                            <VaulDrawer.Description className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
-                                                Recent activity and updates
-                                            </VaulDrawer.Description>
-                                        </div>
-                                        <VaulDrawer.Close asChild>
-                                            <button className="p-2 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors">
-                                                <X className="w-6 h-6" />
-                                            </button>
-                                        </VaulDrawer.Close>
+                        <VaulDrawer.Content className="fixed bottom-0 inset-x-0 z-50 mt-24 flex h-[80vh] max-h-[90vh] max-w-4xl mx-auto flex-col rounded-t-[32px] bg-brand-cream dark:bg-[#021a12] outline-none overflow-hidden">
+                            {/* Fixed Header */}
+                            <div className="shrink-0 p-8 pb-4 bg-brand-cream/80 dark:bg-[#021a12]/80 backdrop-blur-md border-b border-brand-deep/5 dark:border-white/5 z-20">
+                                <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10" />
+                                <div className="max-w-lg mx-auto flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <VaulDrawer.Title className="font-serif text-3xl font-medium text-brand-deep dark:text-brand-cream">
+                                            {viewingActivities?.name}
+                                        </VaulDrawer.Title>
+                                        <VaulDrawer.Description className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                                            Recent activity and updates
+                                        </VaulDrawer.Description>
                                     </div>
+                                    <VaulDrawer.Close asChild>
+                                        <button className="p-2 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors">
+                                            <X className="w-6 h-6" />
+                                        </button>
+                                    </VaulDrawer.Close>
+                                </div>
+                            </div>
 
+                            {/* Scrollable Content */}
+                            <div className="flex-1 overflow-y-auto p-8 pt-6 pb-12">
+                                <div className="max-w-lg mx-auto space-y-8">
                                     <div className="space-y-4">
                                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Live Feed</h3>
                                         <ActivityStream activities={mockStoreActivities} />
