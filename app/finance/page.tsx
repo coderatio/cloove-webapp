@@ -217,7 +217,7 @@ export default function FinancePage() {
                                 </div>
                             </GlassCard>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <GlassCard className="p-6 flex items-center gap-4 border-brand-deep/5 bg-white/40 dark:bg-white/5 backdrop-blur-md">
                                     <div className="h-12 w-12 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green shadow-inner">
                                         <ArrowRightLeft className="h-6 w-6" />

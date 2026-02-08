@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, MessageSquare, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid, Banknote, ShieldCheck } from "lucide-react"
+import { Home, Sparkles, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid, Banknote, ShieldCheck } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
     Drawer,
@@ -87,7 +87,7 @@ export function MobileNav() {
                                             : "bg-brand-gold text-brand-deep hover:scale-105"
                                     )}
                                 >
-                                    <MessageSquare className="h-7 w-7 fill-current/10" strokeWidth={2.5} />
+                                    <Sparkles className="h-7 w-7 fill-current/10" strokeWidth={2.5} />
                                     {/* Pulse effect if on other pages */}
                                     {pathname !== "/assistant" && (
                                         <div className="absolute inset-0 rounded-full bg-brand-gold animate-ping opacity-20 pointer-events-none" />

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Home,
-    MessageSquare,
+    Sparkles,
     Package,
     Users,
     ShoppingBag,
@@ -38,7 +38,7 @@ const navGroups = [
         label: "Main",
         items: [
             { href: "/", icon: Home, label: "Overview" },
-            { href: "/assistant", icon: MessageSquare, label: "Assistant" },
+            { href: "/assistant", icon: Sparkles, label: "Assistant" },
         ]
     },
     {
