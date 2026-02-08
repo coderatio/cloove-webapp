@@ -17,8 +17,15 @@ import {
 } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { cn } from "../lib/utils"
-import { Drawer as VaulDrawer } from "vaul"
 import { ActivityStream } from "../components/dashboard/ActivityStream"
+import {
+    Drawer,
+    DrawerContent,
+    DrawerStickyHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerClose,
+} from "../components/ui/drawer"
 
 // Mock activities for detailed view
 const mockStoreActivities = [
@@ -185,7 +192,7 @@ export default function StoresPage() {
                 </div>
 
                 {/* Add/Edit Store Drawer */}
-                <VaulDrawer.Root
+                <Drawer
                     open={isAddOpen || !!editingStore}
                     onOpenChange={(open) => {
                         if (!open) {
@@ -196,125 +203,106 @@ export default function StoresPage() {
                         }
                     }}
                 >
-                    <VaulDrawer.Portal>
-                        <VaulDrawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
-                        <VaulDrawer.Content className="fixed bottom-0 inset-x-0 z-50 mt-24 flex h-fit max-w-4xl mx-auto flex-col rounded-t-[32px] bg-brand-cream dark:bg-[#021a12] outline-none">
-                            <div className="p-8 pb-12">
-                                <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10" />
-                                <div className="space-y-6 max-w-lg mx-auto">
-                                    <div className="text-center space-y-2">
-                                        <VaulDrawer.Title className="font-serif text-3xl font-medium text-brand-deep dark:text-brand-cream">
-                                            {editingStore ? "Edit Branch" : "Add New Branch"}
-                                        </VaulDrawer.Title>
-                                        <VaulDrawer.Description className="text-brand-accent/60 dark:text-brand-cream/60">
-                                            {editingStore ? "Update details for this location." : "Expand your business with a new location."}
-                                        </VaulDrawer.Description>
+                    <DrawerContent>
+                        <div className="p-8 pb-12">
+                            <div className="space-y-6 max-w-lg mx-auto">
+                                <div className="text-center space-y-2">
+                                    <DrawerTitle>
+                                        {editingStore ? "Edit Branch" : "Add New Branch"}
+                                    </DrawerTitle>
+                                    <DrawerDescription>
+                                        {editingStore ? "Update details for this location." : "Expand your business with a new location."}
+                                    </DrawerDescription>
+                                </div>
+
+                                <form onSubmit={editingStore ? handleUpdate : handleAdd} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Store Name</label>
+                                        <input
+                                            autoFocus
+                                            value={newName}
+                                            onChange={(e) => setNewName(e.target.value)}
+                                            placeholder="e.g. Victoria Island Branch"
+                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Location</label>
+                                        <input
+                                            value={newLocation}
+                                            onChange={(e) => setNewLocation(e.target.value)}
+                                            placeholder="e.g. 15 Admiralty Way, Lekki"
+                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                        />
                                     </div>
 
-                                    <form onSubmit={editingStore ? handleUpdate : handleAdd} className="space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Store Name</label>
-                                            <input
-                                                autoFocus
-                                                value={newName}
-                                                onChange={(e) => setNewName(e.target.value)}
-                                                placeholder="e.g. Victoria Island Branch"
-                                                className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Location</label>
-                                            <input
-                                                value={newLocation}
-                                                onChange={(e) => setNewLocation(e.target.value)}
-                                                placeholder="e.g. 15 Admiralty Way, Lekki"
-                                                className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
-                                            />
-                                        </div>
+                                    <div className="flex gap-4 pt-4">
+                                        <DrawerClose asChild>
+                                            <Button variant="outline" className="flex-1 rounded-2xl h-14">Cancel</Button>
+                                        </DrawerClose>
+                                        <Button type="submit" className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
+                                            {editingStore ? "Save Changes" : "Create Store"}
+                                        </Button>
+                                    </div>
+                                </form>
 
-                                        <div className="flex gap-4 pt-4">
-                                            <VaulDrawer.Close asChild>
-                                                <Button variant="outline" className="flex-1 rounded-2xl h-14">Cancel</Button>
-                                            </VaulDrawer.Close>
-                                            <Button type="submit" className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
-                                                {editingStore ? "Save Changes" : "Create Store"}
-                                            </Button>
-                                        </div>
-                                    </form>
-
-                                    {editingStore && (
-                                        <div className="pt-4 flex justify-center">
-                                            <button
-                                                onClick={() => {
-                                                    deleteStore(editingStore.id);
-                                                    setEditingStore(null);
-                                                }}
-                                                className="text-xs font-bold text-danger/60 hover:text-danger hover:underline transition-all"
-                                            >
-                                                Remove this location from business
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                                {editingStore && (
+                                    <div className="pt-4 flex justify-center">
+                                        <button
+                                            onClick={() => {
+                                                deleteStore(editingStore.id);
+                                                setEditingStore(null);
+                                            }}
+                                            className="text-xs font-bold text-danger/60 hover:text-danger hover:underline transition-all"
+                                        >
+                                            Remove this location from business
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                        </VaulDrawer.Content>
-                    </VaulDrawer.Portal>
-                </VaulDrawer.Root>
+                        </div>
+                    </DrawerContent>
+                </Drawer>
 
                 {/* Activity Detail Drawer */}
-                <VaulDrawer.Root
+                <Drawer
                     open={!!viewingActivities}
                     onOpenChange={(open) => !open && setViewingActivities(null)}
                 >
-                    <VaulDrawer.Portal>
-                        <VaulDrawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
-                        <VaulDrawer.Content className="fixed bottom-0 inset-x-0 z-50 mt-24 flex h-[80vh] max-h-[90vh] max-w-4xl mx-auto flex-col rounded-t-[32px] bg-brand-cream dark:bg-[#021a12] outline-none overflow-hidden">
-                            {/* Fixed Header */}
-                            <div className="shrink-0 p-8 pb-4 bg-brand-cream/80 dark:bg-[#021a12]/80 backdrop-blur-md border-b border-brand-deep/5 dark:border-white/5 z-20">
-                                <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10" />
-                                <div className="max-w-lg mx-auto flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <VaulDrawer.Title className="font-serif text-3xl font-medium text-brand-deep dark:text-brand-cream">
-                                            {viewingActivities?.name}
-                                        </VaulDrawer.Title>
-                                        <VaulDrawer.Description className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
-                                            Recent activity and updates
-                                        </VaulDrawer.Description>
-                                    </div>
-                                    <VaulDrawer.Close asChild>
-                                        <button className="p-2 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors">
-                                            <X className="w-6 h-6" />
-                                        </button>
-                                    </VaulDrawer.Close>
+                    <DrawerContent className="h-[80vh]">
+                        <DrawerStickyHeader>
+                            <DrawerTitle>
+                                {viewingActivities?.name}
+                            </DrawerTitle>
+                            <DrawerDescription>
+                                Recent activity and updates
+                            </DrawerDescription>
+                        </DrawerStickyHeader>
+
+                        <div className="flex-1 overflow-y-auto p-8 pt-6 pb-12">
+                            <div className="max-w-lg mx-auto space-y-8">
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Live Feed</h3>
+                                    <ActivityStream activities={mockStoreActivities} />
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Location Details</h3>
+                                    <GlassCard className="p-6 space-y-4">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-brand-accent/60">Branch Address</span>
+                                            <span className="font-medium text-brand-deep dark:text-brand-cream">{viewingActivities?.location}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-brand-accent/60">Manager</span>
+                                            <span className="font-medium text-brand-deep dark:text-brand-cream">Bolanle Ade</span>
+                                        </div>
+                                    </GlassCard>
                                 </div>
                             </div>
-
-                            {/* Scrollable Content */}
-                            <div className="flex-1 overflow-y-auto p-8 pt-6 pb-12">
-                                <div className="max-w-lg mx-auto space-y-8">
-                                    <div className="space-y-4">
-                                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Live Feed</h3>
-                                        <ActivityStream activities={mockStoreActivities} />
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Location Details</h3>
-                                        <GlassCard className="p-6 space-y-4">
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-brand-accent/60">Branch Address</span>
-                                                <span className="font-medium text-brand-deep dark:text-brand-cream">{viewingActivities?.location}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-brand-accent/60">Manager</span>
-                                                <span className="font-medium text-brand-deep dark:text-brand-cream">Bolanle Ade</span>
-                                            </div>
-                                        </GlassCard>
-                                    </div>
-                                </div>
-                            </div>
-                        </VaulDrawer.Content>
-                    </VaulDrawer.Portal>
-                </VaulDrawer.Root>
+                        </div>
+                    </DrawerContent>
+                </Drawer>
             </div>
         </PageTransition>
     )

@@ -2,9 +2,15 @@
 
 import * as React from "react"
 import { Check, ChevronsUpDown, Store, LayoutGrid } from "lucide-react"
-import { Drawer as VaulDrawer } from "vaul"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
+import {
+    Drawer,
+    DrawerContent,
+    DrawerStickyHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "../ui/drawer"
 
 import { useStore, ALL_STORES_ID } from "../StoreProvider"
 import { useMediaQuery } from "@/app/hooks/useMediaQuery"
@@ -93,67 +99,63 @@ export function StoreSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
     // Let's make it flexible.
 
     return (
-        <VaulDrawer.Root open={open} onOpenChange={setOpen}>
-            <VaulDrawer.Trigger asChild>
-                <button className="flex items-center gap-2 rounded-full border border-border/40 bg-background/40 px-3 py-1.5 text-sm font-medium backdrop-blur-sm">
-                    <Store className="h-3.5 w-3.5 text-muted-foreground" />
+        <Drawer open={open} onOpenChange={setOpen}>
+            <DrawerTrigger asChild>
+                <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium backdrop-blur-sm text-brand-cream ring-1 ring-white/5">
+                    <Store className="h-3.5 w-3.5 text-brand-cream/60" />
                     <span className="max-w-[100px] truncate">{currentStore.name}</span>
                     <ChevronsUpDown className="h-3 w-3 opacity-50" />
                 </button>
-            </VaulDrawer.Trigger>
-            <VaulDrawer.Portal>
-                <VaulDrawer.Overlay className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm" />
-                <VaulDrawer.Content className="bg-white dark:bg-zinc-900 flex flex-col rounded-t-[10px] h-[400px] mt-24 fixed bottom-0 left-0 right-0 z-50 outline-none">
-                    <div className="p-4 bg-white dark:bg-zinc-900 rounded-t-[10px] flex-1">
-                        <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-700 mb-8" />
-                        <div className="max-w-md mx-auto">
-                            <VaulDrawer.Title className="font-medium mb-4 text-zinc-900 dark:text-zinc-100">
-                                Switch Store
-                            </VaulDrawer.Title>
-                            <div className="flex flex-col gap-2">
-                                {stores.map((store) => {
-                                    const isSelected = store.id === currentStore.id
-                                    const isItemAllStores = store.id === ALL_STORES_ID
-                                    return (
-                                        <button
-                                            key={store.id}
-                                            onClick={() => {
-                                                setCurrentStore(store)
-                                                setOpen(false)
-                                            }}
-                                            className={cn(
-                                                "flex items-center gap-3 rounded-xl p-3 text-left transition-colors",
-                                                isSelected
-                                                    ? "bg-brand-green/5 dark:bg-brand-gold/10 text-brand-deep dark:text-brand-cream ring-1 ring-brand-gold/20"
-                                                    : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "flex h-10 w-10 items-center justify-center rounded-full",
-                                                isSelected ? "bg-brand-gold text-brand-deep" : "bg-zinc-100 text-zinc-500"
-                                            )}>
-                                                {isItemAllStores ? <LayoutGrid className="h-5 w-5" /> : <Store className="h-5 w-5" />}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="font-medium">{store.name}</div>
-                                                {store.location && <div className="text-sm text-muted-foreground">{store.location}</div>}
-                                            </div>
-                                            {isSelected && <Check className="h-5 w-5 text-brand-gold" />}
-                                        </button>
-                                    )
-                                })}
-                            </div>
+            </DrawerTrigger>
+            <DrawerContent>
+                <DrawerStickyHeader>
+                    <DrawerTitle>Switch Store</DrawerTitle>
+                </DrawerStickyHeader>
+                <div className="p-4 flex-1">
+                    <div className="max-w-md mx-auto">
+                        <div className="flex flex-col gap-2">
+                            {stores.map((store) => {
+                                const isSelected = store.id === currentStore.id
+                                const isItemAllStores = store.id === ALL_STORES_ID
+                                return (
+                                    <button
+                                        key={store.id}
+                                        onClick={() => {
+                                            setCurrentStore(store)
+                                            setOpen(false)
+                                        }}
+                                        className={cn(
+                                            "flex items-center gap-3 rounded-xl p-3 text-left transition-colors",
+                                            isSelected
+                                                ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/20"
+                                                : "hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep dark:text-brand-cream/80"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "flex h-10 w-10 items-center justify-center rounded-full",
+                                            isSelected ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/5 dark:bg-white/5 text-brand-accent/40"
+                                        )}>
+                                            {isItemAllStores ? <LayoutGrid className="h-5 w-5" /> : <Store className="h-5 w-5" />}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="font-medium text-brand-deep dark:text-brand-cream">{store.name}</div>
+                                            {store.location && <div className="text-sm text-brand-accent/60 dark:text-brand-cream/40">{store.location}</div>}
+                                        </div>
+                                        {isSelected && <Check className="h-5 w-5 text-brand-gold" />}
+                                    </button>
+                                )
+                            })}
                         </div>
                     </div>
-                    <div className="p-4 bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 mt-auto">
-                        <div className="flex gap-6 justify-center max-w-md mx-auto">
-                            <a className="text-xs text-zinc-600 flex items-center gap-0.25" href="https://github.com/emilkowalski/vaul" target="_blank">
-                                Manage stores
-                            </a>
-                        </div>
+                </div>
+                <div className="p-4 bg-brand-deep/5 dark:bg-white/5 border-t border-brand-deep/5 dark:border-white/5 mt-auto">
+                    <div className="flex gap-6 justify-center max-w-md mx-auto">
+                        <a className="text-xs text-brand-accent/60 dark:text-brand-cream/40 hover:text-brand-gold transition-colors" href="/stores">
+                            Manage stores
+                        </a>
                     </div>
-                </VaulDrawer.Content>
-            </VaulDrawer.Portal>
-        </VaulDrawer.Root>
+                </div>
+            </DrawerContent>
+        </Drawer>
     )
 }

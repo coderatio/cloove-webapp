@@ -4,6 +4,8 @@ import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 import { cn } from "@/app/lib/utils"
 
+import { X } from "lucide-react"
+
 const Drawer = ({
     shouldScaleBackground = true,
     ...props
@@ -27,7 +29,7 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DrawerPrimitive.Overlay
         ref={ref}
-        className={cn("fixed inset-0 z-50 bg-black/80", className)}
+        className={cn("fixed inset-0 z-50 bg-black/40 backdrop-blur-sm", className)}
         {...props}
     />
 ))
@@ -42,7 +44,8 @@ const DrawerContent = React.forwardRef<
         <DrawerPrimitive.Content
             ref={ref}
             className={cn(
-                "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[32px] border-none outline-none focus:outline-none focus:ring-0",
+                "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[96vh] flex-col rounded-t-[32px] border-none outline-none focus:outline-none focus:ring-0 bg-brand-cream dark:bg-[#021a12] shadow-2xl",
+                "max-w-4xl mx-auto", // Cloove standard width
                 className
             )}
             {...props}
@@ -52,6 +55,36 @@ const DrawerContent = React.forwardRef<
     </DrawerPortal>
 ))
 DrawerContent.displayName = "DrawerContent"
+
+const DrawerStickyHeader = ({
+    className,
+    children,
+    showClose = true,
+    ...props
+}: React.HTMLAttributes<HTMLDivElement> & { showClose?: boolean }) => (
+    <div
+        className={cn(
+            "shrink-0 p-8 pb-4 bg-brand-cream/80 dark:bg-[#021a12]/80 backdrop-blur-md border-b border-brand-deep/5 dark:border-white/5 z-20 rounded-t-[32px]",
+            className
+        )}
+        {...props}
+    >
+        <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10" />
+        <div className="max-w-lg mx-auto flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+                {children}
+            </div>
+            {showClose && (
+                <DrawerClose asChild>
+                    <button className="p-2 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0">
+                        <X className="w-6 h-6" />
+                    </button>
+                </DrawerClose>
+            )}
+        </div>
+    </div>
+)
+DrawerStickyHeader.displayName = "DrawerStickyHeader"
 
 const DrawerHeader = ({
     className,
@@ -82,7 +115,7 @@ const DrawerTitle = React.forwardRef<
     <DrawerPrimitive.Title
         ref={ref}
         className={cn(
-            "text-lg font-semibold leading-none tracking-tight",
+            "font-serif text-3xl font-medium text-brand-deep dark:text-brand-cream leading-none tracking-tight",
             className
         )}
         {...props}
@@ -96,7 +129,7 @@ const DrawerDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DrawerPrimitive.Description
         ref={ref}
-        className={cn("text-sm text-muted-foreground", className)}
+        className={cn("text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed", className)}
         {...props}
     />
 ))
@@ -110,6 +143,7 @@ export {
     DrawerClose,
     DrawerContent,
     DrawerHeader,
+    DrawerStickyHeader,
     DrawerFooter,
     DrawerTitle,
     DrawerDescription,

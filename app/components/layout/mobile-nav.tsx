@@ -5,8 +5,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Home, MessageSquare, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid } from "lucide-react"
-import { Drawer as VaulDrawer } from "vaul"
 import { cn } from "@/app/lib/utils"
+import {
+    Drawer,
+    DrawerContent,
+    DrawerStickyHeader,
+    DrawerTitle,
+} from "../ui/drawer"
 
 const mainNavItems = [
     { href: "/", icon: Home, label: "Home" },
@@ -145,50 +150,46 @@ export function MobileNav() {
             </AnimatePresence>
 
             {/* More Menu Drawer */}
-            <VaulDrawer.Root open={isMoreOpen} onOpenChange={setIsMoreOpen} snapPoints={[1, 1]}>
-                <VaulDrawer.Portal>
-                    <VaulDrawer.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
-                    <VaulDrawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex h-fit flex-col rounded-t-[32px] bg-white dark:bg-[#021a12] outline-none">
-                        <div className="flex-1 rounded-t-[32px] p-6 pb-12">
-                            <div className="mx-auto mb-6 h-1.5 w-12 shrink-0 rounded-full bg-zinc-300 dark:bg-brand-gold/20" />
-                            <VaulDrawer.Title className="mb-6 font-serif text-2xl font-semibold text-brand-deep dark:text-brand-gold">
-                                Menu
-                            </VaulDrawer.Title>
-                            <div className="grid grid-cols-2 gap-4">
-                                {[...mainNavItems, ...secondaryNavItems, ...moreItems].map((item) => (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        onClick={() => setIsMoreOpen(false)}
-                                        className={cn(
-                                            "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95",
-                                            pathname === item.href
-                                                ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/30"
-                                                : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "flex h-10 w-10 items-center justify-center rounded-xl",
-                                            pathname === item.href ? "bg-brand-gold text-brand-deep" : "bg-white dark:bg-white/10 shadow-sm"
-                                        )}>
-                                            <item.icon className="h-5 w-5" strokeWidth={2} />
-                                        </div>
-                                        <span className="font-semibold">{item.label}</span>
-                                    </Link>
-                                ))}
-                                <button
-                                    className="flex items-center gap-4 rounded-2xl p-4 bg-red-50 dark:bg-red-500/10 text-red-600 active:scale-95 transition-all"
+            <Drawer open={isMoreOpen} onOpenChange={setIsMoreOpen}>
+                <DrawerContent>
+                    <DrawerStickyHeader>
+                        <DrawerTitle>Menu</DrawerTitle>
+                    </DrawerStickyHeader>
+                    <div className="p-6 pb-12">
+                        <div className="grid grid-cols-2 gap-4">
+                            {[...mainNavItems, ...secondaryNavItems, ...moreItems].map((item) => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => setIsMoreOpen(false)}
+                                    className={cn(
+                                        "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95",
+                                        pathname === item.href
+                                            ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/30"
+                                            : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80"
+                                    )}
                                 >
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-white/10 shadow-sm">
-                                        <LogOut className="h-5 w-5" />
+                                    <div className={cn(
+                                        "flex h-10 w-10 items-center justify-center rounded-xl",
+                                        pathname === item.href ? "bg-brand-gold text-brand-deep" : "bg-white dark:bg-white/10 shadow-sm"
+                                    )}>
+                                        <item.icon className="h-5 w-5" strokeWidth={2} />
                                     </div>
-                                    <span className="font-semibold">Sign Out</span>
-                                </button>
-                            </div>
+                                    <span className="font-semibold">{item.label}</span>
+                                </Link>
+                            ))}
+                            <button
+                                className="flex items-center gap-4 rounded-2xl p-4 bg-red-50 dark:bg-red-500/10 text-red-600 active:scale-95 transition-all"
+                            >
+                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-white/10 shadow-sm">
+                                    <LogOut className="h-5 w-5" />
+                                </div>
+                                <span className="font-semibold">Sign Out</span>
+                            </button>
                         </div>
-                    </VaulDrawer.Content>
-                </VaulDrawer.Portal>
-            </VaulDrawer.Root>
+                    </div>
+                </DrawerContent>
+            </Drawer>
         </>
     )
 }
