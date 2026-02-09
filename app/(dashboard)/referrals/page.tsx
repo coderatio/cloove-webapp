@@ -7,10 +7,10 @@ import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Copy, Wallet, TrendingUp, ArrowUpRight, Clock, CheckCircle2, Plus, Building2, Trash2, MoreVertical, CreditCard, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
-import { PageTransition } from "../components/layout/page-transition"
-import { PinVerificationDrawer } from "../components/security/PinVerificationDrawer"
-import { WithdrawalDrawer } from "../components/referrals/WithdrawalDrawer"
-import { AddBankDrawer } from "../components/referrals/AddBankDrawer"
+import { PageTransition } from "@/app/components/layout/page-transition"
+import { PinVerificationDrawer } from "@/app/components/security/PinVerificationDrawer"
+import { WithdrawalDrawer } from "@/app/components/referrals/WithdrawalDrawer"
+import { AddBankDrawer } from "@/app/components/referrals/AddBankDrawer"
 import {
     DropdownMenu,
     DropdownMenuContent,

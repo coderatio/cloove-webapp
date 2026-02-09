@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useRef, useEffect } from 'react'
-import { PageTransition } from '../components/layout/page-transition'
+import { PageTransition } from '@/app/components/layout/page-transition'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Bot, User, ArrowUp, History, Plus, MessageSquare, Search } from 'lucide-react'
-import { cn } from '../lib/utils'
-import { Button } from '../components/ui/button'
-import { GlassCard } from '../components/ui/glass-card'
-import { Markdown } from '../components/ui/markdown'
+import { cn } from '@/app/lib/utils'
+import { Button } from '@/app/components/ui/button'
+import { GlassCard } from '@/app/components/ui/glass-card'
+import { Markdown } from '@/app/components/ui/markdown'
 import {
     Drawer,
     DrawerContent,
@@ -15,7 +15,7 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerTrigger,
-} from "../components/ui/drawer"
+} from "@/app/components/ui/drawer"
 import { useChat, type UIMessage as AIMessage } from '@ai-sdk/react'
 import { type UIMessagePart, type UIDataTypes, type UITools } from 'ai'
 

@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { GlassCard } from "../components/ui/glass-card"
-import { Button } from "../components/ui/button"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { Button } from "@/app/components/ui/button"
 import Link from "next/link"
 import { Copy, ExternalLink, QrCode, Share2, Eye, ShoppingCart, TrendingUp } from "lucide-react"
-import { useBusiness } from "../components/BusinessProvider"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import { toast } from "sonner"
 
 export default function StorefrontOverview() {

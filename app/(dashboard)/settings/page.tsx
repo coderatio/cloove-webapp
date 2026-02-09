@@ -34,7 +34,7 @@ import {
     DrawerDescription,
 } from "@/app/components/ui/drawer"
 
-import { PageTransition } from "../components/layout/page-transition"
+import { PageTransition } from "@/app/components/layout/page-transition"
 
 type Tab = "business" | "profile" | "billing" | "security"
 

@@ -1,19 +1,19 @@
 "use client"
 
 import * as React from 'react'
-import DataTable from '../components/DataTable'
-import { useIsMobile } from '../hooks/useMediaQuery'
-import { PageTransition } from '../components/layout/page-transition'
-import { ListCard } from '../components/ui/list-card'
-import { GlassCard } from '../components/ui/glass-card'
+import DataTable from '@/app/components/DataTable'
+import { useIsMobile } from '@/app/hooks/useMediaQuery'
+import { PageTransition } from '@/app/components/layout/page-transition'
+import { ListCard } from '@/app/components/ui/list-card'
+import { GlassCard } from '@/app/components/ui/glass-card'
 import { ShoppingBag, TrendingUp, Trash2, ReceiptText } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
-import { ManagementHeader } from '../components/shared/ManagementHeader'
-import { InsightWhisper } from '../components/dashboard/InsightWhisper'
-import { useBusiness } from '../components/BusinessProvider'
-import { Button } from '../components/ui/button'
-import { FilterPopover } from '../components/shared/FilterPopover'
-import { TableSearch } from '../components/shared/TableSearch'
+import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
+import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
+import { useBusiness } from '@/app/components/BusinessProvider'
+import { Button } from '@/app/components/ui/button'
+import { FilterPopover } from '@/app/components/shared/FilterPopover'
+import { TableSearch } from '@/app/components/shared/TableSearch'
 import {
     Drawer,
     DrawerContent,
@@ -21,7 +21,7 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerClose,
-} from "../components/ui/drawer"
+} from "@/app/components/ui/drawer"
 
 const initialOrders = [
     { id: '1', customer: 'Mrs. Adebayo', items: '3 items', total: '₦15,000', status: 'Completed', date: '10:30 AM' },

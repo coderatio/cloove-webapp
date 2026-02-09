@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { GlassCard } from "../../components/ui/glass-card"
-import { Button } from "../../components/ui/button"
-import { Input } from "../../components/ui/input"
-import { Switch } from "../../components/ui/switch"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { Button } from "@/app/components/ui/button"
+import { Input } from "@/app/components/ui/input"
+import { Switch } from "@/app/components/ui/switch"
 import { FileText, Eye, Edit2, Plus, Info, MessageSquare, ShieldCheck, Save, ArrowLeft, Check, ChevronDown } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
@@ -16,7 +16,7 @@ import {
     DrawerDescription,
     DrawerFooter,
     DrawerClose,
-} from "../../components/ui/drawer"
+} from "@/app/components/ui/drawer"
 import { toast } from "sonner"
 
 

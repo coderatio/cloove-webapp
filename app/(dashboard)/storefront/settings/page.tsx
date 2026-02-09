@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { GlassCard } from "../../components/ui/glass-card"
-import { Button } from "../../components/ui/button"
-import { Switch } from "../../components/ui/switch"
-import { Input } from "../../components/ui/input"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { Button } from "@/app/components/ui/button"
+import { Switch } from "@/app/components/ui/switch"
+import { Input } from "@/app/components/ui/input"
 import { AtSign, Globe, Instagram, Phone, Save, Twitter, MessageCircle } from "lucide-react"
 import { toast } from "sonner"
 

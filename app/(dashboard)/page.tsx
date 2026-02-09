@@ -1,21 +1,21 @@
 "use client"
 
-import { useBusiness, ALL_STORES_ID } from './components/BusinessProvider'
-import { useMediaQuery } from './hooks/useMediaQuery'
-import { PageTransition } from "./components/layout/page-transition"
+import { useBusiness, ALL_STORES_ID } from '@/app/components/BusinessProvider'
+import { useMediaQuery } from '@/app/hooks/useMediaQuery'
+import { PageTransition } from "@/app/components/layout/page-transition"
 import { motion } from "framer-motion"
-import { DashboardHero } from "./components/dashboard/DashboardHero"
-import { InsightWhisper } from "./components/dashboard/InsightWhisper"
-import { ActionRow } from "./components/dashboard/ActionRow"
-import { ActivityStream, ActivityItem } from "./components/dashboard/ActivityStream"
+import { DashboardHero } from "@/app/components/dashboard/DashboardHero"
+import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
+import { ActionRow } from "@/app/components/dashboard/ActionRow"
+import { ActivityStream, ActivityItem } from "@/app/components/dashboard/ActivityStream"
 import { Package, Clock, AlertCircle } from "lucide-react"
 import { useState, useEffect } from 'react'
 import { DateRange } from 'react-day-picker'
 import { subDays } from 'date-fns'
-import { DateRangeFilter } from './components/dashboard/DateRangeFilter'
-import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton'
-import { InventoryPulse } from './components/dashboard/InventoryPulse'
-import { SalesVelocity } from './components/dashboard/SalesVelocity'
+import { DateRangeFilter } from '@/app/components/dashboard/DateRangeFilter'
+import { DashboardSkeleton } from '@/app/components/dashboard/DashboardSkeleton'
+import { InventoryPulse } from '@/app/components/dashboard/InventoryPulse'
+import { SalesVelocity } from '@/app/components/dashboard/SalesVelocity'
 
 // Mock Data structure per store
 const storeData: Record<string, any> = {

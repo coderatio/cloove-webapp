@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { PageTransition } from "../components/layout/page-transition"
-import { ManagementHeader } from "../components/shared/ManagementHeader"
-import { ListCard } from "../components/ui/list-card"
-import { GlassCard } from "../components/ui/glass-card"
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
-import { Switch } from "../components/ui/switch"
+import { PageTransition } from "@/app/components/layout/page-transition"
+import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
+import { ListCard } from "@/app/components/ui/list-card"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { Button } from "@/app/components/ui/button"
+import { Input } from "@/app/components/ui/input"
+import { Switch } from "@/app/components/ui/switch"
 import {
     ShieldCheck,
     UserPlus,
@@ -22,7 +22,7 @@ import {
     UserCog,
     Check
 } from "lucide-react"
-import { cn } from "../lib/utils"
+import { cn } from "@/app/lib/utils"
 import {
     Drawer,
     DrawerContent,
@@ -31,7 +31,7 @@ import {
     DrawerDescription,
     DrawerFooter,
     DrawerClose,
-} from "../components/ui/drawer"
+} from "@/app/components/ui/drawer"
 import { toast } from "sonner"
 
 // Mock Roles & Permissions based on backend

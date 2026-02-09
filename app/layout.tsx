@@ -65,9 +65,7 @@ export default function RootLayout({
         >
           <TooltipProvider>
             <BusinessProvider>
-              <AppLayout>
-                {children}
-              </AppLayout>
+              {children}
               <Toaster />
             </BusinessProvider>
           </TooltipProvider>

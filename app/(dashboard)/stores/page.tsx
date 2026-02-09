@@ -2,9 +2,9 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { PageTransition } from "../components/layout/page-transition"
-import { GlassCard } from "../components/ui/glass-card"
-import { useBusiness } from "../components/BusinessProvider"
+import { PageTransition } from "@/app/components/layout/page-transition"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import {
     MapPin,
     Plus,
@@ -14,10 +14,10 @@ import {
     Clock,
     X
 } from "lucide-react"
-import { Button } from "../components/ui/button"
-import { cn } from "../lib/utils"
-import { ActivityStream } from "../components/dashboard/ActivityStream"
-import { TableSearch } from "../components/shared/TableSearch"
+import { Button } from "@/app/components/ui/button"
+import { cn } from "@/app/lib/utils"
+import { ActivityStream } from "@/app/components/dashboard/ActivityStream"
+import { TableSearch } from "@/app/components/shared/TableSearch"
 import {
     Drawer,
     DrawerContent,
@@ -25,7 +25,7 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerClose,
-} from "../components/ui/drawer"
+} from "@/app/components/ui/drawer"
 
 // Mock activities for detailed view
 const mockStoreActivities = [

@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { GlassCard } from "../../components/ui/glass-card"
-import { Button } from "../../components/ui/button"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { Button } from "@/app/components/ui/button"
 import { Upload, Check, Palette, Smartphone, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"

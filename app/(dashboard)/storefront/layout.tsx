@@ -5,7 +5,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { LayoutGrid, Palette, FileText, Settings } from "lucide-react"
-import { PageTransition } from "../components/layout/page-transition"
+import { PageTransition } from "@/app/components/layout/page-transition"
 
 const tabs = [
     { name: "Overview", href: "/storefront", icon: LayoutGrid },

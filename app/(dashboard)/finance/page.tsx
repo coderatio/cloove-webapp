@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from 'react'
-import DataTable from '../components/DataTable'
-import { useIsMobile } from '../hooks/useMediaQuery'
-import { PageTransition } from '../components/layout/page-transition'
-import { ListCard } from '../components/ui/list-card'
-import { GlassCard } from '../components/ui/glass-card'
+import DataTable from '@/app/components/DataTable'
+import { useIsMobile } from '@/app/hooks/useMediaQuery'
+import { PageTransition } from '@/app/components/layout/page-transition'
+import { ListCard } from '@/app/components/ui/list-card'
+import { GlassCard } from '@/app/components/ui/glass-card'
 import {
     Wallet,
     ArrowUpRight,
@@ -22,10 +22,10 @@ import {
     ChevronLeft
 } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
-import { ManagementHeader } from '../components/shared/ManagementHeader'
-import { InsightWhisper } from '../components/dashboard/InsightWhisper'
-import { useBusiness } from '../components/BusinessProvider'
-import { Button } from '../components/ui/button'
+import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
+import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
+import { useBusiness } from '@/app/components/BusinessProvider'
+import { Button } from '@/app/components/ui/button'
 import {
     Drawer,
     DrawerContent,
@@ -33,10 +33,10 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerClose,
-} from "../components/ui/drawer"
+} from "@/app/components/ui/drawer"
 import { motion, AnimatePresence } from 'framer-motion'
-import { FilterPopover } from '../components/shared/FilterPopover'
-import { TableSearch } from '../components/shared/TableSearch'
+import { FilterPopover } from '@/app/components/shared/FilterPopover'
+import { TableSearch } from '@/app/components/shared/TableSearch'
 
 const initialTransactions = [
     { id: 'TX-9021', type: 'Credit', amount: '₦45,000', customer: 'Mrs. Adebayo', status: 'Cleared', date: 'Today, 10:30 AM', method: 'Bank Transfer' },
