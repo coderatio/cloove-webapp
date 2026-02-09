@@ -5,10 +5,19 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { ListCard } from "@/app/components/ui/list-card"
 import { PlanCard } from "@/app/components/billing/PlanCard"
 import { Button } from "@/app/components/ui/button"
-import { CreditCard, Zap, Calendar, AlertCircle, Download } from "lucide-react"
+import { CreditCard, Zap, Calendar, AlertCircle, Download, FileText, X } from "lucide-react"
 import { Progress } from "@/app/components/ui/progress"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
+import {
+    Drawer,
+    DrawerContent,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerClose,
+} from "@/app/components/ui/drawer"
 
 const PLANS = [
     {
@@ -82,6 +91,10 @@ export function BillingSettings() {
     const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null)
     const [billingCycle, setBillingCycle] = useState<"month" | "year">("month")
 
+    // Drawer state for mobile invoice details
+    const [selectedInvoice, setSelectedInvoice] = useState<typeof BILLING_HISTORY[0] | null>(null)
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
     const handlePlanSelect = (planId: string) => {
         setLoadingPlanId(planId)
 
@@ -90,6 +103,16 @@ export function BillingSettings() {
             setCurrentPlanId(planId)
             setLoadingPlanId(null)
             toast.success(`Successfully switched to ${PLANS.find(p => p.id === planId)?.name} Plan`)
+        }, 1500)
+    }
+
+    const handleDownloadInvoice = (invoice: typeof BILLING_HISTORY[0]) => {
+        toast.info("Downloading invoice...", {
+            description: `Invoice #${invoice.id.toUpperCase()} download started.`
+        })
+        setTimeout(() => {
+            toast.success("Invoice downloaded successfully")
+            setIsDrawerOpen(false)
         }, 1500)
     }
 
@@ -243,7 +266,14 @@ export function BillingSettings() {
                                         )}>{item.status}</span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <Button variant="ghost" size="sm" className="h-8">Download</Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8"
+                                            onClick={() => handleDownloadInvoice(item)}
+                                        >
+                                            Download
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}
@@ -261,11 +291,74 @@ export function BillingSettings() {
                             status={item.status}
                             statusColor={item.statusColor}
                             value={item.amount}
-                            onClick={() => { }} // Could trigger download or view details
+                            onClick={() => {
+                                setSelectedInvoice(item)
+                                setIsDrawerOpen(true)
+                            }}
                         />
                     ))}
                 </div>
             </section>
+
+            {/* Mobile Invoice Drawer */}
+            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+                <DrawerContent>
+                    <DrawerHeader className="text-left">
+                        <DrawerTitle>Invoice Details</DrawerTitle>
+                        <DrawerDescription>
+                            Review details for this billing period.
+                        </DrawerDescription>
+                    </DrawerHeader>
+
+                    {selectedInvoice && (
+                        <div className="p-4 space-y-6">
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-brand-deep/5 dark:bg-white/5">
+                                <div className="space-y-1">
+                                    <span className="text-xs text-brand-deep/60 dark:text-brand-cream/60 uppercase tracking-wider font-medium">Status</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                        <span className="text-sm font-bold text-brand-deep dark:text-brand-cream">{selectedInvoice.status}</span>
+                                    </div>
+                                </div>
+                                <div className="text-right space-y-1">
+                                    <span className="text-xs text-brand-deep/60 dark:text-brand-cream/60 uppercase tracking-wider font-medium">Amount</span>
+                                    <div className="text-xl font-serif text-brand-deep dark:text-brand-cream">{selectedInvoice.amount}</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between py-3 border-b border-brand-deep/5 dark:border-white/5">
+                                    <span className="text-sm text-brand-deep/60 dark:text-brand-cream/60">Date</span>
+                                    <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">{selectedInvoice.date}</span>
+                                </div>
+                                <div className="flex justify-between py-3 border-b border-brand-deep/5 dark:border-white/5">
+                                    <span className="text-sm text-brand-deep/60 dark:text-brand-cream/60">Description</span>
+                                    <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">{selectedInvoice.description}</span>
+                                </div>
+                                <div className="flex justify-between py-3 border-b border-brand-deep/5 dark:border-white/5">
+                                    <span className="text-sm text-brand-deep/60 dark:text-brand-cream/60">Invoice ID</span>
+                                    <span className="text-sm font-mono text-brand-deep dark:text-brand-cream">#{selectedInvoice.id.toUpperCase()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <DrawerFooter>
+                        <Button
+                            className="w-full text-base font-bold h-12 rounded-xl bg-brand-deep text-brand-cream dark:bg-brand-cream dark:text-brand-deep"
+                            onClick={() => selectedInvoice && handleDownloadInvoice(selectedInvoice)}
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download Receipt
+                        </Button>
+                        <DrawerClose asChild>
+                            <Button variant="outline" className="w-full h-12 rounded-xl border-brand-deep/10 dark:border-white/10 hover:bg-brand-deep/5 dark:hover:bg-white/5">
+                                Close
+                            </Button>
+                        </DrawerClose>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
         </div>
     )
 }
