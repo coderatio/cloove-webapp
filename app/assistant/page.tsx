@@ -16,21 +16,30 @@ import {
     DrawerDescription,
     DrawerTrigger,
 } from "../components/ui/drawer"
+import { useChat, type UIMessage as AIMessage } from '@ai-sdk/react'
+import { type UIMessagePart, type UIDataTypes, type UITools } from 'ai'
 
-// Vercel AI SDK compatible Message type
-export interface Message {
-    id: string;
-    role: 'user' | 'assistant' | 'system' | 'data' | 'tool';
-    content: string;
-    createdAt?: Date;
-}
-
+// Conversation metadata interface
 interface Conversation {
     id: string;
     title: string;
     date: string;
-    messages: Message[];
+    messages: (Omit<AIMessage, 'parts'> & { parts: UIMessagePart<UIDataTypes, UITools>[], createdAt?: Date })[];
 }
+
+const mockToolParts: UIMessagePart<UIDataTypes, UITools>[] = [
+    {
+        type: 'tool-listInventory',
+        toolCallId: 'inventory-1',
+        state: 'output-available',
+        input: { category: 'Beverages' },
+        output: [
+            { id: 1, name: 'Coca Cola 50cl', stock: 24, price: 300 },
+            { id: 2, name: 'Pepsi 50cl', stock: 12, price: 250 },
+            { id: 3, name: 'Fanta 50cl', stock: 0, price: 250 },
+        ]
+    }
+]
 
 const defaultConversations: Conversation[] = [
     {
@@ -41,51 +50,147 @@ const defaultConversations: Conversation[] = [
             {
                 id: 'm1',
                 role: 'assistant',
-                content: "Hello. I'm analysing your store's performance. How can I help you today?",
-                createdAt: new Date()
+                createdAt: new Date(),
+                parts: [
+                    { type: 'text', text: "Hello. I've analysed your store's performance. Recent inventory check shows some items are out of stock." },
+                    ...mockToolParts
+                ]
             },
             {
                 id: 'm2',
                 role: 'user',
-                content: "How are my sales this week?",
+                parts: [{ type: 'text', text: "Which items are out of stock?" }],
                 createdAt: new Date()
-            },
-            {
-                id: 'm3',
-                role: 'assistant',
-                content: "You've made ₦127,800 this week from 34 orders. That's a 23% increase from last week. Wednesday was your substantial day.",
-                createdAt: new Date()
-            }
-        ]
-    },
-    {
-        id: 'inventory-audit-2',
-        title: "Inventory Audit",
-        date: "Yesterday",
-        messages: [
-            {
-                id: 'm4',
-                role: 'assistant',
-                content: "I've flagged 4 items that are low in stock. Would you like to see a procurement list?",
-                createdAt: new Date(Date.now() - 86400000)
             }
         ]
     }
 ]
 
+// Tool Rendering Components
+const ToolRenderer = ({ part, addToolResult }: {
+    part: UIMessagePart<UIDataTypes, UITools>,
+    addToolResult: (args: {
+        toolCallId: string;
+        tool: string;
+        state?: 'output-available';
+        output: any;
+    } | {
+        state: 'output-error';
+        tool: string;
+        toolCallId: string;
+        errorText: string;
+    }) => void
+}) => {
+    if (part.type === 'tool-listInventory' && part.state === 'output-available') {
+        const items = part.output as any[];
+        return (
+            <div className="mt-4 overflow-hidden rounded-2xl border border-brand-accent/10 bg-white/50 dark:bg-black/20 backdrop-blur-sm">
+                <table className="w-full text-left text-xs">
+                    <thead className="bg-brand-accent/5">
+                        <tr>
+                            <th className="p-3 text-brand-deep/40 dark:text-brand-cream/40 font-bold uppercase tracking-wider">Product</th>
+                            <th className="p-3 text-brand-deep/40 dark:text-brand-cream/40 font-bold uppercase tracking-wider">Stock</th>
+                            <th className="p-3 text-brand-deep/40 dark:text-brand-cream/40 font-bold uppercase tracking-wider text-right">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-accent/5">
+                        {items.map((item) => (
+                            <tr key={item.id} className="hover:bg-brand-accent/5 transition-colors">
+                                <td className="p-3 font-medium text-brand-deep dark:text-brand-cream">{item.name}</td>
+                                <td className="p-3">
+                                    <span className={cn(
+                                        "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                                        item.stock > 0 ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-600"
+                                    )}>
+                                        {item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
+                                    </span>
+                                </td>
+                                <td className="p-3 text-right font-mono text-brand-gold">₦{item.price}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+
+    if (part.type === 'tool-requestApproval') {
+        return (
+            <GlassCard className="mt-4 border-brand-gold/20 bg-brand-gold/5 overflow-hidden">
+                <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="h-8 w-8 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold">
+                            <Sparkles className="w-4 h-4" />
+                        </div>
+                        <h4 className="text-sm font-serif font-medium text-brand-gold">Approval Required</h4>
+                    </div>
+                    <p className="text-xs text-brand-deep/60 dark:text-brand-cream/60 leading-relaxed mb-4">
+                        {(part.input as any)?.message || "Please confirm this action."}
+                    </p>
+                    <div className="flex gap-2">
+                        <Button
+                            size="sm"
+                            className="flex-1 bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90"
+                            onClick={() => addToolResult({
+                                toolCallId: part.toolCallId,
+                                tool: 'requestApproval',
+                                output: { approved: true }
+                            })}
+                            disabled={part.state === 'output-available'}
+                        >
+                            Approve
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            className="flex-1 border border-brand-accent/10 text-brand-deep dark:text-brand-cream"
+                            onClick={() => addToolResult({
+                                toolCallId: part.toolCallId,
+                                tool: 'requestApproval',
+                                output: { approved: false }
+                            })}
+                            disabled={part.state === 'output-available'}
+                        >
+                            Decline
+                        </Button>
+                    </div>
+                </div>
+            </GlassCard>
+        );
+    }
+
+    return null;
+}
+
 export default function AssistantPage() {
     const [conversations, setConversations] = useState<Conversation[]>(defaultConversations)
-    const [activeChatId, setActiveChatId] = useState('1')
-    const [input, setInput] = useState('')
+    const [activeChatId, setActiveChatId] = useState('weekly-performance-1')
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
     const chatEndRef = useRef<HTMLDivElement>(null)
 
+    // Using Vercel AI SDK useChat
+    const { messages, addToolResult, sendMessage } = useChat({
+        messages: conversations.find(c => c.id === activeChatId)?.messages || [],
+        id: activeChatId,
+    })
+
+    const [input, setInput] = useState('')
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!input.trim()) return
+
+        const text = input
+        setInput('')
+
+        await sendMessage({ text })
+    }
+
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [activeChatId, conversations])
+    }, [messages])
 
     const activeChat = conversations.find(c => c.id === activeChatId) || conversations[0]
-    const messages = activeChat.messages
 
     const startNewChat = () => {
         const newId = Date.now().toString()
@@ -93,54 +198,11 @@ export default function AssistantPage() {
             id: newId,
             title: "New Conversation",
             date: "Just now",
-            messages: [{
-                id: 'new-' + Date.now(),
-                role: 'assistant',
-                content: "I'm ready to help. What aspect of your business should we look into?",
-                createdAt: new Date()
-            }]
+            messages: []
         }
         setConversations(prev => [newChat, ...prev])
         setActiveChatId(newId)
         setIsHistoryOpen(false)
-    }
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!input.trim()) return
-
-        const userMsg: Message = {
-            id: Date.now().toString(),
-            role: 'user',
-            content: input,
-            createdAt: new Date()
-        }
-
-        setConversations(prev => prev.map(conv => {
-            if (conv.id === activeChatId) {
-                const newTitle = conv.title === "New Conversation" ? input.slice(0, 30) + (input.length > 30 ? "..." : "") : conv.title
-                return {
-                    ...conv,
-                    title: newTitle,
-                    messages: [...conv.messages, userMsg]
-                }
-            }
-            return conv
-        }))
-        setInput('')
-
-        // Mock AI response delay
-        setTimeout(() => {
-            const aiMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: "I'm checking your latest data...",
-                createdAt: new Date()
-            }
-            setConversations(prev => prev.map(conv =>
-                conv.id === activeChatId ? { ...conv, messages: [...conv.messages, aiMsg] } : conv
-            ))
-        }, 1000)
     }
 
     return (
@@ -261,12 +323,12 @@ export default function AssistantPage() {
                     {/* Chat Area */}
                     <div className="flex-1 overflow-y-auto space-y-6 pb-24 md:pb-32 scrollbar-hide px-1 pt-24 md:pt-0">
                         <AnimatePresence initial={false}>
-                            {messages.map((msg) => (
+                            {messages.map((msg: AIMessage) => (
                                 <motion.div
                                     key={msg.id}
                                     initial={{ opacity: 0, y: 10, scale: 0.98 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    className={cn("flex w-full", msg.role === 'user' ? "justify-end" : "justify-start")}
+                                    className={cn("flex w-full flex-col", msg.role === 'user' ? "items-end" : "items-start")}
                                 >
                                     <div className={cn(
                                         "text-sm md:text-base leading-relaxed relative overflow-hidden transition-all",
@@ -283,10 +345,27 @@ export default function AssistantPage() {
                                         )}
 
                                         <div className={cn("relative z-10", msg.role === 'user' ? "pr-2" : "")}>
-                                            <Markdown
-                                                content={msg.content}
-                                                className={msg.role === 'user' ? "text-brand-cream dark:text-brand-deep prose-invert" : ""}
-                                            />
+                                            {msg.parts.map((part: UIMessagePart<UIDataTypes, UITools>, partIndex: number) => {
+                                                if (part.type === 'text') {
+                                                    return (
+                                                        <Markdown
+                                                            key={partIndex}
+                                                            content={part.text}
+                                                            className={msg.role === 'user' ? "text-brand-cream dark:text-brand-deep prose-invert" : ""}
+                                                        />
+                                                    );
+                                                }
+                                                if (part.type.startsWith('tool-')) {
+                                                    return (
+                                                        <ToolRenderer
+                                                            key={partIndex}
+                                                            part={part}
+                                                            addToolResult={addToolResult}
+                                                        />
+                                                    );
+                                                }
+                                                return null;
+                                            })}
                                         </div>
                                     </div>
                                 </motion.div>
