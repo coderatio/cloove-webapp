@@ -22,10 +22,10 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Cloove | Business Dashboard",
   description: "Your calm, intelligent business partner",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/favicon.png",
-    apple: "/favicon.png",
+    apple: "/icons/icon-512.png",
   },
   appleWebApp: {
     capable: true,
