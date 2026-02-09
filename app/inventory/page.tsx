@@ -138,12 +138,16 @@ export default function InventoryPage() {
             key: 'stock',
             header: 'Stock',
             render: (value: number) => (
-                <span className={cn("font-mono", value <= 5 ? 'font-bold text-rose-600 dark:text-rose-400' : 'text-brand-accent/60')}>
+                <span className={cn("font-mono", value <= 5 ? 'font-bold text-rose-600 dark:text-rose-400' : 'text-brand-accent/60 dark:text-brand-cream/60')}>
                     {value} units
                 </span>
             )
         },
-        { key: 'price', header: 'Price' },
+        {
+            key: 'price',
+            header: 'Price',
+            render: (value: string) => <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">{value}</span>
+        },
         {
             key: 'status',
             header: 'Status',
@@ -151,8 +155,8 @@ export default function InventoryPage() {
                 <span className={cn(
                     "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
                     value === 'In Stock'
-                        ? 'bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream'
-                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                        ? 'bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold'
+                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-brand-gold/70'
                 )}>
                     {value}
                 </span>
@@ -183,26 +187,26 @@ export default function InventoryPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Package className="w-24 h-24" />
+                            <Package className="w-24 h-24 dark:text-brand-cream/10" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
                             <Package className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-accent/40 uppercase tracking-wider">Total Products</p>
+                            <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">Total Products</p>
                             <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{inventory.length}</p>
                         </div>
                     </GlassCard>
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group border-brand-gold/20">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-brand-gold">
-                            <AlertTriangle className="w-24 h-24" />
+                            <AlertTriangle className="w-24 h-24 dark:text-brand-cream/10" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
                             <AlertTriangle className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-gold/60 uppercase tracking-wider">Inventory Value</p>
+                            <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">Inventory Value</p>
                             <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                                 ₦{totalInventoryValue.toLocaleString()}
                             </p>
@@ -213,7 +217,7 @@ export default function InventoryPage() {
                 {/* Main Content */}
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30 ml-1">Product List</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product List</p>
 
                         <div className="flex items-center gap-3">
                             <TableSearch
@@ -285,7 +289,7 @@ export default function InventoryPage() {
                         <div className="p-8 pb-12 overflow-y-auto">
                             <form onSubmit={editingItem ? handleUpdate : handleAdd} className="max-w-lg mx-auto space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Product Name</label>
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product Name</label>
                                     <input
                                         autoFocus
                                         value={formData.product}
@@ -297,7 +301,7 @@ export default function InventoryPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Current Stock</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Current Stock</label>
                                         <input
                                             type="number"
                                             value={formData.stock}
@@ -306,7 +310,7 @@ export default function InventoryPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Price (₦)</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Price (₦)</label>
                                         <input
                                             value={formData.price}
                                             onChange={(e) => setFormData({ ...formData, price: e.target.value })}

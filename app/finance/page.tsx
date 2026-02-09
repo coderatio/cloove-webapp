@@ -200,7 +200,7 @@ export default function FinancePage() {
                                 <div className="relative z-10">
                                     <div className="flex items-center gap-2 mb-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30">Business Balance</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">Business Balance</p>
                                     </div>
                                     <h2 className="text-6xl font-serif font-medium text-brand-deep dark:text-brand-cream tracking-tight">{walletBalance}</h2>
                                 </div>
@@ -223,7 +223,7 @@ export default function FinancePage() {
                                         <ArrowRightLeft className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold text-brand-accent/40 uppercase tracking-[0.2em] mb-1">Total Revenue</p>
+                                        <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] mb-1">Total Revenue</p>
                                         <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">₦{totalRevenue.toLocaleString()}</p>
                                     </div>
                                 </GlassCard>
@@ -232,7 +232,7 @@ export default function FinancePage() {
                                         <Clock className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold text-brand-accent/40 uppercase tracking-[0.2em] mb-1">Pending Clear</p>
+                                        <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] mb-1">Pending Clear</p>
                                         <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">{pendingReconciliation} items</p>
                                     </div>
                                 </GlassCard>
@@ -279,7 +279,7 @@ export default function FinancePage() {
                 {/* Main Transaction List */}
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30 ml-1">Recent Transactions</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">Recent Transactions</p>
 
                         <div className="flex items-center gap-3">
                             <TableSearch
@@ -376,11 +376,11 @@ export default function FinancePage() {
                                     <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Payment Details</h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="p-4 rounded-2xl bg-brand-deep/5 dark:bg-white/5">
-                                            <p className="text-[10px] font-bold text-brand-accent/40 uppercase tracking-widest mb-1">Inbound Amount</p>
+                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">Inbound Amount</p>
                                             <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">{viewingTx?.amount}</p>
                                         </div>
                                         <div className="p-4 rounded-2xl bg-brand-deep/5 dark:bg-white/5">
-                                            <p className="text-[10px] font-bold text-brand-accent/40 uppercase tracking-widest mb-1">Time Initiated</p>
+                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">Time Initiated</p>
                                             <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">{viewingTx?.date}</p>
                                         </div>
                                     </div>

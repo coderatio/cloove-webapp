@@ -28,10 +28,10 @@ export function ListCard({
     delay = 0
 }: ListCardProps) {
     const statusStyles = {
-        success: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
-        warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800",
-        danger: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
-        neutral: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700",
+        success: "bg-emerald-100 text-emerald-700 dark:bg-brand-gold/10 dark:text-brand-gold border-emerald-200 dark:border-brand-gold/20",
+        warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-brand-gold/70 border-amber-200 dark:border-amber-800/30",
+        danger: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/30",
+        neutral: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-brand-cream/60 border-zinc-200 dark:border-zinc-700",
     }
 
     return (
@@ -48,8 +48,8 @@ export function ListCard({
         >
             <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0 pr-4">
-                    <h3 className="font-semibold text-foreground truncate">{title}</h3>
-                    {subtitle && <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>}
+                    <h3 className="font-semibold text-foreground dark:text-brand-cream truncate">{title}</h3>
+                    {subtitle && <p className="text-xs text-muted-foreground dark:text-brand-cream/60 mt-0.5 truncate">{subtitle}</p>}
 
                     {meta && <div className="mt-3 text-xs text-muted-foreground font-medium flex items-center gap-2">
                         {meta}
@@ -65,8 +65,8 @@ export function ListCard({
 
                     {value && (
                         <div className="text-right mt-1">
-                            <div className="font-serif text-lg font-medium text-foreground leading-none">{value}</div>
-                            {valueLabel && <div className="text-[10px] text-muted-foreground mt-0.5">{valueLabel}</div>}
+                            <div className="font-serif text-lg font-medium text-foreground dark:text-brand-cream leading-none">{value}</div>
+                            {valueLabel && <div className="text-[10px] text-muted-foreground dark:text-brand-cream/40 mt-0.5">{valueLabel}</div>}
                         </div>
                     )}
                 </div>

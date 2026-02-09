@@ -30,7 +30,7 @@ const ActivityIcon = ({ type }: { type: ActivityItem['type'] }) => {
         case 'debt':
             return <div className="p-2 bg-danger/10 text-danger dark:bg-danger/20 dark:text-red-400 rounded-full"><ArrowDownLeft className="w-4 h-4" /></div>
         case 'customer':
-            return <div className="p-2 bg-brand-accent/10 text-brand-accent dark:bg-brand-accent/20 dark:text-brand-cream rounded-full"><UserPlus className="w-4 h-4" /></div>
+            return <div className="p-2 bg-brand-accent/10 text-brand-accent dark:bg-brand-gold/10 dark:text-brand-gold rounded-full"><UserPlus className="w-4 h-4" /></div>
     }
 }
 
@@ -75,7 +75,7 @@ export function ActivityStream({ activities, className }: ActivityStreamProps) {
                                         {item.type === 'sale' ? '+' : ''}{item.amount}
                                     </div>
                                 )}
-                                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-white/10 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors" />
+                                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors" />
                             </div>
                         </motion.div>
                     )

@@ -156,7 +156,7 @@ export default function CustomersPage() {
                             <Users className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-accent/40 uppercase tracking-wider">Total Customers</p>
+                            <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">Total Customers</p>
                             <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{customers.length}</p>
                         </div>
                     </GlassCard>
@@ -172,7 +172,7 @@ export default function CustomersPage() {
                             <AlertCircle className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-gold/60 uppercase tracking-wider">Payments Pending</p>
+                            <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">Payments Pending</p>
                             <div className="flex items-baseline gap-2">
                                 <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-gold">{owingCustomers}</p>
                                 <span className="text-sm text-brand-accent/40">₦{totalDebt.toLocaleString()} due</span>
@@ -184,7 +184,7 @@ export default function CustomersPage() {
                 {/* Main Content */}
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30 ml-1">Relationship List</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">Relationship List</p>
 
                         <div className="flex items-center gap-3 font-sans">
                             <TableSearch
@@ -256,7 +256,7 @@ export default function CustomersPage() {
                         <div className="p-8 pb-12 overflow-y-auto">
                             <form onSubmit={editingItem ? handleUpdate : handleAdd} className="max-w-lg mx-auto space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Customer Name</label>
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Customer Name</label>
                                     <input
                                         autoFocus
                                         value={formData.name}
@@ -267,7 +267,7 @@ export default function CustomersPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Current Debt (₦)</label>
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Current Debt (₦)</label>
                                     <input
                                         value={formData.owing}
                                         onChange={(e) => setFormData({ ...formData, owing: e.target.value })}

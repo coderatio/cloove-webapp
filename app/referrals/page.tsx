@@ -166,7 +166,7 @@ export default function ReferralsPage() {
                             </div>
                             <div className="flex items-start justify-between relative z-10">
                                 <div className="space-y-1">
-                                    <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Available Balance</span>
+                                    <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Available Balance</span>
                                     <div className="text-3xl font-serif text-brand-deep dark:text-brand-cream">
                                         ₦{MOCK_STATS.availableBalance.toLocaleString()}
                                     </div>
@@ -184,13 +184,13 @@ export default function ReferralsPage() {
 
                         <div className="grid grid-cols-2 gap-6">
                             <GlassCard className="p-6 flex flex-col justify-center space-y-2 rounded-3xl">
-                                <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Total Earned</span>
+                                <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Total Earned</span>
                                 <div className="text-2xl font-serif text-brand-deep dark:text-brand-cream">
                                     ₦{MOCK_STATS.totalEarnings.toLocaleString()}
                                 </div>
                             </GlassCard>
                             <GlassCard className="p-6 flex flex-col justify-center space-y-2 rounded-3xl">
-                                <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Referrals</span>
+                                <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Referrals</span>
                                 <div className="flex items-baseline gap-2">
                                     <div className="text-2xl font-serif text-brand-deep dark:text-brand-cream">
                                         {MOCK_STATS.totalReferrals}

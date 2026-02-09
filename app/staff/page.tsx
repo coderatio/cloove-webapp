@@ -155,7 +155,7 @@ export default function StaffManagementPage() {
                         <div className="flex-1 overflow-y-auto p-8 space-y-8">
                             {/* Basic Info */}
                             <section className="space-y-4">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Basic Information</h3>
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">Basic Information</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-brand-deep dark:text-brand-cream pl-1">Full Name</label>
@@ -181,7 +181,7 @@ export default function StaffManagementPage() {
 
                             {/* Role Selection */}
                             <section className="space-y-4">
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Primary Role</h3>
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">Primary Role</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                     {['STAFF', 'ACCOUNTANT'].map((role) => (
                                         <button

@@ -40,7 +40,7 @@ export default function DataTable<T extends { id: string | number }>({
                 <h3 className="font-serif text-xl font-medium text-brand-deep dark:text-brand-cream opacity-50 mb-2">
                     {emptyMessage}
                 </h3>
-                <p className="text-sm text-brand-accent/30 dark:text-white/20 max-w-xs">
+                <p className="text-sm text-brand-accent/30 dark:text-brand-cream/40 max-w-xs">
                     When you start recording entries, your data will be elegantly presented here.
                 </p>
             </div>
@@ -60,7 +60,7 @@ export default function DataTable<T extends { id: string | number }>({
                             {columns.map((col) => (
                                 <th
                                     key={String(col.key)}
-                                    className="text-left text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/20 px-6 py-4 border-b border-brand-deep/5 dark:border-white/5"
+                                    className="text-left text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-6 py-4 border-b border-brand-deep/5 dark:border-white/5"
                                 >
                                     {col.header}
                                 </th>
@@ -83,7 +83,7 @@ export default function DataTable<T extends { id: string | number }>({
                                 {columns.map((col) => (
                                     <td
                                         key={String(col.key)}
-                                        className="px-6 py-5 text-sm text-brand-deep dark:text-brand-cream/80"
+                                        className="px-6 py-5 text-sm text-brand-deep dark:text-brand-cream"
                                     >
                                         {col.render
                                             ? col.render(row[col.key], row)
@@ -105,7 +105,7 @@ export default function DataTable<T extends { id: string | number }>({
             {/* Pagination Controls */}
             {totalPages > 1 && (
                 <div className="px-6 py-4 flex items-center justify-between border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/10 dark:bg-white/5">
-                    <p className="text-xs text-brand-accent/40 dark:text-white/30 font-medium">
+                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 font-medium">
                         Showing <span className="text-brand-deep dark:text-brand-cream">{startIndex + 1}-{Math.min(startIndex + pageSize, data.length)}</span> of <span className="text-brand-deep dark:text-brand-cream">{data.length}</span>
                     </p>
                     <div className="flex items-center gap-2">
@@ -116,7 +116,7 @@ export default function DataTable<T extends { id: string | number }>({
                             onClick={() => setCurrentPage(prev => prev - 1)}
                             className="h-8 w-8 p-0 rounded-lg border-brand-deep/5 dark:border-white/10"
                         >
-                            <ChevronLeft className="h-4 w-4" />
+                            <ChevronLeft className="h-4 w-4 dark:text-brand-gold" />
                         </Button>
                         <div className="flex items-center gap-1 mx-2">
                             {Array.from({ length: totalPages }).map((_, i) => (
@@ -139,7 +139,7 @@ export default function DataTable<T extends { id: string | number }>({
                             onClick={() => setCurrentPage(prev => prev + 1)}
                             className="h-8 w-8 p-0 rounded-lg border-brand-deep/5 dark:border-white/10"
                         >
-                            <ChevronRight className="h-4 w-4" />
+                            <ChevronRight className="h-4 w-4 dark:text-brand-gold" />
                         </Button>
                     </div>
                 </div>

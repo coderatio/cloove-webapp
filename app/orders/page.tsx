@@ -74,7 +74,7 @@ export default function OrdersPage() {
         {
             key: 'id',
             header: 'Order ID',
-            render: (value: string) => <span className="font-mono text-xs text-brand-accent/40">#{value.padStart(4, '0')}</span>
+            render: (value: string) => <span className="font-mono text-xs text-brand-accent/40 dark:text-brand-cream/40">#{value.padStart(4, '0')}</span>
         },
         {
             key: 'customer',
@@ -93,8 +93,8 @@ export default function OrdersPage() {
             render: (value: string) => (
                 <span className={cn(
                     "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                    value === 'Completed' ? "bg-brand-green/10 text-brand-green dark:bg-brand-green/20" :
-                        value === 'Pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                    value === 'Completed' ? "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold" :
+                        value === 'Pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-brand-gold/70" :
                             "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
                 )}>
                     {value}
@@ -122,26 +122,26 @@ export default function OrdersPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <ShoppingBag className="w-24 h-24" />
+                            <ShoppingBag className="w-24 h-24 dark:text-brand-cream/10" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
                             <ShoppingBag className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-accent/40 uppercase tracking-wider">Today's Orders</p>
+                            <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">Today's Orders</p>
                             <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{orders.filter(o => o.date.includes(':') || o.date === 'Today').length}</p>
                         </div>
                     </GlassCard>
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group border-brand-green/20">
-                        <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-brand-green">
+                        <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-brand-green dark:text-brand-cream/10">
                             <TrendingUp className="w-24 h-24" />
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green">
+                        <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-gold/10 flex items-center justify-center text-brand-green dark:text-brand-gold">
                             <TrendingUp className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-green/60 uppercase tracking-wider">Revenue (Today)</p>
+                            <p className="text-sm font-medium text-brand-green/60 dark:text-brand-gold/60 uppercase tracking-wider">Revenue (Today)</p>
                             <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">₦{completedOrdersValue.toLocaleString()}</p>
                         </div>
                     </GlassCard>
@@ -150,7 +150,7 @@ export default function OrdersPage() {
                 {/* Main Content */}
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30 ml-1">Recent Transactions</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">Recent Transactions</p>
 
                         <div className="flex items-center gap-3">
                             <TableSearch
@@ -210,19 +210,19 @@ export default function OrdersPage() {
                         <div className="p-8 pb-12 overflow-y-auto">
                             <div className="max-w-lg mx-auto space-y-8">
                                 <div className="space-y-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Itemized List</h3>
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Itemized List</h3>
                                     <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 border-brand-deep/5">
                                         <div className="p-4 flex justify-between items-center">
                                             <div>
                                                 <p className="font-medium text-brand-deep dark:text-brand-cream">Ankara Fabric (Blue)</p>
-                                                <p className="text-xs text-brand-accent/40">2 units x ₦4,500</p>
+                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">2 units x ₦4,500</p>
                                             </div>
                                             <p className="font-serif text-brand-deep dark:text-brand-cream">₦9,000</p>
                                         </div>
                                         <div className="p-4 flex justify-between items-center">
                                             <div>
                                                 <p className="font-medium text-brand-deep dark:text-brand-cream">Silk Blend</p>
-                                                <p className="text-xs text-brand-accent/40">1 unit x ₦6,000</p>
+                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">1 unit x ₦6,000</p>
                                             </div>
                                             <p className="font-serif text-brand-deep dark:text-brand-cream">₦6,000</p>
                                         </div>
@@ -234,14 +234,14 @@ export default function OrdersPage() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Payment Information</h3>
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Payment Information</h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         <GlassCard className="p-4">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 mb-1">Status</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-1">Status</p>
                                             <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">{viewingOrder?.status}</p>
                                         </GlassCard>
                                         <GlassCard className="p-4">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 mb-1">Method</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-1">Method</p>
                                             <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">Bank Transfer</p>
                                         </GlassCard>
                                     </div>

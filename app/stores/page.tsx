@@ -115,7 +115,7 @@ export default function StoresManagementPage() {
                             <GlassCard className="p-6 h-full group hover:shadow-2xl transition-all duration-500 border-l-4 border-l-brand-green relative overflow-hidden">
                                 <div className="flex items-start justify-between mb-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green group-hover:scale-110 transition-transform">
+                                        <div className="w-12 h-12 rounded-2xl bg-brand-green/10 dark:bg-brand-gold/10 flex items-center justify-center text-brand-green dark:text-brand-gold group-hover:scale-110 transition-transform">
                                             <StoreIcon className="w-6 h-6" />
                                         </div>
                                         <div>
@@ -137,11 +137,11 @@ export default function StoresManagementPage() {
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between text-sm py-2 border-b border-brand-accent/5">
-                                        <span className="text-brand-accent/60 dark:text-brand-cream/40">Active Staff</span>
+                                        <span className="text-brand-accent/60 dark:text-brand-cream/60">Active Staff</span>
                                         <span className="font-semibold text-brand-deep dark:text-brand-cream">4 members</span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm py-2 border-b border-brand-accent/5">
-                                        <span className="text-brand-accent/60 dark:text-brand-cream/40">Inventory Value</span>
+                                        <span className="text-brand-accent/60 dark:text-brand-cream/60">Inventory Value</span>
                                         <span className="font-semibold text-brand-deep dark:text-brand-cream">₦12.4M</span>
                                     </div>
                                 </div>
@@ -177,10 +177,10 @@ export default function StoresManagementPage() {
                         className="cursor-pointer group"
                     >
                         <div className="h-full min-h-[220px] rounded-[30px] border-2 border-dashed border-brand-accent/10 dark:border-white/10 flex flex-col items-center justify-center gap-4 hover:border-brand-green/40 dark:hover:border-brand-gold/40 hover:bg-white/40 dark:hover:bg-white/5 transition-all group-active:scale-[0.98]">
-                            <div className="w-12 h-12 rounded-full bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent/40 group-hover:bg-brand-green/10 group-hover:text-brand-green transition-all">
+                            <div className="w-12 h-12 rounded-full bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent/40 dark:text-brand-cream/60 group-hover:bg-brand-green/10 group-hover:text-brand-green transition-all">
                                 <Plus className="w-6 h-6" />
                             </div>
-                            <span className="text-brand-accent/40 dark:text-white/40 font-medium group-hover:text-brand-deep dark:group-hover:text-brand-cream transition-colors">
+                            <span className="text-brand-accent/40 dark:text-brand-cream/40 font-medium group-hover:text-brand-deep dark:group-hover:text-brand-cream transition-colors">
                                 Add Another Branch
                             </span>
                         </div>
@@ -213,7 +213,7 @@ export default function StoresManagementPage() {
 
                                 <form onSubmit={editingStore ? handleUpdate : handleAdd} className="space-y-6">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Store Name</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Store Name</label>
                                         <input
                                             autoFocus
                                             value={newName}
@@ -223,7 +223,7 @@ export default function StoresManagementPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Location</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Location</label>
                                         <input
                                             value={newLocation}
                                             onChange={(e) => setNewLocation(e.target.value)}
@@ -278,12 +278,12 @@ export default function StoresManagementPage() {
                         <div className="flex-1 overflow-y-auto p-8 pt-6 pb-12">
                             <div className="max-w-lg mx-auto space-y-8">
                                 <div className="space-y-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Live Feed</h3>
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Live Feed</h3>
                                     <ActivityStream activities={mockStoreActivities} />
                                 </div>
 
                                 <div className="space-y-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Location Details</h3>
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Location Details</h3>
                                     <GlassCard className="p-6 space-y-4">
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-brand-accent/60">Branch Address</span>
