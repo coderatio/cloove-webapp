@@ -150,9 +150,14 @@ export function BillingSettings() {
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-xs font-medium">
                                         <span className="text-brand-deep/60 dark:text-brand-cream/60">Conversations</span>
-                                        <span className="text-brand-deep dark:text-brand-cream">45 / {currentPlanId === 'starter' ? '100' : '500'}</span>
+                                        <span className="text-brand-deep dark:text-brand-cream">
+                                            45 / {currentPlanId === 'starter' ? '100' : '500'}
+                                        </span>
                                     </div>
-                                    <Progress value={45} className="h-1.5" />
+                                    <Progress
+                                        value={(45 / (currentPlanId === 'starter' ? 100 : 500)) * 100}
+                                        className="h-1.5"
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-xs font-medium">
@@ -161,7 +166,10 @@ export function BillingSettings() {
                                             {currentPlanId === 'starter' ? '1 / 1' : '1 / 3'}
                                         </span>
                                     </div>
-                                    <Progress value={100} className="h-1.5" />
+                                    <Progress
+                                        value={(1 / (currentPlanId === 'starter' ? 1 : 3)) * 100}
+                                        className="h-1.5"
+                                    />
                                 </div>
                             </div>
                         </div>
