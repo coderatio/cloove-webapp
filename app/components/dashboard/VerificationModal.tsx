@@ -21,26 +21,34 @@ interface VerificationModalProps {
 }
 
 export function VerificationModal({ isOpen, onOpenChange, onComplete }: VerificationModalProps) {
-    const [step, setStep] = useState<'intro' | 'scanning' | 'success'>('intro')
+    const [step, setStep] = useState<'intro' | 'bvn' | 'scanning' | 'success'>('intro')
     const [progress, setProgress] = useState(0)
+    const [bvn, setBvn] = useState("")
 
     const startVerification = () => {
-        setStep('scanning')
-        // Simulate progress
-        const interval = setInterval(() => {
-            setProgress(prev => {
-                if (prev >= 100) {
-                    clearInterval(interval)
-                    return 100
-                }
-                return prev + 2
-            })
-        }, 40)
+        setStep('bvn')
+    }
 
-        // Simulate a 2.5s verification process
-        setTimeout(() => {
-            setStep('success')
-        }, 2500)
+    const handleBvnSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (bvn.length === 11) {
+            setStep('scanning')
+            // Simulate progress
+            const interval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev >= 100) {
+                        clearInterval(interval)
+                        return 100
+                    }
+                    return prev + 2
+                })
+            }, 40)
+
+            // Simulate a 2.5s verification process
+            setTimeout(() => {
+                setStep('success')
+            }, 2500)
+        }
     }
 
     const isMobile = useIsMobile()
@@ -53,11 +61,12 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
             setTimeout(() => {
                 setStep('intro')
                 setProgress(0)
+                setBvn("")
             }, 300)
         }, 800)
     }
 
-    const ModalContent = () => (
+    const innerContent = (
         <div className="flex flex-col w-full h-full bg-brand-cream dark:bg-brand-deep">
             {/* Visual Header - Holographic Effect */}
             <div className="relative h-56 sm:h-64 bg-brand-deep flex items-center justify-center overflow-hidden shrink-0">
@@ -92,7 +101,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none" />
 
                 <AnimatePresence mode="wait">
-                    {step === 'intro' && (
+                    {(step === 'intro' || step === 'bvn') && (
                         <motion.div
                             key="intro-icon"
                             initial={{ scale: 0.8, opacity: 0, x: -20 }}
@@ -156,7 +165,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
             <div className="px-8 pt-8 pb-12 text-center space-y-8 overflow-y-auto">
                 {/* Journey Progress Dots */}
                 <div className="flex justify-center gap-3">
-                    {['intro', 'scanning', 'success'].map((s, idx) => (
+                    {['intro', 'bvn', 'scanning', 'success'].map((s, idx) => (
                         <div
                             key={s}
                             className={cn(
@@ -181,7 +190,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                                     Unlock Your <span className="italic text-brand-gold underline decoration-brand-gold/30 underline-offset-8">Wallet</span>
                                 </h3>
                                 <p className="text-sm md:text-base text-brand-deep/60 dark:text-brand-cream/60 leading-relaxed max-w-xs mx-auto">
-                                    Join over <span className="text-brand-deep dark:text-brand-cream font-bold">10,000+</span> merchants who trust Cloove for secure payouts.
+                                    Join all merchants who trust <span className="text-brand-deep dark:text-brand-cream font-bold">Cloove</span> for secure payouts.
                                 </p>
                             </div>
 
@@ -207,6 +216,54 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                         </motion.div>
                     )}
 
+                    {step === 'bvn' && (
+                        <motion.div
+                            key="bvn-content"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="space-y-6"
+                        >
+                            <div className="space-y-4">
+                                <h3 className="text-3xl font-serif text-brand-deep dark:text-brand-cream font-medium tracking-tight">
+                                    Level 1 Verification
+                                </h3>
+                                <p className="text-sm text-brand-deep/60 dark:text-brand-cream/60 leading-relaxed max-w-xs mx-auto">
+                                    Enter your 11-digit BVN to verify your basic identity and unlock standard limits.
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleBvnSubmit} className="space-y-6">
+                                <div className="space-y-2 text-left">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-1">Bank Verification Number (BVN)</label>
+                                    <input
+                                        type="text"
+                                        maxLength={11}
+                                        value={bvn}
+                                        onChange={(e) => setBvn(e.target.value.replace(/\D/g, ""))}
+                                        placeholder="Enter your BVN"
+                                        className="w-full h-14 bg-white/50 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 rounded-2xl px-5 focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold outline-none transition-all text-lg font-medium tracking-[0.2em] text-center"
+                                    />
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    disabled={bvn.length !== 11}
+                                    className="w-full h-14 cursor-pointer rounded-2xl bg-brand-deep dark:bg-brand-gold hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 text-brand-gold dark:text-brand-deep dark:hover:text-brand-deep font-bold text-lg shadow-2xl transition-all group active:scale-95 disabled:opacity-50"
+                                >
+                                    Proceed
+                                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </Button>
+                            </form>
+                            <button
+                                onClick={() => setStep('intro')}
+                                className="text-xs font-bold cursor-pointer uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/40 hover:text-brand-gold transition-colors"
+                            >
+                                Back
+                            </button>
+                        </motion.div>
+                    )}
+
                     {step === 'scanning' && (
                         <motion.div
                             key="scanning-content"
@@ -217,11 +274,11 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                         >
                             <div className="space-y-2">
                                 <h3 className="text-xl font-serif text-brand-deep dark:text-brand-cream font-medium tracking-wide">
-                                    Biometric Analysis
+                                    Verifying BVN
                                 </h3>
                                 <div className="font-mono text-[10px] text-brand-deep/40 dark:text-brand-cream/40 flex justify-center gap-4">
-                                    <span>SEC_LEVEL: 04</span>
-                                    <span>SIGNAL: PURE</span>
+                                    <span>SEC_LEVEL: 01</span>
+                                    <span>SIGNAL: STABLE</span>
                                 </div>
                             </div>
 
@@ -256,13 +313,13 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold text-xs font-bold uppercase tracking-widest mb-2"
                                 >
                                     <Star className="w-3 h-3 fill-current" />
-                                    Achievement Unlocked
+                                    Level 1 Complete
                                 </motion.div>
                                 <h3 className="text-3xl font-serif text-brand-deep dark:text-brand-cream font-medium leading-tight">
-                                    Dashboard <span className="italic text-brand-gold underline decoration-brand-gold/30 underline-offset-4">Unlocked</span>
+                                    Identity <span className="italic text-brand-gold underline decoration-brand-gold/30 underline-offset-4">Verified</span>
                                 </h3>
                                 <p className="text-sm md:text-base text-brand-deep/60 dark:text-brand-cream/60 leading-relaxed">
-                                    Welcome to the inner circle. Your virtual bank account and full financial insights are now live.
+                                    Your basic identity has been confirmed. To unlock <span className="text-brand-deep dark:text-brand-cream font-bold">higher transaction limits</span> and more features, complete higher levels of verification under <span className="text-brand-gold font-bold">Settings</span>.
                                 </p>
                             </div>
 
@@ -270,7 +327,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                                 onClick={handleComplete}
                                 className="w-full h-14 rounded-2xl bg-brand-green hover:bg-brand-green/90 text-brand-cream font-bold text-lg shadow-xl shadow-brand-green/20 transition-all hover:scale-[1.02] active:scale-95"
                             >
-                                Experience the New Home
+                                Done
                             </Button>
                         </motion.div>
                     )}
@@ -286,7 +343,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                     <div className="sr-only">
                         <DrawerTitle>Verify Identity</DrawerTitle>
                     </div>
-                    <ModalContent />
+                    {innerContent}
                 </DrawerContent>
             </Drawer>
         )
@@ -296,7 +353,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md bg-brand-cream/95 dark:bg-brand-deep/95 backdrop-blur-2xl border border-white/20 dark:border-white/5 shadow-2xl p-0 overflow-hidden sm:rounded-[40px] transition-all duration-500">
                 <DialogTitle className="sr-only">Verify Identity</DialogTitle>
-                <ModalContent />
+                {innerContent}
             </DialogContent>
         </Dialog>
     )

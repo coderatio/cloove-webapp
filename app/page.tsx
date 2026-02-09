@@ -57,7 +57,7 @@ const storeData: Record<string, any> = {
 // Global business-level data
 const businessData = {
   wallet: {
-    balance: "₦0.00",
+    balance: "₦1,250,000.00",
     isVerified: false,
     label: "Wallet Balance"
   },
