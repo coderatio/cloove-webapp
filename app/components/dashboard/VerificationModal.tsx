@@ -238,6 +238,8 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-1">Bank Verification Number (BVN)</label>
                                     <input
                                         type="text"
+                                        inputMode="numeric"
+                                        autoFocus
                                         maxLength={11}
                                         value={bvn}
                                         onChange={(e) => setBvn(e.target.value.replace(/\D/g, ""))}

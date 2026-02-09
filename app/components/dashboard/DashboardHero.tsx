@@ -34,15 +34,6 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
 
     // Tilt Effect Refs/Values
     const cardRef = useRef<HTMLDivElement>(null)
-    const x = useMotionValue(0)
-    const y = useMotionValue(0)
-
-    const mouseXSpring = useSpring(x)
-    const mouseYSpring = useSpring(y)
-
-    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["7deg", "-7deg"])
-    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-7deg", "7deg"])
-
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!cardRef.current) return
         const rect = cardRef.current.getBoundingClientRect()
@@ -50,15 +41,17 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
         const height = rect.height
         const mouseX = e.clientX - rect.left
         const mouseY = e.clientY - rect.top
-        const xPct = mouseX / width - 0.5
-        const yPct = mouseY / height - 0.5
-        x.set(xPct)
-        y.set(yPct)
+        const xPct = (mouseX / width - 0.5) * 14 // Adjust sensitivity here
+        const yPct = (mouseY / height - 0.5) * -14 // Adjust sensitivity here
+
+        cardRef.current.style.setProperty('--rotate-y', `${xPct}deg`)
+        cardRef.current.style.setProperty('--rotate-x', `${yPct}deg`)
     }
 
     const handleMouseLeave = () => {
-        x.set(0)
-        y.set(0)
+        if (!cardRef.current) return
+        cardRef.current.style.setProperty('--rotate-y', `0deg`)
+        cardRef.current.style.setProperty('--rotate-x', `0deg`)
     }
 
     // Auto-slide every 10 seconds
@@ -87,15 +80,15 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
     ]
 
     return (
-        <motion.div
+        <div
             ref={cardRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             style={{
-                rotateX,
-                rotateY,
+                transform: "perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg))",
                 transformStyle: "preserve-3d",
-            }}
+                transition: "transform 0.1s ease-out" // Subtle smoothing
+            } as any}
             className="perspective-1000"
         >
             <GlassCard className={cn(
@@ -108,32 +101,35 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                         animate={{
                             x: [0, 40, 0],
                             y: [0, -30, 0],
-                            scale: [1, 1.2, 1],
+                            scale: [1, 1.1, 1], // Reduced scale range
                         }}
-                        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute -top-1/4 -right-1/4 w-[80%] h-[80%] rounded-full bg-brand-gold/10 dark:bg-brand-gold/5 blur-[100px]"
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }} // Use linear for consistent velocity
+                        className="absolute -top-1/4 -right-1/4 w-[80%] h-[80%] rounded-full bg-brand-gold/10 dark:bg-brand-gold/5 blur-[100px] will-change-transform"
                     />
                     <motion.div
                         animate={{
                             x: [0, -50, 0],
                             y: [0, 40, 0],
-                            scale: [1.1, 0.9, 1.1],
+                            scale: [1.05, 0.95, 1.05], // Reduced scale range
                         }}
-                        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute -bottom-1/4 -left-1/4 w-[70%] h-[70%] rounded-full bg-brand-green/15 dark:bg-brand-green/10 blur-[100px]"
+                        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                        className="absolute -bottom-1/4 -left-1/4 w-[70%] h-[70%] rounded-full bg-brand-green/15 dark:bg-brand-green/10 blur-[100px] will-change-transform"
                     />
-                    {/* Dark Mode Specific depth */}
                     <div className="absolute inset-0 bg-brand-deep/5 dark:bg-black/20" />
                 </div>
 
                 {/* 2. Noise Overlay */}
-                <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none mix-blend-overlay z-1 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+                {/* 2. Optimized Noise Overlay (Inline Base64 to avoid request) */}
+                <div
+                    className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none mix-blend-overlay z-1"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+                />
 
-                {/* 3. Shine Effect (Holographic) */}
+                {/* 3. Optimized Shine Effect */}
                 <motion.div
                     animate={{ x: ["-100%", "200%"] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", repeatDelay: 2 }}
-                    className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 dark:via-white/5 to-transparent skew-x-[-20deg] pointer-events-none z-2"
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear", repeatDelay: 4 }}
+                    className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 dark:via-white/5 to-transparent skew-x-[-20deg] pointer-events-none z-2 will-change-transform"
                 />
 
                 <div className="relative z-10 w-full mb-8" style={{ transform: "translateZ(50px)" }}>
@@ -229,7 +225,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                                 stroke="var(--brand-gold)"
                                                 fill="url(#salesGradient)"
                                                 strokeWidth={4}
-                                                animationDuration={2000}
+                                                isAnimationActive={false} // Disable heavy Recharts animations
                                             />
                                         </AreaChart>
                                     </ResponsiveContainer>
@@ -291,6 +287,6 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                     walletData={walletData}
                 />
             </GlassCard>
-        </motion.div>
+        </div>
     )
 }

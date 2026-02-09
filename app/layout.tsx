@@ -23,6 +23,10 @@ export const metadata: Metadata = {
   title: "Cloove | Business Dashboard",
   description: "Your calm, intelligent business partner",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

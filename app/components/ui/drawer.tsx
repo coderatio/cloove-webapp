@@ -70,7 +70,7 @@ const DrawerStickyHeader = ({
         {...props}
     >
         <div className="mx-auto mb-6 h-1.5 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10" />
-        <div className="max-w-lg mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-full mx-auto flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
                 {children}
             </div>
