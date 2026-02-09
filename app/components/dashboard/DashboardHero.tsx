@@ -99,7 +99,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
             className="perspective-1000"
         >
             <GlassCard className={cn(
-                "rounded-[40px] p-8 md:px-16 md:py-16 text-center relative overflow-hidden group min-h-[400px] md:h-[440px] flex flex-col justify-center transition-all duration-700 ease-in-out border-white/20 dark:border-white/5",
+                "rounded-[32px] md:rounded-[40px] p-6 md:px-16 md:py-16 text-center relative overflow-hidden group min-h-[340px] md:min-h-[400px] md:h-[440px] flex flex-col justify-center transition-all duration-700 ease-in-out border-white/20 dark:border-white/5",
                 className
             )}>
                 {/* 1. Animated Mesh Gradients */}
@@ -147,24 +147,24 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                                 className="flex flex-col items-center w-full"
                             >
-                                <span className="text-xs md:text-sm font-bold tracking-[0.2em] uppercase text-brand-accent/40 dark:text-brand-cream/40 mb-6 flex items-center gap-2">
-                                    <Wallet className="w-3.5 h-3.5" />
+                                <span className="text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase text-brand-accent/40 dark:text-brand-cream/40 mb-4 md:mb-6 flex items-center justify-center gap-2">
+                                    <Wallet className="w-3 md:w-3.5 h-3 md:h-3.5" />
                                     {walletData.label}
                                 </span>
 
                                 {walletData.isVerified ? (
                                     <div className="flex flex-col items-center w-full">
-                                        <h2 className="font-serif text-5xl md:text-8xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-4 select-all drop-shadow-sm">
+                                        <h2 className="font-serif text-3xl sm:text-4xl md:text-8xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-2 md:mb-4 select-all drop-shadow-sm">
                                             {walletData.balance}
                                         </h2>
 
-                                        <div className="flex items-center gap-4 mt-8">
+                                        <div className="flex items-center gap-3 md:gap-4 mt-6 md:mt-8">
                                             <Button
                                                 onClick={() => setIsAddMoneyOpen(true)}
-                                                className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-12 px-10 shadow-2xl shadow-brand-deep/20 dark:shadow-brand-gold/10 font-bold active:scale-95 transition-all hover:bg-brand-deep/90 dark:hover:bg-brand-gold/80 relative overflow-hidden group/btn"
+                                                className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-10 md:h-12 px-6 md:px-10 shadow-2xl shadow-brand-deep/20 dark:shadow-brand-gold/10 font-bold active:scale-95 transition-all hover:bg-brand-deep/90 dark:hover:bg-brand-gold/80 relative overflow-hidden group/btn text-[10px] md:text-sm"
                                             >
-                                                <span className="relative z-10 flex items-center gap-2">
-                                                    <Plus className="w-4 h-4" /> Add Money
+                                                <span className="relative z-10 flex items-center gap-1.5 md:gap-2">
+                                                    <Plus className="w-3.5 md:w-4 h-3.5 md:h-4" /> Add Money
                                                 </span>
                                                 <motion.div
                                                     initial={{ x: "-100%" }}
@@ -173,19 +173,19 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                                     className="absolute inset-0 bg-white/20 skew-x-[-20deg]"
                                                 />
                                             </Button>
-                                            <Button variant="outline" className="rounded-full border-brand-deep/10 dark:border-white/10 text-brand-deep/60 dark:text-brand-cream/60 hover:text-brand-deep dark:hover:text-brand-cream h-12 px-10 backdrop-blur-md hover:bg-white/40 dark:hover:bg-white/5 active:scale-95 transition-all font-bold">
-                                                <Send className="w-4 h-4 mr-2" /> Send
+                                            <Button variant="outline" className="rounded-full border-brand-deep/10 dark:border-white/10 text-brand-deep/60 dark:text-brand-cream/60 hover:text-brand-deep dark:hover:text-brand-cream h-10 md:h-12 px-6 md:px-10 backdrop-blur-md hover:bg-white/40 dark:hover:bg-white/5 active:scale-95 transition-all font-bold text-[10px] md:text-sm">
+                                                <Send className="w-3.5 md:w-4 h-3.5 md:h-4 mr-1.5 md:mr-2" /> Send
                                             </Button>
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center w-full max-w-sm">
-                                        <h2 className="font-serif text-5xl md:text-8xl font-medium text-brand-deep/10 dark:text-brand-cream/10 tracking-tighter mb-8 select-none blur-[6px]">
+                                        <h2 className="font-serif text-3xl sm:text-4xl md:text-8xl font-medium text-brand-deep/10 dark:text-brand-cream/10 tracking-tighter mb-6 md:mb-8 select-none blur-[6px]">
                                             ₦***,***
                                         </h2>
                                         <Button
                                             onClick={() => setIsVerificationOpen(true)}
-                                            className="bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep font-bold px-10 h-14 rounded-2xl shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 relative overflow-hidden group/verify"
+                                            className="bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep font-bold px-6 md:px-10 h-11 md:h-14 rounded-2xl shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 md:gap-3 relative overflow-hidden group/verify text-[10px] md:text-sm"
                                         >
                                             <motion.div
                                                 animate={{
@@ -195,7 +195,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                                 transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
                                                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg]"
                                             />
-                                            <Sparkles className="w-5 h-5 relative z-10" />
+                                            <Sparkles className="w-4 md:w-5 h-4 md:h-5 relative z-10" />
                                             <span className="relative z-10">Verify Identity</span>
                                         </Button>
                                         <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
@@ -235,11 +235,11 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                     </ResponsiveContainer>
                                 </div>
 
-                                <span className="text-xs md:text-sm font-bold tracking-[0.2em] uppercase text-brand-accent/40 dark:text-brand-cream/40 mb-6">
+                                <span className="text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase text-brand-accent/40 dark:text-brand-cream/40 mb-4 md:mb-6">
                                     {sales.label}
                                 </span>
 
-                                <h2 className="font-serif text-5xl md:text-8xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-8 drop-shadow-sm">
+                                <h2 className="font-serif text-3xl sm:text-4xl md:text-8xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-6 md:mb-8 drop-shadow-sm">
                                     {sales.value}
                                 </h2>
 
@@ -247,7 +247,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                     initial={{ scale: 0.8 }}
                                     animate={{ scale: 1 }}
                                     className={cn(
-                                        "inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold shadow-lg backdrop-blur-md transition-all",
+                                        "inline-flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-full text-[10px] md:text-sm font-bold shadow-lg backdrop-blur-md transition-all",
                                         sales.trendDirection === 'up'
                                             ? "bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold"
                                             : "bg-danger/10 dark:bg-danger/10 text-danger dark:text-danger"
