@@ -64,11 +64,11 @@ export function DateRangeFilter({
                         id="date"
                         variant={"outline"}
                         className={cn(
-                            "w-[260px] justify-start text-left font-medium rounded-xl border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300 shadow-sm hover:shadow-md text-brand-deep/80 dark:text-brand-cream/80",
+                            "w-auto md:w-[260px] justify-start text-left font-medium rounded-xl border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300 shadow-sm hover:shadow-md text-brand-deep/80 dark:text-brand-cream/80 px-2.5 md:px-4 text-[10px] md:text-sm",
                             !date && "text-muted-foreground"
                         )}
                     >
-                        <CalendarIcon className="mr-2 h-4 w-4 text-brand-accent/40" />
+                        <CalendarIcon className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4 text-brand-accent/40" />
                         {date?.from ? (
                             date.to ? (
                                 <span className="text-brand-deep dark:text-brand-cream">

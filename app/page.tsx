@@ -134,19 +134,19 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row md:items-end justify-between gap-4"
+            className="flex flex-row items-center md:items-end justify-between gap-4"
           >
             <div>
-              <p className="text-sm text-brand-accent/80 dark:text-brand-cream/80 font-medium mb-1 capitalize">
+              <p className="text-[10px] md:text-sm text-brand-accent/80 dark:text-brand-cream/80 font-medium mb-0 md:mb-1 capitalize">
                 {isDesktop ? 'Good afternoon,' : 'Welcome,'}
               </p>
-              <h1 className="font-serif text-3xl md:text-4xl text-brand-deep dark:text-brand-cream">
+              <h1 className="font-serif text-2xl md:text-4xl text-brand-deep dark:text-brand-cream">
                 {ownerName}
               </h1>
             </div>
 
             {/* Date Filter & Business Badge */}
-            <div className="flex flex-col md:items-end gap-3">
+            <div className="flex flex-col items-end gap-2 md:gap-3">
               <div className="hidden md:flex flex-col items-end">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/50 mb-1">Current Business</span>
                 <div className="px-3 py-1 rounded-full bg-brand-green/5 dark:bg-brand-gold/10 border border-brand-green/10 dark:border-brand-gold/10">
