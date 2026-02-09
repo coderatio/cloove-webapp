@@ -44,13 +44,13 @@ export function MobileNav() {
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="fixed bottom-6 right-6 z-50 md:hidden"
+                className="fixed top-6 left-6 z-50 md:hidden"
             >
                 <button
                     onClick={() => setIsMenuOpen(true)}
-                    className="h-14 w-14 rounded-full bg-brand-deep border border-brand-gold/20 shadow-[0_8px_32px_rgba(182,143,76,0.3)] flex items-center justify-center text-brand-gold hover:scale-110 transition-transform active:scale-95"
+                    className="h-12 w-12 rounded-full bg-brand-deep/80 backdrop-blur-xl border border-brand-gold/20 shadow-xl flex items-center justify-center text-brand-gold active:scale-95"
                 >
-                    <Menu className="h-7 w-7" />
+                    <Menu className="h-6 w-6" />
                 </button>
             </motion.div>
         )
