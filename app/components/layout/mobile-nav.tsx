@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, Sparkles, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid, Banknote, ShieldCheck } from "lucide-react"
+import { Home, Sparkles, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid, Banknote, ShieldCheck, Gift } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
     Drawer,
@@ -158,6 +158,26 @@ export function MobileNav() {
                         <DrawerTitle>Menu</DrawerTitle>
                     </DrawerStickyHeader>
                     <div className="p-6 pb-12">
+                        <div className="mb-6">
+                            <Link
+                                href="/referrals"
+                                onClick={() => setIsMoreOpen(false)}
+                                className="flex items-center justify-between p-4 rounded-3xl bg-gradient-to-br from-brand-deep to-black text-brand-cream relative overflow-hidden group shadow-xl"
+                            >
+                                {/* Background Effect */}
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 blur-3xl rounded-full -mr-10 -mt-10" />
+
+                                <div className="relative z-10 flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-2xl bg-brand-gold flex items-center justify-center shadow-lg text-brand-deep shrink-0">
+                                        <Gift className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-serif text-lg font-medium text-brand-gold">Refer & Earn</h4>
+                                        <p className="text-xs text-brand-cream/60">Get 10% commission per referral</p>
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             {[...mainNavItems, ...moreItems].map((item) => (
                                 <Link

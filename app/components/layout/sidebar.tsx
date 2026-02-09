@@ -15,11 +15,14 @@ import {
     Moon,
     Sun,
     LayoutGrid,
-    Banknote,
-    Store,
-    ShieldCheck,
     Settings,
-    LogOut
+    LogOut,
+    CheckCircle2,
+    Store,
+    Megaphone,
+    Gift,
+    Banknote,
+    ShieldCheck
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
@@ -56,8 +59,19 @@ const navGroups = [
             { href: "/stores", icon: LayoutGrid, label: "Stores" },
         ]
     },
+    // {
+    //     label: "Growth",
+    //     items: [
+    //         {
+    //             label: "Marketing",
+    //             href: "/marketing",
+    //             icon: Megaphone,
+    //             description: "Campaigns & Promotions"
+    //         }
+    //     ]
+    // },
     {
-        label: "Management",
+        label: "Staff & Management",
         items: [
             { href: "/storefront", icon: Store, label: "Storefront" },
             { href: "/staff", icon: ShieldCheck, label: "Staff" },
@@ -134,7 +148,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </div>
 
                 {/* Nav Items Grouped */}
-                <nav className="flex-1 space-y-6 px-4 overflow-y-auto scrollbar-hide">
+                <nav className="flex-1 space-y-6 px-4 overflow-y-auto scrollbar-hide pb-6">
                     {navGroups.map((group) => (
                         <div key={group.label} className="space-y-1">
                             {!isCollapsed && (
@@ -258,6 +272,22 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                             </>
                         )}
                     </AnimatePresence>
+
+                    {/* Refer & Earn Button */}
+                    <Link
+                        href="/referrals"
+                        className={cn(
+                            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 mb-2",
+                            pathname === "/referrals"
+                                ? "bg-brand-gold/10 text-brand-gold"
+                                : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                        )}
+                    >
+                        <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-brand-gold" : "text-brand-cream/70")} />
+                        {!isCollapsed && (
+                            <span className="whitespace-nowrap">Refer & Earn</span>
+                        )}
+                    </Link>
 
                     {/* Sidebar Toggle (Only visible when expanded or specifically requested) */}
                     <div className="flex items-center gap-2">
