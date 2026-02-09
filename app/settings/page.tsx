@@ -18,12 +18,14 @@ import {
     Phone,
     Lock,
     Save,
-    ExternalLink
+    ExternalLink,
+    CreditCard
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import { BillingSettings } from "./components/BillingSettings"
 import {
     Drawer,
     DrawerContent,
@@ -34,7 +36,7 @@ import {
 
 import { PageTransition } from "../components/layout/page-transition"
 
-type Tab = "business" | "profile" | "security"
+type Tab = "business" | "profile" | "billing" | "security"
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState<Tab>("business")
@@ -43,6 +45,7 @@ export default function SettingsPage() {
     const tabs: { id: Tab; label: string; icon: any }[] = [
         { id: "business", label: "Business", icon: Building2 },
         { id: "profile", label: "My Profile", icon: User },
+        { id: "billing", label: "Billing", icon: CreditCard },
         { id: "security", label: "Security", icon: ShieldCheck },
     ]
 
@@ -64,29 +67,32 @@ export default function SettingsPage() {
                 />
 
                 {/* Tab Navigation */}
-                <div className="flex items-center gap-2 p-1 bg-brand-deep/5 dark:bg-white/5 rounded-2xl w-fit">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={cn(
-                                "relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                                activeTab === tab.id
-                                    ? "text-brand-deep dark:text-brand-gold"
-                                    : "text-brand-deep/60 dark:text-brand-cream/60 hover:bg-white/50 dark:hover:bg-white/5"
-                            )}
-                        >
-                            {activeTab === tab.id && (
-                                <motion.div
-                                    layoutId="active-tab"
-                                    className="absolute inset-0 bg-white dark:bg-white/10 rounded-xl shadow-sm"
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                />
-                            )}
-                            <tab.icon className="relative z-10 w-4 h-4" />
-                            <span className="relative z-10">{tab.label}</span>
-                        </button>
-                    ))}
+                {/* Tab Navigation */}
+                <div className="w-full overflow-x-auto pb-2 no-scrollbar">
+                    <div className="flex items-center gap-2 p-1 bg-brand-deep/5 dark:bg-white/5 rounded-2xl w-max min-w-0">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={cn(
+                                    "relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                                    activeTab === tab.id
+                                        ? "text-brand-deep dark:text-brand-gold"
+                                        : "text-brand-deep/60 dark:text-brand-cream/60 hover:bg-white/50 dark:hover:bg-white/5"
+                                )}
+                            >
+                                {activeTab === tab.id && (
+                                    <motion.div
+                                        layoutId="active-tab"
+                                        className="absolute inset-0 bg-white dark:bg-white/10 rounded-xl shadow-sm"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
+                                <tab.icon className="relative z-10 w-4 h-4" />
+                                <span className="relative z-10">{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <AnimatePresence mode="wait">
@@ -99,6 +105,7 @@ export default function SettingsPage() {
                     >
                         {activeTab === "business" && <BusinessSettings />}
                         {activeTab === "profile" && <ProfileSettings />}
+                        {activeTab === "billing" && <BillingSettings />}
                         {activeTab === "security" && <SecuritySettings />}
                     </motion.div>
                 </AnimatePresence>
