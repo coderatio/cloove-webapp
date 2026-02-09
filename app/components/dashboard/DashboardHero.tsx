@@ -1,31 +1,30 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { TrendingUp, TrendingDown, Wallet, ShieldCheck, Lock, ChevronRight, Plus, Send, Copy } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { TrendingUp, TrendingDown, Wallet, Lock, Plus, Send } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import { useState, useEffect } from "react"
+import { Button } from "@/app/components/ui/button"
+import { VerificationModal } from "./VerificationModal"
+import { GlassCard } from "../ui/glass-card"
+import { AddMoneyModal } from "./AddMoneyModal"
+import { Area, AreaChart, ResponsiveContainer } from "recharts"
 
-// DashboardHero.tsx
 interface DashboardHeroProps {
     sales: {
         value: string
         trend: string
         trendDirection: 'up' | 'down'
         label: string
+        history?: { value: number }[] // Added for sparkline
     }
     wallet?: {
         balance: string
         isVerified: boolean
-        label: string
+        label?: string
     }
     className?: string
 }
-
-import { useState, useEffect } from "react"
-import { AnimatePresence } from "framer-motion"
-import { Button } from "@/app/components/ui/button"
-import { VerificationModal } from "./VerificationModal"
-import { GlassCard } from "../ui/glass-card"
-import { AddMoneyModal } from "./AddMoneyModal"
 
 export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) {
     const [currentSlide, setCurrentSlide] = useState(0) // 0: Wallet, 1: Sales
@@ -43,18 +42,22 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
         return () => clearInterval(timer)
     }, [isVerificationOpen, isAddMoneyOpen])
 
-    const toggleSlide = () => setCurrentSlide((prev) => (prev === 0 ? 1 : 0))
     const handleVerifySuccess = () => {
         setIsWalletVerified(true)
         setIsVerificationOpen(false)
     }
 
-    // Default mock wallet if not provided (safety)
     const walletData = {
         balance: isWalletVerified ? (wallet?.balance || "₦540,500") : "₦0.00",
         isVerified: isWalletVerified,
-        label: "Wallet Balance"
+        label: wallet?.label || "Wallet Balance"
     }
+
+    // Default sparkline data if none provided
+    const sparklineData = sales.history || [
+        { value: 4000 }, { value: 3000 }, { value: 5000 },
+        { value: 2780 }, { value: 1890 }, { value: 2390 }, { value: 3490 }
+    ]
 
     return (
         <GlassCard className={cn("rounded-[32px] p-8 md:px-12 md:py-12 text-center relative overflow-hidden group min-h-[380px] md:h-[420px] flex flex-col justify-center transition-[height] duration-500 ease-in-out", className)}>
@@ -78,7 +81,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
 
                             {walletData.isVerified ? (
                                 <div className="flex flex-col items-center w-full">
-                                    <h2 className="font-serif text-5xl md:text-7xl font-medium text-brand-deep dark:text-brand-cream tracking-tight mb-4">
+                                    <h2 className="font-serif text-5xl md:text-7xl font-medium text-brand-deep dark:text-brand-cream tracking-tight mb-4 select-all">
                                         {walletData.balance}
                                     </h2>
 
@@ -102,7 +105,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                     </h2>
                                     <Button
                                         onClick={() => setIsVerificationOpen(true)}
-                                        className="bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep font-medium px-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+                                        className="bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:hover:bg-brand-gold/60 dark:text-brand-deep dark:hover:text-brand-deep font-medium px-6 rounded-full shadow-lg hover:shadow-xl transition-all"
                                     >
                                         <Lock className="w-4 h-4 mr-2" />
                                         Verify Identity
@@ -120,8 +123,23 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
                             transition={{ duration: 0.4, ease: "easeInOut" }}
-                            className="flex flex-col items-center w-full"
+                            className="flex flex-col items-center w-full relative"
                         >
+                            {/* Sparkline Background */}
+                            <div className="absolute inset-0 -z-10 opacity-20 h-full w-full pointer-events-none scale-110 blur-sm">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={sparklineData}>
+                                        <Area
+                                            type="monotone"
+                                            dataKey="value"
+                                            stroke="#0b3d2e"
+                                            fill="#0b3d2e"
+                                            strokeWidth={4}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+
                             <span className="text-sm md:text-base font-serif text-brand-accent/80 dark:text-brand-cream/80 tracking-widest uppercase mb-4">
                                 {sales.label}
                             </span>

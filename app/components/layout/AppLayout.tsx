@@ -66,7 +66,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
             <main
                 className={cn(
-                    "relative z-10 min-h-screen transition-all duration-300 md:pr-8 md:py-8",
+                    "relative z-10 min-h-screen transition-all duration-300 md:pr-8 md:pt-4 md:pb-8",
                     isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
                 )}
             >

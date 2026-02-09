@@ -9,6 +9,13 @@ import { InsightWhisper } from "./components/dashboard/InsightWhisper"
 import { ActionRow } from "./components/dashboard/ActionRow"
 import { ActivityStream, ActivityItem } from "./components/dashboard/ActivityStream"
 import { Package, Clock, AlertCircle } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { DateRange } from 'react-day-picker'
+import { subDays } from 'date-fns'
+import { DateRangeFilter } from './components/dashboard/DateRangeFilter'
+import { DashboardSkeleton } from './components/dashboard/DashboardSkeleton'
+import { InventoryPulse } from './components/dashboard/InventoryPulse'
+import { SalesVelocity } from './components/dashboard/SalesVelocity'
 
 // Mock Data structure per store
 const storeData: Record<string, any> = {
@@ -60,6 +67,20 @@ const businessData = {
 export default function Dashboard() {
   const { currentStore, ownerName, businessName } = useBusiness()
   const isDesktop = useMediaQuery("(min-width: 768px)")
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 7),
+    to: new Date(),
+  })
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simulate loading state for "Calm" feeling
+  useEffect(() => {
+    setIsLoading(true)
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 1500) // 1.5s delay to show skeleton
+    return () => clearTimeout(timer)
+  }, [currentStore.id, date]) // Reload when store varies
 
   // Aggregate or Filter Data
   const isAll = currentStore.id === ALL_STORES_ID
@@ -89,16 +110,31 @@ export default function Dashboard() {
     ? businessData.insight
     : storeData[currentStore.id]?.insight || "No specific insights for this store yet."
 
+  // Mock data for new widgets
+  const velocityData = [
+    { date: 'Mon', value: 120000 },
+    { date: 'Tue', value: 154000 },
+    { date: 'Wed', value: 110000 },
+    { date: 'Thu', value: 180000 },
+    { date: 'Fri', value: 240000 },
+    { date: 'Sat', value: 310000 },
+    { date: 'Sun', value: 215000 },
+  ]
+
+  if (isLoading) {
+    return <DashboardSkeleton />
+  }
+
   return (
     <PageTransition>
       <div className="max-w-5xl mx-auto space-y-8 pb-20">
 
         {/* Header - Simple & Clean */}
-        <header className="pt-4 px-2">
+        <header className="pt-1">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-end justify-between"
+            className="flex flex-col md:flex-row md:items-end justify-between gap-4"
           >
             <div>
               <p className="text-sm text-brand-accent/80 dark:text-brand-cream/80 font-medium mb-1 capitalize">
@@ -109,12 +145,15 @@ export default function Dashboard() {
               </h1>
             </div>
 
-            {/* Business Badge */}
-            <div className="hidden md:flex flex-col items-end">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/20 mb-1">Current Business</span>
-              <div className="px-3 py-1 rounded-full bg-brand-green/5 dark:bg-brand-gold/10 border border-brand-green/10 dark:border-brand-gold/10">
-                <span className="text-xs font-semibold text-brand-green dark:text-brand-gold">{businessName}</span>
+            {/* Date Filter & Business Badge */}
+            <div className="flex flex-col md:items-end gap-3">
+              <div className="hidden md:flex flex-col items-end">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/50 mb-1">Current Business</span>
+                <div className="px-3 py-1 rounded-full bg-brand-green/5 dark:bg-brand-gold/10 border border-brand-green/10 dark:border-brand-gold/10">
+                  <span className="text-xs font-semibold text-brand-green dark:text-brand-gold">{businessName}</span>
+                </div>
               </div>
+              <DateRangeFilter date={date} setDate={setDate} />
             </div>
           </motion.div>
         </header>
@@ -133,6 +172,19 @@ export default function Dashboard() {
             insight={displayInsight}
             actionLabel="View Report"
             actionLink="/assistant"
+          />
+        </section>
+
+        {/* Widgets Grid */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SalesVelocity
+            data={velocityData}
+            total="₦1,350,000"
+            trend="+12% growth"
+          />
+          <InventoryPulse
+            totalItems={450}
+            lowStockItems={isAll ? 12 : 3} // Mock logic
           />
         </section>
 
