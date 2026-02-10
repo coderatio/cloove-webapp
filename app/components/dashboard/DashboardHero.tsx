@@ -30,7 +30,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
     const [currentSlide, setCurrentSlide] = useState(0) // 0: Wallet, 1: Sales
     const [isVerificationOpen, setIsVerificationOpen] = useState(false)
     const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false)
-    const [isWalletVerified, setIsWalletVerified] = useState(wallet?.isVerified || false)
+    const [isWalletVerified, setIsWalletVerified] = useState(wallet?.isVerified || true)
 
     // Tilt Effect Refs/Values
     const cardRef = useRef<HTMLDivElement>(null)
