@@ -4,16 +4,15 @@ const withSerwist = require("@serwist/next").default({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
   disable: process.env.NODE_ENV === "development",
+  additionalPrecacheEntries: [{ url: "/offline", revision: Date.now().toString() }],
 });
 
 const nextConfig: NextConfig = {
-  experimental: {
-    turbopack: {
-      rules: {
-        "*.svg": {
-          loaders: ["@svgr/webpack"],
-          as: "*.js",
-        },
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
   },

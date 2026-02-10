@@ -33,13 +33,13 @@ export default function OfflinePage() {
                             <Button
                                 onClick={() => window.location.reload()}
                                 variant="outline"
-                                className="h-12 border-white/10 hover:bg-white/5 text-brand-cream text-xs"
+                                className="h-12 border-white/10 hover:bg-white/5 text-brand-cream hover:text-brand-cream/80 text-xs"
                             >
                                 <RefreshCw className="w-4 h-4 mr-2" />
                                 Retry
                             </Button>
                             <Link href="/">
-                                <Button className="w-full h-12 bg-brand-gold text-brand-deep font-bold text-xs shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                                <Button className="w-full h-12 bg-brand-gold hover:bg-brand-gold/80 text-brand-deep font-bold text-xs shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
                                     <Home className="w-4 h-4 mr-2" />
                                     Home
                                 </Button>

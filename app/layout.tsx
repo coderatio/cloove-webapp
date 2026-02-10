@@ -49,6 +49,9 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+
+// ... existing imports
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -57,6 +60,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${playfair.variable} antialiased`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    // Fail silently in production unless critical for debugging
+                  });
+                });
+              }
+            `,
+          }}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
