@@ -6,6 +6,8 @@ import { MobileNav } from "./mobile-nav"
 import { Sidebar } from "./sidebar"
 import { BusinessSwitcher } from "../shared/BusinessSwitcher"
 import { usePathname } from "next/navigation"
+import { useIsTablet } from "../../hooks/useMediaQuery"
+
 
 interface AppLayoutProps {
     children: React.ReactNode
@@ -21,10 +23,24 @@ import { cn } from "@/app/lib/utils"
 export default function AppLayout({ children }: AppLayoutProps) {
     const [mounted, setMounted] = React.useState(false)
     const [isCollapsed, setIsCollapsed] = React.useState(false)
+    const isTablet = useIsTablet()
+
+    React.useEffect(() => {
+        // Auto-collapse on tablet, auto-expand on desktop
+        if (isTablet) {
+            setIsCollapsed(true)
+        } else if (mounted) {
+            // Only auto-expand if we aren't on mobile (where it's hidden anyway)
+            // and we've already mounted to avoid hydration flashes
+            setIsCollapsed(false)
+        }
+    }, [isTablet, mounted])
+
 
     React.useEffect(() => {
         setMounted(true)
     }, [])
+
 
     const pathname = usePathname()
     const isAssistantPage = pathname === "/assistant"

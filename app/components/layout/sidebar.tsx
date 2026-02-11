@@ -166,7 +166,8 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                 <Link
                                                     href={item.href}
                                                     className={cn(
-                                                        "group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200",
+                                                        "group relative flex items-center rounded-xl transition-all duration-200",
+                                                        isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-4 py-3",
                                                         isActive
                                                             ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
                                                             : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
@@ -277,7 +278,8 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                     <Link
                         href="/referrals"
                         className={cn(
-                            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 mb-2",
+                            "flex items-center rounded-xl transition-all duration-200 mb-2",
+                            isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-3 py-2 text-sm font-medium",
                             pathname === "/referrals"
                                 ? "bg-brand-gold/10 text-brand-gold"
                                 : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
