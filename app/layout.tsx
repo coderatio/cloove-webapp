@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/providers/theme-provider";
+import QueryProvider from "./components/providers/query-provider";
 import { BusinessProvider } from "./components/BusinessProvider";
 import AppLayout from "./components/layout/AppLayout";
 import { Toaster } from "./components/ui/sonner";
@@ -79,12 +80,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider>
-            <BusinessProvider>
-              {children}
-              <Toaster />
-            </BusinessProvider>
-          </TooltipProvider>
+          <QueryProvider>
+            <TooltipProvider>
+              <BusinessProvider>
+                {children}
+                <Toaster />
+              </BusinessProvider>
+            </TooltipProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

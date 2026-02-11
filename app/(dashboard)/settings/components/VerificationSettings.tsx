@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import useSWR, { mutate } from "swr"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -9,11 +8,15 @@ import { CheckCircle2, Circle, Upload, MapPin, ChevronRight, AlertCircle, Loader
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
 import { ErrorDisplay } from "@/app/components/shared/ErrorDisplay"
+import {
+    useVerifications,
+    useSubmitVerification,
+    VerificationLevel,
+    VerificationType,
+    VerificationData
+} from "@/app/hooks/business/useVerification"
 
-type VerificationLevel = 1 | 2 | 3
-type VerificationStatus = "pending" | "verified" | "rejected" | "unverified"
-type VerificationType = "BVN" | "GOVT_ID" | "ADDRESS"
-
+// UI config only interface
 interface VerificationStep {
     level: VerificationLevel
     type: VerificationType
@@ -46,37 +49,32 @@ const STEPS_CONFIG: VerificationStep[] = [
     }
 ]
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
-
 export function VerificationSettings() {
-    const { data, error, isLoading: isFetching } = useSWR('/api/verification', fetcher)
+    const { data: verificationData, error, isLoading: isFetching, refetch } = useVerifications()
+    const submitVerification = useSubmitVerification()
+
     const [activeLevel, setActiveLevel] = useState<VerificationLevel | null>(null)
-    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Form States
     const [bvn, setBvn] = useState("")
     const [address, setAddress] = useState("")
 
     const handleVerification = async (level: VerificationLevel, type: VerificationType) => {
-        setIsSubmitting(true)
+        let payload: VerificationData = {}
 
-        let payload = {}
         if (level === 1) {
             if (bvn.length !== 11) {
                 toast.error("Please enter a valid 11-digit BVN")
-                setIsSubmitting(false)
                 return
             }
             payload = { bvn }
         } else if (level === 2) {
             // TODO: Handle file upload
             toast.info("Document upload coming soon")
-            setIsSubmitting(false)
             return
         } else if (level === 3) {
             if (!address) {
                 toast.error("Please enter your business address")
-                setIsSubmitting(false)
                 return
             }
             // TODO: Handle file upload for proof
@@ -84,27 +82,18 @@ export function VerificationSettings() {
         }
 
         try {
-            const res = await fetch('/api/verification', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ level, type, data: payload }),
+            await submitVerification.mutateAsync({
+                level,
+                type,
+                data: payload
             })
 
-            const result = await res.json()
-
-            if (!res.ok) {
-                throw new Error(result.error || "Verification failed")
-            }
-
-            toast.success(result.message || "Verification submitted successfully")
-            mutate('/api/verification') // Refresh data
+            // Clean up form on success
             setActiveLevel(null)
             setBvn("")
             setAddress("")
-        } catch (err: any) {
-            toast.error(err.message)
-        } finally {
-            setIsSubmitting(false)
+        } catch (err) {
+            // Error handling is done in mutation hook
         }
     }
 
@@ -112,18 +101,18 @@ export function VerificationSettings() {
         <ErrorDisplay
             title="Unable to load verification status"
             description="We encountered an issue while fetching your verification details. Please check your connection and try again."
-            onRetry={() => mutate('/api/verification')}
+            onRetry={() => refetch()}
         />
     )
 
     if (isFetching) return <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-brand-deep/20" /></div>
 
-    const verifications = data?.verifications || []
+    const verifications = verificationData?.verifications || []
 
-    const getStepStatus = (step: VerificationStep): VerificationStatus => {
-        const verification = verifications.find((v: any) => v.type === step.type)
+    const getStepStatus = (step: VerificationStep): "pending" | "verified" | "rejected" | "unverified" => {
+        const verification = verifications.find((v) => v.type === step.type)
         if (!verification) return "unverified"
-        return verification.status.toLowerCase() as VerificationStatus
+        return verification.status.toLowerCase() as "pending" | "verified" | "rejected" | "unverified"
     }
 
     return (
@@ -244,11 +233,11 @@ export function VerificationSettings() {
                                                 <div className="flex items-center gap-3 pt-2">
                                                     <Button
                                                         onClick={() => handleVerification(step.level, step.type)}
-                                                        disabled={isSubmitting}
+                                                        disabled={submitVerification.isPending}
                                                         className="bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep"
                                                     >
-                                                        {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                                                        {isSubmitting ? "Verifying..." : "Submit Verification"}
+                                                        {submitVerification.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                                        {submitVerification.isPending ? "Verifying..." : "Submit Verification"}
                                                     </Button>
                                                     <Button
                                                         variant="ghost"
