@@ -37,6 +37,7 @@ interface BusinessContextType {
     addStore: (name: string, location: string) => void
     updateStore: (id: string, updates: Partial<Store>) => void
     deleteStore: (id: string) => void
+    features: Record<string, boolean>
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined)
@@ -44,6 +45,11 @@ const BusinessContext = createContext<BusinessContextType | undefined>(undefined
 export function BusinessProvider({ children }: { children: ReactNode }) {
     const [stores, setStores] = useState<Store[]>(mockStores)
     const [currentStore, setCurrentStore] = useState<Store>(mockStores[0])
+    // Mock features for now - eventually will come from API
+    const [features] = useState<Record<string, boolean>>({
+        'beta_analytics': true,
+        'advanced_inventory': false
+    })
 
     const addStore = (name: string, location: string) => {
         const newStore: Store = {
@@ -81,7 +87,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             ownerName: "Josiah",
             addStore,
             updateStore,
-            deleteStore
+            deleteStore,
+            features
         }}>
             {children}
         </BusinessContext.Provider>

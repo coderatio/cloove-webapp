@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import { BillingSettings } from "./components/BillingSettings"
+import { VerificationSettings } from "./components/VerificationSettings"
 import {
     Drawer,
     DrawerContent,
@@ -36,7 +37,7 @@ import {
 
 import { PageTransition } from "@/app/components/layout/page-transition"
 
-type Tab = "business" | "profile" | "billing" | "security"
+type Tab = "business" | "profile" | "billing" | "security" | "verification"
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState<Tab>("business")
@@ -45,8 +46,9 @@ export default function SettingsPage() {
     const tabs: { id: Tab; label: string; icon: any }[] = [
         { id: "business", label: "Business", icon: Building2 },
         { id: "profile", label: "My Profile", icon: User },
+        { id: "verification", label: "Verification", icon: ShieldCheck },
         { id: "billing", label: "Billing", icon: CreditCard },
-        { id: "security", label: "Security", icon: ShieldCheck },
+        { id: "security", label: "Security", icon: Lock },
     ]
 
     const handleGlobalSave = () => {
@@ -105,28 +107,31 @@ export default function SettingsPage() {
                     >
                         {activeTab === "business" && <BusinessSettings />}
                         {activeTab === "profile" && <ProfileSettings />}
+                        {activeTab === "verification" && <VerificationSettings />}
                         {activeTab === "billing" && <BillingSettings />}
                         {activeTab === "security" && <SecuritySettings />}
                     </motion.div>
                 </AnimatePresence>
 
                 {/* Common Save Bar */}
-                <div className="fixed bottom-8 right-8 z-30">
-                    <Button
-                        onClick={handleGlobalSave}
-                        disabled={isSaving}
-                        className="rounded-full bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 px-8 h-14 shadow-2xl hover:scale-105 transition-all font-bold"
-                    >
-                        {isSaving ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4 mr-2" />
-                                Save Changes
-                            </>
-                        )}
-                    </Button>
-                </div>
+                {activeTab === "business" && (
+                    <div className="fixed bottom-8 right-8 z-30">
+                        <Button
+                            onClick={handleGlobalSave}
+                            disabled={isSaving}
+                            className="rounded-full bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 px-8 h-14 shadow-2xl hover:scale-105 transition-all font-bold"
+                        >
+                            {isSaving ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4 mr-2" />
+                                    Save Changes
+                                </>
+                            )}
+                        </Button>
+                    </div>
+                )}
             </div>
         </PageTransition>
     )
