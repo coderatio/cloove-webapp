@@ -1,3 +1,4 @@
+import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { HttpStatus } from "./http-status"
 
 // Custom error class for API errors
@@ -14,15 +15,11 @@ export class ApiError extends Error {
 }
 
 // Base configuration
-// If we use Next.js rewrites, we can just use relative paths.
-// If NEXT_PUBLIC_API_BASE_URL is provided, we use it as the base.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
 interface RequestOptions extends RequestInit {
     params?: Record<string, string>
 }
-
-const TOKEN_KEY = "cloove_auth_token"
 
 /**
  * Core API Client for making HTTP requests
@@ -32,24 +29,17 @@ export const apiClient = {
      * Token management
      */
     getToken() {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem(TOKEN_KEY)
-        }
-        return null
+        return storage.get(STORAGE_KEYS.AUTH_TOKEN)
     },
 
     setToken(token: string) {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(TOKEN_KEY, token)
-        }
+        storage.set(STORAGE_KEYS.AUTH_TOKEN, token)
     },
 
     clearToken() {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem(TOKEN_KEY)
-            // Optional: Also clear from cookies if needed
-        }
+        storage.remove(STORAGE_KEYS.AUTH_TOKEN)
     },
+
     /**
      * Helper to construct URLs with query params
      */
@@ -62,7 +52,6 @@ export const apiClient = {
         }
 
         // Otherwise, construct from base
-        // If base is absolute, use it. If base is relative or empty, use window.location.origin
         const base = API_BASE_URL.startsWith('http')
             ? API_BASE_URL
             : (typeof window !== 'undefined' ? window.location.origin : '')
@@ -91,6 +80,7 @@ export const apiClient = {
 
         const url = this.buildUrl(endpoint, params)
         const token = this.getToken()
+        const businessId = storage.get(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
 
         // Default headers
         const config: RequestInit = {
@@ -98,6 +88,7 @@ export const apiClient = {
             headers: {
                 "Content-Type": "application/json",
                 ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+                ...(businessId ? { "x-business-id": businessId } : {}),
                 ...headers,
             },
         }
@@ -130,7 +121,6 @@ export const apiClient = {
                 throw error
             }
             const message = error instanceof Error ? error.message : "An unexpected error occurred"
-            // Optional: Log to monitoring service (Sentry, etc.)
             console.error(`[API Client] ${endpoint} failed:`, message)
             throw new ApiError(message, HttpStatus.INTERNAL_SERVER_ERROR)
         }

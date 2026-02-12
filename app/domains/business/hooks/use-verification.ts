@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 
-export type VerificationLevel = 1 | 2 | 3
+export type VerificationLevel = number
 export type VerificationStatus = "pending" | "verified" | "rejected" | "unverified"
 export type VerificationType = "BVN" | "GOVT_ID" | "ADDRESS"
 
@@ -28,10 +28,27 @@ export interface SubmitVerificationPayload {
     data: VerificationData
 }
 
+export interface VerificationLevelConfig {
+    id: number
+    level: number
+    name: string
+    description: string
+    type: VerificationType
+    icon: string
+    requirements: string[] // Assuming backend sends array of strings
+}
+
 export const useVerifications = () => {
     return useQuery({
         queryKey: ["verifications"],
         queryFn: () => apiClient.get<VerificationResponse>("/api/verification"),
+    })
+}
+
+export const useVerificationLevels = () => {
+    return useQuery({
+        queryKey: ["verification-levels"],
+        queryFn: () => apiClient.get<VerificationLevelConfig[]>("/api/verification/levels"),
     })
 }
 

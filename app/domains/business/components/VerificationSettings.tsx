@@ -11,50 +11,24 @@ import { toast } from "sonner"
 import { ErrorDisplay } from "@/app/components/shared/ErrorDisplay"
 import {
     useVerifications,
+    useVerificationLevels,
     useSubmitVerification,
     VerificationLevel,
     VerificationType,
-    VerificationData
+    VerificationData,
+    VerificationLevelConfig,
 } from "@/app/domains/business/hooks/use-verification"
 
-// UI config only interface
-interface VerificationStep {
-    level: VerificationLevel
-    type: VerificationType
-    title: string
-    description: string
-    requirements: string[]
+const ICON_MAP: Record<string, any> = {
+    "ShieldCheck": ShieldCheck,
+    "FileText": FileText,
+    "MapPin": MapPin,
+    "Briefcase": Sparkles // Fallback or additional icon
 }
-
-const STEPS_CONFIG: (VerificationStep & { icon: any })[] = [
-    {
-        level: 1,
-        type: "BVN",
-        title: "Identity Gateway",
-        description: "Secure your account with Bank Verification Number (BVN).",
-        requirements: ["11-digit BVN Code", "Self-verification"],
-        icon: ShieldCheck
-    },
-    {
-        level: 2,
-        type: "GOVT_ID",
-        title: "Official Credential",
-        description: "Upload an official government document for full access.",
-        requirements: ["Passport", "Driver’s License", "National ID"],
-        icon: FileText
-    },
-    {
-        level: 3,
-        type: "ADDRESS",
-        title: "Local Foundation",
-        description: "Establish your business presence at a verified location.",
-        requirements: ["Utility Bill", "Business Tenancy"],
-        icon: MapPin
-    }
-]
 
 export function VerificationSettings() {
     const { data: verificationData, error, isLoading: isFetching, refetch } = useVerifications()
+    const { data: levels, isLoading: isLoadingLevels } = useVerificationLevels()
     const submitVerification = useSubmitVerification()
 
     const [activeLevel, setActiveLevel] = useState<VerificationLevel | null>(null)
@@ -64,16 +38,18 @@ export function VerificationSettings() {
     const handleVerification = async (level: VerificationLevel, type: VerificationType) => {
         let payload: VerificationData = {}
 
-        if (level === 1) {
+        // TODO: This logic needs to be dynamic based on type, not just level number
+        // For now, mapping simplified types
+        if (type === "BVN") {
             if (bvn.length !== 11) {
                 toast.error("Please enter a valid 11-digit BVN")
                 return
             }
             payload = { bvn }
-        } else if (level === 2) {
+        } else if (type === "GOVT_ID") {
             toast.info("Document upload coming soon")
             return
-        } else if (level === 3) {
+        } else if (type === "ADDRESS") {
             if (!address) {
                 toast.error("Please enter your business address")
                 return
@@ -104,7 +80,7 @@ export function VerificationSettings() {
         />
     )
 
-    if (isFetching) return (
+    if (isFetching || isLoadingLevels) return (
         <div className="flex flex-col items-center justify-center p-24 space-y-4">
             <Loader2 className="w-10 h-10 animate-spin text-brand-gold" />
             <p className="text-sm font-medium text-brand-deep/40 dark:text-brand-cream/40 animate-pulse">Synchronizing Security Status...</p>
@@ -112,9 +88,11 @@ export function VerificationSettings() {
     )
 
     const verifications = verificationData?.verifications || []
+    const sortedLevels = levels ? [...levels].sort((a, b) => a.level - b.level) : []
 
-    const getStepStatus = (step: typeof STEPS_CONFIG[0]): "pending" | "verified" | "rejected" | "unverified" => {
-        const verification = verifications.find((v) => v.type === step.type)
+    const getStepStatus = (levelConfig: VerificationLevelConfig): "pending" | "verified" | "rejected" | "unverified" => {
+        // Find verification by levelId instead of type if possible, or fallback to type
+        const verification = verifications.find((v) => v.level === levelConfig.level || v.type === levelConfig.type)
         if (!verification) return "unverified"
         return verification.status.toLowerCase() as "pending" | "verified" | "rejected" | "unverified"
     }
@@ -151,17 +129,17 @@ export function VerificationSettings() {
 
                 {/* 2. Foreground Content Layer - Definitive stage stacking */}
                 <div className="relative z-10 space-y-20 md:space-y-12">
-                    {STEPS_CONFIG.map((step, index) => {
+                    {sortedLevels.map((step, index) => {
                         const status = getStepStatus(step)
                         const isVerified = status === "verified"
                         const isPending = status === "pending"
                         const isRejected = status === "rejected"
                         const isActive = activeLevel === step.level
 
-                        const prevStep = STEPS_CONFIG[index - 1]
+                        const prevStep = sortedLevels[index - 1]
                         const isLocked = prevStep && getStepStatus(prevStep) !== "verified"
 
-                        const Icon = step.icon
+                        const Icon = step.icon && ICON_MAP[step.icon] ? ICON_MAP[step.icon] : ShieldCheck // Default icon
 
                         return (
                             <div key={step.level} className="relative flex flex-col md:block">
@@ -214,7 +192,7 @@ export function VerificationSettings() {
                                                     </div>
                                                     <div className="space-y-1 md:space-y-2">
                                                         <h3 className="text-xl md:text-2xl font-serif text-brand-deep dark:text-brand-cream leading-tight">
-                                                            {step.title}
+                                                            {step.name}
                                                         </h3>
                                                         <p className="text-xs md:text-sm text-brand-deep/60 dark:text-brand-cream/60 max-w-sm leading-relaxed">
                                                             {step.description}

@@ -26,5 +26,11 @@ export interface LoginResponse {
         email: string | null
         phoneNumber: string
         setupRequired: boolean
+        businesses?: Array<{
+            id: string
+            name: string
+            slug: string
+            currency: string
+        }>
     }
 }

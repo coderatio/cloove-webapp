@@ -19,6 +19,7 @@ import { Settings, LogOut, Sun, Moon } from "lucide-react"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
+import { BusinessGuard } from "../shared/BusinessGuard"
 
 export default function AppLayout({ children }: AppLayoutProps) {
     const [mounted, setMounted] = React.useState(false)
@@ -166,7 +167,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 )}
 
                 <div className={cn("px-4 pt-4 md:p-0", isAssistantPage ? "pb-0" : "pb-24")}>
-                    {children}
+                    <BusinessGuard>
+                        {children}
+                    </BusinessGuard>
                 </div>
             </main>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { apiClient } from "@/app/lib/api-client"
+import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { toast } from "sonner"
 import type { LoginStep, CountryDetail, IdentifyResponse, LoginResponse } from "../types"
 
@@ -89,9 +90,20 @@ export function useLoginFlow({ callbackUrl = '/', router }: UseLoginFlowProps = 
                 setStep('setup-password')
             } else {
                 setStep('success')
+
+                // Set active business if there's only one
+                const businesses = response.user?.businesses || []
+                if (businesses.length === 1) {
+                    storage.set(STORAGE_KEYS.ACTIVE_BUSINESS_ID, businesses[0].id)
+                }
+
                 if (router) {
                     setTimeout(() => {
-                        router.replace(callbackUrl)
+                        // If multiple businesses, go to selection, otherwise dashboard
+                        const finalUrl = businesses.length > 1
+                            ? `/select-business?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                            : callbackUrl
+                        router.replace(finalUrl)
                     }, 1500)
                 }
             }

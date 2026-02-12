@@ -1,6 +1,17 @@
 "use client"
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import { apiClient } from '@/app/lib/api-client'
+import { storage, STORAGE_KEYS } from '@/app/lib/storage'
+import { toast } from 'sonner'
+
+export interface Business {
+    id: string
+    name: string
+    slug: string
+    currency: string
+    logo?: string
+}
 
 interface Store {
     id: string
@@ -18,76 +29,93 @@ const allStores: Store = {
     isDefault: false
 }
 
-// Mock stores data
-const mockStores: Store[] = [
-    allStores,
-    { id: '1', name: 'Main Store', location: 'Lekki Phase 1', isDefault: true },
-    { id: '2', name: 'Ikeja Branch', location: 'Computer Village', isDefault: false },
-    { id: '3', name: 'Abuja Store', location: 'Wuse 2', isDefault: false },
-]
-
 interface BusinessContextType {
+    businesses: Business[]
+    activeBusiness: Business | null
+    setActiveBusiness: (business: Business | null) => void
+    isLoading: boolean
+    refreshBusinesses: () => Promise<void>
+
     businessName: string
-    businessLogo?: string
-    allStores: Store
-    stores: Store[]
+    ownerName: string
+
+    // Legacy/Store compatibility (can be expanded later)
     currentStore: Store
     setCurrentStore: (store: Store) => void
-    ownerName: string
-    addStore: (name: string, location: string) => void
-    updateStore: (id: string, updates: Partial<Store>) => void
-    deleteStore: (id: string) => void
+    stores: Store[]
     features: Record<string, boolean>
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined)
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
-    const [stores, setStores] = useState<Store[]>(mockStores)
-    const [currentStore, setCurrentStore] = useState<Store>(mockStores[0])
-    // Mock features for now - eventually will come from API
+    const [businesses, setBusinesses] = useState<Business[]>([])
+    const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+
+    // Mock stores/features for compatibility with existing UI
+    const [stores] = useState<Store[]>([allStores])
+    const [currentStore, setCurrentStore] = useState<Store>(allStores)
     const [features] = useState<Record<string, boolean>>({
         'beta_analytics': true,
         'advanced_inventory': false
     })
 
-    const addStore = (name: string, location: string) => {
-        const newStore: Store = {
-            id: Math.random().toString(36).substring(7),
-            name,
-            location,
-            isDefault: false
+    const setActiveBusiness = useCallback((business: Business | null) => {
+        setActiveBusinessState(business)
+        if (business) {
+            storage.set(STORAGE_KEYS.ACTIVE_BUSINESS_ID, business.id)
+        } else {
+            storage.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
         }
-        setStores([...stores, newStore])
-    }
+    }, [])
 
-    const updateStore = (id: string, updates: Partial<Store>) => {
-        setStores(stores.map(s => s.id === id ? { ...s, ...updates } : s))
-        if (currentStore.id === id) {
-            setCurrentStore({ ...currentStore, ...updates })
+    const refreshBusinesses = useCallback(async () => {
+        // Only fetch if authenticated
+        if (!apiClient.getToken()) {
+            setIsLoading(false)
+            return
         }
-    }
 
-    const deleteStore = (id: string) => {
-        if (id === ALL_STORES_ID) return
-        const newStores = stores.filter(s => s.id !== id)
-        setStores(newStores)
-        if (currentStore.id === id) {
-            setCurrentStore(allStores)
+        try {
+            const data = await apiClient.get<Business[]>('/api/businesses')
+            setBusinesses(data)
+
+            // Auto-selection or restoration
+            const savedId = storage.get(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+
+            if (data.length === 1) {
+                setActiveBusiness(data[0])
+            } else if (savedId) {
+                const found = data.find(b => b.id === savedId)
+                if (found) {
+                    setActiveBusiness(found)
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch businesses:', error)
+            // toast.error('Failed to load businesses')
+        } finally {
+            setIsLoading(false)
         }
-    }
+    }, [setActiveBusiness])
+
+    useEffect(() => {
+        refreshBusinesses()
+    }, [refreshBusinesses])
 
     return (
         <BusinessContext.Provider value={{
-            businessName: "Cloove Fashion",
-            allStores,
-            stores,
+            businesses,
+            activeBusiness,
+            setActiveBusiness,
+            isLoading,
+            refreshBusinesses,
+            businessName: activeBusiness?.name || "",
+            ownerName: "Josiah", // Should ideally come from auth context
             currentStore,
             setCurrentStore,
-            ownerName: "Josiah",
-            addStore,
-            updateStore,
-            deleteStore,
+            stores,
             features
         }}>
             {children}
