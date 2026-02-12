@@ -28,7 +28,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                 <button
                     onClick={() => setOpen(!open)}
                     className={cn(
-                        "flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10 text-brand-cream",
+                        "flex cursor-pointer w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10 text-brand-cream",
                         isCollapsed && "justify-center border-0 bg-transparent p-0"
                     )}
                 >

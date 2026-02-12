@@ -8,10 +8,21 @@ import { useBusiness } from "../components/BusinessProvider"
  * @returns boolean indicating if the feature is enabled
  */
 export function useFeature(featureKey: string): boolean {
-    const { features } = useBusiness()
+    const { permissions, role } = useBusiness()
 
-    // If features is undefined (loading or error), default to false
-    if (!features) return false
+    if (role === 'OWNER') return true
 
-    return !!features[featureKey]
+    // Fallback for previous mock features
+    const legacyFeatures: Record<string, boolean> = {
+        'beta_analytics': true,
+        'advanced_inventory': false
+    }
+
+    if (legacyFeatures[featureKey] !== undefined) {
+        return legacyFeatures[featureKey]
+    }
+
+    if (!permissions) return false
+
+    return !!permissions[featureKey]
 }

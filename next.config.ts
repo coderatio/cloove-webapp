@@ -18,10 +18,14 @@ const nextConfig: NextConfig = {
     },
   },
   async rewrites() {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.clooveai.com";
+    // Handle both cases: base URL with and without /api suffix
+    const destinationBase = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/:path*`,
+        destination: `${destinationBase}/:path*`,
       },
     ];
   },

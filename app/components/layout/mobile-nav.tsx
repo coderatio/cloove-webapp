@@ -12,24 +12,23 @@ import {
     DrawerStickyHeader,
     DrawerTitle,
 } from "../ui/drawer"
+import { usePermission } from "@/app/hooks/usePermission"
 
 const mainNavItems = [
     { href: "/", icon: Home, label: "Home" },
-    { href: "/orders", icon: ShoppingBag, label: "Orders" },
+    { href: "/orders", icon: ShoppingBag, label: "Orders", permission: 'VIEW_SALES' },
 ]
 
 const secondaryNavItems = [
-    { href: "/finance", icon: Banknote, label: "Finance" },
+    { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS' },
 ]
 
 const moreItems = [
-    { href: "/customers", icon: Users, label: "Customers" },
-    { href: "/stores", icon: LayoutGrid, label: "Stores" },
-    { href: "/inventory", icon: Package, label: "Inventory" },
-    { href: "/staff", icon: ShieldCheck, label: "Staff" },
-    { href: "/storefront", icon: ShoppingBag, label: "Storefront" },
-    // { href: "/settings", icon: Settings, label: "Settings" },
-    // { href: "/help", icon: HelpCircle, label: "Help & Support" },
+    { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
+    { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STAFF' },
+    { href: "/inventory", icon: Package, label: "Inventory", permission: 'MANAGE_PRODUCTS' },
+    { href: "/staff", icon: ShieldCheck, label: "Staff", permission: 'MANAGE_STAFF' },
+    { href: "/storefront", icon: ShoppingBag, label: "Storefront", permission: 'MANAGE_STAFF' },
 ]
 
 export function MobileNav() {
@@ -37,6 +36,7 @@ export function MobileNav() {
     const isAssistantPage = pathname === "/assistant"
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isMoreOpen, setIsMoreOpen] = useState(false)
+    const { can } = usePermission()
 
     // Zen Mode for Assistant Page
     if (isAssistantPage && !isMenuOpen) {
@@ -107,6 +107,7 @@ export function MobileNav() {
                                                 href={item.href}
                                                 className={cn(
                                                     "flex flex-col items-center gap-1 transition-colors",
+                                                    (item as any).permission && !can((item as any).permission) ? "hidden" : "",
                                                     isActive ? "text-brand-gold" : "text-white/40"
                                                 )}
                                             >
@@ -127,6 +128,7 @@ export function MobileNav() {
                                                 href={item.href}
                                                 className={cn(
                                                     "flex flex-col items-center gap-1 transition-colors",
+                                                    (item as any).permission && !can((item as any).permission) ? "hidden" : "",
                                                     isActive ? "text-brand-gold" : "text-white/40"
                                                 )}
                                             >
@@ -162,7 +164,7 @@ export function MobileNav() {
                             <Link
                                 href="/referrals"
                                 onClick={() => setIsMoreOpen(false)}
-                                className="flex items-center justify-between p-4 rounded-3xl bg-gradient-to-br from-brand-deep to-black text-brand-cream relative overflow-hidden group shadow-xl"
+                                className="flex items-center justify-between p-4 rounded-3xl bg-linear-to-br from-brand-deep to-black text-brand-cream relative overflow-hidden group shadow-xl"
                             >
                                 {/* Background Effect */}
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 blur-3xl rounded-full -mr-10 -mt-10" />
@@ -179,27 +181,32 @@ export function MobileNav() {
                             </Link>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                            {[...mainNavItems, ...moreItems].map((item) => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    onClick={() => setIsMoreOpen(false)}
-                                    className={cn(
-                                        "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95",
-                                        pathname === item.href
-                                            ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/30"
-                                            : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80"
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "flex h-10 w-10 items-center justify-center rounded-xl",
-                                        pathname === item.href ? "bg-brand-gold text-brand-deep" : "bg-white dark:bg-white/10 shadow-sm"
-                                    )}>
-                                        <item.icon className="h-5 w-5" strokeWidth={2} />
-                                    </div>
-                                    <span className="font-semibold">{item.label}</span>
-                                </Link>
-                            ))}
+                            {[...mainNavItems, ...moreItems].map((item) => {
+                                if ((item as any).permission && !can((item as any).permission)) {
+                                    return null
+                                }
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        onClick={() => setIsMoreOpen(false)}
+                                        className={cn(
+                                            "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95",
+                                            pathname === item.href
+                                                ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/30"
+                                                : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "flex h-10 w-10 items-center justify-center rounded-xl",
+                                            pathname === item.href ? "bg-brand-gold text-brand-deep" : "bg-white dark:bg-white/10 shadow-sm"
+                                        )}>
+                                            <item.icon className="h-5 w-5" strokeWidth={2} />
+                                        </div>
+                                        <span className="font-semibold">{item.label}</span>
+                                    </Link>
+                                )
+                            })}
                             <button
                                 className="flex items-center gap-4 rounded-2xl p-4 bg-red-50 dark:bg-red-500/10 text-red-600 active:scale-95 transition-all"
                             >

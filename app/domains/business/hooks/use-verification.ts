@@ -14,16 +14,24 @@ export interface VerificationData {
 }
 
 export interface VerificationResponse {
+    currentLevelId: number | null
     verifications: Array<{
-        type: VerificationType
+        id: string
         status: string
-        level: VerificationLevel
-        // Add other fields if needed
+        levelId: number
+        verifiedAt: string | null
+        createdAt: string
+        logs: Array<{
+            id: string
+            status: string
+            rejectionReason: string | null
+            createdAt: string
+        }>
     }>
 }
 
 export interface SubmitVerificationPayload {
-    level: VerificationLevel
+    levelId: number
     type: VerificationType
     data: VerificationData
 }
@@ -41,14 +49,14 @@ export interface VerificationLevelConfig {
 export const useVerifications = () => {
     return useQuery({
         queryKey: ["verifications"],
-        queryFn: () => apiClient.get<VerificationResponse>("/api/verification"),
+        queryFn: () => apiClient.get<VerificationResponse>("/verification"),
     })
 }
 
 export const useVerificationLevels = () => {
     return useQuery({
         queryKey: ["verification-levels"],
-        queryFn: () => apiClient.get<VerificationLevelConfig[]>("/api/verification/levels"),
+        queryFn: () => apiClient.get<VerificationLevelConfig[]>("/verification/levels"),
     })
 }
 
@@ -57,7 +65,7 @@ export const useSubmitVerification = () => {
 
     return useMutation({
         mutationFn: (payload: SubmitVerificationPayload) =>
-            apiClient.post("/api/verification", payload),
+            apiClient.post("/verification", payload),
         onSuccess: (data: any) => {
             toast.success(data.message || "Verification submitted successfully")
             // Invalidate and refetch verification data

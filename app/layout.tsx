@@ -7,6 +7,7 @@ import { BusinessProvider } from "./components/BusinessProvider";
 import AppLayout from "./components/layout/AppLayout";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { AuthProvider } from "./components/providers/auth-provider";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -60,7 +61,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${jakarta.variable} ${playfair.variable} antialiased`}>
+      <body className={`${jakarta.variable} ${playfair.variable} antialiased`} suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -81,12 +82,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            <TooltipProvider>
-              <BusinessProvider>
-                {children}
-                <Toaster />
-              </BusinessProvider>
-            </TooltipProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <BusinessProvider>
+                  {children}
+                  <Toaster />
+                </BusinessProvider>
+              </TooltipProvider>
+            </AuthProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

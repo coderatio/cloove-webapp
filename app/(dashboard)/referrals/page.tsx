@@ -24,11 +24,12 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from "@/app/components/ui/drawer"
+import { useAuth } from "@/app/components/providers/auth-provider"
 
 // Mock data
 const MOCK_STATS = {
-    referralCode: "CLV-JOSIAH",
-    referralLink: "https://usecloove.com/signup?ref=CLV-JOSIAH",
+    referralCode: "CLV-USER",
+    referralLink: "https://usecloove.com/signup?ref=CLV-USER",
     totalReferrals: 12,
     activeReferrals: 8,
     totalEarnings: 45000,
@@ -42,13 +43,14 @@ const MOCK_PAYOUTS = [
     { id: 3, amount: 5000, status: "pending", date: "2024-02-08", bank: "Gtbank •••• 1234", reference: "REF-11234-Z", items: [] },
 ]
 
-const MOCK_BANKS = [
-    { id: "1", bankName: "Guaranty Trust Bank", accountNumber: "0123456789", accountName: "Josiah Yahaya", isPrimary: true },
-    { id: "2", bankName: "Zenith Bank", accountNumber: "2001234567", accountName: "Josiah Yahaya", isPrimary: false },
-]
-
 export default function ReferralsPage() {
     const [isLoading, setIsLoading] = useState(false)
+    const { user } = useAuth()
+
+    const MOCK_BANKS = [
+        { id: "1", bankName: "Guaranty Trust Bank", accountNumber: "0123456789", accountName: user?.fullName || "Josiah Yahaya", isPrimary: true },
+        { id: "2", bankName: "Zenith Bank", accountNumber: "2001234567", accountName: user?.fullName || "Josiah Yahaya", isPrimary: false },
+    ]
 
     // UI State
     const [isWithdrawalDrawerOpen, setIsWithdrawalDrawerOpen] = useState(false)

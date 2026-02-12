@@ -1,0 +1,41 @@
+export enum Permission {
+    // Financial
+    VIEW_FINANCIALS = 'VIEW_FINANCIALS',
+
+    // Sales
+    VIEW_SALES = 'VIEW_SALES',
+    RECORD_SALE = 'RECORD_SALE',
+    UPDATE_SALE = 'UPDATE_SALE',
+    DELETE_SALE = 'DELETE_SALE',
+
+    // Products
+    MANAGE_PRODUCTS = 'MANAGE_PRODUCTS',
+
+    // Customers
+    VIEW_CUSTOMERS = 'VIEW_CUSTOMERS',
+    UPDATE_CUSTOMER = 'UPDATE_CUSTOMER',
+    DELETE_CUSTOMER = 'DELETE_CUSTOMER',
+
+    // Suppliers & Payables
+    VIEW_SUPPLIERS = 'VIEW_SUPPLIERS',
+    MANAGE_SUPPLIERS = 'MANAGE_SUPPLIERS',
+    RECORD_PAYABLE = 'RECORD_PAYABLE',
+    PAY_SUPPLIER = 'PAY_SUPPLIER',
+
+    // Staff
+    VIEW_STAFF = 'VIEW_STAFF',
+    MANAGE_STAFF = 'MANAGE_STAFF',
+
+    // Expenses
+    RECORD_EXPENSE = 'RECORD_EXPENSE',
+    VIEW_EXPENSES = 'VIEW_EXPENSES',
+
+    // Debts (customer owes you)
+    RECORD_REPAYMENT = 'RECORD_REPAYMENT',
+
+    // Subscription
+    MANAGE_SUBSCRIPTION = 'MANAGE_SUBSCRIPTION',
+
+    // Payouts
+    MANAGE_PAYOUTS = 'MANAGE_PAYOUTS',
+}

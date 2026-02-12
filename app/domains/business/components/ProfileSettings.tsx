@@ -21,24 +21,39 @@ import {
     DrawerTitle,
     DrawerDescription,
 } from "@/app/components/ui/drawer"
+import { useAuth } from "@/app/components/providers/auth-provider"
+import { useEffect } from "react"
 
 export function ProfileSettings() {
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const { user, refreshUser } = useAuth()
 
     // Form state
     const [formData, setFormData] = useState({
-        fullName: "Josiah AO",
-        email: "josiah@example.com",
-        phone: "+234 813 160 0400"
+        fullName: user?.fullName || "",
+        email: user?.email || "",
+        phone: user?.phoneNumber || ""
     })
+
+    // Sync form state when user changes
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                fullName: user.fullName,
+                email: user.email,
+                phone: user.phoneNumber
+            })
+        }
+    }, [user])
 
     const handleSave = () => {
         setIsLoading(true)
-        // Simulate API call
-        setTimeout(() => {
+        // Simulate API call for now (backend profile update not yet implemented)
+        setTimeout(async () => {
             setIsLoading(false)
             setIsEditing(false)
+            await refreshUser()
             toast.success("Profile updated successfully")
         }, 1500)
     }

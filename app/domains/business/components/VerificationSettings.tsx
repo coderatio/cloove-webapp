@@ -32,10 +32,11 @@ export function VerificationSettings() {
     const submitVerification = useSubmitVerification()
 
     const [activeLevel, setActiveLevel] = useState<VerificationLevel | null>(null)
+    const [showHistory, setShowHistory] = useState<number | null>(null)
     const [bvn, setBvn] = useState("")
     const [address, setAddress] = useState("")
 
-    const handleVerification = async (level: VerificationLevel, type: VerificationType) => {
+    const handleVerification = async (levelId: number, type: VerificationType) => {
         let payload: VerificationData = {}
 
         // TODO: This logic needs to be dynamic based on type, not just level number
@@ -59,7 +60,7 @@ export function VerificationSettings() {
 
         try {
             await submitVerification.mutateAsync({
-                level,
+                levelId,
                 type,
                 data: payload
             })
@@ -90,9 +91,12 @@ export function VerificationSettings() {
     const verifications = verificationData?.verifications || []
     const sortedLevels = levels ? [...levels].sort((a, b) => a.level - b.level) : []
 
+    const getVerification = (levelConfig: VerificationLevelConfig) => {
+        return verifications.find((v) => v.levelId === levelConfig.id)
+    }
+
     const getStepStatus = (levelConfig: VerificationLevelConfig): "pending" | "verified" | "rejected" | "unverified" => {
-        // Find verification by levelId instead of type if possible, or fallback to type
-        const verification = verifications.find((v) => v.level === levelConfig.level || v.type === levelConfig.type)
+        const verification = getVerification(levelConfig)
         if (!verification) return "unverified"
         return verification.status.toLowerCase() as "pending" | "verified" | "rejected" | "unverified"
     }
@@ -206,13 +210,73 @@ export function VerificationSettings() {
                                                         ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
                                                         : isPending
                                                             ? "bg-brand-gold/10 border-brand-gold/30 text-brand-gold animate-pulse"
-                                                            : isLocked
-                                                                ? "bg-brand-deep/5 border-transparent text-brand-deep/30 dark:text-white/30"
-                                                                : "bg-brand-gold/5 border-brand-gold/20 text-brand-gold"
+                                                            : isRejected
+                                                                ? "bg-red-500/10 border-red-500/20 text-red-500"
+                                                                : isLocked
+                                                                    ? "bg-brand-deep/5 border-transparent text-brand-deep/30 dark:text-white/30"
+                                                                    : "bg-brand-gold/5 border-brand-gold/20 text-brand-gold"
                                                 )}>
-                                                    {isVerified ? "Authenticated" : isPending ? "Reviewing" : isLocked ? "Locked" : "Ready"}
+                                                    {isVerified ? "Authenticated" : isPending ? "Reviewing" : isRejected ? "Rejected" : isLocked ? "Locked" : "Ready"}
                                                 </div>
                                             </div>
+
+                                            {isRejected && (
+                                                <div className="mt-4 p-5 rounded-[24px] bg-red-500/5 border border-red-500/10 flex flex-col gap-4">
+                                                    <div className="flex items-start gap-3">
+                                                        <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                                        <div className="space-y-1">
+                                                            <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest leading-none">Identity Rejection</p>
+                                                            <p className="text-sm text-brand-deep dark:text-brand-cream/90 leading-relaxed font-medium">
+                                                                {getVerification(step)?.logs[0]?.rejectionReason || "Please verify your information and try again."}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => setShowHistory(showHistory === step.id ? null : step.id)}
+                                                        className="text-[10px] font-bold text-brand-deep/40 dark:text-brand-cream/40 hover:text-brand-gold uppercase tracking-widest transition-colors flex items-center gap-2 self-start"
+                                                    >
+                                                        {showHistory === step.id ? "Hide Audit Trail" : "View Audit Trail"}
+                                                        <ChevronRight className={cn("w-3 h-3 transition-transform", showHistory === step.id && "rotate-90")} />
+                                                    </button>
+
+                                                    <AnimatePresence>
+                                                        {showHistory === step.id && (
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: "auto", opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                className="overflow-hidden border-t border-red-500/5 pt-4 space-y-4"
+                                                            >
+                                                                {getVerification(step)?.logs.map((log, i) => (
+                                                                    <div key={log.id} className="flex gap-4 relative">
+                                                                        {i !== (getVerification(step)?.logs.length || 0) - 1 && (
+                                                                            <div className="absolute left-1.5 top-3 bottom-0 w-px bg-brand-deep/5 dark:bg-white/5" />
+                                                                        )}
+                                                                        <div className={cn(
+                                                                            "w-3 h-3 rounded-full mt-1.5 shrink-0 border-2",
+                                                                            log.status === "VERIFIED" ? "bg-emerald-500 border-emerald-500/20" :
+                                                                                log.status === "PENDING" ? "bg-brand-gold border-brand-gold/20" :
+                                                                                    "bg-red-500 border-red-500/20"
+                                                                        )} />
+                                                                        <div className="space-y-1.5 pb-2">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-brand-deep/80 dark:text-brand-cream/80">{log.status}</span>
+                                                                                <span className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40">{new Date(log.createdAt).toLocaleString()}</span>
+                                                                            </div>
+                                                                            {log.rejectionReason && (
+                                                                                <p className="text-xs text-brand-deep/60 dark:text-brand-cream/60 leading-relaxed italic pr-4">
+                                                                                    "{log.rejectionReason}"
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            )}
 
                                             <div className="mt-8 md:mt-12 flex flex-col md:flex-row items-end justify-between gap-8">
                                                 <div className="space-y-4 w-full md:w-auto">
@@ -232,7 +296,7 @@ export function VerificationSettings() {
 
                                                 <div className="w-full md:w-auto">
                                                     <AnimatePresence mode="wait">
-                                                        {status === "unverified" && (
+                                                        {(status === "unverified" || status === "rejected") && (
                                                             isActive ? (
                                                                 <motion.div
                                                                     initial={{ opacity: 0, y: 15 }}
@@ -268,7 +332,7 @@ export function VerificationSettings() {
 
                                                                     <div className="flex items-center gap-2 md:gap-3">
                                                                         <Button
-                                                                            onClick={() => handleVerification(step.level, step.type)}
+                                                                            onClick={() => handleVerification(step.id, step.type)}
                                                                             disabled={submitVerification.isPending}
                                                                             className="flex-1 h-12 md:h-14 rounded-xl md:rounded-2xl bg-brand-gold px-8 hover:bg-brand-gold/80 text-brand-deep font-bold uppercase tracking-widest hover:brightness-105 active:scale-[0.98] transition-all shadow-lg shadow-brand-gold/10"
                                                                         >
@@ -300,7 +364,7 @@ export function VerificationSettings() {
                                                                         <span className="flex items-center gap-2 opacity-50 text-xs md:text-sm"><Lock className="w-4 h-4" /> Locked</span>
                                                                     ) : (
                                                                         <span className="flex items-center gap-2 text-xs md:text-sm">
-                                                                            Begin
+                                                                            {isRejected ? "Resubmit" : "Begin"}
                                                                             <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                                                         </span>
                                                                     )}

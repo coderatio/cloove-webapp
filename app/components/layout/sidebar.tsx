@@ -34,7 +34,22 @@ import { Button } from "../ui/button"
 import { toast } from "sonner"
 import { apiClient } from "@/app/lib/api-client"
 
-const navGroups = [
+import { usePermission } from "@/app/hooks/usePermission"
+import { useAuth } from "../providers/auth-provider"
+
+interface NavItem {
+    href: string;
+    icon: any;
+    label: string;
+    permission?: string;
+}
+
+interface NavGroup {
+    label: string;
+    items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
     {
         label: "Main",
         items: [
@@ -45,16 +60,16 @@ const navGroups = [
     {
         label: "Sales & Finance",
         items: [
-            { href: "/orders", icon: ShoppingBag, label: "Orders" },
-            { href: "/finance", icon: Banknote, label: "Finance" },
-            { href: "/customers", icon: Users, label: "Customers" },
+            { href: "/orders", icon: ShoppingBag, label: "Orders", permission: 'VIEW_SALES' },
+            { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS' },
+            { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
         ]
     },
     {
         label: "Operations",
         items: [
-            { href: "/inventory", icon: Package, label: "Inventory" },
-            { href: "/stores", icon: LayoutGrid, label: "Stores" },
+            { href: "/inventory", icon: Package, label: "Inventory", permission: 'MANAGE_PRODUCTS' },
+            { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STAFF' },
         ]
     },
     // {
@@ -71,8 +86,8 @@ const navGroups = [
     {
         label: "Staff & Management",
         items: [
-            { href: "/storefront", icon: Store, label: "Storefront" },
-            { href: "/staff", icon: ShieldCheck, label: "Staff" },
+            { href: "/storefront", icon: Store, label: "Storefront", permission: 'MANAGE_STAFF' },
+            { href: "/staff", icon: ShieldCheck, label: "Staff", permission: 'MANAGE_STAFF' },
         ]
     }
 ]
@@ -86,10 +101,23 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname()
     const { theme, setTheme } = useTheme()
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+    const { can, role } = usePermission()
+    const { user } = useAuth()
+
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+            .substring(0, 2)
+    }
+
+    const userInitials = user?.fullName ? getInitials(user.fullName) : '??'
 
     const handleLogout = () => {
         toast.promise(
-            apiClient.post('/api/settings/logout', {})
+            apiClient.post('/settings/logout', {})
                 .then(() => {
                     window.location.href = '/';
                 }),
@@ -158,6 +186,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 {group.items.map((item) => {
                                     const isActive = pathname === item.href
 
+                                    if (item.permission && !can(item.permission)) {
+                                        return null
+                                    }
+
                                     return (
                                         <Tooltip key={item.href} delayDuration={0}>
                                             <TooltipTrigger asChild>
@@ -219,58 +251,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
                 {/* Footer Actions */}
                 <div className="mt-auto p-4 border-t border-white/10 space-y-4 relative">
-                    {/* Popover Menu */}
-                    <AnimatePresence>
-                        {isMenuOpen && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-40"
-                                    onClick={() => setIsMenuOpen(false)}
-                                />
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className={cn(
-                                        "absolute z-50 bottom-full mb-2 bg-brand-deep/90 dark:bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1 shadow-2xl min-w-[200px]",
-                                        isCollapsed ? "left-2" : "left-4 right-4"
-                                    )}
-                                >
-                                    <div className="flex flex-col gap-0.5">
-                                        <Link
-                                            href="/settings"
-                                            onClick={() => setIsMenuOpen(false)}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-cream/70 hover:text-brand-cream hover:bg-white/5 transition-all"
-                                        >
-                                            <Settings className="h-4 w-4" />
-                                            Settings
-                                        </Link>
-                                        <button
-                                            onClick={() => {
-                                                setTheme(theme === "dark" ? "light" : "dark")
-                                                setIsMenuOpen(false)
-                                            }}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-cream/70 hover:text-brand-cream hover:bg-white/5 transition-all text-left w-full"
-                                        >
-                                            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                                            {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                                        </button>
-                                        <div className="h-px bg-white/5 mx-2 my-1" />
-                                        <button
-                                            onClick={() => {
-                                                setIsMenuOpen(false)
-                                                handleLogout()
-                                            }}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-left w-full"
-                                        >
-                                            <LogOut className="h-4 w-4" />
-                                            Log Out
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
+                    {/* Footer buttons removed from here to be moved inside their own relative containers if needed, but primarily profile menu needs it */}
 
                     {/* Refer & Earn Button */}
                     <Link
@@ -305,30 +286,84 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         </Button>
                     </div>
 
-                    {/* Profile Trigger */}
-                    <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className={cn(
-                            "group flex items-center gap-3 w-full rounded-2xl bg-black/20 p-2 border border-white/5 transition-all hover:bg-white/5 hover:border-white/10 text-left active:scale-[0.98]",
-                            isCollapsed && "justify-center p-1 bg-transparent border-0"
-                        )}
-                    >
-                        <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-brand-gold to-yellow-600 text-brand-deep flex items-center justify-center font-bold text-xs shadow-lg uppercase">
-                            JO
-                        </div>
-                        {!isCollapsed && (
-                            <>
-                                <div className="flex flex-col flex-1 overflow-hidden">
-                                    <span className="text-xs font-bold truncate text-brand-cream">Josiah AO</span>
-                                    <span className="text-[10px] text-brand-cream/50 truncate font-medium">Business Owner</span>
-                                </div>
-                                <ChevronRight className={cn(
-                                    "h-4 w-4 text-brand-cream/30 transition-transform duration-300",
-                                    isMenuOpen && "rotate-90 text-brand-gold"
-                                )} />
-                            </>
-                        )}
-                    </button>
+                    {/* Profile Trigger & Popover */}
+                    <div className="relative w-full">
+                        <AnimatePresence>
+                            {isMenuOpen && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    />
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className={cn(
+                                            "absolute z-50 bottom-full mb-3 bg-brand-deep-600 dark:bg-brand-deep-800 backdrop-blur-xl border border-white/10 rounded-2xl p-1 shadow-2xl min-w-[200px]",
+                                            isCollapsed ? "left-0" : "left-0 right-0"
+                                        )}
+                                    >
+                                        <div className="flex flex-col gap-0.5">
+                                            <Link
+                                                href="/settings"
+                                                onClick={() => setIsMenuOpen(false)}
+                                                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-cream/70 hover:text-brand-cream hover:bg-white/5 transition-all"
+                                            >
+                                                <Settings className="h-4 w-4" />
+                                                Settings
+                                            </Link>
+                                            <button
+                                                onClick={() => {
+                                                    setTheme(theme === "dark" ? "light" : "dark")
+                                                    setIsMenuOpen(false)
+                                                }}
+                                                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-cream/70 hover:text-brand-cream hover:bg-white/5 transition-all text-left w-full"
+                                            >
+                                                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                                                {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                                            </button>
+                                            <div className="h-px bg-white/5 mx-2 my-1" />
+                                            <button
+                                                onClick={() => {
+                                                    setIsMenuOpen(false)
+                                                    handleLogout()
+                                                }}
+                                                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-left w-full"
+                                            >
+                                                <LogOut className="h-4 w-4" />
+                                                Log Out
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
+
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className={cn(
+                                "group flex cursor-pointer items-center gap-3 w-full rounded-2xl bg-black/20 p-2 border border-white/5 transition-all hover:bg-white/5 hover:border-white/10 text-left active:scale-[0.98]",
+                                isCollapsed && "justify-center p-1 bg-transparent border-0"
+                            )}
+                        >
+                            <div className="h-9 w-9 shrink-0 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 text-brand-deep flex items-center justify-center font-bold text-xs shadow-lg uppercase">
+                                {userInitials}
+                            </div>
+                            {!isCollapsed && (
+                                <>
+                                    <div className="flex flex-col flex-1 overflow-hidden">
+                                        <span className="text-xs font-bold truncate text-brand-cream">{user?.fullName}</span>
+                                        <span className="text-[10px] text-brand-cream/50 truncate font-medium capitalize">{role?.toLowerCase().replace('_', ' ') || 'User'}</span>
+                                    </div>
+                                    <ChevronRight className={cn(
+                                        "h-4 w-4 text-brand-cream/30 transition-transform duration-300",
+                                        isMenuOpen && "rotate-90 text-brand-gold"
+                                    )} />
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </motion.aside>

@@ -34,7 +34,7 @@ export function useLoginFlow({ callbackUrl = '/', router }: UseLoginFlowProps = 
     useEffect(() => {
         const fetchCountries = async () => {
             try {
-                const data = await apiClient.get<CountryDetail[]>('/api/security/countries')
+                const data = await apiClient.get<CountryDetail[]>('/security/countries')
                 setCountries(data)
                 if (data.length > 0) {
                     setSelectedCountry(data[0])
@@ -56,7 +56,7 @@ export function useLoginFlow({ callbackUrl = '/', router }: UseLoginFlowProps = 
 
         setIsLoading(true)
         try {
-            const response = await apiClient.post<IdentifyResponse>('/api/security/identifier', {
+            const response = await apiClient.post<IdentifyResponse>('/security/identifier', {
                 identifier,
                 country: selectedCountry?.id
             })
@@ -78,7 +78,7 @@ export function useLoginFlow({ callbackUrl = '/', router }: UseLoginFlowProps = 
         setIsLoading(true)
 
         try {
-            const response = await apiClient.post<LoginResponse>('/api/security/login', {
+            const response = await apiClient.post<LoginResponse>('/security/login', {
                 identifier,
                 [isPinLogin ? 'pin' : 'password']: isPinLogin ? pin : password,
                 country: selectedCountry?.id

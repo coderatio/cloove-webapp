@@ -56,7 +56,11 @@ export const apiClient = {
             ? API_BASE_URL
             : (typeof window !== 'undefined' ? window.location.origin : '')
 
-        const url = new URL(endpoint.startsWith('/') ? endpoint : `/${endpoint}`, base)
+        // Correctly join paths to avoid stripping base path (like /api)
+        const normalizedBase = base.endsWith('/') ? base : `${base}/`
+        const normalizedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint
+
+        const url = new URL(normalizedEndpoint, normalizedBase)
         this.appendParams(url, params)
 
         return url.toString()

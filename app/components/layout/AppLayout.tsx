@@ -20,6 +20,9 @@ import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { BusinessGuard } from "../shared/BusinessGuard"
+import { apiClient } from "@/app/lib/api-client"
+import { useAuth } from "../providers/auth-provider"
+import { usePermission } from "@/app/hooks/usePermission"
 
 export default function AppLayout({ children }: AppLayoutProps) {
     const [mounted, setMounted] = React.useState(false)
@@ -48,10 +51,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     const { theme, setTheme } = useTheme()
     const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false)
+    const { user, logout: authLogout } = useAuth()
+    const { role } = usePermission()
+
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+            .substring(0, 2)
+    }
+
+    const userInitials = user?.fullName ? getInitials(user.fullName) : '??'
 
     const handleLogout = () => {
         toast.promise(
-            fetch('/api/settings/logout', { method: 'POST' })
+            apiClient.post('/settings/logout', {})
                 .then(() => {
                     window.location.href = '/';
                 }),
@@ -108,7 +124,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                                 className="h-8 w-8 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 text-brand-deep flex items-center justify-center font-bold text-[10px] shadow-lg uppercase border border-white/20"
                             >
-                                JO
+                                {userInitials}
                             </button>
                             <AnimatePresence>
                                 {isProfileMenuOpen && (
@@ -125,8 +141,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                         >
                                             <div className="flex flex-col gap-0.5">
                                                 <div className="px-3 py-2 border-b border-white/5 mb-1">
-                                                    <p className="text-xs font-bold text-brand-cream truncate">Josiah AO</p>
-                                                    <p className="text-[10px] text-brand-cream/50 truncate">Business Owner</p>
+                                                    <p className="text-xs font-bold text-brand-cream truncate">{user?.fullName}</p>
+                                                    <p className="text-[10px] text-brand-cream/50 truncate font-medium capitalize">
+                                                        {role?.toLowerCase().replace('_', ' ') || 'User'}
+                                                    </p>
                                                 </div>
                                                 <Link
                                                     href="/settings"

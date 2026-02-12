@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { apiClient } from '@/app/lib/api-client'
 import { storage, STORAGE_KEYS } from '@/app/lib/storage'
 import { toast } from 'sonner'
+import { useAuth } from './providers/auth-provider'
 
 export interface Business {
     id: string
@@ -11,6 +12,8 @@ export interface Business {
     slug: string
     currency: string
     logo?: string
+    role: string
+    permissions: Record<string, boolean> | null
 }
 
 interface Store {
@@ -39,27 +42,51 @@ interface BusinessContextType {
     businessName: string
     ownerName: string
 
-    // Legacy/Store compatibility (can be expanded later)
+    // Legacy/Store compatibility
     currentStore: Store
     setCurrentStore: (store: Store) => void
     stores: Store[]
-    features: Record<string, boolean>
+    addStore: (name: string, location?: string) => void
+    updateStore: (id: string, data: Partial<Store>) => void
+    deleteStore: (id: string) => void
+
+    // Authorization
+    role: string | null
+    permissions: Record<string, boolean> | null
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined)
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
     const [businesses, setBusinesses] = useState<Business[]>([])
+    const { user } = useAuth()
     const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
-    // Mock stores/features for compatibility with existing UI
-    const [stores] = useState<Store[]>([allStores])
+    // Mock stores for compatibility with existing UI
+    const [stores, setStores] = useState<Store[]>([allStores])
     const [currentStore, setCurrentStore] = useState<Store>(allStores)
-    const [features] = useState<Record<string, boolean>>({
-        'beta_analytics': true,
-        'advanced_inventory': false
-    })
+
+    const addStore = useCallback((name: string, location?: string) => {
+        const newStore: Store = {
+            id: Math.random().toString(36).substr(2, 9),
+            name,
+            location,
+            isDefault: false
+        }
+        setStores(prev => [...prev, newStore])
+        toast.success(`Store "${name}" added`)
+    }, [])
+
+    const updateStore = useCallback((id: string, data: Partial<Store>) => {
+        setStores(prev => prev.map(s => s.id === id ? { ...s, ...data } : s))
+        toast.success('Store updated')
+    }, [])
+
+    const deleteStore = useCallback((id: string) => {
+        setStores(prev => prev.filter(s => s.id !== id))
+        toast.error('Store removed')
+    }, [])
 
     const setActiveBusiness = useCallback((business: Business | null) => {
         setActiveBusinessState(business)
@@ -78,7 +105,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         }
 
         try {
-            const data = await apiClient.get<Business[]>('/api/businesses')
+            const data = await apiClient.get<Business[]>('/businesses')
             setBusinesses(data)
 
             // Auto-selection or restoration
@@ -112,11 +139,15 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             isLoading,
             refreshBusinesses,
             businessName: activeBusiness?.name || "",
-            ownerName: "Josiah", // Should ideally come from auth context
+            ownerName: user?.firstName || "",
             currentStore,
             setCurrentStore,
             stores,
-            features
+            addStore,
+            updateStore,
+            deleteStore,
+            role: activeBusiness?.role || null,
+            permissions: activeBusiness?.permissions || null
         }}>
             {children}
         </BusinessContext.Provider>

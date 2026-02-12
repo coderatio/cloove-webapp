@@ -17,6 +17,32 @@
   --color-cloove-muted: #4a7c6a;
   --color-cloove-border: #e8e4dc;
 
+  /* Brand Deep Spectrum */
+  --color-brand-deep-50: #e6eeec;
+  --color-brand-deep-100: #ceddd9;
+  --color-brand-deep-200: #9ebcb3;
+  --color-brand-deep-300: #6e9a8d;
+  --color-brand-deep-400: #3e7967;
+  --color-brand-deep-500: #125741;
+  --color-brand-deep-600: #0e4634;
+  --color-brand-deep-700: #0a3326;
+  --color-brand-deep-800: #062c21;
+  --color-brand-deep-900: #041f17;
+  --color-brand-deep-950: #02120d;
+
+  /* Brand Gold Spectrum */
+  --color-brand-gold-50: #fdfaf0;
+  --color-brand-gold-100: #fbf2d6;
+  --color-brand-gold-200: #f5e4a3;
+  --color-brand-gold-300: #efd36a;
+  --color-brand-gold-400: #e7bd3d;
+  --color-brand-gold-500: #d4af37;
+  --color-brand-gold-600: #b18c2a;
+  --color-brand-gold-700: #8a6a21;
+  --color-brand-gold-800: #6a511c;
+  --color-brand-gold-900: #574319;
+  --color-brand-gold-950: #33260d;
+
   /* Semantic Colors */
   --color-success: #16a34a;
   --color-warning: #ca8a04;
