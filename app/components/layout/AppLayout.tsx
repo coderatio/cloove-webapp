@@ -82,7 +82,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
             <main
                 className={cn(
-                    "relative z-10 min-h-screen transition-all duration-300 md:pr-8 md:pt-4 md:pb-8",
+                    "relative z-10 min-h-screen transition-all duration-300 md:pr-8 md:pt-6 md:pb-8",
                     isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
                 )}
             >
@@ -105,7 +105,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         <div className="relative">
                             <button
                                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                                className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-gold to-yellow-600 text-brand-deep flex items-center justify-center font-bold text-[10px] shadow-lg uppercase border border-white/20"
+                                className="h-8 w-8 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 text-brand-deep flex items-center justify-center font-bold text-[10px] shadow-lg uppercase border border-white/20"
                             >
                                 JO
                             </button>

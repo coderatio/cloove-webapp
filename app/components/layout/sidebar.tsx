@@ -17,9 +17,7 @@ import {
     LayoutGrid,
     Settings,
     LogOut,
-    CheckCircle2,
     Store,
-    Megaphone,
     Gift,
     Banknote,
     ShieldCheck
@@ -28,13 +26,13 @@ import { cn } from "@/app/lib/utils"
 import {
     Tooltip,
     TooltipContent,
-    TooltipProvider,
     TooltipTrigger,
 } from "@/app/components/ui/tooltip"
 import { useTheme } from "next-themes"
 import { BusinessSwitcher } from "../shared/BusinessSwitcher"
 import { Button } from "../ui/button"
 import { toast } from "sonner"
+import { apiClient } from "@/app/lib/api-client"
 
 const navGroups = [
     {
@@ -91,7 +89,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
     const handleLogout = () => {
         toast.promise(
-            fetch('/api/settings/logout', { method: 'POST' })
+            apiClient.post('/api/settings/logout', {})
                 .then(() => {
                     window.location.href = '/';
                 }),

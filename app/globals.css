@@ -122,6 +122,38 @@
    BASE STYLES
    ───────────────────────────────────────────────────────────────────────────── */
 
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(40px, -30px) scale(1.1);
+  }
+}
+
+@keyframes float-slower {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.05);
+  }
+
+  50% {
+    transform: translate(-50px, 40px) scale(0.95);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 20s linear infinite;
+}
+
+.animate-float-slower {
+  animation: float-slower 25s linear infinite;
+}
+
 :root {
   --background: var(--color-cloove-cream);
   --foreground: var(--color-cloove-deep);

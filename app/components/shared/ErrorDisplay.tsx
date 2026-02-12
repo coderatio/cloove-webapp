@@ -36,7 +36,7 @@ export function ErrorDisplay({
                         {/* Icon Container */}
                         <div className="relative group shrink-0">
                             <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                            <div className="relative w-16 h-16 rounded-full bg-gradient-to-b from-red-500/10 to-transparent border border-red-500/10 flex items-center justify-center p-1">
+                            <div className="relative w-16 h-16 rounded-full bg-linear-to-b from-red-500/10 to-transparent border border-red-500/10 flex items-center justify-center p-1">
                                 <div className="w-full h-full rounded-full bg-white/50 dark:bg-black/20 flex items-center justify-center border border-white/40 dark:border-white/5 shadow-inner">
                                     <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400 drop-shadow-sm" />
                                 </div>

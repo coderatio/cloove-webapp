@@ -9,7 +9,8 @@ export type VerificationType = "BVN" | "GOVT_ID" | "ADDRESS"
 export interface VerificationData {
     bvn?: string
     address?: string
-    // Add other fields as needed
+    idType?: "passport" | "drivers_license" | "nin" | "voters_card"
+    idNumber?: string
 }
 
 export interface VerificationResponse {

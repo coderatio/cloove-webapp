@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
 
-const withSerwist = require("@serwist/next").default({
+const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
   disable: process.env.NODE_ENV === "development",
@@ -15,6 +16,14 @@ const nextConfig: NextConfig = {
         as: "*.js",
       },
     },
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/:path*`,
+      },
+    ];
   },
 } as NextConfig;
 

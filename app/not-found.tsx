@@ -62,7 +62,7 @@ export default function NotFound() {
                         <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            className="absolute inset-0 -m-8 border border-dashed border-brand-cream/10 rounded-full w-64 h-64 [mask-image:linear-gradient(to_bottom,transparent,black)]"
+                            className="absolute inset-0 -m-8 border border-dashed border-brand-cream/10 rounded-full w-64 h-64 mask-[linear-gradient(to_bottom,transparent,black)]"
                         />
 
                         <div className="relative w-48 h-48 bg-brand-green/20 backdrop-blur-md rounded-full border border-brand-cream/10 flex items-center justify-center shadow-2xl ring-1 ring-brand-cream/5">
