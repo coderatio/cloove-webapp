@@ -57,7 +57,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
                     {step !== 'options' && (
                         <button
                             onClick={() => setStep('options')}
-                            className="p-2.5 rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 transition-all active:scale-95 group shrink-0"
+                            className="p-2.5 cursor-pointer rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 transition-all active:scale-95 group shrink-0"
                         >
                             <ArrowLeft className="w-5 h-5 text-brand-deep/60 dark:text-brand-cream/60 group-hover:text-brand-deep dark:group-hover:text-brand-cream" />
                         </button>
@@ -80,7 +80,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
             </div>
 
             {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-12">
+            <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-12 pt-4">
                 <AnimatePresence mode="wait">
                     {step === 'options' && (
                         <motion.div
@@ -95,7 +95,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
                             <FundingOption
                                 icon={Building2}
                                 title="Bank Transfer"
-                                description="Push money from any banking app"
+                                description="Receive money from any banking app"
                                 onClick={() => setStep('transfer')}
                             />
                             <FundingOption
@@ -124,7 +124,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
                             <GlassCard className="p-6 space-y-6 border-brand-green/10">
                                 <div className="space-y-1">
                                     <p className="text-[10px] uppercase tracking-widest text-brand-accent/40 font-bold">Bank Name</p>
-                                    <p className="text-lg font-serif text-brand-deep dark:text-brand-cream">Wema Bank (Cloove Virtual)</p>
+                                    <p className="text-lg font-serif text-brand-deep dark:text-brand-cream">Wema Bank</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] uppercase tracking-widest text-brand-accent/40 font-bold">Account Number</p>
@@ -167,7 +167,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
                                     <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60">Your reusable payment link for easy funding.</p>
                                 </div>
                                 <Button
-                                    onClick={() => handleCopy("https://clove.me/adebayo-textiles")}
+                                    onClick={() => handleCopy("https://cloove.me/adebayo-textiles")}
                                     className="w-full rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep"
                                 >
                                     {copied ? "Copied!" : "Copy Link"}
@@ -221,7 +221,7 @@ function FundingOption({ icon: Icon, title, description, onClick }: { icon: any,
     return (
         <button
             onClick={onClick}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/50 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 hover:border-brand-green/20 dark:hover:border-white/10 transition-all active:scale-[0.98] group"
+            className="w-full cursor-pointer flex items-center gap-4 p-4 rounded-2xl bg-white/50 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 hover:border-brand-green/20 dark:hover:border-white/10 transition-all active:scale-[0.98] group"
         >
             <div className="w-12 h-12 rounded-xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-deep/60 dark:text-brand-cream/60 group-hover:bg-brand-green/10 group-hover:text-brand-green transition-colors">
                 <Icon className="w-6 h-6" />

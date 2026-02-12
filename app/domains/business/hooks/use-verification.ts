@@ -14,7 +14,7 @@ export interface VerificationData {
 }
 
 export interface VerificationResponse {
-    currentLevelId: number | null
+    currentLevelId: string | null
     verifications: Array<{
         id: string
         status: string
@@ -37,7 +37,7 @@ export interface SubmitVerificationPayload {
 }
 
 export interface VerificationLevelConfig {
-    id: number
+    id: string
     level: number
     name: string
     description: string
