@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
     AUTH_TOKEN: 'cloove_auth_token',
     ACTIVE_BUSINESS_ID: 'active_business_id',
     THEME: 'theme',
+    LAST_ACTIVITY: 'last_activity',
 } as const
 
 type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]
@@ -44,6 +45,7 @@ export const storage = {
         if (typeof window === 'undefined') return
         this.remove(STORAGE_KEYS.AUTH_TOKEN)
         this.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+        this.remove(STORAGE_KEYS.LAST_ACTIVITY)
     },
 
     /**
@@ -100,5 +102,20 @@ export const storage = {
      */
     removeActiveBusinessId(): void {
         this.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+    },
+
+    /**
+     * Get last activity timestamp
+     */
+    getLastActivity(): number {
+        const val = this.get(STORAGE_KEYS.LAST_ACTIVITY)
+        return val ? parseInt(val) : Date.now()
+    },
+
+    /**
+     * Set last activity timestamp
+     */
+    setLastActivity(timestamp: number): void {
+        this.set(STORAGE_KEYS.LAST_ACTIVITY, timestamp.toString())
     }
 }

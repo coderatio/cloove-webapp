@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useCallback, useRef } from "react"
+"use client"
+
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useIdleTracker } from "@/app/hooks/use-idle-tracker"
 import { apiClient } from "@/app/lib/api-client"
 import { SessionTimeoutDrawer } from "./SessionTimeoutDrawer"
-import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 
 interface SessionManagerProps {
     sessionMetadata?: {
@@ -23,10 +24,12 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
     // Configurable thresholds (defaults)
     const refreshIntervalMs = parseDuration(sessionMetadata?.refreshInterval || "5m")
     const totalIdleTimeoutMs = refreshIntervalMs
-    const warningDurationSeconds = 60
-    const warningThresholdMs = totalIdleTimeoutMs - (warningDurationSeconds * 1000)
+    const proactiveRefreshThresholdMs = refreshIntervalMs * 0.6 // Refresh at 3 mins if 5 min TTL
+    const warningThresholdMs = refreshIntervalMs * 0.8 // Warn at 4 mins if 5 min TTL
+
 
     const lastRefreshTime = useRef(Date.now())
+    const warningStartedAtRef = useRef<number | null>(null)
     const timerRef = useRef<NodeJS.Timeout | null>(null)
 
     // Function to parse Adonis-style duration strings (e.g., "5m", "1h")
@@ -42,13 +45,21 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
         try {
             const data = await apiClient.refresh()
             lastRefreshTime.current = Date.now()
+            warningStartedAtRef.current = null
             setShowWarning(false)
             if (onSessionRefresh) {
                 onSessionRefresh(data.token)
             }
-        } catch (error) {
-            console.error("Failed to refresh session", error)
-            apiClient.logout()
+        } catch (error: any) {
+            // If it's a 401, we might have already expired on backend
+            // Instead of instant logout, show the warning to give one last chance
+            if (error.statusCode === 401) {
+                setShowWarning(true)
+                setRemainingSeconds(30) // Give short grace period
+            } else {
+                // For other errors, logout to be safe
+                apiClient.logout()
+            }
         }
     }, [onSessionRefresh])
 
@@ -56,61 +67,56 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
         apiClient.logout()
     }, [])
 
+    const lastActivityRef = useRef(lastActivity)
+    useEffect(() => {
+        lastActivityRef.current = lastActivity
+    }, [lastActivity])
+
     useEffect(() => {
         const checkSession = () => {
             const now = Date.now()
-            const idleTime = now - lastActivity
+            const currentLastActivity = lastActivityRef.current
+            const idleTime = now - currentLastActivity
 
-            // 1. If active and near refresh interval, refresh token
-            // We refresh if active and at least 80% of the interval has passed
-            if (idleTime < warningThresholdMs && (now - lastRefreshTime.current) >= (refreshIntervalMs * 0.8)) {
+
+            // 1. Proactive Refresh logic (only if active and NO warning shown)
+            // If user is active (idleTime is small) but token is getting old
+            if (!showWarning && idleTime < proactiveRefreshThresholdMs && (now - lastRefreshTime.current) >= proactiveRefreshThresholdMs) {
                 handleRefresh()
+                return
             }
 
-            // 2. If idle time has reached the warning threshold
-            if (idleTime >= warningThresholdMs && idleTime < totalIdleTimeoutMs) {
+            // 2. Warning logic (Once triggered, stay until explicit decision by user)
+            if (showWarning || idleTime >= warningThresholdMs) {
                 if (!showWarning) {
                     setShowWarning(true)
-                    // Calculate exact remaining seconds based on idle time
-                    const remaining = Math.max(0, Math.ceil((totalIdleTimeoutMs - idleTime) / 1000))
-                    setRemainingSeconds(remaining)
+                    warningStartedAtRef.current = now
                 }
-            } else if (idleTime < warningThresholdMs && showWarning) {
-                // If user becomes active again before the timer ends, hide warning
-                setShowWarning(false)
-            }
 
-            // 3. Fallback: If idle time exceeds total timeout significantly without manual logout
-            if (idleTime >= totalIdleTimeoutMs + 5000 && !showWarning) {
-                handleLogout()
+                // Use fixed start time for warning to ignore subsequent activity
+                const warningStartedAt = warningStartedAtRef.current || now
+                const warningDurationMs = totalIdleTimeoutMs - warningThresholdMs
+                const totalTimeoutAt = warningStartedAt + warningDurationMs
+
+                const remaining = Math.max(0, Math.ceil((totalTimeoutAt - now) / 1000))
+                setRemainingSeconds(remaining)
+
+                // 3. LOGOUT: Trigger if time is officially up
+                if (remaining === 0) {
+                    handleLogout()
+                    return
+                }
+
+                // 4. Fallback: Security logout if way past everything (safety)
+                if (idleTime >= totalIdleTimeoutMs + (5 * 60 * 1000)) {
+                    handleLogout()
+                }
             }
         }
 
-        const interval = setInterval(checkSession, 1000) // Check every second for better responsiveness
+        const interval = setInterval(checkSession, 1000)
         return () => clearInterval(interval)
-    }, [lastActivity, refreshIntervalMs, warningThresholdMs, totalIdleTimeoutMs, showWarning, handleRefresh, handleLogout])
-
-    // Warning countdown timer (visual only)
-    useEffect(() => {
-        if (showWarning && remainingSeconds > 0) {
-            const timer = setInterval(() => {
-                setRemainingSeconds(prev => {
-                    if (prev <= 1) {
-                        handleLogout()
-                        return 0
-                    }
-                    return prev - 1
-                })
-            }, 1000)
-            return () => clearInterval(timer)
-        }
-    }, [showWarning, remainingSeconds])
-
-    // If user interacts while warning is shown, automatically extend?
-    // User requested "actionable" drawer, so maybe let them click the button instead of auto-extending.
-    // But if they move the mouse, maybe we should at least reset the idle timer?
-    // The requirement says "decision to stay loggedin or allow system to log them out".
-    // So I'll keep the drawer open until they click.
+    }, [proactiveRefreshThresholdMs, warningThresholdMs, totalIdleTimeoutMs, showWarning, handleRefresh, handleLogout])
 
     return (
         <SessionTimeoutDrawer

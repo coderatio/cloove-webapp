@@ -19,6 +19,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
 interface RequestOptions extends RequestInit {
     params?: Record<string, string>
+    skipAuthRedirect?: boolean
 }
 
 /**
@@ -42,7 +43,7 @@ export const apiClient = {
 
     async refresh() {
         try {
-            const data = await this.post<{ token: string }>("/api/security/refresh", {})
+            const data = await this.post<{ token: string }>("/security/refresh", {}, { skipAuthRedirect: true })
             this.setToken(data.token)
             return data
         } catch (error) {
@@ -53,7 +54,7 @@ export const apiClient = {
 
     async logout() {
         try {
-            await this.post("/api/security/logout", {})
+            await this.post("/security/logout", {})
         } finally {
             this.clearToken()
             if (typeof window !== 'undefined') {
@@ -125,7 +126,7 @@ export const apiClient = {
 
             if (!response.ok) {
                 // Handle specific status codes
-                if (response.status === HttpStatus.UNAUTHORIZED) {
+                if (response.status === HttpStatus.UNAUTHORIZED && !options.skipAuthRedirect) {
                     this.clearToken()
 
                     // Redirect to login on authentication failure
