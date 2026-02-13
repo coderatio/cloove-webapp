@@ -15,6 +15,7 @@ export interface Business {
     logo?: string
     role: string
     permissions: Record<string, boolean> | null
+    features: Record<string, boolean> | null
 }
 
 
@@ -31,6 +32,7 @@ interface BusinessContextType {
     // Authorization
     role: string | null
     permissions: Record<string, boolean> | null
+    features: Record<string, boolean> | null
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined)
@@ -106,7 +108,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             businessName: activeBusiness?.name || "",
             ownerName: user?.firstName || "",
             role: activeBusiness?.role || null,
-            permissions: activeBusiness?.permissions || null
+            permissions: activeBusiness?.permissions || null,
+            features: activeBusiness?.features || null
         }}>
             {children}
         </BusinessContext.Provider>
