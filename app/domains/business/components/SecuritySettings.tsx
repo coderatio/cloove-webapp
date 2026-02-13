@@ -7,7 +7,9 @@ import { Input } from "@/app/components/ui/input"
 import {
     Lock,
     ExternalLink,
-    Loader2
+    Loader2,
+    Eye,
+    EyeOff
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -29,8 +31,15 @@ export function SecuritySettings() {
 
     // PIN State
     const [pinData, setPinData] = useState({ current: "", new: "", confirm: "" })
+    const [showCurrentPin, setShowCurrentPin] = useState(false)
+    const [showNewPin, setShowNewPin] = useState(false)
+    const [showConfirmPin, setShowConfirmPin] = useState(false)
+
     // Password State
     const [passData, setPassData] = useState({ current: "", new: "", confirm: "" })
+    const [showCurrentPass, setShowCurrentPass] = useState(false)
+    const [showNewPass, setShowNewPass] = useState(false)
+    const [showConfirmPass, setShowConfirmPass] = useState(false)
 
     const handlePinSave = () => {
         if (pinData.new !== pinData.confirm) {
@@ -134,7 +143,7 @@ export function SecuritySettings() {
 
             {/* PIN Change Drawer */}
             <Drawer open={isChangingPin} onOpenChange={setIsChangingPin}>
-                <DrawerContent>
+                <DrawerContent className="max-w-sm">
                     <DrawerStickyHeader>
                         <DrawerTitle>Change PIN</DrawerTitle>
                         <DrawerDescription>Update your 4-digit transaction PIN.</DrawerDescription>
@@ -143,34 +152,61 @@ export function SecuritySettings() {
                         <div className="space-y-4 w-full">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Current PIN</label>
-                                <Input
-                                    type="password"
-                                    maxLength={4}
-                                    className="h-14 rounded-2xl text-center text-2xl tracking-[1em] font-mono bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream"
-                                    value={pinData.current}
-                                    onChange={(e) => setPinData({ ...pinData, current: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type={showCurrentPin ? "text" : "password"}
+                                        maxLength={4}
+                                        className="h-14 rounded-2xl text-2xl tracking-[0.5em] font-mono bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream pr-12"
+                                        value={pinData.current}
+                                        onChange={(e) => setPinData({ ...pinData, current: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCurrentPin(!showCurrentPin)}
+                                        className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
+                                    >
+                                        {showCurrentPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="h-px bg-brand-deep/5 dark:bg-white/5 my-4" />
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">New PIN</label>
-                                <Input
-                                    type="password"
-                                    maxLength={4}
-                                    className="h-14 rounded-2xl text-center text-2xl tracking-[1em] font-mono bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream"
-                                    value={pinData.new}
-                                    onChange={(e) => setPinData({ ...pinData, new: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type={showNewPin ? "text" : "password"}
+                                        maxLength={4}
+                                        className="h-14 rounded-2xl text-2xl tracking-[0.5em] font-mono bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream pr-12"
+                                        value={pinData.new}
+                                        onChange={(e) => setPinData({ ...pinData, new: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPin(!showNewPin)}
+                                        className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
+                                    >
+                                        {showNewPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Confirm New PIN</label>
-                                <Input
-                                    type="password"
-                                    maxLength={4}
-                                    className="h-14 rounded-2xl text-center text-2xl tracking-[1em] font-mono bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream"
-                                    value={pinData.confirm}
-                                    onChange={(e) => setPinData({ ...pinData, confirm: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type={showConfirmPin ? "text" : "password"}
+                                        maxLength={4}
+                                        className="h-14 rounded-2xl text-2xl tracking-[0.5em] font-mono bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream pr-12"
+                                        value={pinData.confirm}
+                                        onChange={(e) => setPinData({ ...pinData, confirm: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPin(!showConfirmPin)}
+                                        className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
+                                    >
+                                        {showConfirmPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -188,7 +224,7 @@ export function SecuritySettings() {
 
             {/* Password Change Drawer */}
             <Drawer open={isChangingPassword} onOpenChange={setIsChangingPassword}>
-                <DrawerContent>
+                <DrawerContent className="max-w-md">
                     <DrawerStickyHeader>
                         <DrawerTitle>Update Password</DrawerTitle>
                         <DrawerDescription>Secure your account with a strong password.</DrawerDescription>
@@ -197,31 +233,58 @@ export function SecuritySettings() {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Current Password</label>
-                                <Input
-                                    type="password"
-                                    className="h-14 rounded-2xl text-lg bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream"
-                                    value={passData.current}
-                                    onChange={(e) => setPassData({ ...passData, current: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type={showCurrentPass ? "text" : "password"}
+                                        className="h-14 rounded-2xl text-lg bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream pr-12"
+                                        value={passData.current}
+                                        onChange={(e) => setPassData({ ...passData, current: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCurrentPass(!showCurrentPass)}
+                                        className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
+                                    >
+                                        {showCurrentPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="h-px bg-brand-deep/5 dark:bg-white/5 my-4" />
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">New Password</label>
-                                <Input
-                                    type="password"
-                                    className="h-14 rounded-2xl text-lg bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream"
-                                    value={passData.new}
-                                    onChange={(e) => setPassData({ ...passData, new: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type={showNewPass ? "text" : "password"}
+                                        className="h-14 rounded-2xl text-lg bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream pr-12"
+                                        value={passData.new}
+                                        onChange={(e) => setPassData({ ...passData, new: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPass(!showNewPass)}
+                                        className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
+                                    >
+                                        {showNewPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Confirm New Password</label>
-                                <Input
-                                    type="password"
-                                    className="h-14 rounded-2xl text-lg bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream"
-                                    value={passData.confirm}
-                                    onChange={(e) => setPassData({ ...passData, confirm: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type={showConfirmPass ? "text" : "password"}
+                                        className="h-14 rounded-2xl text-lg bg-transparent border-brand-deep/10 dark:border-white/10 dark:text-brand-cream pr-12"
+                                        value={passData.confirm}
+                                        onChange={(e) => setPassData({ ...passData, confirm: e.target.value })}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPass(!showConfirmPass)}
+                                        className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
+                                    >
+                                        {showConfirmPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
