@@ -36,7 +36,7 @@ const allStores: Store = {
 interface BusinessContextType {
     businesses: Business[]
     activeBusiness: Business | null
-    setActiveBusiness: (business: Business | null) => void
+    setActiveBusiness: (business: Business | null, options?: { quiet?: boolean }) => void
     isLoading: boolean
     refreshBusinesses: () => Promise<void>
 
@@ -90,7 +90,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         toast.error('Store removed')
     }, [])
 
-    const setActiveBusiness = useCallback((business: Business | null) => {
+    const setActiveBusiness = useCallback((business: Business | null, options?: { quiet?: boolean }) => {
         setActiveBusinessState(business)
 
         // Reset store compatibility state
@@ -101,7 +101,12 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             storage.setActiveBusinessId(business.id)
             // Invalidate all queries to force refetch with new business header
             queryClient.invalidateQueries()
-            toast.success(`Switched to ${business.name}`)
+
+            if (!options?.quiet) {
+                const isSelectionPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/select-business')
+                const action = isSelectionPage ? 'Selected' : 'Switched to'
+                toast.success(`${action} ${business.name}`)
+            }
         } else {
             storage.removeActiveBusinessId()
         }
@@ -124,11 +129,11 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             const savedId = storage.getActiveBusinessId()
 
             if (data.length === 1) {
-                setActiveBusiness(data[0])
+                setActiveBusiness(data[0], { quiet: true })
             } else if (savedId) {
                 const found = data.find(b => b.id === savedId)
                 if (found) {
-                    setActiveBusiness(found)
+                    setActiveBusiness(found, { quiet: true })
                 }
             }
         } catch (error) {
