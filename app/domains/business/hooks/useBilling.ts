@@ -68,7 +68,10 @@ export interface InitiateSubscriptionPayload {
 export const useInitiateSubscription = () => {
     return useMutation({
         mutationFn: (payload: InitiateSubscriptionPayload) =>
-            apiClient.post<{ paymentLink: string, transactionReference: string }>("/subscriptions/initiate", payload),
+            apiClient.post<{ paymentLink: string, transactionReference: string }>("/subscriptions/initiate", {
+                channel: 'web',
+                ...payload
+            }),
         onSuccess: (data) => {
             if (data.paymentLink) {
                 window.location.href = data.paymentLink
@@ -164,5 +167,12 @@ export const useDownloadReceipt = () => {
         onError: (error: Error) => {
             toast.error(error.message || "Failed to download receipt")
         },
+    })
+}
+
+export const useVerifyPayment = () => {
+    return useMutation({
+        mutationFn: (params: { transaction_id: string, tx_ref: string }) =>
+            apiClient.get<{ success: boolean, message: string }>("/subscriptions/verify", params as any),
     })
 }
