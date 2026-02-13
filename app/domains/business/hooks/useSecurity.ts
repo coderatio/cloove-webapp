@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 
@@ -37,3 +37,15 @@ export const useChangePin = () => {
         },
     })
 }
+
+export interface SecurityStatus {
+    lastPasswordChange: string | null
+    lastPinChange: string | null
+}
+
+export const useSecurityStatus = () => {
+    return useQuery({
+        queryKey: ["security-status"],
+        queryFn: () => apiClient.get<SecurityStatus>("/security/status"),
+    });
+};

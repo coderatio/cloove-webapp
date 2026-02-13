@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
+import { VerificationTypeEnum } from "../data/type"
 
 export type VerificationLevel = number
 export type VerificationStatus = "pending" | "verified" | "rejected" | "unverified"
@@ -37,7 +38,7 @@ export interface VerificationResponse {
 
 export interface SubmitVerificationPayload {
     levelId: number
-    type: VerificationType
+    type: VerificationTypeEnum
     data: VerificationData
 }
 
@@ -46,7 +47,7 @@ export interface VerificationLevelConfig {
     level: number
     name: string
     description: string
-    type: VerificationType
+    type: VerificationTypeEnum
     icon: string
     requirements: string[] // Assuming backend sends array of strings
 }

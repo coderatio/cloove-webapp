@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ShieldCheck, Lock, ChevronRight } from "lucide-react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
-import { VerificationLevelConfig, VerificationType } from "@/app/domains/business/hooks/use-verification"
+import { VerificationLevelConfig } from "@/app/domains/business/hooks/useVerification"
 import { VerificationStatusBadge } from "./VerificationStatusBadge"
 import { VerificationAuditTrail } from "./VerificationAuditTrail"
 import { VerificationLevelForm } from "./VerificationLevelForm"
+import { VerificationTypeEnum } from "../../data/type"
 
 interface VerificationStepCardProps {
     step: VerificationLevelConfig
@@ -17,7 +18,7 @@ interface VerificationStepCardProps {
     icon: any
     onBegin: () => void
     onCancel: () => void
-    onSubmit: (levelId: number, type: VerificationType) => void
+    onSubmit: (levelId: number, type: VerificationTypeEnum) => void
     bvn: string
     onBvnChange: (val: string) => void
     address: string
@@ -55,7 +56,7 @@ export function VerificationStepCard({
     const canResubmit = isRejected || status === "unverified"
 
     return (
-        <motion.div layout className="relative z-10">
+        <div className="relative z-10">
             <GlassCard
                 hoverEffect={!isLocked}
                 className={cn(
@@ -99,7 +100,10 @@ export function VerificationStepCard({
                         />
                     )}
 
-                    <div className="mt-8 md:mt-12 flex flex-col md:flex-row items-end justify-between gap-8">
+                    <div className={cn(
+                        "mt-8 md:mt-12 flex flex-col gap-8",
+                        !isActive && "md:flex-row md:items-end md:justify-between"
+                    )}>
                         <div className="space-y-4 w-full md:w-auto">
                             <div className="flex items-center gap-3">
                                 <div className="h-px w-6 md:w-8 bg-brand-gold/40" />
@@ -116,55 +120,48 @@ export function VerificationStepCard({
                         </div>
 
                         <div className="w-full md:w-auto">
-                            <AnimatePresence mode="wait">
-                                {canResubmit && (
-                                    isActive ? (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 15 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            className="w-full"
-                                        >
-                                            <VerificationLevelForm
-                                                level={step.level}
-                                                type={step.type}
-                                                bvn={bvn}
-                                                onBvnChange={onBvnChange}
-                                                address={address}
-                                                onAddressChange={onAddressChange}
-                                                onFileSelect={onFileSelect}
-                                                onSubmit={() => onSubmit(step.level, step.type)}
-                                                onCancel={onCancel}
-                                                isPending={isPending}
-                                            />
-                                        </motion.div>
-                                    ) : (
-                                        <button
-                                            onClick={onBegin}
-                                            disabled={isLocked || isVerified}
-                                            className={cn(
-                                                "w-full md:w-auto h-12 md:h-14 px-8 md:px-10 rounded-xl md:rounded-2xl font-bold uppercase tracking-widest transition-all duration-500 group flex items-center justify-center gap-2",
-                                                isLocked
-                                                    ? "bg-brand-deep/5 text-brand-deep/20 dark:bg-white/5 dark:text-white/20 border-transparent cursor-not-allowed"
-                                                    : "bg-brand-gold text-brand-deep hover:shadow-[0_12px_32px_rgba(212,175,55,0.25)] hover:-translate-y-0.5 hover:bg-brand-gold/80"
-                                            )}
-                                        >
-                                            {isLocked ? (
-                                                <span className="flex items-center gap-2 opacity-50 text-xs md:text-sm"><Lock className="w-4 h-4" /> Locked</span>
-                                            ) : (
-                                                <span className="flex items-center gap-2 text-xs md:text-sm">
-                                                    {isRejected ? "Resubmit" : "Begin"}
-                                                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                                </span>
-                                            )}
-                                        </button>
-                                    )
-                                )}
-                            </AnimatePresence>
+                            {canResubmit && (
+                                isActive ? (
+                                    <div className="w-full">
+                                        <VerificationLevelForm
+                                            level={step.level}
+                                            type={step.type}
+                                            bvn={bvn}
+                                            onBvnChange={onBvnChange}
+                                            address={address}
+                                            onAddressChange={onAddressChange}
+                                            onFileSelect={onFileSelect}
+                                            onSubmit={() => onSubmit(step.level, step.type)}
+                                            onCancel={onCancel}
+                                            isPending={isPending}
+                                        />
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={onBegin}
+                                        disabled={isLocked || isVerified}
+                                        className={cn(
+                                            "w-full md:w-auto h-12 md:h-14 px-8 md:px-10 rounded-xl md:rounded-2xl font-bold uppercase tracking-widest transition-all duration-500 group flex items-center justify-center gap-2",
+                                            isLocked
+                                                ? "bg-brand-deep/5 text-brand-deep/20 dark:bg-white/5 dark:text-white/20 border-transparent cursor-not-allowed"
+                                                : "bg-brand-gold text-brand-deep hover:shadow-[0_12px_32px_rgba(212,175,55,0.25)] hover:-translate-y-0.5 hover:bg-brand-gold/80"
+                                        )}
+                                    >
+                                        {isLocked ? (
+                                            <span className="flex items-center gap-2 opacity-50 text-xs md:text-sm"><Lock className="w-4 h-4" /> Locked</span>
+                                        ) : (
+                                            <span className="flex items-center gap-2 text-xs md:text-sm">
+                                                {isRejected ? "Resubmit" : "Begin"}
+                                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                            </span>
+                                        )}
+                                    </button>
+                                )
+                            )}
                         </div>
                     </div>
                 </div>
             </GlassCard>
-        </motion.div>
+        </div>
     )
 }

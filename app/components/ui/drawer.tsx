@@ -97,12 +97,23 @@ const DrawerHeader = ({
 )
 DrawerHeader.displayName = "DrawerHeader"
 
+const DrawerBody = ({
+    className,
+    ...props
+}: React.HTMLAttributes<HTMLDivElement>) => (
+    <div
+        className={cn("flex-1 overflow-y-auto p-6 md:p-8", className)}
+        {...props}
+    />
+)
+DrawerBody.displayName = "DrawerBody"
+
 const DrawerFooter = ({
     className,
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
     <div
-        className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+        className={cn("shrink-0 flex flex-col gap-2 p-6 md:p-8 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/50 dark:bg-[#021a12]/50", className)}
         {...props}
     />
 )
@@ -144,6 +155,7 @@ export {
     DrawerContent,
     DrawerHeader,
     DrawerStickyHeader,
+    DrawerBody,
     DrawerFooter,
     DrawerTitle,
     DrawerDescription,

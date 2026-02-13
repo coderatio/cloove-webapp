@@ -9,18 +9,22 @@ import {
     ExternalLink,
     Loader2,
     Eye,
-    EyeOff
+    EyeOff,
+    ChevronRight
 } from "lucide-react"
 import { toast } from "sonner"
 import {
     Drawer,
     DrawerContent,
     DrawerStickyHeader,
+    DrawerBody,
+    DrawerFooter,
     DrawerTitle,
     DrawerDescription,
 } from "@/app/components/ui/drawer"
 
-import { useChangePassword, useChangePin } from "../hooks/useSecurity"
+import { formatDistanceToNow } from "date-fns"
+import { useChangePassword, useChangePin, useSecurityStatus } from "../hooks/useSecurity"
 
 export function SecuritySettings() {
     const [isChangingPin, setIsChangingPin] = useState(false)
@@ -28,6 +32,16 @@ export function SecuritySettings() {
 
     const changePassword = useChangePassword()
     const changePin = useChangePin()
+    const { data: securityStatus } = useSecurityStatus()
+
+    const formatLastChanged = (dateString: string | null | undefined) => {
+        if (!dateString) return "Not set yet"
+        try {
+            return `Last changed ${formatDistanceToNow(new Date(dateString), { addSuffix: true })}`
+        } catch (e) {
+            return "Recently changed"
+        }
+    }
 
     // PIN State
     const [pinData, setPinData] = useState({ current: "", new: "", confirm: "" })
@@ -95,28 +109,34 @@ export function SecuritySettings() {
                                 <span className="font-medium text-brand-deep dark:text-brand-cream">Transaction PIN</span>
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase">Active</span>
                             </div>
-                            <p className="text-xs text-brand-accent/60 dark:text-white/40">Required for withdrawals and sensitive actions.</p>
+                            <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                {formatLastChanged(securityStatus?.lastPinChange)}
+                            </p>
                         </div>
                         <Button
                             onClick={() => setIsChangingPin(true)}
                             variant="outline"
-                            className="rounded-xl px-4 text-xs font-bold border-brand-deep/5 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
+                            className="rounded-xl px-4 text-xs font-bold border-brand-deep/20 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
                         >
                             Change PIN
+                            <ChevronRight className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
                         </Button>
                     </div>
                     <div className="h-px bg-brand-deep/5 dark:bg-white/5" />
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <span className="font-medium text-brand-deep dark:text-brand-cream">Password</span>
-                            <p className="text-xs text-brand-accent/60 dark:text-white/40">Last changed 3 months ago.</p>
+                            <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                {formatLastChanged(securityStatus?.lastPasswordChange)}
+                            </p>
                         </div>
                         <Button
                             onClick={() => setIsChangingPassword(true)}
                             variant="outline"
-                            className="rounded-xl px-4 text-xs font-bold border-brand-deep/5 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
+                            className="rounded-xl px-4 text-xs font-bold border-brand-deep/20 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
                         >
                             Update Password
+                            <ChevronRight className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
                         </Button>
                     </div>
                 </GlassCard>
@@ -148,7 +168,7 @@ export function SecuritySettings() {
                         <DrawerTitle>Change PIN</DrawerTitle>
                         <DrawerDescription>Update your 4-digit transaction PIN.</DrawerDescription>
                     </DrawerStickyHeader>
-                    <div className="p-6 space-y-6 pb-40">
+                    <DrawerBody>
                         <div className="space-y-4 w-full">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Current PIN</label>
@@ -209,8 +229,8 @@ export function SecuritySettings() {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="p-6 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream dark:bg-[#021a12]">
+                    </DrawerBody>
+                    <DrawerFooter>
                         <Button
                             onClick={handlePinSave}
                             disabled={changePin.isPending}
@@ -218,7 +238,7 @@ export function SecuritySettings() {
                         >
                             {changePin.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update PIN"}
                         </Button>
-                    </div>
+                    </DrawerFooter>
                 </DrawerContent>
             </Drawer>
 
@@ -229,7 +249,7 @@ export function SecuritySettings() {
                         <DrawerTitle>Update Password</DrawerTitle>
                         <DrawerDescription>Secure your account with a strong password.</DrawerDescription>
                     </DrawerStickyHeader>
-                    <div className="p-6 space-y-6 pb-40">
+                    <DrawerBody>
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/60">Current Password</label>
@@ -287,8 +307,8 @@ export function SecuritySettings() {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="p-6 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream dark:bg-[#021a12]">
+                    </DrawerBody>
+                    <DrawerFooter>
                         <Button
                             onClick={handlePassSave}
                             disabled={changePassword.isPending}
@@ -296,9 +316,9 @@ export function SecuritySettings() {
                         >
                             {changePassword.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update Password"}
                         </Button>
-                    </div>
+                    </DrawerFooter>
                 </DrawerContent>
             </Drawer>
-        </div>
+        </div >
     )
 }

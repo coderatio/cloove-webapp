@@ -62,7 +62,7 @@ export function SessionTimeoutDrawer({
                             <Button
                                 onClick={onLogout}
                                 variant="outline"
-                                className="flex-1 h-12 rounded-xl border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 font-medium gap-2"
+                                className="flex-1 h-12 rounded-xl border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-500/10 dark:hover:border-red-500/10 hover:text-red-600 dark:hover:text-red-400 font-medium gap-2"
                             >
                                 <LogOut className="w-4 h-4" />
                                 Logout

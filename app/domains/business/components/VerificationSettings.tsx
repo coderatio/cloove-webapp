@@ -15,17 +15,18 @@ import {
     VerificationType,
     VerificationData,
     VerificationLevelConfig,
-} from "@/app/domains/business/hooks/use-verification"
+} from "@/app/domains/business/hooks/useVerification"
 
 // Sub-components
 import { VerificationJourneyHeader } from "./verification/VerificationJourneyHeader"
 import { VerificationStepCard } from "./verification/VerificationStepCard"
+import { VerificationTypeEnum } from "../data/type"
 
 const ICON_MAP: Record<string, any> = {
-    "ShieldCheck": ShieldCheck,
-    "FileText": FileText,
-    "MapPin": MapPin,
-    "Briefcase": Sparkles
+    'ShieldCheck': ShieldCheck,
+    'FileText': FileText,
+    'MapPin': MapPin,
+    'Briefcase': Sparkles
 }
 
 export function VerificationSettings() {
@@ -35,25 +36,25 @@ export function VerificationSettings() {
 
     const [activeLevel, setActiveLevel] = useState<string | null>(null)
     const [showHistory, setShowHistory] = useState<string | null>(null)
-    const [bvn, setBvn] = useState("")
-    const [address, setAddress] = useState("")
+    const [bvn, setBvn] = useState('')
+    const [address, setAddress] = useState('')
     const [file, setFile] = useState<File | null>(null)
 
-    const handleVerification = async (levelId: number, type: VerificationType) => {
+    const handleVerification = async (levelId: number, type: VerificationTypeEnum) => {
         let payload: VerificationData = {}
 
-        if (type === "BVN") {
+        if (type === VerificationTypeEnum.BVN) {
             if (bvn.length !== 11) {
-                toast.error("Invalid BVN Format", {
-                    description: "Your Bank Verification Number must be exactly 11 digits."
+                toast.error('Invalid BVN Format', {
+                    description: 'Your Bank Verification Number must be exactly 11 digits.'
                 })
                 return
             }
             payload = { bvn }
-        } else if (type === "GOVT_ID") {
+        } else if (type === VerificationTypeEnum.GOVT_ID) {
             if (!file) {
-                toast.error("Identification Required", {
-                    description: "Please upload a clear image of your Government ID to proceed."
+                toast.error('Identification Required', {
+                    description: 'Please upload a clear image of your Government ID to proceed.'
                 })
                 return
             }
@@ -66,10 +67,10 @@ export function VerificationSettings() {
                 // Placeholder for document verification
                 document_uri: URL.createObjectURL(file)
             }
-        } else if (type === "ADDRESS") {
+        } else if (type === VerificationTypeEnum.ADDRESS) {
             if (address.length < 10) {
-                toast.error("Address too short", {
-                    description: "Please provide a more detailed business address."
+                toast.error('Address too short', {
+                    description: 'Please provide a more detailed business address.'
                 })
                 return
             }
@@ -84,10 +85,10 @@ export function VerificationSettings() {
             })
 
             setActiveLevel(null)
-            setBvn("")
-            setAddress("")
+            setBvn('')
+            setAddress('')
             setFile(null)
-            toast.success("Verification Submitted", {
+            toast.success('Verification Submitted', {
                 description: `Your ${type} details have been received and are being processed.`
             })
         } catch (err) {

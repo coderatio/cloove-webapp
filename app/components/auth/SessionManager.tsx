@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { useIdleTracker } from "@/app/hooks/use-idle-tracker"
+import { useIdleTracker } from "@/app/hooks/useIdleTracker"
 import { apiClient } from "@/app/lib/api-client"
 import { SessionTimeoutDrawer } from "./SessionTimeoutDrawer"
 

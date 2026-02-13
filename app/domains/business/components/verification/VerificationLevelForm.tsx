@@ -4,11 +4,11 @@ import { MapPin, Loader2, ShieldCheck, FileText } from "lucide-react"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
 import { DocumentUpload } from "./DocumentUpload"
-import { VerificationType } from "@/app/domains/business/hooks/use-verification"
+import { VerificationTypeEnum } from "../../data/type"
 
 interface VerificationLevelFormProps {
     level: number
-    type: VerificationType
+    type: VerificationTypeEnum
     bvn: string
     onBvnChange: (value: string) => void
     address: string
@@ -85,14 +85,14 @@ export function VerificationLevelForm({
                 </div>
             )}
 
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex flex-col md:flex-row items-center gap-3 pt-2">
                 <Button
                     onClick={onSubmit}
                     disabled={isPending}
-                    className="flex-1 h-14 md:h-16 rounded-[20px] bg-brand-gold px-8 hover:bg-brand-gold/90 text-brand-deep font-bold uppercase tracking-widest hover:shadow-[0_12px_32px_rgba(212,175,55,0.2)] active:scale-[0.98] transition-all"
+                    className="w-full md:flex-1 h-14 md:h-16 rounded-[20px] bg-brand-gold px-8 hover:bg-brand-gold/90 text-brand-deep font-bold uppercase tracking-widest hover:shadow-[0_12px_32px_rgba(212,175,55,0.2)] active:scale-[0.98] transition-all"
                 >
                     {isPending ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center gap-2">
                             <Loader2 className="w-5 h-5 animate-spin" />
                             <span>Processing...</span>
                         </div>
@@ -104,7 +104,7 @@ export function VerificationLevelForm({
                     variant="ghost"
                     onClick={onCancel}
                     disabled={isPending}
-                    className="h-14 md:h-16 px-6 md:px-8 rounded-[20px] text-brand-deep/40 dark:text-brand-cream/40 hover:bg-brand-deep/5 dark:hover:bg-white/5 font-bold uppercase tracking-widest text-xs"
+                    className="w-full md:w-auto h-14 md:h-16 px-6 md:px-8 rounded-[20px] text-brand-deep/40 dark:text-brand-cream/40 hover:bg-brand-deep/5 dark:hover:bg-white/5 font-bold uppercase tracking-widest text-xs"
                 >
                     Cancel
                 </Button>
