@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import {
     MapPin,
     Plus,
@@ -26,7 +27,7 @@ import {
 import { mockStoreActivities } from "../data/storesMocks"
 
 export function StoresView() {
-    const { stores, addStore, updateStore, deleteStore } = useBusiness()
+    const { stores, addStore, updateStore, deleteStore } = useStores()
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [editingStore, setEditingStore] = useState<any>(null)
     const [viewingActivities, setViewingActivities] = useState<any>(null)

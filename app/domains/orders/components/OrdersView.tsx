@@ -11,6 +11,7 @@ import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { useStores } from '@/app/domains/stores/providers/StoreProvider'
 import { Button } from '@/app/components/ui/button'
 import { FilterPopover } from '@/app/components/shared/FilterPopover'
 import { TableSearch } from '@/app/components/shared/TableSearch'
@@ -26,7 +27,7 @@ import { initialOrders } from '../data/ordersMocks'
 
 export function OrdersView() {
     const isMobile = useIsMobile()
-    const { currentStore, stores } = useBusiness()
+    const { currentStore, stores } = useStores()
     const [orders, setOrders] = React.useState(initialOrders)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])

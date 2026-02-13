@@ -17,21 +17,6 @@ export interface Business {
     permissions: Record<string, boolean> | null
 }
 
-interface Store {
-    id: string
-    name: string
-    location?: string
-    isDefault: boolean
-}
-
-// Virtual "All Stores" constant
-export const ALL_STORES_ID = 'all-stores'
-
-const allStores: Store = {
-    id: ALL_STORES_ID,
-    name: 'All Stores',
-    isDefault: false
-}
 
 interface BusinessContextType {
     businesses: Business[]
@@ -42,14 +27,6 @@ interface BusinessContextType {
 
     businessName: string
     ownerName: string
-
-    // Legacy/Store compatibility
-    currentStore: Store
-    setCurrentStore: (store: Store) => void
-    stores: Store[]
-    addStore: (name: string, location?: string) => void
-    updateStore: (id: string, data: Partial<Store>) => void
-    deleteStore: (id: string) => void
 
     // Authorization
     role: string | null
@@ -65,37 +42,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
-    // Mock stores for compatibility with existing UI
-    const [stores, setStores] = useState<Store[]>([allStores])
-    const [currentStore, setCurrentStore] = useState<Store>(allStores)
-
-    const addStore = useCallback((name: string, location?: string) => {
-        const newStore: Store = {
-            id: Math.random().toString(36).substring(2, 9),
-            name,
-            location,
-            isDefault: false
-        }
-        setStores(prev => [...prev, newStore])
-        toast.success(`Store "${name}" added`)
-    }, [])
-
-    const updateStore = useCallback((id: string, data: Partial<Store>) => {
-        setStores(prev => prev.map(s => s.id === id ? { ...s, ...data } : s))
-        toast.success('Store updated')
-    }, [])
-
-    const deleteStore = useCallback((id: string) => {
-        setStores(prev => prev.filter(s => s.id !== id))
-        toast.error('Store removed')
-    }, [])
-
     const setActiveBusiness = useCallback((business: Business | null, options?: { quiet?: boolean }) => {
         setActiveBusinessState(business)
-
-        // Reset store compatibility state
-        setStores([allStores])
-        setCurrentStore(allStores)
 
         if (business) {
             storage.setActiveBusinessId(business.id)
@@ -157,12 +105,6 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             refreshBusinesses,
             businessName: activeBusiness?.name || "",
             ownerName: user?.firstName || "",
-            currentStore,
-            setCurrentStore,
-            stores,
-            addStore,
-            updateStore,
-            deleteStore,
             role: activeBusiness?.role || null,
             permissions: activeBusiness?.permissions || null
         }}>

@@ -1,6 +1,8 @@
 "use client"
 
-import { useBusiness, ALL_STORES_ID } from '@/app/components/BusinessProvider'
+import { useBusiness } from '@/app/components/BusinessProvider'
+import { useStores } from '@/app/domains/stores/providers/StoreProvider'
+import { ALL_STORES_ID } from '@/app/domains/stores/data/storesMocks'
 import { useMediaQuery } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { motion } from "framer-motion"
@@ -18,7 +20,8 @@ import { SalesVelocity } from '@/app/components/dashboard/SalesVelocity'
 import { storeData, businessData, velocityData } from '../data/dashboardMocks'
 
 export function DashboardView() {
-    const { currentStore, ownerName, businessName, activeBusiness } = useBusiness()
+    const { ownerName, businessName, activeBusiness } = useBusiness()
+    const { currentStore } = useStores()
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const [date, setDate] = useState<DateRange | undefined>({
         from: subDays(new Date(), 7),

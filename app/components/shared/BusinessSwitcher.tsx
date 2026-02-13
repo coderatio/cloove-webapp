@@ -14,7 +14,7 @@ import {
     DrawerTrigger,
 } from "../ui/drawer"
 
-import { useBusiness, ALL_STORES_ID } from "../BusinessProvider"
+import { useBusiness } from "../BusinessProvider"
 import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 
 export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }) {

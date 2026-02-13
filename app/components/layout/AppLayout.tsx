@@ -23,6 +23,7 @@ import { BusinessGuard } from "../shared/BusinessGuard"
 import { apiClient } from "@/app/lib/api-client"
 import { useAuth } from "../providers/auth-provider"
 import { usePermission } from "@/app/hooks/usePermission"
+import { StoreProvider } from "../../domains/stores/providers/StoreProvider"
 
 export default function AppLayout({ children }: AppLayoutProps) {
     const [mounted, setMounted] = React.useState(false)
@@ -186,7 +187,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                 <div className={cn("px-4 pt-4 md:p-0", isAssistantPage ? "pb-0" : "pb-24")}>
                     <BusinessGuard>
-                        {children}
+                        <StoreProvider>
+                            {children}
+                        </StoreProvider>
                     </BusinessGuard>
                 </div>
             </main>

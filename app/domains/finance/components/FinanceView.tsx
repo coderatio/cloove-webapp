@@ -22,6 +22,7 @@ import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { useStores } from '@/app/domains/stores/providers/StoreProvider'
 import { Button } from '@/app/components/ui/button'
 import {
     Drawer,
@@ -38,7 +39,7 @@ import { initialTransactions } from '../data/financeMocks'
 
 export function FinanceView() {
     const isMobile = useIsMobile()
-    const { stores, currentStore } = useBusiness()
+    const { stores, currentStore } = useStores()
     const [transactions, setTransactions] = React.useState(initialTransactions)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
