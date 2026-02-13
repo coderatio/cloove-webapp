@@ -1,6 +1,6 @@
 "use client"
 
-import { useBusiness, Business } from "@/app/components/BusinessProvider"
+import { useBusiness, type Business } from "@/app/components/BusinessProvider"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { LayoutGrid, ArrowRight, LogOut } from "lucide-react"
@@ -87,7 +87,7 @@ function SelectBusinessContent() {
                             </Button>
                         </GlassCard>
                     ) : (
-                        businesses.map((business, index) => (
+                        businesses.map((business: Business, index: number) => (
                             <motion.div
                                 key={business.id}
                                 initial={{ opacity: 0, x: -20 }}

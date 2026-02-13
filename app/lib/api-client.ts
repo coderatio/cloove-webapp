@@ -20,6 +20,17 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 interface RequestOptions extends RequestInit {
     params?: Record<string, string>
     skipAuthRedirect?: boolean
+    fullResponse?: boolean
+}
+
+/**
+ * Standard API Response structure
+ */
+export interface ApiResponse<T = any> {
+    success: boolean
+    message: string
+    data: T
+    meta: Record<string, any>
 }
 
 /**
@@ -122,7 +133,25 @@ export const apiClient = {
 
         try {
             const response = await fetch(url, config)
-            const data = await response.json().catch(() => ({})) // Handle empty responses
+            const rawData = await response.json().catch(() => ({})) // Handle empty responses
+
+            // If it's a structured response, unwrap it
+            if (rawData && typeof rawData === 'object' && 'success' in rawData) {
+                const apiResponse = rawData as ApiResponse<T>
+
+                if (!apiResponse.success) {
+                    const errorMessage = apiResponse.message || `API Error: ${response.status}`
+                    throw new ApiError(errorMessage, response.status, apiResponse.data)
+                }
+
+                // If the caller explicitly wants the full response, return it
+                if (options.fullResponse) {
+                    return apiResponse as any as T
+                }
+
+                // Otherwise return just the data to maintain compatibility with existing hooks
+                return apiResponse.data as T
+            }
 
             if (!response.ok) {
                 // Handle specific status codes
@@ -139,11 +168,11 @@ export const apiClient = {
                     }
                 }
 
-                const errorMessage = data.error || data.message || `API Error: ${response.status}`
-                throw new ApiError(errorMessage, response.status, data)
+                const errorMessage = rawData.error || rawData.message || `API Error: ${response.status}`
+                throw new ApiError(errorMessage, response.status, rawData)
             }
 
-            return data as T
+            return rawData as T
         } catch (error) {
             // Re-throw ApiErrors, wrap others
             if (error instanceof ApiError) {
