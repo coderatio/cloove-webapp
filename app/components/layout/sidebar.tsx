@@ -175,78 +175,82 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
                 {/* Nav Items Grouped */}
                 <nav className="flex-1 space-y-6 px-4 overflow-y-auto scrollbar-hide pb-6">
-                    {navGroups.map((group) => (
-                        <div key={group.label} className="space-y-1">
-                            {!isCollapsed && (
-                                <h3 className="px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-cream/50 mb-3">
-                                    {group.label}
-                                </h3>
-                            )}
-                            <div className="space-y-1">
-                                {group.items.map((item) => {
-                                    const isActive = pathname === item.href
+                    {navGroups.map((group) => {
+                        // Filter items in the group based on permissions
+                        const filteredItems = group.items.filter(item => !item.permission || can(item.permission))
 
-                                    if (item.permission && !can(item.permission)) {
-                                        return null
-                                    }
+                        // If no items are left in the group, don't render the group at all
+                        if (filteredItems.length === 0) return null
 
-                                    return (
-                                        <Tooltip key={item.href} delayDuration={0}>
-                                            <TooltipTrigger asChild>
-                                                <Link
-                                                    href={item.href}
-                                                    className={cn(
-                                                        "group relative flex items-center rounded-xl transition-all duration-200",
-                                                        isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-4 py-3",
-                                                        isActive
-                                                            ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
-                                                            : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
-                                                    )}
-                                                >
-                                                    <item.icon
+                        return (
+                            <div key={group.label} className="space-y-1">
+                                {!isCollapsed && (
+                                    <h3 className="px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-cream/50 mb-3">
+                                        {group.label}
+                                    </h3>
+                                )}
+                                <div className="space-y-1">
+                                    {filteredItems.map((item) => {
+                                        const isActive = pathname === item.href
+
+                                        return (
+                                            <Tooltip key={item.href} delayDuration={0}>
+                                                <TooltipTrigger asChild>
+                                                    <Link
+                                                        href={item.href}
                                                         className={cn(
-                                                            "h-5 w-5 shrink-0 transition-colors",
-                                                            isActive ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                                            "group relative flex items-center rounded-xl transition-all duration-200",
+                                                            isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-4 py-3",
+                                                            isActive
+                                                                ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
+                                                                : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
                                                         )}
-                                                    />
-
-                                                    <AnimatePresence mode="wait">
-                                                        {!isCollapsed && (
-                                                            <motion.span
-                                                                initial={{ opacity: 0, x: -5 }}
-                                                                animate={{ opacity: 1, x: 0 }}
-                                                                exit={{ opacity: 0, x: -5 }}
-                                                                className="whitespace-nowrap"
-                                                            >
-                                                                {item.label}
-                                                            </motion.span>
-                                                        )}
-                                                    </AnimatePresence>
-
-                                                    {isActive && !isCollapsed && (
-                                                        <motion.div
-                                                            layoutId="sidebar-active"
-                                                            className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
-                                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                                    >
+                                                        <item.icon
+                                                            className={cn(
+                                                                "h-5 w-5 shrink-0 transition-colors",
+                                                                isActive ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                                            )}
                                                         />
-                                                    )}
-                                                </Link>
-                                            </TooltipTrigger>
-                                            {isCollapsed && (
-                                                <TooltipContent side="right">
-                                                    {item.label}
-                                                </TooltipContent>
-                                            )}
-                                        </Tooltip>
-                                    )
-                                })}
+
+                                                        <AnimatePresence mode="wait">
+                                                            {!isCollapsed && (
+                                                                <motion.span
+                                                                    initial={{ opacity: 0, x: -5 }}
+                                                                    animate={{ opacity: 1, x: 0 }}
+                                                                    exit={{ opacity: 0, x: -5 }}
+                                                                    className="whitespace-nowrap"
+                                                                >
+                                                                    {item.label}
+                                                                </motion.span>
+                                                            )}
+                                                        </AnimatePresence>
+
+                                                        {isActive && !isCollapsed && (
+                                                            <motion.div
+                                                                layoutId="sidebar-active"
+                                                                className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
+                                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                                            />
+                                                        )}
+                                                    </Link>
+                                                </TooltipTrigger>
+                                                {isCollapsed && (
+                                                    <TooltipContent side="right">
+                                                        {item.label}
+                                                    </TooltipContent>
+                                                )}
+                                            </Tooltip>
+                                        )
+                                    })}
+                                </div>
+                                {/* Divider for grouped look when collapsed */}
+                                {isCollapsed && group !== navGroups[navGroups.length - 1] && (
+                                    <div className="mx-4 my-4 h-px bg-white/5" />
+                                )}
                             </div>
-                            {/* Divider for grouped look when collapsed */}
-                            {isCollapsed && group !== navGroups[navGroups.length - 1] && (
-                                <div className="mx-4 my-4 h-px bg-white/5" />
-                            )}
-                        </div>
-                    ))}
+                        )
+                    })}
                 </nav>
 
                 {/* Footer Actions */}
@@ -254,21 +258,23 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                     {/* Footer buttons removed from here to be moved inside their own relative containers if needed, but primarily profile menu needs it */}
 
                     {/* Refer & Earn Button */}
-                    <Link
-                        href="/referrals"
-                        className={cn(
-                            "flex items-center rounded-xl transition-all duration-200 mb-2",
-                            isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-3 py-2 text-sm font-medium",
-                            pathname === "/referrals"
-                                ? "bg-brand-gold/10 text-brand-gold"
-                                : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
-                        )}
-                    >
-                        <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-brand-gold" : "text-brand-cream/70")} />
-                        {!isCollapsed && (
-                            <span className="whitespace-nowrap">Refer & Earn</span>
-                        )}
-                    </Link>
+                    {role === 'OWNER' && (
+                        <Link
+                            href="/referrals"
+                            className={cn(
+                                "flex items-center rounded-xl transition-all duration-200 mb-2",
+                                isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-3 py-2 text-sm font-medium",
+                                pathname === "/referrals"
+                                    ? "bg-brand-gold/10 text-brand-gold"
+                                    : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                            )}
+                        >
+                            <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-brand-gold" : "text-brand-cream/70")} />
+                            {!isCollapsed && (
+                                <span className="whitespace-nowrap">Refer & Earn</span>
+                            )}
+                        </Link>
+                    )}
 
                     {/* Sidebar Toggle (Only visible when expanded or specifically requested) */}
                     <div className="flex items-center gap-2">

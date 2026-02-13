@@ -1,10 +1,10 @@
 "use client"
 
-import { Lock, Sparkles, Shield, CheckCircle2 } from "lucide-react"
+import { Lock, Sparkles, Shield, CheckCircle2, Eye, EyeOff } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import type { useLoginFlow } from "../hooks/use-login-flow"
+import type { useLoginFlow } from "../hooks/useLoginFlow"
 
 interface SetupPasswordStepProps {
     flow: ReturnType<typeof useLoginFlow>
@@ -21,7 +21,7 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-            <GlassCard className="p-8 border-brand-gold/20 bg-brand-gold/5 shadow-2xl relative overflow-hidden bg-white/5">
+            <GlassCard className="p-8 border-brand-gold/20 bg-brand-gold/5 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
                     <Sparkles className="w-24 h-24 text-brand-gold" />
                 </div>
@@ -47,14 +47,21 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                                     <Lock className="w-4 h-4" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={state.showPassword ? "text" : "password"}
                                     required
                                     autoFocus
                                     placeholder="Must be at least 8 characters"
                                     value={state.newPassword}
                                     onChange={(e) => actions.setNewPassword(e.target.value)}
-                                    className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-4 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all"
+                                    className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-12 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => actions.setShowPassword(!state.showPassword)}
+                                    className="absolute cursor-pointer inset-y-0 right-4 flex items-center text-brand-cream/30 hover:text-brand-gold transition-colors"
+                                >
+                                    {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
                         </div>
 
@@ -67,13 +74,20 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                                     <CheckCircle2 className="w-4 h-4" />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={state.showPassword ? "text" : "password"}
                                     required
                                     placeholder="Repeat password"
                                     value={state.confirmPassword}
                                     onChange={(e) => actions.setConfirmPassword(e.target.value)}
-                                    className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-4 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all"
+                                    className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-12 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => actions.setShowPassword(!state.showPassword)}
+                                    className="absolute cursor-pointer inset-y-0 right-4 flex items-center text-brand-cream/30 hover:text-brand-gold transition-colors"
+                                >
+                                    {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
                         </div>
                     </div>

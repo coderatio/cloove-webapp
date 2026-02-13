@@ -65,8 +65,12 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
             })
 
             if (response.exists) {
-                setIsPinLogin(response.authMethod === 'pin')
-                setStep('verify')
+                if (response.authMethod === 'setup') {
+                    setStep('setup-password')
+                } else {
+                    setIsPinLogin(response.authMethod === 'pin')
+                    setStep('verify')
+                }
             }
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "User not found"
@@ -123,17 +127,40 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
 
     const handleSetupSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (newPassword !== confirmPassword) {
+            toast.error('Passwords do not match')
+            return
+        }
         setIsLoading(true)
 
         try {
-            // Mocking setup for now
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            const response = await apiClient.post<LoginResponse>('/security/setup-password', {
+                identifier,
+                password: newPassword,
+                country: selectedCountry?.id
+            })
+
+            apiClient.setToken(response.token)
             setStep('success')
+
+            if (onSuccess) onSuccess()
+
+            const businesses = response.user?.businesses || []
+            if (businesses.length === 1) {
+                storage.setActiveBusinessId(businesses[0].id)
+            }
+
             if (router) {
                 setTimeout(() => {
-                    router.replace(callbackUrl)
-                }, 1500)
+                    const finalUrl = businesses.length > 1
+                        ? `/select-business?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                        : callbackUrl
+                    router.replace(finalUrl)
+                }, 500)
             }
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Failed to set up password'
+            toast.error(message)
         } finally {
             setIsLoading(false)
         }

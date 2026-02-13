@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
-import type { useLoginFlow } from "../hooks/use-login-flow"
+import type { useLoginFlow } from "../hooks/useLoginFlow"
 
 interface VerifyStepProps {
     flow: ReturnType<typeof useLoginFlow>

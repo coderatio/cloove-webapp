@@ -21,22 +21,37 @@ import { ProfileSettings } from "@/app/domains/business/components/ProfileSettin
 import { SecuritySettings } from "@/app/domains/business/components/SecuritySettings"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { PersistedTabs, TabItem } from "@/app/components/shared/PersistedTabs"
+import { usePermission } from "@/app/hooks/usePermission"
 
 type Tab = "business" | "profile" | "billing" | "security" | "verification"
 
 function SettingsContent() {
-    const [activeTab, setActiveTab] = useState<Tab>("business")
+    const { role } = usePermission()
     const [isDirty, setIsDirty] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [saveTrigger, setSaveTrigger] = useState(0)
 
-    const tabs: (TabItem & { id: Tab })[] = [
+    const allTabs: (TabItem & { id: Tab })[] = [
         { id: "business", label: "Business", icon: Building2 },
         { id: "profile", label: "My Profile", icon: User },
         { id: "verification", label: "Verification", icon: ShieldCheck },
         { id: "billing", label: "Billing", icon: CreditCard },
         { id: "security", label: "Security", icon: Lock },
     ]
+
+    // Role-based filtering
+    const tabs = allTabs.filter(tab => {
+        if (tab.id === "profile" || tab.id === "security") return true
+        if (role === 'OWNER') return true
+        if (tab.id === "billing" && role === 'ACCOUNTANT') return true
+        return false
+    })
+
+    // Safe default tab selection
+    const [activeTab, setActiveTab] = useState<Tab>(() => {
+        if (role === 'OWNER') return "business"
+        return "profile"
+    })
 
     const handleGlobalSave = () => {
         setSaveTrigger(prev => prev + 1)
@@ -53,7 +68,7 @@ function SettingsContent() {
             <PersistedTabs
                 tabs={tabs}
                 activeTab={activeTab}
-                defaultTab="business"
+                defaultTab={tabs[0]?.id || "profile"}
                 onChange={(id) => {
                     setActiveTab(id as Tab)
                     setIsDirty(false)
@@ -68,7 +83,7 @@ function SettingsContent() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
                 >
-                    {activeTab === "business" && (
+                    {activeTab === "business" && role === 'OWNER' && (
                         <BusinessSettings
                             onDirtyChange={setIsDirty}
                             onSavingChange={setIsSaving}
@@ -76,8 +91,8 @@ function SettingsContent() {
                         />
                     )}
                     {activeTab === "profile" && <ProfileSettings />}
-                    {activeTab === "verification" && <VerificationSettings />}
-                    {activeTab === "billing" && <BillingSettings />}
+                    {activeTab === "verification" && role === 'OWNER' && <VerificationSettings />}
+                    {activeTab === "billing" && (role === 'OWNER' || role === 'ACCOUNTANT') && <BillingSettings />}
                     {activeTab === "security" && <SecuritySettings />}
                 </motion.div>
             </AnimatePresence>

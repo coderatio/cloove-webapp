@@ -43,9 +43,9 @@ export function ProfileSettings() {
     useEffect(() => {
         if (user) {
             setFormData({
-                fullName: user.fullName,
-                email: user.email,
-                phone: user.phoneNumber
+                fullName: user.fullName || "",
+                email: user.email || "",
+                phone: user.phoneNumber || ""
             })
         }
     }, [user])
@@ -62,67 +62,37 @@ export function ProfileSettings() {
     }
 
     return (
-        <div className="space-y-8">
-            <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Account Details</h2>
-                    <Button
-                        onClick={() => setIsEditing(true)}
-                        variant="outline"
-                        className="rounded-xl px-4 text-xs font-bold border-brand-deep/5 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
-                    >
-                        Edit Profile
-                    </Button>
-                </div>
-
-                <GlassCard className="p-6 space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Full Name</label>
-                            <Input value={formData.fullName} readOnly className="h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 border-transparent" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Email Address</label>
-                            <div className="flex items-center gap-2">
-                                <Input value={formData.email} disabled className="h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 border-transparent opacity-60" />
-                                <Lock className="w-4 h-4 text-brand-deep/30 dark:text-white/30" />
-                            </div>
-                        </div>
+        <>
+            <div className="space-y-8">
+                <section className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Account Details</h2>
+                        <Button
+                            onClick={() => setIsEditing(true)}
+                            variant="outline"
+                            className="rounded-xl px-4 text-xs font-bold border-brand-deep/5 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
+                        >
+                            Edit Profile
+                        </Button>
                     </div>
-                </GlassCard>
-            </section>
 
-            <section className="space-y-4">
-                <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Communication</h2>
-                <GlassCard className="p-6 space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">WhatsApp Number</label>
-                            <div className="relative">
-                                <Smartphone className="absolute left-3 top-3 w-4 h-4 text-brand-accent/40" />
-                                <Input value={formData.phone} readOnly className="pl-10 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 border-transparent" />
+                    <GlassCard className="p-6 space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Full Name</label>
+                                <Input value={formData.fullName} readOnly className="h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 border-transparent" />
                             </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">System Notifications</label>
-                            <div className="flex items-center justify-between h-10 px-1">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Email Address</label>
                                 <div className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60" />
-                                    <span className="text-sm dark:text-brand-cream">Email Summaries</span>
+                                    <Input value={formData.email} disabled className="h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 border-transparent opacity-60" />
+                                    <Lock className="w-4 h-4 text-brand-deep/30 dark:text-white/30" />
                                 </div>
-                                <Switch
-                                    checked={!!settings?.business?.configs?.email_summaries_enabled}
-                                    onCheckedChange={(checked) => {
-                                        updateBusinessSettings.mutate({
-                                            email_summaries_enabled: checked
-                                        })
-                                    }}
-                                />
                             </div>
                         </div>
-                    </div>
-                </GlassCard>
-            </section>
+                    </GlassCard>
+                </section>
+            </div>
 
             <Drawer open={isEditing} onOpenChange={setIsEditing}>
                 <DrawerContent>
@@ -180,6 +150,6 @@ export function ProfileSettings() {
                     </div>
                 </DrawerContent>
             </Drawer>
-        </div>
+        </>
     )
 }

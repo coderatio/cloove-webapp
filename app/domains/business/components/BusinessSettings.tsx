@@ -26,6 +26,8 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
         low_stock_threshold: 5,
         allow_credit_sales: true,
         debt_reminder_enabled: true,
+        daily_summary_enabled: true,
+        email_summaries_enabled: true,
     })
 
     const [isDirty, setIsDirty] = useState(false)
@@ -39,6 +41,8 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                 low_stock_threshold: Number(configs.low_stock_threshold) || 5,
                 allow_credit_sales: !!configs.allow_credit_sales,
                 debt_reminder_enabled: !!configs.debt_reminder_enabled,
+                daily_summary_enabled: !!configs.daily_summary_enabled,
+                email_summaries_enabled: !!configs.email_summaries_enabled,
             })
             setIsDirty(false)
             onDirtyChange?.(false)
@@ -114,6 +118,32 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         <Switch
                             checked={localConfigs.debt_reminder_enabled}
                             onCheckedChange={(checked) => handleConfigChange('debt_reminder_enabled', checked)}
+                        />
+                    </div>
+                </GlassCard>
+            </section>
+
+            <section className="space-y-4">
+                <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Communications & Reports</h2>
+                <GlassCard className="p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <span className="font-medium text-brand-deep dark:text-brand-cream">Email Summaries</span>
+                            <p className="text-xs text-brand-accent/60 dark:text-white/40">Receive important business notifications via email.</p>
+                        </div>
+                        <Switch
+                            checked={localConfigs.email_summaries_enabled}
+                            onCheckedChange={(checked) => handleConfigChange('email_summaries_enabled', checked)}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <span className="font-medium text-brand-deep dark:text-brand-cream">Daily Performance Reports</span>
+                            <p className="text-xs text-brand-accent/60 dark:text-white/40">Get a summary of sales and inventory every evening.</p>
+                        </div>
+                        <Switch
+                            checked={localConfigs.daily_summary_enabled}
+                            onCheckedChange={(checked) => handleConfigChange('daily_summary_enabled', checked)}
                         />
                     </div>
                 </GlassCard>

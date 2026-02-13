@@ -3,7 +3,7 @@
 import { Suspense } from "react"
 import { AnimatePresence } from "framer-motion"
 import { useSearchParams, useRouter } from "next/navigation"
-import { useLoginFlow } from "@/app/domains/auth/hooks/use-login-flow"
+import { useLoginFlow } from "@/app/domains/auth/hooks/useLoginFlow"
 import { IdentifierStep } from "@/app/domains/auth/components/IdentifierStep"
 import { VerifyStep } from "@/app/domains/auth/components/VerifyStep"
 import { SetupPasswordStep } from "@/app/domains/auth/components/SetupPasswordStep"

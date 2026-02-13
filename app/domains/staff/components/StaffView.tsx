@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
-import { ListCard } from "@/app/components/ui/list-card"
+import { StaffCard } from "@/app/domains/staff/components/StaffCard"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -14,6 +14,8 @@ import {
     Shield,
     Save,
     UserCog,
+    Trash2,
+    Loader2
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
@@ -25,21 +27,42 @@ import {
     DrawerFooter,
     DrawerClose,
 } from "@/app/components/ui/drawer"
-import { toast } from "sonner"
-import { initialStaff, PERMISSIONS, Role } from "../data/staffMocks"
+import { PERMISSIONS, Role } from "../data/staffMocks"
+import { useStaff, type StaffMember } from "../hooks/useStaff"
 
 export function StaffView() {
-    const [staff, setStaff] = useState(initialStaff)
+    const { staff, isLoading, inviteStaff, updateStaff, removeStaff } = useStaff()
     const [searchTerm, setSearchTerm] = useState("")
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-    const [editingStaff, setEditingStaff] = useState<typeof initialStaff[0] | null>(null)
+    const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
 
-    const filteredStaff = staff.filter(s =>
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.phone.includes(searchTerm)
-    )
+    // Form State
+    const [fullName, setFullName] = useState("")
+    const [phoneNumber, setPhoneNumber] = useState("")
+    const [role, setRole] = useState<Role>('STAFF')
+    const [permissions, setPermissions] = useState<Record<string, boolean>>({})
+    const [isSaving, setIsSaving] = useState(false)
 
-    const handleEdit = (member: typeof initialStaff[0]) => {
+    useEffect(() => {
+        if (editingStaff) {
+            setFullName(editingStaff.user.fullName)
+            setPhoneNumber(editingStaff.user.phoneNumber)
+            setRole(editingStaff.role)
+            setPermissions(editingStaff.permissions || {})
+        } else {
+            setFullName("")
+            setPhoneNumber("")
+            setRole('STAFF')
+            setPermissions({})
+        }
+    }, [editingStaff])
+
+    const filteredStaff = staff?.filter(s =>
+        s.user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.user.phoneNumber.includes(searchTerm)
+    ) || []
+
+    const handleEdit = (member: StaffMember) => {
         setEditingStaff(member)
         setIsDrawerOpen(true)
     }
@@ -49,9 +72,38 @@ export function StaffView() {
         setIsDrawerOpen(true)
     }
 
-    const handleSave = () => {
-        toast.success(editingStaff ? "Staff updated" : "Staff added and invitation sent")
-        setIsDrawerOpen(false)
+    const handleSave = async () => {
+        setIsSaving(true)
+        let res
+        if (editingStaff) {
+            res = await updateStaff(editingStaff.userId, { role, permissions })
+        } else {
+            res = await inviteStaff({ fullName, phoneNumber, role, permissions })
+        }
+
+        setIsSaving(false)
+        if (res.success) {
+            setIsDrawerOpen(false)
+        }
+    }
+
+    const handleRemove = async () => {
+        if (!editingStaff) return
+        if (!confirm("Are you sure you want to remove this staff member? This action cannot be undone.")) return
+
+        setIsSaving(true)
+        const res = await removeStaff(editingStaff.userId)
+        setIsSaving(false)
+        if (res.success) {
+            setIsDrawerOpen(false)
+        }
+    }
+
+    const togglePermission = (permId: string) => {
+        setPermissions(prev => ({
+            ...prev,
+            [permId]: !prev[permId]
+        }))
     }
 
     return (
@@ -68,22 +120,20 @@ export function StaffView() {
                 />
 
                 <div className="grid grid-cols-1 gap-4">
-                    {filteredStaff.map((member, index) => (
-                        <ListCard
-                            key={member.id}
-                            title={member.name}
-                            subtitle={member.phone}
-                            status={member.role}
-                            statusColor={member.role === 'ACCOUNTANT' ? "warning" : "neutral"}
-                            meta={member.status === 'Pending' ? "Invitation pending" : undefined}
-                            value={member.status}
-                            valueLabel="Status"
-                            onClick={() => handleEdit(member)}
-                            delay={index * 0.05}
-                        />
-                    ))}
+                    {isLoading ? (
+                        <div className="p-12 text-center text-brand-accent/40">Loading staff...</div>
+                    ) : (
+                        filteredStaff.map((member, index) => (
+                            <StaffCard
+                                key={member.id}
+                                member={member}
+                                onClick={member.role !== 'OWNER' ? () => handleEdit(member) : undefined}
+                                delay={index * 0.05}
+                            />
+                        ))
+                    )}
 
-                    {filteredStaff.length === 0 && (
+                    {!isLoading && filteredStaff.length === 0 && (
                         <GlassCard className="p-12 text-center space-y-4">
                             <div className="mx-auto w-16 h-16 rounded-full bg-brand-deep/5 flex items-center justify-center">
                                 <Search className="w-8 h-8 text-brand-accent/20" />
@@ -115,7 +165,9 @@ export function StaffView() {
                                         <label className="text-sm font-medium text-brand-deep dark:text-brand-cream pl-1">Full Name</label>
                                         <Input
                                             placeholder="e.g. Blessing Okon"
-                                            defaultValue={editingStaff?.name}
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            disabled={!!editingStaff}
                                             className="h-12 rounded-xl border-brand-deep/5 bg-white/50 dark:bg-white/5"
                                         />
                                     </div>
@@ -125,7 +177,9 @@ export function StaffView() {
                                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/40" />
                                             <Input
                                                 placeholder="+234..."
-                                                defaultValue={editingStaff?.phone}
+                                                value={phoneNumber}
+                                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                                disabled={!!editingStaff}
                                                 className="h-12 pl-12 rounded-xl border-brand-deep/5 bg-white/50 dark:bg-white/5"
                                             />
                                         </div>
@@ -137,29 +191,29 @@ export function StaffView() {
                             <section className="space-y-4">
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">Primary Role</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    {['STAFF', 'ACCOUNTANT'].map((role) => (
+                                    {['STAFF', 'ACCOUNTANT'].map((r) => (
                                         <button
-                                            key={role}
-                                            onClick={() => editingStaff && setEditingStaff({ ...editingStaff, role: role as Role })}
+                                            key={r}
+                                            onClick={() => setRole(r as Role)}
                                             className={cn(
                                                 "p-4 rounded-3xl cursor-pointer border transition-all text-left group active:scale-95",
-                                                (editingStaff?.role || 'STAFF') === role
+                                                role === r
                                                     ? "bg-brand-deep text-brand-gold border-brand-deep shadow-lg"
                                                     : "bg-white/50 dark:bg-white/5 border-brand-deep/5 hover:border-brand-deep/20"
                                             )}
                                         >
                                             <div className={cn(
                                                 "w-10 h-10 rounded-xl mb-3 flex items-center justify-center transition-colors",
-                                                (editingStaff?.role || 'STAFF') === role ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/5 text-brand-accent/40 dark:text-white/40"
+                                                role === r ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/5 text-brand-accent/40 dark:text-white/40"
                                             )}>
-                                                {role === 'ACCOUNTANT' ? <Shield className="w-5 h-5" /> : <UserCog className="w-5 h-5" />}
+                                                {r === 'ACCOUNTANT' ? <Shield className="w-5 h-5" /> : <UserCog className="w-5 h-5" />}
                                             </div>
-                                            <div className="font-bold text-sm tracking-wide">{role}</div>
+                                            <div className="font-bold text-sm tracking-wide">{r}</div>
                                             <div className={cn(
                                                 "text-[10px] mt-1 opacity-60 text-sm truncate",
-                                                (editingStaff?.role || 'STAFF') === role ? "text-brand-gold" : "text-brand-accent dark:text-white/80"
+                                                role === r ? "text-brand-gold" : "text-brand-accent dark:text-white/80"
                                             )}>
-                                                {role === 'ACCOUNTANT'
+                                                {r === 'ACCOUNTANT'
                                                     ? "Full access to financials and expenses."
                                                     : "Focused on sales and daily operations."}
                                             </div>
@@ -183,7 +237,8 @@ export function StaffView() {
                                                 <span className="text-[10px] text-brand-accent/40 dark:text-white/40 font-bold uppercase tracking-wider">{perm.category}</span>
                                             </div>
                                             <Switch
-                                                defaultChecked={editingStaff?.permissions.includes(perm.id) || (editingStaff?.role === 'ACCOUNTANT')}
+                                                checked={permissions[perm.id] || false}
+                                                onCheckedChange={() => togglePermission(perm.id)}
                                             />
                                         </div>
                                     ))}
@@ -192,19 +247,37 @@ export function StaffView() {
                         </div>
 
                         <DrawerFooter className="p-8 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/40 dark:bg-black/20 backdrop-blur-md">
-                            <div className="max-w-lg mx-auto w-full flex gap-3">
-                                <DrawerClose asChild>
-                                    <Button variant="outline" className="flex-1 h-12 rounded-xl border-brand-accent/10">
-                                        Cancel
+                            <div className="max-w-lg mx-auto w-full flex flex-col gap-3">
+                                <div className="flex gap-3">
+                                    <DrawerClose asChild>
+                                        <Button variant="outline" className="flex-1 h-12 rounded-xl border-brand-accent/10">
+                                            Cancel
+                                        </Button>
+                                    </DrawerClose>
+                                    <Button
+                                        onClick={handleSave}
+                                        disabled={isSaving || !fullName || !phoneNumber}
+                                        className="flex-2 h-12 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 font-bold px-8 shadow-xl hover:scale-[1.02] transition-all"
+                                    >
+                                        {isSaving ? (
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        ) : (
+                                            <Save className="w-4 h-4 mr-2" />
+                                        )}
+                                        {editingStaff ? "Save Changes" : "Send Invite"}
                                     </Button>
-                                </DrawerClose>
-                                <Button
-                                    onClick={handleSave}
-                                    className="flex-2 h-12 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 font-bold px-8 shadow-xl hover:scale-[1.02] transition-all"
-                                >
-                                    <Save className="w-4 h-4 mr-2" />
-                                    {editingStaff ? "Save Changes" : "Send Invite"}
-                                </Button>
+                                </div>
+                                {editingStaff && (
+                                    <Button
+                                        onClick={handleRemove}
+                                        disabled={isSaving}
+                                        variant="ghost"
+                                        className="w-full h-12 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 font-bold"
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Remove Staff
+                                    </Button>
+                                )}
                             </div>
                         </DrawerFooter>
                     </DrawerContent>
