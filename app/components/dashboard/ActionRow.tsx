@@ -24,7 +24,7 @@ export function ActionRow({ items, className }: ActionRowProps) {
         <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-4", className)}>
             {items.map((item, index) => (
                 <motion.div
-                    key={item.label}
+                    key={`${item.label}-${index}`}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3 + (index * 0.1) }}

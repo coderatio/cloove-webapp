@@ -50,11 +50,17 @@ export function DashboardView() {
         : storeData[currentStore.id]?.sales || { value: "₦0", trend: "0%", trendDirection: "up", label: "Total Sales" }
 
     const displayActions = isAll
-        ? [
-            ...storeData['1'].actions.map((a: any) => ({ ...a, icon: a.icon })),
-            ...storeData['2'].actions.map((a: any) => ({ ...a, icon: a.icon })),
-            ...(storeData['3']?.actions || []).map((a: any) => ({ ...a, icon: a.icon }))
-        ].slice(0, 4) // Simplified aggregation for display
+        ? Object.values(storeData).reduce((acc: any[], store: any) => {
+            store.actions?.forEach((action: any) => {
+                const existing = acc.find(a => a.label === action.label)
+                if (existing) {
+                    existing.count += action.count
+                } else {
+                    acc.push({ ...action })
+                }
+            })
+            return acc
+        }, []).slice(0, 4)
         : storeData[currentStore.id]?.actions || []
 
     const displayActivities = isAll
