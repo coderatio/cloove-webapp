@@ -88,7 +88,7 @@ export function CountrySelector({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute top-full left-0 mt-2 w-48 bg-brand-deep/95 border border-white/10 rounded-2xl overflow-hidden z-50 backdrop-blur-xl shadow-2xl"
+                        className="absolute top-full left-0 mt-2 w-48 bg-brand-deep-500 border border-white/10 rounded-2xl overflow-hidden z-50 backdrop-blur-xl shadow-2xl"
                     >
                         {countries.map((c) => (
                             <button

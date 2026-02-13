@@ -97,12 +97,12 @@ export function DashboardView() {
 
                         {/* Date Filter & Business Badge */}
                         <div className="flex flex-col items-end gap-2 md:gap-3">
-                            <div className="hidden md:flex flex-col items-end">
+                            {/* <div className="hidden md:flex flex-col items-end">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 mb-1">Current Business</span>
                                 <div className="px-3 py-1 rounded-full bg-brand-green/5 dark:bg-brand-gold/10 border border-brand-green/10 dark:border-brand-gold/10">
                                     <span className="text-xs font-semibold text-brand-green dark:text-brand-gold">{businessName}</span>
                                 </div>
-                            </div>
+                            </div> */}
                             <DateRangeFilter date={date} setDate={setDate} />
                         </div>
                     </motion.div>
