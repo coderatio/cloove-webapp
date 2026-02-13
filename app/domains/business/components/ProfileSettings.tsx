@@ -23,11 +23,14 @@ import {
 } from "@/app/components/ui/drawer"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { useEffect } from "react"
+import { useUpdateProfile, useSettings, useUpdateBusinessSettings } from "../hooks/useBusinessSettings"
 
 export function ProfileSettings() {
     const [isEditing, setIsEditing] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
     const { user, refreshUser } = useAuth()
+    const updateProfile = useUpdateProfile()
+    const { data: settings } = useSettings()
+    const updateBusinessSettings = useUpdateBusinessSettings()
 
     // Form state
     const [formData, setFormData] = useState({
@@ -48,14 +51,14 @@ export function ProfileSettings() {
     }, [user])
 
     const handleSave = () => {
-        setIsLoading(true)
-        // Simulate API call for now (backend profile update not yet implemented)
-        setTimeout(async () => {
-            setIsLoading(false)
-            setIsEditing(false)
-            await refreshUser()
-            toast.success("Profile updated successfully")
-        }, 1500)
+        updateProfile.mutate({
+            fullName: formData.fullName,
+        }, {
+            onSuccess: async () => {
+                setIsEditing(false)
+                await refreshUser()
+            }
+        })
     }
 
     return (
@@ -107,7 +110,14 @@ export function ProfileSettings() {
                                     <Mail className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60" />
                                     <span className="text-sm dark:text-brand-cream">Email Summaries</span>
                                 </div>
-                                <Switch defaultChecked />
+                                <Switch
+                                    checked={!!settings?.business?.configs?.email_summaries_enabled}
+                                    onCheckedChange={(checked) => {
+                                        updateBusinessSettings.mutate({
+                                            email_summaries_enabled: checked
+                                        })
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
@@ -155,10 +165,10 @@ export function ProfileSettings() {
                     <div className="p-6 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream dark:bg-[#021a12]">
                         <Button
                             onClick={handleSave}
-                            disabled={isLoading}
+                            disabled={updateProfile.isPending}
                             className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                         >
-                            {isLoading ? (
+                            {updateProfile.isPending ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
                                 <>

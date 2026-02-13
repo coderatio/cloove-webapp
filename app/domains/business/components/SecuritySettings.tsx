@@ -18,10 +18,14 @@ import {
     DrawerDescription,
 } from "@/app/components/ui/drawer"
 
+import { useChangePassword, useChangePin } from "../hooks/useSecurity"
+
 export function SecuritySettings() {
     const [isChangingPin, setIsChangingPin] = useState(false)
     const [isChangingPassword, setIsChangingPassword] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
+
+    const changePassword = useChangePassword()
+    const changePin = useChangePin()
 
     // PIN State
     const [pinData, setPinData] = useState({ current: "", new: "", confirm: "" })
@@ -37,13 +41,16 @@ export function SecuritySettings() {
             toast.error("PIN must be 4 digits")
             return
         }
-        setIsLoading(true)
-        setTimeout(() => {
-            setIsLoading(false)
-            setIsChangingPin(false)
-            setPinData({ current: "", new: "", confirm: "" })
-            toast.success("Transaction PIN updated successfully")
-        }, 1500)
+
+        changePin.mutate({
+            currentPin: pinData.current || undefined,
+            newPin: pinData.new
+        }, {
+            onSuccess: () => {
+                setIsChangingPin(false)
+                setPinData({ current: "", new: "", confirm: "" })
+            }
+        })
     }
 
     const handlePassSave = () => {
@@ -51,17 +58,20 @@ export function SecuritySettings() {
             toast.error("New passwords do not match")
             return
         }
-        if (passData.new.length < 8) {
-            toast.error("Password must be at least 8 characters")
+        if (passData.new.length < 6) {
+            toast.error("Password must be at least 6 characters")
             return
         }
-        setIsLoading(true)
-        setTimeout(() => {
-            setIsLoading(false)
-            setIsChangingPassword(false)
-            setPassData({ current: "", new: "", confirm: "" })
-            toast.success("Password updated successfully")
-        }, 1500)
+
+        changePassword.mutate({
+            currentPassword: passData.current,
+            newPassword: passData.new
+        }, {
+            onSuccess: () => {
+                setIsChangingPassword(false)
+                setPassData({ current: "", new: "", confirm: "" })
+            }
+        })
     }
 
     return (
@@ -167,10 +177,10 @@ export function SecuritySettings() {
                     <div className="p-6 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream dark:bg-[#021a12]">
                         <Button
                             onClick={handlePinSave}
-                            disabled={isLoading}
+                            disabled={changePin.isPending}
                             className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                         >
-                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update PIN"}
+                            {changePin.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update PIN"}
                         </Button>
                     </div>
                 </DrawerContent>
@@ -218,10 +228,10 @@ export function SecuritySettings() {
                     <div className="p-6 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream dark:bg-[#021a12]">
                         <Button
                             onClick={handlePassSave}
-                            disabled={isLoading}
+                            disabled={changePassword.isPending}
                             className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                         >
-                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update Password"}
+                            {changePassword.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update Password"}
                         </Button>
                     </div>
                 </DrawerContent>

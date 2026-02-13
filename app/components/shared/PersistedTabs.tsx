@@ -64,7 +64,7 @@ export function PersistedTabs({
                         key={tab.id}
                         onClick={() => handleTabClick(tab.id)}
                         className={cn(
-                            "relative flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                            "relative cursor-pointer flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap",
                             activeTab === tab.id
                                 ? "text-brand-deep dark:text-brand-gold"
                                 : "text-brand-deep/60 dark:text-brand-cream/60 hover:bg-white/50 dark:hover:bg-white/5"

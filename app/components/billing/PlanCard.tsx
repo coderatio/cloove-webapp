@@ -8,10 +8,12 @@ interface PlanCardProps {
     name: string
     description: string
     price: number
-    interval?: "month" | "year"
+    currency: string
+    interval: "month" | "year"
     features: string[]
     isCurrent?: boolean
     isRecommended?: boolean
+    currentPlanPrice: number
     onSelect: () => void
     isLoading?: boolean
 }
@@ -20,18 +22,45 @@ export function PlanCard({
     name,
     description,
     price,
-    interval = "month",
+    interval,
     features,
     isCurrent,
     isRecommended,
+    currentPlanPrice,
     onSelect,
-    isLoading
+    isLoading,
+    currency
 }: PlanCardProps) {
+    const formattedPrice = new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: currency === "₦" ? 'NGN' : currency,
+        minimumFractionDigits: 0,
+    }).format(price).replace('NGN', '₦')
+
+    const getButtonText = () => {
+        if (isLoading) return <Loader2 className="w-4 h-4 animate-spin" />
+        if (isCurrent) return "Current Plan"
+
+        const planPrice = Number(price)
+        const activePlanPrice = Number(currentPlanPrice)
+
+        // If it's the same price but not current, it's likely an interval switch
+        if (planPrice === activePlanPrice && planPrice > 0) {
+            return `Switch to ${interval === 'year' ? 'Yearly' : 'Monthly'}`
+        }
+
+        if (planPrice > activePlanPrice || (activePlanPrice === 0 && planPrice > 0)) {
+            return "Upgrade"
+        }
+
+        return "Downgrade"
+    }
+
     return (
         <div className={cn(
             "relative p-6 rounded-3xl border transition-all duration-300 flex flex-col h-full",
             isRecommended
-                ? "bg-brand-deep/5 dark:bg-white/5 border-brand-gold/50 shadow-xl shadow-brand-gold/5 scale-[1.02] z-10"
+                ? "bg-brand-gold/10 dark:bg-brand-gold/5 border-brand-gold/50 shadow-xl shadow-brand-gold/5 scale-[1.02] z-10"
                 : "bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/5 hover:border-brand-deep/20 dark:hover:border-white/20",
             isCurrent && "border-brand-deep dark:border-brand-cream bg-brand-deep/5 dark:bg-white/5"
         )}>
@@ -51,10 +80,10 @@ export function PlanCard({
             <div className="mb-8">
                 <div className="flex items-baseline gap-1">
                     <span className="font-serif text-4xl text-brand-deep dark:text-brand-cream">
-                        {price === 0 ? "Free" : `₦${price.toLocaleString()}`}
+                        {price === 0 ? "Free" : formattedPrice}
                     </span>
                     {price > 0 && (
-                        <span className="text-sm text-brand-deep/60 dark:text-brand-cream/60 font-medium">
+                        <span className="text-sm text-brand-deep/60 dark:text-brand-cream/60 font-medium lowercase">
                             /{interval}
                         </span>
                     )}
@@ -87,13 +116,7 @@ export function PlanCard({
                     isCurrent && "opacity-100 bg-transparent border-brand-deep/20 text-brand-deep dark:text-brand-cream cursor-default hover:bg-transparent"
                 )}
             >
-                {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                ) : isCurrent ? (
-                    "Current Plan"
-                ) : (
-                    price === 0 ? "Downgrade" : "Upgrade"
-                )}
+                {getButtonText()}
             </Button>
         </div>
     )

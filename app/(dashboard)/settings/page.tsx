@@ -26,7 +26,9 @@ type Tab = "business" | "profile" | "billing" | "security" | "verification"
 
 function SettingsContent() {
     const [activeTab, setActiveTab] = useState<Tab>("business")
+    const [isDirty, setIsDirty] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [saveTrigger, setSaveTrigger] = useState(0)
 
     const tabs: (TabItem & { id: Tab })[] = [
         { id: "business", label: "Business", icon: Building2 },
@@ -37,12 +39,7 @@ function SettingsContent() {
     ]
 
     const handleGlobalSave = () => {
-        setIsSaving(true)
-        // Simulate network request
-        setTimeout(() => {
-            setIsSaving(false)
-            toast.success("Settings saved successfully")
-        }, 2000)
+        setSaveTrigger(prev => prev + 1)
     }
 
     return (
@@ -57,7 +54,10 @@ function SettingsContent() {
                 tabs={tabs}
                 activeTab={activeTab}
                 defaultTab="business"
-                onChange={(id) => setActiveTab(id as Tab)}
+                onChange={(id) => {
+                    setActiveTab(id as Tab)
+                    setIsDirty(false)
+                }}
             />
 
             <AnimatePresence mode="wait">
@@ -68,7 +68,13 @@ function SettingsContent() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
                 >
-                    {activeTab === "business" && <BusinessSettings />}
+                    {activeTab === "business" && (
+                        <BusinessSettings
+                            onDirtyChange={setIsDirty}
+                            onSavingChange={setIsSaving}
+                            saveTrigger={saveTrigger}
+                        />
+                    )}
                     {activeTab === "profile" && <ProfileSettings />}
                     {activeTab === "verification" && <VerificationSettings />}
                     {activeTab === "billing" && <BillingSettings />}
@@ -77,7 +83,7 @@ function SettingsContent() {
             </AnimatePresence>
 
             {/* Common Save Bar */}
-            {activeTab === "business" && (
+            {isDirty && (
                 <div className="fixed bottom-8 right-8 z-30">
                     <Button
                         onClick={handleGlobalSave}
@@ -85,7 +91,10 @@ function SettingsContent() {
                         className="rounded-full bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 px-8 h-14 shadow-2xl hover:scale-105 transition-all font-bold"
                     >
                         {isSaving ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <>
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                Saving...
+                            </>
                         ) : (
                             <>
                                 <Save className="w-4 h-4 mr-2" />
