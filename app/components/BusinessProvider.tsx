@@ -71,7 +71,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     const addStore = useCallback((name: string, location?: string) => {
         const newStore: Store = {
-            id: Math.random().toString(36).substr(2, 9),
+            id: Math.random().toString(36).substring(2, 9),
             name,
             location,
             isDefault: false
