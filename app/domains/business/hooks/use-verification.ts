@@ -11,6 +11,11 @@ export interface VerificationData {
     address?: string
     idType?: "passport" | "drivers_license" | "nin" | "voters_card"
     idNumber?: string
+    idImage?: File | string | null
+    fileName?: string
+    fileType?: string
+    fileSize?: number
+    document_uri?: string
 }
 
 export interface VerificationResponse {

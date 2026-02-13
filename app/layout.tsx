@@ -8,6 +8,7 @@ import AppLayout from "./components/layout/AppLayout";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { AuthProvider } from "./components/providers/auth-provider";
+import { AuthGuard } from "./components/shared/AuthGuard";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -83,12 +84,14 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthProvider>
-              <TooltipProvider>
-                <BusinessProvider>
-                  {children}
-                  <Toaster />
-                </BusinessProvider>
-              </TooltipProvider>
+              <Toaster />
+              <AuthGuard>
+                <TooltipProvider>
+                  <BusinessProvider>
+                    {children}
+                  </BusinessProvider>
+                </TooltipProvider>
+              </AuthGuard>
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

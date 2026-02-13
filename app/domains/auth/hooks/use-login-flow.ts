@@ -7,9 +7,10 @@ import type { LoginStep, CountryDetail, IdentifyResponse, LoginResponse } from "
 interface UseLoginFlowProps {
     callbackUrl?: string
     router?: any
+    onSuccess?: () => void
 }
 
-export function useLoginFlow({ callbackUrl = '/', router }: UseLoginFlowProps = {}) {
+export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginFlowProps = {}) {
     const [isLoading, setIsLoading] = useState(false)
     const [step, setStep] = useState<LoginStep>('identifier')
     const [identifier, setIdentifier] = useState("")
@@ -22,13 +23,15 @@ export function useLoginFlow({ callbackUrl = '/', router }: UseLoginFlowProps = 
     const [countries, setCountries] = useState<CountryDetail[]>([])
     const [selectedCountry, setSelectedCountry] = useState<CountryDetail | null>(null)
 
-    // Initial auth check
+    // Initial auth check - skip if we're already in a login flow beyond the first step
     useEffect(() => {
+        if (step !== 'identifier') return
+
         const token = apiClient.getToken()
         if (token && router) {
             router.replace(callbackUrl)
         }
-    }, [callbackUrl, router])
+    }, [callbackUrl, router, step])
 
     // Fetch countries on mount
     useEffect(() => {
@@ -90,6 +93,9 @@ export function useLoginFlow({ callbackUrl = '/', router }: UseLoginFlowProps = 
                 setStep('setup-password')
             } else {
                 setStep('success')
+
+                // Refresh global auth state
+                if (onSuccess) onSuccess()
 
                 // Set active business if there's only one
                 const businesses = response.user?.businesses || []

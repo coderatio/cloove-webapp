@@ -9,13 +9,15 @@ import { VerifyStep } from "@/app/domains/auth/components/VerifyStep"
 import { SetupPasswordStep } from "@/app/domains/auth/components/SetupPasswordStep"
 import { SuccessStep } from "@/app/domains/auth/components/SuccessStep"
 import { Loader2 } from "lucide-react"
+import { useAuth } from "@/app/components/providers/auth-provider"
 
 export function LoginFlowContainer() {
     const searchParams = useSearchParams()
     const router = useRouter()
+    const { refreshUser } = useAuth()
     const callbackUrl = searchParams.get("callbackUrl") || "/"
 
-    const flow = useLoginFlow({ callbackUrl, router })
+    const flow = useLoginFlow({ callbackUrl, router, onSuccess: refreshUser })
     const { state } = flow
 
     return (

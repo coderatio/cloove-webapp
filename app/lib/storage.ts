@@ -38,12 +38,67 @@ export const storage = {
     },
 
     /**
-     * Clear all Cloove related storage
+     * Clear all Cloove session-related storage (preserves theme)
      */
     clear(): void {
         if (typeof window === 'undefined') return
-        Object.values(STORAGE_KEYS).forEach(key => {
-            localStorage.removeItem(key)
-        })
+        this.remove(STORAGE_KEYS.AUTH_TOKEN)
+        this.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+    },
+
+    /**
+     * Get token
+     */
+    getToken(): string | null {
+        return this.get(STORAGE_KEYS.AUTH_TOKEN)
+    },
+
+    /**
+     * Get active business id
+     */
+    getActiveBusinessId(): string | null {
+        return this.get(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+    },
+
+    /**
+     * Get theme
+     */
+    getTheme(): string | null {
+        return this.get(STORAGE_KEYS.THEME)
+    },
+
+    /**
+     * Set token
+     */
+    setToken(token: string): void {
+        this.set(STORAGE_KEYS.AUTH_TOKEN, token)
+    },
+
+    /**
+     * Set active business id
+     */
+    setActiveBusinessId(id: string): void {
+        this.set(STORAGE_KEYS.ACTIVE_BUSINESS_ID, id)
+    },
+
+    /**
+     * Set theme
+     */
+    setTheme(theme: string): void {
+        this.set(STORAGE_KEYS.THEME, theme)
+    },
+
+    /**
+     * Remove token and active business id
+     */
+    removeToken(): void {
+        this.remove(STORAGE_KEYS.AUTH_TOKEN)
+    },
+
+    /**
+     * Remove active business id
+     */
+    removeActiveBusinessId(): void {
+        this.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
     }
 }

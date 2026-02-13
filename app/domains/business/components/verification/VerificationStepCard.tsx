@@ -22,6 +22,7 @@ interface VerificationStepCardProps {
     onBvnChange: (val: string) => void
     address: string
     onAddressChange: (val: string) => void
+    onFileSelect: (file: File | null) => void
     isPending: boolean
     showHistory: boolean
     onToggleHistory: () => void
@@ -42,6 +43,7 @@ export function VerificationStepCard({
     onBvnChange,
     address,
     onAddressChange,
+    onFileSelect,
     isPending,
     showHistory,
     onToggleHistory,
@@ -125,10 +127,12 @@ export function VerificationStepCard({
                                         >
                                             <VerificationLevelForm
                                                 level={step.level}
+                                                type={step.type}
                                                 bvn={bvn}
                                                 onBvnChange={onBvnChange}
                                                 address={address}
                                                 onAddressChange={onAddressChange}
+                                                onFileSelect={onFileSelect}
                                                 onSubmit={() => onSubmit(step.level, step.type)}
                                                 onCancel={onCancel}
                                                 isPending={isPending}

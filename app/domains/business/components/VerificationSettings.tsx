@@ -37,22 +37,40 @@ export function VerificationSettings() {
     const [showHistory, setShowHistory] = useState<string | null>(null)
     const [bvn, setBvn] = useState("")
     const [address, setAddress] = useState("")
+    const [file, setFile] = useState<File | null>(null)
 
     const handleVerification = async (levelId: number, type: VerificationType) => {
         let payload: VerificationData = {}
 
         if (type === "BVN") {
             if (bvn.length !== 11) {
-                toast.error("Please enter a valid 11-digit BVN")
+                toast.error("Invalid BVN Format", {
+                    description: "Your Bank Verification Number must be exactly 11 digits."
+                })
                 return
             }
             payload = { bvn }
         } else if (type === "GOVT_ID") {
-            toast.info("Document upload coming soon")
-            return
+            if (!file) {
+                toast.error("Identification Required", {
+                    description: "Please upload a clear image of your Government ID to proceed."
+                })
+                return
+            }
+            // In a real scenario, we would upload the file to a CDN first
+            // For now, we follow the pattern of the service expecting data
+            payload = {
+                fileName: file.name,
+                fileType: file.type,
+                fileSize: file.size,
+                // Placeholder for document verification
+                document_uri: URL.createObjectURL(file)
+            }
         } else if (type === "ADDRESS") {
-            if (!address) {
-                toast.error("Please enter your business address")
+            if (address.length < 10) {
+                toast.error("Address too short", {
+                    description: "Please provide a more detailed business address."
+                })
                 return
             }
             payload = { address }
@@ -68,6 +86,10 @@ export function VerificationSettings() {
             setActiveLevel(null)
             setBvn("")
             setAddress("")
+            setFile(null)
+            toast.success("Verification Submitted", {
+                description: `Your ${type} details have been received and are being processed.`
+            })
         } catch (err) {
             // Error handling is done in mutation hook
         }
@@ -163,6 +185,7 @@ export function VerificationSettings() {
                                         onBvnChange={setBvn}
                                         address={address}
                                         onAddressChange={setAddress}
+                                        onFileSelect={setFile}
                                         isPending={submitVerification.isPending}
                                         showHistory={showHistory === step.id}
                                         onToggleHistory={() => setShowHistory(showHistory === step.id ? null : step.id)}

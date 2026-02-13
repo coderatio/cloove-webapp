@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { apiClient } from "@/app/lib/api-client"
 import { storage, STORAGE_KEYS } from "@/app/lib/storage"
+import { SessionManager } from "../auth/SessionManager"
 
 interface User {
     id: string
@@ -12,6 +13,10 @@ interface User {
     email: string
     phoneNumber: string
     setupRequired: boolean
+    session?: {
+        expiresAt?: string
+        refreshInterval?: string
+    }
 }
 
 interface AuthContextType {
@@ -19,6 +24,7 @@ interface AuthContextType {
     isLoading: boolean
     logout: () => void
     refreshUser: () => Promise<void>
+    updateUserMetadata: (token: string) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -27,9 +33,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
-    const fetchUser = async () => {
+    const fetchUser = async (silent = false) => {
+        if (!silent) setIsLoading(true)
         const token = storage.get(STORAGE_KEYS.AUTH_TOKEN)
         if (!token) {
+            setUser(null)
             setIsLoading(false)
             return
         }
@@ -41,24 +49,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.error("Failed to fetch user:", error)
             // If it's a 401, the apiClient will handle the redirect
         } finally {
-            setIsLoading(false)
+            if (!silent) setIsLoading(false)
         }
     }
 
     useEffect(() => {
-        fetchUser()
+        fetchUser(false) // Initial load should show loading state
     }, [])
 
-    const logout = () => {
-        apiClient.post("/settings/logout", {}).finally(() => {
-            storage.remove(STORAGE_KEYS.AUTH_TOKEN)
-            storage.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+    const refreshUser = () => fetchUser(true) // Subsequent refreshes should be silent
+
+    const logout = async () => {
+        try {
+            setUser(null)
+            await apiClient.logout()
+        } catch (error) {
+            console.error("Logout failed:", error)
+            storage.clear()
             window.location.href = "/login"
-        })
+        }
+    }
+
+    const updateUserMetadata = (token: string) => {
+        // This is called when the session manager refreshes the token
+        // We don't necessarily need to update the user object if nothing changed,
+        // but it's a good place if we want to update expiresAt in the future.
+        // For now, apiClient.refresh() already saves the token to storage.
     }
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, logout, refreshUser: fetchUser }}>
+        <AuthContext.Provider value={{ user, isLoading, logout, refreshUser, updateUserMetadata }}>
+            {user && (
+                <SessionManager
+                    sessionMetadata={user.session}
+                    onSessionRefresh={updateUserMetadata}
+                />
+            )}
             {children}
         </AuthContext.Provider>
     )

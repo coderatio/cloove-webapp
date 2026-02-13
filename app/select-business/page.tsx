@@ -41,9 +41,14 @@ function SelectBusinessContent() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="h-20 w-20 bg-brand-green rounded-[2.5rem] p-4 mx-auto shadow-2xl shadow-brand-green/20 mb-8"
+                        className="relative h-20 w-20 bg-brand-green rounded-[2.5rem] p-4 mx-auto shadow-2xl shadow-brand-green/20 mb-8 overflow-hidden"
                     >
-                        <Image src="/images/logo-white.png" alt="Cloove" className="w-full h-full object-contain" />
+                        <Image
+                            src="/images/logo-white.png"
+                            alt="Cloove"
+                            fill
+                            className="object-contain p-4"
+                        />
                     </motion.div>
 
                     <motion.h1
@@ -73,7 +78,10 @@ function SelectBusinessContent() {
                                 <h3 className="text-xl font-bold text-brand-cream">No businesses found</h3>
                                 <p className="text-brand-cream/60">It looks like you haven't created any businesses yet.</p>
                             </div>
-                            <Button className="h-14 rounded-2xl px-12 bg-brand-gold text-brand-deep font-bold hover:scale-[1.02] active:scale-[0.98] transition-all">
+                            <Button
+                                onClick={() => router.push('/onboarding')}
+                                className="h-14 rounded-2xl px-12 bg-brand-gold text-brand-deep font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
                                 Create your first Business
                             </Button>
                         </GlassCard>
@@ -87,7 +95,7 @@ function SelectBusinessContent() {
                             >
                                 <button
                                     onClick={() => handleSelect(business)}
-                                    className="group w-full block text-left outline-none"
+                                    className="group cursor-pointer w-full block text-left outline-none"
                                 >
                                     <GlassCard className={cn(
                                         "p-6 flex items-center gap-6 transition-all duration-300 group-hover:bg-white/10 group-hover:scale-[1.01] active:scale-[0.99] border-white/5",

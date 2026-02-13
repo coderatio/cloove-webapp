@@ -119,7 +119,7 @@ export default function ReferralsPage() {
                 {/* Hero Stats */}
                 <section className="grid md:grid-cols-2 gap-6">
                     <GlassCard className="p-6 md:p-8 relative overflow-hidden bg-brand-deep/5 dark:bg-white/5 border-0 rounded-3xl">
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-gold/20 via-transparent to-transparent opacity-50" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-brand-gold/10 to-transparent rounded-full -mr-16 -mt-16 blur-2xl" />
                         <div className="relative z-10 space-y-6">
                             <div className="space-y-2">
                                 <h3 className="text-xl md:text-2xl font-serif text-brand-deep dark:text-brand-cream">

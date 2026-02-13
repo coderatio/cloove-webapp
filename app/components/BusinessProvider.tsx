@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/app/lib/api-client'
 import { storage, STORAGE_KEYS } from '@/app/lib/storage'
 import { toast } from 'sonner'
@@ -58,6 +59,7 @@ interface BusinessContextType {
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined)
 
 export function BusinessProvider({ children }: { children: ReactNode }) {
+    const queryClient = useQueryClient()
     const [businesses, setBusinesses] = useState<Business[]>([])
     const { user } = useAuth()
     const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null)
@@ -90,17 +92,27 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     const setActiveBusiness = useCallback((business: Business | null) => {
         setActiveBusinessState(business)
+
+        // Reset store compatibility state
+        setStores([allStores])
+        setCurrentStore(allStores)
+
         if (business) {
-            storage.set(STORAGE_KEYS.ACTIVE_BUSINESS_ID, business.id)
+            storage.setActiveBusinessId(business.id)
+            // Invalidate all queries to force refetch with new business header
+            queryClient.invalidateQueries()
+            toast.success(`Switched to ${business.name}`)
         } else {
-            storage.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+            storage.removeActiveBusinessId()
         }
-    }, [])
+    }, [queryClient])
 
     const refreshBusinesses = useCallback(async () => {
         // Only fetch if authenticated
         if (!apiClient.getToken()) {
             setIsLoading(false)
+            setBusinesses([])
+            setActiveBusinessState(null)
             return
         }
 
@@ -109,7 +121,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             setBusinesses(data)
 
             // Auto-selection or restoration
-            const savedId = storage.get(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+            const savedId = storage.getActiveBusinessId()
 
             if (data.length === 1) {
                 setActiveBusiness(data[0])
@@ -120,8 +132,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
                 }
             }
         } catch (error) {
-            console.error('Failed to fetch businesses:', error)
-            // toast.error('Failed to load businesses')
+            //console.error('Failed to fetch businesses:', error)
+            toast.error('Failed to load businesses. Please try again.')
         } finally {
             setIsLoading(false)
         }
@@ -129,7 +141,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         refreshBusinesses()
-    }, [refreshBusinesses])
+    }, [refreshBusinesses, user?.id])
 
     return (
         <BusinessContext.Provider value={{

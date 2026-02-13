@@ -1,4 +1,4 @@
-import { storage, STORAGE_KEYS } from "@/app/lib/storage"
+import { storage } from "@/app/lib/storage"
 import { HttpStatus } from "./http-status"
 
 // Custom error class for API errors
@@ -29,15 +29,37 @@ export const apiClient = {
      * Token management
      */
     getToken() {
-        return storage.get(STORAGE_KEYS.AUTH_TOKEN)
+        return storage.getToken()
     },
 
     setToken(token: string) {
-        storage.set(STORAGE_KEYS.AUTH_TOKEN, token)
+        storage.setToken(token)
     },
 
     clearToken() {
-        storage.remove(STORAGE_KEYS.AUTH_TOKEN)
+        storage.clear()
+    },
+
+    async refresh() {
+        try {
+            const data = await this.post<{ token: string }>("/api/security/refresh", {})
+            this.setToken(data.token)
+            return data
+        } catch (error) {
+            //console.error("[API Client] Token refresh failed:", error)
+            throw error
+        }
+    },
+
+    async logout() {
+        try {
+            await this.post("/api/security/logout", {})
+        } finally {
+            this.clearToken()
+            if (typeof window !== 'undefined') {
+                window.location.href = '/login'
+            }
+        }
     },
 
     /**
@@ -84,7 +106,7 @@ export const apiClient = {
 
         const url = this.buildUrl(endpoint, params)
         const token = this.getToken()
-        const businessId = storage.get(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+        const businessId = storage.getActiveBusinessId()
 
         // Default headers
         const config: RequestInit = {
@@ -104,6 +126,8 @@ export const apiClient = {
             if (!response.ok) {
                 // Handle specific status codes
                 if (response.status === HttpStatus.UNAUTHORIZED) {
+                    this.clearToken()
+
                     // Redirect to login on authentication failure
                     if (typeof window !== 'undefined') {
                         const currentPath = window.location.pathname
@@ -125,7 +149,7 @@ export const apiClient = {
                 throw error
             }
             const message = error instanceof Error ? error.message : "An unexpected error occurred"
-            console.error(`[API Client] ${endpoint} failed:`, message)
+            // console.error(`[API Client] ${endpoint} failed:`, message)
             throw new ApiError(message, HttpStatus.INTERNAL_SERVER_ERROR)
         }
     },

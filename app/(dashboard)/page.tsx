@@ -74,13 +74,15 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
 
   // Simulate loading state for "Calm" feeling
+  const { activeBusiness } = useBusiness()
+
   useEffect(() => {
     setIsLoading(true)
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 1500) // 1.5s delay to show skeleton
     return () => clearTimeout(timer)
-  }, [currentStore.id, date]) // Reload when store varies
+  }, [currentStore.id, activeBusiness?.id, date]) // Reload when store or business varies
 
   // Aggregate or Filter Data
   const isAll = currentStore.id === ALL_STORES_ID

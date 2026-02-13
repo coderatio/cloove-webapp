@@ -32,7 +32,6 @@ export function SuccessStep() {
                 animate={{ width: "100%" }}
                 transition={{ duration: 1.5 }}
                 className="h-1 bg-brand-gold rounded-full max-w-[200px] mx-auto opacity-50"
-                onAnimationComplete={() => window.location.href = '/'}
             />
         </motion.div>
     )
