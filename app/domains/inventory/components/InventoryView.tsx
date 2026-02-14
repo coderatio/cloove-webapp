@@ -22,6 +22,7 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerClose,
+    DrawerBody,
 } from "@/app/components/ui/drawer"
 import { useInventory, InventoryStats } from '../hooks/useInventory'
 import { MoneyInput } from '@/app/components/ui/money-input'
@@ -117,7 +118,8 @@ export function InventoryView() {
         if (!products) return []
 
         return products.map(p => {
-            let totalStock = 0
+            let globalStock = 0
+            let localStock = 0
             const variants = p.variants || (p as any).product_variants || []
             const storeBreakdown: Record<string, number> = {}
 
@@ -128,8 +130,10 @@ export function InventoryView() {
                     const storeName = inv.store?.name || (inv as any).store_name || 'Store'
                     const stockQuantity = Number(inv.stockQuantity !== undefined ? inv.stockQuantity : (inv as any).stock_quantity || 0)
 
-                    if (!currentStore || currentStore.id === 'all-stores' || storeId === currentStore.id) {
-                        totalStock += stockQuantity
+                    globalStock += stockQuantity
+
+                    if (currentStore && currentStore.id !== 'all-stores' && storeId === currentStore.id) {
+                        localStock += stockQuantity
                     }
 
                     if (stockQuantity > 0) {
@@ -141,30 +145,21 @@ export function InventoryView() {
             return {
                 id: p.id,
                 product: p.name,
-                stock: totalStock,
+                stock: globalStock,
+                localStock: localStock,
                 storeBreakdown,
                 price: formatCurrency(p.basePrice || 0),
                 numericPrice: p.basePrice || 0,
                 variantsCount: variants.length,
                 availableIn: (p as any).stores?.map((s: any) => s.name) || [],
-                status: totalStock <= 5 ? 'Low Stock' : 'In Stock',
-                category: 'General', // Backend doesn't have categories yet
+                status: globalStock <= 5 ? 'Low Stock' : 'In Stock',
+                category: (p as any).category || 'General',
                 raw: p
             }
         })
     }, [products, currentStore])
 
     const filterGroups = [
-        {
-            key: 'category',
-            title: 'Category',
-            options: [
-                { label: 'General', value: 'General' },
-                { label: 'Food', value: 'Food' },
-                { label: 'Clothing', value: 'Clothing' },
-                { label: 'Electronics', value: 'Electronics' }
-            ]
-        },
         {
             key: 'storeId',
             title: 'Stores',
@@ -191,13 +186,11 @@ export function InventoryView() {
         const activeStatuses = selectedFilters.filter(f => filterGroups.find(g => g.key === 'status')?.options.some((o: any) => o.value === f))
         const matchesStatus = activeStatuses.length === 0 || activeStatuses.includes(item.status)
 
-        const activeCategories = selectedFilters.filter(f => filterGroups.find(g => g.key === 'category')?.options.some((o: any) => o.value === f))
-        const matchesCategory = activeCategories.length === 0 || activeCategories.includes(item.category)
 
         const activeStores = selectedFilters.filter(f => filterGroups.find(g => g.key === 'storeId')?.options.some((o: any) => o.value === f))
         const matchesStore = activeStores.length === 0 || activeStores.some(storeId => (item.raw as any).stores?.some((s: any) => s.id === storeId))
 
-        return matchesSearch && matchesStatus && matchesCategory && matchesStore
+        return matchesSearch && matchesStatus && matchesStore
     })
 
     const handleAdd = async (e: React.FormEvent) => {
@@ -306,6 +299,11 @@ export function InventoryView() {
                         <span className={cn("font-mono", value <= 5 ? 'font-bold text-rose-600 dark:text-rose-400' : 'text-brand-accent/60 dark:text-brand-cream/60')}>
                             {value} units
                         </span>
+                        {!isAllStores && (
+                            <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 font-medium">
+                                {item.localStock} in {currentStore?.name}
+                            </span>
+                        )}
                         {isAllStores && breakdown.length > 1 && (
                             <div className="flex flex-wrap gap-1">
                                 {breakdown.map(([name, qty]) => (
@@ -367,6 +365,8 @@ export function InventoryView() {
             </div>
         )
     }
+
+    const isAllStores = !currentStore || currentStore.id === 'all-stores'
 
     return (
         <PageTransition>
@@ -460,11 +460,11 @@ export function InventoryView() {
                             <ListCard
                                 key={item.id}
                                 title={item.product}
-                                subtitle={item.price}
+                                subtitle={`${item.price}${!isAllStores ? ` • ${item.localStock} in ${currentStore?.name}` : ''}`}
                                 status={item.status}
                                 statusColor={item.status === 'Low Stock' ? 'danger' : 'success'}
                                 value={`${item.stock}`}
-                                valueLabel="units"
+                                valueLabel="total units"
                                 delay={index * 0.05}
                                 onClick={() => {
                                     const raw = (item as any).raw
@@ -545,7 +545,7 @@ export function InventoryView() {
                             </DrawerDescription>
                         </DrawerStickyHeader>
 
-                        <div className="flex-1 overflow-y-auto min-h-0 px-4 md:px-8 pb-12">
+                        <DrawerBody className="pb-12 min-h-0">
                             <form onSubmit={editingItem ? handleUpdate : handleAdd} className="max-w-lg mx-auto space-y-8">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product Images</label>
@@ -623,17 +623,19 @@ export function InventoryView() {
                                         <div className="space-y-6">
                                             {formData.variants.map((variant, index) => (
                                                 <div key={index} className="p-4 rounded-2xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 space-y-4 relative group">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            const newVariants = [...formData.variants]
-                                                            newVariants.splice(index, 1)
-                                                            setFormData({ ...formData, variants: newVariants })
-                                                        }}
-                                                        className="absolute cursor-pointer -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-all shadow-lg"
-                                                    >
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </button>
+                                                    {formData.variants.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newVariants = [...formData.variants]
+                                                                newVariants.splice(index, 1)
+                                                                setFormData({ ...formData, variants: newVariants })
+                                                            }}
+                                                            className="absolute cursor-pointer -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    )}
 
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
@@ -778,7 +780,7 @@ export function InventoryView() {
                                     </div>
                                 )}
                             </form>
-                        </div>
+                        </DrawerBody>
                     </DrawerContent>
                 </Drawer>
             </div>
