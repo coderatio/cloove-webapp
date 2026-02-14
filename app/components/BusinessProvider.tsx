@@ -33,6 +33,7 @@ interface BusinessContextType {
     role: string | null
     permissions: Record<string, boolean> | null
     features: Record<string, boolean> | null
+    currency: string
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined)
@@ -98,6 +99,20 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         refreshBusinesses()
     }, [refreshBusinesses, user?.id])
 
+    const getBusinessCurrency = useCallback(() => {
+        const currencyCode = activeBusiness?.currency!
+        try {
+            const parts = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currencyCode,
+                currencyDisplay: 'narrowSymbol',
+            }).formatToParts(0)
+            return parts.find(p => p.type === 'currency')?.value || currencyCode
+        } catch (e) {
+            return '₦'
+        }
+    }, [activeBusiness?.currency])
+
     return (
         <BusinessContext.Provider value={{
             businesses,
@@ -109,7 +124,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             ownerName: user?.firstName || "",
             role: activeBusiness?.role || null,
             permissions: activeBusiness?.permissions || null,
-            features: activeBusiness?.features || null
+            features: activeBusiness?.features || null,
+            currency: getBusinessCurrency()
         }}>
             {children}
         </BusinessContext.Provider>

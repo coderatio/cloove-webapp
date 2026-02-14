@@ -74,7 +74,7 @@ export function StaffView() {
 
     const handleSave = async () => {
         setIsSaving(true)
-        let res
+        let res: any
         if (editingStaff) {
             res = await updateStaff(editingStaff.userId, { role, permissions })
         } else {
@@ -92,7 +92,7 @@ export function StaffView() {
         if (!confirm("Are you sure you want to remove this staff member? This action cannot be undone.")) return
 
         setIsSaving(true)
-        const res = await removeStaff(editingStaff.userId)
+        let res: any = await removeStaff(editingStaff.userId)
         setIsSaving(false)
         if (res.success) {
             setIsDrawerOpen(false)

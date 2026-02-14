@@ -18,6 +18,7 @@ interface ManagementHeaderProps {
     onFilterClear?: () => void
     addButtonLabel?: string
     onAddClick?: () => void
+    extraActions?: React.ReactNode
     className?: string
 }
 
@@ -33,6 +34,7 @@ export function ManagementHeader({
     onFilterClear,
     addButtonLabel,
     onAddClick,
+    extraActions,
     className
 }: ManagementHeaderProps) {
     return (
@@ -48,15 +50,18 @@ export function ManagementHeader({
                         </p>
                     )}
                 </div>
-                {addButtonLabel && onAddClick && (
-                    <Button
-                        onClick={onAddClick}
-                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg h-12 px-6"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        {addButtonLabel}
-                    </Button>
-                )}
+                <div className="flex items-center gap-3">
+                    {extraActions}
+                    {addButtonLabel && onAddClick && (
+                        <Button
+                            onClick={onAddClick}
+                            className="rounded-full bg-brand-deep text-brand-gold-300 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg h-12 px-6"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            {addButtonLabel}
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {searchValue !== undefined && onSearchChange && (

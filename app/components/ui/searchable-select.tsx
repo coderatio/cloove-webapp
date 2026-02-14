@@ -152,7 +152,7 @@ export function SearchableSelect({
                                                 handleSelect(option.value)
                                             }}
                                             disabled={option.disabled}
-                                            className="flex w-full items-center text-left"
+                                            className="flex cursor-pointer w-full items-center text-left"
                                         >
                                             <div className={cn(
                                                 "mr-2 flex h-4 w-4 items-center justify-center transition-all shrink-0",

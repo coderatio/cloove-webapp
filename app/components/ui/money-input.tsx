@@ -9,10 +9,11 @@ interface MoneyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElemen
     value: number | string;
     onChange: (value: number) => void;
     currencySymbol?: string;
+    hideSymbol?: boolean;
 }
 
 export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
-    ({ value, onChange, currencySymbol = "₦", className, ...props }, ref) => {
+    ({ value, onChange, currencySymbol = '₦', hideSymbol = false, className, ...props }, ref) => {
         const [displayValue, setDisplayValue] = React.useState("")
 
         // Sync display value with incoming numeric value
@@ -50,17 +51,23 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
         }
 
         return (
-            <div className="relative group">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 font-medium transition-colors group-focus-within:text-brand-gold">
-                    {currencySymbol}
-                </span>
+            <div className={cn("relative group", hideSymbol ? "w-full" : "")}>
+                {!hideSymbol && (
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 font-medium transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold">
+                        {currencySymbol}
+                    </span>
+                )}
                 <Input
                     {...props}
                     ref={ref}
                     type="text"
                     value={displayValue}
                     onChange={handleChange}
-                    className={cn("pl-9 pr-6 py-4 h-14 rounded-2xl", className)}
+                    className={cn(
+                        !hideSymbol && "pl-9",
+                        !hideSymbol && "pr-6 py-4 h-14 rounded-2xl",
+                        className
+                    )}
                 />
             </div>
         )

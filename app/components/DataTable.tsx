@@ -15,6 +15,7 @@ interface DataTableProps<T> {
     emptyMessage?: string
     onRowClick?: (row: T) => void
     pageSize?: number
+    isLoading?: boolean
 }
 
 export default function DataTable<T extends { id: string | number }>({
@@ -22,7 +23,8 @@ export default function DataTable<T extends { id: string | number }>({
     data,
     emptyMessage = "No data to display",
     onRowClick,
-    pageSize = 10
+    pageSize = 10,
+    isLoading = false
 }: DataTableProps<T>) {
     const [currentPage, setCurrentPage] = React.useState(1)
 
@@ -31,7 +33,7 @@ export default function DataTable<T extends { id: string | number }>({
         setCurrentPage(1)
     }, [data])
 
-    if (data.length === 0) {
+    if (data.length === 0 && !isLoading) {
         return (
             <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center py-20 px-8 text-center">
                 <div className="w-16 h-16 rounded-full bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent/20 mb-4">
@@ -71,33 +73,46 @@ export default function DataTable<T extends { id: string | number }>({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-brand-deep/5 dark:divide-white/5">
-                        {paginatedData.map((row) => (
-                            <tr
-                                key={row.id}
-                                onClick={() => onRowClick?.(row)}
-                                className={cn(
-                                    "group transition-all duration-200",
-                                    onRowClick && "cursor-pointer hover:bg-brand-green/5 dark:hover:bg-brand-gold/5"
-                                )}
-                            >
-                                {columns.map((col) => (
-                                    <td
-                                        key={String(col.key)}
-                                        className="px-6 py-5 text-sm text-brand-deep dark:text-brand-cream"
-                                    >
-                                        {col.render
-                                            ? col.render(row[col.key], row)
-                                            : String(row[col.key] ?? '-')
-                                        }
-                                    </td>
-                                ))}
-                                {onRowClick && (
-                                    <td className="px-6 py-5 text-right">
-                                        <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors inline-block" />
-                                    </td>
-                                )}
-                            </tr>
-                        ))}
+                        {isLoading ? (
+                            Array.from({ length: pageSize === 10 ? 5 : pageSize }).map((_, i) => (
+                                <tr key={i}>
+                                    {columns.map((col) => (
+                                        <td key={String(col.key)} className="px-6 py-5">
+                                            <div className="h-4 bg-brand-deep/5 dark:bg-white/5 rounded animate-pulse w-full max-w-[150px]" />
+                                        </td>
+                                    ))}
+                                    {onRowClick && <td className="px-6 py-5" />}
+                                </tr>
+                            ))
+                        ) : (
+                            paginatedData.map((row) => (
+                                <tr
+                                    key={row.id}
+                                    onClick={() => onRowClick?.(row)}
+                                    className={cn(
+                                        "group transition-all duration-200",
+                                        onRowClick && "cursor-pointer hover:bg-brand-green/5 dark:hover:bg-brand-gold/5"
+                                    )}
+                                >
+                                    {columns.map((col) => (
+                                        <td
+                                            key={String(col.key)}
+                                            className="px-6 py-5 text-sm text-brand-deep dark:text-brand-cream"
+                                        >
+                                            {col.render
+                                                ? col.render(row[col.key], row)
+                                                : String(row[col.key] ?? '-')
+                                            }
+                                        </td>
+                                    ))}
+                                    {onRowClick && (
+                                        <td className="px-6 py-5 text-right">
+                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors inline-block" />
+                                        </td>
+                                    )}
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

@@ -46,6 +46,7 @@ export interface InventoryStats {
     totalProducts: number
     totalStockUnits: number
     lowStockItems: number
+    lowStockThreshold: number
 }
 
 /**
@@ -56,7 +57,7 @@ export function useInventory(storeId?: string) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
-    const { data: response, isLoading, error } = useQuery<ApiResponse<Product[]>>({
+    const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<Product[]>>({
         queryKey: ['products', businessId, storeId],
         queryFn: () => apiClient.get<ApiResponse<Product[]>>('/products', { storeId: storeId || '' }, { fullResponse: true }),
         enabled: !!businessId
@@ -101,6 +102,7 @@ export function useInventory(storeId?: string) {
         meta: response?.meta,
         summary: response?.summary as InventoryStats | undefined,
         isLoading,
+        isFetching,
         error,
         createProduct: createProductMutation.mutateAsync,
         updateProduct: updateProductMutation.mutateAsync,
