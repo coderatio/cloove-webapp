@@ -31,6 +31,7 @@ export interface ApiResponse<T = any> {
     message: string
     data: T
     meta: Record<string, any>
+    summary?: any
 }
 
 /**

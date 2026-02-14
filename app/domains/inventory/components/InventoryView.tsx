@@ -6,7 +6,7 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { AlertTriangle, Package, Trash2 } from 'lucide-react'
+import { AlertTriangle, Package, Trash2, Loader2, Plus } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
@@ -23,87 +23,127 @@ import {
     DrawerDescription,
     DrawerClose,
 } from "@/app/components/ui/drawer"
-import { initialInventory } from '../data/inventoryMocks'
+import { useInventory, InventoryStats } from '../hooks/useInventory'
+import { MoneyInput } from '@/app/components/ui/money-input'
+import { formatCurrency } from '@/app/lib/formatters'
 
 export function InventoryView() {
     const isMobile = useIsMobile()
-    const { stores, currentStore } = useStores()
-    const [inventory, setInventory] = React.useState(initialInventory)
+    const { currentStore } = useStores()
+    const { products, summary, isLoading, createProduct, updateProduct, deleteProduct } = useInventory(
+        currentStore?.id && currentStore.id !== 'all-stores' ? currentStore.id : undefined
+    )
+
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
-    const [isAddOpen, setIsAddOpen] = React.useState(false)
+    const [isAddDrawerOpen, setIsAddDrawerOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<any>(null)
+    const [isSubmitting, setIsSubmitting] = React.useState(false)
+
+    // Form states
+    const [formData, setFormData] = React.useState({ product: "", stock: 0, price: "", category: "General" })
+
+    // Map backend products to view-friendly inventory items
+    const inventory = React.useMemo(() => {
+        if (!products) return []
+
+        return products.map(p => {
+            // Calculate total stock for this product in the current selected store (or total if no store filter)
+            let totalStock = 0
+            const variants = p.variants || (p as any).product_variants || []
+
+            variants.forEach(v => {
+                const inventories = v.inventories || (v as any).variant_inventories || []
+                inventories.forEach(inv => {
+                    const storeId = inv.storeId || (inv as any).store_id
+                    const stockQuantity = inv.stockQuantity !== undefined ? inv.stockQuantity : (inv as any).stock_quantity
+
+                    if (!currentStore || currentStore.id === 'all-stores' || storeId === currentStore.id) {
+                        totalStock += (Number(stockQuantity) || 0)
+                    }
+                })
+            })
+
+            return {
+                id: p.id,
+                product: p.name,
+                stock: totalStock,
+                price: formatCurrency(p.basePrice || 0),
+                numericPrice: p.basePrice || 0,
+                status: totalStock <= 5 ? 'Low Stock' : 'In Stock',
+                category: 'General', // Backend doesn't have categories yet
+                raw: p
+            }
+        })
+    }, [products, currentStore])
 
     const filterGroups = [
-        {
-            title: "Store Location",
-            options: stores.map(s => ({ label: s.name, value: s.id }))
-        },
         {
             title: "Status",
             options: [
                 { label: "In Stock", value: "In Stock" },
                 { label: "Low Stock", value: "Low Stock" },
             ]
-        },
-        {
-            title: "Category",
-            options: [
-                { label: "Fabric", value: "Fabric" },
-                { label: "Material", value: "Material" },
-            ]
         }
     ]
 
-    // Form states
-    const [formData, setFormData] = React.useState({ product: "", stock: 0, price: "", category: "Fabric" })
-
-    const lowStockItems = inventory.filter(i => i.stock <= 5).length
-    const totalInventoryValue = inventory.reduce((acc, curr) => {
-        const price = parseInt(curr.price.replace(/[^0-9]/g, '')) || 0
-        return acc + (price * curr.stock)
-    }, 0)
+    // Aggregated stats from backend summary
+    const lowStockItems = summary?.lowStockItems || 0
+    const totalInventoryValue = summary?.totalValue || 0
+    const totalProducts = summary?.totalProducts || 0
 
     const filteredInventory = inventory.filter(item => {
         const matchesSearch = item.product.toLowerCase().includes(search.toLowerCase())
-
-        const activeStores = selectedFilters.filter(f => filterGroups[0].options.some(o => o.value === f))
-        const activeStatuses = selectedFilters.filter(f => filterGroups[1].options.some(o => o.value === f))
-        const activeCategories = selectedFilters.filter(f => filterGroups[2].options.some(o => o.value === f))
-
-        const matchesStore = activeStores.length === 0 || activeStores.includes(currentStore.id)
+        const activeStatuses = selectedFilters.filter(f => filterGroups[0].options.some(o => o.value === f))
         const matchesStatus = activeStatuses.length === 0 || activeStatuses.includes(item.status)
-        const matchesCategory = activeCategories.length === 0 || activeCategories.includes(item.category)
-
-        return matchesSearch && matchesStatus && matchesCategory && matchesStore
+        return matchesSearch && matchesStatus
     })
 
-    const handleAdd = (e: React.FormEvent) => {
+    const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault()
-        const newItem = {
-            id: Math.random().toString(36).substr(2, 9),
-            ...formData,
-            status: formData.stock <= 5 ? 'Low Stock' : 'In Stock'
+        setIsSubmitting(true)
+        try {
+            // Standardizing for backend ProductService.addOrUpdateProduct
+            await createProduct({
+                name: formData.product,
+                basePrice: Number(formData.price) || 0,
+                quantity: formData.stock,
+                storeIds: currentStore ? [currentStore.id] : []
+            })
+            setIsAddDrawerOpen(false)
+            setFormData({ product: "", stock: 0, price: "", category: "General" })
+        } finally {
+            setIsSubmitting(false)
         }
-        setInventory([newItem, ...inventory])
-        setIsAddOpen(false)
-        setFormData({ product: "", stock: 0, price: "", category: "Fabric" })
     }
 
-    const handleUpdate = (e: React.FormEvent) => {
+    const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault()
-        setInventory(inventory.map(item =>
-            item.id === editingItem.id
-                ? { ...formData, id: item.id, status: formData.stock <= 5 ? 'Low Stock' : 'In Stock' }
-                : item
-        ))
-        setEditingItem(null)
-        setFormData({ product: "", stock: 0, price: "", category: "Fabric" })
+        setIsSubmitting(true)
+        try {
+            await updateProduct(editingItem.id, {
+                name: formData.product,
+                basePrice: Number(formData.price) || 0,
+                // Stock updates via ProductService.updateProduct are a bit complex because it's handled via variants/inventories
+                // For now, we update the base info. Stock adjustment might need its own specialized flow.
+                // But addOrUpdateProduct in the backend handles quantity if we pass it.
+            })
+            setEditingItem(null)
+            setFormData({ product: "", stock: 0, price: "", category: "General" })
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
-    const handleDelete = (id: string) => {
-        setInventory(inventory.filter(item => item.id !== id))
-        setEditingItem(null)
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this product?")) return
+        setIsSubmitting(true)
+        try {
+            await deleteProduct(id)
+            setEditingItem(null)
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     const columns: any[] = [
@@ -146,16 +186,24 @@ export function InventoryView() {
         ? `You have **${lowStockItems} items** critically low on stock. Consider restocking soon to avoid losing sales.`
         : `Your inventory levels are looking healthy. No urgent restocks required today.`
 
+    if (isLoading && !products) {
+        return (
+            <div className="flex h-[60vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-brand-gold" />
+            </div>
+        )
+    }
+
     return (
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Inventory"
-                    description={`Track stock levels for ${currentStore.name}. Manage product catalog and monitor inventory value.`}
+                    description={`Track stock levels for ${currentStore?.name || 'your business'}. Manage product catalog and monitor inventory value.`}
                     addButtonLabel="Add Product"
                     onAddClick={() => {
-                        setFormData({ product: "", stock: 0, price: "", category: "Fabric" })
-                        setIsAddOpen(true)
+                        setFormData({ product: "", stock: 0, price: "", category: "General" })
+                        setIsAddDrawerOpen(true)
                     }}
                 />
 
@@ -172,7 +220,7 @@ export function InventoryView() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">Total Products</p>
-                            <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{inventory.length}</p>
+                            <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{totalProducts}</p>
                         </div>
                     </GlassCard>
 
@@ -186,7 +234,7 @@ export function InventoryView() {
                         <div>
                             <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">Inventory Value</p>
                             <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                ₦{totalInventoryValue.toLocaleString()}
+                                {formatCurrency(totalInventoryValue)}
                             </p>
                         </div>
                     </GlassCard>
@@ -215,22 +263,33 @@ export function InventoryView() {
 
                 {isMobile ? (
                     <div className="space-y-3">
-                        {filteredInventory.map((product, index) => (
+                        {filteredInventory.map((item, index) => (
                             <ListCard
-                                key={product.id}
-                                title={product.product}
-                                subtitle={product.price}
-                                status={product.status}
-                                statusColor={product.status === 'Low Stock' ? 'danger' : 'success'}
-                                value={`${product.stock}`}
+                                key={item.id}
+                                title={item.product}
+                                subtitle={item.price}
+                                status={item.status}
+                                statusColor={item.status === 'Low Stock' ? 'danger' : 'success'}
+                                value={`${item.stock}`}
                                 valueLabel="units"
                                 delay={index * 0.05}
                                 onClick={() => {
-                                    setFormData({ product: product.product, stock: product.stock, price: product.price, category: (product as any).category || "Fabric" })
-                                    setEditingItem(product)
+                                    setFormData({
+                                        product: item.product,
+                                        stock: item.stock,
+                                        price: item.price.replace('₦', ''),
+                                        category: item.category
+                                    })
+                                    setEditingItem(item)
                                 }}
                             />
                         ))}
+                        {filteredInventory.length === 0 && (
+                            <GlassCard className="p-12 text-center">
+                                <Package className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                                <p className="text-brand-accent/40">No products found</p>
+                            </GlassCard>
+                        )}
                     </div>
                 ) : (
                     <GlassCard className="overflow-hidden border-brand-deep/5 dark:border-white/5">
@@ -239,7 +298,12 @@ export function InventoryView() {
                             data={filteredInventory}
                             emptyMessage="No products found"
                             onRowClick={(item) => {
-                                setFormData({ product: item.product, stock: item.stock, price: item.price, category: (item as any).category || "Fabric" })
+                                setFormData({
+                                    product: item.product,
+                                    stock: item.stock,
+                                    price: item.price.replace('₦', ''),
+                                    category: item.category
+                                })
                                 setEditingItem(item)
                             }}
                         />
@@ -248,10 +312,10 @@ export function InventoryView() {
 
                 {/* Add/Edit Drawer */}
                 <Drawer
-                    open={isAddOpen || !!editingItem}
+                    open={isAddDrawerOpen || !!editingItem}
                     onOpenChange={(open) => {
                         if (!open) {
-                            setIsAddOpen(false);
+                            setIsAddDrawerOpen(false);
                             setEditingItem(null);
                         }
                     }}
@@ -270,6 +334,7 @@ export function InventoryView() {
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product Name</label>
                                     <input
                                         autoFocus
+                                        required
                                         value={formData.product}
                                         onChange={(e) => setFormData({ ...formData, product: e.target.value })}
                                         placeholder="e.g. Premium Lace Material"
@@ -282,28 +347,33 @@ export function InventoryView() {
                                         <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Current Stock</label>
                                         <input
                                             type="number"
+                                            required
                                             value={formData.stock}
                                             onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                                             className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Price (₦)</label>
-                                        <input
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Price</label>
+                                        <MoneyInput
+                                            required
                                             value={formData.price}
-                                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                            placeholder="e.g. ₦12,000"
-                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
+                                            onChange={(val) => setFormData({ ...formData, price: val.toString() })}
+                                            placeholder="e.g. 12,000"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="flex gap-4 pt-6">
                                     <DrawerClose asChild>
-                                        <Button variant="outline" className="flex-1 rounded-2xl h-14">Cancel</Button>
+                                        <Button variant="outline" className="flex-1 rounded-2xl h-14" disabled={isSubmitting}>Cancel</Button>
                                     </DrawerClose>
-                                    <Button type="submit" className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
-                                        {editingItem ? "Save Changes" : "Create Product"}
+                                    <Button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl"
+                                    >
+                                        {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (editingItem ? "Save Changes" : "Create Product")}
                                     </Button>
                                 </div>
 
@@ -311,10 +381,11 @@ export function InventoryView() {
                                     <div className="pt-6 border-t border-brand-deep/5 dark:border-white/5 mt-6">
                                         <button
                                             type="button"
+                                            disabled={isSubmitting}
                                             onClick={() => handleDelete(editingItem.id)}
-                                            className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold text-rose-500/60 hover:text-rose-500 transition-all uppercase tracking-widest"
+                                            className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold text-rose-500/60 hover:text-rose-500 transition-all uppercase tracking-widest disabled:opacity-50"
                                         >
-                                            <Trash2 className="w-4 h-4" />
+                                            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                             Delete Product from Inventory
                                         </button>
                                     </div>
