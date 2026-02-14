@@ -66,13 +66,18 @@ function StoreStockInputs({
                                 onChange={(e) => {
                                     const rawValue = e.target.value.replace(/[^0-9]/g, '')
                                     const val = rawValue === '' ? '' : parseInt(rawValue)
-                                    const newStocks = [...stocks]
-                                    const idx = newStocks.findIndex(s => s.storeId === store.id)
-                                    if (idx > -1) {
-                                        newStocks[idx].stockQuantity = val
+
+                                    let newStocks: StoreStockMapping[]
+                                    const exists = stocks.some(s => s.storeId === store.id)
+
+                                    if (exists) {
+                                        newStocks = stocks.map(s =>
+                                            s.storeId === store.id ? { ...s, stockQuantity: val } : s
+                                        )
                                     } else {
-                                        newStocks.push({ storeId: store.id, stockQuantity: val })
+                                        newStocks = [...stocks, { storeId: store.id, stockQuantity: val }]
                                     }
+
                                     onChange(newStocks)
                                 }}
                                 className="w-24 px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 text-xs focus:outline-none focus:ring-2 focus:ring-brand-green/20"
@@ -101,11 +106,9 @@ export function InventoryView() {
     // Form states
     const [formData, setFormData] = React.useState({
         product: '',
-        stock: 0 as number | string,
         price: '',
         imageUrls: [] as string[],
         storeIds: [] as string[],
-        storeInventory: [] as StoreStockMapping[],
         variants: [] as any[]
     })
 
@@ -204,19 +207,24 @@ export function InventoryView() {
             await createProduct({
                 name: formData.product,
                 price: parseFloat(formData.price) || 0,
-                quantity: Number(formData.stock) || 0,
                 imageUrls: formData.imageUrls,
                 storeIds: formData.storeIds,
-                storeInventory: formData.storeInventory.map(s => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 })),
-                variants: formData.variants.length > 0 ? formData.variants.map(v => ({
-                    ...v,
-                    price: parseFloat(v.price) || 0,
-                    stockQuantity: Number(v.stockQuantity) || 0,
-                    storeInventory: v.storeInventory?.map((s: any) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 }))
-                })) : undefined
+                variants: formData.variants.map(v => {
+                    // Final sum check before submission
+                    const total = (v.storeInventory || [])
+                        .filter((s: any) => formData.storeIds.includes(s.storeId))
+                        .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+
+                    return {
+                        ...v,
+                        price: parseFloat(v.price) || 0,
+                        stockQuantity: formData.storeIds.length > 1 ? total : (Number(v.stockQuantity) || 0),
+                        storeInventory: v.storeInventory?.map((s: any) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 }))
+                    }
+                })
             })
             setIsAddDrawerOpen(false)
-            setFormData({ product: '', stock: 0, price: '', imageUrls: [], storeIds: [], storeInventory: [], variants: [] })
+            setFormData({ product: '', price: '', imageUrls: [], storeIds: [], variants: [] })
         } catch (error) {
             console.error(error)
         } finally {
@@ -236,17 +244,23 @@ export function InventoryView() {
                     basePrice: parseFloat(formData.price) || 0,
                     imageUrls: formData.imageUrls,
                     storeIds: formData.storeIds,
-                    storeInventory: formData.storeInventory.map(s => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 })),
-                    variants: formData.variants.length > 0 ? formData.variants.map(v => ({
-                        ...v,
-                        price: parseFloat(v.price) || 0,
-                        stockQuantity: Number(v.stockQuantity) || 0,
-                        storeInventory: v.storeInventory?.map((s: any) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 }))
-                    })) : undefined
+                    variants: formData.variants.map(v => {
+                        // Final sum check before submission
+                        const total = (v.storeInventory || [])
+                            .filter((s: any) => formData.storeIds.includes(s.storeId))
+                            .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+
+                        return {
+                            ...v,
+                            price: parseFloat(v.price) || 0,
+                            stockQuantity: formData.storeIds.length > 1 ? total : (Number(v.stockQuantity) || 0),
+                            storeInventory: v.storeInventory?.map((s: any) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 }))
+                        }
+                    })
                 }
             })
             setEditingItem(null)
-            setFormData({ product: '', stock: 0, price: '', imageUrls: [], storeIds: [], storeInventory: [], variants: [] })
+            setFormData({ product: '', price: '', imageUrls: [], storeIds: [], variants: [] })
         } catch (error) {
             console.error(error)
         } finally {
@@ -362,7 +376,13 @@ export function InventoryView() {
                     description={`Track stock levels for ${currentStore?.name || 'your business'}. Manage product catalog and monitor inventory value.`}
                     addButtonLabel="Add Product"
                     onAddClick={() => {
-                        setFormData({ product: "", stock: '', price: "", imageUrls: [], storeIds: [], storeInventory: [], variants: [] })
+                        setFormData({
+                            product: "",
+                            price: "",
+                            imageUrls: [],
+                            storeIds: [],
+                            variants: [{ name: 'Standard', sku: '', price: '', stockQuantity: 0, storeInventory: [] }]
+                        })
                         setIsAddDrawerOpen(true)
                     }}
                 />
@@ -450,25 +470,20 @@ export function InventoryView() {
                                     const raw = (item as any).raw
                                     setFormData({
                                         product: item.product,
-                                        stock: item.stock,
                                         price: item.numericPrice.toString(),
                                         imageUrls: raw.images?.map((img: any) => img.url) || [],
                                         storeIds: raw.stores?.map((s: any) => s.id) || [],
-                                        storeInventory: raw.variants?.[0]?.inventories?.map((inv: any) => ({
-                                            storeId: inv.storeId,
-                                            stockQuantity: inv.stockQuantity
-                                        })) || [],
                                         variants: raw?.variants?.map((v: any) => ({
                                             id: v.id,
-                                            name: v.name || '',
+                                            name: v.name || 'Standard',
                                             sku: v.sku || '',
                                             price: v.price?.toString() || item.numericPrice.toString(),
-                                            stockQuantity: v.inventories?.[0]?.stockQuantity || 0,
+                                            stockQuantity: v.inventories?.reduce((sum: number, inv: any) => sum + (Number(inv.stockQuantity) || 0), 0) || 0,
                                             storeInventory: v.inventories?.map((inv: any) => ({
                                                 storeId: inv.storeId,
                                                 stockQuantity: inv.stockQuantity
                                             })) || []
-                                        })) || []
+                                        })) || [{ name: 'Standard', sku: '', price: item.numericPrice.toString(), stockQuantity: 0, storeInventory: [] }]
                                     })
                                     setEditingItem(item)
                                 }}
@@ -491,14 +506,9 @@ export function InventoryView() {
                                 const raw = (item as any).raw
                                 setFormData({
                                     product: item.product,
-                                    stock: item.stock,
                                     price: item.numericPrice.toString(),
                                     imageUrls: raw.images?.map((img: any) => img.url) || [],
                                     storeIds: raw.stores?.map((s: any) => s.id) || [],
-                                    storeInventory: raw.variants?.[0]?.inventories?.map((inv: any) => ({
-                                        storeId: inv.storeId,
-                                        stockQuantity: inv.stockQuantity
-                                    })) || [],
                                     variants: raw?.variants?.map((v: any) => ({
                                         id: v.id,
                                         name: v.name || '',
@@ -535,8 +545,8 @@ export function InventoryView() {
                             </DrawerDescription>
                         </DrawerStickyHeader>
 
-                        <div className="p-8 pb-12 overflow-y-auto">
-                            <form onSubmit={editingItem ? handleUpdate : handleAdd} className="max-w-lg mx-auto space-y-6">
+                        <div className="flex-1 overflow-y-auto min-h-0 px-4 md:px-8 pb-12">
+                            <form onSubmit={editingItem ? handleUpdate : handleAdd} className="max-w-lg mx-auto space-y-8">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product Images</label>
                                     <ImageUpload
@@ -561,50 +571,40 @@ export function InventoryView() {
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Available In Stores</label>
                                     <StoreSelector
                                         value={formData.storeIds}
-                                        onChange={(ids) => setFormData({ ...formData, storeIds: ids })}
+                                        onChange={(ids) => {
+                                            const newVariants = formData.variants.map(v => {
+                                                const total = (v.storeInventory || [])
+                                                    .filter((s: any) => ids.includes(s.storeId))
+                                                    .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+                                                return { ...v, stockQuantity: total }
+                                            })
+                                            setFormData({ ...formData, storeIds: ids, variants: newVariants })
+                                        }}
                                     />
                                 </div>
 
-                                <StoreStockInputs
-                                    storeIds={formData.storeIds}
-                                    stocks={formData.storeInventory}
-                                    onChange={(stocks) => setFormData({ ...formData, storeInventory: stocks })}
-                                />
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Default Stock</label>
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            pattern="[0-9]*"
-                                            required={formData.variants.length === 0}
-                                            value={formData.stock}
-                                            onChange={(e) => {
-                                                const rawValue = e.target.value.replace(/[^0-9]/g, '')
-                                                setFormData({ ...formData, stock: rawValue === '' ? '' : parseInt(rawValue) })
-                                            }}
-                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
-                                        />
-                                        <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 px-1">
-                                            This stock applies if no variants are added.
-                                        </p>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Base Price</label>
-                                        <MoneyInput
-                                            required
-                                            value={formData.price}
-                                            onChange={(val) => setFormData({ ...formData, price: val.toString() })}
-                                            placeholder="e.g. 12,000"
-                                        />
-                                    </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Base Price</label>
+                                    <MoneyInput
+                                        required
+                                        value={formData.price}
+                                        onChange={(val) => {
+                                            const newPrice = val.toString()
+                                            // Auto-update variants with empty or default price
+                                            const newVariants = formData.variants.map(v => ({
+                                                ...v,
+                                                price: v.price === formData.price || !v.price ? newPrice : v.price
+                                            }))
+                                            setFormData({ ...formData, price: newPrice, variants: newVariants })
+                                        }}
+                                        placeholder="e.g. 12,000"
+                                    />
                                 </div>
 
                                 {/* Variants Section */}
                                 <div className="space-y-4 pt-4">
                                     <div className="flex items-center justify-between">
-                                        <h4 className="text-xs font-bold uppercase tracking-widest text-brand-deep/60 dark:text-brand-cream/60">Product Variants</h4>
+                                        <h4 className="text-xs font-bold uppercase tracking-widest text-brand-deep/60 dark:text-brand-cream/60">Inventory & Variants</h4>
                                         <Button
                                             type="button"
                                             onClick={() => setFormData({
@@ -630,7 +630,7 @@ export function InventoryView() {
                                                             newVariants.splice(index, 1)
                                                             setFormData({ ...formData, variants: newVariants })
                                                         }}
-                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                                                        className="absolute cursor-pointer -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-all shadow-lg"
                                                     >
                                                         <Trash2 className="w-3 h-3" />
                                                     </button>
@@ -669,14 +669,45 @@ export function InventoryView() {
                                                                 inputMode="numeric"
                                                                 pattern="[0-9]*"
                                                                 placeholder="Stock"
-                                                                value={variant.stockQuantity}
+                                                                readOnly={formData.storeIds.length > 1}
+                                                                value={(() => {
+                                                                    if (formData.storeIds.length > 1) {
+                                                                        return (variant.storeInventory || [])
+                                                                            .filter((s: any) => formData.storeIds.includes(s.storeId))
+                                                                            .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+                                                                    }
+                                                                    return variant.stockQuantity || 0
+                                                                })()}
                                                                 onChange={(e) => {
                                                                     const rawValue = e.target.value.replace(/[^0-9]/g, '')
-                                                                    const v = [...formData.variants]
-                                                                    v[index].stockQuantity = rawValue === '' ? '' : parseInt(rawValue)
-                                                                    setFormData({ ...formData, variants: v })
+                                                                    const val = rawValue === '' ? '' : parseInt(rawValue)
+
+                                                                    setFormData(prev => {
+                                                                        const newVariants = [...prev.variants]
+                                                                        const v = { ...newVariants[index] }
+                                                                        v.stockQuantity = val
+
+                                                                        // Bidirectional sync: if only 1 store, update its inventory too
+                                                                        if (prev.storeIds.length === 1) {
+                                                                            const storeId = prev.storeIds[0]
+                                                                            const inv = [...(v.storeInventory || [])]
+                                                                            const sIdx = inv.findIndex(s => s.storeId === storeId)
+                                                                            if (sIdx > -1) {
+                                                                                inv[sIdx] = { ...inv[sIdx], stockQuantity: val }
+                                                                            } else {
+                                                                                inv.push({ storeId, stockQuantity: val })
+                                                                            }
+                                                                            v.storeInventory = inv
+                                                                        }
+
+                                                                        newVariants[index] = v
+                                                                        return { ...prev, variants: newVariants }
+                                                                    })
                                                                 }}
-                                                                className="text-xs w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+                                                                className={cn(
+                                                                    "text-xs w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20",
+                                                                    formData.storeIds.length > 1 && "opacity-60 cursor-not-allowed bg-brand-deep/5 font-bold"
+                                                                )}
                                                             />
                                                         </div>
                                                         <div className="space-y-2">
@@ -697,9 +728,20 @@ export function InventoryView() {
                                                         storeIds={formData.storeIds}
                                                         stocks={variant.storeInventory || []}
                                                         onChange={(stocks) => {
-                                                            const v = [...formData.variants]
-                                                            v[index].storeInventory = stocks
-                                                            setFormData({ ...formData, variants: v })
+                                                            // Ensure we only sum what's in the selected stores
+                                                            const total = stocks
+                                                                .filter(s => formData.storeIds.includes(s.storeId))
+                                                                .reduce((sum, s) => sum + (Number(s.stockQuantity) || 0), 0)
+
+                                                            setFormData(prev => {
+                                                                const newVariants = [...prev.variants]
+                                                                newVariants[index] = {
+                                                                    ...newVariants[index],
+                                                                    storeInventory: stocks,
+                                                                    stockQuantity: total
+                                                                }
+                                                                return { ...prev, variants: newVariants }
+                                                            })
                                                         }}
                                                     />
                                                 </div>
