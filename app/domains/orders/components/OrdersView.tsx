@@ -106,7 +106,7 @@ export function OrdersView() {
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Orders"
-                    description={`Monitor sales pipeline and track order fulfillment for ${currentStore.name}.`}
+                    description={`Monitor sales pipeline and track order fulfillment for ${currentStore?.name || 'your business'}.`}
                 />
 
                 <InsightWhisper insight={intelligenceWhisper} />

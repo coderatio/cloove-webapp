@@ -92,15 +92,16 @@ export function FilterPopover({
                         <div className="px-6 py-4 flex items-center justify-between border-b border-brand-deep/5 dark:border-white/5">
                             <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">Select Filters</span>
                             {activeCount > 0 && (
-                                <button
+                                <Button
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         onClear()
                                     }}
-                                    className="text-[10px] font-bold text-rose-500/60 hover:text-rose-500 transition-colors uppercase tracking-widest"
+                                    variant="destructive"
+                                    className="text-[10px] font-bold text-rose-500/60 dark:text-rose-400 hover:text-rose-500 dark:hover:text-rose-500 transition-colors uppercase tracking-widest"
                                 >
                                     Clear All
-                                </button>
+                                </Button>
                             )}
                         </div>
 
@@ -119,7 +120,7 @@ export function FilterPopover({
                                                     key={option.value}
                                                     onClick={() => toggleOption(option.value)}
                                                     className={cn(
-                                                        "flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group text-left",
+                                                        "flex cursor-pointer items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group text-left",
                                                         isSelected
                                                             ? "bg-brand-green/10 dark:bg-brand-gold/10 text-brand-deep dark:text-brand-gold"
                                                             : "text-brand-accent/60 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5"
@@ -139,7 +140,7 @@ export function FilterPopover({
                         <div className="p-4 bg-brand-cream/10 dark:bg-white/5 border-t border-brand-deep/5 dark:border-white/5">
                             <Button
                                 onClick={() => setIsOpen(false)}
-                                className="w-full rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-xs h-10 shadow-lg"
+                                className="w-full rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold text-xs h-10 shadow-lg"
                             >
                                 Done
                             </Button>

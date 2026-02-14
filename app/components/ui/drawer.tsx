@@ -44,7 +44,7 @@ const DrawerContent = React.forwardRef<
         <DrawerPrimitive.Content
             ref={ref}
             className={cn(
-                "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[96vh] flex-col rounded-t-[32px] border-none outline-none focus:outline-none focus:ring-0 bg-brand-cream dark:bg-[#021a12] shadow-2xl",
+                "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[96vh] flex-col rounded-t-[32px] border-none outline-none focus:outline-none focus:ring-0 bg-brand-cream dark:bg-brand-deep-900 shadow-2xl",
                 "max-w-5xl md:max-w-2xl mx-auto", // Optimized for desktop
                 className
             )}
@@ -64,7 +64,7 @@ const DrawerStickyHeader = ({
 }: React.HTMLAttributes<HTMLDivElement> & { showClose?: boolean }) => (
     <div
         className={cn(
-            "shrink-0 p-8 pb-4 bg-brand-cream/80 dark:bg-[#021a12]/80 backdrop-blur-md border-b border-brand-deep/5 dark:border-white/5 z-20 rounded-t-[32px]",
+            "shrink-0 p-8 pb-4 bg-brand-cream/80 dark:bg-brand-deep-800 backdrop-blur-md border-b border-brand-deep/5 dark:border-white/5 z-20 rounded-t-[32px]",
             className
         )}
         {...props}
@@ -113,7 +113,7 @@ const DrawerFooter = ({
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
     <div
-        className={cn("shrink-0 flex flex-col gap-2 p-6 md:p-8 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/50 dark:bg-[#021a12]/50", className)}
+        className={cn("shrink-0 flex flex-col gap-2 p-6 md:p-8 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/50 dark:bg-zinc-950/50", className)}
         {...props}
     />
 )

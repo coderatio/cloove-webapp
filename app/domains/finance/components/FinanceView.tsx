@@ -75,7 +75,7 @@ export function FinanceView() {
 
     const filteredTransactions = transactions.filter(t => {
         const matchesSearch = t.customer.toLowerCase().includes(search.toLowerCase()) || t.id.toLowerCase().includes(search.toLowerCase())
-        const matchesFilters = selectedFilters.length === 0 || selectedFilters.includes(t.status) || selectedFilters.includes(t.type) || selectedFilters.includes(currentStore.id)
+        const matchesFilters = selectedFilters.length === 0 || selectedFilters.includes(t.status) || selectedFilters.includes(t.type) || (currentStore && selectedFilters.includes(currentStore.id))
         return matchesSearch && matchesFilters
     })
 
@@ -158,7 +158,7 @@ export function FinanceView() {
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Finance"
-                    description={`Monitor cash flow and reconcile transactions for ${currentStore.name}.`}
+                    description={`Monitor cash flow and reconcile transactions for ${currentStore?.name || 'your business'}.`}
                 />
 
                 <div className="space-y-6">

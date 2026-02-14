@@ -7,15 +7,17 @@ import { Button } from "@/app/components/ui/button"
 import Link from "next/link"
 import { Copy, ExternalLink, QrCode, Share2, Eye, ShoppingCart, TrendingUp } from "lucide-react"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { toast } from "sonner"
 
 export default function StorefrontOverview() {
-    const { currentStore } = useBusiness()
+    const { currentStore } = useStores()
     const [isCopied, setIsCopied] = useState(false)
 
     // Mock data based on current store
-    const storeSlug = currentStore.id === '1' ? 'adebayo-textiles' :
-        currentStore.id === '2' ? 'adebayo-ikeja' : 'adebayo-abuja'
+    const storeSlug = !currentStore ? 'default' :
+        currentStore.id === '1' ? 'adebayo-textiles' :
+            currentStore.id === '2' ? 'adebayo-ikeja' : 'adebayo-abuja'
 
     const storeUrl = `clooveai.com/b/${storeSlug}`
 
@@ -30,7 +32,7 @@ export default function StorefrontOverview() {
         <div className="space-y-6">
             {/* Quick Actions Card */}
             <GlassCard className="p-6 md:p-8 flex flex-col md:flex-row items-end justify-between gap-6 relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-r from-brand-green/5 to-transparent dark:from-brand-gold/5 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-r from-brand-green/5 to-transparent dark:from-brand-gold/5 pointer-events-none" />
 
                 <div className="flex-1 w-full space-y-4 relative z-10">
                     <div>

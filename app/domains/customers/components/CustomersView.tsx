@@ -11,6 +11,7 @@ import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { useStores } from '@/app/domains/stores/providers/StoreProvider'
 import { Button } from '@/app/components/ui/button'
 import { FilterPopover } from '@/app/components/shared/FilterPopover'
 import { TableSearch } from '@/app/components/shared/TableSearch'
@@ -26,7 +27,7 @@ import { initialCustomers } from '../data/customersMocks'
 
 export function CustomersView() {
     const isMobile = useIsMobile()
-    const { currentStore, stores } = useBusiness()
+    const { currentStore, stores } = useStores()
     const [customers, setCustomers] = React.useState(initialCustomers)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
@@ -128,7 +129,7 @@ export function CustomersView() {
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title="Customers"
-                    description={`Manage customer relationships and track credit history for ${currentStore.name}.`}
+                    description={`Manage customer relationships and track credit history for ${currentStore?.name || 'your business'}.`}
                     addButtonLabel="Add Customer"
                     onAddClick={() => {
                         setFormData({ name: "", owing: "—" })

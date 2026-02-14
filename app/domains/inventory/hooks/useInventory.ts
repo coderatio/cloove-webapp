@@ -44,6 +44,7 @@ export interface Product {
 export interface InventoryStats {
     totalValue: number
     totalProducts: number
+    totalStockUnits: number
     lowStockItems: number
 }
 
@@ -102,7 +103,7 @@ export function useInventory(storeId?: string) {
         isLoading,
         error,
         createProduct: createProductMutation.mutateAsync,
-        updateProduct: (id: string, data: any) => updateProductMutation.mutateAsync({ id, data }),
+        updateProduct: updateProductMutation.mutateAsync,
         deleteProduct: deleteProductMutation.mutateAsync
     }
 }

@@ -35,7 +35,7 @@ export default function DataTable<T extends { id: string | number }>({
         return (
             <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center py-20 px-8 text-center">
                 <div className="w-16 h-16 rounded-full bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent/20 mb-4">
-                    <ChevronRight className="w-8 h-8 opacity-20" />
+                    <ChevronRight className="w-8 h-8 opacity-100 dark:text-brand-cream/20" />
                 </div>
                 <h3 className="font-serif text-xl font-medium text-brand-deep dark:text-brand-cream opacity-50 mb-2">
                     {emptyMessage}

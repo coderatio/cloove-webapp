@@ -51,7 +51,7 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
 
         return (
             <div className="relative group">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 font-medium transition-colors group-focus-within:text-brand-gold">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 font-medium transition-colors group-focus-within:text-brand-gold">
                     {currencySymbol}
                 </span>
                 <Input
@@ -60,7 +60,7 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     type="text"
                     value={displayValue}
                     onChange={handleChange}
-                    className={cn("pl-11 pr-6 py-4 h-14 rounded-2xl", className)}
+                    className={cn("pl-9 pr-6 py-4 h-14 rounded-2xl", className)}
                 />
             </div>
         )

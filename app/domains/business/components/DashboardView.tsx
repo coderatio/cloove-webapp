@@ -35,10 +35,10 @@ export function DashboardView() {
             setIsLoading(false)
         }, 1500)
         return () => clearTimeout(timer)
-    }, [currentStore.id, activeBusiness?.id, date])
+    }, [currentStore?.id, activeBusiness?.id, date])
 
     // Aggregate or Filter Data
-    const isAll = currentStore.id === ALL_STORES_ID
+    const isAll = !currentStore || currentStore.id === ALL_STORES_ID
 
     const displaySales = isAll
         ? {
@@ -47,7 +47,7 @@ export function DashboardView() {
             trendDirection: "up",
             label: "Total Sales (All Stores)"
         }
-        : storeData[currentStore.id]?.sales || { value: "₦0", trend: "0%", trendDirection: "up", label: "Total Sales" }
+        : (currentStore && storeData[currentStore.id]?.sales) || { value: "₦0", trend: "0%", trendDirection: "up", label: "Total Sales" }
 
     const displayActions = isAll
         ? Object.values(storeData).reduce((acc: any[], store: any) => {
@@ -61,15 +61,15 @@ export function DashboardView() {
             })
             return acc
         }, []).slice(0, 4)
-        : storeData[currentStore.id]?.actions || []
+        : (currentStore && storeData[currentStore.id]?.actions) || []
 
     const displayActivities = isAll
         ? Object.values(storeData).flatMap(s => s.activities)
-        : storeData[currentStore.id]?.activities || []
+        : (currentStore && storeData[currentStore.id]?.activities) || []
 
     const displayInsight = isAll
         ? businessData.insight
-        : storeData[currentStore.id]?.insight || "No specific insights for this store yet."
+        : (currentStore && storeData[currentStore.id]?.insight) || "No specific insights for this store yet."
 
     if (isLoading) {
         return <DashboardSkeleton />
