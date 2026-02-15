@@ -121,15 +121,31 @@ export const apiClient = {
         const token = this.getToken()
         const businessId = storage.getActiveBusinessId()
 
-        // Default headers
+        // Build headers dynamically
+        const requestHeaders: Record<string, string> = {
+            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+            ...(businessId ? { "x-business-id": businessId } : {}),
+        }
+
+        // Add custom headers
+        if (headers) {
+            Object.assign(requestHeaders, headers)
+        }
+
+        // Only add JSON Content-Type if it's not FormData AND hasn't been explicitly set or unset
+        if (!requestHeaders["Content-Type"] && !((customConfig.body as any) instanceof FormData)) {
+            requestHeaders["Content-Type"] = "application/json"
+        }
+
+        // If explicitly set to undefined/null by user, remove it from the final object
+        // This is crucial for FormData to let the browser set the boundary
+        if (requestHeaders["Content-Type"] === undefined || (requestHeaders as any)["Content-Type"] === null) {
+            delete requestHeaders["Content-Type"]
+        }
+
         const config: RequestInit = {
             ...customConfig,
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-                ...(businessId ? { "x-business-id": businessId } : {}),
-                ...headers,
-            },
+            headers: requestHeaders,
         }
 
         try {
@@ -169,7 +185,14 @@ export const apiClient = {
                     }
                 }
 
-                const errorMessage = rawData.error || rawData.message || `API Error: ${response.status}`
+                // Handle validation errors from AdonisJS/VineJS
+                let errorMessage = rawData.error || rawData.message || `API Error: ${response.status}`
+
+                if (rawData.errors && Array.isArray(rawData.errors)) {
+                    const validationMessages = rawData.errors.map((e: any) => e.message).join(', ')
+                    errorMessage = `${errorMessage}: ${validationMessages}`
+                }
+
                 throw new ApiError(errorMessage, response.status, rawData)
             }
 

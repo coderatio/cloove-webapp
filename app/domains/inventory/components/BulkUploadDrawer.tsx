@@ -14,11 +14,15 @@ import {
 import { Button } from "@/app/components/ui/button"
 import { FileDropZone } from "@/app/components/ui/file-drop-zone"
 import { ProductExtractionCard, ExtractedProduct } from "./ProductExtractionCard"
-import { Sparkles, Loader2, CheckCircle2, ChevronRight, ArrowLeft, Edit3 } from 'lucide-react'
+import { Sparkles, Loader2, CheckCircle2, ChevronRight, ArrowLeft, Edit3, Store as StoreIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { cn } from '@/app/lib/utils'
 import { storage } from '@/app/lib/storage'
+import { useBulkUpload, BulkUploadPayload } from "../hooks/useBulkUpload"
+import { useBusiness } from '@/app/components/BusinessProvider'
+import { useStores } from '@/app/domains/stores/providers/StoreProvider'
+import { MultiSelect } from '@/app/components/ui/multi-select'
+import { cn } from '@/app/lib/utils'
 
 type UploadStep = 'upload' | 'extracting' | 'review' | 'success'
 
@@ -37,7 +41,9 @@ export function BulkUploadDrawer({
     const [file, setFile] = React.useState<File | null>(null)
     const [fileHash, setFileHash] = React.useState<string | null>(null)
     const [extractedProducts, setExtractedProducts] = React.useState<ExtractedProduct[]>([])
-    const [isSubmitting, setIsSubmitting] = React.useState(false)
+    const [selectedStoreIds, setSelectedStoreIds] = React.useState<string[]>([])
+    const { extractProducts, confirmUpload, isUploading } = useBulkUpload()
+    const { stores, currentStore } = useStores()
 
     // Load session state on mount
     React.useEffect(() => {
@@ -63,6 +69,16 @@ export function BulkUploadDrawer({
             }
         }
     }, [isOpen])
+
+    // Pre-select store if none selected
+    React.useEffect(() => {
+        if (isOpen && stores.length > 0 && selectedStoreIds.length === 0) {
+            const defaultId = currentStore?.id || stores.find(s => s.isDefault)?.id || stores[0].id
+            if (defaultId) {
+                setSelectedStoreIds([defaultId])
+            }
+        }
+    }, [isOpen, stores, currentStore, selectedStoreIds])
 
     // Save session state whenever relevant data changes
     React.useEffect(() => {
@@ -154,55 +170,47 @@ export function BulkUploadDrawer({
             // Check FILE cache first
             const cachedFile = getFromFileCache(computedHash)
             if (cachedFile) {
-                // Restore ORIGINAL data from file cache
-                // This acts as a fresh start for this file, but skips AI
-                setExtractedProducts(cachedFile.originalProducts)
+                // Ensure products from cache have the current selectedStoreIds if they don't have any
+                const productsFromCache = cachedFile.originalProducts.map((p: any) => ({
+                    ...p,
+                    storeIds: p.storeIds && p.storeIds.length > 0 ? p.storeIds : [...selectedStoreIds]
+                }))
+                setExtractedProducts(productsFromCache)
                 setStep('review')
                 toast.success('Extraction completed. Please review')
-
-                // We don't need to manually save to session here, the useEffect will catch the state change
                 return
             }
 
-            // Simulate AI Extraction
-            setTimeout(() => {
-                const mockExtracted: ExtractedProduct[] = [
-                    {
-                        id: '1',
-                        name: 'Premium Silk Scarf',
-                        price: 45000,
-                        sku: 'SILK-001',
-                        stockQuantity: 12,
-                        status: 'success'
-                    },
-                    {
-                        id: '2',
-                        name: 'Linen Summer Dress',
-                        price: 28500,
-                        sku: 'DRS-LNG-02',
-                        stockQuantity: 5,
-                        status: 'success'
-                    },
-                    {
-                        id: '3',
-                        name: 'Unbranded Cotton Tee',
-                        price: '',
-                        sku: '',
-                        stockQuantity: 0,
-                        status: 'error',
-                        errors: ['Missing price', 'Missing SKU']
-                    }
-                ]
-                setExtractedProducts(mockExtracted)
-                setStep('review')
-                toast.success("AI extraction complete. Please review the details.")
+            // Real AI Extraction
+            const data = await extractProducts(selectedFile)
 
-                // Save to FILE cache (permanent record of extraction)
-                saveToFileCache(computedHash, mockExtracted, selectedFile.name)
-            }, 3000)
+            // Map backend response to frontend ExtractedProduct
+            const mappedProducts: ExtractedProduct[] = data.map((p: any, index: number) => {
+                const errors: string[] = []
+                if (!p.price) errors.push('Missing price')
+                if (!p.name) errors.push('Missing name')
+
+                return {
+                    id: `new-${Date.now()}-${index}`,
+                    name: p.name || '',
+                    price: p.price || 0,
+                    sku: p.sku || '',
+                    stockQuantity: p.stockQuantity || 0,
+                    status: errors.length > 0 ? 'error' : 'success',
+                    errors: errors,
+                    storeIds: [...selectedStoreIds]
+                }
+            })
+
+            setExtractedProducts(mappedProducts)
+            setStep('review')
+            toast.success("AI extraction complete. Please review the details.")
+
+            // Save to FILE cache
+            saveToFileCache(computedHash, mappedProducts, selectedFile.name)
         } catch (error) {
             console.error("Error processing file:", error)
-            toast.error("Failed to process file.")
+            // Error toast is already handled by hook
             setStep('upload')
         }
     }
@@ -213,7 +221,7 @@ export function BulkUploadDrawer({
                 const updated = { ...p, ...updates }
                 // Re-validate simple errors
                 const errors: string[] = []
-                if (!updated.price) errors.push('Missing price')
+                if (!updated.price && updated.price !== 0) errors.push('Missing price')
                 if (!updated.name) errors.push('Missing name')
                 return {
                     ...updated,
@@ -236,14 +244,25 @@ export function BulkUploadDrawer({
             return
         }
 
-        setIsSubmitting(true)
-        // Simulate Batch Save
-        await new Promise(r => setTimeout(r, 2000))
-        setIsSubmitting(false)
-        setStep('success')
-        storage.clearBulkUploadSession()
-        // File cache remains populated for future uploads of same file
-        onComplete(extractedProducts)
+        try {
+            const payload: BulkUploadPayload = {
+                storeIds: selectedStoreIds.length > 0 ? selectedStoreIds : undefined,
+                products: extractedProducts.map(p => ({
+                    name: p.name,
+                    price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
+                    sku: p.sku || undefined,
+                    stockQuantity: typeof p.stockQuantity === 'string' ? parseInt(p.stockQuantity) : p.stockQuantity,
+                    storeIds: p.storeIds && p.storeIds.length > 0 ? p.storeIds : undefined
+                }))
+            }
+
+            await confirmUpload(payload)
+            setStep('success')
+            storage.clearBulkUploadSession()
+            onComplete(extractedProducts)
+        } catch (error) {
+            console.error("Upload failed:", error)
+        }
     }
 
     return (
@@ -274,8 +293,33 @@ export function BulkUploadDrawer({
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="max-w-xl mx-auto py-8"
+                                className="max-w-xl mx-auto"
                             >
+                                <div className="mb-8 p-6 rounded-[32px] bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 shadow-sm">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green">
+                                            <StoreIcon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-bold text-brand-deep dark:text-brand-cream">Select Destination Store</h4>
+                                            <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">Where should these products be added?</p>
+                                        </div>
+                                    </div>
+
+                                    <MultiSelect
+                                        options={stores.map(s => ({ label: s.name, value: s.id }))}
+                                        value={selectedStoreIds}
+                                        onChange={setSelectedStoreIds}
+                                        placeholder="Pick one or more branches..."
+                                    />
+
+                                    {selectedStoreIds.length === 0 && stores.length > 0 && (
+                                        <p className="mt-3 text-[10px] text-brand-orange/60 font-medium">
+                                            Note: If no store is selected, products will be added to your default branch.
+                                        </p>
+                                    )}
+                                </div>
+
                                 <FileDropZone onFileSelect={handleFileSelect} />
                                 <div className="mt-8 p-6 rounded-[24px] bg-brand-gold/5 border border-brand-gold/30">
                                     <h4 className="text-sm font-bold text-brand-deep-900 uppercase tracking-widest mb-2 flex items-center gap-2">
@@ -348,6 +392,7 @@ export function BulkUploadDrawer({
                                         <ProductExtractionCard
                                             key={product.id}
                                             product={product}
+                                            stores={stores}
                                             onUpdate={handleUpdateProduct}
                                             onRemove={handleRemoveProduct}
                                         />
@@ -412,10 +457,10 @@ export function BulkUploadDrawer({
                             </button>
                             <Button
                                 onClick={handleConfirm}
-                                disabled={isSubmitting || extractedProducts.some(p => p.status === 'error')}
+                                disabled={isUploading || extractedProducts.some(p => p.status === 'error')}
                                 className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep px-8 h-12 shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
                             >
-                                {isSubmitting ? (
+                                {isUploading ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                 ) : (
                                     <CheckCircle2 className="w-4 h-4 mr-2" />

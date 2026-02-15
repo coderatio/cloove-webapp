@@ -820,9 +820,7 @@ export function InventoryView() {
                     <BulkUploadDrawer
                         isOpen={isBulkUploadOpen}
                         onOpenChange={setIsBulkUploadOpen}
-                        onComplete={() => {
-                            // Refresh products or update state
-                        }}
+                        onComplete={() => setIsBulkUploadOpen(false)}
                     />
                 </div>
             </div>

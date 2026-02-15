@@ -6,6 +6,9 @@ import { GlassCard } from '@/app/components/ui/glass-card'
 import { cn } from '@/app/lib/utils'
 import { MoneyInput } from '@/app/components/ui/money-input'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { MultiSelect } from '@/app/components/ui/multi-select'
+import { Store } from '@/app/domains/stores/providers/StoreProvider'
+import { Store as StoreIcon } from 'lucide-react'
 
 export interface ExtractedProduct {
     id: string
@@ -15,16 +18,19 @@ export interface ExtractedProduct {
     stockQuantity: number | string
     status: 'pending' | 'error' | 'success'
     errors?: string[]
+    storeIds?: string[]
 }
 
 interface ProductExtractionCardProps {
     product: ExtractedProduct
+    stores: Store[]
     onUpdate: (id: string, updates: Partial<ExtractedProduct>) => void
     onRemove: (id: string) => void
 }
 
 export function ProductExtractionCard({
     product,
+    stores,
     onUpdate,
     onRemove
 }: ProductExtractionCardProps) {
@@ -112,6 +118,19 @@ export function ProductExtractionCard({
                                     placeholder="0"
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-brand-deep/5 dark:border-white/5">
+                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                                <StoreIcon className="w-3 h-3" /> Targeted Branches
+                            </label>
+                            <MultiSelect
+                                options={stores.map(s => ({ label: s.name, value: s.id }))}
+                                value={product.storeIds || []}
+                                onChange={(val) => onUpdate(product.id, { storeIds: val })}
+                                placeholder="Assign to stores..."
+                                triggerClassName="h-10 text-xs rounded-xl h-12"
+                            />
                         </div>
 
                         {hasErrors && (
