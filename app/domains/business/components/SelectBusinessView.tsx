@@ -1,6 +1,7 @@
 "use client"
 
 import { useBusiness, type Business } from "@/app/components/BusinessProvider"
+import { useAuth } from "@/app/components/providers/auth-provider"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { LayoutGrid, ArrowRight, LogOut } from "lucide-react"
@@ -17,6 +18,7 @@ function SelectBusinessContent() {
         activeBusiness,
         isLoading
     } = useBusiness()
+    const { logout } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get('callbackUrl') || '/'
@@ -99,22 +101,22 @@ function SelectBusinessContent() {
                                     className="group cursor-pointer w-full block text-left outline-none"
                                 >
                                     <GlassCard className={cn(
-                                        "p-6 flex items-center gap-6 transition-all duration-300 group-hover:bg-white/10 group-hover:scale-[1.01] active:scale-[0.99] border-white/5",
+                                        "p-4 sm:p-6 flex items-center gap-4 sm:gap-6 transition-all duration-300 group-hover:bg-white/10 group-hover:scale-[1.01] active:scale-[0.99] border-white/5",
                                         activeBusiness?.id === business.id && "bg-white/10 border-brand-gold/30 ring-1 ring-brand-gold/10"
                                     )}>
-                                        <div className="h-16 w-16 rounded-3xl bg-linear-to-br from-brand-gold/20 to-brand-gold/5 flex items-center justify-center text-brand-gold shadow-inner border border-white/5">
-                                            <LayoutGrid className="h-8 w-8" />
+                                        <div className="h-12 w-12 sm:h-16 sm:w-16 shrink-0 rounded-2xl sm:rounded-3xl bg-linear-to-br from-brand-gold/20 to-brand-gold/5 flex items-center justify-center text-brand-gold shadow-inner border border-white/5">
+                                            <LayoutGrid className="h-6 w-6 sm:h-8 sm:w-8" />
                                         </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-xl font-bold text-brand-deep dark:text-brand-cream group-hover:text-brand-gold transition-colors">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-base sm:text-xl font-bold text-brand-deep dark:text-brand-cream group-hover:text-brand-gold transition-colors truncate">
                                                 {business.name}
                                             </h3>
-                                            <p className="text-brand-accent/50 dark:text-brand-cream/40 font-medium uppercase tracking-widest text-[10px] mt-1">
+                                            <p className="text-brand-accent/50 dark:text-brand-cream/40 font-medium uppercase tracking-widest text-[10px] mt-1 truncate">
                                                 Managed Business • {business.currency}
                                             </p>
                                         </div>
-                                        <div className="h-12 w-12 rounded-full border border-white/10 flex items-center justify-center text-brand-cream/20 group-hover:text-brand-gold group-hover:border-brand-gold/30 transition-all">
-                                            <ArrowRight className="h-5 w-5" />
+                                        <div className="h-8 w-8 sm:h-12 sm:w-12 shrink-0 rounded-full border border-brand-gold/30 sm:border-white/10 dark:sm:border-transparent flex items-center justify-center text-brand-gold sm:text-brand-cream/20 dark:sm:text-transparent sm:group-hover:text-brand-gold sm:group-hover:border-brand-gold/30 transition-all">
+                                            <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
                                         </div>
                                     </GlassCard>
                                 </button>
@@ -125,11 +127,8 @@ function SelectBusinessContent() {
 
                 <div className="flex justify-center pt-8">
                     <button
-                        onClick={() => {
-                            localStorage.removeItem('cloove_auth_token')
-                            window.location.href = '/login'
-                        }}
-                        className="flex items-center gap-2 text-sm font-bold text-red-500/60 hover:text-red-500 transition-colors uppercase tracking-widest"
+                        onClick={() => logout()}
+                        className="flex items-center gap-2 text-sm font-bold text-red-500/60 dark:text-red-400 hover:text-red-500 transition-colors uppercase tracking-widest"
                     >
                         <LogOut className="h-4 w-4" />
                         Sign Out

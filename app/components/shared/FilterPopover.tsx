@@ -63,7 +63,7 @@ export function FilterPopover({
                 variant="outline"
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "rounded-2xl h-[46px] border-brand-deep/5 dark:border-white/5 px-4 transition-all duration-300",
+                    "rounded-2xl h-[46px] bg-white border-brand-deep/8 dark:border-brand-gold/20 dark:bg-brand-deep/20 px-4 transition-all duration-300",
                     isOpen
                         ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep border-transparent shadow-lg"
                         : "text-brand-accent/60 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5",

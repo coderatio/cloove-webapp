@@ -46,14 +46,16 @@ export function StoreContextSelector({ value, onChange, className }: StoreContex
                         className
                     )}
                 >
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold">
-                        {currValue === 'all-stores' ? <LayoutGrid className="h-3.5 w-3.5" /> : <StoreIcon className="h-3.5 w-3.5" />}
-                    </div>
-                    <div className="flex flex-col items-start overflow-hidden">
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-brand-accent/40 dark:text-brand-cream/40 leading-none mb-0.5">Viewing</span>
-                        <span className="truncate text-xs font-bold leading-none text-brand-deep dark:text-brand-cream">
-                            {selectedOption.label}
-                        </span>
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold">
+                            {currValue === 'all-stores' ? <LayoutGrid className="h-3.5 w-3.5" /> : <StoreIcon className="h-3.5 w-3.5" />}
+                        </div>
+                        <div className="flex flex-col items-start overflow-hidden">
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-brand-accent/40 dark:text-brand-cream/40 leading-none mb-0.5">Viewing</span>
+                            <span className="truncate text-xs font-bold leading-none text-brand-deep dark:text-brand-cream">
+                                {selectedOption.label}
+                            </span>
+                        </div>
                     </div>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-40 dark:opacity-60" />
                 </button>

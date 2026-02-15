@@ -370,15 +370,16 @@ export function InventoryView() {
                     title="Inventory"
                     description="Track and manage your products across all stores."
                     extraActions={
-                        <div className="flex items-center gap-2">
+                        <div className="w-full flex items-center gap-2">
                             <StoreContextSelector
                                 value={selectedStoreId}
                                 onChange={setSelectedStoreId}
+                                className="w-full sm:w-auto flex justify-between"
                             />
                             <Button
                                 variant="ghost"
                                 onClick={() => setIsBulkUploadOpen(true)}
-                                className="hidden sm:flex h-12 rounded-full bg-white border border-brand-accent/10 text-brand-deep-800 hover:text-brand-deep dark:bg-white/5 dark:text-brand-cream/80 dark:border dark:border-brand-gold-500/20 dark:hover:text-brand-gold transition-all gap-2"
+                                className="flex h-12 rounded-full bg-white border border-brand-accent/10 text-brand-deep-800 hover:text-brand-deep dark:bg-white/5 dark:text-brand-cream/80 dark:border dark:border-brand-gold-500/20 dark:hover:text-brand-gold transition-all gap-2"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 Bulk Import
@@ -396,6 +397,7 @@ export function InventoryView() {
                         })
                         setIsAddDrawerOpen(true)
                     }}
+                    mobileFloatingAction={true}
                 />
 
                 {isFetching ? (

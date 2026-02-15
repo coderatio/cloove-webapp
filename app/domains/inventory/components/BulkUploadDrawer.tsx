@@ -14,10 +14,11 @@ import {
 import { Button } from "@/app/components/ui/button"
 import { FileDropZone } from "@/app/components/ui/file-drop-zone"
 import { ProductExtractionCard, ExtractedProduct } from "./ProductExtractionCard"
-import { Sparkles, Loader2, CheckCircle2, ChevronRight, ArrowLeft } from 'lucide-react'
+import { Sparkles, Loader2, CheckCircle2, ChevronRight, ArrowLeft, Edit3 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { cn } from '@/app/lib/utils'
+import { storage } from '@/app/lib/storage'
 
 type UploadStep = 'upload' | 'extracting' | 'review' | 'success'
 
@@ -34,58 +35,176 @@ export function BulkUploadDrawer({
 }: BulkUploadDrawerProps) {
     const [step, setStep] = React.useState<UploadStep>('upload')
     const [file, setFile] = React.useState<File | null>(null)
+    const [fileHash, setFileHash] = React.useState<string | null>(null)
     const [extractedProducts, setExtractedProducts] = React.useState<ExtractedProduct[]>([])
     const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-    // Reset state when drawer closes
+    // Load session state on mount
     React.useEffect(() => {
-        if (!isOpen) {
-            setTimeout(() => {
-                setStep('upload')
-                setFile(null)
-                setExtractedProducts([])
-                setIsSubmitting(false)
-            }, 500)
+        if (isOpen) {
+            const cachedSession = storage.getBulkUploadSession()
+            if (cachedSession) {
+                try {
+                    const { step: cachedStep, products, timestamp, hash } = JSON.parse(cachedSession)
+                    // Expire session after 24 hours
+                    if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+                        setStep(cachedStep)
+                        setExtractedProducts(products)
+                        if (hash) setFileHash(hash)
+                        if (cachedStep === 'review' && products.length > 0) {
+                            toast.info("Restored your previous upload session.")
+                        }
+                    } else {
+                        storage.clearBulkUploadSession()
+                    }
+                } catch (e) {
+                    console.error("Failed to restore bulk upload session", e)
+                }
+            }
         }
     }, [isOpen])
 
-    const handleFileSelect = (selectedFile: File) => {
+    // Save session state whenever relevant data changes
+    React.useEffect(() => {
+        if (step === 'review' && extractedProducts.length > 0) {
+            storage.setBulkUploadSession(JSON.stringify({
+                step,
+                products: extractedProducts,
+                timestamp: Date.now(),
+                hash: fileHash
+            }))
+        }
+    }, [step, extractedProducts, fileHash])
+
+    const computeFileHash = async (file: File): Promise<string> => {
+        const buffer = await file.arrayBuffer()
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    }
+
+    const saveToFileCache = (hash: string, products: ExtractedProduct[], fileName: string) => {
+        try {
+            const cacheRaw = storage.getBulkUploadFileCache()
+            const cache = cacheRaw ? JSON.parse(cacheRaw) : {}
+            cache[hash] = {
+                originalProducts: products,
+                fileName,
+                timestamp: Date.now()
+            }
+            storage.setBulkUploadFileCache(JSON.stringify(cache))
+        } catch (e) {
+            console.error("Failed to save to file cache", e)
+        }
+    }
+
+    const getFromFileCache = (hash: string) => {
+        try {
+            const cacheRaw = storage.getBulkUploadFileCache()
+            if (!cacheRaw) return null
+            const cache = JSON.parse(cacheRaw)
+            const cachedFile = cache[hash]
+
+            if (!cachedFile) return null
+
+            // Check expiration (14 days)
+            const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000
+            storage.pruneBulkUploadFileCache(FOURTEEN_DAYS_MS)
+
+            return cachedFile
+        } catch (e) {
+            return null
+        }
+    }
+
+    // Cleanup expired cache entries on mount
+    React.useEffect(() => {
+        try {
+            const cacheRaw = storage.getBulkUploadFileCache()
+            if (cacheRaw) {
+                const cache = JSON.parse(cacheRaw)
+                const now = Date.now()
+                const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000
+
+                let hasChanges = false
+                Object.keys(cache).forEach(hash => {
+                    if (now - cache[hash].timestamp > FOURTEEN_DAYS_MS) {
+                        delete cache[hash]
+                        hasChanges = true
+                    }
+                })
+
+                if (hasChanges) {
+                    storage.setBulkUploadFileCache(JSON.stringify(cache))
+                }
+            }
+        } catch (e) {
+            console.error("Failed to cleanup file cache", e)
+        }
+    }, [])
+
+    const handleFileSelect = async (selectedFile: File) => {
         setFile(selectedFile)
         setStep('extracting')
 
-        // Simulate AI Extraction
-        setTimeout(() => {
-            const mockExtracted: ExtractedProduct[] = [
-                {
-                    id: '1',
-                    name: 'Premium Silk Scarf',
-                    price: 45000,
-                    sku: 'SILK-001',
-                    stockQuantity: 12,
-                    status: 'success'
-                },
-                {
-                    id: '2',
-                    name: 'Linen Summer Dress',
-                    price: 28500,
-                    sku: 'DRS-LNG-02',
-                    stockQuantity: 5,
-                    status: 'success'
-                },
-                {
-                    id: '3',
-                    name: 'Unbranded Cotton Tee',
-                    price: '',
-                    sku: '',
-                    stockQuantity: 0,
-                    status: 'error',
-                    errors: ['Missing price', 'Missing SKU']
-                }
-            ]
-            setExtractedProducts(mockExtracted)
-            setStep('review')
-            toast.success("AI extraction complete. Please review the details.")
-        }, 3000)
+        try {
+            const computedHash = await computeFileHash(selectedFile)
+            setFileHash(computedHash)
+
+            // Check FILE cache first
+            const cachedFile = getFromFileCache(computedHash)
+            if (cachedFile) {
+                // Restore ORIGINAL data from file cache
+                // This acts as a fresh start for this file, but skips AI
+                setExtractedProducts(cachedFile.originalProducts)
+                setStep('review')
+                toast.success('Extraction completed. Please review')
+
+                // We don't need to manually save to session here, the useEffect will catch the state change
+                return
+            }
+
+            // Simulate AI Extraction
+            setTimeout(() => {
+                const mockExtracted: ExtractedProduct[] = [
+                    {
+                        id: '1',
+                        name: 'Premium Silk Scarf',
+                        price: 45000,
+                        sku: 'SILK-001',
+                        stockQuantity: 12,
+                        status: 'success'
+                    },
+                    {
+                        id: '2',
+                        name: 'Linen Summer Dress',
+                        price: 28500,
+                        sku: 'DRS-LNG-02',
+                        stockQuantity: 5,
+                        status: 'success'
+                    },
+                    {
+                        id: '3',
+                        name: 'Unbranded Cotton Tee',
+                        price: '',
+                        sku: '',
+                        stockQuantity: 0,
+                        status: 'error',
+                        errors: ['Missing price', 'Missing SKU']
+                    }
+                ]
+                setExtractedProducts(mockExtracted)
+                setStep('review')
+                toast.success("AI extraction complete. Please review the details.")
+
+                // Save to FILE cache (permanent record of extraction)
+                saveToFileCache(computedHash, mockExtracted, selectedFile.name)
+            }, 3000)
+        } catch (error) {
+            console.error("Error processing file:", error)
+            toast.error("Failed to process file.")
+            setStep('upload')
+        }
     }
 
     const handleUpdateProduct = (id: string, updates: Partial<ExtractedProduct>) => {
@@ -122,6 +241,8 @@ export function BulkUploadDrawer({
         await new Promise(r => setTimeout(r, 2000))
         setIsSubmitting(false)
         setStep('success')
+        storage.clearBulkUploadSession()
+        // File cache remains populated for future uploads of same file
         onComplete(extractedProducts)
     }
 
@@ -133,7 +254,9 @@ export function BulkUploadDrawer({
                         <div className="w-8 h-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
                             <Sparkles className="w-4 h-4" />
                         </div>
-                        <DrawerTitle className="font-serif text-2xl">Bulk Product Upload</DrawerTitle>
+                        <DrawerTitle className="font-serif text-2xl">
+                            Bulk Product Upload
+                        </DrawerTitle>
                     </div>
                     <DrawerDescription>
                         {step === 'upload' && "Upload a PDF, CSV or Excel file and our AI will extract product details for you."}
@@ -209,6 +332,17 @@ export function BulkUploadDrawer({
                                 exit={{ opacity: 0, x: -20 }}
                                 className="max-w-3xl mx-auto space-y-6"
                             >
+                                <div className="bg-brand-gold/10 border border-brand-gold/20 rounded-3xl sm:rounded-2xl p-4 flex items-start gap-3">
+                                    <div className="p-2 bg-brand-gold/20 rounded-full shrink-0">
+                                        <Edit3 className="w-4 h-4 text-brand-deep dark:text-brand-gold" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-brand-deep dark:text-brand-cream">Review your data</h4>
+                                        <p className="text-xs text-brand-deep/60 dark:text-brand-cream/60 mt-1">
+                                            Please verify the extracted details below. Tap any field to edit before confirming.
+                                        </p>
+                                    </div>
+                                </div>
                                 <div className="space-y-4">
                                     {extractedProducts.map((product) => (
                                         <ProductExtractionCard
@@ -265,22 +399,29 @@ export function BulkUploadDrawer({
                     <DrawerFooter>
                         <div className="sticky bottom-0 pt-6 pb-2 flex items-center justify-between gap-4">
                             <button
-                                onClick={() => setStep('upload')}
+                                onClick={() => {
+                                    setStep('upload')
+                                    setExtractedProducts([])
+                                    setFile(null)
+                                    setFileHash(null)
+                                    storage.clearBulkUploadSession()
+                                }}
                                 className="flex cursor-pointer items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-accent/40 hover:text-brand-deep dark:text-brand-deep-300 dark:hover:text-brand-deep-400 transition-colors"
                             >
                                 <ArrowLeft className="w-4 h-4" /> Start Over
                             </button>
                             <Button
                                 onClick={handleConfirm}
-                                disabled={isSubmitting}
-                                className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep px-8 h-12 shadow-xl hover:scale-105 transition-all"
+                                disabled={isSubmitting || extractedProducts.some(p => p.status === 'error')}
+                                className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep px-8 h-12 shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
                             >
                                 {isSubmitting ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                 ) : (
                                     <CheckCircle2 className="w-4 h-4 mr-2" />
                                 )}
-                                Confirm & Upload {extractedProducts.length} Products
+                                <span className="hidden md:inline">Confirm & Upload {extractedProducts.length} Products</span>
+                                <span className="md:hidden">Confirm</span>
                             </Button>
                         </div>
                     </DrawerFooter>

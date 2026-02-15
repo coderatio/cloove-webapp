@@ -67,8 +67,8 @@ export function ProductExtractionCard({
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="space-y-1">
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="space-y-1 col-span-3 sm:col-span-1">
                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                     <Tag className="w-3 h-3" /> Price
                                 </label>
@@ -83,7 +83,7 @@ export function ProductExtractionCard({
                                 </div>
                             </div>
 
-                            <div className="space-y-1">
+                            <div className="space-y-1 col-span-2 sm:col-span-1">
                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                     <Package className="w-3 h-3" /> SKU
                                 </label>
@@ -95,7 +95,7 @@ export function ProductExtractionCard({
                                 />
                             </div>
 
-                            <div className="space-y-1">
+                            <div className="space-y-1 col-span-1">
                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                     Stock
                                 </label>

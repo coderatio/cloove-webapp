@@ -105,7 +105,7 @@ export function MultiSelect({
             </PopoverTrigger>
             <PopoverContent
                 className={cn(
-                    "w-[calc(var(--radix-popover-trigger-width))] p-0 rounded-xl overflow-hidden shadow-xl border-brand-deep/5 dark:border-brand-cream/10 bg-white dark:bg-brand-deep-800",
+                    "w-[calc(var(--radix-popover-trigger-width))] p-0 rounded-3xl overflow-hidden shadow-xl border-brand-deep/5 dark:border-brand-cream/10 bg-white dark:bg-brand-deep-800",
                     className
                 )}
                 align="start"

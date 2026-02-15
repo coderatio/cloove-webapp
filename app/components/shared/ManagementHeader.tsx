@@ -5,6 +5,7 @@ import { Search, Plus } from "lucide-react"
 import { Button } from "../ui/button"
 import { cn } from "../../lib/utils"
 import { FilterPopover, FilterGroup } from "./FilterPopover"
+import { useIsMobile } from "@/app/hooks/useMediaQuery"
 
 interface ManagementHeaderProps {
     title: string
@@ -20,6 +21,7 @@ interface ManagementHeaderProps {
     onAddClick?: () => void
     extraActions?: React.ReactNode
     className?: string
+    mobileFloatingAction?: boolean
 }
 
 export function ManagementHeader({
@@ -35,8 +37,10 @@ export function ManagementHeader({
     addButtonLabel,
     onAddClick,
     extraActions,
-    className
+    className,
+    mobileFloatingAction = false
 }: ManagementHeaderProps) {
+    const isMobile = useIsMobile()
     return (
         <div className={cn("space-y-6", className)}>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -50,15 +54,21 @@ export function ManagementHeader({
                         </p>
                     )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className={cn(
+                    "items-center gap-3",
+                    mobileFloatingAction && isMobile ? "mt-4 md:mt-0 w-full block" : "flex"
+                )}>
                     {extraActions}
                     {addButtonLabel && onAddClick && (
                         <Button
                             onClick={onAddClick}
-                            className="rounded-full bg-brand-deep text-brand-gold-300 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg h-12 px-6"
+                            className={cn(
+                                "rounded-full bg-brand-deep text-brand-gold-300 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg h-12 px-6",
+                                mobileFloatingAction && isMobile && "fixed top-15 right-6 z-50 h-14 w-14 p-0 md:static md:h-12 md:w-auto md:px-6 md:rounded-full shadow-2xl md:shadow-lg"
+                            )}
                         >
-                            <Plus className="w-4 h-4 mr-2" />
-                            {addButtonLabel}
+                            <Plus className={cn("w-4 h-4", mobileFloatingAction && isMobile && "md:mr-2 w-6 h-6 md:w-4 md:h-4")} />
+                            <span className={cn(mobileFloatingAction && isMobile && "hidden md:inline")}>{addButtonLabel}</span>
                         </Button>
                     )}
                 </div>

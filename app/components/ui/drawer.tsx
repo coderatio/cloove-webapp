@@ -64,7 +64,7 @@ const DrawerStickyHeader = ({
 }: React.HTMLAttributes<HTMLDivElement> & { showClose?: boolean }) => (
     <div
         className={cn(
-            "shrink-0 p-8 pb-4 bg-brand-cream/80 dark:bg-brand-deep-800 backdrop-blur-md border-b border-brand-deep/5 dark:border-white/5 z-20 rounded-t-[32px]",
+            "relative shrink-0 p-8 pb-4 bg-brand-cream/80 dark:bg-brand-deep-800 backdrop-blur-md border-b border-brand-deep/5 dark:border-white/5 z-20 rounded-t-[32px]",
             className
         )}
         {...props}
@@ -76,7 +76,7 @@ const DrawerStickyHeader = ({
             </div>
             {showClose && (
                 <DrawerClose asChild>
-                    <button className="p-2 bg-brand-deep/5 cursor-pointer dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0">
+                    <button className="absolute top-4 right-4 p-2 bg-brand-deep/5 cursor-pointer dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 rounded-full text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0">
                         <X className="w-6 h-6" />
                     </button>
                 </DrawerClose>
