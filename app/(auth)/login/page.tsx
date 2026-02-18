@@ -53,7 +53,7 @@ export default function LoginPage() {
                         Welcome Back
                     </h1>
                     <p className="text-brand-cream/60 text-sm mt-3 tracking-wide uppercase font-bold text-center">
-                        Your calm intelligence partner
+                        Your calm AI-powered business partner
                     </p>
                 </div>
 
@@ -63,7 +63,7 @@ export default function LoginPage() {
                 </div>
 
                 <p className="mt-12 text-center text-[10px] text-brand-cream/30 uppercase tracking-[0.3em] font-medium">
-                    Cloove &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span>
+                    Cloove AI &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span>
                 </p>
             </div>
         </div>

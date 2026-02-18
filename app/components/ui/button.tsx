@@ -17,6 +17,7 @@ const buttonVariants = cva(
                 ghost: "bg-transparent hover:bg-brand-green/5 dark:hover:bg-brand-gold/5 hover:text-brand-green dark:hover:text-brand-gold transition-all duration-300",
                 link: "text-primary underline-offset-4 hover:underline",
                 glass: "bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-foreground shadow-sm",
+                base: "bg-brand-green/5 dark:bg-brand-gold/5 text-brand-deep dark:text-brand-gold border border-brand-green/10 dark:border-brand-gold/20 hover:bg-brand-green/10 dark:hover:bg-brand-gold/10 transition-all duration-300",
             },
             size: {
                 default: "h-10 px-4 py-2",
@@ -40,10 +41,7 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, variant, size, asChild = false, ...props }, ref) => {
-        // We need to install @radix-ui/react-slot for asChild, but simpler to just use button for now if not installed
-        // Actually, I'll assume standard button if Slot is not available, but 'asChild' pattern is great.
-        // I'll skip Slot for now to avoid one more dependency if I didn't install it, but I should probably just make it a standard button.
-        const Comp = "button"
+        const Comp = asChild ? Slot : "button"
         return (
             <Comp
                 className={cn(buttonVariants({ variant, size, className }))}

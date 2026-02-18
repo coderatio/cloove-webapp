@@ -50,21 +50,11 @@ export default function StorefrontPages() {
     }, [searchParams, pages])
 
     const handleEdit = (page: typeof initialPages[0]) => {
-        setEditingPage(page)
-        setIsDrawerOpen(true)
+        router.push(`/storefront/editor/${page.id}`)
     }
 
     const handleCreate = () => {
-        setEditingPage({
-            id: Math.random().toString(),
-            title: '',
-            slug: '',
-            status: 'Draft',
-            icon: FileText,
-            date: 'Just now',
-            content: ''
-        })
-        setIsDrawerOpen(true)
+        router.push(`/storefront/editor/new`)
     }
 
     const handleSave = () => {
@@ -80,8 +70,8 @@ export default function StorefrontPages() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream font-medium">Content Pages</h2>
-                    <p className="text-brand-accent/60 dark:text-brand-cream/60 text-sm">Manage the auxiliary pages for your storefront.</p>
+                    <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream font-medium">Website Builder</h2>
+                    <p className="text-brand-accent/60 dark:text-brand-cream/60 text-sm">Design and compose your storefront pages with modular sections.</p>
                 </div>
                 <Button
                     onClick={handleCreate}
@@ -143,55 +133,6 @@ export default function StorefrontPages() {
                 </div>
             </GlassCard>
 
-            {/* Page Editor Drawer */}
-            <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-                <DrawerContent>
-                    <div className="max-w-5xl mx-auto w-full h-full flex flex-col">
-                        <div className="p-6 border-b border-brand-deep/5 dark:border-white/5 flex items-center justify-between">
-                            <div>
-                                <DrawerTitle>Edit Page</DrawerTitle>
-                                <DrawerDescription>Make changes to your page content.</DrawerDescription>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <DrawerClose asChild>
-                                    <Button variant="ghost">Cancel</Button>
-                                </DrawerClose>
-                                <Button onClick={handleSave} className="bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-full">
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Save Changes
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="space-y-2 md:col-span-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Page Title</label>
-                                    <Input
-                                        defaultValue={editingPage?.title}
-                                        className="text-lg font-serif border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 h-12"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Visible to Public</label>
-                                    <div className="h-12 flex items-center px-4 rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 justify-between">
-                                        <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">Published</span>
-                                        <Switch defaultChecked={editingPage?.status === 'Published'} />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2 h-[400px]">
-                                <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Content</label>
-                                <textarea
-                                    className="w-full h-full p-4 rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 resize-none focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
-                                    defaultValue={editingPage?.content}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </DrawerContent>
-            </Drawer>
         </div>
     )
 }
