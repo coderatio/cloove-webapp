@@ -35,6 +35,7 @@ import {
 } from "@/app/components/ui/drawer"
 import { useInventory } from '../hooks/useInventory'
 import { Product, InventoryItem, InventoryStats } from '../types'
+import { Badge } from '@/app/components/ui/badge'
 import { MoneyInput } from '@/app/components/ui/money-input'
 import { formatCurrency } from '@/app/lib/formatters'
 import { ImageUpload } from '@/app/components/ui/image-upload'
@@ -215,17 +216,22 @@ export function InventoryView() {
     const totalProducts = summary?.totalProducts || 0
     const totalStockUnits = summary?.totalStockUnits || 0
 
-    const filteredInventory = inventory.filter((item: InventoryItem) => {
-        const matchesSearch = item.product.toLowerCase().includes(search.toLowerCase())
-        const activeStatuses = selectedFilters.filter(f => filterGroups.find(g => g.key === 'status')?.options.some((o: any) => o.value === f))
-        const matchesStatus = activeStatuses.length === 0 || activeStatuses.includes(item.status)
+    const filteredInventory = React.useMemo(() => {
+        const query = search.toLowerCase()
+        const statusOptions = filterGroups.find(g => g.key === 'status')?.options || []
+        const storeOptions = filterGroups.find(g => g.key === 'storeId')?.options || []
 
+        const activeStatuses = new Set(selectedFilters.filter(f => statusOptions.some((o: any) => o.value === f)))
+        const activeStores = new Set(selectedFilters.filter(f => storeOptions.some((o: any) => o.value === f)))
 
-        const activeStores = selectedFilters.filter(f => filterGroups.find(g => g.key === 'storeId')?.options.some((o: any) => o.value === f))
-        const matchesStore = activeStores.length === 0 || activeStores.some(storeId => (item.raw as any).stores?.some((s: any) => s.id === storeId))
+        return inventory.filter((item: InventoryItem) => {
+            const matchesSearch = item.product.toLowerCase().includes(query)
+            const matchesStatus = activeStatuses.size === 0 || activeStatuses.has(item.status)
+            const matchesStore = activeStores.size === 0 || Array.from(activeStores).some(storeId => (item.raw as any).stores?.some((s: any) => s.id === storeId))
 
-        return matchesSearch && matchesStatus && matchesStore
-    })
+            return matchesSearch && matchesStatus && matchesStore
+        })
+    }, [inventory, search, selectedFilters, filterGroups])
 
     const prepareFormData = (item: any) => {
         const raw = item.raw
@@ -361,9 +367,9 @@ export function InventoryView() {
             key: 'variantsCount',
             header: 'Variants',
             render: (value: number) => (
-                <span className="px-2 py-0.5 rounded-full bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60 text-[10px] font-medium border border-brand-deep/5 dark:border-white/5">
+                <Badge variant="default">
                     {value} {value === 1 ? 'variant' : 'variants'}
-                </span>
+                </Badge>
             )
         },
         {
@@ -378,11 +384,11 @@ export function InventoryView() {
                         <span className={cn("font-mono", (isAllStores ? value : item.localStock) <= (summary?.lowStockThreshold || 5) ? 'font-bold text-rose-600 dark:text-rose-400' : 'text-brand-accent/60 dark:text-brand-cream/60')}>
                             {isAllStores ? value : item.localStock} units
                         </span>
-                        {!isAllStores && (
+                        {!isAllStores ? (
                             <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 font-medium">
                                 Total: {value} units
                             </span>
-                        )}
+                        ) : null}
                     </div>
                 )
             }
@@ -398,13 +404,13 @@ export function InventoryView() {
             render: (stores: string[]) => (
                 <div className="flex flex-wrap gap-1">
                     {stores.map(name => (
-                        <span key={name} className="px-2 py-0.5 rounded-full bg-brand-green/10 dark:bg-brand-gold/20 text-brand-green dark:text-brand-cream/80 text-[9px] font-medium border border-brand-green/20">
+                        <Badge key={name} variant="success">
                             {name}
-                        </span>
+                        </Badge>
                     ))}
-                    {stores.length === 0 && (
+                    {stores.length === 0 ? (
                         <span className="text-[9px] text-brand-accent/40 dark:text-brand-cream/40 italic">Not assigned</span>
-                    )}
+                    ) : null}
                 </div>
             )
         },
@@ -412,14 +418,9 @@ export function InventoryView() {
             key: 'status',
             header: 'Status',
             render: (value: string) => (
-                <span className={cn(
-                    "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                    value === 'In Stock'
-                        ? 'bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold'
-                        : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-brand-gold/70'
-                )}>
+                <Badge variant={value === 'In Stock' ? 'success' : 'warning'} className='uppercase'>
                     {value}
-                </span>
+                </Badge>
             )
         },
         {
@@ -697,15 +698,15 @@ export function InventoryView() {
                                     />
                                 ))
                             )}
-                            {!isFetching && filteredInventory.length === 0 && (
+                            {!isFetching && filteredInventory.length === 0 ? (
                                 <GlassCard className="p-12 text-center">
                                     <Package className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                     <p className="text-brand-accent/40">No products found</p>
                                 </GlassCard>
-                            )}
+                            ) : null}
 
                             {/* Mobile Pagination */}
-                            {meta && (meta as any).totalPages > 1 && (
+                            {meta && (meta as any).totalPages > 1 ? (
                                 <div className="flex items-center justify-between pt-4 border-t border-brand-deep/5 dark:border-white/5">
                                     <Button
                                         variant="outline"
@@ -745,7 +746,7 @@ export function InventoryView() {
                                         <ChevronRight className="h-4 w-4 ml-1 dark:text-brand-gold" />
                                     </Button>
                                 </div>
-                            )}
+                            ) : null}
                         </div>
                     ) : (
                         <div className={cn("transition-opacity duration-300", isFetching && "opacity-50")}>
@@ -1015,7 +1016,7 @@ export function InventoryView() {
                                         </Button>
                                     </div>
 
-                                    {editingItem && (
+                                    {editingItem ? (
                                         <div className="pt-6 border-t border-brand-deep/5 dark:border-white/5 mt-6">
                                             <Button
                                                 type="button"
@@ -1031,7 +1032,7 @@ export function InventoryView() {
                                                 Delete Product from Inventory
                                             </Button>
                                         </div>
-                                    )}
+                                    ) : null}
                                 </form>
                             </DrawerBody>
                         </DrawerContent>

@@ -32,6 +32,7 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
 import { motion } from "framer-motion"
 import { formatCurrency } from "@/app/lib/formatters"
+import { Badge } from "@/app/components/ui/badge"
 import { InventoryItem, ProductImage, ProductVariant } from "../types"
 
 interface ProductViewDrawerProps {
@@ -45,11 +46,6 @@ interface ProductViewDrawerProps {
 export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete }: ProductViewDrawerProps) {
     const [activeImageIndex, setActiveImageIndex] = React.useState(0)
 
-    // Reset index when item changes
-    React.useEffect(() => {
-        setActiveImageIndex(0)
-    }, [item?.id])
-
     if (!item) return null
 
     const raw = item.raw
@@ -61,8 +57,8 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
 
     return (
         <Drawer open={isOpen} onOpenChange={onOpenChange}>
-            <DrawerContent className="max-w-2xl h-[92vh]">
-                <DrawerStickyHeader className="pb-6">
+            <DrawerContent className="max-w-2xl h-[92vh]" key={item.id}>
+                <DrawerStickyHeader className="pb-6 px-4 sm:px-8">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold shrink-0">
                             <Package className="w-5 h-5" />
@@ -76,23 +72,18 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                                     <Tag className="w-3 h-3" />
                                     {item.category}
                                 </DrawerDescription>
-                                <div className={cn(
-                                    "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border",
-                                    item.status === 'In Stock'
-                                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30"
-                                        : "bg-rose-500/10 text-rose-600 border-rose-500/20 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30"
-                                )}>
+                                <Badge variant={item.status === 'In Stock' ? 'emerald' : 'destructive'}>
                                     {item.status}
-                                </div>
+                                </Badge>
                             </div>
                         </div>
                     </div>
                 </DrawerStickyHeader>
 
                 <DrawerBody className="p-0 overflow-y-auto bg-brand-cream/30 dark:bg-brand-deep/10">
-                    <div className="p-8 space-y-8">
+                    <div className="py-8 px-4 sm:px-8 space-y-8">
                         {/* Image Gallery */}
-                        {images.length > 0 && (
+                        {images.length > 0 ? (
                             <div className="space-y-4">
                                 <div className="relative aspect-video rounded-3xl overflow-hidden border border-brand-deep/5 dark:border-white/5 bg-white/50 dark:bg-white/5 group">
                                     <Image
@@ -106,7 +97,7 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                                     <div className="absolute inset-0 bg-linear-to-t from-brand-deep/20 to-transparent pointer-events-none" />
                                 </div>
 
-                                {images.length > 1 && (
+                                {images.length > 1 ? (
                                     <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
                                         {images.map((img: ProductImage, i: number) => (
                                             <button
@@ -128,11 +119,11 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                                             </button>
                                         ))}
                                     </div>
-                                )}
+                                ) : null}
                             </div>
-                        )}
+                        ) : null}
                         {/* Product Description */}
-                        {raw?.description && (
+                        {raw?.description ? (
                             <div className="space-y-4">
                                 <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                     <BarChart3 className="w-3 h-3" />
@@ -144,7 +135,7 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                                     </p>
                                 </div>
                             </div>
-                        )}
+                        ) : null}
 
                         {/* Core Stats Grid */}
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -234,7 +225,7 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                 <DrawerFooter className="flex flex-row gap-3 pt-4">
                     <Button
                         variant="ghost"
-                        className="flex-1 h-12 rounded-full border border-brand-deep/5 text-rose-500 hover:bg-rose-500/5 hover:text-rose-600 transition-colors uppercase tracking-widest text-[10px] font-bold"
+                        className="flex-1 h-12 rounded-2xl border border-brand-deep/5 text-rose-500 hover:bg-rose-500/5 hover:text-rose-600 transition-colors uppercase tracking-widest text-[10px] font-bold"
                         onClick={() => {
                             onDelete?.(item)
                             onOpenChange(false)
@@ -244,7 +235,7 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                         Delete
                     </Button>
                     <Button
-                        className="flex-2 h-12 rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep shadow-lg hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px] font-bold"
+                        className="flex-2 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep shadow-lg hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px] font-bold"
                         onClick={() => {
                             onEdit?.(item)
                             onOpenChange(false)
