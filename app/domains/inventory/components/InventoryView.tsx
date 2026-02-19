@@ -6,8 +6,15 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles } from 'lucide-react'
+import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from "@/app/components/ui/dropdown-menu"
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
 import { Skeleton } from '@/app/components/ui/skeleton'
@@ -32,6 +39,8 @@ import { ImageUpload } from '@/app/components/ui/image-upload'
 import { StoreSelector } from '@/app/components/shared/storeSelector'
 import { StoreContextSelector } from '@/app/components/shared/StoreContextSelector'
 import { BulkUploadDrawer } from './BulkUploadDrawer'
+import { ConfirmDialog } from '@/app/components/shared/ConfirmDialog'
+import { ProductViewDrawer } from './ProductViewDrawer'
 
 interface StoreStockMapping {
     storeId: string
@@ -114,11 +123,16 @@ export function InventoryView() {
     const [isAddDrawerOpen, setIsAddDrawerOpen] = React.useState(false)
     const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<any>(null)
+    const [viewItem, setViewItem] = React.useState<any>(null)
+    const [isViewDrawerOpen, setIsViewDrawerOpen] = React.useState(false)
     const [isSubmitting, setIsSubmitting] = React.useState(false)
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
+    const [itemToDelete, setItemToDelete] = React.useState<any>(null)
 
     // Form states
     const [formData, setFormData] = React.useState({
         product: '',
+        description: '',
         price: '',
         imageUrls: [] as string[],
         storeIds: [] as string[],
@@ -205,12 +219,35 @@ export function InventoryView() {
         return matchesSearch && matchesStatus && matchesStore
     })
 
+    const prepareFormData = (item: any) => {
+        const raw = item.raw
+        return {
+            product: item.product,
+            description: raw.description || '',
+            price: item.numericPrice.toString(),
+            imageUrls: raw.images?.map((img: any) => img.url) || [],
+            storeIds: raw.stores?.map((s: any) => s.id) || [],
+            variants: raw?.variants?.map((v: any) => ({
+                id: v.id,
+                name: v.name || 'Standard',
+                sku: v.sku || '',
+                price: v.price?.toString() || item.numericPrice.toString(),
+                stockQuantity: v.inventories?.reduce((sum: number, inv: any) => sum + (Number(inv.stockQuantity) || 0), 0) || 0,
+                storeInventory: v.inventories?.map((inv: any) => ({
+                    storeId: inv.storeId,
+                    stockQuantity: inv.stockQuantity
+                })) || []
+            })) || [{ name: 'Standard', sku: '', price: item.numericPrice.toString(), stockQuantity: 0, storeInventory: [] }]
+        }
+    }
+
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSubmitting(true)
         try {
             await createProduct({
                 name: formData.product,
+                description: formData.description,
                 price: parseFloat(formData.price) || 0,
                 imageUrls: formData.imageUrls,
                 storeIds: formData.storeIds,
@@ -229,7 +266,7 @@ export function InventoryView() {
                 })
             })
             setIsAddDrawerOpen(false)
-            setFormData({ product: '', price: '', imageUrls: [], storeIds: [], variants: [] })
+            setFormData({ product: '', description: '', price: '', imageUrls: [], storeIds: [], variants: [] })
         } catch (error) {
             console.error(error)
         } finally {
@@ -246,6 +283,7 @@ export function InventoryView() {
                 id: editingItem.id,
                 data: {
                     name: formData.product,
+                    description: formData.description,
                     basePrice: parseFloat(formData.price) || 0,
                     imageUrls: formData.imageUrls,
                     storeIds: formData.storeIds,
@@ -265,7 +303,7 @@ export function InventoryView() {
                 }
             })
             setEditingItem(null)
-            setFormData({ product: '', price: '', imageUrls: [], storeIds: [], variants: [] })
+            setFormData({ product: '', description: '', price: '', imageUrls: [], storeIds: [], variants: [] })
         } catch (error) {
             console.error(error)
         } finally {
@@ -274,11 +312,13 @@ export function InventoryView() {
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this product?")) return
         setIsSubmitting(true)
         try {
             await deleteProduct(id)
             setEditingItem(null)
+            setItemToDelete(null)
+        } catch (error) {
+            console.error(error)
         } finally {
             setIsSubmitting(false)
         }
@@ -355,6 +395,71 @@ export function InventoryView() {
                 </span>
             )
         },
+        {
+            key: 'actions' as any,
+            header: '',
+            render: (_: any, item: any) => (
+                <div className="flex justify-end">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-full hover:bg-brand-deep/5 dark:hover:bg-white/5">
+                                <span className="sr-only">Open menu</span>
+                                <MoreVertical className="h-4 w-4 text-brand-deep/40 dark:text-brand-cream/40" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-white/80 dark:bg-[#021a12]/80 backdrop-blur-xl border-brand-deep/5 dark:border-white/5 shadow-2xl">
+                            <DropdownMenuItem
+                                onClick={() => {
+                                    setViewItem(item)
+                                    setIsViewDrawerOpen(true)
+                                }}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
+                            >
+                                <Eye className="w-4 h-4" />
+                                View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => {
+                                    setFormData(prepareFormData(item))
+                                    setEditingItem(item)
+                                }}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
+                            >
+                                <Pencil className="w-4 h-4" />
+                                Edit Product
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => {
+                                    const data = prepareFormData(item)
+                                    // Strip SKUs and IDs for duplication
+                                    setFormData({
+                                        ...data,
+                                        product: `${data.product} (Copy)`,
+                                        variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '' }))
+                                    })
+                                    setIsAddDrawerOpen(true)
+                                }}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
+                            >
+                                <Copy className="w-4 h-4" />
+                                Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="my-1 bg-brand-deep/5 dark:bg-white/5" />
+                            <DropdownMenuItem
+                                onClick={() => {
+                                    setItemToDelete(item)
+                                    setConfirmDeleteOpen(true)
+                                }}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-rose-500 focus:bg-rose-500/10 focus:text-rose-600 cursor-pointer"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            )
+        },
     ]
 
     const intelligenceWhisper = lowStockItems > 0
@@ -390,6 +495,7 @@ export function InventoryView() {
                     onAddClick={() => {
                         setFormData({
                             product: "",
+                            description: "",
                             price: "",
                             imageUrls: [],
                             storeIds: [],
@@ -496,24 +602,7 @@ export function InventoryView() {
                                         value={`${!isAllStores ? item.localStock : item.stock}`}
                                         valueLabel={!isAllStores ? `in ${selectedStoreName}` : "Units"}
                                         onClick={() => {
-                                            const raw = (item as any).raw
-                                            setFormData({
-                                                product: item.product,
-                                                price: item.numericPrice.toString(),
-                                                imageUrls: raw.images?.map((img: any) => img.url) || [],
-                                                storeIds: raw.stores?.map((s: any) => s.id) || [],
-                                                variants: raw?.variants?.map((v: any) => ({
-                                                    id: v.id,
-                                                    name: v.name || 'Standard',
-                                                    sku: v.sku || '',
-                                                    price: v.price?.toString() || item.numericPrice.toString(),
-                                                    stockQuantity: v.inventories?.reduce((sum: number, inv: any) => sum + (Number(inv.stockQuantity) || 0), 0) || 0,
-                                                    storeInventory: v.inventories?.map((inv: any) => ({
-                                                        storeId: inv.storeId,
-                                                        stockQuantity: inv.stockQuantity
-                                                    })) || []
-                                                })) || [{ name: 'Standard', sku: '', price: item.numericPrice.toString(), stockQuantity: 0, storeInventory: [] }]
-                                            })
+                                            setFormData(prepareFormData(item))
                                             setEditingItem(item)
                                         }}
                                     />
@@ -533,27 +622,6 @@ export function InventoryView() {
                                     columns={columns}
                                     data={filteredInventory}
                                     isLoading={isFetching}
-                                    onRowClick={(item) => {
-                                        const raw = (item as any).raw
-                                        setFormData({
-                                            product: item.product,
-                                            price: item.numericPrice.toString(),
-                                            imageUrls: raw.images?.map((img: any) => img.url) || [],
-                                            storeIds: raw.stores?.map((s: any) => s.id) || [],
-                                            variants: raw?.variants?.map((v: any) => ({
-                                                id: v.id,
-                                                name: v.name || '',
-                                                sku: v.sku || '',
-                                                price: v.price?.toString() || item.numericPrice.toString(),
-                                                stockQuantity: v.inventories?.[0]?.stockQuantity || 0,
-                                                storeInventory: v.inventories?.map((inv: any) => ({
-                                                    storeId: inv.storeId,
-                                                    stockQuantity: inv.stockQuantity
-                                                })) || []
-                                            })) || []
-                                        })
-                                        setEditingItem(item)
-                                    }}
                                 />
                             </GlassCard>
                         </div>
@@ -596,6 +664,17 @@ export function InventoryView() {
                                             onChange={(e) => setFormData({ ...formData, product: e.target.value })}
                                             placeholder="e.g. Premium Lace Material"
                                             className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product Description</label>
+                                        <textarea
+                                            value={formData.description}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            placeholder="Tell a story about this product..."
+                                            rows={3}
+                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream resize-none text-sm leading-relaxed"
                                         />
                                     </div>
 
@@ -805,7 +884,10 @@ export function InventoryView() {
                                                 type="button"
                                                 variant="destructive"
                                                 disabled={isSubmitting}
-                                                onClick={() => handleDelete(editingItem.id)}
+                                                onClick={() => {
+                                                    setItemToDelete(editingItem)
+                                                    setConfirmDeleteOpen(true)
+                                                }}
                                                 className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold text-rose-500/60 dark:text-rose-400 dark:hover:text-rose-500 hover:text-rose-500 transition-all uppercase tracking-widest disabled:opacity-50"
                                             >
                                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -821,6 +903,21 @@ export function InventoryView() {
                         isOpen={isBulkUploadOpen}
                         onOpenChange={setIsBulkUploadOpen}
                         onComplete={() => setIsBulkUploadOpen(false)}
+                    />
+                    <ConfirmDialog
+                        open={confirmDeleteOpen}
+                        onOpenChange={setConfirmDeleteOpen}
+                        onConfirm={() => handleDelete(itemToDelete?.id)}
+                        isLoading={isSubmitting}
+                        title="Delete Product?"
+                        description={`This will permanently remove "${itemToDelete?.product || 'this product'}" from your inventory across all stores. This action cannot be undone.`}
+                        confirmText="Delete Product"
+                        variant="destructive"
+                    />
+                    <ProductViewDrawer
+                        isOpen={isViewDrawerOpen}
+                        onOpenChange={setIsViewDrawerOpen}
+                        item={viewItem}
                     />
                 </div>
             </div>
