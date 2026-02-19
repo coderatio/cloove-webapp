@@ -17,6 +17,22 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'clooveai.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'africanfabs.com',
+      },
+    ],
+  },
   async rewrites() {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.clooveai.com";
     // Handle both cases: base URL with and without /api suffix

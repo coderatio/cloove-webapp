@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from 'react'
+import Image from "next/image"
 import DataTable from '@/app/components/DataTable'
 import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil } from 'lucide-react'
+import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import {
     DropdownMenu,
@@ -32,7 +33,8 @@ import {
     DrawerClose,
     DrawerBody,
 } from "@/app/components/ui/drawer"
-import { useInventory, InventoryStats } from '../hooks/useInventory'
+import { useInventory } from '../hooks/useInventory'
+import { Product, InventoryItem, InventoryStats } from '../types'
 import { MoneyInput } from '@/app/components/ui/money-input'
 import { formatCurrency } from '@/app/lib/formatters'
 import { ImageUpload } from '@/app/components/ui/image-upload'
@@ -42,6 +44,7 @@ import { BulkUploadDrawer } from './BulkUploadDrawer'
 import { ConfirmDialog } from '@/app/components/shared/ConfirmDialog'
 import { ProductViewDrawer } from './ProductViewDrawer'
 
+const PER_PAGE = 10
 interface StoreStockMapping {
     storeId: string
     stockQuantity: number | string
@@ -108,9 +111,13 @@ export function InventoryView() {
     const { currency } = useBusiness()
     const { stores, currentStore } = useStores()
     const [selectedStoreId, setSelectedStoreId] = React.useState<string>(currentStore?.id || 'all-stores')
+    const [currentPage, setCurrentPage] = React.useState(1)
+    const pageSize = PER_PAGE
 
-    const { products, summary, isLoading, isFetching, createProduct, updateProduct, deleteProduct } = useInventory(
-        selectedStoreId !== 'all-stores' ? selectedStoreId : undefined
+    const { products, meta, summary, isLoading, isFetching, createProduct, updateProduct, deleteProduct } = useInventory(
+        selectedStoreId !== 'all-stores' ? selectedStoreId : undefined,
+        currentPage,
+        pageSize
     )
 
     const selectedStoreName = React.useMemo(() => {
@@ -143,7 +150,7 @@ export function InventoryView() {
     const inventory = React.useMemo(() => {
         if (!products) return []
 
-        return products.map(p => {
+        return products.map((p: Product) => {
             let globalStock = 0
             let localStock = 0
             const variants = p.variants || (p as any).product_variants || []
@@ -180,6 +187,7 @@ export function InventoryView() {
                 availableIn: (p as any).stores?.map((s: any) => s.name) || [],
                 status: (selectedStoreId === 'all-stores' ? globalStock : localStock) <= (summary?.lowStockThreshold || 5) ? 'Low Stock' : 'In Stock',
                 category: (p as any).category || 'General',
+                image: (p as any).images?.find((img: any) => img.isPrimary)?.url || (p as any).images?.[0]?.url,
                 raw: p
             }
         })
@@ -207,7 +215,7 @@ export function InventoryView() {
     const totalProducts = summary?.totalProducts || 0
     const totalStockUnits = summary?.totalStockUnits || 0
 
-    const filteredInventory = inventory.filter(item => {
+    const filteredInventory = inventory.filter((item: InventoryItem) => {
         const matchesSearch = item.product.toLowerCase().includes(search.toLowerCase())
         const activeStatuses = selectedFilters.filter(f => filterGroups.find(g => g.key === 'status')?.options.some((o: any) => o.value === f))
         const matchesStatus = activeStatuses.length === 0 || activeStatuses.includes(item.status)
@@ -328,7 +336,26 @@ export function InventoryView() {
         {
             key: 'product',
             header: 'Product',
-            render: (value: string) => <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
+            render: (val: string, item: any) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 flex items-center justify-center overflow-hidden shrink-0 relative">
+                        {item.image ? (
+                            <Image
+                                src={item.image}
+                                alt={val}
+                                fill
+                                className="object-cover"
+                            />
+                        ) : (
+                            <Package className="w-4 h-4 text-brand-deep/20 dark:text-white/20" />
+                        )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="font-medium text-brand-deep dark:text-brand-cream truncate">{val}</span>
+                        <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest font-bold">{item.category}</span>
+                    </div>
+                </div>
+            )
         },
         {
             key: 'variantsCount',
@@ -592,19 +619,81 @@ export function InventoryView() {
                                     </GlassCard>
                                 ))
                             ) : (
-                                filteredInventory.map(item => (
+                                filteredInventory.map((item: InventoryItem) => (
                                     <ListCard
                                         key={item.id}
                                         title={item.product}
-                                        subtitle={`${item.price}${!isAllStores ? ` • Total: ${item.stock}` : ''}`}
+                                        subtitle={item.category}
+                                        image={item.image}
                                         status={item.status}
                                         statusColor={item.status === 'Low Stock' ? 'danger' : 'success'}
                                         value={`${!isAllStores ? item.localStock : item.stock}`}
                                         valueLabel={!isAllStores ? `in ${selectedStoreName}` : "Units"}
                                         onClick={() => {
-                                            setFormData(prepareFormData(item))
-                                            setEditingItem(item)
+                                            setViewItem(item)
+                                            setIsViewDrawerOpen(true)
                                         }}
+                                        actions={
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-brand-deep/5 dark:hover:bg-white/5">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-48 p-1.5 rounded-2xl bg-white/95 dark:bg-brand-deep-800 backdrop-blur-xl border border-brand-deep/5 dark:border-white/5 shadow-2xl">
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setViewItem(item)
+                                                            setIsViewDrawerOpen(true)
+                                                        }}
+                                                        className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl focus:bg-brand-green/10 dark:focus:bg-brand-gold/10 transition-colors"
+                                                    >
+                                                        <Eye className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                        View Details
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setFormData(prepareFormData(item))
+                                                            setEditingItem(item)
+                                                        }}
+                                                        className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl focus:bg-brand-green/10 dark:focus:bg-brand-gold/10 transition-colors"
+                                                    >
+                                                        <Pencil className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                        Edit Product
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            const duplicated = {
+                                                                ...prepareFormData(item),
+                                                                product: `${item.product} (Copy)`,
+                                                                variants: prepareFormData(item).variants.map((v: any) => ({ ...v, sku: '' }))
+                                                            }
+                                                            setFormData(duplicated)
+                                                            setIsAddDrawerOpen(true)
+                                                        }}
+                                                        className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl focus:bg-brand-green/10 dark:focus:bg-brand-gold/10 transition-colors"
+                                                    >
+                                                        <Copy className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                        Duplicate
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator className="my-1 border-brand-deep/5 dark:border-white/5" />
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setItemToDelete(item)
+                                                            setConfirmDeleteOpen(true)
+                                                        }}
+                                                        className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-rose-500 rounded-xl focus:bg-rose-500/10 dark:focus:bg-rose-500/10 transition-colors"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                        Delete Product
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        }
                                     />
                                 ))
                             )}
@@ -614,6 +703,49 @@ export function InventoryView() {
                                     <p className="text-brand-accent/40">No products found</p>
                                 </GlassCard>
                             )}
+
+                            {/* Mobile Pagination */}
+                            {meta && (meta as any).totalPages > 1 && (
+                                <div className="flex items-center justify-between pt-4 border-t border-brand-deep/5 dark:border-white/5">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={(meta as any).currentPage === 1}
+                                        onClick={() => setCurrentPage((meta as any).currentPage - 1)}
+                                        className="rounded-xl h-10 border-brand-deep/5 dark:border-white/10"
+                                    >
+                                        <ChevronLeft className="h-4 w-4 mr-1 dark:text-brand-gold" />
+                                        Prev
+                                    </Button>
+                                    <div className="flex items-center gap-1.5">
+                                        {Array.from({ length: Math.min((meta as any).totalPages, 5) }).map((_, i) => {
+                                            const page = i + 1
+                                            return (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={cn(
+                                                        "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                                                        (meta as any).currentPage === page
+                                                            ? "bg-brand-green w-3 dark:bg-brand-gold"
+                                                            : "bg-brand-accent/20 dark:bg-white/10"
+                                                    )}
+                                                />
+                                            )
+                                        })}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={(meta as any).currentPage === (meta as any).totalPages}
+                                        onClick={() => setCurrentPage((meta as any).currentPage + 1)}
+                                        className="rounded-xl h-10 border-brand-deep/5 dark:border-white/10"
+                                    >
+                                        Next
+                                        <ChevronRight className="h-4 w-4 ml-1 dark:text-brand-gold" />
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className={cn("transition-opacity duration-300", isFetching && "opacity-50")}>
@@ -622,6 +754,11 @@ export function InventoryView() {
                                     columns={columns}
                                     data={filteredInventory}
                                     isLoading={isFetching}
+                                    manualPagination={{
+                                        currentPage: (meta as any)?.currentPage || 1,
+                                        totalPages: (meta as any)?.totalPages || 1,
+                                        onPageChange: (page) => setCurrentPage(page)
+                                    }}
                                 />
                             </GlassCard>
                         </div>
@@ -639,8 +776,8 @@ export function InventoryView() {
                     >
                         <DrawerContent>
                             <DrawerStickyHeader>
-                                <DrawerTitle>{editingItem ? "Edit Product" : "Add New Product"}</DrawerTitle>
-                                <DrawerDescription>
+                                <DrawerTitle className="text-2xl font-serif">{editingItem ? "Edit Product" : "Add New Product"}</DrawerTitle>
+                                <DrawerDescription className="mt-1">
                                     {editingItem ? "Update product details and stock levels." : "Add a new item to your store's catalog."}
                                 </DrawerDescription>
                             </DrawerStickyHeader>
@@ -918,6 +1055,14 @@ export function InventoryView() {
                         isOpen={isViewDrawerOpen}
                         onOpenChange={setIsViewDrawerOpen}
                         item={viewItem}
+                        onEdit={(item) => {
+                            setFormData(prepareFormData(item))
+                            setEditingItem(item)
+                        }}
+                        onDelete={(item) => {
+                            setItemToDelete(item)
+                            setConfirmDeleteOpen(true)
+                        }}
                     />
                 </div>
             </div>

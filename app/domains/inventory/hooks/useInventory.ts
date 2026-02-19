@@ -2,64 +2,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient, ApiResponse } from "@/app/lib/api-client"
 import { toast } from "sonner"
 import { useBusiness } from "@/app/components/BusinessProvider"
-
-export interface ProductImage {
-    id: string
-    url: string
-    isPrimary: boolean
-    alt?: string
-}
-
-export interface StoreInventory {
-    id: string
-    storeId: string
-    productId: string
-    variantId: string
-    stockQuantity: number
-    store?: {
-        id: string
-        name: string
-    }
-}
-
-export interface ProductVariant {
-    id: string
-    productId: string
-    name: string | null
-    sku: string | null
-    price: number | null
-    inventories: StoreInventory[]
-}
-
-export interface Product {
-    id: string
-    businessId: string
-    name: string
-    description: string | null
-    basePrice: number
-    images: ProductImage[]
-    variants: ProductVariant[]
-}
-
-export interface InventoryStats {
-    totalValue: number
-    totalProducts: number
-    totalStockUnits: number
-    lowStockItems: number
-    lowStockThreshold: number
-}
+import { Product, InventoryStats } from "../types"
 
 /**
  * Hook for managing product inventory
  */
-export function useInventory(storeId?: string) {
+export function useInventory(storeId?: string, page: number = 1, limit: number = 10) {
     const queryClient = useQueryClient()
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<Product[]>>({
-        queryKey: ['products', businessId, storeId],
-        queryFn: () => apiClient.get<ApiResponse<Product[]>>('/products', { storeId: storeId || '' }, { fullResponse: true }),
+        queryKey: ['products', businessId, storeId, page, limit],
+        queryFn: () => apiClient.get<ApiResponse<Product[]>>('/products', {
+            storeId: storeId || '',
+            page: String(page),
+            limit: String(limit)
+        }, { fullResponse: true }),
         enabled: !!businessId
     })
 
@@ -99,7 +58,10 @@ export function useInventory(storeId?: string) {
 
     return {
         products: response?.data || [],
-        meta: response?.meta,
+        meta: response?.meta ? {
+            ...response.meta,
+            totalPages: (response.meta as any).lastPage || 1
+        } : undefined,
         summary: response?.summary as InventoryStats | undefined,
         isLoading,
         isFetching,

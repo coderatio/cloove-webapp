@@ -16,6 +16,11 @@ interface DataTableProps<T> {
     onRowClick?: (row: T) => void
     pageSize?: number
     isLoading?: boolean
+    manualPagination?: {
+        currentPage: number
+        totalPages: number
+        onPageChange: (page: number) => void
+    }
 }
 
 export default function DataTable<T extends { id: string | number }>({
@@ -24,14 +29,24 @@ export default function DataTable<T extends { id: string | number }>({
     emptyMessage = "No data to display",
     onRowClick,
     pageSize = 10,
-    isLoading = false
+    isLoading = false,
+    manualPagination
 }: DataTableProps<T>) {
-    const [currentPage, setCurrentPage] = React.useState(1)
+    const [internalPage, setInternalPage] = React.useState(1)
 
-    // Reset pagination when data changes (e.g., during filtering)
+    // Reset internal pagination when data changes
     React.useEffect(() => {
-        setCurrentPage(1)
-    }, [data])
+        if (!manualPagination) setInternalPage(1)
+    }, [data, manualPagination])
+
+    const currentPage = manualPagination ? manualPagination.currentPage : internalPage
+    const setCurrentPage = (page: number) => {
+        if (manualPagination) {
+            manualPagination.onPageChange(page)
+        } else {
+            setInternalPage(page)
+        }
+    }
 
     if (data.length === 0 && !isLoading) {
         return (
@@ -49,9 +64,9 @@ export default function DataTable<T extends { id: string | number }>({
         )
     }
 
-    const totalPages = Math.ceil(data.length / pageSize)
+    const totalPages = manualPagination ? manualPagination.totalPages : Math.ceil(data.length / pageSize)
     const startIndex = (currentPage - 1) * pageSize
-    const paginatedData = data.slice(startIndex, startIndex + pageSize)
+    const paginatedData = manualPagination ? data : data.slice(startIndex, startIndex + pageSize)
 
     return (
         <div className="w-full overflow-hidden flex flex-col">
@@ -128,7 +143,7 @@ export default function DataTable<T extends { id: string | number }>({
                             variant="outline"
                             size="sm"
                             disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            onClick={() => setCurrentPage(currentPage - 1)}
                             className="h-8 w-8 p-0 rounded-lg border-brand-deep/5 dark:border-white/10"
                         >
                             <ChevronLeft className="h-4 w-4 dark:text-brand-gold" />
@@ -151,7 +166,7 @@ export default function DataTable<T extends { id: string | number }>({
                             variant="outline"
                             size="sm"
                             disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            onClick={() => setCurrentPage(currentPage + 1)}
                             className="h-8 w-8 p-0 rounded-lg border-brand-deep/5 dark:border-white/10"
                         >
                             <ChevronRight className="h-4 w-4 dark:text-brand-gold" />
