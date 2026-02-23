@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { useLoginFlow } from "@/app/domains/auth/hooks/useLoginFlow"
 import { IdentifierStep } from "@/app/domains/auth/components/IdentifierStep"
 import { VerifyStep } from "@/app/domains/auth/components/VerifyStep"
+import { VerifyOtpStep } from "@/app/domains/auth/components/VerifyOtpStep"
 import { SetupPasswordStep } from "@/app/domains/auth/components/SetupPasswordStep"
 import { SuccessStep } from "@/app/domains/auth/components/SuccessStep"
 import { Loader2 } from "lucide-react"
@@ -22,10 +23,11 @@ export function LoginFlowContainer() {
 
     return (
         <AnimatePresence mode="wait" initial={false}>
-            {state.step === 'identifier' && <IdentifierStep key="identifier" flow={flow} />}
-            {state.step === 'verify' && <VerifyStep key="verify" flow={flow} />}
-            {state.step === 'setup-password' && <SetupPasswordStep key="setup" flow={flow} />}
-            {state.step === 'success' && <SuccessStep key="success" />}
+            {state.step === 'identifier' ? <IdentifierStep key="identifier" flow={flow} /> : null}
+            {state.step === 'verify' ? <VerifyStep key="verify" flow={flow} /> : null}
+            {state.step === 'verify-otp' ? <VerifyOtpStep key="verify-otp" flow={flow} /> : null}
+            {state.step === 'setup-password' ? <SetupPasswordStep key="setup" flow={flow} /> : null}
+            {state.step === 'success' ? <SuccessStep key="success" /> : null}
         </AnimatePresence>
     )
 }

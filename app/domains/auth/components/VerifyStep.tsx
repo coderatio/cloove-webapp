@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
+import { LoginBackButton } from "./LoginBackButton"
 import type { useLoginFlow } from "../hooks/useLoginFlow"
 
 interface VerifyStepProps {
@@ -22,13 +23,8 @@ export function VerifyStep({ flow }: VerifyStepProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
         >
-            <GlassCard className="p-8 border-white/10 shadow-2xl relative overflow-hidden bg-white/5">
-                <button
-                    onClick={actions.backToIdentifier}
-                    className="absolute top-8 left-8 text-brand-gold/60 hover:text-brand-gold text-xs font-bold uppercase tracking-widest z-20"
-                >
-                    Back
-                </button>
+            <GlassCard className="p-8 border-white/10 shadow-2xl relative overflow-visible bg-white/5">
+                <LoginBackButton onClick={actions.backToIdentifier} />
 
                 <form onSubmit={actions.handleVerifySubmit} className="space-y-6 pt-8">
                     <div className="space-y-3">
@@ -36,11 +32,11 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">
                                 {state.isPinLogin ? "Transaction PIN" : "Password"}
                             </label>
-                            {state.isPinLogin && (
+                            {state.isPinLogin ? (
                                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-gold/10 text-brand-gold text-[9px] font-bold uppercase border border-brand-gold/20">
                                     <Shield className="w-3 h-3" /> WhatsApp PIN Login
                                 </span>
-                            )}
+                            ) : null}
                         </div>
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-cream/60 group-focus-within:text-brand-gold transition-colors">
@@ -50,10 +46,18 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                                 type={state.showPassword ? "text" : "password"}
                                 autoFocus
                                 required
+                                autoComplete="current-password"
+                                // PIN-specific: numeric keyboard on mobile, digit-only, 4-char max
+                                inputMode={state.isPinLogin ? "numeric" : "text"}
+                                pattern={state.isPinLogin ? "[0-9]*" : undefined}
                                 maxLength={state.isPinLogin ? 4 : undefined}
                                 placeholder={state.isPinLogin ? "• • • •" : "Enter password"}
                                 value={state.isPinLogin ? state.pin : state.password}
-                                onChange={(e) => state.isPinLogin ? actions.setPin(e.target.value.replace(/\D/g, "")) : actions.setPassword(e.target.value)}
+                                onChange={(e) =>
+                                    state.isPinLogin
+                                        ? actions.setPin(e.target.value.replace(/\D/g, ""))
+                                        : actions.setPassword(e.target.value)
+                                }
                                 className={cn(
                                     "w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-12 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all text-base tracking-widest",
                                     state.isPinLogin && "text-center tracking-[1em] pl-4 font-bold"
@@ -67,11 +71,11 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                                 {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                         </div>
-                        {state.isPinLogin && (
+                        {state.isPinLogin ? (
                             <p className="text-[10px] text-brand-cream/60 text-center px-4 leading-relaxed mt-2">
                                 First time login? Use the 4-digit PIN you use for WhatsApp transactions.
                             </p>
-                        )}
+                        ) : null}
                     </div>
 
                     <Button

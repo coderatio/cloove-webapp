@@ -8,6 +8,8 @@ export const STORAGE_KEYS = {
     LAST_ACTIVITY: 'last_activity',
     BULK_UPLOAD_SESSION: 'cloove_bulk_upload_session',
     BULK_UPLOAD_FILE_CACHE: 'cloove_bulk_upload_file_cache',
+    /** ID of the last country selected on the login screen */
+    LOGIN_COUNTRY_ID: 'cloove_login_country',
 } as const
 
 type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]
@@ -104,6 +106,20 @@ export const storage = {
      */
     removeActiveBusinessId(): void {
         this.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
+    },
+
+    /**
+     * Get the last login country ID
+     */
+    getLoginCountry(): string | null {
+        return this.get(STORAGE_KEYS.LOGIN_COUNTRY_ID)
+    },
+
+    /**
+     * Persist the selected login country ID
+     */
+    setLoginCountry(id: string): void {
+        this.set(STORAGE_KEYS.LOGIN_COUNTRY_ID, id)
     },
 
     /**

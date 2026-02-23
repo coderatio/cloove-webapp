@@ -23,6 +23,8 @@ import {
     DrawerDescription,
     DrawerClose,
 } from "@/app/components/ui/drawer"
+import { Switch } from "@/app/components/ui/switch"
+import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { initialCustomers } from '../data/customersMocks'
 
 export function CustomersView() {
@@ -33,6 +35,8 @@ export function CustomersView() {
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [isAddOpen, setIsAddOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<any>(null)
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
+    const [itemToDelete, setItemToDelete] = React.useState<any>(null)
 
     const filterGroups = [
         {
@@ -49,7 +53,13 @@ export function CustomersView() {
     ]
 
     // Form states
-    const [formData, setFormData] = React.useState({ name: "", owing: "—" })
+    const [formData, setFormData] = React.useState({
+        name: "",
+        owing: "—",
+        phoneNumber: "",
+        email: "",
+        isBlacklisted: false
+    })
 
     const owingCustomers = customers.filter(c => c.owing !== '—').length
     const totalDebt = customers.reduce((acc, curr) => {
@@ -73,13 +83,26 @@ export function CustomersView() {
             id: Math.random().toString(36).substr(2, 9),
             name: formData.name,
             owing: formData.owing || "—",
+            phoneNumber: formData.phoneNumber,
+            email: formData.email,
+            isBlacklisted: formData.isBlacklisted,
             orders: 0,
             totalSpent: "₦0",
             lastOrder: "Never"
         }
         setCustomers([newItem, ...customers])
         setIsAddOpen(false)
-        setFormData({ name: "", owing: "—" })
+        resetForm()
+    }
+
+    const resetForm = () => {
+        setFormData({
+            name: "",
+            owing: "—",
+            phoneNumber: "",
+            email: "",
+            isBlacklisted: false
+        })
     }
 
     const handleUpdate = (e: React.FormEvent) => {
@@ -88,11 +111,13 @@ export function CustomersView() {
             c.id === editingItem.id ? { ...c, ...formData } : c
         ))
         setEditingItem(null)
-        setFormData({ name: "", owing: "—" })
+        resetForm()
     }
 
     const handleDelete = (id: string) => {
         setCustomers(customers.filter(c => c.id !== id))
+        setConfirmDeleteOpen(false)
+        setItemToDelete(null)
         setEditingItem(null)
     }
 
@@ -100,7 +125,19 @@ export function CustomersView() {
         {
             key: 'name',
             header: 'Customer',
-            render: (value: string) => <span className="font-serif font-medium text-brand-deep dark:text-brand-cream text-base">{value}</span>
+            render: (value: string, item: any) => (
+                <div className="flex flex-col gap-0.5">
+                    <span className={cn(
+                        "font-serif font-medium text-base",
+                        item.isBlacklisted ? "text-brand-deep/30 dark:text-brand-cream/30 line-through" : "text-brand-deep dark:text-brand-cream"
+                    )}>
+                        {value}
+                    </span>
+                    {item.isBlacklisted && (
+                        <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tighter">Blacklisted</span>
+                    )}
+                </div>
+            )
         },
         { key: 'orders', header: 'Orders' },
         { key: 'totalSpent', header: 'Total Spent' },
@@ -132,7 +169,7 @@ export function CustomersView() {
                     description={`Manage customer relationships and track credit history for ${currentStore?.name || 'your business'}.`}
                     addButtonLabel="Add Customer"
                     onAddClick={() => {
-                        setFormData({ name: "", owing: "—" })
+                        resetForm()
                         setIsAddOpen(true)
                     }}
                 />
@@ -208,7 +245,13 @@ export function CustomersView() {
                                 valueLabel={customer.owing !== '—' ? 'Debt' : 'Total Spent'}
                                 delay={index * 0.05}
                                 onClick={() => {
-                                    setFormData({ name: customer.name, owing: customer.owing })
+                                    setFormData({
+                                        name: customer.name,
+                                        owing: customer.owing,
+                                        phoneNumber: (customer as any).phoneNumber || "",
+                                        email: (customer as any).email || "",
+                                        isBlacklisted: !!(customer as any).isBlacklisted
+                                    })
                                     setEditingItem(customer)
                                 }}
                             />
@@ -221,7 +264,13 @@ export function CustomersView() {
                             data={filteredCustomers}
                             emptyMessage="No customers found"
                             onRowClick={(item) => {
-                                setFormData({ name: item.name, owing: item.owing })
+                                setFormData({
+                                    name: item.name,
+                                    owing: item.owing,
+                                    phoneNumber: (item as any).phoneNumber || "",
+                                    email: (item as any).email || "",
+                                    isBlacklisted: !!(item as any).isBlacklisted
+                                })
                                 setEditingItem(item)
                             }}
                         />
@@ -260,6 +309,41 @@ export function CustomersView() {
                                 </div>
 
                                 <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        value={formData.phoneNumber}
+                                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                        placeholder="e.g. 08012345678"
+                                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Email Address</label>
+                                    <input
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        placeholder="e.g. adebayo@example.com"
+                                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
+                                    />
+                                </div>
+
+                                <div className="space-y-4 pt-2">
+                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-brand-deep/2 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
+                                        <div className="space-y-0.5">
+                                            <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">Blacklist Customer</p>
+                                            <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">Prevent this customer from making new orders.</p>
+                                        </div>
+                                        <Switch
+                                            checked={formData.isBlacklisted}
+                                            onCheckedChange={(checked) => setFormData({ ...formData, isBlacklisted: checked })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Current Debt (₦)</label>
                                     <input
                                         value={formData.owing}
@@ -282,7 +366,10 @@ export function CustomersView() {
                                     <div className="pt-6 border-t border-brand-deep/5 dark:border-white/5 mt-6">
                                         <button
                                             type="button"
-                                            onClick={() => handleDelete(editingItem.id)}
+                                            onClick={() => {
+                                                setItemToDelete(editingItem)
+                                                setConfirmDeleteOpen(true)
+                                            }}
                                             className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold text-rose-500/60 hover:text-rose-500 transition-all uppercase tracking-widest"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -294,6 +381,16 @@ export function CustomersView() {
                         </div>
                     </DrawerContent>
                 </Drawer>
+
+                <ConfirmDialog
+                    open={confirmDeleteOpen}
+                    onOpenChange={setConfirmDeleteOpen}
+                    onConfirm={() => itemToDelete && handleDelete(itemToDelete.id)}
+                    title="Delete Customer Profile"
+                    description={`Are you sure you want to remove ${itemToDelete?.name}? This action cannot be undone and will remove their contact records.`}
+                    confirmText="Delete Profile"
+                    variant="destructive"
+                />
             </div>
         </PageTransition >
     )

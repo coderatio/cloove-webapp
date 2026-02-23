@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { Mail, Phone, ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
@@ -13,6 +14,19 @@ interface IdentifierStepProps {
 
 export function IdentifierStep({ flow }: IdentifierStepProps) {
     const { state, actions } = flow
+    const inputRef = useRef<HTMLInputElement>(null)
+
+    // Load countries (uses module-level cache — no duplicate fetch on re-renders)
+    useEffect(() => {
+        actions.loadCountries()
+    }, [actions.loadCountries]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Focus the identifier input when a country is selected
+    const handleCountrySelect = (country: Parameters<typeof actions.setSelectedCountry>[0]) => {
+        actions.setSelectedCountry(country)
+        // Short timeout lets the dropdown close before focus shifts
+        setTimeout(() => inputRef.current?.focus(), 50)
+    }
 
     return (
         <motion.div
@@ -32,7 +46,7 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                             <CountrySelector
                                 countries={state.countries}
                                 selectedCountry={state.selectedCountry}
-                                onSelect={actions.setSelectedCountry}
+                                onSelect={handleCountrySelect}
                                 disabled={state.isLoading}
                             />
 
@@ -41,9 +55,11 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                                     {state.isEmail ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
                                 </div>
                                 <input
+                                    ref={inputRef}
                                     type="text"
                                     autoFocus
                                     required
+                                    autoComplete="username"
                                     placeholder={state.isPhone && state.selectedCountry ? `+${state.selectedCountry.phoneCode} ...` : (state.isEmail ? "email@example.com" : "Phone or Email")}
                                     value={state.identifier}
                                     onChange={(e) => actions.setIdentifier(e.target.value)}
