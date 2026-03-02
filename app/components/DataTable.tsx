@@ -7,6 +7,9 @@ export interface Column<T> {
     key: keyof T
     header: string
     render?: (value: T[keyof T], row: T) => React.ReactNode
+    width?: string
+    headerClassName?: string
+    cellClassName?: string
 }
 
 interface DataTableProps<T> {
@@ -71,7 +74,7 @@ export default function DataTable<T extends { id: string | number }>({
     return (
         <div className="w-full overflow-hidden flex flex-col">
             <div className="overflow-x-auto">
-                <table className="w-full border-separate border-spacing-0">
+                <table className="w-full border-separate border-spacing-0 table-fixed">
                     <thead>
                         <tr>
                             {columns.map((col) => (
@@ -83,7 +86,7 @@ export default function DataTable<T extends { id: string | number }>({
                                 </th>
                             ))}
                             {onRowClick && (
-                                <th className="border-b border-brand-deep/5 dark:border-white/5 w-10"></th>
+                                <th className="border-b border-brand-deep/5 dark:border-white/5 w-12"></th>
                             )}
                         </tr>
                     </thead>
@@ -96,7 +99,7 @@ export default function DataTable<T extends { id: string | number }>({
                                             <div className="h-4 bg-brand-deep/5 dark:bg-white/5 rounded animate-pulse w-full max-w-[150px]" />
                                         </td>
                                     ))}
-                                    {onRowClick && <td className="px-6 py-5" />}
+                                    {onRowClick && <td className="pl-4 pr-6 py-5" />}
                                 </tr>
                             ))
                         ) : (
@@ -112,7 +115,11 @@ export default function DataTable<T extends { id: string | number }>({
                                     {columns.map((col) => (
                                         <td
                                             key={String(col.key)}
-                                            className="px-6 py-5 text-sm text-brand-deep dark:text-brand-cream"
+                                            style={col.width ? { width: col.width } : undefined}
+                                            className={cn(
+                                                "px-6 py-5 text-sm text-brand-deep dark:text-brand-cream",
+                                                col.cellClassName
+                                            )}
                                         >
                                             {col.render
                                                 ? col.render(row[col.key], row)
@@ -121,8 +128,8 @@ export default function DataTable<T extends { id: string | number }>({
                                         </td>
                                     ))}
                                     {onRowClick && (
-                                        <td className="px-6 py-5 text-right">
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors inline-block" />
+                                        <td className="pl-4 pr-6 py-5 text-right">
+                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/40 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors inline-block" />
                                         </td>
                                     )}
                                 </tr>
