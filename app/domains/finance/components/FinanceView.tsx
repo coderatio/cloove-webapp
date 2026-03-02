@@ -36,6 +36,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FilterPopover } from '@/app/components/shared/FilterPopover'
 import { TableSearch } from '@/app/components/shared/TableSearch'
 import { initialTransactions } from '../data/financeMocks'
+import { AddMoneyModal } from '@/app/components/dashboard/AddMoneyModal'
 
 export function FinanceView() {
     const isMobile = useIsMobile()
@@ -45,6 +46,7 @@ export function FinanceView() {
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [viewingTx, setViewingTx] = React.useState<any>(null)
     const [isRequerying, setIsRequerying] = React.useState(false)
+    const [isAddMoneyOpen, setIsAddMoneyOpen] = React.useState(false)
 
     const filterGroups = [
         {
@@ -196,7 +198,7 @@ export function FinanceView() {
                                         <ArrowUpRight className="w-6 h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
                                         Withdraw
                                     </Button>
-                                    <Button variant="outline" className="flex-1 h-16 rounded-2xl border-brand-deep/10 bg-white/50 dark:bg-white/5 font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
+                                    <Button onClick={() => setIsAddMoneyOpen(true)} variant="outline" className="flex-1 h-16 rounded-2xl border-brand-deep/10 bg-white/50 dark:bg-white/5 font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
                                         <ArrowDownRight className="w-6 h-6 text-brand-green" />
                                         Add Funds
                                     </Button>
@@ -389,6 +391,12 @@ export function FinanceView() {
                         </div>
                     </DrawerContent>
                 </Drawer>
+
+                <AddMoneyModal
+                    isOpen={isAddMoneyOpen}
+                    onOpenChange={setIsAddMoneyOpen}
+                    walletData={{ balance: walletBalance }}
+                />
             </div>
         </PageTransition>
     )

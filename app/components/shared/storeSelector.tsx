@@ -43,7 +43,7 @@ export function StoreSelector({ value = [], onChange, disabled }: StoreSelectorP
                     variant="outline"
                     role="combobox"
                     disabled={disabled || isLoading}
-                    className="w-full justify-between h-12 rounded-xl border-brand-deep/10 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/2 text-left font-normal"
+                    className="w-full justify-between h-14 rounded-2xl border-brand-deep/10 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/2 text-left font-normal"
                 >
                     <div className="flex items-center gap-2 truncate">
                         <StoreIcon className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60 shrink-0" />

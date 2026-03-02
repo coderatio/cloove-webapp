@@ -22,12 +22,15 @@ import {
     DrawerTitle,
 } from "@/app/components/ui/drawer"
 import { GlassCard } from "../ui/glass-card"
+import { useBusiness } from "@/app/components/BusinessProvider"
 
 interface AddMoneyModalProps {
     isOpen: boolean
     onOpenChange: (open: boolean) => void
     walletData: {
-        balance: string
+        balance: string;
+        accountNumber?: string;
+        bankName?: string;
     }
 }
 
@@ -37,6 +40,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
     const [step, setStep] = useState<Step>('options')
     const [copied, setCopied] = useState(false)
     const isMobile = useIsMobile()
+    const { activeBusiness } = useBusiness()
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text)
@@ -124,14 +128,14 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
                             <GlassCard className="p-6 space-y-6 border-brand-green/10">
                                 <div className="space-y-1">
                                     <p className="text-[10px] uppercase tracking-widest text-brand-accent/40 font-bold">Bank Name</p>
-                                    <p className="text-lg font-serif text-brand-deep dark:text-brand-cream">Wema Bank</p>
+                                    <p className="text-lg font-serif text-brand-deep dark:text-brand-cream">{walletData.bankName || "Providus Bank"}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] uppercase tracking-widest text-brand-accent/40 font-bold">Account Number</p>
                                     <div className="flex items-center justify-between">
-                                        <p className="text-2xl font-mono font-bold text-brand-deep dark:text-brand-cream tracking-widest">0123456789</p>
+                                        <p className="text-2xl font-mono font-bold text-brand-deep dark:text-brand-cream tracking-widest">{walletData.accountNumber || "9988776655"}</p>
                                         <button
-                                            onClick={() => handleCopy("0123456789")}
+                                            onClick={() => handleCopy(walletData.accountNumber || "9988776655")}
                                             className="p-2 rounded-xl bg-brand-deep/5 dark:bg-white/10 hover:bg-brand-deep/10 text-brand-deep dark:text-brand-gold transition-all"
                                         >
                                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -140,7 +144,7 @@ export function AddMoneyModal({ isOpen, onOpenChange, walletData }: AddMoneyModa
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] uppercase tracking-widest text-brand-accent/40 font-bold">Account Name</p>
-                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">CLVE / ADEBAYO TEXTILES</p>
+                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">{activeBusiness?.name ? `CLVE / ${activeBusiness.name.toUpperCase()}` : "CLVE / WALLET"}</p>
                                 </div>
                             </GlassCard>
                             <div className="p-4 rounded-xl bg-brand-green/5 border border-brand-green/10">

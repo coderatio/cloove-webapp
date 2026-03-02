@@ -33,6 +33,7 @@ import { cn } from "@/app/lib/utils"
 import { motion } from "framer-motion"
 import { formatCurrency } from "@/app/lib/formatters"
 import { Badge } from "@/app/components/ui/badge"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import { InventoryItem, ProductImage, ProductVariant } from "../types"
 
 interface ProductViewDrawerProps {
@@ -45,6 +46,8 @@ interface ProductViewDrawerProps {
 
 export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete }: ProductViewDrawerProps) {
     const [activeImageIndex, setActiveImageIndex] = React.useState(0)
+    const { activeBusiness } = useBusiness()
+    const currencyCode = activeBusiness?.currency || 'NGN'
 
     if (!item) return null
 
@@ -207,7 +210,7 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                                             <div className="flex items-center gap-6">
                                                 <div className="text-right">
                                                     <p className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Price</p>
-                                                    <p className="text-sm font-bold text-brand-gold">{v.price ? formatCurrency(v.price) : item.price}</p>
+                                                    <p className="text-sm font-bold text-brand-gold">{v.price ? formatCurrency(v.price, { currency: currencyCode }) : item.price}</p>
                                                 </div>
                                                 <div className="h-8 w-px bg-brand-deep/5 dark:border-white/5" />
                                                 <div className="text-right">

@@ -50,13 +50,26 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
             onChange(numericValue)
         }
 
+        if (hideSymbol) {
+            return (
+                <Input
+                    {...props}
+                    ref={ref}
+                    type="text"
+                    value={displayValue}
+                    onChange={handleChange}
+                    className={cn("font-medium tabular-nums", className)}
+                />
+            )
+        }
+
         return (
-            <div className={cn("relative group", hideSymbol ? "w-full" : "")}>
-                {!hideSymbol && (
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 font-medium transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold">
+            <div className={cn("group flex items-stretch rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 focus-within:ring-2 focus-within:ring-brand-green/20 focus-within:border-brand-green/30 transition-all overflow-hidden", props.disabled && "opacity-50")}>
+                <div className="flex items-center shrink-0 min-w-14 pl-4 pr-2 py-4 border-r border-brand-deep/10 dark:border-white/10 bg-brand-deep/2 dark:bg-white/2">
+                    <span className="text-brand-accent/50 dark:text-brand-cream/50 font-semibold text-sm tracking-tight transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold" aria-hidden>
                         {currencySymbol}
                     </span>
-                )}
+                </div>
                 <Input
                     {...props}
                     ref={ref}
@@ -64,8 +77,7 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     value={displayValue}
                     onChange={handleChange}
                     className={cn(
-                        !hideSymbol && "pl-9",
-                        !hideSymbol && "pr-6 py-4 h-14 rounded-2xl",
+                        "flex-1 border-0 rounded-none bg-transparent focus-visible:ring-0 py-4 h-14 pl-3 pr-4 font-medium tabular-nums placeholder:text-brand-accent/40 dark:placeholder:text-white/30",
                         className
                     )}
                 />

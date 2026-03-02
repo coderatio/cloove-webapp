@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown, Store, LayoutGrid } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Check, ChevronsUpDown, LayoutGrid, Plus } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -9,18 +10,39 @@ import {
     DrawerContent,
     DrawerStickyHeader,
     DrawerTitle,
-    DrawerDescription,
     DrawerClose,
     DrawerTrigger,
 } from "../ui/drawer"
 
 import { useBusiness } from "../BusinessProvider"
+import { usePermission } from "@/app/hooks/usePermission"
 import { useMediaQuery } from "@/app/hooks/useMediaQuery"
+import { useCurrentSubscription, useUsageStats } from "@/app/domains/business/hooks/useBilling"
 
 export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }) {
     const { businesses, activeBusiness, setActiveBusiness } = useBusiness()
+    const { role } = usePermission()
+    const { data: subData } = useCurrentSubscription()
+    const { data: usage, isLoading: isLoadingUsage } = useUsageStats()
     const [open, setOpen] = React.useState(false)
     const isDesktop = useMediaQuery("(min-width: 768px)")
+    const router = useRouter()
+
+    const planBenefits = subData?.currentPlan?.benefits as Record<string, number | null> | undefined
+    const maxBusinesses = planBenefits?.maxBusinesses
+    const isUnlimited =
+        maxBusinesses === undefined ||
+        maxBusinesses === null ||
+        maxBusinesses === Infinity
+    const canAddBusiness =
+        role === "OWNER" &&
+        !isLoadingUsage &&
+        (isUnlimited || (usage != null && usage.businesses < Number(maxBusinesses)))
+
+    const handleAddBusiness = () => {
+        setOpen(false)
+        router.push("/onboarding?from=switcher")
+    }
 
     if (isDesktop) {
         return (
@@ -78,6 +100,18 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                         {activeBusiness?.id === business.id && <Check className="ml-auto h-4 w-4 text-brand-gold" />}
                                     </button>
                                 ))}
+                                {canAddBusiness && (
+                                    <button
+                                        type="button"
+                                        onClick={handleAddBusiness}
+                                        className="relative flex w-full cursor-pointer select-none items-center rounded-lg px-2 py-2.5 text-sm font-medium outline-none transition-all hover:bg-white/10 text-brand-gold/90 border border-dashed border-white/20 mt-1"
+                                    >
+                                        <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0 bg-brand-gold/20">
+                                            <Plus className="h-3.5 w-3.5" />
+                                        </div>
+                                        <span className="flex-1 text-left">Add business</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </>
@@ -89,7 +123,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
     return (
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-                <button className="flex items-center gap-2 rounded-full border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 px-3 py-1.5 text-sm font-medium backdrop-blur-sm text-brand-deep dark:text-brand-cream ring-1 ring-black/5 dark:ring-white/5 shadow-sm">
+                <button className="flex cursor-pointer items-center gap-2 rounded-full border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 px-3 py-1.5 text-sm font-medium backdrop-blur-sm text-brand-deep dark:text-brand-cream ring-1 ring-black/5 dark:ring-white/5 shadow-sm">
                     <LayoutGrid className="h-3.5 w-3.5 text-brand-deep/60 dark:text-brand-cream/60" />
                     <span className="max-w-[100px] truncate">{activeBusiness?.name || 'Select Business'}</span>
                     <ChevronsUpDown className="h-3 w-3 opacity-40 dark:opacity-50" />
@@ -109,7 +143,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                     setOpen(false)
                                 }}
                                 className={cn(
-                                    "flex w-full items-center gap-4 rounded-2xl p-4 transition-all hover:bg-black/5 dark:hover:bg-white/5",
+                                    "flex w-full cursor-pointer items-center gap-4 rounded-2xl p-4 transition-all hover:bg-black/5 dark:hover:bg-white/5",
                                     activeBusiness?.id === business.id && "bg-black/5 dark:bg-white/5 ring-1 ring-brand-gold/20"
                                 )}
                             >
@@ -127,6 +161,20 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                 )}
                             </button>
                         ))}
+                        {canAddBusiness && (
+                            <button
+                                type="button"
+                                onClick={handleAddBusiness}
+                                className="flex w-full cursor-pointer items-center gap-4 rounded-2xl p-4 transition-all hover:bg-black/5 dark:hover:bg-white/5 border border-dashed border-brand-deep/20 dark:border-white/20 mt-2"
+                            >
+                                <div className="h-12 w-12 rounded-xl bg-brand-gold/20 flex items-center justify-center text-brand-gold">
+                                    <Plus className="h-6 w-6" />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <h3 className="font-bold text-brand-deep dark:text-brand-cream">Add business</h3>
+                                </div>
+                            </button>
+                        )}
                     </div>
                 </div>
                 <div className="p-4 bg-brand-deep/5 dark:bg-white/5 border-t border-brand-deep/5 dark:border-white/5 mt-auto">

@@ -3,7 +3,7 @@ import { ChevronRight, ChevronLeft } from "lucide-react"
 import { cn } from "../lib/utils"
 import { Button } from "./ui/button"
 
-interface Column<T> {
+export interface Column<T> {
     key: keyof T
     header: string
     render?: (value: T[keyof T], row: T) => React.ReactNode

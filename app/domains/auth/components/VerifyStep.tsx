@@ -26,7 +26,7 @@ export function VerifyStep({ flow }: VerifyStepProps) {
             <GlassCard className="p-8 border-white/10 shadow-2xl relative overflow-visible bg-white/5">
                 <LoginBackButton onClick={actions.backToIdentifier} />
 
-                <form onSubmit={actions.handleVerifySubmit} className="space-y-6 pt-8">
+                <form onSubmit={actions.handleVerifySubmit} className="space-y-6 pt-10">
                     <div className="space-y-3">
                         <div className="flex items-center justify-between ml-1">
                             <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">

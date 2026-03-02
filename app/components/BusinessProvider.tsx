@@ -24,7 +24,7 @@ interface BusinessContextType {
     activeBusiness: Business | null
     setActiveBusiness: (business: Business | null, options?: { quiet?: boolean }) => void
     isLoading: boolean
-    refreshBusinesses: () => Promise<void>
+    refreshBusinesses: () => Promise<Business[] | undefined>
 
     businessName: string
     ownerName: string
@@ -63,22 +63,19 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         }
     }, [queryClient])
 
-    const refreshBusinesses = useCallback(async () => {
-        // Only fetch if authenticated
+    const refreshBusinesses = useCallback(async (): Promise<Business[] | undefined> => {
         if (!apiClient.getToken()) {
             setIsLoading(false)
             setBusinesses([])
             setActiveBusinessState(null)
-            return
+            return undefined
         }
 
         try {
             const data = await apiClient.get<Business[]>('/businesses')
             setBusinesses(data)
 
-            // Auto-selection or restoration
             const savedId = storage.getActiveBusinessId()
-
             if (data.length === 1) {
                 setActiveBusiness(data[0], { quiet: true })
             } else if (savedId) {
@@ -87,9 +84,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
                     setActiveBusiness(found, { quiet: true })
                 }
             }
+            return data
         } catch (error) {
-            //console.error('Failed to fetch businesses:', error)
             toast.error('Failed to load businesses. Please try again.')
+            return undefined
         } finally {
             setIsLoading(false)
         }

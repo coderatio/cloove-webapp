@@ -5,6 +5,14 @@ import { apiClient } from "@/app/lib/api-client"
 import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { SessionManager } from "../auth/SessionManager"
 
+export interface UserCountryDetail {
+    id: string
+    name: string
+    code: string
+    phoneCode: string
+    currency: { code: string; symbol: string }
+}
+
 interface User {
     id: string
     fullName: string
@@ -12,6 +20,8 @@ interface User {
     lastName: string
     email: string
     phoneNumber: string
+    country?: string | null
+    countryDetail?: UserCountryDetail | null
     setupRequired: boolean
     session?: {
         expiresAt?: string

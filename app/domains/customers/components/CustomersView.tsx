@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from 'react'
-import DataTable from '@/app/components/DataTable'
+import DataTable, { type Column } from '@/app/components/DataTable'
 import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
@@ -25,7 +25,7 @@ import {
 } from "@/app/components/ui/drawer"
 import { Switch } from "@/app/components/ui/switch"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
-import { initialCustomers } from '../data/customersMocks'
+import { initialCustomers, type Customer } from '../data/customersMocks'
 
 export function CustomersView() {
     const isMobile = useIsMobile()
@@ -34,9 +34,9 @@ export function CustomersView() {
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [isAddOpen, setIsAddOpen] = React.useState(false)
-    const [editingItem, setEditingItem] = React.useState<any>(null)
+    const [editingItem, setEditingItem] = React.useState<Customer | null>(null)
     const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
-    const [itemToDelete, setItemToDelete] = React.useState<any>(null)
+    const [itemToDelete, setItemToDelete] = React.useState<Customer | null>(null)
 
     const filterGroups = [
         {
@@ -107,6 +107,7 @@ export function CustomersView() {
 
     const handleUpdate = (e: React.FormEvent) => {
         e.preventDefault()
+        if (!editingItem) return
         setCustomers(customers.map(c =>
             c.id === editingItem.id ? { ...c, ...formData } : c
         ))
@@ -121,17 +122,17 @@ export function CustomersView() {
         setEditingItem(null)
     }
 
-    const columns: any[] = [
+    const columns: Column<Customer>[] = [
         {
             key: 'name',
             header: 'Customer',
-            render: (value: string, item: any) => (
+            render: (_value: Customer[keyof Customer], item: Customer) => (
                 <div className="flex flex-col gap-0.5">
                     <span className={cn(
                         "font-serif font-medium text-base",
                         item.isBlacklisted ? "text-brand-deep/30 dark:text-brand-cream/30 line-through" : "text-brand-deep dark:text-brand-cream"
                     )}>
-                        {value}
+                        {item.name}
                     </span>
                     {item.isBlacklisted && (
                         <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tighter">Blacklisted</span>
@@ -145,15 +146,18 @@ export function CustomersView() {
         {
             key: 'owing',
             header: 'Owing',
-            render: (value: string) => (
-                <span className={cn(
-                    "font-medium px-2 py-0.5 rounded-full text-xs inline-flex items-center gap-1.5",
-                    value !== '—' ? "bg-brand-gold/10 text-brand-deep dark:text-brand-gold border border-brand-gold/20" : "text-brand-accent/30"
-                )}>
-                    {value !== '—' && <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />}
-                    {value}
-                </span>
-            )
+            render: (value: Customer[keyof Customer]) => {
+                const owing = String(value)
+                return (
+                    <span className={cn(
+                        "font-medium px-2 py-0.5 rounded-full text-xs inline-flex items-center gap-1.5",
+                        owing !== '—' ? "bg-brand-gold/10 text-brand-deep dark:text-brand-gold border border-brand-gold/20" : "text-brand-accent/30"
+                    )}>
+                        {owing !== '—' && <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />}
+                        {owing}
+                    </span>
+                )
+            }
         },
     ]
 
@@ -248,9 +252,9 @@ export function CustomersView() {
                                     setFormData({
                                         name: customer.name,
                                         owing: customer.owing,
-                                        phoneNumber: (customer as any).phoneNumber || "",
-                                        email: (customer as any).email || "",
-                                        isBlacklisted: !!(customer as any).isBlacklisted
+                                        phoneNumber: customer.phoneNumber,
+                                        email: customer.email,
+                                        isBlacklisted: customer.isBlacklisted
                                     })
                                     setEditingItem(customer)
                                 }}
@@ -263,13 +267,13 @@ export function CustomersView() {
                             columns={columns}
                             data={filteredCustomers}
                             emptyMessage="No customers found"
-                            onRowClick={(item) => {
+                            onRowClick={(item: Customer) => {
                                 setFormData({
                                     name: item.name,
                                     owing: item.owing,
-                                    phoneNumber: (item as any).phoneNumber || "",
-                                    email: (item as any).email || "",
-                                    isBlacklisted: !!(item as any).isBlacklisted
+                                    phoneNumber: item.phoneNumber,
+                                    email: item.email,
+                                    isBlacklisted: item.isBlacklisted
                                 })
                                 setEditingItem(item)
                             }}
@@ -385,7 +389,9 @@ export function CustomersView() {
                 <ConfirmDialog
                     open={confirmDeleteOpen}
                     onOpenChange={setConfirmDeleteOpen}
-                    onConfirm={() => itemToDelete && handleDelete(itemToDelete.id)}
+                    onConfirm={() => {
+                        if (itemToDelete) handleDelete(itemToDelete.id)
+                    }}
                     title="Delete Customer Profile"
                     description={`Are you sure you want to remove ${itemToDelete?.name}? This action cannot be undone and will remove their contact records.`}
                     confirmText="Delete Profile"

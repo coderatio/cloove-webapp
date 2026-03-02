@@ -27,7 +27,7 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                 <LoginBackButton onClick={actions.backToIdentifier} />
 
                 {/* Header */}
-                <div className="text-center mb-8 pt-6">
+                <div className="text-center mb-8 pt-10">
                     <div className="h-12 w-12 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold mx-auto mb-4 border border-brand-gold/20">
                         <Shield className="w-6 h-6" />
                     </div>
@@ -67,8 +67,9 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                             Didn&apos;t receive a code?{" "}
                             <button
                                 type="button"
-                                onClick={() => actions.handleIdentifierSubmit({ preventDefault: () => { } } as any)}
-                                className="text-brand-gold/70 hover:text-brand-gold underline underline-offset-2 transition-colors"
+                                disabled={state.isLoading}
+                                onClick={() => actions.resendOtp()}
+                                className="text-brand-gold/70 hover:text-brand-gold underline underline-offset-2 transition-colors disabled:opacity-40"
                             >
                                 Resend
                             </button>

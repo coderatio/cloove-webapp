@@ -1,41 +1,10 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime"
 import { apiClient } from "@/app/lib/api-client"
 import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { toast } from "sonner"
 import type { LoginStep, CountryDetail, IdentifyResponse, OtpVerifyResponse, LoginResponse } from "../types"
-
-// ─── Module-level countries cache (fetched once, reused across remounts) ──────
-// This avoids re-fetching on every mount/remount of the login form.
-// Synchronous cache: populated once the fetch resolves so we can read it
-// in useState() initializers without async gymnastics.
-let countriesPromise: Promise<CountryDetail[]> | null = null
-let countriesCache: CountryDetail[] = []
-
-function getCountries(): Promise<CountryDetail[]> {
-    if (!countriesPromise) {
-        countriesPromise = apiClient
-            .get<CountryDetail[]>('/security/countries')
-            .then((data) => {
-                countriesCache = data   // populate sync cache
-                return data
-            })
-            .catch((err) => {
-                // Reset both caches on error so next mount retries
-                countriesPromise = null
-                countriesCache = []
-                throw err
-            })
-    }
-    return countriesPromise
-}
-
-/**
- * Synchronously pick the best default country from the already-resolved cache.
- * Called as a useState lazy initializer so the VERY FIRST render has the right value.
- * Returns null if the cache isn't resolved yet (async load will set it instead).
- */
-
+import { useCountries } from "@/app/hooks/useCountries"
 
 // ─── Hook interface ───────────────────────────────────────────────────────────
 
@@ -60,65 +29,40 @@ function resolveRedirectUrl(
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginFlowProps = {}) {
+    const { data: countriesData, isLoading: isLoadingCountries } = useCountries()
+    const countries = countriesData ?? []
+
     const [isLoading, setIsLoading] = useState(false)
     const [step, setStep] = useState<LoginStep>('identifier')
     const [identifier, setIdentifier] = useState("")
     const [password, setPassword] = useState("")
     const [pin, setPin] = useState("")
-    const [otp, setOtp] = useState("")                   // OTP for the verify-otp step
-    const [setupToken, setSetupToken] = useState("")     // Short-lived token returned after OTP verify
+    const [otp, setOtp] = useState("")
+    const [setupToken, setSetupToken] = useState("")
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [isPinLogin, setIsPinLogin] = useState(false)
-    const [countries, setCountries] = useState<CountryDetail[]>([])
     const [selectedCountry, setSelectedCountry] = useState<CountryDetail | null>(null)
 
-    // Fetch countries using module-level cache — called lazily on mount
-    const loadCountries = useCallback(async () => {
-        // Redirect already-authenticated users immediately
+    useEffect(() => {
         const token = apiClient.getToken()
         if (token && router) {
             router.replace(callbackUrl)
             return
         }
-        try {
-            const data = await getCountries()
-            setCountries(data)
-            if (data.length > 0) {
-                // 1. Try to restore the last-used login country (exact ID match)
-                const savedId = storage.getLoginCountry()
-                const saved = savedId ? data.find(c => c.id === savedId) : null
-
-                // 2. Fall back to Nigeria — match by name OR by phone code (+234)
-                const nigeria = data.find(c =>
-                    c?.name?.toLowerCase()?.includes('nigeria') || c?.phoneCode === '234'
-                )
-
-                const defaultCountry = saved ?? nigeria ?? data[0]
-
-                console.log('[useLoginFlow] loadCountries default selection:', {
-                    savedId,
-                    hasSaved: !!saved,
-                    hasNigeria: !!nigeria,
-                    finalSelection: defaultCountry?.name
-                })
-
-                // Delay the selection state update slightly to ensure React has fully committed
-                // the `countries` array to the DOM. If the module cache is instant, 
-                // synchronous batching here can cause the selection to be dropped.
-                setTimeout(() => {
-                    setSelectedCountry(defaultCountry)
-                    // 3. Persist immediately so future visits restore via exact ID match
-                    if (!savedId && defaultCountry) {
-                        storage.setLoginCountry(defaultCountry.id)
-                    }
-                }, 50)
-            }
-        } catch {
-            toast.error("Failed to load supported countries")
+        if (countries.length === 0) return
+        const savedId = storage.getLoginCountry()
+        const saved = savedId ? countries.find((c) => c.id === savedId) : null
+        const nigeria = countries.find(
+            (c) => c?.name?.toLowerCase()?.includes("nigeria") || c?.phoneCode === "234"
+        )
+        const defaultCountry = saved ?? nigeria ?? countries[0]
+        setSelectedCountry(defaultCountry)
+        if (!savedId && defaultCountry) {
+            storage.setLoginCountry(defaultCountry.id)
         }
-    }, [callbackUrl, router]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [countries, callbackUrl, router])
 
     // ── Shared post-login handler ─────────────────────────────────────────────
     const handleAuthSuccess = useCallback((response: LoginResponse) => {
@@ -253,6 +197,23 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
     const backToIdentifier = useCallback(() => setStep('identifier'), [])
     const backToOtp = useCallback(() => setStep('verify-otp'), [])
 
+    /** Re-trigger OTP dispatch without a form submit event */
+    const resendOtp = useCallback(async () => {
+        if (!identifier) return
+        setIsLoading(true)
+        try {
+            await apiClient.post<IdentifyResponse>('/security/identifier', {
+                identifier,
+                country: selectedCountry?.id
+            })
+            toast.success('A new code has been sent.')
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Failed to resend code')
+        } finally {
+            setIsLoading(false)
+        }
+    }, [identifier, selectedCountry])
+
     // Persist country selection so it survives page refreshes
     const selectCountry = useCallback((country: CountryDetail | null) => {
         setSelectedCountry(country)
@@ -272,12 +233,12 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
             showPassword,
             isPinLogin,
             countries,
+            isLoadingCountries,
             selectedCountry,
             isEmail: identifier.includes("@"),
             isPhone: /^\d+$/.test(identifier.replace(/\+/g, "")) && identifier.length >= 7,
         },
         actions: {
-            loadCountries,
             setIdentifier,
             setPassword,
             setPin,
@@ -290,6 +251,7 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
             handleVerifySubmit,
             handleOtpSubmit,
             handleSetupSubmit,
+            resendOtp,
             backToIdentifier,
             backToOtp,
         }

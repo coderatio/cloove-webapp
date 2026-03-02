@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 import { Mail, Phone, ArrowRight } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
@@ -15,11 +15,6 @@ interface IdentifierStepProps {
 export function IdentifierStep({ flow }: IdentifierStepProps) {
     const { state, actions } = flow
     const inputRef = useRef<HTMLInputElement>(null)
-
-    // Load countries (uses module-level cache — no duplicate fetch on re-renders)
-    useEffect(() => {
-        actions.loadCountries()
-    }, [actions.loadCountries]) // eslint-disable-line react-hooks/exhaustive-deps
 
     // Focus the identifier input when a country is selected
     const handleCountrySelect = (country: Parameters<typeof actions.setSelectedCountry>[0]) => {
@@ -47,7 +42,7 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                                 countries={state.countries}
                                 selectedCountry={state.selectedCountry}
                                 onSelect={handleCountrySelect}
-                                disabled={state.isLoading}
+                                disabled={state.isLoading || state.isLoadingCountries}
                             />
 
                             <div className="relative group flex-1">

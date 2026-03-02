@@ -81,7 +81,7 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                 {/* Back button */}
                 <LoginBackButton onClick={actions.backToOtp} />
 
-                <div className="text-center mb-8">
+                <div className="text-center mb-8 pt-10">
                     <div className="h-12 w-12 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold mx-auto mb-4 border border-brand-gold/20">
                         <Shield className="w-6 h-6" />
                     </div>

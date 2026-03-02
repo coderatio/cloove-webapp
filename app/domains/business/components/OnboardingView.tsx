@@ -1,25 +1,27 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-    LayoutGrid,
     ArrowRight,
     CheckCircle2,
     ChevronLeft,
     Building2,
     MapPin,
-    Globe,
-    Briefcase
+    Briefcase,
+    X
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
+import { CountrySelector, type CountryDetail } from "@/app/components/ui/country-selector"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
-import { useBusiness } from "@/app/components/BusinessProvider"
+import { useBusiness, type Business } from "@/app/components/BusinessProvider"
+import { useAuth } from "@/app/components/providers/auth-provider"
+import { useCountries } from "@/app/hooks/useCountries"
 import Image from "next/image"
 
 interface Category {
@@ -27,19 +29,50 @@ interface Category {
     name: string
 }
 
+function OnboardingCancelButton({ className }: { className?: string }) {
+    const router = useRouter()
+    return (
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+            <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/")}
+                className={cn(
+                    "flex cursor-pointer items-center gap-2 rounded-xl border border-brand-deep/15 dark:border-brand-cream/25 bg-transparent text-sm font-semibold text-brand-deep dark:text-brand-cream hover:bg-white/10 transition-colors duration-200",
+                    className
+                )}
+                aria-label="Cancel and return to dashboard"
+            >
+                <X className="h-4 w-4 shrink-0" aria-hidden />
+                <span>Cancel</span>
+            </Button>
+        </motion.div>
+    )
+}
+
 export function OnboardingView() {
     const router = useRouter()
-    const { refreshBusinesses } = useBusiness()
+    const searchParams = useSearchParams()
+    const fromSwitcher = searchParams.get("from") === "switcher"
+    const { user } = useAuth()
+    const { businesses, refreshBusinesses, setActiveBusiness } = useBusiness()
+    const isAddBusinessFlow = fromSwitcher || (businesses?.length ?? 0) > 0
+    const { data: countriesData, isError: isCountriesError, error: countriesError, refetch: refetchCountries } = useCountries()
+    const countries = countriesData ?? []
+
     const [step, setStep] = useState(1)
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoadingCategories, setIsLoadingCategories] = useState(true)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    // Form State
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
     const [businessName, setBusinessName] = useState("")
-    const [country, setCountry] = useState("NG") // Default to Nigeria
+    const [selectedCountry, setSelectedCountry] = useState<CountryDetail | null>(null)
     const [fullName, setFullName] = useState("")
+
+    const businessNameRef = useRef<HTMLInputElement>(null)
+    const countryTriggerRef = useRef<HTMLButtonElement>(null)
+    const fullNameRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -55,6 +88,20 @@ export function OnboardingView() {
         fetchCategories()
     }, [])
 
+    useEffect(() => {
+        if (user?.fullName) {
+            setFullName((prev) => (prev === "" ? user.fullName ?? "" : prev))
+        }
+    }, [user?.fullName])
+
+    useEffect(() => {
+        if (countries.length === 0) return
+        const defaultCountry =
+            ((user?.countryDetail && countries.find((c) => c.id === user.countryDetail!.id || c.code === user.countryDetail!.code)) ||
+                countries[0]) ?? null
+        setSelectedCountry((prev) => prev ?? defaultCountry)
+    }, [countries, user?.countryDetail])
+
     const handleNext = () => {
         if (step === 1 && !selectedCategory) {
             toast.error("Please select a business category")
@@ -66,20 +113,42 @@ export function OnboardingView() {
     const handleSubmit = async () => {
         if (!businessName.trim()) {
             toast.error("Please enter your business name")
+            businessNameRef.current?.focus()
+            return
+        }
+        if (!selectedCountry) {
+            toast.error("Please select a country")
+            countryTriggerRef.current?.focus()
+            return
+        }
+        if (!fullName.trim()) {
+            toast.error("Please enter your name")
+            fullNameRef.current?.focus()
             return
         }
 
         setIsSubmitting(true)
         try {
-            await apiClient.post("/onboarding/setup", {
+            const countryCode = selectedCountry.code
+            const response = await apiClient.post<{ business: { id: string } }>("/onboarding/setup", {
                 businessName,
                 categoryId: selectedCategory,
-                country,
+                country: countryCode,
                 fullName
             })
 
-            toast.success("Business set up successfully!")
-            await refreshBusinesses()
+            const list = (await refreshBusinesses()) as Business[] | undefined
+            if (response?.business?.id && list) {
+                const newBusiness = list.find((b: Business) => b.id === response.business.id)
+                if (newBusiness) {
+                    setActiveBusiness(newBusiness, { quiet: true })
+                }
+            }
+            toast.success(
+                fromSwitcher
+                    ? "Business created. You can switch to it from the business switcher."
+                    : "Business set up successfully!"
+            )
             router.push("/")
         } catch (error: any) {
             toast.error(error.message || "Failed to set up business")
@@ -148,8 +217,9 @@ export function OnboardingView() {
                                 categories.map((category) => (
                                     <button
                                         key={category.id}
+                                        type="button"
                                         onClick={() => setSelectedCategory(category.id)}
-                                        className="group text-left focus:outline-none"
+                                        className="group cursor-pointer text-left focus:outline-none"
                                     >
                                         <GlassCard className={cn(
                                             "h-40 p-6 flex flex-col justify-between transition-all duration-300 group-hover:bg-white/10 group-hover:scale-[1.02] border-white/5",
@@ -188,7 +258,7 @@ export function OnboardingView() {
                             exit="exit"
                             className="max-w-md mx-auto w-full"
                         >
-                            <GlassCard className="p-8 space-y-6 border-white/5 shadow-2xl">
+                            <GlassCard allowOverflow className="p-8 space-y-6 border-white/5 shadow-2xl">
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -196,6 +266,7 @@ export function OnboardingView() {
                                             Business Name
                                         </label>
                                         <Input
+                                            ref={businessNameRef}
                                             value={businessName}
                                             onChange={(e) => setBusinessName(e.target.value)}
                                             placeholder="e.g. Martha's Kitchen"
@@ -209,21 +280,46 @@ export function OnboardingView() {
                                             <MapPin className="h-3 w-3" />
                                             Country
                                         </label>
-                                        <div className="h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center px-4 gap-3 text-brand-deep/60 dark:text-brand-cream/60 cursor-not-allowed">
-                                            <Globe className="h-5 w-5 text-brand-gold/40" />
-                                            <span className="font-medium">Nigeria (Default)</span>
-                                            <span className="ml-auto text-[10px] bg-brand-gold/10 text-brand-gold px-2 py-1 rounded-md">NG</span>
-                                        </div>
+                                        {isCountriesError ? (
+                                            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 space-y-2">
+                                                <p className="text-sm text-red-600 dark:text-red-400">
+                                                    {countriesError?.message ?? "Failed to load supported countries"}
+                                                </p>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => refetchCountries()}
+                                                    className="border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                                                >
+                                                    Retry
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <CountrySelector
+                                                countries={countries}
+                                                selectedCountry={selectedCountry}
+                                                onSelect={setSelectedCountry}
+                                                disabled={isSubmitting}
+                                                className="w-full"
+                                                dropdownClassName="bg-brand-cream/95 dark:bg-brand-deep/95 border-brand-green/10 dark:border-white/10"
+                                                triggerRef={countryTriggerRef}
+                                            />
+                                        )}
+                                        {user?.countryDetail && selectedCountry && user.countryDetail.code === selectedCountry.code && (
+                                            <p className="text-[10px] text-brand-cream/50">Default: your account country</p>
+                                        )}
                                     </div>
 
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] flex items-center gap-2">
-                                            Account Holder Name
+                                            Your name
                                         </label>
                                         <Input
+                                            ref={fullNameRef}
                                             value={fullName}
                                             onChange={(e) => setFullName(e.target.value)}
-                                            placeholder="Your full name"
+                                            placeholder="Full name of the business owner"
                                             className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-brand-gold/20 focus:border-brand-gold/30 transition-all"
                                         />
                                     </div>
@@ -232,7 +328,7 @@ export function OnboardingView() {
                                 <div className="pt-4">
                                     <Button
                                         onClick={handleSubmit}
-                                        disabled={isSubmitting}
+                                        disabled={isSubmitting || !selectedCountry || isCountriesError}
                                         className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 transition-all text-lg shadow-xl shadow-brand-gold/10"
                                     >
                                         {isSubmitting ? (
@@ -250,32 +346,50 @@ export function OnboardingView() {
                     )}
                 </AnimatePresence>
 
-                {/* Footer Controls */}
-                <div className="flex items-center justify-between pt-12">
-                    {step === 2 && (
-                        <button
-                            onClick={() => setStep(1)}
-                            className="flex items-center gap-2 text-sm font-bold text-brand-accent/40 hover:text-brand-deep dark:hover:text-brand-cream transition-colors uppercase tracking-widest"
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Back
-                        </button>
-                    )}
-                    <div className="flex gap-2 mx-auto">
+                {/* Footer: one place for all step navigation (Back, Cancel, dots, Next) */}
+                <nav
+                    className="flex items-center justify-between gap-4 pt-8 sm:pt-12"
+                    aria-label="Onboarding steps"
+                >
+                    <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
+                        {step === 2 ? (
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setStep(1)}
+                                    className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-deep dark:text-brand-cream hover:bg-white/10 transition-colors duration-200 uppercase tracking-wider"
+                                >
+                                    <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
+                                    <span>Back</span>
+                                </Button>
+                            </motion.div>
+                        ) : isAddBusinessFlow ? (
+                            <OnboardingCancelButton className="px-3 py-2" />
+                        ) : null}
+                    </div>
+                    <div className="flex shrink-0 gap-2" aria-hidden>
                         <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 1 ? "bg-brand-gold" : "bg-white/10")} />
                         <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 2 ? "bg-brand-gold" : "bg-white/10")} />
                     </div>
-                    {step === 1 && (
-                        <Button
-                            onClick={handleNext}
-                            className="bg-transparent hover:bg-white/5 text-brand-deep dark:text-brand-cream font-bold group px-6 h-12 uppercase tracking-widest text-xs"
-                        >
-                            Next
-                            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                    )}
-                    {step === 2 && <div className="w-24" />}
-                </div>
+                    <div className="flex min-w-0 shrink-0 justify-end w-24 sm:w-28">
+                        {step === 1 ? (
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+                                <Button
+                                    onClick={handleNext}
+                                    className="bg-transparent hover:bg-white/5 text-brand-deep dark:text-brand-cream font-bold group px-4 sm:px-6 h-11 sm:h-12 uppercase tracking-widest text-xs transition-colors duration-200"
+                                >
+                                    Next
+                                    <ArrowRight className="ml-2 h-4 w-4 shrink-0 group-hover:translate-x-0.5 transition-transform duration-200" aria-hidden />
+                                </Button>
+                            </motion.div>
+                        ) : isAddBusinessFlow ? (
+                            <OnboardingCancelButton className="px-4 sm:px-6 h-11 sm:h-12" />
+                        ) : (
+                            <span className="block w-full" aria-hidden />
+                        )}
+                    </div>
+                </nav>
             </div>
         </div>
     )

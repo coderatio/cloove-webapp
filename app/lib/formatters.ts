@@ -18,14 +18,16 @@ export function formatCurrency(
 
     const numericValue = typeof value === 'string' ? parseFloat(value) : value;
 
-    if (isNaN(numericValue)) return '₦0';
-
-    return new Intl.NumberFormat(locale, {
-        style: 'currency',
+    const formatOpts = {
+        style: 'currency' as const,
         currency,
+        currencyDisplay: 'narrowSymbol' as const,
         minimumFractionDigits,
         maximumFractionDigits: 2,
-    }).format(numericValue);
+    };
+    if (isNaN(numericValue)) return new Intl.NumberFormat(locale, formatOpts).format(0);
+
+    return new Intl.NumberFormat(locale, formatOpts).format(numericValue);
 }
 
 /**

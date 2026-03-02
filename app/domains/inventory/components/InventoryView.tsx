@@ -109,7 +109,8 @@ function StoreStockInputs({
 
 export function InventoryView() {
     const isMobile = useIsMobile()
-    const { currency } = useBusiness()
+    const { currency, activeBusiness } = useBusiness()
+    const currencyCode = activeBusiness?.currency || 'NGN'
     const { stores, currentStore } = useStores()
     const [selectedStoreId, setSelectedStoreId] = React.useState<string>(currentStore?.id || 'all-stores')
     const [currentPage, setCurrentPage] = React.useState(1)
@@ -125,6 +126,8 @@ export function InventoryView() {
         if (selectedStoreId === 'all-stores') return 'All Stores'
         return stores.find(s => s.id === selectedStoreId)?.name || 'Store'
     }, [selectedStoreId, stores])
+
+    const defaultStore = React.useMemo(() => stores.find(s => s.isDefault) || stores[0], [stores])
 
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
@@ -182,7 +185,7 @@ export function InventoryView() {
                 stock: globalStock,
                 localStock: localStock,
                 storeBreakdown,
-                price: formatCurrency(p.basePrice || 0),
+                price: formatCurrency(p.basePrice || 0, { currency: currencyCode }),
                 numericPrice: p.basePrice || 0,
                 variantsCount: variants.length,
                 availableIn: (p as any).stores?.map((s: any) => s.name) || [],
@@ -192,7 +195,7 @@ export function InventoryView() {
                 raw: p
             }
         })
-    }, [products, currentStore])
+    }, [products, currentStore, currencyCode])
 
     const filterGroups = [
         {
@@ -526,7 +529,7 @@ export function InventoryView() {
                             description: "",
                             price: "",
                             imageUrls: [],
-                            storeIds: [],
+                            storeIds: defaultStore ? [defaultStore.id] : [],
                             variants: [{ name: 'Standard', sku: '', price: '', stockQuantity: 0, storeInventory: [] }]
                         })
                         setIsAddDrawerOpen(true)
@@ -578,7 +581,7 @@ export function InventoryView() {
                         <div>
                             <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">Inventory Value</p>
                             {isFetching ? <Skeleton className="h-8 w-32 mt-1" /> : <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                {formatCurrency(totalInventoryValue)}
+                                {formatCurrency(totalInventoryValue, { currency: currencyCode })}
                             </p>}
                         </div>
                     </GlassCard>
@@ -897,7 +900,7 @@ export function InventoryView() {
                                                                         v[index].name = e.target.value
                                                                         setFormData({ ...formData, variants: v })
                                                                     }}
-                                                                    className="text-xs w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+                                                                    className="text-sm w-full h-14 px-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20"
                                                                 />
                                                             </div>
                                                             <div className="space-y-2">
@@ -909,7 +912,7 @@ export function InventoryView() {
                                                                         v[index].sku = e.target.value
                                                                         setFormData({ ...formData, variants: v })
                                                                     }}
-                                                                    className="text-xs w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+                                                                    className="text-sm w-full h-14 px-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20"
                                                                 />
                                                             </div>
                                                         </div>
@@ -928,7 +931,7 @@ export function InventoryView() {
                                                                                 .filter((s: any) => formData.storeIds.includes(s.storeId))
                                                                                 .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
                                                                         }
-                                                                        return variant.stockQuantity || 0
+                                                                        return variant.stockQuantity || 1
                                                                     })()}
                                                                     onChange={(e) => {
                                                                         const rawValue = e.target.value.replace(/[^0-9]/g, '')
@@ -957,7 +960,7 @@ export function InventoryView() {
                                                                         })
                                                                     }}
                                                                     className={cn(
-                                                                        "text-xs w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20",
+                                                                        "text-sm w-full h-14 px-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20",
                                                                         formData.storeIds.length > 1 && "opacity-60 cursor-not-allowed bg-brand-deep/5 font-bold"
                                                                     )}
                                                                 />
@@ -965,14 +968,14 @@ export function InventoryView() {
                                                             <div className="space-y-2">
                                                                 <MoneyInput
                                                                     currencySymbol={currency}
-                                                                    className="h-11 text-xs pl-10 pr-4 rounded-xl"
+                                                                    className="rounded-2xl"
                                                                     value={variant.price}
                                                                     onChange={(val) => {
                                                                         const v = [...formData.variants]
                                                                         v[index].price = val.toString()
                                                                         setFormData({ ...formData, variants: v })
                                                                     }}
-                                                                    placeholder="Price"
+                                                                    placeholder="0"
                                                                 />
                                                             </div>
                                                         </div>

@@ -209,6 +209,19 @@
   --color-muted-foreground: var(--color-text-muted);
 }
 
+/* Next.js dev overlay portal: give it proper dimensions so it doesn't report 0×0 */
+nextjs-portal {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+nextjs-portal > * {
+  pointer-events: auto;
+}
+
 * {
   box-sizing: border-box;
 }

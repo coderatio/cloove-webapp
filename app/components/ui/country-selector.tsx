@@ -22,6 +22,9 @@ interface CountrySelectorProps {
     onSelect: (country: CountryDetail) => void
     disabled?: boolean
     className?: string
+    triggerClassName?: string
+    dropdownClassName?: string
+    triggerRef?: React.RefObject<HTMLButtonElement | null>
 }
 
 export function CountrySelector({
@@ -29,7 +32,10 @@ export function CountrySelector({
     selectedCountry,
     onSelect,
     disabled = false,
-    className
+    className,
+    triggerClassName,
+    dropdownClassName,
+    triggerRef,
 }: CountrySelectorProps) {
     const [isOpen, setIsOpen] = useState(false)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -64,13 +70,15 @@ export function CountrySelector({
     return (
         <div ref={containerRef} className={cn("relative", className)}>
             <button
+                ref={triggerRef}
                 type="button"
                 disabled={disabled}
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
                     "h-14 px-4 bg-white/10 border cursor-pointer border-white/20 rounded-2xl flex items-center gap-1.5 text-brand-cream hover:bg-white/20 transition-all",
                     disabled && "opacity-50 cursor-not-allowed",
-                    isOpen && "border-brand-gold/40"
+                    isOpen && "border-brand-gold/40",
+                    triggerClassName
                 )}
             >
                 <span className="text-lg">
@@ -88,7 +96,10 @@ export function CountrySelector({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute top-full left-0 mt-2 w-48 bg-brand-deep-500 border border-white/10 rounded-2xl overflow-hidden z-50 backdrop-blur-xl shadow-2xl"
+                        className={cn(
+                            "absolute top-full left-0 mt-2 w-48 rounded-2xl overflow-hidden z-[100] shadow-2xl border border-white/10 bg-brand-cream/95 dark:bg-brand-deep/95 backdrop-blur-xl",
+                            dropdownClassName
+                        )}
                     >
                         {countries.map((c) => (
                             <button
@@ -99,8 +110,8 @@ export function CountrySelector({
                                     setIsOpen(false)
                                 }}
                                 className={cn(
-                                    "w-full px-4 cursor-pointer py-3 flex items-center justify-between hover:bg-white/10 transition-colors text-left",
-                                    selectedCountry?.id === c.id && "bg-white/10"
+                                    "w-full px-4 cursor-pointer py-3 flex items-center justify-between hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-left",
+                                    selectedCountry?.id === c.id && "bg-black/5 dark:bg-white/10"
                                 )}
                             >
                                 <div className="flex items-center gap-3">
@@ -108,8 +119,8 @@ export function CountrySelector({
                                         {getFlag(c.code)}
                                     </span>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-sm text-brand-cream font-medium">{c.name}</span>
-                                        <span className="text-[10px] text-brand-cream/40 font-medium">+{c.phoneCode}</span>
+                                        <span className="text-sm text-brand-deep dark:text-brand-cream font-medium">{c.name}</span>
+                                        <span className="text-[10px] text-brand-deep/60 dark:text-brand-cream/40 font-medium">+{c.phoneCode}</span>
                                     </div>
                                 </div>
                                 {selectedCountry?.id === c.id && (
