@@ -6,10 +6,11 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { ListCard } from "@/app/components/ui/list-card"
 import { PlanCard } from "@/app/components/billing/PlanCard"
 import { Button } from "@/app/components/ui/button"
-import { CreditCard, AlertCircle, Download, Loader2, FileText, ChevronRight } from "lucide-react"
+import { CreditCard, AlertCircle, Download, Loader2, FileText, ChevronRight, Wallet } from "lucide-react"
 import { Progress } from "@/app/components/ui/progress"
 import { cn } from "@/app/lib/utils"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { useAuth } from "@/app/components/providers/auth-provider"
 import {
     Drawer,
     DrawerContent,
@@ -19,6 +20,13 @@ import {
     DrawerFooter,
     DrawerClose,
 } from "@/app/components/ui/drawer"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
 import {
     type Plan,
     type BillingHistoryItem,
@@ -31,46 +39,62 @@ import {
     useDownloadReceipt,
 } from "../hooks/useBilling"
 
-const formatPrice = (amount: number, currency: string = "₦") => {
-    return new Intl.NumberFormat('en-NG', {
-        style: 'currency',
-        currency: currency === "₦" ? 'NGN' : currency,
+const formatPrice = (amount: number, currency: string = "NGN") => {
+    const code = currency.length === 3 ? currency : currency === "₦" ? "NGN" : currency
+    return new Intl.NumberFormat("en", {
+        style: "currency",
+        currency: code,
+        currencyDisplay: "narrowSymbol",
         minimumFractionDigits: 0,
-    }).format(amount).replace('NGN', '₦')
+    }).format(amount)
 }
 
 
 export function BillingSettings() {
-    const { activeBusiness } = useBusiness()
+    const { user } = useAuth()
+    const { activeBusiness, businesses } = useBusiness()
+    const ownerBusinesses = businesses.filter((b) => b.role === "OWNER")
+    const [selectedWalletBusinessId, setSelectedWalletBusinessId] = useState<string | null>(null)
+    const effectiveWalletId =
+        selectedWalletBusinessId ?? activeBusiness?.id ?? ownerBusinesses[0]?.id ?? null
+
     const { data: plans = [], isLoading: isLoadingPlans } = useSubscriptionPlans()
-    const { data: subData, isLoading: isLoadingSub } = useCurrentSubscription()
+    const { data: subData, isLoading: isLoadingSub } = useCurrentSubscription(effectiveWalletId)
     const initiateSub = useInitiateSubscription()
     const downgradeSub = useDowngradeSubscription()
-    const { data: billingHistory = [], isLoading: isLoadingHistory } = useBillingHistory()
+    const { data: billingHistory = [], isLoading: isLoadingHistory } =
+        useBillingHistory(effectiveWalletId)
     const downloadReceipt = useDownloadReceipt()
 
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
 
-    // Drawer state for mobile invoice details
     const [selectedInvoice, setSelectedInvoice] = useState<BillingHistoryItem | null>(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
     const handlePlanSelect = (planSlug: string) => {
-        const plan = plans.find(p => p.slug === planSlug)
-        const price = billingCycle === "yearly" ? (plan?.yearlyPrice || 0) : (plan?.monthlyPrice || 0)
+        const plan = plans.find((p) => p.slug === planSlug)
+        const price =
+            billingCycle === "yearly" ? (plan?.yearlyPrice || 0) : (plan?.monthlyPrice || 0)
 
         if (price === 0) {
-            downgradeSub.mutate(planSlug)
+            downgradeSub.mutate({
+                planSlug,
+                businessIdOverride: effectiveWalletId,
+            })
         } else {
             initiateSub.mutate({
                 planSlug,
                 interval: billingCycle,
+                businessIdOverride: effectiveWalletId,
             })
         }
     }
 
     const handleDownloadInvoice = (invoice: BillingHistoryItem) => {
-        downloadReceipt.mutate(invoice.id)
+        downloadReceipt.mutate({
+            transactionId: invoice.id,
+            businessIdOverride: effectiveWalletId,
+        })
     }
 
     const handleInvoiceClick = (invoice: BillingHistoryItem) => {
@@ -97,8 +121,7 @@ export function BillingSettings() {
     const maxConversations = planBenefits.maxConversations
     const maxProducts = planBenefits.products
 
-    // Use business currency if available
-    const currency = activeBusiness?.currency || currentPlan?.currency || "₦"
+    const ownerCurrencyCode = user?.countryDetail?.currency?.code ?? "NGN"
 
     const currentPlanPrice = Number(billingCycle === "yearly" ? (currentPlan?.yearlyPrice || 0) : (currentPlan?.monthlyPrice || 0))
 
@@ -113,6 +136,12 @@ export function BillingSettings() {
     const isUnlimitedBusinesses = planBenefits.maxBusinesses === null || planBenefits.maxBusinesses === Infinity
     const businessProgress = isUnlimitedBusinesses ? 0 : (usage ? (usage.businesses / Number(planBenefits.maxBusinesses)) * 100 : 0)
 
+
+    const isDownloadingInvoice = (id: string) =>
+        downloadReceipt.isPending &&
+        (downloadReceipt.variables === id ||
+            (typeof downloadReceipt.variables === "object" &&
+                downloadReceipt.variables?.transactionId === id))
 
     return (
         <div className="space-y-8">
@@ -143,9 +172,9 @@ export function BillingSettings() {
                                                 return "Free forever. Upgrade anytime."
                                             }
                                             if (subscription.status === 'trialling') {
-                                                return `Trial ends on ${subscription.trialEndsAt ? new Date(subscription.trialEndsAt).toLocaleDateString() : 'N/A'}. Renews for ${formatPrice(Number(subscription.amount), currency)} thereafter.`
+                                                return `Trial ends on ${subscription.trialEndsAt ? new Date(subscription.trialEndsAt).toLocaleDateString() : 'N/A'}. Renews for ${formatPrice(Number(subscription.amount), ownerCurrencyCode)} thereafter.`
                                             }
-                                            return `Renews automatically on ${subscription.endsAt ? new Date(subscription.endsAt).toLocaleDateString() : 'N/A'} for ${formatPrice(Number(subscription.amount), currency)}`
+                                            return `Renews automatically on ${subscription.endsAt ? new Date(subscription.endsAt).toLocaleDateString() : 'N/A'} for ${formatPrice(Number(subscription.amount), ownerCurrencyCode)}`
                                         })()}
                                     </p>
                                 </div>
@@ -193,39 +222,82 @@ export function BillingSettings() {
                         </div>
 
                         {/* Wallet Funding Card */}
-                        <div className="p-4 rounded-3xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 flex flex-col justify-between">
+                        <div className="p-4 rounded-3xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 flex flex-col justify-between transition-colors duration-200">
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 text-brand-deep dark:text-brand-cream font-medium">
-                                    <div className="w-5 h-5 rounded-full bg-brand-gold/20 flex items-center justify-center">
-                                        <FileText className="w-3 h-3 text-brand-gold" />
+                                    <div className="w-5 h-5 rounded-full bg-brand-gold/20 flex items-center justify-center shrink-0">
+                                        <Wallet className="w-3 h-3 text-brand-gold" />
                                     </div>
                                     <span className="text-sm">Wallet Funding</span>
                                 </div>
 
-                                <div className="p-4 bg-white dark:bg-brand-deep-500 rounded-2xl border border-brand-deep/5 dark:border-white/5">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Current Balance</span>
-                                        <span className="text-2xl font-serif text-brand-deep dark:text-brand-cream">
-                                            {wallet ? formatPrice(wallet.balance, wallet.currency) : formatPrice(0, currency)}
-                                        </span>
-                                    </div>
+                                <div
+                                    key={effectiveWalletId ?? "none"}
+                                    className="p-4 bg-white dark:bg-brand-deep-500 rounded-2xl border border-brand-deep/5 dark:border-white/5 min-h-18 flex flex-col justify-center transition-opacity duration-200"
+                                >
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                                        Current Balance
+                                    </span>
+                                    <span className="text-2xl font-serif text-brand-deep dark:text-brand-cream tabular-nums mt-0.5">
+                                        {isLoadingSub
+                                            ? "Loading..."
+                                            : wallet
+                                              ? formatPrice(wallet.balance, wallet.currency)
+                                              : formatPrice(0, ownerCurrencyCode)}
+                                    </span>
                                 </div>
 
                                 <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 leading-relaxed italic">
-                                    Fund your wallet to ensure automatic renewal of your {currentPlan?.name || 'Starter'} plan.
+                                    Fund your wallet to ensure automatic renewal of your{" "}
+                                    {currentPlan?.name || "Starter"} plan.
                                 </p>
                             </div>
 
-                            <Button
-                                variant="outline"
-                                className="w-full text-xs h-10 mt-4 rounded-xl border-brand-gold/20 hover:bg-brand-gold/5 text-brand-deep dark:text-brand-cream"
-                                onClick={() => {
-                                    // Funding flow would go here
-                                    toast.info("Wallet funding feature coming soon")
-                                }}
-                            >
-                                Fund Wallet
-                            </Button>
+                            <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
+                                {ownerBusinesses.length > 1 && (
+                                    <Select
+                                        value={effectiveWalletId ?? ""}
+                                        onValueChange={(id) => setSelectedWalletBusinessId(id || null)}
+                                    >
+                                        <SelectTrigger
+                                            className={cn(
+                                                "cursor-pointer rounded-xl h-10 text-xs font-medium border-brand-deep/10 dark:border-white/10",
+                                                "transition-[border-color,box-shadow] duration-200",
+                                                "focus:ring-2 focus:ring-brand-gold/20 dark:focus:ring-brand-gold/30",
+                                                "sm:flex-1 min-w-0"
+                                            )}
+                                            aria-label="Select wallet to fund or pay from"
+                                        >
+                                            <SelectValue placeholder="Select wallet" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl">
+                                            {ownerBusinesses.map((b) => (
+                                                <SelectItem
+                                                    key={b.id}
+                                                    value={b.id}
+                                                    className="text-sm rounded-lg focus:bg-brand-gold/10"
+                                                >
+                                                    {b.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "text-xs h-10 rounded-xl border-brand-gold/20 hover:bg-brand-gold/5 text-brand-deep dark:text-brand-cream",
+                                        "transition-colors duration-200 shrink-0",
+                                        ownerBusinesses.length > 1 ? "sm:w-auto sm:flex-initial" : "w-full"
+                                    )}
+                                    onClick={() => {
+                                        toast.info("Wallet funding feature coming soon")
+                                    }}
+                                >
+                                    <Wallet className="w-3.5 h-3.5 mr-2 shrink-0" />
+                                    Fund Wallet
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </GlassCard>
@@ -268,13 +340,13 @@ export function BillingSettings() {
                             name={plan.name}
                             description={plan.description}
                             price={billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice}
-                            currency={currency}
+                            currency={ownerCurrencyCode}
                             currentPlanPrice={currentPlanPrice}
                             interval={billingCycle === "yearly" ? "year" : "month"}
                             features={plan.features}
                             isRecommended={plan.slug === 'growth'}
                             isCurrent={(currentPlan?.slug === plan.slug || (!currentPlan && plan.slug === 'starter')) && (plan.monthlyPrice === 0 || subscription?.interval === billingCycle)}
-                            isLoading={(initiateSub.isPending && initiateSub.variables?.planSlug === plan.slug) || (downgradeSub.isPending && downgradeSub.variables === plan.slug)}
+                            isLoading={(initiateSub.isPending && initiateSub.variables?.planSlug === plan.slug) || (downgradeSub.isPending && (downgradeSub.variables === plan.slug || (typeof downgradeSub.variables === "object" && downgradeSub.variables?.planSlug === plan.slug)))}
                             onSelect={() => handlePlanSelect(plan.slug)}
                         />
                     ))}
@@ -421,10 +493,10 @@ export function BillingSettings() {
                         <Button
                             className="w-full h-12 rounded-xl text-md font-bold"
                             onClick={() => selectedInvoice && handleDownloadInvoice(selectedInvoice)}
-                            disabled={!selectedInvoice || (downloadReceipt.isPending && downloadReceipt.variables === selectedInvoice?.id)}
+                            disabled={!selectedInvoice || isDownloadingInvoice(selectedInvoice?.id ?? "")}
                         >
                             <Download className="h-5 w-5 mr-2" />
-                            {downloadReceipt.isPending && downloadReceipt.variables === selectedInvoice?.id ? "Preparing..." : "Download Receipt"}
+                            {isDownloadingInvoice(selectedInvoice?.id ?? "") ? "Preparing..." : "Download Receipt"}
                         </Button>
                         <DrawerClose asChild>
                             <Button variant="outline" className="w-full h-12 rounded-xl border-brand-deep/10 dark:border-white/10 hover:bg-brand-deep/5 dark:hover:bg-white/5">

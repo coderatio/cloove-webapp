@@ -49,12 +49,17 @@ export const useSubscriptionPlans = () => {
     })
 }
 
-export const useCurrentSubscription = () => {
-    const businessId = storage.getActiveBusinessId() as string
+export const useCurrentSubscription = (billingBusinessId?: string | null) => {
+    const effectiveId = billingBusinessId ?? storage.getActiveBusinessId()
     return useQuery({
-        queryKey: ["current-subscription", businessId],
-        queryFn: () => apiClient.get<SubscriptionResponse>("/subscriptions"),
-        enabled: !!businessId,
+        queryKey: ["current-subscription", effectiveId ?? ""],
+        queryFn: () =>
+            apiClient.get<SubscriptionResponse>("/subscriptions", undefined, {
+                businessIdOverride: effectiveId ?? undefined,
+            }),
+        enabled: !!effectiveId,
+        staleTime: 0,
+        refetchOnMount: true,
     })
 }
 
@@ -63,15 +68,19 @@ export interface InitiateSubscriptionPayload {
     interval: "monthly" | "yearly"
     channel?: string
     metadata?: Record<string, unknown>
+    businessIdOverride?: string | null
 }
 
 export const useInitiateSubscription = () => {
     return useMutation({
-        mutationFn: (payload: InitiateSubscriptionPayload) =>
-            apiClient.post<{ paymentLink: string, transactionReference: string }>("/subscriptions/initiate", {
-                channel: 'web',
-                ...payload
-            }),
+        mutationFn: (payload: InitiateSubscriptionPayload) => {
+            const { businessIdOverride, ...body } = payload
+            return apiClient.post<{ paymentLink: string; transactionReference: string }>(
+                "/subscriptions/initiate",
+                { channel: "web", ...body },
+                { businessIdOverride: businessIdOverride ?? undefined }
+            )
+        },
         onSuccess: (data) => {
             if (data.paymentLink) {
                 window.location.href = data.paymentLink
@@ -120,13 +129,25 @@ export const useDowngradeSubscription = () => {
     const businessId = storage.getActiveBusinessId()
 
     return useMutation({
-        mutationFn: (planSlug: string) =>
-            apiClient.post<{ message: string }>("/subscriptions/downgrade", {
-                planSlug,
-            }),
-        onSuccess: (data) => {
+        mutationFn: (
+            payload: string | { planSlug: string; businessIdOverride?: string | null }
+        ) => {
+            const planSlug = typeof payload === "string" ? payload : payload.planSlug
+            const businessIdOverride =
+                typeof payload === "string" ? undefined : payload.businessIdOverride
+            return apiClient.post<{ message: string }>(
+                "/subscriptions/downgrade",
+                { planSlug },
+                { businessIdOverride: businessIdOverride ?? undefined }
+            )
+        },
+        onSuccess: (data, variables) => {
             toast.success(data.message || "Plan changed successfully")
-            queryClient.invalidateQueries({ queryKey: ["current-subscription", businessId] })
+            const effectiveId =
+                typeof variables === "string"
+                    ? businessId
+                    : variables.businessIdOverride ?? businessId
+            queryClient.invalidateQueries({ queryKey: ["current-subscription", effectiveId] })
         },
         onError: (error: Error) => {
             toast.error(error.message || "Failed to change plan")
@@ -144,21 +165,35 @@ export interface BillingHistoryItem {
     reference: string
 }
 
-export const useBillingHistory = () => {
-    const businessId = storage.getActiveBusinessId() as string
+export const useBillingHistory = (billingBusinessId?: string | null) => {
+    const effectiveId = billingBusinessId ?? storage.getActiveBusinessId()
     return useQuery({
-        queryKey: ["billing-history", businessId],
-        queryFn: () => apiClient.get<BillingHistoryItem[]>("/subscriptions/history"),
-        enabled: !!businessId,
+        queryKey: ["billing-history", effectiveId ?? ""],
+        queryFn: () =>
+            apiClient.get<BillingHistoryItem[]>("/subscriptions/history", undefined, {
+                businessIdOverride: effectiveId ?? undefined,
+            }),
+        enabled: !!effectiveId,
     })
 }
 
 export const useDownloadReceipt = () => {
     return useMutation({
-        mutationFn: (transactionId: string) =>
-            apiClient.get<{ url: string }>("/subscriptions/receipt", {
-                transactionId,
-            }),
+        mutationFn: (
+            arg:
+                | string
+                | { transactionId: string; businessIdOverride?: string | null }
+        ) => {
+            const params =
+                typeof arg === "string"
+                    ? { transactionId: arg }
+                    : arg
+            return apiClient.get<{ url: string }>(
+                "/subscriptions/receipt",
+                { transactionId: params.transactionId },
+                { businessIdOverride: params.businessIdOverride ?? undefined }
+            )
+        },
         onSuccess: (data) => {
             if (data.url) {
                 window.open(data.url, "_blank")

@@ -21,6 +21,7 @@ interface RequestOptions extends RequestInit {
     params?: Record<string, string>
     skipAuthRedirect?: boolean
     fullResponse?: boolean
+    businessIdOverride?: string | null
 }
 
 /**
@@ -115,13 +116,14 @@ export const apiClient = {
      * Generic request handler
      */
     async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-        const { params, headers, ...customConfig } = options
+        const { params, headers, businessIdOverride, ...customConfig } = options
 
         const url = this.buildUrl(endpoint, params)
         const token = this.getToken()
-        const businessId = storage.getActiveBusinessId()
+        const businessId = businessIdOverride !== undefined && businessIdOverride !== null
+            ? businessIdOverride
+            : storage.getActiveBusinessId()
 
-        // Build headers dynamically
         const requestHeaders: Record<string, string> = {
             ...(token ? { "Authorization": `Bearer ${token}` } : {}),
             ...(businessId ? { "x-business-id": businessId } : {}),
