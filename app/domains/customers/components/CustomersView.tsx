@@ -10,7 +10,9 @@ import { AlertCircle, Users, Trash2, Loader2, ChevronLeft, ChevronRight } from "
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
+import { formatCurrency } from "@/app/lib/formatters"
 import { Button } from "@/app/components/ui/button"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { TableSearch } from "@/app/components/shared/TableSearch"
@@ -31,7 +33,9 @@ const PAGE_SIZE = 20
 
 export function CustomersView() {
     const isMobile = useIsMobile()
+    const { activeBusiness } = useBusiness()
     const { currentStore, stores } = useStores()
+    const currencyCode = activeBusiness?.currency ?? "NGN"
     const [search, setSearch] = React.useState("")
     const deferredSearch = React.useDeferredValue(search)
     const [currentPage, setCurrentPage] = React.useState(1)
@@ -309,7 +313,7 @@ export function CustomersView() {
                                             {owingCustomersOnPage}
                                         </p>
                                         <span className="text-sm text-brand-accent/40">
-                                            ₦{totalDebtOnPage.toLocaleString()} due
+                                            {formatCurrency(totalDebtOnPage, { currency: currencyCode })} due
                                         </span>
                                     </>
                                 )}
