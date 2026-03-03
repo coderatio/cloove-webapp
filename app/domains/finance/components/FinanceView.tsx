@@ -53,6 +53,7 @@ import { CurrencyDisplay } from '@/app/components/shared/CurrencyDisplay'
 import { formatCurrency, parseCurrencyToNumber } from '@/app/lib/formatters'
 import type { FinanceTransactionMock } from '../data/financeMocks'
 import { useFinanceSummary, useFinanceTransactions, type TransactionFilterParams } from '../hooks/useFinance'
+import { useSettings, useUpdateBusinessSettings } from '@/app/domains/business/hooks/useBusinessSettings'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { Badge } from '@/app/components/ui/badge'
 
@@ -135,7 +136,18 @@ export function FinanceView() {
     const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
     const [isPayoutSettingsOpen, setIsPayoutSettingsOpen] = React.useState(false)
     const [withdrawInitialStep, setWithdrawInitialStep] = React.useState<"details" | "manage_payouts">("details")
-    const [showBalance, setShowBalance] = React.useState(true)
+
+    const { data: settings } = useSettings()
+    const updateSettings = useUpdateBusinessSettings()
+
+    const showBalance = settings?.business?.configs?.show_wallet_balance ?? true
+
+    const toggleBalance = () => {
+        updateSettings.mutate({
+            show_wallet_balance: !showBalance,
+            quiet: true
+        })
+    }
 
     const transactions = useApi ? apiTransactions.map(t => ({ ...t, amountNumeric: t.amount })) : mockTransactions
     const isFetching = useApi ? (summaryFetching || transactionsFetching) : false
@@ -372,7 +384,8 @@ export function FinanceView() {
                                             variant="ghost"
                                             size="icon"
                                             className="h-8 w-8 rounded-full hover:bg-brand-deep/5 dark:hover:bg-white/5"
-                                            onClick={() => setShowBalance(!showBalance)}
+                                            onClick={toggleBalance}
+                                            disabled={updateSettings.isPending}
                                         >
                                             {showBalance ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                             <span className="sr-only">{showBalance ? "Hide balance" : "Show balance"}</span>

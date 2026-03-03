@@ -9,6 +9,7 @@ export interface BusinessConfigs {
     debt_reminder_enabled: boolean
     daily_summary_enabled: boolean
     email_summaries_enabled: boolean
+    show_wallet_balance: boolean
     [key: string]: any
 }
 
@@ -45,14 +46,47 @@ export const useUpdateBusinessSettings = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (configs: Partial<BusinessConfigs>) =>
-            apiClient.patch("/settings/business", { configs }),
-        onSuccess: (data: any) => {
-            toast.success(data.message || "Business settings updated")
-            queryClient.invalidateQueries({ queryKey: ["settings"] })
+        mutationFn: (variables: Partial<BusinessConfigs> & { quiet?: boolean }) => {
+            const { quiet, ...configs } = variables
+            return apiClient.patch("/settings/business", { configs })
         },
-        onError: (error: any) => {
-            toast.error(error.message || "Failed to update business settings")
+        onMutate: async (newConfigs) => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: ["settings"] })
+
+            // Snapshot the previous value
+            const previousSettings = queryClient.getQueryData<SettingsResponse>(["settings"])
+
+            // Optimistically update to the new value
+            if (previousSettings) {
+                const { quiet, ...configs } = newConfigs
+                queryClient.setQueryData<SettingsResponse>(["settings"], {
+                    ...previousSettings,
+                    business: {
+                        ...previousSettings.business,
+                        configs: {
+                            ...previousSettings.business.configs,
+                            ...configs
+                        }
+                    }
+                })
+            }
+
+            return { previousSettings }
+        },
+        onError: (err, newConfigs, context) => {
+            if (context?.previousSettings) {
+                queryClient.setQueryData(["settings"], context.previousSettings)
+            }
+            toast.error("Failed to update business settings")
+        },
+        onSuccess: (data: any, variables) => {
+            if (!variables.quiet) {
+                toast.success(data.message || "Business settings updated")
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["settings"] })
         },
     })
 }
