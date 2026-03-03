@@ -4,21 +4,38 @@ import { toast } from "sonner"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { Product, InventoryStats } from "../types"
 
+export interface ProductFilterParams {
+    search?: string
+    status?: string[]
+    storeIds?: string[]
+}
+
 /**
- * Hook for managing product inventory
+ * Hook for managing product inventory.
+ * Pass filters to enable server-side search and status (In Stock / Low Stock) filtering.
  */
-export function useInventory(storeId?: string, page: number = 1, limit: number = 10) {
+export function useInventory(
+    storeId?: string,
+    page: number = 1,
+    limit: number = 10,
+    filters?: ProductFilterParams
+) {
     const queryClient = useQueryClient()
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
+    const params: Record<string, string> = {
+        page: String(page),
+        limit: String(limit),
+    }
+    if (storeId && storeId !== 'all-stores') params.storeId = storeId
+    if (filters?.search) params.search = filters.search
+    if (filters?.status && filters.status.length > 0) params.status = filters.status.join(',')
+    if (filters?.storeIds && filters.storeIds.length > 0) params.storeIds = filters.storeIds.join(',')
+
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<Product[]>>({
-        queryKey: ['products', businessId, storeId, page, limit],
-        queryFn: () => apiClient.get<ApiResponse<Product[]>>('/products', {
-            storeId: storeId || '',
-            page: String(page),
-            limit: String(limit)
-        }, { fullResponse: true }),
+        queryKey: ['products', businessId, storeId, page, limit, filters?.search, filters?.status, filters?.storeIds],
+        queryFn: () => apiClient.get<ApiResponse<Product[]>>('/products', params, { fullResponse: true }),
         enabled: !!businessId
     })
 

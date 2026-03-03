@@ -33,7 +33,7 @@ import {
     DrawerClose,
     DrawerBody,
 } from "@/app/components/ui/drawer"
-import { useInventory } from '../hooks/useInventory'
+import { useInventory, type ProductFilterParams } from '../hooks/useInventory'
 import { Product, InventoryItem, InventoryStats } from '../types'
 import { Badge } from '@/app/components/ui/badge'
 import { MoneyInput } from '@/app/components/ui/money-input'
@@ -46,6 +46,11 @@ import { ConfirmDialog } from '@/app/components/shared/ConfirmDialog'
 import { ProductViewDrawer } from './ProductViewDrawer'
 
 const PER_PAGE = 10
+
+const STATUS_FILTER_OPTIONS = [
+    { label: "In Stock", value: "In Stock" },
+    { label: "Low Stock", value: "Low Stock" },
+] as const
 interface StoreStockMapping {
     storeId: string
     stockQuantity: number | string
@@ -112,14 +117,46 @@ export function InventoryView() {
     const { currency, activeBusiness } = useBusiness()
     const currencyCode = activeBusiness?.currency || 'NGN'
     const { stores, currentStore } = useStores()
-    const [selectedStoreId, setSelectedStoreId] = React.useState<string>(currentStore?.id || 'all-stores')
+    const [selectedStoreId, setSelectedStoreId] = React.useState<string>('all-stores')
     const [currentPage, setCurrentPage] = React.useState(1)
     const pageSize = PER_PAGE
+    const [search, setSearch] = React.useState("")
+    const deferredSearch = React.useDeferredValue(search)
+    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
+
+    const storeFilterOptions = React.useMemo(
+        () => stores.map((s) => ({ label: s.name, value: s.id })),
+        [stores]
+    )
+
+    const serverFilters = React.useMemo<ProductFilterParams>(() => {
+        const status = selectedFilters.filter((f) =>
+            STATUS_FILTER_OPTIONS.some((o) => o.value === f)
+        )
+        const storeIds = selectedFilters.filter((f) =>
+            storeFilterOptions.some((o) => o.value === f)
+        )
+        return {
+            ...(deferredSearch?.trim() ? { search: deferredSearch.trim() } : {}),
+            ...(status.length > 0 ? { status } : {}),
+            ...(storeIds.length > 0 ? { storeIds } : {}),
+        }
+    }, [deferredSearch, selectedFilters, storeFilterOptions])
+
+    const filterSortKey = React.useMemo(
+        () => selectedFilters.slice().sort().join(','),
+        [selectedFilters]
+    )
+
+    React.useEffect(() => {
+        setCurrentPage(1)
+    }, [selectedStoreId, deferredSearch, filterSortKey])
 
     const { products, meta, summary, isLoading, isFetching, createProduct, updateProduct, deleteProduct } = useInventory(
         selectedStoreId !== 'all-stores' ? selectedStoreId : undefined,
         currentPage,
-        pageSize
+        pageSize,
+        activeBusiness?.id ? serverFilters : undefined
     )
 
     const selectedStoreName = React.useMemo(() => {
@@ -128,9 +165,6 @@ export function InventoryView() {
     }, [selectedStoreId, stores])
 
     const defaultStore = React.useMemo(() => stores.find(s => s.isDefault) || stores[0], [stores])
-
-    const [search, setSearch] = React.useState("")
-    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [isAddDrawerOpen, setIsAddDrawerOpen] = React.useState(false)
     const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<any>(null)
@@ -160,16 +194,19 @@ export function InventoryView() {
             const variants = p.variants || (p as any).product_variants || []
             const storeBreakdown: Record<string, number> = {}
 
+            const perStoreStock: Record<string, number> = {}
+
             variants.forEach((v: any) => {
                 const inventories = v.inventories || (v as any).variant_inventories || []
                 inventories.forEach((inv: any) => {
-                    const storeId = inv.storeId || (inv as any).store_id
+                    const invStoreId = inv.storeId || (inv as any).store_id
                     const storeName = inv.store?.name || (inv as any).store_name || 'Store'
                     const stockQuantity = Number(inv.stockQuantity !== undefined ? inv.stockQuantity : (inv as any).stock_quantity || 0)
 
                     globalStock += stockQuantity
+                    perStoreStock[invStoreId] = (perStoreStock[invStoreId] || 0) + stockQuantity
 
-                    if (selectedStoreId !== 'all-stores' && storeId === selectedStoreId) {
+                    if (selectedStoreId !== 'all-stores' && invStoreId === selectedStoreId) {
                         localStock += stockQuantity
                     }
 
@@ -178,6 +215,18 @@ export function InventoryView() {
                     }
                 })
             })
+
+            const threshold = summary?.lowStockThreshold || 5
+            const assignedStores: { id: string }[] = (p as any).stores || []
+            let status: string
+
+            if (selectedStoreId === 'all-stores') {
+                const lowInAnyStore = assignedStores.length === 0 ||
+                    assignedStores.some((s) => (perStoreStock[s.id] || 0) <= threshold)
+                status = lowInAnyStore ? 'Low Stock' : 'In Stock'
+            } else {
+                status = localStock <= threshold ? 'Low Stock' : 'In Stock'
+            }
 
             return {
                 id: p.id,
@@ -188,28 +237,25 @@ export function InventoryView() {
                 price: formatCurrency(p.basePrice || 0, { currency: currencyCode }),
                 numericPrice: p.basePrice || 0,
                 variantsCount: variants.length,
-                availableIn: (p as any).stores?.map((s: any) => s.name) || [],
-                status: (selectedStoreId === 'all-stores' ? globalStock : localStock) <= (summary?.lowStockThreshold || 5) ? 'Low Stock' : 'In Stock',
+                availableIn: assignedStores.map((s: any) => s.name),
+                status,
                 category: (p as any).category || 'General',
                 image: (p as any).images?.find((img: any) => img.isPrimary)?.url || (p as any).images?.[0]?.url,
                 raw: p
             }
         })
-    }, [products, currentStore, currencyCode])
+    }, [products, currentStore, currencyCode, selectedStoreId, summary?.lowStockThreshold])
 
     const filterGroups = [
         {
             key: 'storeId',
             title: 'Stores',
-            options: stores.map(s => ({ label: s.name, value: s.id })) as any
+            options: storeFilterOptions as { label: string; value: string }[]
         },
         {
             key: 'status',
             title: 'Status',
-            options: [
-                { label: "In Stock", value: "In Stock" },
-                { label: "Low Stock", value: "Low Stock" },
-            ]
+            options: [...STATUS_FILTER_OPTIONS]
         }
     ]
 
@@ -220,21 +266,24 @@ export function InventoryView() {
     const totalStockUnits = summary?.totalStockUnits || 0
 
     const filteredInventory = React.useMemo(() => {
+        if (activeBusiness?.id) return inventory
         const query = search.toLowerCase()
         const statusOptions = filterGroups.find(g => g.key === 'status')?.options || []
         const storeOptions = filterGroups.find(g => g.key === 'storeId')?.options || []
 
-        const activeStatuses = new Set(selectedFilters.filter(f => statusOptions.some((o: any) => o.value === f)))
-        const activeStores = new Set(selectedFilters.filter(f => storeOptions.some((o: any) => o.value === f)))
+        const activeStatuses = new Set(selectedFilters.filter(f => statusOptions.some((o) => o.value === f)))
+        const activeStores = new Set(selectedFilters.filter(f => storeOptions.some((o) => o.value === f)))
 
         return inventory.filter((item: InventoryItem) => {
             const matchesSearch = item.product.toLowerCase().includes(query)
             const matchesStatus = activeStatuses.size === 0 || activeStatuses.has(item.status)
-            const matchesStore = activeStores.size === 0 || Array.from(activeStores).some(storeId => (item.raw as any).stores?.some((s: any) => s.id === storeId))
+            const matchesStore = activeStores.size === 0 || Array.from(activeStores).some(sid => (item.raw as Product & { stores?: { id: string }[] }).stores?.some((s) => s.id === sid))
 
             return matchesSearch && matchesStatus && matchesStore
         })
-    }, [inventory, search, selectedFilters, filterGroups])
+    }, [activeBusiness?.id, inventory, search, selectedFilters, filterGroups])
+
+    const displayItems = activeBusiness?.id ? inventory : filteredInventory
 
     const prepareFormData = (item: any) => {
         const raw = item.raw
@@ -345,6 +394,8 @@ export function InventoryView() {
         {
             key: 'product',
             header: 'Product',
+            width: 'auto',
+            cellClassName: 'whitespace-normal',
             render: (val: string, item: any) => (
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 flex items-center justify-center overflow-hidden shrink-0 relative">
@@ -369,6 +420,7 @@ export function InventoryView() {
         {
             key: 'variantsCount',
             header: 'Variants',
+            width: '100px',
             render: (value: number) => (
                 <Badge variant="default">
                     {value} {value === 1 ? 'variant' : 'variants'}
@@ -378,8 +430,8 @@ export function InventoryView() {
         {
             key: 'stock',
             header: 'Stock',
+            width: '110px',
             render: (value: number, item: any) => {
-                const breakdown = Object.entries(item.storeBreakdown || {}).filter(([_, qty]) => (qty as number) > 0)
                 const isAllStores = selectedStoreId === 'all-stores'
 
                 return (
@@ -399,16 +451,19 @@ export function InventoryView() {
         {
             key: 'price',
             header: 'Price',
+            width: '100px',
             render: (value: string) => <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">{value}</span>
         },
         {
             key: 'availableIn',
             header: 'Available In',
+            width: '130px',
+            cellClassName: 'whitespace-normal',
             render: (stores: string[]) => (
                 <div className="flex flex-wrap gap-1">
                     {stores.map(name => (
-                        <Badge key={name} variant="success">
-                            {name}
+                        <Badge key={name} variant="success" title={name} tabIndex={0} className="max-w-[110px] overflow-hidden cursor-default">
+                            <span className="truncate">{name}</span>
                         </Badge>
                     ))}
                     {stores.length === 0 ? (
@@ -420,6 +475,7 @@ export function InventoryView() {
         {
             key: 'status',
             header: 'Status',
+            width: '100px',
             render: (value: string) => (
                 <Badge variant={value === 'In Stock' ? 'success' : 'warning'} className='uppercase'>
                     {value}
@@ -429,6 +485,7 @@ export function InventoryView() {
         {
             key: 'actions' as any,
             header: '',
+            width: '50px',
             render: (_: any, item: any) => (
                 <div className="flex justify-end">
                     <DropdownMenu>
@@ -623,7 +680,7 @@ export function InventoryView() {
                                     </GlassCard>
                                 ))
                             ) : (
-                                filteredInventory.map((item: InventoryItem) => (
+                                displayItems.map((item: InventoryItem) => (
                                     <ListCard
                                         key={item.id}
                                         title={item.product}
@@ -701,7 +758,7 @@ export function InventoryView() {
                                     />
                                 ))
                             )}
-                            {!isFetching && filteredInventory.length === 0 ? (
+                            {!isFetching && displayItems.length === 0 ? (
                                 <GlassCard className="p-12 text-center">
                                     <Package className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                     <p className="text-brand-accent/40">No products found</p>
@@ -756,7 +813,7 @@ export function InventoryView() {
                             <GlassCard className="overflow-hidden border-brand-deep/5 dark:border-white/5">
                                 <DataTable
                                     columns={columns}
-                                    data={filteredInventory}
+                                    data={displayItems}
                                     isLoading={isFetching}
                                     manualPagination={{
                                         currentPage: (meta as any)?.currentPage || 1,
