@@ -49,7 +49,7 @@ import { FilterPopover, type FilterGroup } from '@/app/components/shared/FilterP
 import { TableSearch } from '@/app/components/shared/TableSearch'
 import { StoreContextSelector } from '@/app/components/shared/StoreContextSelector'
 import { initialTransactions } from '../data/financeMocks'
-import { AddMoneyModal } from '@/app/components/dashboard/AddMoneyModal'
+import { AddFundsDrawer } from '@/app/components/shared/AddFundsDrawer'
 import { WithdrawDrawer } from './WithdrawDrawer'
 import { PayoutAccountsManager } from './PayoutAccountsManager'
 import { CurrencyDisplay } from '@/app/components/shared/CurrencyDisplay'
@@ -880,10 +880,10 @@ export function FinanceView() {
                 </Drawer>
 
 
-                <AddMoneyModal
+                <AddFundsDrawer
                     isOpen={isAddMoneyOpen}
                     onOpenChange={setIsAddMoneyOpen}
-                    walletData={{ balance: walletBalanceFormatted }}
+                    currencyCode={currencyCode}
                 />
                 <WithdrawDrawer
                     isOpen={isWithdrawOpen}

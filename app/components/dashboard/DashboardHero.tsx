@@ -7,7 +7,8 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/app/components/ui/button"
 import { VerificationModal } from "./VerificationModal"
 import { GlassCard } from "../ui/glass-card"
-import { AddMoneyModal } from "./AddMoneyModal"
+import { AddFundsDrawer } from "@/app/components/shared/AddFundsDrawer"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import { Area, AreaChart, ResponsiveContainer } from "recharts"
 
 interface DashboardHeroProps {
@@ -31,6 +32,8 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
     const [isVerificationOpen, setIsVerificationOpen] = useState(false)
     const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false)
     const [isWalletVerified, setIsWalletVerified] = useState(wallet?.isVerified || true)
+    const { activeBusiness } = useBusiness()
+    const currencyCode = activeBusiness?.currency || "NGN"
 
     // Tilt Effect Refs/Values
     const cardRef = useRef<HTMLDivElement>(null)
@@ -281,10 +284,10 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                     onOpenChange={setIsVerificationOpen}
                     onComplete={handleVerifySuccess}
                 />
-                <AddMoneyModal
+                <AddFundsDrawer
                     isOpen={isAddMoneyOpen}
                     onOpenChange={setIsAddMoneyOpen}
-                    walletData={walletData}
+                    currencyCode={currencyCode}
                 />
             </GlassCard>
         </div>

@@ -222,6 +222,42 @@ export function usePaymentProviders() {
     })
 }
 
+export interface DepositAccount {
+    id: string
+    bankName: string
+    accountNumber: string
+    accountName: string
+    qrCodeUrl: string
+    provider: string | null
+}
+
+export interface DepositAccountsData {
+    verificationLevel: number
+    isEligible: boolean
+    accounts: DepositAccount[]
+    requiredLevel: number
+    requiredAction: string | null
+}
+
+export function useDepositAccounts() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<DepositAccountsData>>({
+        queryKey: ['finance', 'deposit-accounts', businessId],
+        queryFn: () => apiClient.get<ApiResponse<DepositAccountsData>>('/finance/deposit-accounts', {}, { fullResponse: true }),
+        enabled: !!businessId,
+        staleTime: 1000 * 60 * 5, // 5 min cache
+    })
+
+    return {
+        depositData: response?.data,
+        isLoading,
+        isFetching,
+        error,
+    }
+}
+
 export function useResolveAccount() {
     return useMutation({
         mutationFn: async (payload: { accountNumber: string; bankCode: string; provider: string }) => {
