@@ -292,7 +292,7 @@ export function FinanceView() {
                 const isFailed = value === 'Failed'
                 const isProcessing = value === 'Processing'
                 const icon = isCleared ? (
-                    <CheckCircle2 className="w-3 h-3 text-brand-green dark:text-emerald-400" />
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
                 ) : isFailed ? (
                     <XCircle className="w-3 h-3 text-red-500 dark:text-red-400" />
                 ) : isProcessing ? (
@@ -301,13 +301,13 @@ export function FinanceView() {
                     <Clock className="w-3 h-3 text-amber-500 dark:text-amber-400 animate-pulse" />
                 )
                 const colorClass = isCleared
-                    ? "text-brand-green dark:text-emerald-400"
+                    ? "text-emerald-600 dark:text-emerald-400"
                     : isFailed
                         ? "text-red-600 dark:text-red-400"
                         : "text-amber-600 dark:text-amber-400"
 
                 const bgClass = isCleared
-                    ? "bg-brand-green/5 dark:bg-emerald-400/5"
+                    ? "bg-emerald-500/10 dark:bg-emerald-400/10"
                     : isFailed
                         ? "bg-red-600/5 dark:bg-red-400/5"
                         : "bg-amber-600/5 dark:bg-amber-400/5"
