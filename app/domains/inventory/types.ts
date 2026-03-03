@@ -26,12 +26,26 @@ export interface ProductVariant {
     inventories: StoreInventory[]
 }
 
+export interface ProductCategoryRef {
+    id: string
+    name: string
+    slug: string
+}
+
 export interface Product {
     id: string
     businessId: string
     name: string
     description: string | null
     basePrice: number
+    categoryId?: string | null
+    category?: ProductCategoryRef | null
+    sku?: string | null
+    costPrice?: number | null
+    barcode?: string | null
+    unit?: string | null
+    isActive?: boolean
+    reorderLevel?: number | null
     images: ProductImage[]
     variants: ProductVariant[]
     product_variants?: ProductVariant[]

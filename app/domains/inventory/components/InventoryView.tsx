@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import Image from "next/image"
+import { motion, AnimatePresence } from "framer-motion"
 import DataTable from '@/app/components/DataTable'
 import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
@@ -9,6 +10,14 @@ import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
+import { Switch } from "@/app/components/ui/switch"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -32,8 +41,10 @@ import {
     DrawerDescription,
     DrawerClose,
     DrawerBody,
+    DrawerFooter,
 } from "@/app/components/ui/drawer"
 import { useInventory, type ProductFilterParams } from '../hooks/useInventory'
+import { useProductCategories } from '../hooks/useProductCategories'
 import { Product, InventoryItem, InventoryStats } from '../types'
 import { Badge } from '@/app/components/ui/badge'
 import { MoneyInput } from '@/app/components/ui/money-input'
@@ -42,6 +53,7 @@ import { ImageUpload } from '@/app/components/ui/image-upload'
 import { StoreSelector } from '@/app/components/shared/storeSelector'
 import { StoreContextSelector } from '@/app/components/shared/StoreContextSelector'
 import { BulkUploadDrawer } from './BulkUploadDrawer'
+import { ManageCategoriesDrawer } from './ManageCategoriesDrawer'
 import { ConfirmDialog } from '@/app/components/shared/ConfirmDialog'
 import { ProductViewDrawer } from './ProductViewDrawer'
 
@@ -124,6 +136,7 @@ export function InventoryView() {
     const deferredSearch = React.useDeferredValue(search)
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
 
+    const { options: categoryOptions } = useProductCategories()
     const storeFilterOptions = React.useMemo(
         () => stores.map((s) => ({ label: s.name, value: s.id })),
         [stores]
@@ -136,12 +149,16 @@ export function InventoryView() {
         const storeIds = selectedFilters.filter((f) =>
             storeFilterOptions.some((o) => o.value === f)
         )
+        const categoryIds = selectedFilters.filter((f) =>
+            categoryOptions.some((o) => o.value === f)
+        )
         return {
             ...(deferredSearch?.trim() ? { search: deferredSearch.trim() } : {}),
             ...(status.length > 0 ? { status } : {}),
             ...(storeIds.length > 0 ? { storeIds } : {}),
+            ...(categoryIds.length > 0 ? { categoryIds } : {}),
         }
-    }, [deferredSearch, selectedFilters, storeFilterOptions])
+    }, [deferredSearch, selectedFilters, storeFilterOptions, categoryOptions])
 
     const filterSortKey = React.useMemo(
         () => selectedFilters.slice().sort().join(','),
@@ -167,6 +184,7 @@ export function InventoryView() {
     const defaultStore = React.useMemo(() => stores.find(s => s.isDefault) || stores[0], [stores])
     const [isAddDrawerOpen, setIsAddDrawerOpen] = React.useState(false)
     const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false)
+    const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<any>(null)
     const [viewItem, setViewItem] = React.useState<any>(null)
     const [isViewDrawerOpen, setIsViewDrawerOpen] = React.useState(false)
@@ -179,6 +197,13 @@ export function InventoryView() {
         product: '',
         description: '',
         price: '',
+        categoryId: '' as string,
+        sku: '' as string,
+        costPrice: '' as string,
+        barcode: '' as string,
+        unit: '' as string,
+        isActive: true as boolean,
+        reorderLevel: '' as string,
         imageUrls: [] as string[],
         storeIds: [] as string[],
         variants: [] as any[]
@@ -239,7 +264,7 @@ export function InventoryView() {
                 variantsCount: variants.length,
                 availableIn: assignedStores.map((s: any) => s.name),
                 status,
-                category: (p as any).category || 'General',
+                category: (p as any).category?.name ?? (p as any).category ?? 'General',
                 image: (p as any).images?.find((img: any) => img.isPrimary)?.url || (p as any).images?.[0]?.url,
                 raw: p
             }
@@ -256,6 +281,11 @@ export function InventoryView() {
             key: 'status',
             title: 'Status',
             options: [...STATUS_FILTER_OPTIONS]
+        },
+        {
+            key: 'categoryId',
+            title: 'Category',
+            options: categoryOptions
         }
     ]
 
@@ -291,6 +321,12 @@ export function InventoryView() {
             product: item.product,
             description: raw.description || '',
             price: item.numericPrice.toString(),
+            categoryId: raw.categoryId ?? raw.category?.id ?? '',
+            costPrice: raw.costPrice != null ? String(raw.costPrice) : '',
+            barcode: raw.barcode ?? '',
+            unit: raw.unit ?? '',
+            isActive: raw.isActive !== false,
+            reorderLevel: raw.reorderLevel != null ? String(raw.reorderLevel) : '',
             imageUrls: raw.images?.map((img: any) => img.url) || [],
             storeIds: raw.stores?.map((s: any) => s.id) || [],
             variants: raw?.variants?.map((v: any) => ({
@@ -315,6 +351,12 @@ export function InventoryView() {
                 name: formData.product,
                 description: formData.description,
                 price: parseFloat(formData.price) || 0,
+                categoryId: formData.categoryId || undefined,
+                costPrice: formData.costPrice ? parseFloat(formData.costPrice) : undefined,
+                barcode: formData.barcode || undefined,
+                unit: formData.unit || undefined,
+                isActive: formData.isActive,
+                reorderLevel: formData.reorderLevel ? parseInt(formData.reorderLevel, 10) : undefined,
                 imageUrls: formData.imageUrls,
                 storeIds: formData.storeIds,
                 variants: formData.variants.map(v => {
@@ -332,7 +374,7 @@ export function InventoryView() {
                 })
             })
             setIsAddDrawerOpen(false)
-            setFormData({ product: '', description: '', price: '', imageUrls: [], storeIds: [], variants: [] })
+            setFormData({ product: '', description: '', price: '', categoryId: '', costPrice: '', barcode: '', unit: '', isActive: true, reorderLevel: '', imageUrls: [], storeIds: [], variants: [] })
         } catch (error) {
             console.error(error)
         } finally {
@@ -351,6 +393,12 @@ export function InventoryView() {
                     name: formData.product,
                     description: formData.description,
                     basePrice: parseFloat(formData.price) || 0,
+                    categoryId: formData.categoryId || null,
+                    costPrice: formData.costPrice ? parseFloat(formData.costPrice) : null,
+                    barcode: formData.barcode || undefined,
+                    unit: formData.unit || undefined,
+                    isActive: formData.isActive,
+                    reorderLevel: formData.reorderLevel ? parseInt(formData.reorderLevel, 10) : null,
                     imageUrls: formData.imageUrls,
                     storeIds: formData.storeIds,
                     variants: formData.variants.map(v => {
@@ -369,7 +417,7 @@ export function InventoryView() {
                 }
             })
             setEditingItem(null)
-            setFormData({ product: '', description: '', price: '', imageUrls: [], storeIds: [], variants: [] })
+            setFormData({ product: '', description: '', price: '', categoryId: '', costPrice: '', barcode: '', unit: '', isActive: true, reorderLevel: '', imageUrls: [], storeIds: [], variants: [] })
         } catch (error) {
             console.error(error)
         } finally {
@@ -563,12 +611,19 @@ export function InventoryView() {
                     title="Inventory"
                     description="Track and manage your products across all stores."
                     extraActions={
-                        <div className="w-full flex items-center gap-2">
+                        <div className="w-full flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                             <StoreContextSelector
                                 value={selectedStoreId}
                                 onChange={setSelectedStoreId}
                                 className="w-full sm:w-auto flex justify-between"
                             />
+                            <Button
+                                variant="ghost"
+                                onClick={() => setIsCategoriesDrawerOpen(true)}
+                                className="flex h-12 rounded-full bg-white border border-brand-accent/10 text-brand-deep-800 hover:text-brand-deep dark:bg-white/5 dark:text-brand-cream/80 dark:border dark:border-brand-gold-500/20 dark:hover:text-brand-gold transition-all gap-2"
+                            >
+                                Categories
+                            </Button>
                             <Button
                                 variant="ghost"
                                 onClick={() => setIsBulkUploadOpen(true)}
@@ -585,6 +640,12 @@ export function InventoryView() {
                             product: "",
                             description: "",
                             price: "",
+                            categoryId: "",
+                            costPrice: "",
+                            barcode: "",
+                            unit: "",
+                            isActive: true,
+                            reorderLevel: "",
                             imageUrls: [],
                             storeIds: defaultStore ? [defaultStore.id] : [],
                             variants: [{ name: 'Standard', sku: '', price: '', stockQuantity: 0, storeInventory: [] }]
@@ -843,260 +904,405 @@ export function InventoryView() {
                                 </DrawerDescription>
                             </DrawerStickyHeader>
 
-                            <DrawerBody className="pb-12 min-h-0">
-                                <form onSubmit={editingItem ? handleUpdate : handleAdd} className="max-w-lg mx-auto space-y-8">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product Images</label>
-                                        <ImageUpload
-                                            value={formData.imageUrls}
-                                            onChange={(urls) => setFormData({ ...formData, imageUrls: urls })}
-                                        />
+                            <DrawerBody className="pb-12 min-h-0 overflow-y-auto bg-brand-cream/30 dark:bg-brand-deep/10">
+                                <form id="product-form" onSubmit={editingItem ? handleUpdate : handleAdd} className="max-w-xl mx-auto py-8 px-4 sm:px-8 space-y-10">
+                                    {/* Section: Visuals */}
+                                    <div className="space-y-4">
+                                        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40 px-1">
+                                            <Sparkles className="w-3 h-3 text-brand-gold" />
+                                            Product Visuals
+                                        </h3>
+                                        <GlassCard className="p-6 bg-white/50 dark:bg-white/5 border-none shadow-sm ring-1 ring-brand-deep/10 dark:ring-white/5">
+                                            <ImageUpload
+                                                value={formData.imageUrls}
+                                                onChange={(urls) => setFormData({ ...formData, imageUrls: urls })}
+                                            />
+                                        </GlassCard>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product Name</label>
-                                        <input
-                                            autoFocus
-                                            required
-                                            value={formData.product}
-                                            onChange={(e) => setFormData({ ...formData, product: e.target.value })}
-                                            placeholder="e.g. Premium Lace Material"
-                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
-                                        />
+                                    {/* Section: Basic Information */}
+                                    <div className="space-y-6">
+                                        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
+                                            <Package className="w-3 h-3" />
+                                            Basic Information
+                                        </h3>
+                                        <div className="grid gap-5">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Product Name</label>
+                                                <input
+                                                    autoFocus
+                                                    required
+                                                    value={formData.product}
+                                                    onChange={(e) => setFormData({ ...formData, product: e.target.value })}
+                                                    placeholder="e.g. Premium Lace Material"
+                                                    className="w-full px-5 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/20 text-brand-deep dark:text-brand-cream transition-all font-sans"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Category</label>
+                                                <Select
+                                                    value={formData.categoryId || "none"}
+                                                    onValueChange={(val) => setFormData({ ...formData, categoryId: val === "none" ? "" : val })}
+                                                >
+                                                    <SelectTrigger className="w-full h-[54px] rounded-2xl bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/10 px-5 focus:ring-brand-gold/20 font-sans">
+                                                        <SelectValue placeholder="Select Category" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="none">No category</SelectItem>
+                                                        {categoryOptions.map((o) => (
+                                                            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Product Description</label>
+                                                <textarea
+                                                    value={formData.description}
+                                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                                    placeholder="Tell a story about this product..."
+                                                    rows={3}
+                                                    className="w-full px-5 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/20 text-brand-deep dark:text-brand-cream resize-none text-sm leading-relaxed transition-all font-sans"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product Description</label>
-                                        <textarea
-                                            value={formData.description}
-                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                            placeholder="Tell a story about this product..."
-                                            rows={3}
-                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream resize-none text-sm leading-relaxed"
-                                        />
+                                    {/* Section: Inventory & Identification */}
+                                    <div className="space-y-6">
+                                        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Inventory & Tracking
+                                        </h3>
+                                        <GlassCard className="p-6 bg-white/50 dark:bg-white/5 border-none space-y-6">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Barcode</label>
+                                                <input
+                                                    value={formData.barcode}
+                                                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                                                    placeholder="Optional Barcode / UPC"
+                                                    className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/20 text-xs transition-all font-mono"
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Unit</label>
+                                                    <input
+                                                        value={formData.unit}
+                                                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                                                        placeholder="e.g. pcs, kg"
+                                                        className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/20 text-xs transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Reorder Level</label>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        value={formData.reorderLevel}
+                                                        onChange={(e) => setFormData({ ...formData, reorderLevel: e.target.value })}
+                                                        placeholder="Alert threshold"
+                                                        className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/20 text-xs transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </GlassCard>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Available In Stores</label>
-                                        <StoreSelector
-                                            value={formData.storeIds}
-                                            onChange={(ids) => {
-                                                const newVariants = formData.variants.map(v => {
-                                                    const total = (v.storeInventory || [])
-                                                        .filter((s: any) => ids.includes(s.storeId))
-                                                        .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
-                                                    return { ...v, stockQuantity: total }
-                                                })
-                                                setFormData({ ...formData, storeIds: ids, variants: newVariants })
-                                            }}
-                                        />
+                                    {/* Section: Pricing */}
+                                    <div className="space-y-6">
+                                        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
+                                            <Sparkles className="w-3 h-3" />
+                                            Pricing Strategy
+                                        </h3>
+                                        <div className="grid sm:grid-cols-2 gap-5">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Base Selling Price</label>
+                                                <MoneyInput
+                                                    currencySymbol={currency}
+                                                    required
+                                                    value={formData.price}
+                                                    onChange={(val) => {
+                                                        const newPrice = val.toString()
+                                                        const newVariants = formData.variants.map(v => ({
+                                                            ...v,
+                                                            price: v.price === formData.price || !v.price ? newPrice : v.price
+                                                        }))
+                                                        setFormData({ ...formData, price: newPrice, variants: newVariants })
+                                                    }}
+                                                    placeholder="e.g. 12,000"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Unit Cost Price</label>
+                                                <MoneyInput
+                                                    currencySymbol={currency}
+                                                    value={formData.costPrice}
+                                                    onChange={(val) => setFormData({ ...formData, costPrice: typeof val === 'string' ? val : String(val ?? '') })}
+                                                    placeholder="Optional"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Base Price</label>
-                                        <MoneyInput
-                                            currencySymbol={currency}
-                                            required
-                                            value={formData.price}
-                                            onChange={(val) => {
-                                                const newPrice = val.toString()
-                                                // Auto-update variants with empty or default price
-                                                const newVariants = formData.variants.map(v => ({
-                                                    ...v,
-                                                    price: v.price === formData.price || !v.price ? newPrice : v.price
-                                                }))
-                                                setFormData({ ...formData, price: newPrice, variants: newVariants })
-                                            }}
-                                            placeholder="e.g. 12,000"
-                                        />
+                                    {/* Section: Availability */}
+                                    <div className="space-y-6">
+                                        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
+                                            <MoreVertical className="w-3 h-3" />
+                                            Global Availability
+                                        </h3>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Available In Stores</label>
+                                                <StoreSelector
+                                                    value={formData.storeIds}
+                                                    onChange={(ids) => {
+                                                        const newVariants = formData.variants.map(v => {
+                                                            const total = (v.storeInventory || [])
+                                                                .filter((s: any) => ids.includes(s.storeId))
+                                                                .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+                                                            return { ...v, stockQuantity: total }
+                                                        })
+                                                        setFormData({ ...formData, storeIds: ids, variants: newVariants })
+                                                    }}
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
+                                                <div className="space-y-0.5">
+                                                    <label htmlFor="form-isActive" className="text-sm font-medium text-brand-deep dark:text-brand-cream cursor-pointer">
+                                                        Active & Visible in Catalog
+                                                    </label>
+                                                    <span className="block text-[10px] text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-tight font-normal">Toggle to hide this product from customers</span>
+                                                </div>
+                                                <Switch
+                                                    checked={formData.isActive}
+                                                    onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    {/* Variants Section */}
-                                    <div className="space-y-4 pt-4">
+                                    {/* Section: Variants & Specific Inventory */}
+                                    <div className="space-y-6 pt-4">
                                         <div className="flex items-center justify-between">
-                                            <h4 className="text-xs font-bold uppercase tracking-widest text-brand-deep/60 dark:text-brand-cream/60">Inventory & Variants</h4>
+                                            <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
+                                                <Plus className="w-3 h-3" />
+                                                Inventory & Variants
+                                            </h3>
                                             <Button
                                                 type="button"
                                                 onClick={() => setFormData({
                                                     ...formData,
                                                     variants: [...formData.variants, { name: '', sku: '', price: formData.price, stockQuantity: 0, storeInventory: [] }]
                                                 })}
-                                                variant="outline"
-                                                className="text-[10px] h-8 font-bold uppercase tracking-tighter bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 px-3 rounded-full transition-all"
+                                                variant="ghost"
+                                                className="text-[10px] h-8 font-bold uppercase tracking-widest text-brand-gold hover:bg-brand-gold/5 px-4 rounded-full transition-all"
                                             >
-                                                <Plus className="w-4 h-4" />
+                                                <Plus className="w-3.5 h-3.5 mr-1" />
                                                 Add Variant
                                             </Button>
                                         </div>
 
-                                        {formData.variants.length > 0 && (
-                                            <div className="space-y-6">
-                                                {formData.variants.map((variant, index) => (
-                                                    <div key={index} className="p-4 rounded-2xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 space-y-4 relative group">
-                                                        {formData.variants.length > 1 && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const newVariants = [...formData.variants]
-                                                                    newVariants.splice(index, 1)
-                                                                    setFormData({ ...formData, variants: newVariants })
-                                                                }}
-                                                                className="absolute cursor-pointer -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-all shadow-lg"
-                                                            >
-                                                                <Trash2 className="w-3 h-3" />
-                                                            </button>
-                                                        )}
+                                        <AnimatePresence mode="popLayout">
+                                            {formData.variants.length > 0 && (
+                                                <div className="space-y-6">
+                                                    {formData.variants.map((variant, index) => (
+                                                        <motion.div
+                                                            key={index}
+                                                            layout
+                                                            initial={{ opacity: 0, y: 20 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            exit={{ opacity: 0, scale: 0.95 }}
+                                                            className="relative group"
+                                                        >
+                                                            <GlassCard allowOverflow className="p-6 bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/5 space-y-5 transition-all hover:border-brand-gold/20">
+                                                                {formData.variants.length > 1 && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newVariants = [...formData.variants]
+                                                                            newVariants.splice(index, 1)
+                                                                            setFormData({ ...formData, variants: newVariants })
+                                                                        }}
+                                                                        className="absolute cursor-pointer -top-2 -right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:scale-110 z-10"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                )}
 
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <input
-                                                                    placeholder="Variant Name (e.g. XL)"
-                                                                    value={variant.name}
-                                                                    onChange={(e) => {
-                                                                        const v = [...formData.variants]
-                                                                        v[index].name = e.target.value
-                                                                        setFormData({ ...formData, variants: v })
-                                                                    }}
-                                                                    className="text-sm w-full h-14 px-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <input
-                                                                    placeholder="SKU"
-                                                                    value={variant.sku}
-                                                                    onChange={(e) => {
-                                                                        const v = [...formData.variants]
-                                                                        v[index].sku = e.target.value
-                                                                        setFormData({ ...formData, variants: v })
-                                                                    }}
-                                                                    className="text-sm w-full h-14 px-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20"
-                                                                />
-                                                            </div>
-                                                        </div>
+                                                                <div className="grid grid-cols-2 gap-4">
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Variant Name</label>
+                                                                        <input
+                                                                            placeholder="e.g. Extra Large"
+                                                                            value={variant.name}
+                                                                            onChange={(e) => {
+                                                                                const v = [...formData.variants]
+                                                                                v[index].name = e.target.value
+                                                                                setFormData({ ...formData, variants: v })
+                                                                            }}
+                                                                            className="text-sm w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 transition-all"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">SKU (Optional)</label>
+                                                                        <input
+                                                                            placeholder="V-SKU-001"
+                                                                            value={variant.sku}
+                                                                            onChange={(e) => {
+                                                                                const v = [...formData.variants]
+                                                                                v[index].sku = e.target.value
+                                                                                setFormData({ ...formData, variants: v })
+                                                                            }}
+                                                                            className="text-xs w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 font-mono transition-all"
+                                                                        />
+                                                                    </div>
+                                                                </div>
 
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <input
-                                                                    type="text"
-                                                                    inputMode="numeric"
-                                                                    pattern="[0-9]*"
-                                                                    placeholder="Stock"
-                                                                    readOnly={formData.storeIds.length > 1}
-                                                                    value={(() => {
-                                                                        if (formData.storeIds.length > 1) {
-                                                                            return (variant.storeInventory || [])
-                                                                                .filter((s: any) => formData.storeIds.includes(s.storeId))
-                                                                                .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
-                                                                        }
-                                                                        return variant.stockQuantity || 1
-                                                                    })()}
-                                                                    onChange={(e) => {
-                                                                        const rawValue = e.target.value.replace(/[^0-9]/g, '')
-                                                                        const val = rawValue === '' ? '' : parseInt(rawValue)
+                                                                <div className="grid grid-cols-2 gap-4">
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Stock Level</label>
+                                                                        <div className="relative">
+                                                                            <input
+                                                                                type="text"
+                                                                                inputMode="numeric"
+                                                                                pattern="[0-9]*"
+                                                                                placeholder="0"
+                                                                                readOnly={formData.storeIds.length > 1}
+                                                                                value={(() => {
+                                                                                    if (formData.storeIds.length > 1) {
+                                                                                        return (variant.storeInventory || [])
+                                                                                            .filter((s: any) => formData.storeIds.includes(s.storeId))
+                                                                                            .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+                                                                                    }
+                                                                                    return variant.stockQuantity || 0
+                                                                                })()}
+                                                                                onChange={(e) => {
+                                                                                    const rawValue = e.target.value.replace(/[^0-9]/g, '')
+                                                                                    const val = rawValue === '' ? 0 : parseInt(rawValue)
+
+                                                                                    setFormData(prev => {
+                                                                                        const newVariants = [...prev.variants]
+                                                                                        const v = { ...newVariants[index] }
+                                                                                        v.stockQuantity = val
+
+                                                                                        if (prev.storeIds.length === 1) {
+                                                                                            const storeId = prev.storeIds[0]
+                                                                                            const inv = [...(v.storeInventory || [])]
+                                                                                            const sIdx = inv.findIndex(s => s.storeId === storeId)
+                                                                                            if (sIdx > -1) {
+                                                                                                inv[sIdx] = { ...inv[sIdx], stockQuantity: val }
+                                                                                            } else {
+                                                                                                inv.push({ storeId, stockQuantity: val })
+                                                                                            }
+                                                                                            v.storeInventory = inv
+                                                                                        }
+
+                                                                                        newVariants[index] = v
+                                                                                        return { ...prev, variants: newVariants }
+                                                                                    })
+                                                                                }}
+                                                                                className={cn(
+                                                                                    "text-sm w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 transition-all font-bold",
+                                                                                    formData.storeIds.length > 1 && "bg-brand-deep/5 dark:bg-white/5 cursor-not-allowed text-brand-deep/40 dark:text-brand-cream/40"
+                                                                                )}
+                                                                            />
+                                                                            {formData.storeIds.length > 1 && (
+                                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2" title="Calculated from stores">
+                                                                                    <Loader2 className="w-3 h-3 text-brand-gold" />
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Variant Price</label>
+                                                                        <MoneyInput
+                                                                            currencySymbol={currency}
+                                                                            className="h-12 text-sm"
+                                                                            value={variant.price}
+                                                                            onChange={(val) => {
+                                                                                const v = [...formData.variants]
+                                                                                v[index].price = val.toString()
+                                                                                setFormData({ ...formData, variants: v })
+                                                                            }}
+                                                                            placeholder="0"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                <StoreStockInputs
+                                                                    storeIds={formData.storeIds}
+                                                                    stocks={variant.storeInventory || []}
+                                                                    onChange={(stocks) => {
+                                                                        const total = stocks
+                                                                            .filter(s => formData.storeIds.includes(s.storeId))
+                                                                            .reduce((sum, s) => sum + (Number(s.stockQuantity) || 0), 0)
 
                                                                         setFormData(prev => {
                                                                             const newVariants = [...prev.variants]
-                                                                            const v = { ...newVariants[index] }
-                                                                            v.stockQuantity = val
-
-                                                                            // Bidirectional sync: if only 1 store, update its inventory too
-                                                                            if (prev.storeIds.length === 1) {
-                                                                                const storeId = prev.storeIds[0]
-                                                                                const inv = [...(v.storeInventory || [])]
-                                                                                const sIdx = inv.findIndex(s => s.storeId === storeId)
-                                                                                if (sIdx > -1) {
-                                                                                    inv[sIdx] = { ...inv[sIdx], stockQuantity: val }
-                                                                                } else {
-                                                                                    inv.push({ storeId, stockQuantity: val })
-                                                                                }
-                                                                                v.storeInventory = inv
+                                                                            newVariants[index] = {
+                                                                                ...newVariants[index],
+                                                                                storeInventory: stocks,
+                                                                                stockQuantity: total
                                                                             }
-
-                                                                            newVariants[index] = v
                                                                             return { ...prev, variants: newVariants }
                                                                         })
                                                                     }}
-                                                                    className={cn(
-                                                                        "text-sm w-full h-14 px-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20",
-                                                                        formData.storeIds.length > 1 && "opacity-60 cursor-not-allowed bg-brand-deep/5 font-bold"
-                                                                    )}
                                                                 />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <MoneyInput
-                                                                    currencySymbol={currency}
-                                                                    className="rounded-2xl"
-                                                                    value={variant.price}
-                                                                    onChange={(val) => {
-                                                                        const v = [...formData.variants]
-                                                                        v[index].price = val.toString()
-                                                                        setFormData({ ...formData, variants: v })
-                                                                    }}
-                                                                    placeholder="0"
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        <StoreStockInputs
-                                                            storeIds={formData.storeIds}
-                                                            stocks={variant.storeInventory || []}
-                                                            onChange={(stocks) => {
-                                                                // Ensure we only sum what's in the selected stores
-                                                                const total = stocks
-                                                                    .filter(s => formData.storeIds.includes(s.storeId))
-                                                                    .reduce((sum, s) => sum + (Number(s.stockQuantity) || 0), 0)
-
-                                                                setFormData(prev => {
-                                                                    const newVariants = [...prev.variants]
-                                                                    newVariants[index] = {
-                                                                        ...newVariants[index],
-                                                                        storeInventory: stocks,
-                                                                        stockQuantity: total
-                                                                    }
-                                                                    return { ...prev, variants: newVariants }
-                                                                })
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                                            </GlassCard>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
 
-                                    <div className="flex gap-4 pt-6">
+                                    {/* Action Buttons */}
+                                </form>
+                            </DrawerBody>
+                            <DrawerFooter className="bg-brand-cream/80 dark:bg-brand-deep-800 backdrop-blur-md pt-4">
+                                <div className="max-w-xl mx-auto w-full space-y-4">
+                                    <div className="flex gap-4">
                                         <DrawerClose asChild>
-                                            <Button variant="outline" className="flex-1 rounded-2xl h-14" disabled={isSubmitting}>Cancel</Button>
+                                            <Button variant="ghost" className="flex-1 rounded-2xl h-14 uppercase tracking-widest text-[10px] font-bold text-brand-deep/40 dark:text-brand-cream/40 hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-all" disabled={isSubmitting}>Cancel</Button>
                                         </DrawerClose>
                                         <Button
-                                            type="submit"
+                                            onClick={() => {
+                                                const form = document.getElementById('product-form') as HTMLFormElement
+                                                form?.requestSubmit()
+                                            }}
                                             disabled={isSubmitting}
-                                            className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-xl"
+                                            className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest text-xs"
                                         >
-                                            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (editingItem ? "Save Changes" : "Create Product")}
+                                            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (editingItem ? "Update Changes" : "Create Product")}
                                         </Button>
                                     </div>
 
-                                    {editingItem ? (
-                                        <div className="pt-6 border-t border-brand-deep/5 dark:border-white/5 mt-6">
-                                            <Button
+                                    {editingItem && (
+                                        <div className="text-center">
+                                            <button
                                                 type="button"
-                                                variant="destructive"
                                                 disabled={isSubmitting}
                                                 onClick={() => {
                                                     setItemToDelete(editingItem)
                                                     setConfirmDeleteOpen(true)
                                                 }}
-                                                className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold text-rose-500/60 dark:text-rose-400 dark:hover:text-rose-500 hover:text-rose-500 transition-all uppercase tracking-widest disabled:opacity-50"
+                                                className="px-6 py-2 text-[10px] font-bold text-rose-500/60 dark:text-rose-400/60 hover:text-rose-500 transition-all uppercase tracking-[0.2em] disabled:opacity-50 inline-flex items-center gap-2"
                                             >
-                                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                                Delete Product from Inventory
-                                            </Button>
+                                                {isSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                                Permanent Removal
+                                            </button>
                                         </div>
-                                    ) : null}
-                                </form>
-                            </DrawerBody>
+                                    )}
+                                </div>
+                            </DrawerFooter>
                         </DrawerContent>
                     </Drawer>
+                    <ManageCategoriesDrawer open={isCategoriesDrawerOpen} onOpenChange={setIsCategoriesDrawerOpen} />
                     <BulkUploadDrawer
                         isOpen={isBulkUploadOpen}
                         onOpenChange={setIsBulkUploadOpen}

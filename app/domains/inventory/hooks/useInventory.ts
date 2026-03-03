@@ -8,6 +8,8 @@ export interface ProductFilterParams {
     search?: string
     status?: string[]
     storeIds?: string[]
+    categoryId?: string
+    categoryIds?: string[]
 }
 
 /**
@@ -32,9 +34,11 @@ export function useInventory(
     if (filters?.search) params.search = filters.search
     if (filters?.status && filters.status.length > 0) params.status = filters.status.join(',')
     if (filters?.storeIds && filters.storeIds.length > 0) params.storeIds = filters.storeIds.join(',')
+    if (filters?.categoryId) params.categoryId = filters.categoryId
+    if (filters?.categoryIds && filters.categoryIds.length > 0) params.categoryIds = filters.categoryIds.join(',')
 
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<Product[]>>({
-        queryKey: ['products', businessId, storeId, page, limit, filters?.search, filters?.status, filters?.storeIds],
+        queryKey: ['products', businessId, storeId, page, limit, filters?.search, filters?.status, filters?.storeIds, filters?.categoryId, filters?.categoryIds],
         queryFn: () => apiClient.get<ApiResponse<Product[]>>('/products', params, { fullResponse: true }),
         enabled: !!businessId
     })
