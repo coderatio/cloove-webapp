@@ -5,7 +5,7 @@ import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Building2, Loader2, CheckCircle2, AlertCircle, ChevronsUpDown, ArrowLeft, Lock } from "lucide-react"
 import { BankSelector, Bank } from "@/app/components/shared/BankSelector"
-import { useAddPayoutAccount, useResolveAccount } from "../hooks/useFinance"
+import { useAddPayoutAccount, useResolveAccount, usePaymentProviders } from "../hooks/useFinance"
 import { cn } from "@/app/lib/utils"
 
 interface AddPayoutAccountFormProps {
@@ -13,15 +13,19 @@ interface AddPayoutAccountFormProps {
     onCancel?: () => void
 }
 
-type FormView = "form" | "bank-selection"
+type FormView = "form" | "bank-selection" | "provider-selection"
 
 export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFormProps) {
-    const [view, setView] = useState<FormView>("form")
+    const { data: providersResponse, isLoading: providersLoading } = usePaymentProviders()
+    const enabledProviders = providersResponse?.data?.filter((p) => p.is_enabled) || []
+
+    const [view, setView] = useState<FormView>("provider-selection")
     const [details, setDetails] = useState({
         bankName: "",
         bankCode: "",
         accountNumber: "",
         accountName: "",
+        provider: "",
         pin: ""
     })
 
@@ -30,12 +34,24 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
     const addPayoutAccount = useAddPayoutAccount()
     const resolveAccountMutation = useResolveAccount()
 
+    // Initialize view and provider based on loaded data
+    useEffect(() => {
+        if (!providersLoading && enabledProviders.length > 0) {
+            if (enabledProviders.length === 1) {
+                setDetails((prev) => ({ ...prev, provider: enabledProviders[0].id }))
+                setView("form")
+            } else if (!details.provider) {
+                setView("provider-selection")
+            }
+        }
+    }, [providersLoading, enabledProviders.length, details.provider])
+
     // Real Account Name Resolution
     useEffect(() => {
-        if (details.bankCode && details.accountNumber.length === 10) {
+        if (details.bankCode && details.accountNumber.length === 10 && details.provider) {
             resolveAccount()
         }
-    }, [details.bankCode, details.accountNumber])
+    }, [details.bankCode, details.accountNumber, details.provider])
 
     const resolveAccount = async () => {
         setResolveError("")
@@ -43,7 +59,8 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
 
         resolveAccountMutation.mutate({
             accountNumber: details.accountNumber,
-            bankCode: details.bankCode
+            bankCode: details.bankCode,
+            provider: details.provider
         }, {
             onSuccess: (response) => {
                 if (response.data?.accountName) {
@@ -73,9 +90,69 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
         details.bankName !== "" &&
         details.accountNumber.length === 10 &&
         details.accountName !== "" &&
+        details.provider !== "" &&
         details.pin.length === 4 &&
         !resolveAccountMutation.isPending &&
         !addPayoutAccount.isPending
+
+    if (providersLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
+                <Loader2 className="w-10 h-10 animate-spin text-brand-gold/40" />
+                <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-brand-accent/40">
+                    Sourcing providers...
+                </p>
+            </div>
+        )
+    }
+
+    if (view === "provider-selection") {
+        return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                    {onCancel && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onCancel}
+                            className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
+                        >
+                            <ArrowLeft className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
+                        </Button>
+                    )}
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
+                        Select Payment Partner
+                    </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                    {enabledProviders.map((provider) => (
+                        <button
+                            key={provider.id}
+                            type="button"
+                            onClick={() => {
+                                setDetails(prev => ({ ...prev, provider: provider.id }))
+                                setView("form")
+                            }}
+                            className="group cursor-pointer relative flex items-center gap-4 p-4 rounded-3xl border border-brand-deep/5 bg-brand-deep/3 dark:bg-white/3 hover:border-brand-gold/50 transition-all duration-300 text-left"
+                        >
+                            <div className="w-12 h-12 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center shadow-sm">
+                                {provider.logo_url ? (
+                                    <img src={provider.logo_url} alt={provider.name} className="w-8 h-8 object-contain" />
+                                ) : (
+                                    <Building2 className="w-6 h-6 text-brand-deep/20 dark:text-white/20" />
+                                )}
+                            </div>
+                            <div>
+                                <p className="font-bold text-brand-deep dark:text-brand-cream uppercase tracking-tight">{provider.name}</p>
+                                <p className="text-[10px] text-brand-accent/40 dark:text-white/20 uppercase tracking-widest">Connect your bank via {provider.name}</p>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        )
+    }
 
     if (view === "bank-selection") {
         return (
@@ -96,6 +173,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                 <div className="flex-1">
                     <BankSelector
                         selectedBankName={details.bankName}
+                        provider={details.provider}
                         onSelect={(bank: Bank) => {
                             setDetails(prev => ({ ...prev, bankName: bank.name, bankCode: bank.code }))
                             setView("form")
@@ -106,21 +184,25 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
         )
     }
 
+    const selectedProvider = enabledProviders.find(p => p.id === details.provider)
+
     return (
         <form onSubmit={handleSubmit} className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-            {onCancel && (
+            {(onCancel || enabledProviders.length > 1) && (
                 <div className="flex items-center gap-3 mb-2">
                     <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={onCancel}
+                        onClick={() => (enabledProviders.length > 1 ? setView("provider-selection") : onCancel?.())}
                         className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
                     >
                         <ArrowLeft className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
                     </Button>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
-                        Add Payout Account
+                        {enabledProviders.length > 1 && selectedProvider
+                            ? `Add Account via ${selectedProvider.name}`
+                            : "Add Payout Account"}
                     </span>
                 </div>
             )}
@@ -203,11 +285,11 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
             </div>
 
             <div className="flex gap-4 pt-4">
-                {onCancel && (
+                {(onCancel || enabledProviders.length > 1) && (
                     <Button
                         type="button"
                         variant="ghost"
-                        onClick={onCancel}
+                        onClick={() => enabledProviders.length > 1 ? setView("provider-selection") : onCancel?.()}
                         disabled={addPayoutAccount.isPending}
                         className="flex-1 h-12 rounded-xl text-brand-deep/60 dark:text-brand-cream/60"
                     >

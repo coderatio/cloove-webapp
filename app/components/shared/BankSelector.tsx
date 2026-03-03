@@ -15,12 +15,13 @@ export interface Bank {
 interface BankSelectorProps {
     onSelect: (bank: Bank) => void
     selectedBankName?: string
+    provider?: string
     className?: string
 }
 
-export function BankSelector({ onSelect, selectedBankName, className }: BankSelectorProps) {
+export function BankSelector({ onSelect, selectedBankName, provider, className }: BankSelectorProps) {
     const [searchQuery, setSearchQuery] = useState("")
-    const { banks, isLoading } = useBanks()
+    const { banks, isLoading } = useBanks(provider)
 
     const filteredBanks = banks.filter(bank =>
         bank.name.toLowerCase().includes(searchQuery.toLowerCase())

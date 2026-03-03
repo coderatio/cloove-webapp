@@ -155,13 +155,16 @@ export function usePayoutAccounts() {
     }
 }
 
-export function useBanks() {
+export function useBanks(provider?: string) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
+    const params: Record<string, string> = {}
+    if (provider) params.provider = provider
+
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<Bank[]>>({
-        queryKey: ['finance', 'banks', businessId],
-        queryFn: () => apiClient.get<ApiResponse<Bank[]>>('/finance/banks', {}, { fullResponse: true }),
+        queryKey: ['finance', 'banks', businessId, provider],
+        queryFn: () => apiClient.get<ApiResponse<Bank[]>>('/finance/banks', params, { fullResponse: true }),
         enabled: !!businessId,
         staleTime: 1000 * 60 * 60, // 1 hour
     })
@@ -174,9 +177,24 @@ export function useBanks() {
     }
 }
 
+export interface PaymentProviderOption {
+    id: string
+    name: string
+    is_enabled: boolean
+    logo_url: string | null
+}
+
+export function usePaymentProviders() {
+    return useQuery<ApiResponse<PaymentProviderOption[]>>({
+        queryKey: ['common', 'payment-providers'],
+        queryFn: () => apiClient.get<ApiResponse<PaymentProviderOption[]>>('/payment-providers', {}, { fullResponse: true }),
+        staleTime: 1000 * 60 * 60, // 1 hour
+    })
+}
+
 export function useResolveAccount() {
     return useMutation({
-        mutationFn: async (payload: { accountNumber: string; bankCode: string }) => {
+        mutationFn: async (payload: { accountNumber: string; bankCode: string; provider: string }) => {
             return apiClient.get<ApiResponse<{ accountName: string }>>('/finance/payout-accounts/resolve', payload, { fullResponse: true })
         }
     })
@@ -208,7 +226,7 @@ export function useAddPayoutAccount() {
     const businessId = activeBusiness?.id
 
     return useMutation({
-        mutationFn: async (payload: { bankName: string, accountNumber: string, accountName: string, bankCode?: string, pin: string }) => {
+        mutationFn: async (payload: { bankName: string, accountNumber: string, accountName: string, bankCode?: string, provider: string, pin: string }) => {
             return apiClient.post<ApiResponse<PayoutAccountOption>>('/finance/payout-accounts', payload, { fullResponse: true })
         },
         onSuccess: (response) => {
