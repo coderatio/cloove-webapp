@@ -31,8 +31,22 @@ export interface FinanceTransactionRow {
     customer: string
     status: 'Cleared' | 'Pending' | 'Failed' | 'Processing'
     date: string
+    dateLabel?: string
+    fullDate?: string
     method: string
     storeId: string | null
+    metadata?: any
+    sale?: {
+        shortCode: string
+        status: string
+        customerName?: string
+        totalAmount: number
+    }
+    withdrawal?: {
+        bankName: string
+        accountNumber: string
+        accountName: string
+    }
 }
 
 export interface WalletBalanceData {

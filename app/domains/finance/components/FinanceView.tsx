@@ -24,6 +24,9 @@ import {
     Copy,
     Eye,
     EyeOff,
+    CreditCard,
+    Globe,
+    Share2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/app/lib/utils'
@@ -55,6 +58,7 @@ import type { FinanceTransactionMock } from '../data/financeMocks'
 import { useFinanceSummary, useFinanceTransactions, type TransactionFilterParams } from '../hooks/useFinance'
 import { useSettings, useUpdateBusinessSettings } from '@/app/domains/business/hooks/useBusinessSettings'
 import { Skeleton } from '@/app/components/ui/skeleton'
+import { VisuallyHidden } from '@/app/components/ui/visually-hidden'
 import { Badge } from '@/app/components/ui/badge'
 
 const WALLET_BALANCE_NUMERIC = 0
@@ -628,111 +632,244 @@ export function FinanceView() {
                     open={!!viewingTx}
                     onOpenChange={(open) => !open && setViewingTx(null)}
                 >
-                    <DrawerContent>
-                        <DrawerStickyHeader>
-                            <DrawerTitle>Verify Transaction</DrawerTitle>
-                            <DrawerDescription>
-                                {viewingTx?.customer} · {viewingTx ? formatCurrency((viewingTx as any).amountNumeric ?? (typeof (viewingTx as any).amount === 'number' ? (viewingTx as any).amount : parseCurrencyToNumber((viewingTx as any).amount)), { currency: currencyCode }) : '—'}
-                            </DrawerDescription>
-                        </DrawerStickyHeader>
-
-                        <DrawerBody className="pb-12 min-h-0">
-                            <div className="max-w-lg mx-auto space-y-8">
-                                <div className="space-y-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Transaction Status</h3>
-                                    <GlassCard className={cn(
-                                        "p-6 flex items-center justify-between border-brand-deep/5 transition-colors",
-                                        viewingTx?.status === 'Cleared' && "bg-brand-green/5 border-brand-green/20",
-                                        (viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && "bg-amber-500/5 border-amber-500/20",
-                                        viewingTx?.status === 'Failed' && "bg-red-500/5 border-red-500/20"
-                                    )}>
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn(
-                                                "h-12 w-12 rounded-full flex items-center justify-center",
-                                                viewingTx?.status === 'Cleared' && "bg-brand-green/20 text-brand-green",
-                                                (viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && "bg-amber-500/20 text-amber-500",
-                                                viewingTx?.status === 'Failed' && "bg-red-500/20 text-red-500"
-                                            )}>
-                                                {viewingTx?.status === 'Cleared' && <CheckCircle2 className="w-6 h-6" />}
-                                                {(viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && <Clock className={cn("w-6 h-6", viewingTx?.status === 'Processing' && "animate-pulse")} />}
-                                                {viewingTx?.status === 'Failed' && <XCircle className="w-6 h-6" />}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-lg">{viewingTx?.status}</p>
-                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">{viewingTx?.status === 'Cleared' ? `Verified via ${viewingTx?.method}` : viewingTx?.status === 'Failed' ? 'Transfer failed' : `Pending verification · ${viewingTx?.method}`}</p>
-                                                {viewingTx?.method && (() => {
-                                                    const cat = getTransactionCategory(viewingTx.method)
-                                                    return <Badge variant={cat.variant} className="mt-2 w-fit">{cat.label}</Badge>
-                                                })()}
-                                            </div>
-                                        </div>
-                                        {(viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && showMockActions && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={handleRequery}
-                                                disabled={isRequerying}
-                                                className="h-10 rounded-xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold/10"
-                                            >
-                                                <RefreshCcw className={cn("w-4 h-4 mr-2", isRequerying && "animate-spin")} />
-                                                {isRequerying ? "Querying..." : "Re-query API"}
-                                            </Button>
-                                        )}
-                                    </GlassCard>
+                    <DrawerContent className="max-h-[92vh]">
+                        <VisuallyHidden>
+                            <DrawerTitle>Transaction Details</DrawerTitle>
+                            <DrawerDescription>View detailed information about this transaction.</DrawerDescription>
+                        </VisuallyHidden>
+                        <DrawerStickyHeader className="border-b-0 pb-0">
+                            <div className="flex flex-col items-center text-center pt-4">
+                                <div className={cn(
+                                    "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-4 flex items-center gap-2",
+                                    viewingTx?.type === 'Credit'
+                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+                                )}>
+                                    {viewingTx?.type === 'Credit' ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
+                                    {viewingTx?.type === 'Credit' ? 'Inbound Payment' : 'Outbound Transfer'}
                                 </div>
 
-                                <div className="space-y-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Payment Details</h3>
-                                    <div className="space-y-4">
-                                        <div className="p-4 rounded-2xl bg-brand-deep/5 dark:bg-white/5 w-full">
-                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">Transaction ID</p>
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream truncate">{(viewingTx as any)?.reference ?? viewingTx?.id ?? '—'}</p>
+                                <h2 className="text-5xl sm:text-7xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                    {viewingTx ? (
+                                        <CurrencyDisplay
+                                            value={(viewingTx as any).amountNumeric ?? (typeof (viewingTx as any).amount === 'number' ? (viewingTx as any).amount : parseCurrencyToNumber((viewingTx as any).amount))}
+                                            currency={currencyCode}
+                                            className="justify-center"
+                                        />
+                                    ) : '—'}
+                                </h2>
+
+                                <p className="text-brand-accent/60 dark:text-brand-cream/60 font-medium mt-2">
+                                    {/* For sales, prefer customer name. For withdrawals, show bank name. Else show description. */}
+                                    {viewingTx?.sale?.customerName
+                                        ? viewingTx.sale.customerName
+                                        : viewingTx?.withdrawal
+                                            ? viewingTx.withdrawal.bankName
+                                            : viewingTx?.customer}
+                                </p>
+                            </div>
+                        </DrawerStickyHeader>
+
+                        <DrawerBody className="pb-12 pt-8">
+                            <div className="max-w-2xl mx-auto space-y-8">
+                                {/* Status Card */}
+                                <div className="px-1">
+                                    <div className={cn(
+                                        "p-1 rounded-[2rem] border transition-all duration-500",
+                                        viewingTx?.status === 'Cleared' && "bg-emerald-500/5 border-emerald-500/10",
+                                        (viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && "bg-amber-500/5 border-amber-500/10",
+                                        viewingTx?.status === 'Failed' && "bg-rose-500/5 border-rose-500/10"
+                                    )}>
+                                        <div className="flex items-center justify-between p-4 pr-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className={cn(
+                                                    "h-14 w-14 rounded-2xl flex items-center justify-center shadow-sm",
+                                                    viewingTx?.status === 'Cleared' && "bg-emerald-500 text-white shadow-emerald-500/20",
+                                                    (viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && "bg-amber-500 text-white shadow-amber-500/20",
+                                                    viewingTx?.status === 'Failed' && "bg-rose-500 text-white shadow-rose-500/20"
+                                                )}>
+                                                    {viewingTx?.status === 'Cleared' && <CheckCircle2 className="w-7 h-7" />}
+                                                    {(viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && <Clock className={cn("w-7 h-7", viewingTx?.status === 'Processing' && "animate-pulse")} />}
+                                                    {viewingTx?.status === 'Failed' && <XCircle className="w-7 h-7" />}
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 mb-0.5">Payment Status</p>
+                                                    <p className="font-bold text-xl text-brand-deep dark:text-brand-cream">{viewingTx?.status}</p>
+                                                </div>
+                                            </div>
+
+                                            {(viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && showMockActions ? (
                                                 <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="shrink-0 h-8 w-8 rounded-lg text-brand-accent/60 hover:text-brand-gold dark:text-brand-cream/60 dark:hover:text-brand-gold"
-                                                    onClick={() => {
-                                                        const id = (viewingTx as any)?.reference ?? viewingTx?.id ?? ''
-                                                        if (id) {
-                                                            navigator.clipboard.writeText(id)
-                                                            toast.success('Transaction ID copied')
-                                                        }
-                                                    }}
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={handleRequery}
+                                                    disabled={isRequerying}
+                                                    className="h-10 rounded-xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold/10 px-4"
                                                 >
-                                                    <Copy className="w-4 h-4" />
-                                                    <span className="sr-only">Copy transaction ID</span>
+                                                    <RefreshCcw className={cn("w-4 h-4 mr-2", isRequerying && "animate-spin")} />
+                                                    {isRequerying ? "Querying..." : "Re-query"}
                                                 </Button>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-4 rounded-2xl bg-brand-deep/5 dark:bg-white/5">
-                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">Inbound Amount</p>
-                                                <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                                    {viewingTx ? formatCurrency((viewingTx as any).amountNumeric ?? (typeof (viewingTx as any).amount === 'number' ? (viewingTx as any).amount : parseCurrencyToNumber((viewingTx as any).amount)), { currency: currencyCode }) : '—'}
-                                                </p>
-                                            </div>
-                                            <div className="p-4 rounded-2xl bg-brand-deep/5 dark:bg-white/5">
-                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">Time Initiated</p>
-                                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">{viewingTx?.date}</p>
-                                            </div>
+                                            ) : (
+                                                <div className="text-right">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 mb-0.5">Verification</p>
+                                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                                        {viewingTx?.status === 'Cleared'
+                                                            ? 'Fully Verified'
+                                                            : viewingTx?.status === 'Failed'
+                                                                ? 'Declined'
+                                                                : viewingTx?.status === 'Processing'
+                                                                    ? 'In Progress'
+                                                                    : 'Awaiting'}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-4 pt-6">
+                                {/* Data Grid */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between px-1">
+                                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30">Transaction Information</h3>
+                                        <Badge variant="outline" className="text-[9px] uppercase tracking-wider h-5 flex items-center">{viewingTx?.method}</Badge>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {/* Core Details Group */}
+                                        <div className="p-6 rounded-[2.5rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 space-y-6">
+                                            <div className="flex items-center justify-between group">
+                                                <div>
+                                                    <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">Reference ID</p>
+                                                    <p className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream truncate">
+                                                        {(viewingTx as any)?.reference ?? viewingTx?.id ?? '—'}
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 rounded-xl transition-all duration-300 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
+                                                    onClick={() => {
+                                                        const id = (viewingTx as any)?.reference ?? viewingTx?.id ?? ''
+                                                        navigator.clipboard.writeText(id)
+                                                        toast.success('ID copied to clipboard')
+                                                    }}
+                                                >
+                                                    <Copy className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1.5">Transaction Type</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center">
+                                                            <CreditCard className="w-3 h-3 text-brand-gold" />
+                                                        </div>
+                                                        <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">{viewingTx?.method}</p>
+                                                    </div>
+                                                </div>
+                                                {viewingTx?.storeId && (
+                                                    <div className="text-right">
+                                                        <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1.5">Location</p>
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                                                {stores.find(s => s.id === viewingTx?.storeId)?.name || 'Main Branch'}
+                                                            </p>
+                                                            <Globe className="w-3 h-3 text-emerald-500" />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="pt-4 border-t border-brand-deep/5 dark:border-white/5">
+                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-2">Time & Date</p>
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                                            {viewingTx?.fullDate || viewingTx?.date}
+                                                        </p>
+                                                        <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 mt-1">
+                                                            {viewingTx?.dateLabel || viewingTx?.date} • {' '}
+                                                            {viewingTx?.status === 'Cleared'
+                                                                ? 'Completed successfully'
+                                                                : viewingTx?.status === 'Failed'
+                                                                    ? 'Transaction failed'
+                                                                    : viewingTx?.status === 'Processing'
+                                                                        ? 'Processing payment'
+                                                                        : 'Awaiting confirmation'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Contextual Information Group */}
+                                        {(viewingTx?.withdrawal || viewingTx?.sale) && (
+                                            <div className="p-6 rounded-[2.5rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
+                                                {viewingTx?.withdrawal && (
+                                                    <div>
+                                                        <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-4">Destination Account</p>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-2xl bg-brand-deep/10 dark:bg-brand-gold/10 flex items-center justify-center">
+                                                                <Banknote className="w-6 h-6 text-brand-deep dark:text-brand-gold" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-base font-bold text-brand-deep dark:text-brand-cream">{viewingTx.withdrawal.bankName}</p>
+                                                                <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">{viewingTx.withdrawal.accountNumber} • {viewingTx.withdrawal.accountName}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {viewingTx?.sale && (
+                                                    <div className="space-y-6">
+                                                        <div className="flex items-center justify-between">
+                                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">Linked Sale</p>
+                                                            <Badge variant="outline" className="text-[9px] uppercase tracking-wider">
+                                                                {viewingTx.sale.status === 'COMPLETED' || viewingTx.sale.status === 'completed'
+                                                                    ? 'Completed'
+                                                                    : viewingTx.sale.status}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <div>
+                                                                <p className="text-base font-bold text-brand-deep dark:text-brand-cream">
+                                                                    {viewingTx.sale.customerName || 'Walking Customer'}
+                                                                </p>
+                                                                <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 mt-0.5">Sale #{viewingTx.sale.shortCode}</p>
+                                                            </div>
+                                                            <div className="text-right shrink-0">
+                                                                <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">Sale Total</p>
+                                                                <p className="text-base font-bold font-mono text-brand-deep dark:text-brand-cream">
+                                                                    {formatCurrency(viewingTx.sale.totalAmount, { currency: currencyCode })}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex flex-col sm:flex-row gap-4 pt-4 px-1">
+                                    <Button variant="outline" className="flex-1 h-14 rounded-3xl border-brand-deep/10 dark:border-white/10 font-bold flex items-center justify-center gap-3">
+                                        <Share2 className="w-4 h-4" />
+                                        Share Receipt
+                                    </Button>
+
                                     {viewingTx?.status === 'Pending' && showMockActions ? (
                                         <Button
                                             onClick={handleClearManual}
-                                            className="flex-1 h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:hover:text-brand-deep font-bold shadow-xl"
+                                            className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:hover:text-brand-deep font-bold shadow-xl"
                                         >
-                                            Mark as Cleared Manually
+                                            Approve Manually
                                         </Button>
                                     ) : (
                                         <DrawerClose asChild>
-                                            <Button className="flex-1 h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep dark:hover:text-brand-deep font-bold shadow-xl">
-                                                Done
+                                            <Button className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep dark:hover:text-brand-deep font-bold shadow-xl">
+                                                Close
                                             </Button>
                                         </DrawerClose>
                                     )}
@@ -741,6 +878,7 @@ export function FinanceView() {
                         </DrawerBody>
                     </DrawerContent>
                 </Drawer>
+
 
                 <AddMoneyModal
                     isOpen={isAddMoneyOpen}
@@ -776,6 +914,6 @@ export function FinanceView() {
                     </DrawerContent>
                 </Drawer>
             </div>
-        </PageTransition>
+        </PageTransition >
     )
 }
