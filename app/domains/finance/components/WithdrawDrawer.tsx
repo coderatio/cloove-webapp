@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Wallet, Building2, Check, Lock, Loader2 } from "lucide-react"
+import { Wallet, Building2, Check, Lock, Loader2, X, AlertCircle, Plus, Settings2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import {
@@ -16,6 +16,8 @@ import { useWalletBalance, usePayoutAccounts, useWithdraw } from "@/app/domains/
 import { formatCurrency } from "@/app/lib/formatters"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
+import { AddPayoutAccountForm } from './AddPayoutAccountForm'
+import { PayoutAccountsManager } from './PayoutAccountsManager'
 
 const FALLBACK_MIN_WITHDRAWAL = 1000
 
@@ -33,6 +35,7 @@ interface WithdrawDrawerProps {
     isOpen: boolean
     onOpenChange: (open: boolean) => void
     currencyCode: string
+    initialStep?: Step
 }
 
 function parseAmount(value: string): number {
@@ -54,9 +57,9 @@ function calculateWithdrawalFee(amount: number, tiers: { min: number; max: numbe
     return matchedFee ?? (sorted.length > 0 ? sorted[sorted.length - 1].fee : 0)
 }
 
-type Step = "details" | "pin"
+type Step = "details" | "pin" | "manage_payouts"
 
-export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode }: WithdrawDrawerProps) {
+export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep = "details" }: WithdrawDrawerProps) {
     const { wallet, isLoading: walletLoading } = useWalletBalance()
     const { payoutAccounts, isLoading: accountsLoading } = usePayoutAccounts()
     const withdrawMutation = useWithdraw()
@@ -94,8 +97,6 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode }: WithdrawD
     const pin = pinDigits.join("")
     const canSubmit = canContinue && pin.length === 4 && !withdrawMutation.isPending
 
-    const selectedAccount = payoutAccounts.find((a) => a.id === payoutAccountId)
-
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const raw = e.target.value.replace(/[^0-9]/g, "")
         if (raw) {
@@ -121,19 +122,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode }: WithdrawD
         }
     }
 
-    const goToPin = () => {
-        if (!canContinue) return
-        setStep("pin")
-        setPinDigits(["", "", "", ""])
-    }
-
-    const goBack = () => {
-        setStep("details")
-        setPinDigits(["", "", "", ""])
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleWithdraw = async () => {
         if (!canSubmit) return
         try {
             await withdrawMutation.mutateAsync({
@@ -164,8 +153,12 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode }: WithdrawD
     }, [isOpen, payoutAccounts, payoutAccountId])
 
     React.useEffect(() => {
-        if (!isOpen) setStep("details")
-    }, [isOpen])
+        if (!isOpen) {
+            setStep("details")
+        } else if (initialStep) {
+            setStep(initialStep)
+        }
+    }, [isOpen, initialStep])
 
     const amountInputRef = React.useRef<HTMLInputElement>(null)
     React.useEffect(() => {
@@ -188,230 +181,232 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode }: WithdrawD
     return (
         <Drawer open={isOpen} onOpenChange={onOpenChange}>
             <DrawerContent>
-                <div className="mx-auto w-full max-w-md">
-                    {step === "details" && (
-                        <>
-                            <DrawerHeader>
-                                <div className="mx-auto bg-brand-deep/5 dark:bg-white/5 p-3 rounded-full w-fit mb-4">
-                                    <Wallet className="w-6 h-6 text-brand-deep dark:text-brand-cream" />
-                                </div>
-                                <DrawerTitle className="text-center text-xl font-serif text-brand-deep dark:text-brand-cream">
-                                    Withdraw Funds
-                                </DrawerTitle>
-                                <DrawerDescription className="text-center text-brand-deep/60 dark:text-brand-cream/60">
-                                    Move funds to your bank account.
-                                </DrawerDescription>
-                            </DrawerHeader>
+                <DrawerHeader className="px-8 py-6">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                            <DrawerTitle className="text-xl font-serif text-brand-deep dark:text-brand-cream">
+                                {step === 'manage_payouts' ? "Manage Payouts" : "Withdraw Funds"}
+                            </DrawerTitle>
+                            <DrawerDescription className="text-[10px] text-brand-deep/60 dark:text-brand-cream/60 uppercase tracking-[0.2em] font-black">
+                                {step === 'manage_payouts' ? "Add or update bank accounts" : "Move funds to your bank account"}
+                            </DrawerDescription>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onOpenChange(false)}
+                            className="h-10 w-10 rounded-full hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                        >
+                            <X className="w-5 h-5 text-brand-deep/40" />
+                        </Button>
+                    </div>
+                </DrawerHeader>
+                <div className="mx-auto w-full max-w-md h-full flex flex-col min-h-[500px]">
 
-                            <DrawerBody className="p-4 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">
+
+                    <DrawerBody className="p-4 flex-1 overflow-y-auto max-h-[calc(100vh-160px)]">
+                        {step === "manage_payouts" ? (
+                            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                                <PayoutAccountsManager onClose={() => setStep("details")} />
+                            </div>
+                        ) : payoutAccounts.length === 0 && !accountsLoading ? (
+                            <div className="py-12 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-brand-gold/20 blur-3xl rounded-full animate-pulse" />
+                                    <div className="relative w-24 h-24 rounded-[2.5rem] bg-linear-to-br from-brand-deep to-brand-accent flex items-center justify-center shadow-2xl overflow-hidden group rotate-3">
+                                        <Building2 className="w-12 h-12 text-brand-gold group-hover:scale-110 transition-transform duration-700 -rotate-3" />
+                                        <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2 max-w-[280px]">
+                                    <h4 className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">No settlement account</h4>
+                                    <p className="text-[10px] text-brand-deep/40 dark:text-white/30 leading-relaxed uppercase tracking-[0.2em] font-black">Link a bank account to start receiving your business settlements directly.</p>
+                                </div>
+                                <Button
+                                    onClick={() => setStep("manage_payouts")}
+                                    className="w-full h-16 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-widest text-xs rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex items-center justify-center gap-3 group hover:translate-y-[-4px] active:translate-y-[0] transition-all duration-300"
+                                >
+                                    <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                                    Link Bank Account
+                                </Button>
+                            </div>
+                        ) : step === "details" ? (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
+                                <div className="space-y-6">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 ml-1">
                                             Amount (Min {formatCurrency(minWithdrawal, { currency: currencyCode })})
                                         </label>
-                                        <div className="flex rounded-2xl border border-transparent bg-brand-deep/5 dark:bg-white/5 overflow-hidden focus-within:ring-2 focus-within:ring-brand-deep/20 focus-within:border-brand-deep/10">
-                                            <span className="flex items-center justify-center min-w-14 px-3 h-12 text-brand-deep/50 dark:text-brand-cream/50 font-serif text-base shrink-0 border-r border-brand-deep/10 dark:border-white/10">
-                                                {symbol}
-                                            </span>
-                                            <Input
-                                                ref={amountInputRef}
-                                                type="text"
-                                                inputMode="numeric"
-                                                placeholder="0.00"
-                                                value={amount}
-                                                onChange={handleAmountChange}
-                                                className="h-12 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-3"
-                                                aria-describedby={amountError ? "amount-hint amount-error" : "amount-hint"}
-                                            />
-                                        </div>
-                                        {amountError ? (
-                                            <span id="amount-error" className={cn(
-                                                "text-xs font-medium",
-                                                amountError.type === "config" ? "text-amber-600 dark:text-amber-400" :
-                                                    amountError.type === "min" ? "text-orange-500" : "text-red-500"
-                                            )} role="alert">
-                                                {amountError.text}
-                                            </span>
-                                        ) : amountNum > 0 ? (
-                                            <div className="flex items-center gap-1.5 h-4">
-                                                {walletLoading ? (
-                                                    <Loader2 className="w-3 h-3 animate-spin text-brand-deep/30 dark:text-brand-cream/30" />
-                                                ) : null}
-                                                <span className="text-xs text-brand-deep/60 dark:text-brand-cream/60">
-                                                    Fee: {walletLoading ? "Calculating…" : formatCurrency(fee, { currency: currencyCode })}
+                                        <div className="relative group">
+                                            <div className="absolute -inset-1 bg-brand-gold/0 group-focus-within:bg-brand-gold/10 rounded-[2rem] transition-all duration-500 blur-md" />
+                                            <div className="relative flex rounded-3xl border border-brand-deep/5 bg-brand-deep/[0.03] dark:bg-white/[0.03] overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
+                                                <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/40 font-serif text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
+                                                    {symbol}
                                                 </span>
+                                                <Input
+                                                    ref={amountInputRef}
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    placeholder="0.00"
+                                                    value={amount}
+                                                    onChange={handleAmountChange}
+                                                    className="h-16 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black text-brand-deep dark:text-white placeholder:text-brand-deep/10"
+                                                />
                                             </div>
-                                        ) : (
-                                            <span id="amount-hint" className="text-xs text-brand-deep/40 dark:text-brand-cream/40">
-                                                Available: {walletLoading ? "…" : formatCurrency(available, { currency: currencyCode })}
-                                            </span>
-                                        )}
+                                        </div>
+
+                                        <div className="flex items-center justify-between px-1">
+                                            {amountError ? (
+                                                <div className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-rose-500 animate-in slide-in-from-left-2">
+                                                    <AlertCircle className="w-3 h-3" />
+                                                    {amountError.text}
+                                                </div>
+                                            ) : amountNum > 0 ? (
+                                                <div className="flex items-center gap-1.5 h-4 animate-in fade-in">
+                                                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-white/30">
+                                                        Fee: {walletLoading ? "Calculating…" : formatCurrency(fee, { currency: currencyCode })}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-white/20">
+                                                    Available: {walletLoading ? "…" : formatCurrency(available, { currency: currencyCode })}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">
-                                            To account
-                                        </label>
-                                        {payoutAccounts.length === 0 && !accountsLoading ? (
-                                            <p className="text-sm text-amber-600 dark:text-amber-400 py-3">
-                                                Add a payout account in settings first.
-                                            </p>
-                                        ) : (
-                                            <div className="space-y-3 bg-brand-deep/5 dark:bg-white/5 rounded-3xl p-3">
-                                                {payoutAccounts.map((acc) => (
-                                                    <button
-                                                        key={acc.id}
-                                                        type="button"
-                                                        onClick={() => setPayoutAccountId(acc.id)}
-                                                        className={cn(
-                                                            "w-full cursor-pointer p-4 rounded-3xl flex items-center gap-4 transition-all text-left border-2",
-                                                            payoutAccountId === acc.id
-                                                                ? "bg-brand-deep/5 dark:bg-white/5 border-brand-gold/50 dark:border-brand-gold/40 shadow-md shadow-brand-gold/5"
-                                                                : "bg-white dark:bg-white/5 border-brand-deep/10 dark:border-white/10 hover:border-brand-deep/20 dark:hover:border-white/20 hover:bg-brand-deep/3 dark:hover:bg-white/5"
-                                                        )}
-                                                    >
-                                                        <div
-                                                            className={cn(
-                                                                "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-                                                                payoutAccountId === acc.id
-                                                                    ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep"
-                                                                    : "bg-brand-deep/5 dark:bg-white/10 text-brand-deep/60 dark:text-brand-cream/60"
-                                                            )}
-                                                        >
+                                        <div className="flex items-center justify-between ml-1">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
+                                                Select Destination
+                                            </label>
+                                            <button
+                                                onClick={() => setStep("manage_payouts")}
+                                                className="text-[10px] cursor-pointer font-black text-brand-gold hover:text-brand-gold/80 uppercase tracking-widest flex items-center gap-1 transition-all hover:gap-1.5"
+                                            >
+                                                <Settings2 className="w-3 h-3" />
+                                                Manage
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {payoutAccounts.map((account) => (
+                                                <button
+                                                    key={account.id}
+                                                    onClick={() => setPayoutAccountId(account.id)}
+                                                    className={cn(
+                                                        "group relative flex items-center justify-between p-4 rounded-3xl border transition-all duration-500",
+                                                        payoutAccountId === account.id
+                                                            ? "bg-brand-gold shadow-[0_15px_30px_rgba(182,143,76,0.15)] border-brand-gold"
+                                                            : "bg-brand-deep/3 dark:bg-white/3 border-transparent hover:border-brand-deep/10 dark:hover:border-white/10"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-4 min-w-0">
+                                                        <div className={cn(
+                                                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                                                            payoutAccountId === account.id ? "bg-white text-brand-deep shadow-inner" : "bg-white dark:bg-white/10 text-brand-deep/30 dark:text-white/30"
+                                                        )}>
                                                             <Building2 className="w-6 h-6" />
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-semibold text-brand-deep dark:text-brand-cream flex items-center gap-2 flex-wrap">
-                                                                {acc.bankName}
-                                                                {acc.isDefault && (
-                                                                    <span className="text-[10px] bg-brand-gold/15 text-brand-gold px-2 py-0.5 rounded-full font-bold uppercase">
-                                                                        Default
-                                                                    </span>
+                                                        <div className="text-left min-w-0">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className={cn(
+                                                                    "text-[11px] font-black uppercase tracking-tight truncate",
+                                                                    payoutAccountId === account.id ? "text-brand-deep" : "text-brand-deep dark:text-brand-cream"
+                                                                )}>
+                                                                    {account.bankName}
+                                                                </span>
+                                                                {account.isDefault && (
+                                                                    <span className={cn(
+                                                                        "text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter",
+                                                                        payoutAccountId === account.id ? "bg-brand-deep/10 text-brand-deep" : "bg-brand-gold/20 text-brand-gold"
+                                                                    )}>Default</span>
                                                                 )}
                                                             </div>
-                                                            <div className="text-sm text-brand-deep/70 dark:text-brand-cream/70 font-mono mt-0.5">
-                                                                {acc.accountNumber ?? ""}
-                                                            </div>
+                                                            <span className={cn(
+                                                                "text-xs font-mono font-medium block",
+                                                                payoutAccountId === account.id ? "text-brand-deep/60" : "text-brand-accent/40 dark:text-white/40"
+                                                            )}>{account.accountNumber}</span>
                                                         </div>
-                                                        {payoutAccountId === acc.id && (
-                                                            <div className="w-6 h-6 rounded-full bg-brand-deep dark:bg-brand-gold flex items-center justify-center text-brand-gold dark:text-brand-deep shrink-0">
-                                                                <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                                                            </div>
-                                                        )}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
+                                                    </div>
+                                                    {payoutAccountId === account.id && (
+                                                        <div className="w-6 h-6 rounded-full bg-brand-deep flex items-center justify-center shadow-lg animate-in zoom-in duration-500">
+                                                            <Check className="w-3.5 h-3.5 text-brand-gold" strokeWidth={4} />
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-3">
+                                <div className="pt-4">
                                     <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="flex-1 h-12 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-transparent hover:bg-brand-deep/10 dark:hover:bg-white/10 text-brand-deep dark:text-brand-cream font-medium"
-                                        onClick={() => onOpenChange(false)}
+                                        onClick={() => setStep("pin")}
+                                        disabled={!amount || !!amountError || !payoutAccountId}
+                                        className="w-full h-16 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-2xl hover:translate-y-[-4px] active:translate-y-[0] transition-all duration-300 disabled:opacity-50 disabled:translate-y-0"
                                     >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        disabled={!canContinue}
-                                        onClick={goToPin}
-                                        className="flex-1 h-12 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 text-base font-medium rounded-2xl"
-                                    >
-                                        Continue
+                                        Authorize Withdrawal
                                     </Button>
                                 </div>
-                            </DrawerBody>
-                        </>
-                    )}
-
-                    {step === "pin" && selectedAccount && (
-                        <>
-                            <div className="relative">
-                                <DrawerHeader>
-                                    <div className="mx-auto bg-brand-gold/10 dark:bg-brand-gold/20 p-4 rounded-2xl w-fit mb-4">
-                                        <Lock className="w-8 h-8 text-brand-gold" />
-                                    </div>
-                                    <DrawerTitle className="text-center text-xl font-serif text-brand-deep dark:text-brand-cream">
-                                        Confirm with PIN
-                                    </DrawerTitle>
-                                    <DrawerDescription className="text-center text-brand-deep/60 dark:text-brand-cream/60">
-                                        Enter your 4-digit transaction PIN to authorise this withdrawal.
-                                    </DrawerDescription>
-                                </DrawerHeader>
                             </div>
-
-                            <DrawerBody className="p-4 pt-0 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-                                <div className="rounded-2xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 p-4 space-y-2">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-brand-deep/60 dark:text-brand-cream/60">Amount</span>
-                                        <span className="font-semibold text-brand-deep dark:text-brand-cream">
-                                            {formatCurrency(amountNum, { currency: currencyCode })}
-                                        </span>
+                        ) : (
+                            <div className="space-y-10 py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                <div className="text-center space-y-6">
+                                    <div className="mx-auto w-20 h-20 rounded-4xl bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-6 group relative">
+                                        <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full animate-pulse" />
+                                        <Lock className="w-10 h-10 relative z-10" />
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-brand-deep/60 dark:text-brand-cream/60">Fee</span>
-                                        <span className="font-medium text-brand-deep dark:text-brand-cream">
-                                            {formatCurrency(fee, { currency: currencyCode })}
-                                        </span>
-                                    </div>
-                                    <div className="pt-2 mt-2 border-t border-brand-deep/10 dark:border-white/10 flex justify-between text-base font-bold">
-                                        <span className="text-brand-deep dark:text-brand-cream">Total Debit</span>
-                                        <span className="text-brand-deep dark:text-brand-cream">
-                                            {formatCurrency(totalDebit, { currency: currencyCode })}
-                                        </span>
+                                    <div className="space-y-2">
+                                        <h4 className="text-3xl font-serif font-black text-brand-deep dark:text-white tracking-tight italic">Verify Access</h4>
+                                        <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase font-black tracking-[0.2em]">Authenticating payout of {formatCurrency(amountNum, { currency: currencyCode })}</p>
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <p className="text-center text-xs font-medium text-brand-deep/50 dark:text-brand-cream/50 uppercase tracking-wider">
-                                        Transaction PIN
-                                    </p>
-                                    <div className="flex justify-center gap-3">
-                                        {pinDigits.map((digit, i) => (
-                                            <Input
-                                                key={i}
-                                                ref={i === 0 ? pinFirstInputRef : undefined}
-                                                id={`withdraw-pin-${i}`}
-                                                type="password"
-                                                inputMode="numeric"
-                                                autoComplete="off"
-                                                maxLength={1}
-                                                value={digit}
-                                                onChange={(e) => handlePinDigit(i, e.target.value)}
-                                                onKeyDown={(e) => handlePinKeyDown(i, e)}
-                                                className="w-14 h-14 text-center text-2xl font-bold rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-2 border-transparent focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20 text-brand-deep dark:text-brand-cream transition-all"
-                                            />
-                                        ))}
-                                    </div>
+                                <div className="flex justify-center gap-4 max-w-sm mx-auto">
+                                    {pinDigits.map((digit, i) => (
+                                        <input
+                                            key={i}
+                                            ref={i === 0 ? pinFirstInputRef : undefined}
+                                            id={`withdraw-pin-${i}`}
+                                            type="password"
+                                            inputMode="numeric"
+                                            maxLength={1}
+                                            value={digit}
+                                            onChange={(e) => handlePinDigit(i, e.target.value)}
+                                            onKeyDown={(e) => handlePinKeyDown(i, e)}
+                                            className="w-16 h-20 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-2 border-transparent focus:border-brand-gold focus:bg-white dark:focus:bg-brand-deep text-center text-3xl font-serif font-black transition-all outline-hidden shadow-inner text-brand-deep dark:text-white"
+                                        />
+                                    ))}
                                 </div>
 
-                                <form onSubmit={handleSubmit} className="space-y-3">
+                                <div className="flex flex-col gap-4 pt-4">
                                     <Button
-                                        type="submit"
-                                        disabled={!canSubmit}
-                                        className="w-full h-16 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 text-base font-medium rounded-2xl"
+                                        onClick={handleWithdraw}
+                                        disabled={pinDigits.some(d => !d) || withdrawMutation.isPending}
+                                        className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
                                     >
                                         {withdrawMutation.isPending ? (
-                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <div className="flex items-center gap-3">
+                                                <Loader2 className="w-6 h-6 animate-spin" />
+                                                <span>Processing...</span>
+                                            </div>
                                         ) : (
-                                            "Withdraw " + formatCurrency(totalDebit, { currency: currencyCode })
+                                            "Confirm & Execute"
                                         )}
                                     </Button>
                                     <Button
-                                        type="button"
                                         variant="ghost"
-                                        className="w-full h-14 rounded-2xl text-brand-deep/60 dark:text-brand-cream/60"
-                                        onClick={goBack}
+                                        onClick={() => setStep("details")}
+                                        disabled={withdrawMutation.isPending}
+                                        className="h-12 rounded-xl text-brand-deep/40 dark:text-brand-cream/40 font-black uppercase tracking-widest text-[9px] hover:bg-brand-deep/5 dark:hover:bg-white/5"
                                     >
-                                        Change details
+                                        Correction / Change Details
                                     </Button>
-                                </form>
-                            </DrawerBody>
-                        </>
-                    )}
+                                </div>
+                            </div>
+                        )}
+                    </DrawerBody>
                 </div>
             </DrawerContent>
         </Drawer>

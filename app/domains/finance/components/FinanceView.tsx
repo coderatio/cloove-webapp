@@ -8,6 +8,7 @@ import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
 import {
     Wallet,
+    Building2,
     ArrowUpRight,
     ArrowDownRight,
     RefreshCcw,
@@ -95,6 +96,7 @@ export function FinanceView() {
     const [isRequerying, setIsRequerying] = React.useState(false)
     const [isAddMoneyOpen, setIsAddMoneyOpen] = React.useState(false)
     const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
+    const [withdrawInitialStep, setWithdrawInitialStep] = React.useState<"details" | "manage_payouts">("details")
 
     const transactions = useApi ? apiTransactions.map(t => ({ ...t, amountNumeric: t.amount })) : mockTransactions
     const isFetching = useApi ? (summaryFetching || transactionsFetching) : false
@@ -414,6 +416,22 @@ export function FinanceView() {
                                             </div>
                                             <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                                         </Button>
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => {
+                                                setWithdrawInitialStep("manage_payouts")
+                                                setIsWithdrawOpen(true)
+                                            }}
+                                            className="w-full cursor-pointer flex items-center justify-between p-5 rounded-3xl h-auto bg-white/80 dark:bg-white/5 border border-brand-deep/5 hover:border-brand-gold/30 hover:shadow-xl transition-all text-left group active:scale-95"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-xl bg-brand-green/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
+                                                    <Building2 className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
+                                                </div>
+                                                <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream/80">Payout Settings</span>
+                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                                        </Button>
                                     </div>
                                 </div>
 
@@ -654,8 +672,12 @@ export function FinanceView() {
                 />
                 <WithdrawDrawer
                     isOpen={isWithdrawOpen}
-                    onOpenChange={setIsWithdrawOpen}
+                    onOpenChange={(open) => {
+                        setIsWithdrawOpen(open)
+                        if (!open) setWithdrawInitialStep("details")
+                    }}
                     currencyCode={currencyCode}
+                    initialStep={withdrawInitialStep}
                 />
             </div>
         </PageTransition>

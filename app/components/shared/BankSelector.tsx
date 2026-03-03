@@ -1,39 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Check } from "lucide-react"
+import { Search, Check, Loader2 } from "lucide-react"
 import { Input } from "@/app/components/ui/input"
 import { cn } from "@/app/lib/utils"
+import { useBanks } from "@/app/domains/finance/hooks/useFinance"
 
 export interface Bank {
+    id: string | number
     code: string
     name: string
 }
-
-export const NIGERIAN_BANKS: Bank[] = [
-    { code: "058", name: "Guaranty Trust Bank" },
-    { code: "044", name: "Access Bank" },
-    { code: "050", name: "Ecobank Nigeria" },
-    { code: "070", name: "Fidelity Bank" },
-    { code: "011", name: "First Bank of Nigeria" },
-    { code: "214", name: "First City Monument Bank" },
-    { code: "030", name: "Heritage Bank" },
-    { code: "301", name: "Jaiz Bank" },
-    { code: "082", name: "Keystone Bank" },
-    { code: "014", name: "Mainstreet Bank" },
-    { code: "076", name: "Skye Bank" },
-    { code: "039", name: "Stanbic IBTC Bank" },
-    { code: "232", name: "Sterling Bank" },
-    { code: "032", name: "Union Bank of Nigeria" },
-    { code: "033", name: "United Bank for Africa" },
-    { code: "215", name: "Unity Bank" },
-    { code: "035", name: "Wema Bank" },
-    { code: "057", name: "Zenith Bank" },
-    { code: "101", name: "Providus Bank" },
-    { code: "100", name: "SunTrust Bank" },
-    { code: "302", name: "TAJ Bank" },
-    { code: "090115", name: "TCF MFB" },
-]
 
 interface BankSelectorProps {
     onSelect: (bank: Bank) => void
@@ -43,22 +20,34 @@ interface BankSelectorProps {
 
 export function BankSelector({ onSelect, selectedBankName, className }: BankSelectorProps) {
     const [searchQuery, setSearchQuery] = useState("")
+    const { banks, isLoading } = useBanks()
 
-    const filteredBanks = NIGERIAN_BANKS.filter(bank =>
+    const filteredBanks = banks.filter(bank =>
         bank.name.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-gold" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30">Loading banks...</p>
+            </div>
+        )
+    }
+
     return (
         <div className={cn("flex flex-col h-full space-y-4 pt-2", className)}>
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-deep/40 dark:text-brand-cream/40" />
-                <Input
-                    placeholder="Search bank..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 bg-brand-deep/5 dark:bg-white/5 border-transparent h-11 rounded-xl"
-                    autoFocus
-                />
+            <div className="-mx-2 px-2">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-deep/40 dark:text-brand-cream/40" />
+                    <Input
+                        placeholder="Search bank..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 bg-brand-deep/5 dark:bg-white/5 border-transparent h-11 rounded-xl focus:bg-white dark:focus:bg-white/10 transition-all"
+                        autoFocus
+                    />
+                </div>
             </div>
             <div className="flex-1 overflow-y-auto -mx-2 px-2 pb-4">
                 {filteredBanks.length === 0 ? (

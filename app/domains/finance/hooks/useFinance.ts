@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient, ApiResponse } from "@/app/lib/api-client"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { toast } from "sonner"
 
 export interface FinanceSummary {
     date: string | null
@@ -49,6 +50,12 @@ export interface PayoutAccountOption {
     accountNumber?: string
     accountName: string
     isDefault: boolean
+}
+
+export interface Bank {
+    id: string | number
+    code: string
+    name: string
 }
 
 export interface WithdrawalResponse {
@@ -148,6 +155,33 @@ export function usePayoutAccounts() {
     }
 }
 
+export function useBanks() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<Bank[]>>({
+        queryKey: ['finance', 'banks', businessId],
+        queryFn: () => apiClient.get<ApiResponse<Bank[]>>('/finance/banks', {}, { fullResponse: true }),
+        enabled: !!businessId,
+        staleTime: 1000 * 60 * 60, // 1 hour
+    })
+
+    return {
+        banks: response?.data ?? [],
+        isLoading,
+        isFetching,
+        error,
+    }
+}
+
+export function useResolveAccount() {
+    return useMutation({
+        mutationFn: async (payload: { accountNumber: string; bankCode: string }) => {
+            return apiClient.get<ApiResponse<{ accountName: string }>>('/finance/payout-accounts/resolve', payload, { fullResponse: true })
+        }
+    })
+}
+
 export function useWithdraw() {
     const queryClient = useQueryClient()
     const { activeBusiness } = useBusiness()
@@ -165,5 +199,89 @@ export function useWithdraw() {
                 queryClient.invalidateQueries({ queryKey: ['finance', 'withdrawals', businessId] })
             }
         },
+    })
+}
+
+export function useAddPayoutAccount() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: async (payload: { bankName: string, accountNumber: string, accountName: string, bankCode?: string, pin: string }) => {
+            return apiClient.post<ApiResponse<PayoutAccountOption>>('/finance/payout-accounts', payload, { fullResponse: true })
+        },
+        onSuccess: (response) => {
+            toast.success(response.message || "Payout account added")
+            if (businessId) {
+                queryClient.invalidateQueries({ queryKey: ['finance', 'payout-accounts', businessId] })
+            }
+        },
+        onError: (err: any) => {
+            toast.error(err.data?.message || err.message || "Failed to add payout account")
+        }
+    })
+}
+
+export function useUpdatePayoutAccount() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: async ({ id, ...payload }: { id: string, bankName?: string, accountName?: string, bankCode?: string, pin: string }) => {
+            return apiClient.patch<ApiResponse<PayoutAccountOption>>(`/finance/payout-accounts/${id}`, payload, { fullResponse: true })
+        },
+        onSuccess: (response) => {
+            toast.success(response.message || "Payout account updated")
+            if (businessId) {
+                queryClient.invalidateQueries({ queryKey: ['finance', 'payout-accounts', businessId] })
+            }
+        },
+        onError: (err: any) => {
+            toast.error(err.data?.message || err.message || "Failed to update payout account")
+        }
+    })
+}
+
+export function useDeletePayoutAccount() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: async ({ id, pin }: { id: string, pin: string }) => {
+            return apiClient.delete<ApiResponse<void>>(`/finance/payout-accounts/${id}`, { params: { pin }, fullResponse: true })
+        },
+        onSuccess: (response) => {
+            toast.success(response.message || "Payout account removed")
+            if (businessId) {
+                queryClient.invalidateQueries({ queryKey: ['finance', 'payout-accounts', businessId] })
+            }
+        },
+        onError: (err: any) => {
+            toast.error(err.data?.message || err.message || "Failed to remove payout account")
+        }
+    })
+}
+
+export function useSetDefaultPayoutAccount() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: async ({ id, pin }: { id: string, pin: string }) => {
+            return apiClient.post<ApiResponse<void>>(`/finance/payout-accounts/${id}/default`, { pin }, { fullResponse: true })
+        },
+        onSuccess: (response) => {
+            toast.success(response.message || "Default payout account updated")
+            if (businessId) {
+                queryClient.invalidateQueries({ queryKey: ['finance', 'payout-accounts', businessId] })
+            }
+        },
+        onError: (err: any) => {
+            toast.error(err.data?.message || err.message || "Failed to update default payout account")
+        }
     })
 }
