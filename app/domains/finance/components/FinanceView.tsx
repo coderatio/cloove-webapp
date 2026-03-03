@@ -49,7 +49,7 @@ import { WithdrawDrawer } from './WithdrawDrawer'
 import { PayoutAccountsManager } from './PayoutAccountsManager'
 import { formatCurrency, parseCurrencyToNumber } from '@/app/lib/formatters'
 import type { FinanceTransactionMock } from '../data/financeMocks'
-import { useFinanceSummary, useFinanceTransactions } from '../hooks/useFinance'
+import { useFinanceSummary, useFinanceTransactions, type TransactionFilterParams } from '../hooks/useFinance'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { Badge } from '@/app/components/ui/badge'
 
@@ -79,30 +79,10 @@ export function FinanceView() {
     const useApi = !!activeBusiness?.id
     const [mockTransactions, setMockTransactions] = React.useState(initialTransactions)
     const [search, setSearch] = React.useState("")
+    const deferredSearch = React.useDeferredValue(search)
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [selectedStoreId, setSelectedStoreId] = React.useState<string>(currentStore?.id || 'all-stores')
     const [currentPage, setCurrentPage] = React.useState(1)
-
-    React.useEffect(() => {
-        if (useApi) setCurrentPage(1)
-    }, [selectedStoreId, useApi])
-
-    const { summary: apiSummary, isFetching: summaryFetching } = useFinanceSummary(selectedStoreId)
-    const { transactions: apiTransactions, meta: apiMeta, isLoading: transactionsLoading, isFetching: transactionsFetching } = useFinanceTransactions(
-        useApi ? selectedStoreId : undefined,
-        currentPage,
-        PAGE_SIZE
-    )
-    const [viewingTx, setViewingTx] = React.useState<TransactionRow | null>(null)
-    const [isRequerying, setIsRequerying] = React.useState(false)
-    const [isAddMoneyOpen, setIsAddMoneyOpen] = React.useState(false)
-    const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
-    const [isPayoutSettingsOpen, setIsPayoutSettingsOpen] = React.useState(false)
-    const [withdrawInitialStep, setWithdrawInitialStep] = React.useState<"details" | "manage_payouts">("details")
-
-    const transactions = useApi ? apiTransactions.map(t => ({ ...t, amountNumeric: t.amount })) : mockTransactions
-    const isFetching = useApi ? (summaryFetching || transactionsFetching) : false
-    const isLoading = useApi ? transactionsLoading : false
 
     const statusFilterOptions = [
         { label: "Cleared", value: "Cleared" },
@@ -120,6 +100,43 @@ export function FinanceView() {
         { label: "Wallet", value: "Wallet" },
         { label: "Other", value: "Other" },
     ] as const
+
+    // Parse selectedFilters array into structured server-side filter params
+    const serverFilters = React.useMemo<TransactionFilterParams>(() => {
+        const status = selectedFilters.filter(f => statusFilterOptions.some(o => o.value === f))
+        const type = selectedFilters.filter(f => typeFilterOptions.some(o => o.value === f))
+        const category = selectedFilters.filter(f => categoryFilterOptions.some(o => o.value === f))
+        return {
+            ...(deferredSearch ? { search: deferredSearch } : {}),
+            ...(status.length > 0 ? { status } : {}),
+            ...(type.length > 0 ? { type } : {}),
+            ...(category.length > 0 ? { category } : {}),
+        }
+    }, [deferredSearch, selectedFilters])
+
+    // Reset to page 1 when search, filters, or store changes
+    React.useEffect(() => {
+        if (useApi) setCurrentPage(1)
+    }, [selectedStoreId, deferredSearch, selectedFilters, useApi])
+
+    const { summary: apiSummary, isFetching: summaryFetching } = useFinanceSummary(selectedStoreId)
+    const { transactions: apiTransactions, meta: apiMeta, isLoading: transactionsLoading, isFetching: transactionsFetching } = useFinanceTransactions(
+        useApi ? selectedStoreId : undefined,
+        currentPage,
+        PAGE_SIZE,
+        useApi ? serverFilters : undefined
+    )
+    const [viewingTx, setViewingTx] = React.useState<TransactionRow | null>(null)
+    const [isRequerying, setIsRequerying] = React.useState(false)
+    const [isAddMoneyOpen, setIsAddMoneyOpen] = React.useState(false)
+    const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
+    const [isPayoutSettingsOpen, setIsPayoutSettingsOpen] = React.useState(false)
+    const [withdrawInitialStep, setWithdrawInitialStep] = React.useState<"details" | "manage_payouts">("details")
+
+    const transactions = useApi ? apiTransactions.map(t => ({ ...t, amountNumeric: t.amount })) : mockTransactions
+    const isFetching = useApi ? (summaryFetching || transactionsFetching) : false
+    const isLoading = useApi ? transactionsLoading : false
+
     const filterGroups: (FilterGroup & { key: string })[] = [
         { key: 'storeId', title: "Store Location", options: stores.map(s => ({ label: s.name, value: s.id })) },
         { key: 'status', title: "Transaction Status", options: [...statusFilterOptions] },
@@ -137,18 +154,18 @@ export function FinanceView() {
         ? (apiSummary.pendingTransactionsCount ?? apiSummary.pendingOrdersCount)
         : transactions.filter(t => t.status === 'Pending').length
 
-    const filteredTransactions = React.useMemo(() => {
+    // For mock (non-API) mode, apply client-side filtering as a fallback
+    const displayTransactions = React.useMemo(() => {
+        if (useApi) return transactions
         const query = search.toLowerCase()
         const activeStatuses = new Set(selectedFilters.filter(f => statusFilterOptions.some(o => o.value === f)))
         const activeTypes = new Set(selectedFilters.filter(f => typeFilterOptions.some(o => o.value === f)))
         const activeStores = new Set(selectedFilters.filter(f => stores.some(s => s.id === f)))
         const activeCategories = new Set(selectedFilters.filter(f => categoryFilterOptions.some(o => o.value === f)))
 
-        const storeScoped = useApi
+        const storeScoped = selectedStoreId === 'all-stores'
             ? transactions
-            : selectedStoreId === 'all-stores'
-                ? transactions
-                : transactions.filter((t: TransactionRow) => t.storeId === selectedStoreId)
+            : transactions.filter((t: TransactionRow) => t.storeId === selectedStoreId)
 
         return storeScoped.filter((t: TransactionRow) => {
             const ref = (t as any).reference ?? t.id
@@ -481,7 +498,7 @@ export function FinanceView() {
                                     </GlassCard>
                                 ))
                             ) : (
-                                filteredTransactions.map((tx, index) => {
+                                displayTransactions.map((tx, index) => {
                                     const num = (tx as any).amountNumeric ?? (typeof (tx as any).amount === 'number' ? (tx as any).amount : parseCurrencyToNumber((tx as any).amount))
                                     const isCredit = tx.type === 'Credit'
                                     return (
@@ -532,7 +549,7 @@ export function FinanceView() {
                             <GlassCard className="overflow-hidden border-brand-deep/5 dark:border-white/5">
                                 <DataTable
                                     columns={columns}
-                                    data={filteredTransactions}
+                                    data={displayTransactions}
                                     emptyMessage="No transactions matching your criteria."
                                     onRowClick={setViewingTx}
                                     pageSize={useApi ? PAGE_SIZE : 8}

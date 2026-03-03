@@ -90,7 +90,19 @@ export function useFinanceSummary(storeId?: string) {
     }
 }
 
-export function useFinanceTransactions(storeId: string | undefined, page: number = 1, limit: number = FINANCE_PAGE_SIZE) {
+export interface TransactionFilterParams {
+    search?: string
+    status?: string[]   // multi-select
+    type?: string[]     // multi-select
+    category?: string[] // multi-select
+}
+
+export function useFinanceTransactions(
+    storeId: string | undefined,
+    page: number = 1,
+    limit: number = FINANCE_PAGE_SIZE,
+    filters?: TransactionFilterParams
+) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
@@ -99,9 +111,13 @@ export function useFinanceTransactions(storeId: string | undefined, page: number
         limit: String(limit),
     }
     if (storeId && storeId !== 'all-stores') params.storeId = storeId
+    if (filters?.search) params.search = filters.search
+    if (filters?.status && filters.status.length > 0) params.status = filters.status.join(',')
+    if (filters?.type && filters.type.length > 0) params.type = filters.type.join(',')
+    if (filters?.category && filters.category.length > 0) params.category = filters.category.join(',')
 
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<FinanceTransactionRow[]>>({
-        queryKey: ['finance', 'transactions', businessId, storeId, page, limit],
+        queryKey: ['finance', 'transactions', businessId, storeId, page, limit, filters?.search, filters?.status, filters?.type, filters?.category],
         queryFn: () => apiClient.get<ApiResponse<FinanceTransactionRow[]>>('/finance/transactions', params, { fullResponse: true }),
         enabled: !!businessId,
     })
