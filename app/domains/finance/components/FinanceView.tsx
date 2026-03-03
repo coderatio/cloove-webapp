@@ -13,6 +13,8 @@ import {
     RefreshCcw,
     CheckCircle2,
     Clock,
+    XCircle,
+    Loader2,
     ArrowRightLeft,
     Banknote,
     Receipt,
@@ -42,6 +44,7 @@ import { TableSearch } from '@/app/components/shared/TableSearch'
 import { StoreContextSelector } from '@/app/components/shared/StoreContextSelector'
 import { initialTransactions } from '../data/financeMocks'
 import { AddMoneyModal } from '@/app/components/dashboard/AddMoneyModal'
+import { WithdrawDrawer } from './WithdrawDrawer'
 import { formatCurrency, parseCurrencyToNumber } from '@/app/lib/formatters'
 import type { FinanceTransactionMock } from '../data/financeMocks'
 import { useFinanceSummary, useFinanceTransactions } from '../hooks/useFinance'
@@ -91,6 +94,7 @@ export function FinanceView() {
     const [viewingTx, setViewingTx] = React.useState<TransactionRow | null>(null)
     const [isRequerying, setIsRequerying] = React.useState(false)
     const [isAddMoneyOpen, setIsAddMoneyOpen] = React.useState(false)
+    const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
 
     const transactions = useApi ? apiTransactions.map(t => ({ ...t, amountNumeric: t.amount })) : mockTransactions
     const isFetching = useApi ? (summaryFetching || transactionsFetching) : false
@@ -99,6 +103,8 @@ export function FinanceView() {
     const statusFilterOptions = [
         { label: "Cleared", value: "Cleared" },
         { label: "Pending", value: "Pending" },
+        { label: "Processing", value: "Processing" },
+        { label: "Failed", value: "Failed" },
     ] as const
     const typeFilterOptions = [
         { label: "Revenue (Credit)", value: "Credit" },
@@ -118,7 +124,7 @@ export function FinanceView() {
     ]
 
     const walletBalanceFormatted = useApi && apiSummary
-        ? apiSummary.walletBalanceLabel
+        ? formatCurrency(apiSummary.walletBalance, { currency: currencyCode })
         : formatCurrency(WALLET_BALANCE_NUMERIC, { currency: currencyCode })
     const totalRevenueNumeric = useApi && apiSummary
         ? (apiSummary.creditsTotal ?? apiSummary.salesTotal)
@@ -179,29 +185,43 @@ export function FinanceView() {
 
     const columns: any[] = [
         {
-            key: 'reference',
-            header: 'Reference',
-            width: '300px',
-            cellClassName: 'min-w-0',
-            render: (value: string, row: TransactionRow) => {
-                const fullRef = String((row as any).reference ?? (row as any).id ?? '')
+            key: 'type',
+            header: '',
+            width: '48px',
+            cellClassName: 'pl-6 pr-0 py-5 shrink-0 w-[48px]',
+            headerClassName: 'pl-6 pr-0 py-4 w-[48px]',
+            render: (_: string, row: TransactionRow) => {
+                const isCredit = row.type === 'Credit'
+                const Icon = isCredit ? ArrowDownRight : ArrowUpRight
                 return (
-                    <span className="font-mono text-[10px] text-brand-accent/40 dark:text-brand-cream/40 truncate block min-w-0" title={fullRef}>
-                        {fullRef}
-                    </span>
+                    <div className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                        isCredit ? "bg-brand-green/10 text-brand-green" : "bg-rose-500/10 text-rose-500"
+                    )}>
+                        <Icon className="w-4 h-4" />
+                    </div>
                 )
             }
         },
         {
             key: 'customer',
             header: 'Entity / Purpose',
-            width: 'min(380px, 40%)',
+            width: '320px',
+            cellClassName: 'max-w-[320px] min-w-0',
             render: (value: string, row: any) => {
                 const { label, variant } = getTransactionCategory(row.method)
+                const fullRef = String(row.reference ?? row.id ?? '')
                 return (
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
-                        <Badge variant={variant} className="shrink-0 text-[10px] px-2 py-0.5">{label}</Badge>
+                    <div className="flex flex-col gap-0.5 min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                            <span className="font-medium text-brand-deep dark:text-brand-cream truncate flex-1 min-w-0" title={value}>
+                                {value}
+                            </span>
+                            <Badge variant={variant} className="shrink-0 text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider">{label}</Badge>
+                        </div>
+                        <span className="font-mono text-[10px] text-brand-accent/40 dark:text-brand-cream/40 truncate block min-w-0" title={fullRef}>
+                            {fullRef}
+                        </span>
                     </div>
                 )
             }
@@ -213,35 +233,67 @@ export function FinanceView() {
                 const num = (row as any).amountNumeric ?? (typeof (row as any).amount === 'number' ? (row as any).amount : parseCurrencyToNumber((row as any).amount))
                 const formatted = formatCurrency(num, { currency: currencyCode })
                 return (
-                    <span className={cn(
-                        "font-serif font-medium",
-                        row.type === 'Credit' ? "text-brand-green dark:text-brand-gold" : "text-rose-600 dark:text-rose-400"
-                    )}>
-                        {row.type === 'Credit' ? '+' : '-'}{formatted}
-                    </span>
+                    <div className="flex flex-col items-start">
+                        <span className={cn(
+                            "font-serif font-medium text-base",
+                            row.type === 'Credit' ? "text-brand-green dark:text-brand-gold" : "text-rose-600 dark:text-rose-400"
+                        )}>
+                            {row.type === 'Credit' ? '+' : '-'}{formatted}
+                        </span>
+                        <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 font-medium uppercase tracking-tighter">
+                            {row.type === 'Credit' ? 'Inbound' : 'Outbound'}
+                        </span>
+                    </div>
                 )
             }
         },
         {
             key: 'status',
             header: 'Status',
+            render: (value: string) => {
+                const isCleared = value === 'Cleared'
+                const isFailed = value === 'Failed'
+                const isProcessing = value === 'Processing'
+                const icon = isCleared ? (
+                    <CheckCircle2 className="w-3 h-3 text-brand-green dark:text-emerald-400" />
+                ) : isFailed ? (
+                    <XCircle className="w-3 h-3 text-red-500 dark:text-red-400" />
+                ) : isProcessing ? (
+                    <Loader2 className="w-3 h-3 text-amber-500 dark:text-amber-400 animate-spin" />
+                ) : (
+                    <Clock className="w-3 h-3 text-amber-500 dark:text-amber-400 animate-pulse" />
+                )
+                const colorClass = isCleared
+                    ? "text-brand-green dark:text-emerald-400"
+                    : isFailed
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-amber-600 dark:text-amber-400"
+
+                const bgClass = isCleared
+                    ? "bg-brand-green/5 dark:bg-emerald-400/5"
+                    : isFailed
+                        ? "bg-red-600/5 dark:bg-red-400/5"
+                        : "bg-amber-600/5 dark:bg-amber-400/5"
+
+                return (
+                    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10", colorClass, bgClass)}>
+                        {icon}
+                        <span className="text-[10px] font-bold uppercase tracking-wider">
+                            {value}
+                        </span>
+                    </div>
+                )
+            }
+        },
+        {
+            key: 'date',
+            header: 'Date',
             render: (value: string) => (
-                <div className="flex items-center gap-1.5">
-                    {value === 'Cleared' ? (
-                        <CheckCircle2 className="w-3 h-3 text-brand-green dark:text-emerald-400" />
-                    ) : (
-                        <Clock className="w-3 h-3 text-amber-500 animate-pulse" />
-                    )}
-                    <span className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider",
-                        value === 'Cleared' ? "text-brand-green dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
-                    )}>
-                        {value}
-                    </span>
-                </div>
+                <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60 tabular-nums">
+                    {value}
+                </span>
             )
         },
-        { key: 'date', header: 'Date' },
     ]
 
     const intelligenceWhisper = pendingReconciliation > 0
@@ -294,7 +346,7 @@ export function FinanceView() {
                                 </div>
 
                                 <div className="relative z-10 flex gap-4">
-                                    <Button className="flex-1 h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
+                                    <Button onClick={() => setIsWithdrawOpen(true)} className="flex-1 h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
                                         <ArrowUpRight className="w-6 h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
                                         Withdraw
                                     </Button>
@@ -410,19 +462,23 @@ export function FinanceView() {
                                     </GlassCard>
                                 ))
                             ) : (
-                                filteredTransactions.map((tx, index) => (
-                                    <ListCard
-                                        key={tx.id}
-                                        title={tx.customer}
-                                        subtitle={`${(tx as any).reference ?? tx.id} • ${tx.method}`}
-                                        status={tx.status}
-                                        statusColor={tx.status === 'Cleared' ? 'success' : 'warning'}
-                                        value={formatCurrency((tx as any).amountNumeric ?? (typeof (tx as any).amount === 'number' ? (tx as any).amount : parseCurrencyToNumber((tx as any).amount)), { currency: currencyCode })}
-                                        valueLabel={tx.type === 'Credit' ? 'Inbound' : 'Outbound'}
-                                        delay={index * 0.05}
-                                        onClick={() => setViewingTx(tx)}
-                                    />
-                                ))
+                                filteredTransactions.map((tx, index) => {
+                                    const num = (tx as any).amountNumeric ?? (typeof (tx as any).amount === 'number' ? (tx as any).amount : parseCurrencyToNumber((tx as any).amount))
+                                    const isCredit = tx.type === 'Credit'
+                                    return (
+                                        <ListCard
+                                            key={tx.id}
+                                            title={tx.customer}
+                                            subtitle={`${(tx as any).reference ?? tx.id} • ${tx.method}`}
+                                            status={tx.status}
+                                            statusColor={tx.status === 'Cleared' ? 'success' : tx.status === 'Failed' ? 'danger' : 'warning'}
+                                            value={(isCredit ? '+' : '-') + formatCurrency(num, { currency: currencyCode })}
+                                            valueLabel={isCredit ? 'Inbound' : 'Outbound'}
+                                            delay={index * 0.05}
+                                            onClick={() => setViewingTx(tx)}
+                                        />
+                                    )
+                                })
                             )}
                             {useApi && apiMeta && (apiMeta.totalPages ?? 1) > 1 && !isLoading && (
                                 <div className="flex items-center justify-between pt-4 border-t border-brand-deep/5 dark:border-white/5">
@@ -491,25 +547,31 @@ export function FinanceView() {
                                     <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Transaction Status</h3>
                                     <GlassCard className={cn(
                                         "p-6 flex items-center justify-between border-brand-deep/5 transition-colors",
-                                        viewingTx?.status === 'Cleared' ? "bg-brand-green/5 border-brand-green/20" : "bg-amber-500/5 border-amber-500/20"
+                                        viewingTx?.status === 'Cleared' && "bg-brand-green/5 border-brand-green/20",
+                                        (viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && "bg-amber-500/5 border-amber-500/20",
+                                        viewingTx?.status === 'Failed' && "bg-red-500/5 border-red-500/20"
                                     )}>
                                         <div className="flex items-center gap-4">
                                             <div className={cn(
                                                 "h-12 w-12 rounded-full flex items-center justify-center",
-                                                viewingTx?.status === 'Cleared' ? "bg-brand-green/20 text-brand-green" : "bg-amber-500/20 text-amber-500"
+                                                viewingTx?.status === 'Cleared' && "bg-brand-green/20 text-brand-green",
+                                                (viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && "bg-amber-500/20 text-amber-500",
+                                                viewingTx?.status === 'Failed' && "bg-red-500/20 text-red-500"
                                             )}>
-                                                {viewingTx?.status === 'Cleared' ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6 animate-pulse" />}
+                                                {viewingTx?.status === 'Cleared' && <CheckCircle2 className="w-6 h-6" />}
+                                                {(viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && <Clock className={cn("w-6 h-6", viewingTx?.status === 'Processing' && "animate-pulse")} />}
+                                                {viewingTx?.status === 'Failed' && <XCircle className="w-6 h-6" />}
                                             </div>
                                             <div>
                                                 <p className="font-bold text-lg">{viewingTx?.status}</p>
-                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">Verified via {viewingTx?.method}</p>
+                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">{viewingTx?.status === 'Cleared' ? `Verified via ${viewingTx?.method}` : viewingTx?.status === 'Failed' ? 'Transfer failed' : `Pending verification · ${viewingTx?.method}`}</p>
                                                 {viewingTx?.method && (() => {
                                                     const cat = getTransactionCategory(viewingTx.method)
                                                     return <Badge variant={cat.variant} className="mt-2 w-fit">{cat.label}</Badge>
                                                 })()}
                                             </div>
                                         </div>
-                                        {viewingTx?.status === 'Pending' && showMockActions && (
+                                        {(viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && showMockActions && (
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -589,6 +651,11 @@ export function FinanceView() {
                     isOpen={isAddMoneyOpen}
                     onOpenChange={setIsAddMoneyOpen}
                     walletData={{ balance: walletBalanceFormatted }}
+                />
+                <WithdrawDrawer
+                    isOpen={isWithdrawOpen}
+                    onOpenChange={setIsWithdrawOpen}
+                    currencyCode={currencyCode}
                 />
             </div>
         </PageTransition>

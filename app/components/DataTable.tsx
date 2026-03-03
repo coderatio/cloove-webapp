@@ -74,19 +74,24 @@ export default function DataTable<T extends { id: string | number }>({
     return (
         <div className="w-full overflow-hidden flex flex-col">
             <div className="overflow-x-auto">
-                <table className="w-full border-separate border-spacing-0 table-fixed">
+                <table className="w-full border-separate border-spacing-0 table-auto">
                     <thead>
                         <tr>
                             {columns.map((col) => (
                                 <th
                                     key={String(col.key)}
-                                    className="text-left text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-6 py-4 border-b border-brand-deep/5 dark:border-white/5"
+                                    style={col.width ? { width: col.width } : undefined}
+                                    className={cn(
+                                        "text-left text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-6 py-4 border-b border-brand-deep/5 dark:border-white/5 whitespace-nowrap",
+                                        !col.width && "min-w-[120px]",
+                                        col.headerClassName
+                                    )}
                                 >
                                     {col.header}
                                 </th>
                             ))}
                             {onRowClick && (
-                                <th className="border-b border-brand-deep/5 dark:border-white/5 w-12"></th>
+                                <th className="border-b border-brand-deep/5 dark:border-white/5 w-12 px-6 py-4"></th>
                             )}
                         </tr>
                     </thead>
@@ -117,7 +122,7 @@ export default function DataTable<T extends { id: string | number }>({
                                             key={String(col.key)}
                                             style={col.width ? { width: col.width } : undefined}
                                             className={cn(
-                                                "px-6 py-5 text-sm text-brand-deep dark:text-brand-cream",
+                                                "px-6 py-5 text-sm text-brand-deep dark:text-brand-cream whitespace-nowrap overflow-hidden text-ellipsis",
                                                 col.cellClassName
                                             )}
                                         >
@@ -128,7 +133,7 @@ export default function DataTable<T extends { id: string | number }>({
                                         </td>
                                     ))}
                                     {onRowClick && (
-                                        <td className="pl-4 pr-6 py-5 text-right">
+                                        <td className="px-6 py-5 text-right w-12">
                                             <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/40 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors inline-block" />
                                         </td>
                                     )}

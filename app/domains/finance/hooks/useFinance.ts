@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient, ApiResponse } from "@/app/lib/api-client"
 import { useBusiness } from "@/app/components/BusinessProvider"
 
@@ -28,10 +28,36 @@ export interface FinanceTransactionRow {
     type: 'Credit' | 'Debit'
     amount: number
     customer: string
-    status: 'Cleared' | 'Pending'
+    status: 'Cleared' | 'Pending' | 'Failed' | 'Processing'
     date: string
     method: string
     storeId: string | null
+}
+
+export interface WalletBalanceData {
+    balance: number
+    availableBalance: number
+    pendingWithdrawals: number
+    currency: string
+    minimumWithdrawalAmount?: number
+    withdrawalFeeTiers?: { min: number; max: number | null; fee: number }[]
+}
+
+export interface PayoutAccountOption {
+    id: string
+    bankName: string
+    accountNumber?: string
+    accountName: string
+    isDefault: boolean
+}
+
+export interface WithdrawalResponse {
+    withdrawal: {
+        id: string
+        amount: number
+        status: string
+        [key: string]: unknown
+    }
 }
 
 const FINANCE_PAGE_SIZE = 10
@@ -84,4 +110,60 @@ export function useFinanceTransactions(storeId: string | undefined, page: number
         isFetching,
         error,
     }
+}
+
+export function useWalletBalance() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<WalletBalanceData>>({
+        queryKey: ['finance', 'wallet', businessId],
+        queryFn: () => apiClient.get<ApiResponse<WalletBalanceData>>('/finance/wallet', {}, { fullResponse: true }),
+        enabled: !!businessId,
+    })
+
+    return {
+        wallet: response?.data,
+        isLoading,
+        isFetching,
+        error,
+    }
+}
+
+export function usePayoutAccounts() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<PayoutAccountOption[]>>({
+        queryKey: ['finance', 'payout-accounts', businessId],
+        queryFn: () => apiClient.get<ApiResponse<PayoutAccountOption[]>>('/finance/payout-accounts', {}, { fullResponse: true }),
+        enabled: !!businessId,
+    })
+
+    return {
+        payoutAccounts: response?.data ?? [],
+        isLoading,
+        isFetching,
+        error,
+    }
+}
+
+export function useWithdraw() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: async (payload: { amount: number; payoutAccountId: string; pin: string }) => {
+            return apiClient.post<WithdrawalResponse>('/finance/withdraw', payload)
+        },
+        onSuccess: () => {
+            if (businessId) {
+                queryClient.invalidateQueries({ queryKey: ['finance', 'wallet', businessId] })
+                queryClient.invalidateQueries({ queryKey: ['finance', 'transactions', businessId] })
+                queryClient.invalidateQueries({ queryKey: ['finance', 'summary', businessId] })
+                queryClient.invalidateQueries({ queryKey: ['finance', 'withdrawals', businessId] })
+            }
+        },
+    })
 }
