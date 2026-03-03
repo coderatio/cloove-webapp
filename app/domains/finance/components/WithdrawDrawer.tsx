@@ -146,9 +146,15 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
     }
 
     React.useEffect(() => {
-        if (isOpen && payoutAccounts.length && !payoutAccountId) {
+        if (isOpen && payoutAccounts.length) {
             const defaultAccount = payoutAccounts.find((a) => a.isDefault) ?? payoutAccounts[0]
-            setPayoutAccountId(defaultAccount.id)
+            if (defaultAccount && !payoutAccountId) {
+                setPayoutAccountId(defaultAccount.id)
+            }
+        }
+
+        if (!isOpen) {
+            setPayoutAccountId('')
         }
     }, [isOpen, payoutAccounts, payoutAccountId])
 
@@ -194,10 +200,10 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => onOpenChange(false)}
-                            className="h-10 w-10 rounded-full hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                            onClick={() => step === 'manage_payouts' ? setStep('details') : onOpenChange(false)}
+                            className="h-10 w-10 rounded-full bg-brand-deep/5 cursor-pointer dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0"
                         >
-                            <X className="w-5 h-5 text-brand-deep/40" />
+                            <X className="w-5 h-5 text-brand-deep/40 dark:text-brand-cream/40" />
                         </Button>
                     </div>
                 </DrawerHeader>
@@ -276,7 +282,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 bg-white dark:bg-white/10 border border-brand-deep/10 dark:border-white/10 rounded-3xl p-4">
                                         <div className="flex items-center justify-between ml-1">
                                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
                                                 Select Destination
@@ -295,7 +301,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                     key={account.id}
                                                     onClick={() => setPayoutAccountId(account.id)}
                                                     className={cn(
-                                                        "group relative flex items-center justify-between p-4 rounded-3xl border transition-all duration-500",
+                                                        "group cursor-pointer relative flex items-center justify-between p-4 rounded-3xl border transition-all duration-500",
                                                         payoutAccountId === account.id
                                                             ? "bg-brand-gold shadow-[0_15px_30px_rgba(182,143,76,0.15)] border-brand-gold"
                                                             : "bg-brand-deep/3 dark:bg-white/3 border-transparent hover:border-brand-deep/10 dark:hover:border-white/10"
@@ -304,7 +310,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                     <div className="flex items-center gap-4 min-w-0">
                                                         <div className={cn(
                                                             "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                            payoutAccountId === account.id ? "bg-white text-brand-deep shadow-inner" : "bg-white dark:bg-white/10 text-brand-deep/30 dark:text-white/30"
+                                                            payoutAccountId === account.id ? "bg-white/60 text-brand-deep shadow-inner" : "bg-white dark:bg-white/10 text-brand-deep/30 dark:text-white/30"
                                                         )}>
                                                             <Building2 className="w-6 h-6" />
                                                         </div>
@@ -318,7 +324,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                                 </span>
                                                                 {account.isDefault && (
                                                                     <span className={cn(
-                                                                        "text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter",
+                                                                        "text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter",
                                                                         payoutAccountId === account.id ? "bg-brand-deep/10 text-brand-deep" : "bg-brand-gold/20 text-brand-gold"
                                                                     )}>Default</span>
                                                                 )}
@@ -344,7 +350,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                     <Button
                                         onClick={() => setStep("pin")}
                                         disabled={!amount || !!amountError || !payoutAccountId}
-                                        className="w-full h-16 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-2xl hover:translate-y-[-4px] active:translate-y-[0] transition-all duration-300 disabled:opacity-50 disabled:translate-y-0"
+                                        className="w-full h-16 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-3xl shadow-2xl hover:translate-y-[-4px] active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:translate-y-0"
                                     >
                                         Authorize Withdrawal
                                     </Button>
@@ -358,8 +364,11 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                         <Lock className="w-10 h-10 relative z-10" />
                                     </div>
                                     <div className="space-y-2">
-                                        <h4 className="text-3xl font-serif font-black text-brand-deep dark:text-white tracking-tight italic">Verify Access</h4>
-                                        <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase font-black tracking-[0.2em]">Authenticating payout of {formatCurrency(amountNum, { currency: currencyCode })}</p>
+                                        <h4 className="text-3xl font-serif font-black text-brand-deep dark:text-white tracking-tight">Authorize Withdrawal</h4>
+                                        <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase font-black tracking-[0.2em]">Enter your 4-digit pin to authorize withdrawal of</p>
+                                        <div className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">
+                                            {formatCurrency(amountNum, { currency: currencyCode })}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -375,7 +384,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                             value={digit}
                                             onChange={(e) => handlePinDigit(i, e.target.value)}
                                             onKeyDown={(e) => handlePinKeyDown(i, e)}
-                                            className="w-16 h-20 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-2 border-transparent focus:border-brand-gold focus:bg-white dark:focus:bg-brand-deep text-center text-3xl font-serif font-black transition-all outline-hidden shadow-inner text-brand-deep dark:text-white"
+                                            className="sm:w-20 sm:h-20 w-16 h-16 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-2 border-transparent focus:border-brand-gold focus:bg-white dark:focus:bg-brand-deep text-center text-3xl font-serif font-black transition-all outline-hidden shadow-inner text-brand-deep dark:text-white"
                                         />
                                     ))}
                                 </div>
@@ -399,7 +408,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                         variant="ghost"
                                         onClick={() => setStep("details")}
                                         disabled={withdrawMutation.isPending}
-                                        className="h-12 rounded-xl text-brand-deep/40 dark:text-brand-cream/40 font-black uppercase tracking-widest text-[9px] hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                                        className="h-12 rounded-2xl border border-brand-deep/10 dark:border-white/10 text-brand-deep/40 dark:text-brand-cream/40 font-black uppercase tracking-widest text-[9px] hover:bg-brand-deep/5 dark:hover:bg-white/5"
                                     >
                                         Correction / Change Details
                                     </Button>

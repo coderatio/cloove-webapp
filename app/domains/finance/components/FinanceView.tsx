@@ -46,6 +46,7 @@ import { StoreContextSelector } from '@/app/components/shared/StoreContextSelect
 import { initialTransactions } from '../data/financeMocks'
 import { AddMoneyModal } from '@/app/components/dashboard/AddMoneyModal'
 import { WithdrawDrawer } from './WithdrawDrawer'
+import { PayoutAccountsManager } from './PayoutAccountsManager'
 import { formatCurrency, parseCurrencyToNumber } from '@/app/lib/formatters'
 import type { FinanceTransactionMock } from '../data/financeMocks'
 import { useFinanceSummary, useFinanceTransactions } from '../hooks/useFinance'
@@ -96,6 +97,7 @@ export function FinanceView() {
     const [isRequerying, setIsRequerying] = React.useState(false)
     const [isAddMoneyOpen, setIsAddMoneyOpen] = React.useState(false)
     const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
+    const [isPayoutSettingsOpen, setIsPayoutSettingsOpen] = React.useState(false)
     const [withdrawInitialStep, setWithdrawInitialStep] = React.useState<"details" | "manage_payouts">("details")
 
     const transactions = useApi ? apiTransactions.map(t => ({ ...t, amountNumeric: t.amount })) : mockTransactions
@@ -419,8 +421,7 @@ export function FinanceView() {
                                         <Button
                                             variant="ghost"
                                             onClick={() => {
-                                                setWithdrawInitialStep("manage_payouts")
-                                                setIsWithdrawOpen(true)
+                                                setIsPayoutSettingsOpen(true)
                                             }}
                                             className="w-full cursor-pointer flex items-center justify-between p-5 rounded-3xl h-auto bg-white/80 dark:bg-white/5 border border-brand-deep/5 hover:border-brand-gold/30 hover:shadow-xl transition-all text-left group active:scale-95"
                                         >
@@ -435,11 +436,11 @@ export function FinanceView() {
                                     </div>
                                 </div>
 
-                                <div className="mt-8 p-6 rounded-2xl bg-brand-gold/5 border border-brand-gold/10 text-center relative overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(182,143,76,0.1),transparent)]">
+                                {/* <div className="mt-8 p-6 rounded-2xl bg-brand-gold/5 border border-brand-gold/10 text-center relative overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(182,143,76,0.1),transparent)]">
                                     <p className="relative z-10 text-[10px] font-bold text-brand-gold uppercase tracking-[0.2em] leading-relaxed">
                                         Secure & Verified <br /> Gateway
                                     </p>
-                                </div>
+                                </div> */}
                             </GlassCard>
                         </div>
                     </div>
@@ -679,6 +680,25 @@ export function FinanceView() {
                     currencyCode={currencyCode}
                     initialStep={withdrawInitialStep}
                 />
+
+                <Drawer
+                    open={isPayoutSettingsOpen}
+                    onOpenChange={setIsPayoutSettingsOpen}
+                >
+                    <DrawerContent>
+                        <DrawerStickyHeader>
+                            <DrawerTitle>Payout Settings</DrawerTitle>
+                            <DrawerDescription>
+                                Manage your settlement bank accounts
+                            </DrawerDescription>
+                        </DrawerStickyHeader>
+                        <DrawerBody className="p-4 pb-12">
+                            <div className="max-w-md mx-auto">
+                                <PayoutAccountsManager />
+                            </div>
+                        </DrawerBody>
+                    </DrawerContent>
+                </Drawer>
             </div>
         </PageTransition>
     )

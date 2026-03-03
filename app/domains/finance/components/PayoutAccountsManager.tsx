@@ -13,7 +13,8 @@ import {
     Loader2,
     Lock,
     X,
-    AlertCircle
+    AlertCircle,
+    ArrowLeft
 } from "lucide-react"
 import {
     usePayoutAccounts,
@@ -38,7 +39,7 @@ export function PayoutAccountsManager({ onClose }: PayoutAccountsManagerProps) {
     const { payoutAccounts, isLoading } = usePayoutAccounts()
     const [isAdding, setIsAdding] = useState(false)
     const [confirmAction, setConfirmAction] = useState<{ id: string, type: 'delete' | 'default' } | null>(null)
-    const [pin, setPin] = useState("")
+    const [pin, setPin] = useState('')
 
     const deleteAccount = useDeletePayoutAccount()
     const setDefaultAccount = useSetDefaultPayoutAccount()
@@ -50,14 +51,14 @@ export function PayoutAccountsManager({ onClose }: PayoutAccountsManagerProps) {
             deleteAccount.mutate({ id: confirmAction.id, pin }, {
                 onSuccess: () => {
                     setConfirmAction(null)
-                    setPin("")
+                    setPin('')
                 }
             })
         } else {
             setDefaultAccount.mutate({ id: confirmAction.id, pin }, {
                 onSuccess: () => {
                     setConfirmAction(null)
-                    setPin("")
+                    setPin('')
                 }
             })
         }
@@ -74,22 +75,53 @@ export function PayoutAccountsManager({ onClose }: PayoutAccountsManagerProps) {
         )
     }
 
+    const isLimitReached = payoutAccounts.length >= 3
+
     return (
         <div className="space-y-6 relative min-h-[400px]">
             <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 pl-1">
-                    Payout Accounts
-                </span>
+                <div className="flex items-center gap-3">
+                    {onClose && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onClose}
+                            className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
+                        >
+                            <ArrowLeft className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
+                        </Button>
+                    )}
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 pl-1">
+                        Payout Accounts
+                    </span>
+                </div>
                 <Button
                     variant="ghost"
                     size="sm"
+                    disabled={isLimitReached}
                     onClick={() => setIsAdding(true)}
-                    className="rounded-full bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 gap-2 border border-brand-gold/20"
+                    className={cn(
+                        "rounded-full gap-2 border transition-all",
+                        isLimitReached
+                            ? "bg-brand-deep/5 text-brand-deep/20 border-transparent cursor-not-allowed"
+                            : "bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 border-brand-gold/20"
+                    )}
                 >
                     <Plus className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Add New</span>
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                        {isLimitReached ? "Limit Reached" : "Add New"}
+                    </span>
                 </Button>
             </div>
+
+            {isLimitReached && !isAdding && (
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-brand-gold/5 border border-brand-gold/10 animate-in fade-in slide-in-from-top-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-brand-gold-900 dark:text-brand-gold" />
+                    <p className="text-[9px] font-black uppercase tracking-widest text-brand-gold-900 dark:text-brand-gold">
+                        Maximum of 3 payout accounts reached.
+                    </p>
+                </div>
+            )}
 
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 animate-pulse">
@@ -97,7 +129,7 @@ export function PayoutAccountsManager({ onClose }: PayoutAccountsManagerProps) {
                     <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-brand-accent/40">Securing your vault...</p>
                 </div>
             ) : payoutAccounts.length === 0 ? (
-                <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/[0.02] dark:bg-white/[0.02] border-dashed border-brand-deep/10 dark:border-white/10">
+                <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10">
                     <div className="w-16 h-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
                         <Building2 className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
                     </div>
@@ -119,7 +151,7 @@ export function PayoutAccountsManager({ onClose }: PayoutAccountsManagerProps) {
                             key={account.id}
                             className={cn(
                                 "group p-4 flex items-center justify-between border-brand-deep/5 hover:border-brand-gold/30 transition-all duration-500",
-                                account.isDefault && "bg-brand-gold/[0.03] border-brand-gold/20 shadow-[0_8px_30px_rgb(182,143,76,0.05)]"
+                                account.isDefault && "bg-brand-gold/3 border-brand-gold/20 shadow-[0_8px_30px_rgb(182,143,76,0.05)]"
                             )}
                         >
                             <div className="flex items-center gap-4">
@@ -133,7 +165,7 @@ export function PayoutAccountsManager({ onClose }: PayoutAccountsManagerProps) {
                                     <div className="flex items-center gap-2">
                                         <p className="font-bold text-brand-deep dark:text-brand-cream uppercase tracking-tight">{account.bankName}</p>
                                         {account.isDefault && (
-                                            <span className="text-[9px] font-black bg-brand-gold text-brand-deep px-1.5 py-0.5 rounded uppercase tracking-tighter">Default</span>
+                                            <span className="text-[9px] font-black bg-brand-gold text-brand-deep px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Default</span>
                                         )}
                                     </div>
                                     <p className="text-xs font-mono text-brand-accent/60 dark:text-white/40">{account.accountNumber}</p>
