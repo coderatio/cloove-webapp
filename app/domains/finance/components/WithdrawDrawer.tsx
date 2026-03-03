@@ -230,7 +230,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 </div>
                                 <Button
                                     onClick={() => setStep("manage_payouts")}
-                                    className="w-full h-16 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-widest text-xs rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex items-center justify-center gap-3 group hover:translate-y-[-4px] active:translate-y-[0] transition-all duration-300"
+                                    className="w-full h-16 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-widest text-xs rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex items-center justify-center gap-3 group hover:translate-y-[-4px] active:translate-y-0 transition-all duration-300"
                                 >
                                     <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
                                     Link Bank Account
@@ -244,8 +244,8 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                             Amount (Min {formatCurrency(minWithdrawal, { currency: currencyCode })})
                                         </label>
                                         <div className="relative group">
-                                            <div className="absolute -inset-1 bg-brand-gold/0 group-focus-within:bg-brand-gold/10 rounded-[2rem] transition-all duration-500 blur-md" />
-                                            <div className="relative flex rounded-3xl border border-brand-deep/5 bg-brand-deep/[0.03] dark:bg-white/[0.03] overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
+                                            <div className="absolute -inset-1 bg-brand-gold/0 group-focus-within:bg-brand-gold/10 rounded-4xl transition-all duration-500 blur-md" />
+                                            <div className="relative flex rounded-3xl border border-brand-deep/5 bg-brand-deep/3 dark:bg-white/3 overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
                                                 <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/40 font-serif text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
                                                     {symbol}
                                                 </span>
