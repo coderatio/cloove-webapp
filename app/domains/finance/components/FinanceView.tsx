@@ -22,6 +22,8 @@ import {
     ChevronLeft,
     ChevronRight,
     Copy,
+    Eye,
+    EyeOff,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/app/lib/utils'
@@ -47,6 +49,7 @@ import { initialTransactions } from '../data/financeMocks'
 import { AddMoneyModal } from '@/app/components/dashboard/AddMoneyModal'
 import { WithdrawDrawer } from './WithdrawDrawer'
 import { PayoutAccountsManager } from './PayoutAccountsManager'
+import { CurrencyDisplay } from '@/app/components/shared/CurrencyDisplay'
 import { formatCurrency, parseCurrencyToNumber } from '@/app/lib/formatters'
 import type { FinanceTransactionMock } from '../data/financeMocks'
 import { useFinanceSummary, useFinanceTransactions, type TransactionFilterParams } from '../hooks/useFinance'
@@ -132,6 +135,7 @@ export function FinanceView() {
     const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
     const [isPayoutSettingsOpen, setIsPayoutSettingsOpen] = React.useState(false)
     const [withdrawInitialStep, setWithdrawInitialStep] = React.useState<"details" | "manage_payouts">("details")
+    const [showBalance, setShowBalance] = React.useState(true)
 
     const transactions = useApi ? apiTransactions.map(t => ({ ...t, amountNumeric: t.amount })) : mockTransactions
     const isFetching = useApi ? (summaryFetching || transactionsFetching) : false
@@ -353,26 +357,46 @@ export function FinanceView() {
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                         <div className="lg:col-span-8 space-y-4">
-                            <GlassCard className="p-8 relative overflow-hidden group border-brand-gold/20 bg-linear-to-br from-white/50 to-brand-gold/5 dark:from-white/5 dark:to-brand-gold/5 min-h-[300px] flex flex-col justify-between">
+                            <GlassCard className="p-6 sm:p-8 relative overflow-hidden group border-brand-gold/20 bg-linear-to-br from-white/50 to-brand-gold/5 dark:from-white/5 dark:to-brand-gold/5 min-h-[220px] sm:min-h-[300px] flex flex-col justify-between">
                                 <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-all duration-700 -rotate-12 group-hover:rotate-0">
-                                    <Wallet className="w-48 h-48 text-brand-gold" />
+                                    <Wallet className="w-32 h-32 sm:w-48 sm:h-48 text-brand-gold" />
                                 </div>
 
                                 <div className="relative z-10">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">Business Balance</p>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
+                                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">Business Balance</p>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-full hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                                            onClick={() => setShowBalance(!showBalance)}
+                                        >
+                                            {showBalance ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                            <span className="sr-only">{showBalance ? "Hide balance" : "Show balance"}</span>
+                                        </Button>
                                     </div>
-                                    <h2 className="text-6xl font-serif font-medium text-brand-deep dark:text-brand-cream tracking-tight">{walletBalanceFormatted}</h2>
+                                    <h2 className="text-4xl sm:text-6xl font-serif font-medium text-brand-deep dark:text-brand-cream tracking-tight">
+                                        {showBalance ? (
+                                            <CurrencyDisplay
+                                                value={useApi && apiSummary ? apiSummary.walletBalance : WALLET_BALANCE_NUMERIC}
+                                                currency={currencyCode}
+                                            />
+                                        ) : (
+                                            <span>••••••••</span>
+                                        )}
+                                    </h2>
                                 </div>
 
                                 <div className="relative z-10 flex gap-4">
-                                    <Button onClick={() => setIsWithdrawOpen(true)} className="flex-1 h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
-                                        <ArrowUpRight className="w-6 h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
+                                    <Button onClick={() => setIsWithdrawOpen(true)} className="flex-1 h-12 sm:h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
+                                        <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
                                         Withdraw
                                     </Button>
-                                    <Button onClick={() => setIsAddMoneyOpen(true)} variant="outline" className="flex-1 h-16 rounded-2xl border-brand-deep/10 bg-white/50 dark:bg-white/5 font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
-                                        <ArrowDownRight className="w-6 h-6 text-brand-green" />
+                                    <Button onClick={() => setIsAddMoneyOpen(true)} variant="outline" className="flex-1 h-12 sm:h-16 rounded-2xl border-brand-deep/10 bg-white/50 dark:bg-white/5 font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
+                                        <ArrowDownRight className="w-5 h-5 sm:w-6 sm:h-6 text-brand-green dark:text-brand-gold" />
                                         Add Funds
                                     </Button>
                                 </div>
@@ -390,7 +414,14 @@ export function FinanceView() {
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] mb-1">Total Revenue</p>
-                                            {isFetching ? <Skeleton className="h-8 w-24 mt-1" /> : <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">{formatCurrency(totalRevenueNumeric, { currency: currencyCode })}</p>}
+                                            {isFetching ? <Skeleton className="h-8 w-24 mt-1" /> : (
+                                                <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                                    <CurrencyDisplay
+                                                        value={totalRevenueNumeric}
+                                                        currency={currencyCode}
+                                                    />
+                                                </p>
+                                            )}
                                         </div>
                                     </GlassCard>
                                 </motion.div>
@@ -497,14 +528,29 @@ export function FinanceView() {
                                         </div>
                                     </GlassCard>
                                 ))
+                            ) : displayTransactions.length === 0 ? (
+                                <GlassCard className="p-12 text-center border-dashed border-brand-deep/20 dark:border-white/10 bg-transparent">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
+                                            <Receipt className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                                        </div>
+                                        <h3 className="text-brand-deep dark:text-brand-cream font-medium">No transactions found</h3>
+                                        <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
+                                            Try adjusting your filters or search terms to find what you're looking for.
+                                        </p>
+                                    </div>
+                                </GlassCard>
                             ) : (
                                 displayTransactions.map((tx, index) => {
                                     const num = (tx as any).amountNumeric ?? (typeof (tx as any).amount === 'number' ? (tx as any).amount : parseCurrencyToNumber((tx as any).amount))
                                     const isCredit = tx.type === 'Credit'
+                                    const Icon = isCredit ? ArrowDownRight : ArrowUpRight
                                     return (
                                         <ListCard
                                             key={tx.id}
                                             title={tx.customer}
+                                            icon={Icon}
+                                            iconClassName={isCredit ? "text-brand-green dark:text-brand-gold" : "text-rose-500 dark:text-rose-400"}
                                             subtitle={`${(tx as any).reference ?? tx.id} • ${tx.method}`}
                                             status={tx.status}
                                             statusColor={tx.status === 'Cleared' ? 'success' : tx.status === 'Failed' ? 'danger' : 'warning'}

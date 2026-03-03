@@ -190,7 +190,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                 <DrawerHeader className="px-8 py-6">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <DrawerTitle className="text-xl font-serif text-brand-deep dark:text-brand-cream">
+                            <DrawerTitle className="text-xl font-serif text-brand-deep dark:text-brand-cream text-left">
                                 {step === 'manage_payouts' ? "Manage Payouts" : "Withdraw Funds"}
                             </DrawerTitle>
                             <DrawerDescription className="text-[10px] text-brand-deep/60 dark:text-brand-cream/60 uppercase tracking-[0.2em] font-black">

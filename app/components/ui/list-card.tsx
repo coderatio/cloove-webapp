@@ -14,6 +14,8 @@ interface ListCardProps {
     value?: string
     valueLabel?: string
     image?: string
+    icon?: React.ElementType
+    iconClassName?: string
     actions?: React.ReactNode
     onClick?: () => void
     delay?: number
@@ -28,6 +30,8 @@ export function ListCard({
     value,
     valueLabel,
     image,
+    icon: Icon,
+    iconClassName,
     actions,
     onClick,
     delay = 0
@@ -61,6 +65,8 @@ export function ListCard({
                                 fill
                                 className="object-cover"
                             />
+                        ) : Icon ? (
+                            <Icon className={cn("w-6 h-6", iconClassName || "text-brand-deep/60 dark:text-brand-gold")} />
                         ) : (
                             <Package className="w-6 h-6 text-brand-deep/20 dark:text-white/20" />
                         )}
