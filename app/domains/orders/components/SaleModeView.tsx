@@ -70,6 +70,7 @@ export function SaleModeView() {
     const [cart, setCart] = React.useState<CartItem[]>([])
     const [paymentMethod, setPaymentMethod] = React.useState<'Cash' | 'Transfer' | 'Card'>('Cash')
     const [isCheckingOut, setIsCheckingOut] = React.useState(false)
+    const [mobileView, setMobileView] = React.useState<'catalog' | 'cart'>('catalog')
     const [allCustomers, setAllCustomers] = React.useState<Customer[]>(mockCustomers)
     const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | null>(null)
     const [customerSearch, setCustomerSearch] = React.useState("")
@@ -96,6 +97,7 @@ export function SaleModeView() {
 
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0)
+    const totalPrice = `₦${new Intl.NumberFormat().format(subtotal)}`
 
     // Barcode Auto-Add Logic
     React.useEffect(() => {
@@ -136,7 +138,7 @@ export function SaleModeView() {
             if (existing) {
                 return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
             }
-            return [...prev, { id: product.id, product: product.product, price, quantity: 1 }]
+            return [...prev, { id: product.id, product: product.product, price, category: product.category, quantity: 1 }]
         })
     }
 
@@ -173,179 +175,247 @@ export function SaleModeView() {
             </div>
 
             {/* Left Side: Product Catalog */}
-            <div className="flex-1 flex flex-col min-w-0 p-4 md:p-8 space-y-8 relative z-10">
-                <header className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                        <Link href="/orders">
+            <div className={cn(
+                "flex-1 flex flex-col min-w-0 h-full relative z-10",
+                mobileView === 'cart' ? "hidden md:flex" : "flex"
+            )}>
+                <div className="flex-1 flex flex-col p-4 md:p-8 space-y-4 md:space-y-8 min-h-0">
+                    <header className="flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-6">
+                            <Link href="/orders" className="hidden md:block">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="rounded-2xl h-12 w-12 group hover:bg-brand-gold/10 transition-all duration-500"
+                                >
+                                    <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                                </Button>
+                            </Link>
+                            <div>
+                                <h2 className="text-3xl md:text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
+                                <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs md:text-sm font-sans uppercase tracking-[0.2em] font-black">Catalog</p>
+                            </div>
+                        </div>
+
+                        <div className="flex md:hidden items-center gap-2">
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="rounded-2xl h-12 w-12 group hover:bg-brand-gold/10 transition-all duration-500"
+                                onClick={() => setMobileView('cart')}
+                                className="rounded-2xl h-12 w-12 bg-white/40 dark:bg-white/5 relative"
                             >
-                                <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                                <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
+                                {totalItems > 0 && (
+                                    <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[10px] font-black shadow-lg">
+                                        {totalItems}
+                                    </span>
+                                )}
                             </Button>
-                        </Link>
-                        <div>
-                            <h2 className="text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
-                            <p className="text-brand-accent/60 dark:text-brand-cream/40 text-sm font-sans">Point of Sale & Catalog Management</p>
                         </div>
-                    </div>
-                </header>
+                    </header>
 
-                {/* Filters & Search */}
-                <div className="flex flex-col md:flex-row gap-4 items-start">
-                    <div className="relative flex-2 w-full md:w-auto min-w-[320px] group flex items-center">
-                        <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
-                        </div>
-                        <Input
-                            placeholder="Search catalog or scan barcode..."
-                            className="pl-12 pr-12 h-14 bg-white/40 dark:bg-white/5 border-brand-accent/10 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-gold/20 w-full"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            autoFocus
-                        />
-                        <Button
-                            variant="ghost"
-                            className="absolute right-2 top-2 bottom-2 flex items-center gap-2 px-3 rounded-[14px] transition-all z-30 pointer-events-auto cursor-pointer group/scan hover:bg-brand-gold/10 dark:hover:bg-white/5 active:scale-95 h-auto"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toast.info("Barcode scanner protocol active...")
-                            }}
-                        >
-                            <div className="h-6 w-px bg-brand-accent/10 dark:bg-white/10 mx-1" />
-                            <Barcode className="h-5 w-5 text-brand-gold/60 group-hover/scan:text-brand-gold group-hover/scan:scale-110 transition-all animate-pulse" />
-                        </Button>
-                    </div>
-                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth">
-                        <Button
-                            variant={!selectedCategory ? 'base' : 'outline'}
-                            onClick={() => setSelectedCategory(null)}
-                            className={cn(
-                                "rounded-2xl h-14 px-8 min-w-max transition-all duration-500",
-                                !selectedCategory && "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-sm"
-                            )}
-                        >
-                            Catalog
-                        </Button>
-                        {categories.map(cat => (
+                    {/* Filters & Search */}
+                    <div className="flex flex-col md:flex-row gap-4 items-start">
+                        <div className="relative flex-2 w-full md:w-auto min-w-[320px] group flex items-center">
+                            <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
+                                <Search className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
+                            </div>
+                            <Input
+                                placeholder="Search catalog or scan barcode..."
+                                className="pl-12 pr-12 h-14 bg-white/40 dark:bg-white/5 border-brand-accent/10 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-gold/20 w-full"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                autoFocus
+                            />
                             <Button
-                                key={cat}
-                                variant={selectedCategory === cat ? 'base' : 'outline'}
-                                onClick={() => setSelectedCategory(cat)}
+                                variant="ghost"
+                                className="absolute right-2 top-2 bottom-2 flex items-center gap-2 px-3 rounded-[14px] transition-all z-30 pointer-events-auto cursor-pointer group/scan hover:bg-brand-gold/10 dark:hover:bg-white/5 active:scale-95 h-auto"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toast.info("Barcode scanner protocol active...")
+                                }}
+                            >
+                                <div className="h-6 w-px bg-brand-accent/10 dark:bg-white/10 mx-1" />
+                                <Barcode className="h-5 w-5 text-brand-gold/60 group-hover/scan:text-brand-gold group-hover/scan:scale-110 transition-all animate-pulse" />
+                            </Button>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth w-full">
+                            <Button
+                                variant={!selectedCategory ? 'base' : 'outline'}
+                                onClick={() => setSelectedCategory(null)}
                                 className={cn(
                                     "rounded-2xl h-14 px-8 min-w-max transition-all duration-500",
-                                    selectedCategory === cat && "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-sm"
+                                    !selectedCategory && "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-sm"
                                 )}
                             >
-                                {cat}
+                                Catalog
                             </Button>
-                        ))}
+                            {categories.map(cat => (
+                                <Button
+                                    key={cat}
+                                    variant={selectedCategory === cat ? 'base' : 'outline'}
+                                    onClick={() => setSelectedCategory(cat)}
+                                    className={cn(
+                                        "rounded-2xl h-14 px-8 min-w-max transition-all duration-500",
+                                        selectedCategory === cat && "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-sm"
+                                    )}
+                                >
+                                    {cat}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
+                    <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 mt-4 md:mt-0">
+                        <motion.div
+                            key={`${selectedCategory}-${search}-${currentPage}`}
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="show"
+                            className="flex-1 overflow-y-auto pr-1 md:pr-2 custom-scrollbar -mr-1 md:-mr-2"
+                        >
+                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 pb-24 md:pb-6 pt-1 md:pt-3">
+                                {paginatedProducts.map((product) => (
+                                    <motion.div key={product.id} variants={itemVariants}>
+                                        <GlassCard
+                                            onClick={() => addToCart(product)}
+                                            hoverEffect
+                                            className="p-5 cursor-pointer group flex flex-col h-full bg-white/40 dark:bg-white/3 border-brand-accent/5 dark:border-white/5"
+                                        >
+                                            <div className="flex-1 space-y-4">
+                                                <div className="flex justify-between items-start">
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold/80">{product.category}</span>
+                                                    <div className={cn(
+                                                        "w-2 h-2 rounded-full",
+                                                        product.status === 'In Stock' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"
+                                                    )} />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <h3 className="font-serif text-xl leading-tight text-brand-deep dark:text-brand-cream group-hover:text-brand-gold transition-colors duration-300">{product.product}</h3>
+                                                    <p className="text-[10px] font-medium text-brand-accent/40 dark:text-brand-cream/30 uppercase tracking-widest">{product.status} • {product.stock} units</p>
+                                                </div>
+                                            </div>
+                                            <div className="mt-6 flex items-center justify-between pt-4 border-t border-brand-accent/5 dark:border-white/5">
+                                                <p className="font-sans font-bold text-xl text-brand-gold tracking-tight">{product.price}</p>
+                                                <div className="h-10 w-10 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 shadow-xl shadow-brand-gold/10">
+                                                    <Plus className="h-5 w-5" />
+                                                </div>
+                                            </div>
+                                        </GlassCard>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
+
+                        {/* Pagination Controls - Fixed Bottom */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2 md:gap-6 py-3 md:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl flex-shrink-0">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-xl px-2 md:px-4 hover:bg-brand-gold/5 transition-all text-[10px] md:text-xs font-bold uppercase tracking-widest h-10"
+                                >
+                                    <ChevronLeft className="h-4 w-4 md:mr-2" />
+                                    <span className="hidden md:inline">Previous</span>
+                                </Button>
+
+                                <div className="flex items-center gap-1 md:gap-2">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                        // Logic to show fewer pages on mobile
+                                        const isVisibleOnMobile = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
+                                        if (!isVisibleOnMobile) return null;
+
+                                        return (
+                                            <Button
+                                                key={page}
+                                                variant={currentPage === page ? 'default' : 'ghost'}
+                                                size="sm"
+                                                onClick={() => setCurrentPage(page)}
+                                                className={cn(
+                                                    "w-10 h-10 rounded-xl font-bold transition-all duration-300",
+                                                    currentPage === page
+                                                        ? "bg-brand-deep dark:bg-brand-accent text-brand-gold shadow-lg shadow-brand-deep/20"
+                                                        : "text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-brand-accent/5"
+                                                )}
+                                            >
+                                                {page}
+                                            </Button>
+                                        )
+                                    })}
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-xl px-2 md:px-4 hover:bg-brand-gold/5 transition-all text-[10px] md:text-xs font-bold uppercase tracking-widest h-10"
+                                >
+                                    <span className="hidden md:inline">Next</span>
+                                    <ChevronRight className="h-4 w-4 md:ml-2" />
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
-                <div className="flex-1 min-h-0 flex flex-col gap-6">
+                {/* Mobile Floating Action Button */}
+                {mobileView === 'catalog' && cart.length > 0 && (
                     <motion.div
-                        key={`${selectedCategory}-${search}-${currentPage}`}
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="show"
-                        className="flex-1 overflow-y-auto pr-2 custom-scrollbar"
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        className="fixed bottom-24 left-6 right-6 z-40 md:hidden"
                     >
-                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 pt-3">
-                            {paginatedProducts.map((product) => (
-                                <motion.div key={product.id} variants={itemVariants}>
-                                    <GlassCard
-                                        onClick={() => addToCart(product)}
-                                        hoverEffect
-                                        className="p-5 cursor-pointer group flex flex-col h-full bg-white/40 dark:bg-white/3 border-brand-accent/5 dark:border-white/5"
-                                    >
-                                        <div className="flex-1 space-y-4">
-                                            <div className="flex justify-between items-start">
-                                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold/80">{product.category}</span>
-                                                <div className={cn(
-                                                    "w-2 h-2 rounded-full",
-                                                    product.status === 'In Stock' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"
-                                                )} />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <h3 className="font-serif text-xl leading-tight text-brand-deep dark:text-brand-cream group-hover:text-brand-gold transition-colors duration-300">{product.product}</h3>
-                                                <p className="text-[10px] font-medium text-brand-accent/40 dark:text-brand-cream/30 uppercase tracking-widest">{product.status} • {product.stock} units</p>
-                                            </div>
-                                        </div>
-                                        <div className="mt-6 flex items-center justify-between pt-4 border-t border-brand-accent/5 dark:border-white/5">
-                                            <p className="font-sans font-bold text-xl text-brand-gold tracking-tight">{product.price}</p>
-                                            <div className="h-10 w-10 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 shadow-xl shadow-brand-gold/10">
-                                                <Plus className="h-5 w-5" />
-                                            </div>
-                                        </div>
-                                    </GlassCard>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
-
-                    {/* Pagination Controls - Fixed Bottom */}
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-6 py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className="rounded-xl px-4 hover:bg-brand-gold/5 transition-all text-xs font-bold uppercase tracking-widest"
-                            >
-                                <ChevronLeft className="h-4 w-4 mr-2" />
-                                Previous
-                            </Button>
-
-                            <div className="flex items-center gap-2">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                    <Button
-                                        key={page}
-                                        variant={currentPage === page ? 'default' : 'ghost'}
-                                        size="sm"
-                                        onClick={() => setCurrentPage(page)}
-                                        className={cn(
-                                            "w-10 h-10 rounded-xl font-bold transition-all duration-300",
-                                            currentPage === page
-                                                ? "bg-brand-deep dark:bg-brand-accent text-brand-gold shadow-lg shadow-brand-deep/20"
-                                                : "text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-brand-accent/5"
-                                        )}
-                                    >
-                                        {page}
-                                    </Button>
-                                ))}
+                        <Button
+                            onClick={() => setMobileView('cart')}
+                            className="w-full h-16 rounded-[24px] bg-brand-deep dark:bg-brand-accent text-brand-gold shadow-[0_20px_40px_rgba(0,0,0,0.3)] border border-brand-gold/20 flex items-center justify-between px-6 group"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center">
+                                    <ShoppingCart className="h-5 w-5" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Complete Sale</p>
+                                    <p className="text-lg font-black tracking-tight">{totalPrice}</p>
+                                </div>
                             </div>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages}
-                                className="rounded-xl px-4 hover:bg-brand-gold/5 transition-all text-xs font-bold uppercase tracking-widest"
-                            >
-                                Next
-                                <ChevronRight className="h-4 w-4 ml-2" />
-                            </Button>
-                        </div>
-                    )}
-                </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold uppercase tracking-widest mr-2">{totalItems} Items</span>
+                                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                        </Button>
+                    </motion.div>
+                )}
             </div>
 
             {/* Right Side: Cart & Checkout Summary */}
-            <div className="w-full md:w-[420px] lg:w-[480px] bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20">
+            <div className={cn(
+                "w-full md:w-[420px] lg:w-[480px] bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20",
+                mobileView === 'catalog' ? "hidden md:flex" : "flex h-full fixed inset-0 z-50 md:relative md:inset-auto"
+            )}>
                 <div className="p-6 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-4 bg-brand-gold/5 dark:bg-brand-gold/5 relative">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-[16px] bg-brand-deep dark:bg-brand-accent flex items-center justify-center text-brand-gold shadow-lg shadow-brand-deep/20">
+                            {/* Mobile Back to Catalog Button */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setMobileView('catalog')}
+                                className="h-12 w-12 rounded-xl text-brand-accent hover:text-brand-accent dark:text-brand-cream md:hidden hover:bg-brand-accent/10 transition-all shadow-sm border border-brand-accent/5"
+                            >
+                                <ArrowLeft className="h-5 w-5" />
+                            </Button>
+
+                            <div className="hidden md:flex h-12 w-12 rounded-[16px] bg-brand-deep dark:bg-brand-accent items-center justify-center text-brand-gold shadow-lg shadow-brand-deep/20">
                                 <ShoppingCart className="h-5 w-5" />
                             </div>
                             <div>
-                                <h3 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Active Order</h3>
-                                <p className="text-[10px] uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 font-bold">{totalItems} Positions Selected</p>
+                                <h3 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Checkout</h3>
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 font-bold">{totalItems} Items in Basket</p>
                             </div>
                         </div>
 
@@ -354,7 +424,7 @@ export function SaleModeView() {
                                 <Button
                                     variant="ghost"
                                     onClick={() => setIsCustomerSearchOpen(!isCustomerSearchOpen)}
-                                    className="h-12 rounded-2xl bg-brand-accent/10 dark:bg-brand-accent/20 text-brand-accent dark:text-brand-cream hover:bg-brand-accent/20 border border-brand-accent/10 dark:border-white/10 transition-all flex items-center gap-3"
+                                    className="h-12 rounded-2xl bg-white dark:bg-brand-accent/20 text-brand-accent dark:text-brand-cream hover:bg-white/80 dark:hover:bg-brand-accent/30 border border-brand-accent/5 dark:border-white/5 shadow-sm transition-all flex items-center gap-3 px-4"
                                 >
                                     <div className="text-left">
                                         <p className="text-[10px] font-bold uppercase tracking-widest leading-none opacity-40 dark:opacity-60">Client</p>
@@ -367,7 +437,7 @@ export function SaleModeView() {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setIsCustomerSearchOpen(!isCustomerSearchOpen)}
-                                    className="h-12 w-12 rounded-xl text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-brand-accent/10 transition-all"
+                                    className="h-12 w-12 rounded-[16px] bg-white dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-white/80 transition-all border border-brand-accent/5 dark:border-white/5 shadow-sm"
                                 >
                                     <User className="h-5 w-5" />
                                 </Button>
@@ -383,12 +453,12 @@ export function SaleModeView() {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: -20 }}
                                 ref={customerDropdownRef}
-                                className="absolute top-0 left-0 right-0 z-50 p-6 pt-8 pb-10 bg-white/95 dark:bg-brand-deep/95 backdrop-blur-2xl flex flex-col gap-5 rounded-b-[40px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border-b border-brand-accent/20 dark:border-white/10"
+                                className="absolute top-0 left-0 right-0 z-50 p-6 pt-8 pb-10 bg-white dark:bg-brand-deep-900 flex flex-col gap-5 rounded-b-[40px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border-b border-brand-accent/10 dark:border-white/5"
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                                            <User className="h-4 w-4" />
+                                        <div className="h-10 w-10 rounded-xl bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-gold">
+                                            <User className="h-5 w-5" />
                                         </div>
                                         <h4 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Client Search</h4>
                                     </div>
@@ -396,22 +466,22 @@ export function SaleModeView() {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => setIsCustomerSearchOpen(false)}
-                                        className="h-10 w-10 rounded-xl bg-brand-accent/5 hover:bg-rose-500/10 hover:text-rose-500 transition-all"
+                                        className="h-10 w-10 rounded-xl bg-brand-accent/5 dark:bg-white/5 hover:bg-rose-500/10 dark:hover:bg-rose-500/20 text-brand-accent/60 dark:text-brand-cream/60 hover:text-rose-500 transition-all"
                                     >
                                         <X className="h-5 w-5" />
                                     </Button>
                                 </div>
 
                                 <div className="relative group px-0.5">
-                                    <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
-                                        <Search className="h-5 w-5 text-brand-accent/40 group-focus-within:text-brand-accent transition-colors" />
+                                    <div className="absolute left-6 inset-y-0 flex items-center pointer-events-none">
+                                        <Search className="h-5 w-5 text-brand-accent/30 dark:text-brand-cream/30 group-focus-within:text-brand-gold transition-colors" />
                                     </div>
                                     <Input
                                         autoFocus
                                         placeholder="Type name, phone or email..."
                                         value={customerSearch}
                                         onChange={(e) => setCustomerSearch(e.target.value)}
-                                        className="pl-14 h-16 text-lg bg-brand-deep/5 dark:bg-white/5 border-brand-accent/10 dark:border-white/10 rounded-2xl focus:ring-brand-accent/30 focus:border-brand-accent/20 transition-all"
+                                        className="pl-16 h-16 text-lg bg-brand-deep/5 dark:bg-white/10 border-brand-accent/5 dark:border-white/5 rounded-2xl dark:focus:ring-brand-accent/30 dark:text-brand-cream dark:placeholder:text-brand-cream/20 transition-all font-medium"
                                     />
                                 </div>
 
@@ -430,18 +500,23 @@ export function SaleModeView() {
                                                         setCustomerSearch("")
                                                         toast.success(`Client ${customer.name} attached`)
                                                     }}
-                                                    className="w-full p-4 h-auto text-left hover:bg-brand-accent/5 justify-start transition-colors rounded-2xl group border border-transparent hover:border-brand-accent/10"
+                                                    className="w-full rounded-3xl p-4 h-auto text-left hover:bg-brand-accent/5 dark:hover:bg-white/5 justify-start transition-colors group border border-transparent hover:border-brand-accent/5 dark:hover:border-white/10"
                                                 >
                                                     <div className="flex items-center justify-between w-full">
-                                                        <div>
-                                                            <h4 className="font-bold text-brand-deep dark:text-brand-cream group-hover:text-brand-accent transition-colors">{customer.name}</h4>
-                                                            <p className="text-xs text-brand-accent/40 dark:text-brand-cream/30">{customer.phone} • {customer.type}</p>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="h-12 w-12 rounded-2xl bg-brand-accent/5 dark:bg-white/10 flex items-center justify-center text-brand-accent dark:text-brand-cream group-hover:bg-brand-accent/10 dark:group-hover:bg-brand-accent/20 transition-colors shadow-sm">
+                                                                <User className="h-5 w-5" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-bold text-brand-deep dark:text-brand-cream group-hover:text-brand-accent dark:group-hover:text-brand-gold transition-colors">{customer.name}</h4>
+                                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 font-medium">{customer.phone} • {customer.type}</p>
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                             {customer.recentPurchases && (
-                                                                <span className="text-[10px] font-bold text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full">{customer.recentPurchases} orders</span>
+                                                                <span className="text-[10px] font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20">{customer.recentPurchases} orders</span>
                                                             )}
-                                                            <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-40 transition-opacity" />
+                                                            <ChevronRight className="h-5 w-5 text-brand-accent/20 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
                                                         </div>
                                                     </div>
                                                 </Button>
@@ -464,15 +539,15 @@ export function SaleModeView() {
                                                     setCustomerSearch("")
                                                     toast.success(`New customer "${customerSearch}" created`)
                                                 }}
-                                                className="w-full p-4 h-auto text-left border-dashed border-brand-accent/30 hover:border-brand-accent bg-brand-accent/5 hover:bg-brand-accent/10 group rounded-2xl transition-all"
+                                                className="w-full p-5 h-auto text-left border border-dashed border-brand-accent/30 dark:border-white/20 hover:border-brand-accent bg-brand-accent/5 dark:bg-white/5 hover:bg-brand-accent/10 dark:hover:bg-white/10 group rounded-3xl transition-all"
                                             >
                                                 <div className="flex items-center gap-4">
-                                                    <div className="h-10 w-10 rounded-xl bg-brand-accent/20 flex items-center justify-center text-brand-accent">
-                                                        <UserPlus className="h-5 w-5" />
+                                                    <div className="h-12 w-12 rounded-xl bg-brand-accent/10 dark:bg-brand-accent/30 flex items-center justify-center text-brand-accent dark:text-brand-cream shadow-inner">
+                                                        <UserPlus className="h-6 w-6" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-xs font-bold text-brand-accent">Add as new customer</p>
-                                                        <h4 className="font-black text-brand-deep dark:text-brand-cream">{customerSearch}</h4>
+                                                        <p className="text-[10px] font-bold text-brand-accent dark:text-brand-gold uppercase tracking-[0.2em] mb-1">Add as new customer</p>
+                                                        <h4 className="font-serif text-2xl text-brand-deep dark:text-brand-cream font-medium tracking-tight">{customerSearch}</h4>
                                                     </div>
                                                 </div>
                                             </Button>
@@ -514,38 +589,52 @@ export function SaleModeView() {
                                     exit={{ opacity: 0, x: 20 }}
                                     className="group"
                                 >
-                                    <GlassCard className="p-5 flex items-center gap-5 bg-white/40 dark:bg-white/5 border-brand-accent/5 dark:border-white/5 group-hover:border-brand-gold/20 transition-all duration-300">
-                                        <div className="flex-1 min-w-0">
+                                    <GlassCard className="p-4 rounded-[20px] sm:rounded-3xl flex flex-col gap-3 bg-white/40 dark:bg-white/5 border-brand-accent/5 dark:border-white/5 group-hover:border-brand-gold/20 transition-all duration-300">
+                                        <div className="min-w-0">
                                             <h4 className="font-medium text-brand-deep dark:text-brand-cream truncate text-lg group-hover:text-brand-gold transition-colors">{item.product}</h4>
-                                            <p className="text-sm font-bold text-brand-gold tracking-tight">₦{item.price.toLocaleString()}</p>
                                         </div>
-                                        <div className="flex items-center gap-3 bg-brand-deep/5 dark:bg-white/5 rounded-2xl p-1 border border-brand-accent/5 dark:border-white/5">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => updateQuantity(item.id, -1)}
-                                                className="h-10 w-10 flex items-center justify-center text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-brand-gold/10 rounded-xl transition-all"
-                                            >
-                                                <Minus className="h-4 w-4" />
-                                            </Button>
-                                            <span className="w-10 text-center text-base font-bold text-brand-deep dark:text-brand-cream tabular-nums">{item.quantity}</span>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => updateQuantity(item.id, 1)}
-                                                className="h-10 w-10 flex items-center justify-center text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-brand-gold/10 rounded-xl transition-all"
-                                            >
-                                                <Plus className="h-4 w-4" />
-                                            </Button>
+
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <p className="font-bold text-brand-gold text-base tracking-tight shrink-0">₦{item.price.toLocaleString()}</p>
+                                                {(item as any).category && (
+                                                    <>
+                                                        <div className="w-1 h-1 rounded-full bg-brand-accent/20 shrink-0" />
+                                                        <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/30 uppercase tracking-widest truncate">{(item as any).category}</p>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-1.5 bg-brand-deep/5 dark:bg-white/5 rounded-xl p-0.5 border border-brand-accent/5 dark:border-white/5">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => updateQuantity(item.id, -1)}
+                                                        className="h-7 w-7 flex items-center justify-center text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-brand-gold/10 rounded-md transition-all"
+                                                    >
+                                                        <Minus className="h-3 w-3" />
+                                                    </Button>
+                                                    <span className="w-6 text-center text-xs font-bold text-brand-deep dark:text-brand-cream tabular-nums">{item.quantity}</span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => updateQuantity(item.id, 1)}
+                                                        className="h-7 w-7 flex items-center justify-center text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-brand-gold/10 rounded-md transition-all"
+                                                    >
+                                                        <Plus className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => updateQuantity(item.id, -item.quantity)}
+                                                    className="h-8 w-8 flex items-center justify-center text-rose-500/30 dark:text-rose-300/80 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => updateQuantity(item.id, -item.quantity)}
-                                            className="h-12 w-12 flex items-center justify-center text-rose-500/30 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all group-hover:bg-rose-500/5"
-                                        >
-                                            <Trash2 className="h-5 w-5" />
-                                        </Button>
                                     </GlassCard>
                                 </motion.div>
                             ))
