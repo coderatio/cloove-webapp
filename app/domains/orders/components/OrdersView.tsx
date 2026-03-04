@@ -24,6 +24,7 @@ import {
     DrawerClose,
 } from "@/app/components/ui/drawer"
 import { initialOrders } from '../data/ordersMocks'
+import Link from 'next/link'
 
 export function OrdersView() {
     const isMobile = useIsMobile()
@@ -107,6 +108,16 @@ export function OrdersView() {
                 <ManagementHeader
                     title="Orders"
                     description={`Monitor sales pipeline and track order fulfillment for ${currentStore?.name || 'your business'}.`}
+                    extraActions={
+                        <Link href="/orders/sale">
+                            <Button
+                                className="rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg h-12 px-6 font-bold"
+                            >
+                                <ShoppingBag className="w-4 h-4 mr-2" />
+                                Record Sale
+                            </Button>
+                        </Link>
+                    }
                 />
 
                 <InsightWhisper insight={intelligenceWhisper} />
