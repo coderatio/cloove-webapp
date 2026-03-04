@@ -37,10 +37,10 @@ export function ListCard({
     delay = 0
 }: ListCardProps) {
     const statusStyles = {
-        success: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20",
+        success: "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold border-brand-green/10 dark:border-brand-gold/10",
         warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-brand-gold/70 border-amber-200 dark:border-amber-800/30",
         danger: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/30",
-        neutral: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-brand-cream/60 border-zinc-200 dark:border-zinc-700",
+        neutral: "bg-brand-deep/5 text-brand-deep/60 dark:bg-white/5 dark:text-brand-cream/60 border-brand-deep/5 dark:border-white/5",
     }
 
     return (
@@ -73,9 +73,9 @@ export function ListCard({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground dark:text-brand-cream truncate leading-none pt-1">{title}</h3>
-                        {subtitle && <p className="text-[11px] text-muted-foreground dark:text-brand-cream/60 mt-1.5 truncate">{subtitle}</p>}
-                        {meta && <div className="mt-3 text-xs text-muted-foreground font-medium flex items-center gap-2">
+                        <h3 className="font-semibold text-brand-deep dark:text-brand-cream truncate leading-tight">{title}</h3>
+                        {subtitle && <p className="text-[12px] text-brand-accent/60 dark:text-brand-cream/60 mt-1 truncate font-medium">{subtitle}</p>}
+                        {meta && <div className="mt-2 text-[10px] font-mono text-brand-accent/40 dark:text-brand-cream/40 flex items-center gap-2 uppercase tracking-tight">
                             {meta}
                         </div>}
                     </div>

@@ -242,8 +242,8 @@ export function BillingSettings() {
                                         {isLoadingSub
                                             ? "Loading..."
                                             : wallet
-                                              ? formatPrice(wallet.balance, wallet.currency)
-                                              : formatPrice(0, ownerCurrencyCode)}
+                                                ? formatPrice(wallet.balance, wallet.currency)
+                                                : formatPrice(0, ownerCurrencyCode)}
                                     </span>
                                 </div>
 
