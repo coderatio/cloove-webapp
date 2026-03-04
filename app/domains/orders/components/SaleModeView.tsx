@@ -20,7 +20,11 @@ import {
     User,
     UserPlus,
     X,
-    ArrowBigUpDash
+    ArrowBigUpDash,
+    UsersRoundIcon,
+    UserSearchIcon,
+    Layers,
+    History
 } from 'lucide-react'
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { Button } from '@/app/components/ui/button'
@@ -31,13 +35,8 @@ import { mockCustomers, Customer } from '../data/customerMocks'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-
-interface CartItem {
-    id: string
-    product: string
-    price: number
-    quantity: number
-}
+import { useQueuedSales, CartItem } from '../hooks/useQueuedSales'
+import { QueuedSalesDrawer } from './QueuedSalesDrawer'
 
 // Stagger variants for the container
 const containerVariants: Variants = {
@@ -78,6 +77,10 @@ export function SaleModeView() {
     const customerDropdownRef = React.useRef<HTMLDivElement>(null)
     const [currentPage, setCurrentPage] = React.useState(1)
     const itemsPerPage = 8
+
+    // Queue Sale State
+    const { queuedSales, queueSale, removeQueuedSale } = useQueuedSales()
+    const [isQueueDrawerOpen, setIsQueueDrawerOpen] = React.useState(false)
 
     // Derived State
     const categories = Array.from(new Set(initialInventory.map(item => item.category)))
@@ -164,6 +167,49 @@ export function SaleModeView() {
             setIsCheckingOut(false)
             router.push('/orders')
         }, 2000)
+    }
+
+    const handleQueueSale = () => {
+        if (cart.length === 0) {
+            toast.error("Cart is empty")
+            return
+        }
+
+        queueSale({
+            customer: selectedCustomer,
+            items: cart,
+            paymentMethod: paymentMethod,
+            total: subtotal
+        })
+
+        toast.success("Sale parked successfully", {
+            description: selectedCustomer ? `Saved for ${selectedCustomer.name}` : "Saved for walk-in customer",
+            icon: <Layers className="h-4 w-4" />
+        })
+
+        // Clear active cart
+        setCart([])
+        setSelectedCustomer(null)
+    }
+
+    const handleRecallSale = (sale: any) => {
+        if (cart.length > 0) {
+            toast.error("Cart not empty", {
+                description: "Please clear or queue your current cart before recalling a sale."
+            })
+            return
+        }
+
+        setCart(sale.items)
+        setSelectedCustomer(sale.customer)
+        setPaymentMethod(sale.paymentMethod)
+
+        removeQueuedSale(sale.id)
+        setIsQueueDrawerOpen(false)
+
+        toast.info("Sale recalled", {
+            icon: <History className="h-4 w-4" />
+        })
     }
 
     return (
@@ -298,7 +344,7 @@ export function SaleModeView() {
                                                 </div>
                                             </div>
                                             <div className="mt-6 flex items-center justify-between pt-4 border-t border-brand-accent/5 dark:border-white/5">
-                                                <p className="font-sans font-bold text-xl text-brand-gold tracking-tight">{product.price}</p>
+                                                <p className="font-serif font-bold text-xl text-brand-deep-700 dark:text-brand-cream tracking-tight">{product.price}</p>
                                                 <div className="h-10 w-10 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 shadow-xl shadow-brand-gold/10">
                                                     <Plus className="h-5 w-5" />
                                                 </div>
@@ -311,7 +357,7 @@ export function SaleModeView() {
 
                         {/* Pagination Controls - Fixed Bottom */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 md:gap-6 py-3 md:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl flex-shrink-0">
+                            <div className="flex items-center justify-center gap-2 md:gap-6 py-3 md:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl shrink-0">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -437,11 +483,29 @@ export function SaleModeView() {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setIsCustomerSearchOpen(!isCustomerSearchOpen)}
-                                    className="h-12 w-12 rounded-[16px] bg-white dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-white/80 transition-all border border-brand-accent/5 dark:border-white/5 shadow-sm"
+                                    className="size-12 rounded-[16px] bg-white dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-white/80 transition-all border border-brand-accent/5 dark:border-white/5 shadow-sm"
                                 >
-                                    <User className="h-5 w-5" />
+                                    <UsersRoundIcon className="h-5 w-5" />
                                 </Button>
                             )}
+
+                            {/* Queue Sale Indicator */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setIsQueueDrawerOpen(true)}
+                                className={cn(
+                                    "size-12 rounded-[16px] bg-white dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-white/80 transition-all border border-brand-accent/5 dark:border-white/5 shadow-sm relative",
+                                    queuedSales.length > 0 && "text-brand-gold border-brand-gold/20"
+                                )}
+                            >
+                                <Layers className="h-5 w-5" />
+                                {queuedSales.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[9px] font-black shadow-lg">
+                                        {queuedSales.length}
+                                    </span>
+                                )}
+                            </Button>
                         </div>
                     </div>
 
@@ -453,14 +517,14 @@ export function SaleModeView() {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: -20 }}
                                 ref={customerDropdownRef}
-                                className="absolute top-0 left-0 right-0 z-50 p-6 pt-8 pb-10 bg-white dark:bg-brand-deep-900 flex flex-col gap-5 rounded-b-[40px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border-b border-brand-accent/10 dark:border-white/5"
+                                className="absolute top-0 left-0 right-0 z-50 p-6 pt-8 pb-10 bg-white dark:bg-brand-deep-900 flex flex-col gap-5 rounded-b-[40px] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border-b border-brand-accent/10 dark:border-white/5"
                             >
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-3">
                                         <div className="h-10 w-10 rounded-xl bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-gold">
-                                            <User className="h-5 w-5" />
+                                            <UserSearchIcon className="h-5 w-5" />
                                         </div>
-                                        <h4 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Client Search</h4>
+                                        <h4 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Customer Search</h4>
                                     </div>
                                     <Button
                                         variant="ghost"
@@ -589,7 +653,7 @@ export function SaleModeView() {
                                     exit={{ opacity: 0, x: 20 }}
                                     className="group"
                                 >
-                                    <GlassCard className="p-4 rounded-[20px] sm:rounded-3xl flex flex-col gap-3 bg-white/40 dark:bg-white/5 border-brand-accent/5 dark:border-white/5 group-hover:border-brand-gold/20 transition-all duration-300">
+                                    <GlassCard className="p-4 rounded-[20px] before:rounded-[20px] sm:rounded-3xl flex flex-col gap-3 bg-white/40 dark:bg-white/10 border-brand-accent/10 dark:border-white/5 group-hover:border-brand-gold/20 transition-all duration-300">
                                         <div className="min-w-0">
                                             <h4 className="font-medium text-brand-deep dark:text-brand-cream truncate text-lg group-hover:text-brand-gold transition-colors">{item.product}</h4>
                                         </div>
@@ -693,27 +757,39 @@ export function SaleModeView() {
                     </div>
 
                     {/* Pro Actions */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <Button
+                                variant="outline"
+                                className="h-14 px-3 rounded-2xl border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
+                                onClick={() => toast.info("Initializing receipt printer protocol...")}
+                            >
+                                <ReceiptText className="h-5 w-5 mr-3" />
+                                Print
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="h-14 px-3 rounded-2xl border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
+                                onClick={handleQueueSale}
+                                disabled={cart.length === 0}
+                            >
+                                <Layers className="h-5 w-5 mr-3" />
+                                Queue
+                            </Button>
+                        </div>
                         <Button
-                            variant="outline"
-                            className="h-14 px-3 rounded-2xl border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
-                            onClick={() => toast.info("Initializing receipt printer protocol...")}
-                        >
-                            <ReceiptText className="h-5 w-5 mr-3" />
-                            Print
-                        </Button>
-                        <Button
-                            className="h-14 px-3 rounded-2xl bg-brand-deep dark:bg-brand-accent text-brand-gold font-bold text-xl hover:scale-[1.01] shadow-md active:scale-95 transition-all duration-500 border border-brand-gold/20"
+                            className="h-14 px-3 rounded-[24px] bg-brand-deep dark:bg-brand-accent text-brand-gold font-serif font-black text-2xl hover:scale-[1.01] shadow-2xl active:scale-95 transition-all duration-500 border border-brand-gold/30 group relative overflow-hidden"
                             onClick={handleCheckout}
                             disabled={isCheckingOut || cart.length === 0}
                         >
+                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                             {isCheckingOut ? (
                                 <motion.div key="loader" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
                                     <ArrowRight className="h-7 w-7" />
                                 </motion.div>
                             ) : (
                                 <motion.span key="text" className="inline-flex items-center">
-                                    Finalize
+                                    Finalize Sale
                                     <CheckCircle2 className="h-6 w-6 ml-3" />
                                 </motion.span>
                             )}
@@ -721,6 +797,15 @@ export function SaleModeView() {
                     </div>
                 </div>
             </div>
+
+            {/* Queued Sales Management */}
+            <QueuedSalesDrawer
+                isOpen={isQueueDrawerOpen}
+                onClose={() => setIsQueueDrawerOpen(false)}
+                sales={queuedSales}
+                onRecall={handleRecallSale}
+                onRemove={removeQueuedSale}
+            />
 
             {/* Global Refinements */}
             <style jsx global>{`

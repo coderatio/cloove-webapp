@@ -10,6 +10,8 @@ export const STORAGE_KEYS = {
     BULK_UPLOAD_FILE_CACHE: 'cloove_bulk_upload_file_cache',
     /** ID of the last country selected on the login screen */
     LOGIN_COUNTRY_ID: 'cloove_login_country',
+    /** Queued sales for the POS system */
+    POS_QUEUED_SALES: 'cloove_pos_queued_sales',
 } as const
 
 type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]
@@ -224,5 +226,27 @@ export const storage = {
         } catch (e) {
             console.error("Failed to prune file cache", e)
         }
+    },
+
+    // --- POS Helpers ---
+
+    /**
+     * Get queued sales from storage
+     */
+    getQueuedSales<T>(): T[] {
+        const val = this.get(STORAGE_KEYS.POS_QUEUED_SALES)
+        try {
+            return val ? JSON.parse(val) : []
+        } catch (e) {
+            console.error("Failed to parse queued sales", e)
+            return []
+        }
+    },
+
+    /**
+     * Set queued sales in storage
+     */
+    setQueuedSales(value: any[]): void {
+        this.set(STORAGE_KEYS.POS_QUEUED_SALES, JSON.stringify(value))
     }
 }
