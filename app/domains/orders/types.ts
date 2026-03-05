@@ -16,6 +16,8 @@ export interface Order {
     summary: string
     items: OrderItem[]
     totalAmount: number | string // Numeric from backend now, but support string for safety
+    subtotalAmount?: number
+    discountAmount?: number
     currency?: string
     customer: string // Customer name
     amountPaid: number

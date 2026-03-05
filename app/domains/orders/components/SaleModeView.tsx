@@ -106,7 +106,7 @@ export function SaleModeView() {
     const { queuedSales, queueSale, removeQueuedSale } = useQueuedSales()
     const [isQueueDrawerOpen, setIsQueueDrawerOpen] = React.useState(false)
 
-    const { activeBusiness } = useBusiness()
+    const { currency, activeBusiness } = useBusiness()
     const { printReceipt } = useReceiptPrinter()
     const { recordSale, isRecording } = useRecordSale()
     const { products, isLoadingProducts } = useInventory()
@@ -888,7 +888,7 @@ export function SaleModeView() {
                 <div className="p-4 lg:p-5 bg-brand-gold/5 dark:bg-brand-gold/5 border-t border-brand-accent/10 dark:border-white/5 space-y-4 shrink-0">
                     {/* Adaptive Payment Selection */}
                     <div className="space-y-2.5">
-                        <header className="flex justify-between items-center px-1">
+                        <header className="flex justify-between items-center">
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">Settlement Method</p>
                             <div className="h-px flex-1 mx-4 bg-brand-accent/10 dark:bg-brand-gold/10" />
                         </header>
@@ -947,113 +947,114 @@ export function SaleModeView() {
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: "auto", opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden space-y-4"
                                 >
-                                    {/* Discount Input & Promotions */}
-                                    <div className="flex items-center justify-between text-sm gap-3 pt-2">
-                                        <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Discount</span>
-
-                                        <div className="flex items-center justify-end gap-2 flex-1">
-                                            {selectedPromotion !== 'none' ? (
-                                                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl">
-                                                    <span className="text-xs font-bold truncate max-w-[120px]">
-                                                        {promotions?.find((p: any) => p.id === selectedPromotion)?.name || 'Promo'}
-                                                    </span>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => {
-                                                            setSelectedPromotion('none')
-                                                            setDiscount(0)
-                                                        }}
-                                                        className="h-6 w-6 rounded-md hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
-                                                        aria-label="Remove promotion"
-                                                    >
-                                                        <X className="w-3 h-3" />
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <div className="w-32">
-                                                    <MoneyInput
-                                                        size="sm"
-                                                        value={discount || ''}
-                                                        onChange={(val) => {
-                                                            setDiscount(Math.min(val || 0, subtotal))
-                                                            if (val > 0) setShowExtras(true)
-                                                        }}
-                                                        currencySymbol={activeBusiness?.currency === 'USD' ? '$' : activeBusiness?.currency === 'EUR' ? '€' : activeBusiness?.currency === 'GBP' ? '£' : '₦'}
-                                                        className="border-brand-accent/10 dark:border-white/10 text-emerald-600 dark:text-brand-gold transition-colors"
-                                                    />
-                                                </div>
-                                            )}
-
-                                            {promotions && promotions.length > 0 && (
-                                                <Select
-                                                    value={selectedPromotion}
-                                                    onValueChange={(val) => {
-                                                        setSelectedPromotion(val)
-                                                        if (val === 'none') {
-                                                            setDiscount(0)
-                                                        } else {
-                                                            setShowExtras(true)
-                                                            const promo = promotions.find((p: any) => p.id === val)
-                                                            if (promo) {
-                                                                let calcDiscount = 0
-                                                                if (promo.type === 'PERCENTAGE') {
-                                                                    calcDiscount = subtotal * (promo.value / 100)
-                                                                } else if (promo.type === 'FIXED') {
-                                                                    calcDiscount = promo.value
-                                                                }
-                                                                setDiscount(Math.min(calcDiscount, subtotal))
-                                                            }
-                                                        }
-                                                    }}
-                                                >
-                                                    <SelectTrigger className="w-10 h-10 shrink-0 px-0 justify-center border-brand-accent/10 dark:border-white/10 dark:bg-white/5 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-colors [&>svg:last-child]:hidden [&>span]:hidden" aria-label="Apply promotion">
-                                                        <SelectValue placeholder="Promo" />
-                                                        <Tag className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60" />
-                                                    </SelectTrigger>
-                                                    <SelectContent align="end">
-                                                        <SelectItem value="none">Custom amount</SelectItem>
-                                                        {promotions.map((promo: any) => (
-                                                            <SelectItem key={promo.id} value={promo.id}>
-                                                                {promo.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-col text-sm gap-2">
-                                        <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium px-1">Order Note</span>
-                                        <Textarea
-                                            value={note}
-                                            onChange={(e) => setNote(e.target.value)}
-                                            placeholder="Special instructions or remarks..."
-                                            maxLength={120}
-                                            rows={1}
-                                            className="w-full bg-white/40 dark:bg-white/5 rounded-xl border border-brand-accent/10 dark:border-white/10 px-3 py-2 text-sm text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 outline-none focus:border-brand-gold/40 transition-colors resize-none min-h-[44px]"
-                                        />
-                                    </div>
-
-                                    {/* Amount Received (Cash only) */}
-                                    {paymentMethod === 'Cash' && (
+                                    <div className="space-y-4">
+                                        {/* Discount Input & Promotions */}
                                         <div className="flex items-center justify-between text-sm gap-3 pt-2">
-                                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Amount Received</span>
-                                            <div className="flex-1 max-w-[180px]">
-                                                <MoneyInput
-                                                    size="sm"
-                                                    value={amountPaid === '' ? '' : amountPaid}
-                                                    onChange={(val) => setAmountPaid(val === 0 ? '' : val)}
-                                                    currencySymbol={activeBusiness?.currency === 'USD' ? '$' : activeBusiness?.currency === 'EUR' ? '€' : activeBusiness?.currency === 'GBP' ? '£' : '₦'}
-                                                    placeholder={String(totalAfterDiscount)}
-                                                    className="h-11 border-brand-accent/10 dark:border-white/10 text-brand-deep dark:text-brand-cream text-base"
-                                                />
+                                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Discount</span>
+
+                                            <div className="flex items-center justify-end gap-2 flex-1">
+                                                {selectedPromotion !== 'none' ? (
+                                                    <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl">
+                                                        <span className="text-xs font-bold truncate max-w-[120px]">
+                                                            {promotions?.find((p: any) => p.id === selectedPromotion)?.name || 'Promo'}
+                                                        </span>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => {
+                                                                setSelectedPromotion('none')
+                                                                setDiscount(0)
+                                                            }}
+                                                            className="h-6 w-6 rounded-full hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                                                            aria-label="Remove promotion"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-36">
+                                                        <MoneyInput
+                                                            size="sm"
+                                                            value={discount || ''}
+                                                            onChange={(val) => {
+                                                                setDiscount(Math.min(val || 0, subtotal))
+                                                                if (val > 0) setShowExtras(true)
+                                                            }}
+                                                            currencySymbol={currency}
+                                                            className="border-brand-accent/10 dark:border-white/10 text-emerald-600 dark:text-brand-gold transition-colors"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {promotions && promotions.length > 0 && (
+                                                    <Select
+                                                        value={selectedPromotion}
+                                                        onValueChange={(val) => {
+                                                            setSelectedPromotion(val)
+                                                            if (val === 'none') {
+                                                                setDiscount(0)
+                                                            } else {
+                                                                setShowExtras(true)
+                                                                const promo = promotions.find((p: any) => p.id === val)
+                                                                if (promo) {
+                                                                    let calcDiscount = 0
+                                                                    if (promo.type === 'PERCENTAGE') {
+                                                                        calcDiscount = subtotal * (promo.value / 100)
+                                                                    } else if (promo.type === 'FIXED') {
+                                                                        calcDiscount = promo.value
+                                                                    }
+                                                                    setDiscount(Math.min(calcDiscount, subtotal))
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="w-10 h-10 shrink-0 px-0 justify-center border-brand-accent/10 dark:border-white/10 dark:bg-white/5 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-colors [&>svg:last-child]:hidden [&>span]:hidden" aria-label="Apply promotion">
+                                                            <SelectValue placeholder="Promo" />
+                                                            <Tag className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60" />
+                                                        </SelectTrigger>
+                                                        <SelectContent align="end">
+                                                            <SelectItem value="none">Custom amount</SelectItem>
+                                                            {promotions.map((promo: any) => (
+                                                                <SelectItem key={promo.id} value={promo.id}>
+                                                                    {promo.name}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
+
+                                        <div className="flex flex-col text-sm gap-2">
+                                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Order Note</span>
+                                            <Textarea
+                                                value={note}
+                                                onChange={(e) => setNote(e.target.value)}
+                                                placeholder="Special instructions or remarks..."
+                                                maxLength={120}
+                                                rows={1}
+                                                className="w-full bg-white/40 dark:bg-white/5 rounded-xl border border-brand-accent/10 dark:border-white/10 px-3 py-2 text-sm text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 outline-none focus:border-brand-gold/40 transition-colors resize-none min-h-[44px]"
+                                            />
+                                        </div>
+
+                                        {/* Amount Received (Cash only) */}
+                                        {paymentMethod === 'Cash' && (
+                                            <div className="flex items-center justify-between text-sm gap-3 pt-2">
+                                                <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Amount Received</span>
+                                                <div className="flex-1 max-w-[180px]">
+                                                    <MoneyInput
+                                                        size="sm"
+                                                        value={amountPaid === '' ? '' : amountPaid}
+                                                        onChange={(val) => setAmountPaid(val === 0 ? '' : val)}
+                                                        currencySymbol={currency}
+                                                        placeholder={String(totalAfterDiscount)}
+                                                        className="h-11 border-brand-accent/10 dark:border-white/10 text-brand-deep dark:text-brand-cream text-base"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>

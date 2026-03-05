@@ -119,7 +119,8 @@ export function OrdersView() {
                 price: Number(item.price),
                 total: Number(item.total)
             })) || [],
-            subtotal: Number(order.totalAmount),
+            subtotal: Number(order.subtotalAmount || order.totalAmount),
+            discountAmount: order.discountAmount ? Number(order.discountAmount) : undefined,
             totalAmount: Number(order.totalAmount),
             amountPaid: Number(order.amountPaid),
             remainingAmount: Number(order.remainingAmount || 0),
@@ -555,9 +556,19 @@ export function OrdersView() {
                                             <div className="flex justify-between items-center opacity-60">
                                                 <p className="font-bold text-[10px] uppercase tracking-widest text-brand-accent">Subtotal</p>
                                                 <p className="text-sm font-bold text-brand-deep dark:text-brand-cream">
-                                                    {formatCurrency(viewingOrder?.totalAmount ?? 0, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
+                                                    {formatCurrency(viewingOrder?.subtotalAmount || viewingOrder?.totalAmount || 0, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
                                                 </p>
                                             </div>
+
+                                            {viewingOrder?.discountAmount ? (
+                                                <div className="flex justify-between items-center text-red-500 dark:text-red-400 italic">
+                                                    <p className="font-bold text-[10px] uppercase tracking-widest">Less: Discount</p>
+                                                    <p className="text-sm font-bold">
+                                                        - {formatCurrency(viewingOrder.discountAmount, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
+                                                    </p>
+                                                </div>
+                                            ) : null}
+
                                             <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
                                                 <p className="font-bold text-[10px] uppercase tracking-widest">Amount Paid</p>
                                                 <p className="text-sm font-bold">
