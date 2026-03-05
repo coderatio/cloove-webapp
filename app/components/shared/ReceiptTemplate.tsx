@@ -21,6 +21,7 @@ export interface ReceiptData {
     customerName?: string
     items: ReceiptItem[]
     subtotal: number
+    discountAmount?: number
     totalAmount: number
     amountPaid: number
     remainingAmount: number
@@ -102,13 +103,19 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptTemplateP
 
                 {/* Totals Section */}
                 <div className="space-y-1.5 mb-4">
-                    <div className="flex justify-between items-center">
-                        <span className="text-xs">Subtotal:</span>
+                    <div className="flex justify-between items-center text-[11px] opacity-80">
+                        <span>Items Subtotal:</span>
                         <span className="tabular-nums font-medium">{formatCurrency(data.subtotal, { currency: data.currency })}</span>
                     </div>
-                    <div className="flex justify-between items-center py-1 border-y border-black/10">
-                        <span className="font-bold">Total:</span>
-                        <span className="text-sm font-black tabular-nums">{formatCurrency(data.totalAmount, { currency: data.currency })}</span>
+                    {data.discountAmount !== undefined && data.discountAmount > 0 && (
+                        <div className="flex justify-between items-center text-[11px] text-rose-700 italic">
+                            <span>Less: Discount:</span>
+                            <span className="tabular-nums">- {formatCurrency(data.discountAmount, { currency: data.currency })}</span>
+                        </div>
+                    )}
+                    <div className="flex justify-between items-center py-2 border-y border-black font-bold text-sm">
+                        <span>TOTAL:</span>
+                        <span className="tabular-nums tracking-tighter">{formatCurrency(data.totalAmount, { currency: data.currency })}</span>
                     </div>
                     <div className="flex justify-between items-center text-emerald-800 font-medium">
                         <span className="text-xs">Paid:</span>

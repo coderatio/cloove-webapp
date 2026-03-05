@@ -17,6 +17,7 @@ import {
     Barcode,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
     User,
     UserPlus,
     X,
@@ -99,6 +100,7 @@ export function SaleModeView() {
     const [amountPaid, setAmountPaid] = React.useState<number | "">("")
     const [selectedPromotion, setSelectedPromotion] = React.useState<string>('none')
     const [autoPrint, setAutoPrint] = React.useState(true)
+    const [showExtras, setShowExtras] = React.useState(false)
 
     // Queue Sale State
     const { queuedSales, queueSale, removeQueuedSale } = useQueuedSales()
@@ -141,9 +143,10 @@ export function SaleModeView() {
                 total: item.price * item.quantity
             })),
             subtotal: subtotal,
-            totalAmount: subtotal,
-            amountPaid: subtotal, // Assuming full payment in Sale Mode for now
-            remainingAmount: 0,
+            discountAmount: discount,
+            totalAmount: totalAfterDiscount,
+            amountPaid: amountPaidNum > 0 ? amountPaidNum : totalAfterDiscount,
+            remainingAmount: Math.max(0, totalAfterDiscount - (amountPaidNum > 0 ? amountPaidNum : totalAfterDiscount)),
             paymentMethod: paymentMethod.toUpperCase(),
             currency: activeBusiness.currency || 'NGN'
         }
@@ -271,7 +274,8 @@ export function SaleModeView() {
                     price: item.price,
                     total: item.price * item.quantity
                 })),
-                subtotal: saleTotal,
+                subtotal: subtotal,
+                discountAmount: discount,
                 totalAmount: saleTotal,
                 amountPaid: saleAmountPaid,
                 remainingAmount: Math.max(0, saleTotal - saleAmountPaid),
@@ -351,6 +355,11 @@ export function SaleModeView() {
         setNote(sale.note || '')
         setAmountPaid(sale.amountPaid || '')
 
+        // Auto-show extras if there is relevant data
+        if (sale.discount > 0 || sale.note || sale.promotionId) {
+            setShowExtras(true)
+        }
+
         removeQueuedSale(sale.id)
         setIsQueueDrawerOpen(false)
 
@@ -392,7 +401,7 @@ export function SaleModeView() {
 
                         <div className="flex items-center gap-4">
                             {/* Auto Print Toggle */}
-                            <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-2 md:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
+                            <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-4 md:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
                                 <span className="text-[10px] md:text-xs font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest hidden sm:block">Auto Print</span>
                                 <span className="text-[10px] font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest sm:hidden">Print</span>
                                 <Switch checked={autoPrint} onCheckedChange={setAutoPrint} className="scale-75 origin-right" />
@@ -513,7 +522,20 @@ export function SaleModeView() {
 
                         {/* Pagination Controls - Fixed Bottom */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 md:gap-6 py-3 md:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl shrink-0">
+                            <div className="flex items-center justify-center md:justify-center gap-2 md:gap-6 py-3 md:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl shrink-0 relative">
+                                {/* Mobile Back Button */}
+                                <div className="absolute left-2 md:hidden">
+                                    <Link href="/orders">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="rounded-xl h-10 w-10 hover:bg-brand-gold/10 transition-all duration-500"
+                                        >
+                                            <ArrowLeft className="h-5 w-5" />
+                                        </Button>
+                                    </Link>
+                                </div>
+
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -596,7 +618,7 @@ export function SaleModeView() {
 
             {/* Right Side: Cart & Checkout Summary */}
             <div className={cn(
-                "w-full md:w-[420px] lg:w-[480px] bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20",
+                "w-full md:w-[420px] lg:w-[480px] md:h-full bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20 min-h-0",
                 mobileView === 'catalog' ? "hidden md:flex" : "flex h-full fixed inset-0 z-50 md:relative md:inset-auto"
             )}>
                 <div className="p-4 md:p-5 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-3 bg-brand-gold/5 dark:bg-brand-gold/5 relative">
@@ -780,7 +802,7 @@ export function SaleModeView() {
                 </div>
 
                 {/* Cart Items List */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-3 custom-scrollbar min-h-[200px]">
+                <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-3 custom-scrollbar min-h-0">
                     <AnimatePresence mode="popLayout">
                         {cart.length === 0 ? (
                             <motion.div
@@ -895,118 +917,149 @@ export function SaleModeView() {
                     </div>
 
                     {/* Breakdown */}
-                    <div className="space-y-2.5 py-3 border-y border-brand-accent/10 dark:border-white/10">
+                    <div className="space-y-4 py-6 border-y border-brand-accent/10 dark:border-white/10">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Order Subtotal</span>
-                            <span className="text-brand-deep dark:text-brand-cream font-bold tabular-nums">
-                                {formatCurrency(subtotal, { currency: activeBusiness?.currency || 'NGN' })}
-                            </span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-brand-deep dark:text-brand-cream font-bold tabular-nums">
+                                    {formatCurrency(subtotal, { currency: activeBusiness?.currency || 'NGN' })}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowExtras(!showExtras)}
+                                    className={cn(
+                                        "h-7 px-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                                        showExtras
+                                            ? "bg-brand-gold/10 text-brand-gold border border-brand-gold/20"
+                                            : "text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-brand-gold/5"
+                                    )}
+                                >
+                                    {showExtras ? "Hide Options" : "Add Options/Discount"}
+                                    <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform duration-300", showExtras && "rotate-180")} />
+                                </Button>
+                            </div>
                         </div>
 
-                        {/* Discount Input & Promotions */}
-                        <div className="flex items-center justify-between text-sm gap-3">
-                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Discount</span>
+                        <AnimatePresence>
+                            {showExtras && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden space-y-4"
+                                >
+                                    {/* Discount Input & Promotions */}
+                                    <div className="flex items-center justify-between text-sm gap-3 pt-2">
+                                        <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Discount</span>
 
-                            <div className="flex items-center justify-end gap-2 flex-1">
-                                {selectedPromotion !== 'none' ? (
-                                    <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl">
-                                        <span className="text-xs font-bold truncate max-w-[120px]">
-                                            {promotions?.find((p: any) => p.id === selectedPromotion)?.name || 'Promo'}
-                                        </span>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => {
-                                                setSelectedPromotion('none')
-                                                setDiscount(0)
-                                            }}
-                                            className="h-6 w-6 rounded-md hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
-                                            aria-label="Remove promotion"
-                                        >
-                                            <X className="w-3 h-3" />
-                                        </Button>
+                                        <div className="flex items-center justify-end gap-2 flex-1">
+                                            {selectedPromotion !== 'none' ? (
+                                                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl">
+                                                    <span className="text-xs font-bold truncate max-w-[120px]">
+                                                        {promotions?.find((p: any) => p.id === selectedPromotion)?.name || 'Promo'}
+                                                    </span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => {
+                                                            setSelectedPromotion('none')
+                                                            setDiscount(0)
+                                                        }}
+                                                        className="h-6 w-6 rounded-md hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                                                        aria-label="Remove promotion"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="w-32">
+                                                    <MoneyInput
+                                                        size="sm"
+                                                        value={discount || ''}
+                                                        onChange={(val) => {
+                                                            setDiscount(Math.min(val || 0, subtotal))
+                                                            if (val > 0) setShowExtras(true)
+                                                        }}
+                                                        currencySymbol={activeBusiness?.currency === 'USD' ? '$' : activeBusiness?.currency === 'EUR' ? '€' : activeBusiness?.currency === 'GBP' ? '£' : '₦'}
+                                                        className="border-brand-accent/10 dark:border-white/10 text-emerald-600 dark:text-brand-gold transition-colors"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {promotions && promotions.length > 0 && (
+                                                <Select
+                                                    value={selectedPromotion}
+                                                    onValueChange={(val) => {
+                                                        setSelectedPromotion(val)
+                                                        if (val === 'none') {
+                                                            setDiscount(0)
+                                                        } else {
+                                                            setShowExtras(true)
+                                                            const promo = promotions.find((p: any) => p.id === val)
+                                                            if (promo) {
+                                                                let calcDiscount = 0
+                                                                if (promo.type === 'PERCENTAGE') {
+                                                                    calcDiscount = subtotal * (promo.value / 100)
+                                                                } else if (promo.type === 'FIXED') {
+                                                                    calcDiscount = promo.value
+                                                                }
+                                                                setDiscount(Math.min(calcDiscount, subtotal))
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="w-10 h-10 shrink-0 px-0 justify-center border-brand-accent/10 dark:border-white/10 dark:bg-white/5 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-colors [&>svg:last-child]:hidden [&>span]:hidden" aria-label="Apply promotion">
+                                                        <SelectValue placeholder="Promo" />
+                                                        <Tag className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60" />
+                                                    </SelectTrigger>
+                                                    <SelectContent align="end">
+                                                        <SelectItem value="none">Custom amount</SelectItem>
+                                                        {promotions.map((promo: any) => (
+                                                            <SelectItem key={promo.id} value={promo.id}>
+                                                                {promo.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
+                                        </div>
                                     </div>
-                                ) : (
-                                    <div className="w-32">
-                                        <MoneyInput
-                                            size="sm"
-                                            value={discount || ''}
-                                            onChange={(val) => setDiscount(Math.min(val || 0, subtotal))}
-                                            currencySymbol={activeBusiness?.currency === 'USD' ? '$' : activeBusiness?.currency === 'EUR' ? '€' : activeBusiness?.currency === 'GBP' ? '£' : '₦'}
-                                            className="border-brand-accent/10 dark:border-white/10 text-emerald-600 dark:text-brand-gold transition-colors"
+
+                                    <div className="flex flex-col text-sm gap-2">
+                                        <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium px-1">Order Note</span>
+                                        <Textarea
+                                            value={note}
+                                            onChange={(e) => setNote(e.target.value)}
+                                            placeholder="Special instructions or remarks..."
+                                            maxLength={120}
+                                            rows={1}
+                                            className="w-full bg-white/40 dark:bg-white/5 rounded-xl border border-brand-accent/10 dark:border-white/10 px-3 py-2 text-sm text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 outline-none focus:border-brand-gold/40 transition-colors resize-none min-h-[44px]"
                                         />
                                     </div>
-                                )}
 
-                                {promotions && promotions.length > 0 && (
-                                    <Select
-                                        value={selectedPromotion}
-                                        onValueChange={(val) => {
-                                            setSelectedPromotion(val)
-                                            if (val === 'none') {
-                                                setDiscount(0)
-                                            } else {
-                                                const promo = promotions.find((p: any) => p.id === val)
-                                                if (promo) {
-                                                    let calcDiscount = 0
-                                                    if (promo.type === 'PERCENTAGE') {
-                                                        calcDiscount = subtotal * (promo.value / 100)
-                                                    } else if (promo.type === 'FIXED') {
-                                                        calcDiscount = promo.value
-                                                    }
-                                                    setDiscount(Math.min(calcDiscount, subtotal))
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-10 h-10 shrink-0 px-0 justify-center border-brand-accent/10 dark:border-white/10 dark:bg-white/5 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-colors [&>svg:last-child]:hidden [&>span]:hidden" aria-label="Apply promotion">
-                                            <SelectValue placeholder="Promo" />
-                                            <Tag className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60" />
-                                        </SelectTrigger>
-                                        <SelectContent align="end">
-                                            <SelectItem value="none">Custom amount</SelectItem>
-                                            {promotions.map((promo: any) => (
-                                                <SelectItem key={promo.id} value={promo.id}>
-                                                    {promo.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            </div>
-                        </div>
+                                    {/* Amount Received (Cash only) */}
+                                    {paymentMethod === 'Cash' && (
+                                        <div className="flex items-center justify-between text-sm gap-3 pt-2">
+                                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Amount Received</span>
+                                            <div className="flex-1 max-w-[180px]">
+                                                <MoneyInput
+                                                    size="sm"
+                                                    value={amountPaid === '' ? '' : amountPaid}
+                                                    onChange={(val) => setAmountPaid(val === 0 ? '' : val)}
+                                                    currencySymbol={activeBusiness?.currency === 'USD' ? '$' : activeBusiness?.currency === 'EUR' ? '€' : activeBusiness?.currency === 'GBP' ? '£' : '₦'}
+                                                    placeholder={String(totalAfterDiscount)}
+                                                    className="h-11 border-brand-accent/10 dark:border-white/10 text-brand-deep dark:text-brand-cream text-base"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                        <div className="flex flex-col text-sm gap-2">
-                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Note</span>
-                            <Textarea
-                                value={note}
-                                onChange={(e) => setNote(e.target.value)}
-                                placeholder="Order remarks..."
-                                maxLength={120}
-                                rows={1}
-                                className="w-full bg-white/40 dark:bg-white/5 rounded-xl border border-brand-accent/10 dark:border-white/10 px-3 py-2 text-sm text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 outline-none focus:border-brand-gold/40 transition-colors resize-none min-h-[36px]"
-                            />
-                        </div>
-
-                        {/* Amount Received (Cash only) */}
-                        {paymentMethod === 'Cash' && (
-                            <div className="flex items-center justify-between text-sm gap-3 pt-2">
-                                <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Amount Received</span>
-                                <div className="flex-1 max-w-[200px]">
-                                    <MoneyInput
-                                        size="sm"
-                                        value={amountPaid === '' ? '' : amountPaid}
-                                        onChange={(val) => setAmountPaid(val === 0 ? '' : val)}
-                                        currencySymbol={activeBusiness?.currency === 'USD' ? '$' : activeBusiness?.currency === 'EUR' ? '€' : activeBusiness?.currency === 'GBP' ? '£' : '₦'}
-                                        placeholder={String(totalAfterDiscount)}
-                                        className="h-11 border-brand-accent/10 dark:border-white/10 text-brand-deep dark:text-brand-cream text-base"
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex justify-between items-center pt-2 border-t border-brand-accent/5 dark:border-white/5">
-                            <span className="font-serif text-lg text-brand-deep dark:text-brand-gold">Total Amount</span>
+                        <div className="flex justify-between items-center pt-4 border-t border-brand-accent/5 dark:border-white/5">
+                            <span className="font-serif text-lg text-brand-deep dark:text-brand-gold">Total Payable</span>
                             <div className="text-right">
                                 <span className="font-sans font-black text-2xl md:text-3xl text-brand-deep dark:text-brand-gold tracking-tighter">
                                     {formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' })}
