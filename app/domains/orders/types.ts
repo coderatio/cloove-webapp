@@ -53,6 +53,11 @@ export interface OrdersResponse {
     summary?: {
         todayOrders: number
         todayRevenue: number
+        totalOrders: number
+        totalRevenue: number
+        averageOrderValue: number
+        pendingOrdersCount: number
+        completedOrdersCount: number
     }
 }
 

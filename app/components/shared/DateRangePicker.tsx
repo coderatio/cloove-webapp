@@ -158,15 +158,24 @@ export function DateRangePicker({
                         <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">
                             Select Dates
                         </span>
-                        {date && (
+                        <div className="flex items-center gap-3">
+                            {date && (
+                                <Button
+                                    variant="ghost"
+                                    onClick={handleClear}
+                                    className="h-auto p-0 text-[10px] font-bold text-rose-500/80 dark:text-rose-400 hover:text-rose-500 bg-transparent hover:bg-transparent transition-colors uppercase tracking-widest"
+                                >
+                                    Clear
+                                </Button>
+                            )}
                             <Button
                                 variant="ghost"
-                                onClick={handleClear}
-                                className="h-auto p-0 text-[10px] font-bold text-rose-500/80 dark:text-rose-400 hover:text-rose-500 bg-transparent hover:bg-transparent transition-colors uppercase tracking-widest"
+                                onClick={() => setIsOpen(false)}
+                                className="h-auto p-0 text-[10px] font-bold text-brand-deep/60 dark:text-brand-gold hover:text-brand-deep dark:hover:text-brand-gold/80 bg-transparent hover:bg-transparent transition-colors uppercase tracking-widest"
                             >
-                                Clear
+                                Done
                             </Button>
-                        )}
+                        </div>
                     </div>
                     <div className="flex-1 overflow-auto custom-scrollbar">
                         <Calendar
@@ -177,14 +186,6 @@ export function DateRangePicker({
                             onSelect={handleSelect}
                             numberOfMonths={2}
                         />
-                    </div>
-                    <div className="p-4 bg-brand-cream/10 dark:bg-white/5 border-t border-brand-deep/5 dark:border-white/5 shrink-0">
-                        <Button
-                            onClick={() => setIsOpen(false)}
-                            className="w-full rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold text-[10px] h-10 shadow-lg uppercase tracking-widest"
-                        >
-                            Done
-                        </Button>
                     </div>
                 </PopoverContent>
             </Popover>

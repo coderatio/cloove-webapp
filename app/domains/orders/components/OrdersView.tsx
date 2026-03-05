@@ -233,16 +233,32 @@ export function OrdersView() {
 
     const stats = [
         {
-            label: "Today's Orders",
-            value: summary?.todayOrders ?? orders.filter(o => o.date.includes(':') || o.date.toLowerCase().includes('today')).length,
-            icon: ShoppingBag,
-            color: "brand-green"
+            label: "Total Revenue",
+            value: formatCurrency(summary?.totalRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' }),
+            icon: TrendingUp,
+            color: "brand-gold",
+            description: "Revenue from selected filters"
         },
         {
-            label: "Revenue (Today)",
-            value: formatCurrency(summary?.todayRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' }),
-            icon: TrendingUp,
-            color: "brand-gold"
+            label: "Total Orders",
+            value: summary?.totalOrders ?? orders.length,
+            icon: ShoppingBag,
+            color: "brand-green",
+            description: "Count of filtered orders"
+        },
+        {
+            label: "Avg. Order Value",
+            value: formatCurrency(summary?.averageOrderValue ?? 0, { currency: activeBusiness?.currency || 'NGN' }),
+            icon: Receipt,
+            color: "brand-gold",
+            description: "Average revenue per order"
+        },
+        {
+            label: "Pending Fulfillment",
+            value: summary?.pendingOrdersCount ?? orders.filter(o => o.status === 'PENDING').length,
+            icon: Clock,
+            color: "brand-gold",
+            description: "Awaiting fulfillment"
         }
     ]
 
@@ -287,22 +303,33 @@ export function OrdersView() {
                 <InsightWhisper insight={intelligenceWhisper} />
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {stats.map((stat, i) => (
-                        <GlassCard key={i} className="p-5 flex items-center gap-4 relative overflow-hidden group">
-                            <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <stat.icon className="w-24 h-24 dark:text-brand-cream/10" />
+                        <GlassCard key={i} className="p-4 flex flex-col gap-3 relative overflow-hidden group border-brand-deep/5 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300">
+                            <div className="absolute -right-2 -top-2 p-3 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity rotate-12 group-hover:rotate-0 duration-700">
+                                <stat.icon className="w-20 h-20 dark:text-brand-cream" />
                             </div>
-                            <div className={cn(
-                                "h-12 w-12 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 duration-500",
-                                stat.color === "brand-green" ? "bg-brand-green/10 dark:bg-brand-green/20 text-brand-green" : "bg-brand-gold/10 dark:bg-brand-gold/20 text-brand-gold"
-                            )}>
-                                <stat.icon className="h-6 w-6" />
+
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-110",
+                                    stat.color === "brand-green"
+                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                        : "bg-brand-gold/10 text-brand-gold"
+                                )}>
+                                    <stat.icon className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.15em]">{stat.label}</p>
+                                    <p className="text-xl font-serif font-semibold text-brand-deep dark:text-brand-cream truncate">{stat.value}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">{stat.label}</p>
-                                <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{stat.value}</p>
-                            </div>
+
+                            {stat.description && (
+                                <p className="text-[10px] text-brand-accent/50 dark:text-brand-cream/50 group-hover:text-brand-accent/70 dark:group-hover:text-brand-cream/70 transition-colors">
+                                    {stat.description}
+                                </p>
+                            )}
                         </GlassCard>
                     ))}
                 </div>
