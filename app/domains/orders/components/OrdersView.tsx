@@ -291,7 +291,7 @@ export function OrdersView() {
                     extraActions={
                         <Link href="/orders/sale" className="hidden md:block">
                             <Button
-                                className="rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg h-12 px-6 font-bold"
+                                className="rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
                             >
                                 <ShoppingBag className="w-4 h-4 mr-2" />
                                 Record Sale
@@ -381,30 +381,61 @@ export function OrdersView() {
                 {isLoading ? (
                     <OrdersSkeleton isMobile={isMobile} />
                 ) : orders.length === 0 ? (
-                    <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-3xl flex flex-col items-center justify-center py-24 px-8 text-center text-brand-deep dark:text-brand-cream">
-                        <div className="h-20 w-20 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-6">
-                            <FilterX className="h-10 w-10 opacity-20" />
-                        </div>
-                        <h3 className="text-xl font-serif font-medium mb-2">No orders match your criteria</h3>
-                        <p className="text-sm text-brand-accent/40 dark:text-brand-cream/40 mb-8 max-w-sm">
-                            We couldn't find any orders matching your current filters. Try adjusting your search or filtering by a different status.
-                        </p>
-                        <Button
-                            variant="outline"
-                            className="rounded-full px-8 h-12"
-                            onClick={() => {
-                                setSearch("")
-                                setSelectedStatus([])
-                                setSelectedPaymentStatus([])
-                                setSelectedAutomation([])
-                                setStartDate(undefined)
-                                setEndDate(undefined)
-                                setPage(1)
-                            }}
-                        >
-                            Clear All Filters
-                        </Button>
-                    </div>
+                    (() => {
+                        const isFiltered = search !== "" ||
+                            selectedStatus.length > 0 ||
+                            selectedPaymentStatus.length > 0 ||
+                            selectedAutomation.length > 0 ||
+                            startDate !== undefined ||
+                            endDate !== undefined;
+
+                        return (
+                            <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-3xl flex flex-col items-center justify-center py-24 px-8 text-center text-brand-deep dark:text-brand-cream">
+                                <div className="h-20 w-20 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-6">
+                                    {isFiltered ? (
+                                        <FilterX className="h-10 w-10 opacity-20" />
+                                    ) : (
+                                        <ShoppingBag className="h-10 w-10 opacity-20 text-brand-gold" />
+                                    )}
+                                </div>
+                                <h3 className="text-xl font-serif font-medium mb-2">
+                                    {isFiltered ? "No orders match your criteria" : "No orders yet"}
+                                </h3>
+                                <p className="text-sm text-brand-accent/40 dark:text-brand-cream/40 mb-8 max-w-sm">
+                                    {isFiltered
+                                        ? "We couldn't find any orders matching your current filters. Try adjusting your search or filtering by a different status."
+                                        : "Your sales pipeline is empty. Once you record a sale, it will appear here for you to track and manage."}
+                                </p>
+                                {isFiltered ? (
+                                    <Button
+                                        variant="outline"
+                                        className="rounded-full px-8 h-12"
+                                        onClick={() => {
+                                            setSearch("")
+                                            setSelectedStatus([])
+                                            setSelectedPaymentStatus([])
+                                            setSelectedAutomation([])
+                                            setStartDate(undefined)
+                                            setEndDate(undefined)
+                                            setPage(1)
+                                        }}
+                                    >
+                                        Clear All Filters
+                                    </Button>
+                                ) : (
+                                    <Link href="/orders/sale">
+                                        <Button
+                                            variant="outline"
+                                            className="rounded-full px-8 h-12 border-brand-accent/20 dark:border-white/20 hover:bg-brand-accent/5 dark:hover:bg-white/5"
+                                        >
+                                            <ShoppingBag className="w-4 h-4 mr-2 text-brand-gold" />
+                                            Record Your First Sale
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                        )
+                    })()
                 ) : isMobile ? (
                     <div className="space-y-4">
                         {orders.map((order, index) => (
@@ -669,7 +700,7 @@ export function OrdersView() {
                         <Link href="/orders/sale">
                             <Button
                                 size="icon"
-                                className="h-16 w-16 rounded-full bg-brand-gold text-brand-deep shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-brand-cream dark:border-brand-deep"
+                                className="h-16 w-16 rounded-full bg-brand-gold text-brand-deep shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-brand-cream dark:border-brand-deep animate-pulse-glow"
                             >
                                 <ShoppingBag className="w-7 h-7" />
                             </Button>
