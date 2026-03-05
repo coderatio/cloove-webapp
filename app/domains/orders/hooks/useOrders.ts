@@ -23,12 +23,32 @@ export function useOrders(
     }
 
     if (filters?.search) params.search = filters.search
-    if (filters?.status && filters.status !== 'ALL') params.status = filters.status
+    if (filters?.status && filters.status.length > 0) {
+        params.status = filters.status.map(s => s.startsWith('S:') ? s.slice(2) : s).join(',')
+    }
+
+    if (filters?.paymentStatus && filters.paymentStatus.length > 0) {
+        params.paymentStatus = filters.paymentStatus.map(p => p.startsWith('P:') ? p.slice(2) : p).join(',')
+    }
+
+    if (filters?.isAutomated !== undefined) {
+        params.isAutomated = String(filters.isAutomated)
+    } else if (filters?.automation) {
+        if (filters.automation.includes('A:AUTOMATED') && !filters.automation.includes('A:MANUAL')) {
+            params.isAutomated = 'true'
+        } else if (filters.automation.includes('A:MANUAL') && !filters.automation.includes('A:AUTOMATED')) {
+            params.isAutomated = 'false'
+        }
+    }
+
+    if (filters?.startDate) params.startDate = filters.startDate
+    if (filters?.endDate) params.endDate = filters.endDate
+
     if (filters?.storeId && filters.storeId !== 'all-stores') params.storeId = filters.storeId
     if (filters?.storeIds && filters.storeIds.length > 0) params.storeIds = filters.storeIds.join(',')
 
     const { data: response, isLoading, isFetching, error, refetch } = useQuery<OrdersResponse>({
-        queryKey: ['sales', businessId, page, limit, filters?.search, filters?.status, filters?.storeId, filters?.storeIds],
+        queryKey: ['sales', businessId, page, limit, filters?.search, filters?.status, filters?.paymentStatus, filters?.automation, filters?.isAutomated, filters?.startDate, filters?.endDate, filters?.storeId, filters?.storeIds],
         queryFn: () => apiClient.get<OrdersResponse>('/sales', params, { fullResponse: true }),
         enabled: !!businessId,
         staleTime: 30000, // 30 seconds
@@ -36,24 +56,53 @@ export function useOrders(
 
     const deleteOrderMutation = useMutation({
         mutationFn: (id: string) => apiClient.delete(`/sales/${id}`),
-        onSuccess: (data: any) => {
-            toast.success(data.message || "Order deleted successfully")
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sales', businessId] })
-        },
-        onError: (error: any) => {
-            toast.error(error.message || "Failed to delete order")
         }
     })
 
     const updateOrderMutation = useMutation({
         mutationFn: ({ id, updates }: { id: string, updates: Partial<Order> }) =>
             apiClient.patch(`/sales/${id}`, updates),
-        onSuccess: (data: any) => {
-            toast.success(data.message || "Order updated successfully")
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sales', businessId] })
-        },
-        onError: (error: any) => {
-            toast.error(error.message || "Failed to update order")
+        }
+    })
+
+    const requeryOrderMutation = useMutation({
+        mutationFn: (id: string) => apiClient.post(`/sales/${id}/requery`, {}),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sales', businessId] })
+        }
+    })
+
+    const generateReceiptMutation = useMutation({
+        mutationFn: (id: string) => apiClient.post(`/invoices/receipt`, { saleId: id, businessId }),
+        onSuccess: async (data: any, id: string) => {
+            // apiClient unwraps the response, so data IS the inner { url: "..." } object
+            const receiptUrl = data?.url
+            if (receiptUrl) {
+                try {
+                    // Fetch the blob to bypass popup blockers and force a download
+                    const response = await fetch(receiptUrl)
+                    const blob = await response.blob()
+                    const blobUrl = window.URL.createObjectURL(blob)
+
+                    const link = document.createElement('a')
+                    link.href = blobUrl
+                    link.download = `receipt-${id.slice(0, 8)}.pdf`
+                    document.body.appendChild(link)
+                    link.click()
+
+                    // Cleanup
+                    document.body.removeChild(link)
+                    window.URL.revokeObjectURL(blobUrl)
+                } catch (error) {
+                    console.error("Failed to download receipt:", error)
+                    // Fallback: open in new tab if blob fetch fails (e.g. CORS)
+                    window.open(receiptUrl, '_blank')
+                }
+            }
         }
     })
 
@@ -68,6 +117,10 @@ export function useOrders(
         deleteOrder: deleteOrderMutation.mutateAsync,
         isDeleting: deleteOrderMutation.isPending,
         updateOrder: updateOrderMutation.mutateAsync,
-        isUpdating: updateOrderMutation.isPending
+        isUpdating: updateOrderMutation.isPending,
+        requeryOrder: requeryOrderMutation.mutateAsync,
+        isRequerying: requeryOrderMutation.isPending,
+        generateReceipt: generateReceiptMutation.mutateAsync,
+        isGeneratingReceipt: generateReceiptMutation.isPending
     }
 }

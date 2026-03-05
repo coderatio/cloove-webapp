@@ -6,15 +6,17 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy } from 'lucide-react'
-import { toast } from 'sonner'
+import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt } from 'lucide-react'
+import { Order, OrderStatus, PaymentStatus } from "../types"
+import { FilterPopover } from "@/app/components/shared/FilterPopover"
+import { DateRangePicker } from "@/app/components/shared/DateRangePicker"
+import { RecordPaymentDrawer } from "./RecordPaymentDrawer"
+import { Button } from '@/app/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
 import { useStores } from '@/app/domains/stores/providers/StoreProvider'
-import { Button } from '@/app/components/ui/button'
-import { FilterPopover } from '@/app/components/shared/FilterPopover'
 import { TableSearch } from '@/app/components/shared/TableSearch'
 import {
     Drawer,
@@ -29,9 +31,10 @@ import { useOrders } from '../hooks/useOrders'
 import { useDebounce } from '@/app/hooks/useDebounce'
 import { OrdersSkeleton } from './OrdersSkeleton'
 import { Pagination } from '@/app/components/shared/Pagination'
-import { Order, OrderStatus } from '../types'
 import { formatCurrency } from '@/app/lib/formatters'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { OrderActionMenu } from './OrderActionMenu'
+import { toast } from 'sonner'
 
 export function OrdersView() {
     const isMobile = useIsMobile()
@@ -39,8 +42,13 @@ export function OrdersView() {
     const { currentStore, stores } = useStores()
     const [page, setPage] = React.useState(1)
     const [search, setSearch] = React.useState("")
-    const [selectedStatus, setSelectedStatus] = React.useState<OrderStatus>('ALL')
+    const [selectedStatus, setSelectedStatus] = React.useState<OrderStatus[]>([])
+    const [selectedPaymentStatus, setSelectedPaymentStatus] = React.useState<PaymentStatus[]>([])
+    const [selectedAutomation, setSelectedAutomation] = React.useState<string[]>([])
+    const [startDate, setStartDate] = React.useState<string | undefined>()
+    const [endDate, setEndDate] = React.useState<string | undefined>()
     const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
+    const [recordingPaymentOrder, setRecordingPaymentOrder] = React.useState<Order | null>(null)
     const statusColorMap: Record<string, { label: string, color: 'success' | 'warning' | 'danger' | 'neutral', className: string, icon: any }> = {
         COMPLETED: {
             label: 'Completed',
@@ -64,7 +72,7 @@ export function OrdersView() {
 
     const debouncedSearch = useDebounce(search, 500)
 
-    const limit = isMobile ? 15 : 50
+    const limit = 10
     const {
         orders,
         meta,
@@ -72,15 +80,27 @@ export function OrdersView() {
         isLoading,
         error,
         refetch,
+        updateOrder,
+        isUpdating,
         deleteOrder,
         isDeleting,
-        updateOrder,
-        isUpdating
+        requeryOrder,
+        isRequerying,
+        generateReceipt,
+        isGeneratingReceipt
     } = useOrders(page, limit, {
         search: debouncedSearch,
         status: selectedStatus,
+        paymentStatus: selectedPaymentStatus,
+        automation: selectedAutomation,
+        startDate,
+        endDate,
         storeId: currentStore?.id
     })
+
+    const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
+        await updateOrder({ id: orderId, updates: { status } })
+    }
 
     const totalPages = meta?.lastPage || (meta as any)?.last_page || 1
 
@@ -88,40 +108,66 @@ export function OrdersView() {
         {
             title: "Order Status",
             options: [
-                { label: "All Statuses", value: "ALL" },
-                { label: "Completed", value: "Completed" },
-                { label: "Pending", value: "Pending" },
-                { label: "Cancelled", value: "Cancelled" },
+                { label: "Completed", value: "S:COMPLETED" },
+                { label: "Pending", value: "S:PENDING" },
+                { label: "Cancelled", value: "S:CANCELLED" },
+                { label: "Refunded", value: "S:REFUNDED" },
+            ]
+        },
+        {
+            title: "Payment Status",
+            options: [
+                { label: "Paid", value: "P:PAID" },
+                { label: "Partial", value: "P:PARTIAL" },
+                { label: "Pending", value: "P:PENDING" },
+            ]
+        },
+        {
+            title: "Type",
+            options: [
+                { label: "Automated", value: "A:AUTOMATED" },
+                { label: "Manual", value: "A:MANUAL" },
             ]
         }
     ]
 
-    const handleStatusChange = (values: string[]) => {
-        if (values.length > 0) {
-            setSelectedStatus(values[0] as OrderStatus)
-        } else {
-            setSelectedStatus('ALL')
-        }
+    const handleFilterChange = (groupIdx: number, values: string[]) => {
+        if (groupIdx === 0) setSelectedStatus(values as OrderStatus[])
+        if (groupIdx === 1) setSelectedPaymentStatus(values as PaymentStatus[])
+        if (groupIdx === 2) setSelectedAutomation(values)
         setPage(1)
     }
 
     const columns: any[] = [
         {
-            key: 'id',
-            header: 'Order ID',
-            width: '100px',
-            render: (value: string, row: Order) => (
-                <span className="font-mono text-xs text-brand-accent/40 dark:text-brand-cream/40 uppercase">
-                    #{row.shortCode || value.substring(0, 6)}
-                </span>
-            )
-        },
-        {
             key: 'customer',
             header: 'Customer',
-            width: '150px',
+            width: '200px',
             cellClassName: 'whitespace-normal',
-            render: (value: string) => <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
+            render: (value: string, row: Order) => {
+                const orderId = row.shortCode || row.id.substring(0, 6)
+                return (
+                    <div className="flex flex-col gap-0.5">
+                        <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
+                        <div className="group/id flex items-center gap-1.5">
+                            <span className="font-mono text-[11px] text-brand-accent/40 dark:text-brand-cream/40 uppercase">
+                                #{orderId}
+                            </span>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    navigator.clipboard.writeText(orderId)
+                                    toast.success('Order ID copied')
+                                }}
+                                className="opacity-0 group-hover/id:opacity-100 transition-opacity p-0.5 rounded hover:bg-brand-deep/5 dark:hover:bg-white/10"
+                                title="Copy Order ID"
+                            >
+                                <Copy className="w-3 h-3 text-brand-accent/40 dark:text-brand-cream/40" />
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
         },
         {
             key: 'items',
@@ -164,10 +210,25 @@ export function OrdersView() {
             }
         },
         { key: 'date', header: 'Time', width: '120px' },
+        {
+            key: 'actions' as any,
+            header: '',
+            width: '48px',
+            render: (_: any, row: Order) => (
+                <OrderActionMenu
+                    order={row}
+                    onViewDetails={setViewingOrder}
+                    onUpdateStatus={handleUpdateStatus}
+                    onRequery={requeryOrder}
+                    onGenerateReceipt={generateReceipt}
+                    onRecordPayment={setRecordingPaymentOrder}
+                />
+            )
+        }
     ]
 
-    const intelligenceWhisper = orders.some(o => o.status === 'Pending')
-        ? `You have **${orders.filter(o => o.status === 'Pending').length} pending orders** awaiting fulfillment. Ensuring prompt delivery builds customer trust.`
+    const intelligenceWhisper = orders.some(o => o.status === 'PENDING')
+        ? `You have **${orders.filter(o => o.status === 'PENDING').length} pending orders** awaiting fulfillment. Ensuring prompt delivery builds customer trust.`
         : `All orders have been successfully fulfilled. Your operations are running smoothly today.`
 
     const stats = [
@@ -253,18 +314,39 @@ export function OrdersView() {
                             {isLoading ? "Fetching Records..." : "Recent Transactions"}
                         </p>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
                             <TableSearch
                                 value={search}
                                 onChange={(val) => { setSearch(val); setPage(1); }}
                                 placeholder="Search customer or ID..."
                             />
-                            <FilterPopover
-                                groups={filterGroups}
-                                selectedValues={selectedStatus !== 'ALL' ? [selectedStatus] : []}
-                                onSelectionChange={handleStatusChange}
-                                onClear={() => { setSelectedStatus('ALL'); setPage(1); }}
-                            />
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                <FilterPopover
+                                    groups={filterGroups}
+                                    className="flex-1 md:flex-initial"
+                                    selectedValues={[...selectedStatus, ...selectedPaymentStatus, ...selectedAutomation]}
+                                    onSelectionChange={(groupIdx, values) => handleFilterChange(groupIdx, values)}
+                                    onClear={() => {
+                                        setSelectedStatus([]);
+                                        setSelectedPaymentStatus([]);
+                                        setSelectedAutomation([]);
+                                        setPage(1);
+                                    }}
+                                />
+                                <DateRangePicker
+                                    className="flex-1 md:flex-initial"
+                                    value={{
+                                        from: startDate ? new Date(startDate) : undefined,
+                                        to: endDate ? new Date(endDate) : undefined
+                                    }}
+                                    onChange={(range) => {
+                                        setStartDate(range?.from);
+                                        setEndDate(range?.to);
+                                        setPage(1);
+                                    }}
+                                    placeholder="Filter by date"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -285,7 +367,11 @@ export function OrdersView() {
                             className="rounded-full px-8 h-12"
                             onClick={() => {
                                 setSearch("")
-                                setSelectedStatus('ALL')
+                                setSelectedStatus([])
+                                setSelectedPaymentStatus([])
+                                setSelectedAutomation([])
+                                setStartDate(undefined)
+                                setEndDate(undefined)
                                 setPage(1)
                             }}
                         >
@@ -293,19 +379,28 @@ export function OrdersView() {
                         </Button>
                     </div>
                 ) : isMobile ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {orders.map((order, index) => (
                             <ListCard
                                 key={order.id}
                                 title={order.customer}
-                                subtitle={order.summary}
+                                subtitle={order.id.startsWith('#') ? order.id : `#${order.id.slice(0, 8)}`}
                                 meta={order.date}
-                                status={order.status}
+                                status={statusColorMap[order.status?.toUpperCase() || '']?.label || order.status}
                                 statusColor={statusColorMap[order.status?.toUpperCase() || '']?.color || 'neutral'}
                                 value={formatCurrency(order.totalAmount, { currency: order.currency || activeBusiness?.currency || 'NGN' })}
                                 valueLabel={(order.isAutomated || order.paymentMethod === 'TRANSFER') ? 'Bank Transfer' : order.paymentMethod?.replace('_', ' ').toLowerCase()}
                                 delay={index * 0.05}
-                                onClick={() => setViewingOrder(order)}
+                                actions={
+                                    <OrderActionMenu
+                                        order={order}
+                                        onViewDetails={setViewingOrder}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onRequery={requeryOrder}
+                                        onGenerateReceipt={generateReceipt}
+                                        onRecordPayment={setRecordingPaymentOrder}
+                                    />
+                                }
                             />
                         ))}
 
@@ -321,17 +416,17 @@ export function OrdersView() {
                         <GlassCard className="overflow-hidden border-brand-deep/5 dark:border-white/5 shadow-lg">
                             <DataTable
                                 columns={columns}
-                                data={orders as any}
-                                onRowClick={(item) => setViewingOrder(item as Order)}
+                                data={orders}
+                                isLoading={isLoading}
+                                pageSize={limit}
+                                manualPagination={{
+                                    currentPage: page,
+                                    totalPages: totalPages,
+                                    onPageChange: (p) => setPage(p),
+                                    total: meta?.total
+                                }}
                             />
                         </GlassCard>
-
-                        <Pagination
-                            currentPage={page}
-                            totalPages={totalPages}
-                            onPageChange={(p) => setPage(p)}
-                            isLoading={isLoading}
-                        />
                     </div>
                 )}
 
@@ -364,11 +459,25 @@ export function OrdersView() {
                                         )) || (
                                                 <div className="p-4 text-center text-xs opacity-40">No item details available</div>
                                             )}
-                                        <div className="p-4 flex justify-between items-center bg-brand-deep/5 dark:bg-white/5">
-                                            <p className="font-bold text-xs uppercase tracking-widest text-brand-accent/60">Total Amount</p>
-                                            <p className="text-2xl font-bold text-brand-green dark:text-brand-gold">
-                                                {formatCurrency(viewingOrder?.totalAmount ?? 0, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
-                                            </p>
+                                        <div className="p-4 space-y-3 bg-brand-deep/5 dark:bg-white/5">
+                                            <div className="flex justify-between items-center opacity-60">
+                                                <p className="font-bold text-[10px] uppercase tracking-widest text-brand-accent">Subtotal</p>
+                                                <p className="text-sm font-bold text-brand-deep dark:text-brand-cream">
+                                                    {formatCurrency(viewingOrder?.totalAmount ?? 0, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
+                                                </p>
+                                            </div>
+                                            <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
+                                                <p className="font-bold text-[10px] uppercase tracking-widest">Amount Paid</p>
+                                                <p className="text-sm font-bold">
+                                                    {formatCurrency(viewingOrder?.amountPaid ?? 0, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
+                                                </p>
+                                            </div>
+                                            <div className="pt-2 border-t border-brand-accent/10 flex justify-between items-center">
+                                                <p className="font-bold text-xs uppercase tracking-widest text-brand-accent">Remaining Balance</p>
+                                                <p className="text-2xl font-bold text-brand-green dark:text-brand-gold">
+                                                    {formatCurrency(Number(viewingOrder?.remainingAmount || 0), { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
+                                                </p>
+                                            </div>
                                         </div>
                                     </GlassCard>
                                 </div>
@@ -541,6 +650,30 @@ export function OrdersView() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <RecordPaymentDrawer
+                order={recordingPaymentOrder}
+                open={!!recordingPaymentOrder}
+                onOpenChange={(open) => !open && setRecordingPaymentOrder(null)}
+                isSubmitting={isUpdating}
+                onSuccess={async (amount, method) => {
+                    if (recordingPaymentOrder) {
+                        const newAmountPaid = Number(recordingPaymentOrder.amountPaid || 0) + amount
+                        const total = Number(recordingPaymentOrder.totalAmount)
+                        const newStatus = newAmountPaid >= total ? 'COMPLETED' : recordingPaymentOrder.status
+
+                        await updateOrder({
+                            id: recordingPaymentOrder.id,
+                            updates: {
+                                amountPaid: newAmountPaid,
+                                paymentMethod: method as any,
+                                status: newStatus as any
+                            }
+                        })
+                        toast.success(`Recorded ${formatCurrency(amount, { currency: recordingPaymentOrder.currency || 'NGN' })} payment`)
+                    }
+                }}
+            />
         </PageTransition>
     )
 }

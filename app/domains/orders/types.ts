@@ -1,6 +1,6 @@
 import { Customer } from "./data/customerMocks"
 
-export type OrderStatus = 'COMPLETED' | 'PENDING' | 'CANCELLED' | 'REFUNDED' | 'Completed' | 'Pending' | 'Cancelled' | 'ALL'
+export type OrderStatus = 'COMPLETED' | 'PENDING' | 'CANCELLED' | 'REFUNDED' | 'ALL'
 
 export interface OrderItem {
     productName: string
@@ -18,6 +18,8 @@ export interface Order {
     totalAmount: number | string // Numeric from backend now, but support string for safety
     currency?: string
     customer: string // Customer name
+    amountPaid: number
+    remainingAmount?: number
     paymentMethod: string
     status: OrderStatus
     channel?: string
@@ -54,9 +56,16 @@ export interface OrdersResponse {
     }
 }
 
+export type PaymentStatus = 'PAID' | 'PARTIAL' | 'PENDING'
+
 export interface OrderFilterParams {
-    status?: OrderStatus
+    status?: string[]
+    paymentStatus?: string[]
+    automation?: string[]
+    isAutomated?: boolean
     search?: string
+    startDate?: string
+    endDate?: string
     storeId?: string
     storeIds?: string[]
 }

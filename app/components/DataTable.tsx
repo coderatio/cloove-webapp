@@ -23,6 +23,7 @@ interface DataTableProps<T> {
         currentPage: number
         totalPages: number
         onPageChange: (page: number) => void
+        total?: number
     }
 }
 
@@ -148,7 +149,10 @@ export default function DataTable<T extends { id: string | number }>({
             {totalPages > 1 && (
                 <div className="px-6 py-4 flex items-center justify-between border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/10 dark:bg-white/5">
                     <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 font-medium">
-                        Showing <span className="text-brand-deep dark:text-brand-cream">{startIndex + 1}-{Math.min(startIndex + pageSize, data.length)}</span> of <span className="text-brand-deep dark:text-brand-cream">{data.length}</span>
+                        Showing <span className="text-brand-deep dark:text-brand-cream">
+                            {manualPagination ? (currentPage - 1) * pageSize + 1 : startIndex + 1}-
+                            {manualPagination ? (currentPage - 1) * pageSize + data.length : Math.min(startIndex + pageSize, data.length)}
+                        </span> of <span className="text-brand-deep dark:text-brand-cream">{manualPagination?.total ?? data.length}</span>
                     </p>
                     <div className="flex items-center gap-2">
                         <Button
