@@ -55,7 +55,13 @@ import { PayoutAccountsManager } from './PayoutAccountsManager'
 import { CurrencyDisplay } from '@/app/components/shared/CurrencyDisplay'
 import { formatCurrency, parseCurrencyToNumber } from '@/app/lib/formatters'
 import type { FinanceTransactionMock } from '../data/financeMocks'
-import { useFinanceSummary, useFinanceTransactions, type TransactionFilterParams } from '../hooks/useFinance'
+import {
+    useFinanceSummary,
+    useFinanceTransactions,
+    useRequeryTransaction,
+    type TransactionFilterParams,
+    type FinanceTransactionRow
+} from '../hooks/useFinance'
 import { useSettings, useUpdateBusinessSettings } from '@/app/domains/business/hooks/useBusinessSettings'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { VisuallyHidden } from '@/app/components/ui/visually-hidden'
@@ -135,7 +141,7 @@ export function FinanceView() {
         useApi ? serverFilters : undefined
     )
     const [viewingTx, setViewingTx] = React.useState<TransactionRow | null>(null)
-    const [isRequerying, setIsRequerying] = React.useState(false)
+    const { mutateAsync: requeryTx, isPending: isRequerying } = useRequeryTransaction()
     const [isAddMoneyOpen, setIsAddMoneyOpen] = React.useState(false)
     const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
     const [isPayoutSettingsOpen, setIsPayoutSettingsOpen] = React.useState(false)
@@ -200,16 +206,17 @@ export function FinanceView() {
     }, [useApi, transactions, search, selectedFilters, selectedStoreId, stores])
 
     const handleRequery = async () => {
-        if (!viewingTx || isApiRow(viewingTx)) return
-        setIsRequerying(true)
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        if (viewingTx.id === 'TX-9022') {
-            setMockTransactions(prev => prev.map(t =>
-                t.id === viewingTx.id ? { ...t, status: 'Cleared' as const } : t
-            ))
-            setViewingTx(prev => prev ? { ...prev, status: 'Cleared' as const } : null)
+        if (!viewingTx) return
+
+        try {
+            const response = await requeryTx(viewingTx.id)
+            if (response.data) {
+                setViewingTx(response.data)
+            }
+        } catch (error) {
+            // Error handling is managed by the hook (toast.error)
+            console.error("Requery failed:", error)
         }
-        setIsRequerying(false)
     }
 
     const handleClearManual = () => {
@@ -706,7 +713,7 @@ export function FinanceView() {
                                                 </div>
                                             </div>
 
-                                            {(viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && showMockActions ? (
+                                            {(viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') ? (
                                                 <Button
                                                     variant="outline"
                                                     size="sm"

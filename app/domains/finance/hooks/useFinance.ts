@@ -369,3 +369,26 @@ export function useSetDefaultPayoutAccount() {
         }
     })
 }
+
+export function useRequeryTransaction() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: async (id: string) => {
+            return apiClient.post<ApiResponse<FinanceTransactionRow>>(`/finance/transactions/${id}/requery`, {})
+        },
+        onSuccess: (response) => {
+            toast.success(response.message || "Transaction status updated")
+            if (businessId) {
+                queryClient.invalidateQueries({ queryKey: ['finance', 'transactions', businessId] })
+                queryClient.invalidateQueries({ queryKey: ['finance', 'wallet', businessId] })
+                queryClient.invalidateQueries({ queryKey: ['finance', 'summary', businessId] })
+            }
+        },
+        onError: (err: any) => {
+            toast.error(err.data?.message || err.message || "Failed to requery transaction")
+        }
+    })
+}
