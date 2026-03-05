@@ -683,7 +683,7 @@ export function FinanceView() {
                                 {/* Status Card */}
                                 <div className="px-1">
                                     <div className={cn(
-                                        "p-1 rounded-[2rem] border transition-all duration-500",
+                                        "p-1 rounded-4xl border transition-all duration-500",
                                         viewingTx?.status === 'Cleared' && "bg-emerald-500/5 border-emerald-500/10",
                                         (viewingTx?.status === 'Pending' || viewingTx?.status === 'Processing') && "bg-amber-500/5 border-amber-500/10",
                                         viewingTx?.status === 'Failed' && "bg-rose-500/5 border-rose-500/10"
