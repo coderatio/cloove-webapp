@@ -34,7 +34,7 @@ export interface FilterGroup {
 interface FilterPopoverProps {
     groups: FilterGroup[]
     selectedValues: string[]
-    onSelectionChange: (groupIdx: number, values: string[]) => void
+    onSelectionChange: (values: string[]) => void
     onClear: () => void
     className?: string
     align?: "start" | "center" | "end"
@@ -53,13 +53,19 @@ export function FilterPopover({
 
     const toggleOption = (groupIdx: number, value: string) => {
         const groupOptions = groups[groupIdx].options.map(o => o.value)
-        const groupSelectedValues = selectedValues.filter(v => groupOptions.includes(v))
+        const isCurrentlySelected = selectedValues.includes(value)
 
-        if (groupSelectedValues.includes(value)) {
-            onSelectionChange(groupIdx, groupSelectedValues.filter(v => v !== value))
+        let newSelectedValues: string[]
+        if (isCurrentlySelected) {
+            newSelectedValues = selectedValues.filter(v => v !== value)
         } else {
-            onSelectionChange(groupIdx, [...groupSelectedValues, value])
+            // @Note: Remove other options from the same group if you want single-select per group,
+            // but the current behavior is multi-select across all groups.
+            // Let's stick to multi-select but handle it correctly.
+            newSelectedValues = [...selectedValues, value]
         }
+
+        onSelectionChange(newSelectedValues)
     }
 
     const activeCount = selectedValues.length

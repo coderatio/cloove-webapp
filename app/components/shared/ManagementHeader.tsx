@@ -92,7 +92,7 @@ export function ManagementHeader({
                         <FilterPopover
                             groups={filterGroups}
                             selectedValues={selectedFilterValues}
-                            onSelectionChange={(_, values) => onFilterSelectionChange(values)}
+                            onSelectionChange={onFilterSelectionChange}
                             onClear={onFilterClear}
                         />
                     )}

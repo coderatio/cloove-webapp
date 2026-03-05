@@ -44,9 +44,7 @@ export function OrdersView() {
     const { currentStore, stores } = useStores()
     const [page, setPage] = React.useState(1)
     const [search, setSearch] = React.useState("")
-    const [selectedStatus, setSelectedStatus] = React.useState<OrderStatus[]>([])
-    const [selectedPaymentStatus, setSelectedPaymentStatus] = React.useState<PaymentStatus[]>([])
-    const [selectedAutomation, setSelectedAutomation] = React.useState<string[]>([])
+    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [startDate, setStartDate] = React.useState<string | undefined>()
     const [endDate, setEndDate] = React.useState<string | undefined>()
     const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
@@ -92,9 +90,9 @@ export function OrdersView() {
         isGeneratingReceipt
     } = useOrders(page, limit, {
         search: debouncedSearch,
-        status: selectedStatus,
-        paymentStatus: selectedPaymentStatus,
-        automation: selectedAutomation,
+        status: selectedFilters.filter(f => f.startsWith('S:')).map(f => f.slice(2)) as OrderStatus[],
+        paymentStatus: selectedFilters.filter(f => f.startsWith('P:')).map(f => f.slice(2)) as PaymentStatus[],
+        automation: selectedFilters.filter(f => f.startsWith('A:')).map(f => f.slice(2)),
         startDate,
         endDate,
         storeId: currentStore?.id
@@ -164,12 +162,8 @@ export function OrdersView() {
         }
     ]
 
-    const handleFilterChange = (groupIdx: number, values: string[]) => {
-        if (groupIdx === 0) setSelectedStatus(values as OrderStatus[])
-        if (groupIdx === 1) setSelectedPaymentStatus(values as PaymentStatus[])
-        if (groupIdx === 2) setSelectedAutomation(values)
-        setPage(1)
-    }
+    // Simplified filter logic handled by FilterPopover internally
+    // handleFilterChange removed in favor of direct setSelectedFilters usage
 
     const columns: any[] = [
         {
@@ -385,13 +379,14 @@ export function OrdersView() {
                                 <FilterPopover
                                     groups={filterGroups}
                                     className="flex-1 md:flex-initial"
-                                    selectedValues={[...selectedStatus, ...selectedPaymentStatus, ...selectedAutomation]}
-                                    onSelectionChange={(groupIdx, values) => handleFilterChange(groupIdx, values)}
+                                    selectedValues={selectedFilters}
+                                    onSelectionChange={(values) => {
+                                        setSelectedFilters(values)
+                                        setPage(1)
+                                    }}
                                     onClear={() => {
-                                        setSelectedStatus([]);
-                                        setSelectedPaymentStatus([]);
-                                        setSelectedAutomation([]);
-                                        setPage(1);
+                                        setSelectedFilters([])
+                                        setPage(1)
                                     }}
                                 />
                                 <DateRangePicker
@@ -417,9 +412,7 @@ export function OrdersView() {
                 ) : orders.length === 0 ? (
                     (() => {
                         const isFiltered = search !== "" ||
-                            selectedStatus.length > 0 ||
-                            selectedPaymentStatus.length > 0 ||
-                            selectedAutomation.length > 0 ||
+                            selectedFilters.length > 0 ||
                             startDate !== undefined ||
                             endDate !== undefined;
 
@@ -446,9 +439,7 @@ export function OrdersView() {
                                         className="rounded-full px-8 h-12"
                                         onClick={() => {
                                             setSearch("")
-                                            setSelectedStatus([])
-                                            setSelectedPaymentStatus([])
-                                            setSelectedAutomation([])
+                                            setSelectedFilters([])
                                             setStartDate(undefined)
                                             setEndDate(undefined)
                                             setPage(1)

@@ -192,13 +192,11 @@ export function InventoryView() {
     const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
     const [itemToDelete, setItemToDelete] = React.useState<any>(null)
 
-    // Form states
-    const [formData, setFormData] = React.useState({
+    const INITIAL_FORM_STATE = {
         product: '',
         description: '',
         price: '',
         categoryId: '' as string,
-        sku: '' as string,
         costPrice: '' as string,
         barcode: '' as string,
         unit: '' as string,
@@ -207,7 +205,10 @@ export function InventoryView() {
         imageUrls: [] as string[],
         storeIds: [] as string[],
         variants: [] as any[]
-    })
+    }
+
+    // Form states
+    const [formData, setFormData] = React.useState(INITIAL_FORM_STATE)
 
     // Map backend products to view-friendly inventory items
     const inventory = React.useMemo(() => {
@@ -333,7 +334,7 @@ export function InventoryView() {
                 id: v.id,
                 name: v.name || 'Standard',
                 sku: v.sku || '',
-                price: v.price?.toString() || item.numericPrice.toString(),
+                price: v.price != null ? v.price.toString() : item.numericPrice.toString(),
                 stockQuantity: v.inventories?.reduce((sum: number, inv: any) => sum + (Number(inv.stockQuantity) || 0), 0) || 0,
                 storeInventory: v.inventories?.map((inv: any) => ({
                     storeId: inv.storeId,
@@ -374,7 +375,7 @@ export function InventoryView() {
                 })
             })
             setIsAddDrawerOpen(false)
-            setFormData({ product: '', description: '', price: '', categoryId: '', costPrice: '', barcode: '', unit: '', isActive: true, reorderLevel: '', imageUrls: [], storeIds: [], variants: [] })
+            setFormData(INITIAL_FORM_STATE)
         } catch (error) {
             console.error(error)
         } finally {
@@ -417,7 +418,7 @@ export function InventoryView() {
                 }
             })
             setEditingItem(null)
-            setFormData({ product: '', description: '', price: '', categoryId: '', costPrice: '', barcode: '', unit: '', isActive: true, reorderLevel: '', imageUrls: [], storeIds: [], variants: [] })
+            setFormData(INITIAL_FORM_STATE)
         } catch (error) {
             console.error(error)
         } finally {
@@ -567,12 +568,13 @@ export function InventoryView() {
                             <DropdownMenuItem
                                 onClick={() => {
                                     const data = prepareFormData(item)
-                                    // Strip SKUs and IDs for duplication
-                                    setFormData({
+                                    // Strip IDs and SKUs for duplication to prevent collisions
+                                    const duplicated = {
                                         ...data,
                                         product: `${data.product} (Copy)`,
                                         variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '' }))
-                                    })
+                                    }
+                                    setFormData(duplicated)
                                     setIsAddDrawerOpen(true)
                                 }}
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
@@ -593,7 +595,7 @@ export function InventoryView() {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                </div>
+                </div >
             )
         },
     ]
@@ -637,16 +639,7 @@ export function InventoryView() {
                     addButtonLabel="Add Product"
                     onAddClick={() => {
                         setFormData({
-                            product: "",
-                            description: "",
-                            price: "",
-                            categoryId: "",
-                            costPrice: "",
-                            barcode: "",
-                            unit: "",
-                            isActive: true,
-                            reorderLevel: "",
-                            imageUrls: [],
+                            ...INITIAL_FORM_STATE,
                             storeIds: defaultStore ? [defaultStore.id] : [],
                             variants: [{ name: 'Standard', sku: '', price: '', stockQuantity: 0, storeInventory: [] }]
                         })
@@ -788,10 +781,12 @@ export function InventoryView() {
                                                     <DropdownMenuItem
                                                         onClick={(e) => {
                                                             e.stopPropagation()
+                                                            const data = prepareFormData(item)
+                                                            // Strip IDs and SKUs for duplication to prevent collisions
                                                             const duplicated = {
-                                                                ...prepareFormData(item),
-                                                                product: `${item.product} (Copy)`,
-                                                                variants: prepareFormData(item).variants.map((v: any) => ({ ...v, sku: '' }))
+                                                                ...data,
+                                                                product: `${data.product} (Copy)`,
+                                                                variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '' }))
                                                             }
                                                             setFormData(duplicated)
                                                             setIsAddDrawerOpen(true)
@@ -801,7 +796,7 @@ export function InventoryView() {
                                                         <Copy className="w-4 h-4 text-brand-green dark:text-brand-gold" />
                                                         Duplicate
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuSeparator className="my-1 border-brand-deep/5 dark:border-white/5" />
+                                                    <DropdownMenuSeparator className="my-1 bg-brand-deep/5 dark:bg-white/5" />
                                                     <DropdownMenuItem
                                                         onClick={(e) => {
                                                             e.stopPropagation()
@@ -893,6 +888,7 @@ export function InventoryView() {
                             if (!open) {
                                 setIsAddDrawerOpen(false);
                                 setEditingItem(null);
+                                setFormData(INITIAL_FORM_STATE);
                             }
                         }}
                     >
@@ -1026,10 +1022,10 @@ export function InventoryView() {
                                                     required
                                                     value={formData.price}
                                                     onChange={(val) => {
-                                                        const newPrice = val.toString()
+                                                        const newPrice = val?.toString() || ''
                                                         const newVariants = formData.variants.map(v => ({
                                                             ...v,
-                                                            price: v.price === formData.price || !v.price ? newPrice : v.price
+                                                            price: v.price === formData.price || v.price === '' ? newPrice : v.price
                                                         }))
                                                         setFormData({ ...formData, price: newPrice, variants: newVariants })
                                                     }}
@@ -1226,7 +1222,7 @@ export function InventoryView() {
                                                                             value={variant.price}
                                                                             onChange={(val) => {
                                                                                 const v = [...formData.variants]
-                                                                                v[index].price = val.toString()
+                                                                                v[index].price = val?.toString() || ''
                                                                                 setFormData({ ...formData, variants: v })
                                                                             }}
                                                                             placeholder="0"
@@ -1333,6 +1329,6 @@ export function InventoryView() {
                     />
                 </div>
             </div>
-        </PageTransition>
+        </PageTransition >
     )
 }

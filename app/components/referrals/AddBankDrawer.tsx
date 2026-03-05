@@ -5,7 +5,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } f
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Building2, Loader2, CheckCircle2, AlertCircle, ChevronsUpDown, ArrowLeft } from "lucide-react"
-import { BankSelector, NIGERIAN_BANKS } from "@/app/components/shared/BankSelector"
+import { BankSelector } from "@/app/components/shared/BankSelector"
 
 interface AddBankDrawerProps {
     isOpen: boolean
