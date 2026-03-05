@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { MoreVertical, Eye, Check, RefreshCw, Receipt, XCircle, Loader2 } from 'lucide-react'
+import { MoreVertical, Eye, Check, RefreshCw, Printer, Download, XCircle, Loader2 } from 'lucide-react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,6 +20,7 @@ interface OrderActionMenuProps {
     onUpdateStatus: (id: string, status: OrderStatus) => Promise<any>
     onRequery: (id: string) => Promise<any>
     onGenerateReceipt: (id: string) => Promise<any>
+    onPrintReceipt: (order: Order) => void
     onRecordPayment: (order: Order) => void
 }
 
@@ -29,6 +30,7 @@ export function OrderActionMenu({
     onUpdateStatus,
     onRequery,
     onGenerateReceipt,
+    onPrintReceipt,
     onRecordPayment
 }: OrderActionMenuProps) {
     const [isProcessing, setIsProcessing] = useState(false)
@@ -122,13 +124,25 @@ export function OrderActionMenu({
                 <DropdownMenuItem
                     onSelect={(e) => {
                         e.preventDefault()
-                        handleAction('receipt', 'Generate Receipt', () => onGenerateReceipt(order.id))
+                        onPrintReceipt(order)
                     }}
                     className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep/5 dark:focus:bg-white/5 cursor-pointer"
                     disabled={isProcessing}
                 >
-                    <Receipt className={cn("w-4 h-4 text-brand-accent/60", activeAction === 'receipt' && "animate-pulse")} />
-                    <span className="font-medium text-sm">Generate Receipt</span>
+                    <Printer className={cn("w-4 h-4 text-brand-accent/60")} />
+                    <span className="font-medium text-sm">Print Receipt</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                    onSelect={(e) => {
+                        e.preventDefault()
+                        handleAction('receipt', 'Download Receipt', () => onGenerateReceipt(order.id))
+                    }}
+                    className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep/5 dark:focus:bg-white/5 cursor-pointer"
+                    disabled={isProcessing}
+                >
+                    <Download className={cn("w-4 h-4 text-brand-accent/60", activeAction === 'receipt' && "animate-pulse")} />
+                    <span className="font-medium text-sm">Download Receipt</span>
                 </DropdownMenuItem>
 
                 {(order.status === 'PENDING' || (order.status === 'COMPLETED' && !order.isAutomated)) && (

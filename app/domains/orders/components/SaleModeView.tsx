@@ -35,6 +35,9 @@ import { mockCustomers, Customer } from '../data/customerMocks'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useReceiptPrinter } from '@/app/hooks/useReceiptPrinter'
+import { useBusiness } from '@/app/components/BusinessProvider'
+import { format } from 'date-fns'
 import { useQueuedSales, CartItem } from '../hooks/useQueuedSales'
 import { QueuedSalesDrawer } from './QueuedSalesDrawer'
 
@@ -82,6 +85,44 @@ export function SaleModeView() {
     const { queuedSales, queueSale, removeQueuedSale } = useQueuedSales()
     const [isQueueDrawerOpen, setIsQueueDrawerOpen] = React.useState(false)
 
+    const { activeBusiness } = useBusiness()
+    const { printReceipt } = useReceiptPrinter()
+
+    const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+    const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0)
+    const totalPrice = `₦${new Intl.NumberFormat().format(subtotal)}`
+
+    const handlePrintReceipt = React.useCallback(async () => {
+        if (!activeBusiness || cart.length === 0) {
+            if (cart.length === 0) toast.error("Cart is empty")
+            return
+        }
+
+        const receiptData = {
+            businessName: activeBusiness.name,
+            businessAddress: (activeBusiness as any).address,
+            businessPhone: (activeBusiness as any).phone,
+            orderId: `SALE-${Date.now()}`,
+            shortCode: `S${Math.floor(Math.random() * 9000) + 1000}`,
+            date: format(new Date(), 'dd MMM yyyy, HH:mm'),
+            customerName: selectedCustomer?.name || 'Walk-in Customer',
+            items: cart.map(item => ({
+                productName: item.product,
+                quantity: item.quantity,
+                price: item.price,
+                total: item.price * item.quantity
+            })),
+            subtotal: subtotal,
+            totalAmount: subtotal,
+            amountPaid: subtotal, // Assuming full payment in Sale Mode for now
+            remainingAmount: 0,
+            paymentMethod: paymentMethod.toUpperCase(),
+            currency: activeBusiness.currency || 'NGN'
+        }
+
+        await printReceipt(receiptData)
+    }, [activeBusiness, cart, subtotal, selectedCustomer, paymentMethod, printReceipt])
+
     // Derived State
     const categories = Array.from(new Set(initialInventory.map(item => item.category)))
 
@@ -97,10 +138,6 @@ export function SaleModeView() {
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     )
-
-    const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
-    const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0)
-    const totalPrice = `₦${new Intl.NumberFormat().format(subtotal)}`
 
     // Barcode Auto-Add Logic
     React.useEffect(() => {
@@ -161,9 +198,47 @@ export function SaleModeView() {
             return
         }
         setIsCheckingOut(true)
+
+        // Capture cart data before clearing it
+        const saleCart = [...cart]
+        const saleCustomer = selectedCustomer
+        const salePaymentMethod = paymentMethod
+        const saleSubtotal = subtotal
+
         setTimeout(() => {
-            toast.success("Sale recorded successfully!")
+            toast.success("Sale recorded successfully!", {
+                description: `${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${activeBusiness?.currency || 'NGN'} ${new Intl.NumberFormat().format(saleSubtotal)}`,
+                duration: 8000,
+                action: {
+                    label: "Print Receipt",
+                    onClick: async () => {
+                        if (!activeBusiness) return
+                        await printReceipt({
+                            businessName: activeBusiness.name,
+                            businessAddress: (activeBusiness as any).address,
+                            businessPhone: (activeBusiness as any).phone,
+                            orderId: `SALE-${Date.now()}`,
+                            shortCode: `S${Math.floor(Math.random() * 9000) + 1000}`,
+                            date: format(new Date(), 'dd MMM yyyy, HH:mm'),
+                            customerName: saleCustomer?.name || 'Walk-in Customer',
+                            items: saleCart.map(item => ({
+                                productName: item.product,
+                                quantity: item.quantity,
+                                price: item.price,
+                                total: item.price * item.quantity
+                            })),
+                            subtotal: saleSubtotal,
+                            totalAmount: saleSubtotal,
+                            amountPaid: saleSubtotal,
+                            remainingAmount: 0,
+                            paymentMethod: salePaymentMethod.toUpperCase(),
+                            currency: activeBusiness.currency || 'NGN'
+                        })
+                    }
+                }
+            })
             setCart([])
+            setSelectedCustomer(null)
             setIsCheckingOut(false)
             router.push('/orders')
         }, 2000)
@@ -762,7 +837,8 @@ export function SaleModeView() {
                             <Button
                                 variant="outline"
                                 className="h-14 px-3 rounded-2xl border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
-                                onClick={() => toast.info("Initializing receipt printer protocol...")}
+                                onClick={handlePrintReceipt}
+                                disabled={cart.length === 0}
                             >
                                 <ReceiptText className="h-5 w-5 mr-3" />
                                 Print

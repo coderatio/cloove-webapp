@@ -35,6 +35,8 @@ import { formatCurrency } from '@/app/lib/formatters'
 import { useBusiness } from '@/app/components/BusinessProvider'
 import { OrderActionMenu } from './OrderActionMenu'
 import { toast } from 'sonner'
+import { useReceiptPrinter } from '@/app/hooks/useReceiptPrinter'
+import { format } from 'date-fns'
 
 export function OrdersView() {
     const isMobile = useIsMobile()
@@ -97,6 +99,36 @@ export function OrdersView() {
         endDate,
         storeId: currentStore?.id
     })
+
+    const { printReceipt } = useReceiptPrinter()
+
+    const handlePrintReceipt = React.useCallback(async (order: Order) => {
+        if (!activeBusiness) return
+
+        const receiptData = {
+            businessName: activeBusiness.name,
+            businessAddress: (activeBusiness as any).address,
+            businessPhone: (activeBusiness as any).phone,
+            orderId: order.id,
+            shortCode: order.shortCode,
+            date: order.date || format(new Date(), 'dd MMM yyyy, HH:mm'),
+            customerName: order.customer,
+            items: order.items?.map(item => ({
+                productName: item.productName,
+                quantity: Number(item.quantity),
+                price: Number(item.price),
+                total: Number(item.total)
+            })) || [],
+            subtotal: Number(order.totalAmount),
+            totalAmount: Number(order.totalAmount),
+            amountPaid: Number(order.amountPaid),
+            remainingAmount: Number(order.remainingAmount || 0),
+            paymentMethod: order.paymentMethod,
+            currency: order.currency || activeBusiness.currency || 'NGN'
+        }
+
+        await printReceipt(receiptData)
+    }, [activeBusiness, printReceipt])
 
     const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {
         await updateOrder({ id: orderId, updates: { status } })
@@ -221,6 +253,7 @@ export function OrdersView() {
                     onUpdateStatus={handleUpdateStatus}
                     onRequery={requeryOrder}
                     onGenerateReceipt={generateReceipt}
+                    onPrintReceipt={handlePrintReceipt}
                     onRecordPayment={setRecordingPaymentOrder}
                 />
             )
@@ -456,6 +489,7 @@ export function OrdersView() {
                                         onUpdateStatus={handleUpdateStatus}
                                         onRequery={requeryOrder}
                                         onGenerateReceipt={generateReceipt}
+                                        onPrintReceipt={handlePrintReceipt}
                                         onRecordPayment={setRecordingPaymentOrder}
                                     />
                                 }
@@ -631,7 +665,11 @@ export function OrdersView() {
                                 )}
 
                                 <div className="flex gap-4 pt-6">
-                                    <Button variant="outline" className="flex-1 rounded-2xl h-14 border-brand-deep/5">
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 rounded-2xl h-14 border-brand-deep/5"
+                                        onClick={() => viewingOrder && handlePrintReceipt(viewingOrder)}
+                                    >
                                         <ReceiptText className="w-4 h-4 mr-2" />
                                         Print Receipt
                                     </Button>
