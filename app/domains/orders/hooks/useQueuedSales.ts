@@ -15,6 +15,10 @@ export interface QueuedSale {
     customer: Customer | null
     items: CartItem[]
     paymentMethod: 'Cash' | 'Transfer' | 'Card'
+    discount: number
+    promotionId?: string
+    note: string
+    amountPaid: number | string
     total: number
     timestamp: number
 }

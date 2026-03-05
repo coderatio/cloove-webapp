@@ -1,0 +1,66 @@
+"use client"
+
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { apiClient } from "@/app/lib/api-client"
+import { useBusiness } from "@/app/components/BusinessProvider"
+
+export interface RecordSaleItem {
+    productName: string
+    quantity: number
+    customPrice?: number
+}
+
+export interface RecordSalePayload {
+    items: RecordSaleItem[]
+    paymentMethod: string
+    amountPaid?: number
+    discountAmount?: number
+    promotionId?: string
+    customerId?: string
+    customerName?: string
+    notes?: string
+    channel?: string
+}
+
+export interface RecordedSale {
+    id: string
+    shortCode: string
+    totalAmount: number
+    amountPaid: number
+    remainingAmount: number
+    paymentMethod: string
+    status: string
+    date: string
+    customer?: string
+    items: Array<{
+        productName: string
+        quantity: number
+        price: number
+        total: number
+    }>
+}
+
+/**
+ * Hook to record a new sale via the API.
+ * Follows the same pattern as useOrders.ts (apiClient + React Query).
+ */
+export function useRecordSale() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+
+    const mutation = useMutation({
+        mutationFn: (payload: RecordSalePayload) =>
+            apiClient.post<RecordedSale>('/sales', payload),
+        onSuccess: () => {
+            // Invalidate sales list so OrdersView refreshes
+            queryClient.invalidateQueries({ queryKey: ['sales', activeBusiness?.id] })
+        }
+    })
+
+    return {
+        recordSale: mutation.mutateAsync,
+        isRecording: mutation.isPending,
+        recordError: mutation.error,
+        reset: mutation.reset,
+    }
+}

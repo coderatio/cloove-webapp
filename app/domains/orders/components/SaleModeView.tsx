@@ -24,11 +24,22 @@ import {
     UsersRoundIcon,
     UserSearchIcon,
     Layers,
-    History
+    History,
+    Tag
 } from 'lucide-react'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/app/components/ui/select'
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { Button } from '@/app/components/ui/button'
 import { Input } from '@/app/components/ui/input'
+import { Textarea } from '@/app/components/ui/textarea'
+import { MoneyInput } from '@/app/components/ui/money-input'
+import { Switch } from '@/app/components/ui/switch'
 import { cn } from '@/app/lib/utils'
 import { initialInventory } from '../data/inventoryMocks'
 import { mockCustomers, Customer } from '../data/customerMocks'
@@ -40,6 +51,11 @@ import { useBusiness } from '@/app/components/BusinessProvider'
 import { format } from 'date-fns'
 import { useQueuedSales, CartItem } from '../hooks/useQueuedSales'
 import { QueuedSalesDrawer } from './QueuedSalesDrawer'
+import { useRecordSale } from '../hooks/useRecordSale'
+import { useInventory } from '../hooks/useInventory'
+import { useCustomers } from '../hooks/useCustomers'
+import { usePromotions } from '../hooks/usePromotions'
+import { formatCurrency } from '@/app/lib/formatters'
 
 // Stagger variants for the container
 const containerVariants: Variants = {
@@ -71,15 +87,18 @@ export function SaleModeView() {
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
     const [cart, setCart] = React.useState<CartItem[]>([])
     const [paymentMethod, setPaymentMethod] = React.useState<'Cash' | 'Transfer' | 'Card'>('Cash')
-    const [isCheckingOut, setIsCheckingOut] = React.useState(false)
     const [mobileView, setMobileView] = React.useState<'catalog' | 'cart'>('catalog')
-    const [allCustomers, setAllCustomers] = React.useState<Customer[]>(mockCustomers)
     const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | null>(null)
     const [customerSearch, setCustomerSearch] = React.useState("")
     const [isCustomerSearchOpen, setIsCustomerSearchOpen] = React.useState(false)
     const customerDropdownRef = React.useRef<HTMLDivElement>(null)
     const [currentPage, setCurrentPage] = React.useState(1)
     const itemsPerPage = 8
+    const [discount, setDiscount] = React.useState(0)
+    const [note, setNote] = React.useState('')
+    const [amountPaid, setAmountPaid] = React.useState<number | "">("")
+    const [selectedPromotion, setSelectedPromotion] = React.useState<string>('none')
+    const [autoPrint, setAutoPrint] = React.useState(true)
 
     // Queue Sale State
     const { queuedSales, queueSale, removeQueuedSale } = useQueuedSales()
@@ -87,10 +106,19 @@ export function SaleModeView() {
 
     const { activeBusiness } = useBusiness()
     const { printReceipt } = useReceiptPrinter()
+    const { recordSale, isRecording } = useRecordSale()
+    const { products, isLoadingProducts } = useInventory()
+    const { customers, createCustomer } = useCustomers(customerSearch)
+    const { data: promotions } = usePromotions()
 
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+    const totalAfterDiscount = Math.max(0, subtotal - discount)
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0)
-    const totalPrice = `₦${new Intl.NumberFormat().format(subtotal)}`
+    const totalPrice = formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' })
+    const amountPaidNum = typeof amountPaid === 'number' ? amountPaid : 0
+    const changeDue = paymentMethod === 'Cash' && amountPaidNum > 0
+        ? Math.max(0, amountPaidNum - totalAfterDiscount)
+        : 0
 
     const handlePrintReceipt = React.useCallback(async () => {
         if (!activeBusiness || cart.length === 0) {
@@ -124,10 +152,10 @@ export function SaleModeView() {
     }, [activeBusiness, cart, subtotal, selectedCustomer, paymentMethod, printReceipt])
 
     // Derived State
-    const categories = Array.from(new Set(initialInventory.map(item => item.category)))
+    const categories = Array.from(new Set(products.map(item => item.category)))
 
-    const filteredProducts = initialInventory.filter(p => {
-        const matchesSearch = p.product.toLowerCase().includes(search.toLowerCase()) ||
+    const filteredProducts = products.filter(p => {
+        const matchesSearch = p.product?.toLowerCase().includes(search.toLowerCase()) ||
             (p.barcode && p.barcode.includes(search))
         const matchesCategory = !selectedCategory || p.category === selectedCategory
         return matchesSearch && matchesCategory
@@ -172,7 +200,15 @@ export function SaleModeView() {
 
     // Handlers
     const addToCart = (product: any) => {
-        const price = parseInt(product.price.replace(/[^0-9]/g, ''))
+        // OOS Guard: block adding out-of-stock items
+        if (product.status === 'Out of Stock') {
+            toast.error(`${product.product} is out of stock`)
+            return
+        }
+        // price is already numeric from useInventory
+        const price = typeof product.price === 'number'
+            ? product.price
+            : parseInt(String(product.price).replace(/[^0-9]/g, ''), 10) || 0
         setCart(prev => {
             const existing = prev.find(item => item.id === product.id)
             if (existing) {
@@ -192,56 +228,81 @@ export function SaleModeView() {
         }).filter(item => item.quantity > 0))
     }
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         if (cart.length === 0) {
             toast.error("Cart is empty")
             return
         }
-        setIsCheckingOut(true)
 
-        // Capture cart data before clearing it
+        // Snapshot cart before clearing
         const saleCart = [...cart]
         const saleCustomer = selectedCustomer
         const salePaymentMethod = paymentMethod
-        const saleSubtotal = subtotal
+        const saleTotal = totalAfterDiscount
+        const saleAmountPaid = amountPaidNum > 0 ? amountPaidNum : saleTotal
 
-        setTimeout(() => {
-            toast.success("Sale recorded successfully!", {
-                description: `${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${activeBusiness?.currency || 'NGN'} ${new Intl.NumberFormat().format(saleSubtotal)}`,
+        try {
+            const result = await recordSale({
+                items: saleCart.map(item => ({
+                    productName: item.product,
+                    quantity: item.quantity,
+                    customPrice: item.price,
+                })),
+                paymentMethod: salePaymentMethod.toUpperCase(),
+                amountPaid: saleAmountPaid,
+                discountAmount: discount || undefined,
+                promotionId: selectedPromotion !== 'none' ? selectedPromotion : undefined,
+                customerId: saleCustomer?.id?.startsWith('new-') ? undefined : saleCustomer?.id,
+                customerName: saleCustomer?.name,
+                notes: note.trim() || undefined,
+            })
+
+            const buildReceiptData = () => ({
+                businessName: activeBusiness?.name || '',
+                businessAddress: (activeBusiness as any)?.address,
+                businessPhone: (activeBusiness as any)?.phone,
+                orderId: result?.id || `SALE-${Date.now()}`,
+                shortCode: result?.shortCode || `S${Math.floor(Math.random() * 9000) + 1000}`,
+                date: format(new Date(), 'dd MMM yyyy, HH:mm'),
+                customerName: saleCustomer?.name || 'Walk-in Customer',
+                items: saleCart.map(item => ({
+                    productName: item.product,
+                    quantity: item.quantity,
+                    price: item.price,
+                    total: item.price * item.quantity
+                })),
+                subtotal: saleTotal,
+                totalAmount: saleTotal,
+                amountPaid: saleAmountPaid,
+                remainingAmount: Math.max(0, saleTotal - saleAmountPaid),
+                paymentMethod: salePaymentMethod.toUpperCase(),
+                currency: activeBusiness?.currency || 'NGN'
+            })
+
+            toast.success('Sale recorded!', {
+                description: `${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${formatCurrency(saleTotal, { currency: activeBusiness?.currency || 'NGN' })}`,
                 duration: 8000,
                 action: {
-                    label: "Print Receipt",
-                    onClick: async () => {
-                        if (!activeBusiness) return
-                        await printReceipt({
-                            businessName: activeBusiness.name,
-                            businessAddress: (activeBusiness as any).address,
-                            businessPhone: (activeBusiness as any).phone,
-                            orderId: `SALE-${Date.now()}`,
-                            shortCode: `S${Math.floor(Math.random() * 9000) + 1000}`,
-                            date: format(new Date(), 'dd MMM yyyy, HH:mm'),
-                            customerName: saleCustomer?.name || 'Walk-in Customer',
-                            items: saleCart.map(item => ({
-                                productName: item.product,
-                                quantity: item.quantity,
-                                price: item.price,
-                                total: item.price * item.quantity
-                            })),
-                            subtotal: saleSubtotal,
-                            totalAmount: saleSubtotal,
-                            amountPaid: saleSubtotal,
-                            remainingAmount: 0,
-                            paymentMethod: salePaymentMethod.toUpperCase(),
-                            currency: activeBusiness.currency || 'NGN'
-                        })
-                    }
+                    label: 'Print Receipt',
+                    onClick: () => printReceipt(buildReceiptData()),
                 }
             })
+
+            if (autoPrint) {
+                printReceipt(buildReceiptData())
+            }
+
+            // Reset state
             setCart([])
             setSelectedCustomer(null)
-            setIsCheckingOut(false)
-            router.push('/orders')
-        }, 2000)
+            setDiscount(0)
+            setSelectedPromotion('none')
+            setNote('')
+            setAmountPaid('')
+        } catch (err: any) {
+            const message = err?.message || 'Failed to record sale. Please try again.'
+            toast.error('Checkout failed', { description: message })
+        }
     }
 
     const handleQueueSale = () => {
@@ -254,6 +315,10 @@ export function SaleModeView() {
             customer: selectedCustomer,
             items: cart,
             paymentMethod: paymentMethod,
+            discount: discount,
+            promotionId: selectedPromotion !== 'none' ? selectedPromotion : undefined,
+            note: note,
+            amountPaid: amountPaid,
             total: subtotal
         })
 
@@ -265,6 +330,9 @@ export function SaleModeView() {
         // Clear active cart
         setCart([])
         setSelectedCustomer(null)
+        setDiscount(0)
+        setNote('')
+        setAmountPaid('')
     }
 
     const handleRecallSale = (sale: any) => {
@@ -278,6 +346,10 @@ export function SaleModeView() {
         setCart(sale.items)
         setSelectedCustomer(sale.customer)
         setPaymentMethod(sale.paymentMethod)
+        setDiscount(sale.discount || 0)
+        setSelectedPromotion(sale.promotionId || 'none')
+        setNote(sale.note || '')
+        setAmountPaid(sale.amountPaid || '')
 
         removeQueuedSale(sale.id)
         setIsQueueDrawerOpen(false)
@@ -318,20 +390,29 @@ export function SaleModeView() {
                             </div>
                         </div>
 
-                        <div className="flex md:hidden items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => setMobileView('cart')}
-                                className="rounded-2xl h-12 w-12 bg-white/40 dark:bg-white/5 relative"
-                            >
-                                <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
-                                {totalItems > 0 && (
-                                    <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[10px] font-black shadow-lg">
-                                        {totalItems}
-                                    </span>
-                                )}
-                            </Button>
+                        <div className="flex items-center gap-4">
+                            {/* Auto Print Toggle */}
+                            <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-2 md:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
+                                <span className="text-[10px] md:text-xs font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest hidden sm:block">Auto Print</span>
+                                <span className="text-[10px] font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest sm:hidden">Print</span>
+                                <Switch checked={autoPrint} onCheckedChange={setAutoPrint} className="scale-75 origin-right" />
+                            </div>
+
+                            <div className="flex md:hidden items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => setMobileView('cart')}
+                                    className="rounded-2xl h-12 w-12 bg-white/40 dark:bg-white/5 relative"
+                                >
+                                    <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
+                                    {totalItems > 0 && (
+                                        <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[10px] font-black shadow-lg">
+                                            {totalItems}
+                                        </span>
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </header>
 
@@ -391,7 +472,7 @@ export function SaleModeView() {
                     {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
                     <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 mt-4 md:mt-0">
                         <motion.div
-                            key={`${selectedCategory}-${search}-${currentPage}`}
+                            key={`${selectedCategory}-${search}-${currentPage}-${products.length}`}
                             variants={containerVariants}
                             initial="hidden"
                             animate="show"
@@ -419,7 +500,7 @@ export function SaleModeView() {
                                                 </div>
                                             </div>
                                             <div className="mt-6 flex items-center justify-between pt-4 border-t border-brand-accent/5 dark:border-white/5">
-                                                <p className="font-serif font-bold text-xl text-brand-deep-700 dark:text-brand-cream tracking-tight">{product.price}</p>
+                                                <p className="font-serif font-bold text-xl text-brand-deep-700 dark:text-brand-cream tracking-tight">{formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}</p>
                                                 <div className="h-10 w-10 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 shadow-xl shadow-brand-gold/10">
                                                     <Plus className="h-5 w-5" />
                                                 </div>
@@ -518,7 +599,7 @@ export function SaleModeView() {
                 "w-full md:w-[420px] lg:w-[480px] bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20",
                 mobileView === 'catalog' ? "hidden md:flex" : "flex h-full fixed inset-0 z-50 md:relative md:inset-auto"
             )}>
-                <div className="p-6 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-4 bg-brand-gold/5 dark:bg-brand-gold/5 relative">
+                <div className="p-4 md:p-5 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-3 bg-brand-gold/5 dark:bg-brand-gold/5 relative">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             {/* Mobile Back to Catalog Button */}
@@ -531,16 +612,17 @@ export function SaleModeView() {
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
 
-                            <div className="hidden md:flex h-12 w-12 rounded-[16px] bg-brand-deep dark:bg-brand-accent items-center justify-center text-brand-gold shadow-lg shadow-brand-deep/20">
-                                <ShoppingCart className="h-5 w-5" />
+                            <div className="hidden md:flex h-10 w-10 rounded-[14px] bg-brand-deep dark:bg-brand-accent items-center justify-center text-brand-gold shadow-lg shadow-brand-deep/20">
+                                <ShoppingCart className="h-4 w-4" />
                             </div>
                             <div>
-                                <h3 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Checkout</h3>
-                                <p className="text-[10px] uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 font-bold">{totalItems} Items in Basket</p>
+                                <h3 className="font-serif text-xl md:text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Checkout</h3>
+                                <p className="text-[10px] uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 font-bold leading-none mt-1">{totalItems} Items in Basket</p>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2">
+                            {/* Customer Select / Open Drawer */}
                             {selectedCustomer ? (
                                 <Button
                                     variant="ghost"
@@ -626,10 +708,10 @@ export function SaleModeView() {
 
                                 <div className="flex-1 overflow-y-auto custom-scrollbar -mx-2 px-2">
                                     <div className="space-y-1">
-                                        {/* Filtered Customers */}
-                                        {allCustomers
-                                            .filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()) || c.phone.includes(customerSearch))
-                                            .map(customer => (
+                                        {/* Filtered Customers — from useCustomers hook */}
+                                        {customers
+                                            .filter((c: Customer) => c.name?.toLowerCase().includes(customerSearch?.toLowerCase() ?? '') || c.phone?.includes(customerSearch ?? ''))
+                                            .map((customer: Customer) => (
                                                 <Button
                                                     key={customer.id}
                                                     variant="ghost"
@@ -662,21 +744,20 @@ export function SaleModeView() {
                                             ))}
 
                                         {/* Quick Create Option */}
-                                        {customerSearch.length > 2 && !allCustomers.some(c => c.name.toLowerCase() === customerSearch.toLowerCase()) && (
+                                        {customerSearch.length > 2 && !customers.some((c: Customer) => c.name?.toLowerCase() === customerSearch?.toLowerCase()) && (
                                             <Button
                                                 variant="outline"
-                                                onClick={() => {
-                                                    const newCustomer: Customer = {
-                                                        id: `new-${Date.now()}`,
-                                                        name: customerSearch,
-                                                        phone: "0800-PENDING",
-                                                        type: 'Walk-in'
+                                                onClick={async () => {
+                                                    try {
+                                                        const newCustomer = await createCustomer(customerSearch)
+                                                        setSelectedCustomer(newCustomer as Customer)
+                                                    } catch {
+                                                        // Fallback: create local placeholder (will be synced on checkout via customerName)
+                                                        setSelectedCustomer({ id: `new-${Date.now()}`, name: customerSearch, phone: '', type: 'Walk-in' })
                                                     }
-                                                    setAllCustomers(prev => [newCustomer, ...prev])
-                                                    setSelectedCustomer(newCustomer)
                                                     setIsCustomerSearchOpen(false)
                                                     setCustomerSearch("")
-                                                    toast.success(`New customer "${customerSearch}" created`)
+                                                    toast.success(`Customer "${customerSearch}" added`)
                                                 }}
                                                 className="w-full p-5 h-auto text-left border border-dashed border-brand-accent/30 dark:border-white/20 hover:border-brand-accent bg-brand-accent/5 dark:bg-white/5 hover:bg-brand-accent/10 dark:hover:bg-white/10 group rounded-3xl transition-all"
                                             >
@@ -699,7 +780,7 @@ export function SaleModeView() {
                 </div>
 
                 {/* Cart Items List */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-3 custom-scrollbar min-h-[200px]">
                     <AnimatePresence mode="popLayout">
                         {cart.length === 0 ? (
                             <motion.div
@@ -782,9 +863,9 @@ export function SaleModeView() {
                 </div>
 
                 {/* Billing Summary & Actions */}
-                <div className="p-6 bg-brand-gold/5 dark:bg-brand-gold/5 border-t border-brand-accent/10 dark:border-white/5 space-y-6">
+                <div className="p-4 md:p-5 bg-brand-gold/5 dark:bg-brand-gold/5 border-t border-brand-accent/10 dark:border-white/5 space-y-4 shrink-0">
                     {/* Adaptive Payment Selection */}
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                         <header className="flex justify-between items-center px-1">
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">Settlement Method</p>
                             <div className="h-px flex-1 mx-4 bg-brand-accent/10 dark:bg-brand-gold/10" />
@@ -814,52 +895,165 @@ export function SaleModeView() {
                     </div>
 
                     {/* Breakdown */}
-                    <div className="space-y-3 py-4 border-y border-brand-accent/10 dark:border-white/10">
+                    <div className="space-y-2.5 py-3 border-y border-brand-accent/10 dark:border-white/10">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Order Subtotal</span>
-                            <span className="text-brand-deep dark:text-brand-cream font-bold tabular-nums">₦{subtotal.toLocaleString()}</span>
+                            <span className="text-brand-deep dark:text-brand-cream font-bold tabular-nums">
+                                {formatCurrency(subtotal, { currency: activeBusiness?.currency || 'NGN' })}
+                            </span>
                         </div>
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Applied Discounts</span>
-                            <span className="text-emerald-600 dark:text-brand-gold font-bold">₦0.00</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-3 border-t border-brand-accent/5 dark:border-white/5">
-                            <span className="font-serif text-xl text-brand-deep dark:text-brand-gold">Total Amount</span>
-                            <div className="text-right">
-                                <span className="font-sans font-black text-3xl text-brand-deep dark:text-brand-gold tracking-tighter">₦{subtotal.toLocaleString()}</span>
+
+                        {/* Discount Input & Promotions */}
+                        <div className="flex items-center justify-between text-sm gap-3">
+                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Discount</span>
+
+                            <div className="flex items-center justify-end gap-2 flex-1">
+                                {selectedPromotion !== 'none' ? (
+                                    <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl">
+                                        <span className="text-xs font-bold truncate max-w-[120px]">
+                                            {promotions?.find((p: any) => p.id === selectedPromotion)?.name || 'Promo'}
+                                        </span>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => {
+                                                setSelectedPromotion('none')
+                                                setDiscount(0)
+                                            }}
+                                            className="h-6 w-6 rounded-md hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                                            aria-label="Remove promotion"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="w-32">
+                                        <MoneyInput
+                                            size="sm"
+                                            value={discount || ''}
+                                            onChange={(val) => setDiscount(Math.min(val || 0, subtotal))}
+                                            currencySymbol={activeBusiness?.currency === 'USD' ? '$' : activeBusiness?.currency === 'EUR' ? '€' : activeBusiness?.currency === 'GBP' ? '£' : '₦'}
+                                            className="border-brand-accent/10 dark:border-white/10 text-emerald-600 dark:text-brand-gold transition-colors"
+                                        />
+                                    </div>
+                                )}
+
+                                {promotions && promotions.length > 0 && (
+                                    <Select
+                                        value={selectedPromotion}
+                                        onValueChange={(val) => {
+                                            setSelectedPromotion(val)
+                                            if (val === 'none') {
+                                                setDiscount(0)
+                                            } else {
+                                                const promo = promotions.find((p: any) => p.id === val)
+                                                if (promo) {
+                                                    let calcDiscount = 0
+                                                    if (promo.type === 'PERCENTAGE') {
+                                                        calcDiscount = subtotal * (promo.value / 100)
+                                                    } else if (promo.type === 'FIXED') {
+                                                        calcDiscount = promo.value
+                                                    }
+                                                    setDiscount(Math.min(calcDiscount, subtotal))
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-10 h-10 shrink-0 px-0 justify-center border-brand-accent/10 dark:border-white/10 dark:bg-white/5 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-colors [&>svg:last-child]:hidden [&>span]:hidden" aria-label="Apply promotion">
+                                            <SelectValue placeholder="Promo" />
+                                            <Tag className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60" />
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            <SelectItem value="none">Custom amount</SelectItem>
+                                            {promotions.map((promo: any) => (
+                                                <SelectItem key={promo.id} value={promo.id}>
+                                                    {promo.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </div>
                         </div>
+
+                        <div className="flex flex-col text-sm gap-2">
+                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Note</span>
+                            <Textarea
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder="Order remarks..."
+                                maxLength={120}
+                                rows={1}
+                                className="w-full bg-white/40 dark:bg-white/5 rounded-xl border border-brand-accent/10 dark:border-white/10 px-3 py-2 text-sm text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 outline-none focus:border-brand-gold/40 transition-colors resize-none min-h-[36px]"
+                            />
+                        </div>
+
+                        {/* Amount Received (Cash only) */}
+                        {paymentMethod === 'Cash' && (
+                            <div className="flex items-center justify-between text-sm gap-3 pt-2">
+                                <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Amount Received</span>
+                                <div className="flex-1 max-w-[200px]">
+                                    <MoneyInput
+                                        size="sm"
+                                        value={amountPaid === '' ? '' : amountPaid}
+                                        onChange={(val) => setAmountPaid(val === 0 ? '' : val)}
+                                        currencySymbol={activeBusiness?.currency === 'USD' ? '$' : activeBusiness?.currency === 'EUR' ? '€' : activeBusiness?.currency === 'GBP' ? '£' : '₦'}
+                                        placeholder={String(totalAfterDiscount)}
+                                        className="h-11 border-brand-accent/10 dark:border-white/10 text-brand-deep dark:text-brand-cream text-base"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="flex justify-between items-center pt-2 border-t border-brand-accent/5 dark:border-white/5">
+                            <span className="font-serif text-lg text-brand-deep dark:text-brand-gold">Total Amount</span>
+                            <div className="text-right">
+                                <span className="font-sans font-black text-2xl md:text-3xl text-brand-deep dark:text-brand-gold tracking-tighter">
+                                    {formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' })}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Change Due (Cash only) */}
+                        {paymentMethod === 'Cash' && changeDue > 0 && (
+                            <div className="flex justify-between items-center text-sm bg-emerald-500/10 dark:bg-emerald-500/5 rounded-2xl px-4 py-3 border border-emerald-500/20">
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400">Change Due</span>
+                                <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums text-lg">
+                                    {formatCurrency(changeDue, { currency: activeBusiness?.currency || 'NGN' })}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Pro Actions */}
-                    <div className="flex flex-col gap-4">
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-3">
                             <Button
                                 variant="outline"
-                                className="h-14 px-3 rounded-2xl border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
+                                className="h-12 px-3 rounded-[14px] border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
                                 onClick={handlePrintReceipt}
                                 disabled={cart.length === 0}
                             >
-                                <ReceiptText className="h-5 w-5 mr-3" />
+                                <ReceiptText className="h-4 w-4 mr-2" />
                                 Print
                             </Button>
                             <Button
                                 variant="outline"
-                                className="h-14 px-3 rounded-2xl border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
+                                className="h-12 px-3 rounded-[14px] border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
                                 onClick={handleQueueSale}
                                 disabled={cart.length === 0}
                             >
-                                <Layers className="h-5 w-5 mr-3" />
+                                <Layers className="h-4 w-4 mr-2" />
                                 Queue
                             </Button>
                         </div>
                         <Button
-                            className="h-14 px-3 rounded-[24px] bg-brand-deep dark:bg-brand-accent text-brand-gold font-serif font-black text-2xl hover:scale-[1.01] shadow-2xl active:scale-95 transition-all duration-500 border border-brand-gold/30 group relative overflow-hidden"
+                            className="h-14 px-3 rounded-[20px] bg-brand-deep dark:bg-brand-accent text-brand-gold font-serif font-black text-xl hover:scale-[1.01] shadow-xl active:scale-95 transition-all duration-500 border border-brand-gold/30 group relative overflow-hidden"
                             onClick={handleCheckout}
-                            disabled={isCheckingOut || cart.length === 0}
+                            disabled={isRecording || cart.length === 0}
                         >
                             <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                            {isCheckingOut ? (
+                            {isRecording ? (
                                 <motion.div key="loader" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
                                     <ArrowRight className="h-7 w-7" />
                                 </motion.div>
