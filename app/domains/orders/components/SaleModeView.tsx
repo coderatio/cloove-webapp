@@ -369,7 +369,7 @@ export function SaleModeView() {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col md:flex-row overflow-hidden theme-transition bg-brand-cream dark:bg-brand-deep">
+        <div className="fixed inset-0 z-50 flex flex-col lg:flex-row overflow-hidden theme-transition bg-brand-cream dark:bg-brand-deep">
             {/* Background Decorative Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-40 dark:opacity-20">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/10 blur-[120px] animate-float-slow" />
@@ -379,35 +379,35 @@ export function SaleModeView() {
             {/* Left Side: Product Catalog */}
             <div className={cn(
                 "flex-1 flex flex-col min-w-0 h-full relative z-10",
-                mobileView === 'cart' ? "hidden md:flex" : "flex"
+                mobileView === 'cart' ? "hidden lg:flex" : "flex"
             )}>
-                <div className="flex-1 flex flex-col p-4 md:p-8 space-y-4 md:space-y-8 min-h-0">
+                <div className="flex-1 flex flex-col p-4 lg:p-8 space-y-4 lg:space-y-8 min-h-0">
                     <header className="flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-6">
-                            <Link href="/orders" className="hidden md:block">
+                            <Link href="/orders" className="hidden lg:block">
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="rounded-2xl h-12 w-12 group hover:bg-brand-gold/10 transition-all duration-500"
+                                    className="rounded-2xl h-12 w-12 group border-brand-deep/15 dark:border-white/5 bg-white dark:bg-brand-deep-400 hover:bg-brand-gold/10 dark:hover:bg-brand-deep-500 hover:border-brand-deep/15 transition-all duration-500"
                                 >
                                     <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
                                 </Button>
                             </Link>
                             <div>
-                                <h2 className="text-3xl md:text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
-                                <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs md:text-sm font-sans uppercase tracking-[0.2em] font-black">Catalog</p>
+                                <h2 className="text-3xl lg:text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
+                                <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs lg:text-sm font-sans uppercase tracking-[0.2em] font-black">Catalog</p>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-4">
                             {/* Auto Print Toggle */}
-                            <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-4 md:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
-                                <span className="text-[10px] md:text-xs font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest hidden sm:block">Auto Print</span>
+                            <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-4 lg:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
+                                <span className="text-[10px] lg:text-xs font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest hidden sm:block">Auto Print</span>
                                 <span className="text-[10px] font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest sm:hidden">Print</span>
                                 <Switch checked={autoPrint} onCheckedChange={setAutoPrint} className="scale-75 origin-right" />
                             </div>
 
-                            <div className="flex md:hidden items-center gap-2">
+                            <div className="flex lg:hidden items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="icon"
@@ -426,8 +426,8 @@ export function SaleModeView() {
                     </header>
 
                     {/* Filters & Search */}
-                    <div className="flex flex-col md:flex-row gap-4 items-start">
-                        <div className="relative flex-2 w-full md:w-auto min-w-[320px] group flex items-center">
+                    <div className="flex flex-col lg:flex-row gap-4 items-start">
+                        <div className="relative flex-2 w-full lg:w-auto min-w-[320px] group flex items-center">
                             <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
                                 <Search className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
                             </div>
@@ -479,15 +479,15 @@ export function SaleModeView() {
                     </div>
 
                     {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
-                    <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 mt-4 md:mt-0">
+                    <div className="flex-1 min-h-0 flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-0">
                         <motion.div
                             key={`${selectedCategory}-${search}-${currentPage}-${products.length}`}
                             variants={containerVariants}
                             initial="hidden"
                             animate="show"
-                            className="flex-1 overflow-y-auto pr-1 md:pr-2 custom-scrollbar -mr-1 md:-mr-2"
+                            className="flex-1 overflow-y-auto pr-1 lg:pr-2 custom-scrollbar -mr-1 lg:-mr-2"
                         >
-                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 pb-24 md:pb-6 pt-1 md:pt-3">
+                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 pb-24 lg:pb-6 pt-1 lg:pt-3">
                                 {paginatedProducts.map((product) => (
                                     <motion.div key={product.id} variants={itemVariants}>
                                         <GlassCard
@@ -522,9 +522,9 @@ export function SaleModeView() {
 
                         {/* Pagination Controls - Fixed Bottom */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center md:justify-center gap-2 md:gap-6 py-3 md:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl shrink-0 relative">
+                            <div className="flex items-center justify-center lg:justify-center gap-2 lg:gap-6 py-3 lg:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl shrink-0 relative">
                                 {/* Mobile Back Button */}
-                                <div className="absolute left-2 md:hidden">
+                                <div className="absolute left-2 lg:hidden">
                                     <Link href="/orders">
                                         <Button
                                             variant="ghost"
@@ -541,13 +541,13 @@ export function SaleModeView() {
                                     size="sm"
                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
-                                    className="rounded-xl px-2 md:px-4 hover:bg-brand-gold/5 transition-all text-[10px] md:text-xs font-bold uppercase tracking-widest h-10"
+                                    className="rounded-xl px-2 lg:px-4 hover:bg-brand-gold/5 transition-all text-[10px] lg:text-xs font-bold uppercase tracking-widest h-10"
                                 >
-                                    <ChevronLeft className="h-4 w-4 md:mr-2" />
-                                    <span className="hidden md:inline">Previous</span>
+                                    <ChevronLeft className="h-4 w-4 lg:mr-2" />
+                                    <span className="hidden lg:inline">Previous</span>
                                 </Button>
 
-                                <div className="flex items-center gap-1 md:gap-2">
+                                <div className="flex items-center gap-1 lg:gap-2">
                                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                                         // Logic to show fewer pages on mobile
                                         const isVisibleOnMobile = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
@@ -562,7 +562,7 @@ export function SaleModeView() {
                                                 className={cn(
                                                     "w-10 h-10 rounded-xl font-bold transition-all duration-300",
                                                     currentPage === page
-                                                        ? "bg-brand-deep dark:bg-brand-accent text-brand-gold shadow-lg shadow-brand-deep/20"
+                                                        ? "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-lg shadow-brand-deep/20"
                                                         : "text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-brand-accent/5"
                                                 )}
                                             >
@@ -577,10 +577,10 @@ export function SaleModeView() {
                                     size="sm"
                                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="rounded-xl px-2 md:px-4 hover:bg-brand-gold/5 transition-all text-[10px] md:text-xs font-bold uppercase tracking-widest h-10"
+                                    className="rounded-xl px-2 lg:px-4 hover:bg-brand-gold/5 transition-all text-[10px] lg:text-xs font-bold uppercase tracking-widest h-10"
                                 >
-                                    <span className="hidden md:inline">Next</span>
-                                    <ChevronRight className="h-4 w-4 md:ml-2" />
+                                    <span className="hidden lg:inline">Next</span>
+                                    <ChevronRight className="h-4 w-4 lg:ml-2" />
                                 </Button>
                             </div>
                         )}
@@ -592,7 +592,7 @@ export function SaleModeView() {
                     <motion.div
                         initial={{ y: 100, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="fixed bottom-24 left-6 right-6 z-40 md:hidden"
+                        className="fixed bottom-24 left-6 right-6 z-40 lg:hidden"
                     >
                         <Button
                             onClick={() => setMobileView('cart')}
@@ -618,10 +618,10 @@ export function SaleModeView() {
 
             {/* Right Side: Cart & Checkout Summary */}
             <div className={cn(
-                "w-full md:w-[420px] lg:w-[480px] md:h-full bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20 min-h-0",
-                mobileView === 'catalog' ? "hidden md:flex" : "flex h-full fixed inset-0 z-50 md:relative md:inset-auto"
+                "w-full lg:w-[420px] lg:h-full bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20 min-h-0",
+                mobileView === 'catalog' ? "hidden lg:flex" : "flex h-full fixed inset-0 z-50 lg:relative lg:inset-auto"
             )}>
-                <div className="p-4 md:p-5 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-3 bg-brand-gold/5 dark:bg-brand-gold/5 relative">
+                <div className="p-4 lg:p-5 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-3 bg-brand-gold/5 dark:bg-brand-gold/5 relative">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             {/* Mobile Back to Catalog Button */}
@@ -629,16 +629,16 @@ export function SaleModeView() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setMobileView('catalog')}
-                                className="h-12 w-12 rounded-xl text-brand-accent hover:text-brand-accent dark:text-brand-cream md:hidden hover:bg-brand-accent/10 transition-all shadow-sm border border-brand-accent/5"
+                                className="h-12 w-12 rounded-xl text-brand-accent hover:text-brand-accent dark:text-brand-cream lg:hidden hover:bg-brand-accent/10 transition-all shadow-sm border border-brand-accent/5"
                             >
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
 
-                            <div className="hidden md:flex h-10 w-10 rounded-[14px] bg-brand-deep dark:bg-brand-accent items-center justify-center text-brand-gold shadow-lg shadow-brand-deep/20">
+                            <div className="hidden lg:flex h-10 w-10 rounded-[14px] bg-brand-deep dark:bg-brand-accent items-center justify-center text-brand-gold shadow-lg shadow-brand-deep/20">
                                 <ShoppingCart className="h-4 w-4" />
                             </div>
                             <div>
-                                <h3 className="font-serif text-xl md:text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Checkout</h3>
+                                <h3 className="font-serif text-xl lg:text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Checkout</h3>
                                 <p className="text-[10px] uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 font-bold leading-none mt-1">{totalItems} Items in Basket</p>
                             </div>
                         </div>
@@ -802,7 +802,7 @@ export function SaleModeView() {
                 </div>
 
                 {/* Cart Items List */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-3 custom-scrollbar min-h-0">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-3 custom-scrollbar min-h-0">
                     <AnimatePresence mode="popLayout">
                         {cart.length === 0 ? (
                             <motion.div
@@ -885,7 +885,7 @@ export function SaleModeView() {
                 </div>
 
                 {/* Billing Summary & Actions */}
-                <div className="p-4 md:p-5 bg-brand-gold/5 dark:bg-brand-gold/5 border-t border-brand-accent/10 dark:border-white/5 space-y-4 shrink-0">
+                <div className="p-4 lg:p-5 bg-brand-gold/5 dark:bg-brand-gold/5 border-t border-brand-accent/10 dark:border-white/5 space-y-4 shrink-0">
                     {/* Adaptive Payment Selection */}
                     <div className="space-y-2.5">
                         <header className="flex justify-between items-center px-1">
@@ -1061,7 +1061,7 @@ export function SaleModeView() {
                         <div className="flex justify-between items-center pt-4 border-t border-brand-accent/5 dark:border-white/5">
                             <span className="font-serif text-lg text-brand-deep dark:text-brand-gold">Total Payable</span>
                             <div className="text-right">
-                                <span className="font-sans font-black text-2xl md:text-3xl text-brand-deep dark:text-brand-gold tracking-tighter">
+                                <span className="font-sans font-black text-2xl lg:text-3xl text-brand-deep dark:text-brand-gold tracking-tighter">
                                     {formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' })}
                                 </span>
                             </div>
