@@ -57,6 +57,7 @@ import { useInventory } from '../hooks/useInventory'
 import { useCustomers } from '../hooks/useCustomers'
 import { usePromotions } from '../hooks/usePromotions'
 import { formatCurrency } from '@/app/lib/formatters'
+import { ProductSearchOverlay } from './ProductSearchOverlay'
 
 // Stagger variants for the container
 const containerVariants: Variants = {
@@ -103,6 +104,7 @@ export function SaleModeView() {
     const [selectedPromotion, setSelectedPromotion] = React.useState<string>('none')
     const [autoPrint, setAutoPrint] = React.useState(true)
     const [showExtras, setShowExtras] = React.useState(false)
+    const [isSearchOpen, setIsSearchOpen] = React.useState(false)
 
     // Queue Sale State
     const { queuedSales, queueSale, removeQueuedSale } = useQueuedSales()
@@ -191,6 +193,23 @@ export function SaleModeView() {
     React.useEffect(() => {
         setCurrentPage(1)
     }, [search, selectedCategory])
+
+    // Keyboard shortcut for search
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === '/' && !isSearchOpen) {
+                // Don't open if user is typing in another input
+                const isInput = document.activeElement?.tagName === 'INPUT' ||
+                    document.activeElement?.tagName === 'TEXTAREA'
+                if (!isInput) {
+                    e.preventDefault()
+                    setIsSearchOpen(true)
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [isSearchOpen])
 
     // Click outside customer dropdown
     React.useEffect(() => {
@@ -436,29 +455,16 @@ export function SaleModeView() {
 
                     {/* Filters & Search */}
                     <div className="flex flex-col lg:flex-row gap-4 items-start">
-                        <div className="relative flex-2 w-full lg:w-auto min-w-[320px] group flex items-center">
+                        <div
+                            className="relative flex-2 w-full lg:w-auto min-w-[320px] group flex items-center cursor-pointer"
+                            onClick={() => setIsSearchOpen(true)}
+                        >
                             <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
+                                <Search className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
                             </div>
-                            <Input
-                                placeholder="Search catalog or scan barcode..."
-                                className="pl-12 pr-12 h-14 bg-white/40 dark:bg-white/5 border-brand-accent/10 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-brand-gold/20 w-full"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                autoFocus
-                            />
-                            <Button
-                                variant="ghost"
-                                className="absolute right-2 top-2 bottom-2 flex items-center gap-2 px-3 rounded-[14px] transition-all z-30 pointer-events-auto cursor-pointer group/scan hover:bg-brand-gold/10 dark:hover:bg-white/5 active:scale-95 h-auto"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    toast.info("Barcode scanner protocol active...")
-                                }}
-                            >
-                                <div className="h-6 w-px bg-brand-accent/10 dark:bg-white/10 mx-1" />
-                                <Barcode className="h-5 w-5 text-brand-gold/60 group-hover/scan:text-brand-gold group-hover/scan:scale-110 transition-all animate-pulse" />
-                            </Button>
+                            <div className="pl-12 pr-6 h-14 bg-white/40 dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-2xl flex items-center text-brand-accent/40 dark:text-brand-cream/40 text-sm select-none w-full group-hover:border-brand-gold/30 transition-all">
+                                Search catalog or scan barcode... <span className="ml-auto text-[10px] font-black bg-brand-accent/5 dark:bg-white/5 px-2 py-1 rounded-lg border border-brand-accent/10">/</span>
+                            </div>
                         </div>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth w-full">
                             <Button
@@ -1220,6 +1226,13 @@ export function SaleModeView() {
                 sales={queuedSales}
                 onRecall={handleRecallSale}
                 onRemove={removeQueuedSale}
+            />
+
+            <ProductSearchOverlay
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
+                products={products}
+                onSelect={(product) => addToCart(product)}
             />
 
             {/* Global Refinements */}
