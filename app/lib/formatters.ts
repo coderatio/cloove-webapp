@@ -74,7 +74,14 @@ export function formatCompactCurrency(
 export function formatDate(date: string | Date | undefined, pattern: string = 'MMM yyyy') {
     if (!date || date === 'Unknown') return 'Unknown';
     try {
-        const d = typeof date === 'string' ? new Date(date) : date;
+        let d: Date;
+        if (typeof date === 'string') {
+            const cleanedDate = date.replace(' •', '').replace('•', '');
+            d = new Date(cleanedDate);
+        } else {
+            d = date;
+        }
+
         if (isNaN(d.getTime())) {
             // Check if it's already in a relative format or similar
             if (typeof date === 'string' && (date.includes('ago') || date.includes('Never'))) {

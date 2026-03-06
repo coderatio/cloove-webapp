@@ -23,13 +23,20 @@ import {
     Star,
     History,
     Sparkles,
-    Activity
+    Activity,
+    ChevronRight,
 } from "lucide-react"
 import { type Customer, useCustomerTransactions } from "../hooks/useCustomers"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { type Order } from "../../orders/types"
-import { formatCurrency, formatCompactCurrency, formatDate } from "@/app/lib/formatters"
+import { formatCompactCurrency, formatDate } from "@/app/lib/formatters"
 import { cn } from "@/app/lib/utils"
+import { OrderDetailsDrawer } from "../../orders/components/OrderDetailsDrawer"
+import { CustomerLedgerDrawer } from "./CustomerLedgerDrawer"
+import { CustomerTransactionListItem } from "./CustomerTransactionListItem"
+import { useOrders } from "../../orders/hooks/useOrders"
+import { useReceiptPrinter } from "@/app/hooks/useReceiptPrinter"
+import { format } from "date-fns"
 
 interface CustomerProfileDrawerProps {
     customer: Customer | null
@@ -48,6 +55,12 @@ export function CustomerProfileDrawer({
 }: CustomerProfileDrawerProps) {
     const { activeBusiness } = useBusiness()
     const { data: txResponse, isLoading: isLoadingTx } = useCustomerTransactions(customer?.id || "")
+    const { updateOrder, isUpdating: isUpdatingTx, deleteOrder, isDeleting: isDeletingTx } = useOrders(1, 10, { customerId: customer?.id })
+    const { printReceipt } = useReceiptPrinter()
+
+    const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
+    const [isLedgerOpen, setIsLedgerOpen] = React.useState(false)
+
     const currencyCode = activeBusiness?.currency || 'NGN'
 
     if (!customer) return null
@@ -117,7 +130,7 @@ export function CustomerProfileDrawer({
                 <div className="p-6 md:p-8 space-y-8 overflow-y-auto max-h-[75vh]">
                     {/* Quick Stats Grid - Academic Luxury Overhaul */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group">
+                        <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group rounded-3xl">
                             <div className="absolute -right-2 -top-2 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
                                 <ShoppingBag className="w-20 h-20 text-brand-deep/10 dark:text-white/10" />
                             </div>
@@ -132,7 +145,7 @@ export function CustomerProfileDrawer({
                             </div>
                         </GlassCard>
 
-                        <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group">
+                        <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group rounded-3xl">
                             <div className="absolute -right-2 -top-2 opacity-10 group-hover:opacity-20 transition-opacity transform -rotate-12">
                                 <TrendingUp className="w-20 h-20 text-brand-gold/10" />
                             </div>
@@ -150,7 +163,7 @@ export function CustomerProfileDrawer({
                         </GlassCard>
 
                         <GlassCard className={cn(
-                            "p-6 flex flex-col gap-3 border-none relative overflow-hidden group transition-all duration-500",
+                            "p-6 flex flex-col gap-3 border-none relative overflow-hidden group transition-all duration-500 rounded-3xl",
                             hasDebt
                                 ? "bg-rose-500/4 border border-rose-500/10 shadow-[0_0_30px_rgba(239,68,68,0.05)]"
                                 : "bg-brand-deep/3 dark:bg-white/3"
@@ -186,63 +199,68 @@ export function CustomerProfileDrawer({
                         <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
                             Connect & Communicate
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {customer.phoneNumber && (
-                                <>
-                                    <Button
-                                        variant="outline"
-                                        className="h-14 rounded-2xl justify-start gap-4 px-6 border-brand-deep/5 dark:border-white/5"
-                                        asChild
-                                    >
-                                        <a href={`tel:${customer.phoneNumber}`}>
-                                            <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green">
-                                                <Phone className="w-4 h-4" />
-                                            </div>
-                                            <div className="flex flex-col items-start">
-                                                <span className="text-xs font-bold uppercase tracking-wider text-brand-deep dark:text-brand-cream">Call Customer</span>
-                                                <span className="text-[10px] text-brand-accent/60">{customer.phoneNumber}</span>
-                                            </div>
-                                        </a>
-                                    </Button>
-
-                                    {whatsappUrl && (
+                        <GlassCard className="p-0 border-brand-deep/5 dark:border-white/5 overflow-hidden">
+                            <div className="flex flex-col divide-y divide-brand-deep/5 dark:divide-white/5">
+                                {customer.phoneNumber && (
+                                    <>
                                         <Button
-                                            variant="outline"
-                                            className="h-14 rounded-2xl justify-start gap-4 px-6 border-brand-green/20 bg-brand-green/5"
+                                            variant="ghost"
+                                            className="h-16 rounded-none justify-start gap-4 px-6 hover:bg-brand-deep/2 dark:hover:bg-white/2 group"
                                             asChild
                                         >
-                                            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                                                <div className="h-8 w-8 rounded-full bg-brand-green flex items-center justify-center text-white">
-                                                    <MessageSquare className="w-4 h-4" />
+                                            <a href={`tel:${customer.phoneNumber}`} className="w-full flex items-center gap-4">
+                                                <div className="h-9 w-9 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
+                                                    <Phone className="w-4.5 h-4.5" />
                                                 </div>
-                                                <div className="flex flex-col items-start">
-                                                    <span className="text-xs font-bold uppercase tracking-wider text-brand-green">WhatsApp Chat</span>
-                                                    <span className="text-[10px] text-brand-green/60">Fastest response</span>
+                                                <div className="flex flex-col items-start flex-1">
+                                                    <span className="text-xs font-bold uppercase tracking-wider text-brand-deep dark:text-brand-cream">Call Customer</span>
+                                                    <span className="text-[10px] text-brand-accent/60">{customer.phoneNumber}</span>
                                                 </div>
+                                                <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:translate-x-0.5 transition-transform" />
                                             </a>
                                         </Button>
-                                    )}
-                                </>
-                            )}
 
-                            {customer.email && (
-                                <Button
-                                    variant="outline"
-                                    className="h-14 rounded-2xl justify-start gap-4 px-6 border-brand-deep/5 dark:border-white/5 col-span-full"
-                                    asChild
-                                >
-                                    <a href={`mailto:${customer.email}`}>
-                                        <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                            <Mail className="w-4 h-4" />
-                                        </div>
-                                        <div className="flex flex-col items-start">
-                                            <span className="text-xs font-bold uppercase tracking-wider text-brand-deep dark:text-brand-cream">Send Email</span>
-                                            <span className="text-[10px] text-brand-accent/60">{customer.email}</span>
-                                        </div>
-                                    </a>
-                                </Button>
-                            )}
-                        </div>
+                                        {whatsappUrl && (
+                                            <Button
+                                                variant="ghost"
+                                                className="h-16 rounded-none justify-start gap-4 px-6 hover:bg-brand-green/2 group"
+                                                asChild
+                                            >
+                                                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-4">
+                                                    <div className="h-9 w-9 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
+                                                        <MessageSquare className="w-4.5 h-4.5" />
+                                                    </div>
+                                                    <div className="flex flex-col items-start flex-1">
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-brand-green">WhatsApp Chat</span>
+                                                        <span className="text-[10px] text-brand-green/60 uppercase tracking-tighter font-medium">Fastest response</span>
+                                                    </div>
+                                                    <ChevronRight className="w-4 h-4 text-brand-green/20 group-hover:translate-x-0.5 transition-transform" />
+                                                </a>
+                                            </Button>
+                                        )}
+                                    </>
+                                )}
+
+                                {customer.email && (
+                                    <Button
+                                        variant="ghost"
+                                        className="h-16 rounded-none justify-start gap-4 px-6 hover:bg-brand-gold/2 group"
+                                        asChild
+                                    >
+                                        <a href={`mailto:${customer.email}`} className="w-full flex items-center gap-4">
+                                            <div className="h-9 w-9 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold group-hover:text-white transition-all">
+                                                <Mail className="w-4.5 h-4.5" />
+                                            </div>
+                                            <div className="flex flex-col items-start flex-1">
+                                                <span className="text-xs font-bold uppercase tracking-wider text-brand-deep dark:text-brand-cream">Send Email</span>
+                                                <span className="text-[10px] text-brand-accent/60">{customer.email}</span>
+                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:translate-x-0.5 transition-transform" />
+                                        </a>
+                                    </Button>
+                                )}
+                            </div>
+                        </GlassCard>
                     </div>
 
                     {/* Timeline/History */}
@@ -251,7 +269,12 @@ export function CustomerProfileDrawer({
                             <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
                                 Relationship History
                             </h4>
-                            <Button variant="link" size="sm" className="text-brand-gold text-[10px] uppercase font-bold tracking-widest h-auto p-0">
+                            <Button
+                                variant="link"
+                                size="sm"
+                                onClick={() => setIsLedgerOpen(true)}
+                                className="text-brand-gold text-[10px] uppercase font-bold tracking-widest h-auto p-0"
+                            >
                                 View Full Ledger
                             </Button>
                         </div>
@@ -263,34 +286,23 @@ export function CustomerProfileDrawer({
                                 </div>
                             ) : txResponse?.data && txResponse.data.length > 0 ? (
                                 <div className="space-y-3 bg-brand-deep/5 dark:bg-white/5 p-4 rounded-3xl">
-                                    {txResponse.data.map((tx: Order, idx: number) => (
-                                        <div key={tx.id || idx} className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm group hover:border-brand-gold/20 transition-all">
-                                            <div className="h-10 w-10 rounded-full bg-brand-gold/5 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold group-hover:text-white transition-all">
-                                                <ShoppingBag className="w-5 h-5" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between mb-0.5">
-                                                    <p className="text-xs font-bold text-brand-deep dark:text-brand-cream truncate">
-                                                        {tx.summary || 'Purchase'}
-                                                    </p>
-                                                    <p className="text-xs font-serif font-bold text-brand-deep dark:text-brand-cream">
-                                                        {formatCurrency(tx.totalAmount, { currency: currencyCode })}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                    <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
-                                                        {tx.date || 'Recent'}
-                                                    </p>
-                                                    <Badge variant="outline" className={cn(
-                                                        "text-[8px] uppercase tracking-tighter h-4 px-1.5 border-none",
-                                                        tx.status === 'COMPLETED' ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
-                                                    )}>
-                                                        {tx.status}
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    {txResponse.data.slice(0, 5).map((tx: Order) => (
+                                        <CustomerTransactionListItem
+                                            key={tx.id}
+                                            transaction={tx}
+                                            currencyCode={currencyCode}
+                                            onClick={() => setViewingOrder(tx)}
+                                        />
                                     ))}
+                                    {txResponse.data.length > 5 && (
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => setIsLedgerOpen(true)}
+                                            className="w-full h-10 text-[10px] uppercase font-bold tracking-widest text-brand-accent/40 hover:text-brand-gold transition-colors"
+                                        >
+                                            + {txResponse.data.length - 5} More Transactions
+                                        </Button>
+                                    )}
                                 </div>
                             ) : (
                                 /* Empty State Overhaul */
@@ -325,7 +337,7 @@ export function CustomerProfileDrawer({
                                 </div>
                             )}
 
-                            <div className="flex items-center gap-4 p-5 rounded-2xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm">
+                            <div className="flex items-center gap-4 p-5 rounded-3xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm">
                                 <div className="h-10 w-10 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green">
                                     <ShoppingBag className="w-5 h-5" />
                                 </div>
@@ -341,14 +353,56 @@ export function CustomerProfileDrawer({
                     </div>
                 </div>
 
-                <div className="p-6 md:p-8 pt-0">
+                <div className="p-6 md:p-8 pt-0 sm:hidden">
                     <DrawerClose asChild>
                         <Button variant="outline" className="w-full h-12 rounded-xl border-brand-deep/5">
-                            Close Profile
+                            Close
                         </Button>
                     </DrawerClose>
                 </div>
             </DrawerContent>
-        </Drawer>
+
+            <OrderDetailsDrawer
+                order={viewingOrder}
+                open={!!viewingOrder}
+                onOpenChange={(open) => !open && setViewingOrder(null)}
+                onUpdateStatus={async (id, status) => { await updateOrder({ id, updates: { status } }) }}
+                onDelete={async (id) => { await deleteOrder(id) }}
+                onPrintReceipt={async (order) => {
+                    if (!activeBusiness) return
+                    const receiptData = {
+                        businessName: activeBusiness.name,
+                        businessAddress: (activeBusiness as any).address,
+                        businessPhone: (activeBusiness as any).phone,
+                        orderId: order.id,
+                        shortCode: order.shortCode,
+                        date: order.date || format(new Date(), 'dd MMM yyyy, HH:mm'),
+                        customerName: order.customer,
+                        items: order.items?.map(item => ({
+                            productName: item.productName,
+                            quantity: Number(item.quantity),
+                            price: Number(item.price),
+                            total: Number(item.total)
+                        })) || [],
+                        subtotal: Number(order.subtotalAmount || order.totalAmount),
+                        discountAmount: order.discountAmount ? Number(order.discountAmount) : undefined,
+                        totalAmount: Number(order.totalAmount),
+                        amountPaid: Number(order.amountPaid),
+                        remainingAmount: Number(order.remainingAmount || 0),
+                        paymentMethod: order.paymentMethod,
+                        currency: order.currency || activeBusiness.currency || 'NGN'
+                    }
+                    await printReceipt(receiptData)
+                }}
+                isUpdating={isUpdatingTx}
+                isDeleting={isDeletingTx}
+            />
+
+            <CustomerLedgerDrawer
+                customer={customer}
+                open={isLedgerOpen}
+                onOpenChange={setIsLedgerOpen}
+            />
+        </Drawer >
     )
 }

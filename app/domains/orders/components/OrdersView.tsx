@@ -11,6 +11,7 @@ import { Order, OrderStatus, PaymentStatus } from "../types"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { DateRangePicker } from "@/app/components/shared/DateRangePicker"
 import { RecordPaymentDrawer } from "./RecordPaymentDrawer"
+import { OrderDetailsDrawer } from "./OrderDetailsDrawer"
 import { Button } from '@/app/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/app/lib/utils'
@@ -31,7 +32,7 @@ import { useOrders } from '../hooks/useOrders'
 import { useDebounce } from '@/app/hooks/useDebounce'
 import { OrdersSkeleton } from './OrdersSkeleton'
 import { Pagination } from '@/app/components/shared/Pagination'
-import { formatCurrency } from '@/app/lib/formatters'
+import { formatCurrency, formatDate } from '@/app/lib/formatters'
 import { useBusiness } from '@/app/components/BusinessProvider'
 import { OrderActionMenu } from './OrderActionMenu'
 import { toast } from 'sonner'
@@ -236,7 +237,14 @@ export function OrdersView() {
                 )
             }
         },
-        { key: 'date', header: 'Time', width: '120px' },
+        {
+            key: 'date',
+            header: 'Time',
+            width: '120px',
+            render: (_: any, order: Order) => (
+                <span className="text-xs text-brand-accent/60">{formatDate(order.date, 'MMM d, h:mm a')}</span>
+            )
+        },
         {
             key: 'actions' as any,
             header: '',
@@ -468,7 +476,7 @@ export function OrdersView() {
                                 key={order.id}
                                 title={order.customer}
                                 subtitle={order.id.startsWith('#') ? order.id : `#${order.id.slice(0, 8)}`}
-                                meta={order.date}
+                                meta={formatDate(order.date, 'MMM d, h:mm a')}
                                 status={statusColorMap[order.status?.toUpperCase() || '']?.label || order.status}
                                 statusColor={statusColorMap[order.status?.toUpperCase() || '']?.color || 'neutral'}
                                 value={formatCurrency(order.totalAmount, { currency: order.currency || activeBusiness?.currency || 'NGN' })}
@@ -514,218 +522,16 @@ export function OrdersView() {
                     </div>
                 )}
 
-                {/* Order Detail Drawer */}
-                <Drawer
+                <OrderDetailsDrawer
+                    order={viewingOrder}
                     open={!!viewingOrder}
                     onOpenChange={(open) => !open && setViewingOrder(null)}
-                >
-                    <DrawerContent>
-                        <DrawerStickyHeader>
-                            <DrawerTitle>Order Details</DrawerTitle>
-                            <DrawerDescription>
-                                Transaction #{viewingOrder?.shortCode || viewingOrder?.id.substring(0, 6)} for {viewingOrder?.customer}
-                            </DrawerDescription>
-                        </DrawerStickyHeader>
-
-                        <div className="p-8 pb-12 overflow-y-auto">
-                            <div className="max-w-lg mx-auto space-y-8">
-                                <div className="space-y-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Itemized List</h3>
-                                    <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 border-brand-deep/5 rounded-2xl">
-                                        {viewingOrder?.items?.map((item, idx) => (
-                                            <div key={idx} className="p-4 flex justify-between items-center">
-                                                <div>
-                                                    <p className="font-medium text-brand-deep dark:text-brand-cream">{item.productName}</p>
-                                                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">{Number(item.quantity)} {Number(item.quantity) === 1 ? 'unit' : 'units'} x {formatCurrency(item.price, { currency: viewingOrder.currency || activeBusiness?.currency || 'NGN' })}</p>
-                                                </div>
-                                                <p className="font-serif font-medium text-brand-deep dark:text-brand-cream">{formatCurrency(item.total, { currency: viewingOrder.currency || activeBusiness?.currency || 'NGN' })}</p>
-                                            </div>
-                                        )) || (
-                                                <div className="p-4 text-center text-xs opacity-40">No item details available</div>
-                                            )}
-                                        <div className="p-4 space-y-3 bg-brand-deep/5 dark:bg-white/5">
-                                            <div className="flex justify-between items-center opacity-60">
-                                                <p className="font-bold text-[10px] uppercase tracking-widest text-brand-accent">Subtotal</p>
-                                                <p className="text-sm font-bold text-brand-deep dark:text-brand-cream">
-                                                    {formatCurrency(viewingOrder?.subtotalAmount || viewingOrder?.totalAmount || 0, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
-                                                </p>
-                                            </div>
-
-                                            {viewingOrder?.discountAmount ? (
-                                                <div className="flex justify-between items-center text-red-500 dark:text-red-400 italic">
-                                                    <p className="font-bold text-[10px] uppercase tracking-widest">Less: Discount</p>
-                                                    <p className="text-sm font-bold">
-                                                        - {formatCurrency(viewingOrder.discountAmount, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
-                                                    </p>
-                                                </div>
-                                            ) : null}
-
-                                            <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
-                                                <p className="font-bold text-[10px] uppercase tracking-widest">Amount Paid</p>
-                                                <p className="text-sm font-bold">
-                                                    {formatCurrency(viewingOrder?.amountPaid ?? 0, { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
-                                                </p>
-                                            </div>
-                                            <div className="pt-2 border-t border-brand-accent/10 flex justify-between items-center">
-                                                <p className="font-bold text-xs uppercase tracking-widest text-brand-accent">Remaining Balance</p>
-                                                <p className="text-2xl font-bold text-brand-green dark:text-brand-gold">
-                                                    {formatCurrency(Number(viewingOrder?.remainingAmount || 0), { currency: viewingOrder?.currency || activeBusiness?.currency || 'NGN' })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </GlassCard>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Payment Information</h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <GlassCard className="p-4 rounded-3xl">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-2">Status</p>
-                                            <div className="flex">
-                                                {(() => {
-                                                    const status = viewingOrder?.status?.toUpperCase() || 'UNKNOWN'
-                                                    const config = statusColorMap[status] || {
-                                                        label: viewingOrder?.status || 'Unknown',
-                                                        className: "text-brand-deep/60 dark:text-brand-cream/60 bg-brand-deep/5 dark:bg-white/5",
-                                                        icon: AlertCircle
-                                                    }
-                                                    const StatusIcon = config.icon
-                                                    return (
-                                                        <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10 whitespace-nowrap", config.className)}>
-                                                            <StatusIcon className="w-3 h-3" />
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider">
-                                                                {config.label}
-                                                            </span>
-                                                        </div>
-                                                    )
-                                                })()}
-                                            </div>
-                                        </GlassCard>
-                                        <GlassCard className="p-4 rounded-3xl">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-2">Method</p>
-                                            <p className="text-sm font-bold text-brand-deep dark:text-brand-cream capitalize tracking-tight leading-none">
-                                                {(viewingOrder?.isAutomated || viewingOrder?.paymentMethod === 'TRANSFER') ? 'Bank Transfer' : viewingOrder?.paymentMethod?.replace('_', ' ').toLowerCase()}
-                                            </p>
-                                        </GlassCard>
-                                    </div>
-                                    {viewingOrder?.notes && (
-                                        <GlassCard className="p-4 rounded-3xl">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-1">Notes</p>
-                                            <p className="text-sm text-brand-deep/70 dark:text-brand-cream/70 leading-relaxed">{viewingOrder.notes}</p>
-                                        </GlassCard>
-                                    )}
-                                </div>
-
-                                {viewingOrder?.deposit && (
-                                    <div className="space-y-4">
-                                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Automated Payment Details</h3>
-                                        <GlassCard className="p-6 rounded-3xl space-y-4 bg-brand-gold/5 border-brand-gold/10">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/60 mb-1">Bank Name</p>
-                                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">{viewingOrder.deposit.bankName}</p>
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/60">Account Number</p>
-                                                        <button
-                                                            onClick={() => {
-                                                                navigator.clipboard.writeText(viewingOrder.deposit?.virtualAccountNumber || '')
-                                                                toast.success('Account number copied to clipboard')
-                                                            }}
-                                                            className="text-brand-gold hover:text-brand-gold/80 transition-colors"
-                                                        >
-                                                            <Copy className="w-2.5 h-2.5" />
-                                                        </button>
-                                                    </div>
-                                                    <p className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream tracking-wider">{viewingOrder.deposit.virtualAccountNumber}</p>
-                                                </div>
-                                            </div>
-                                            <div className="pt-3 border-t border-brand-gold/10 grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/60">Reference</p>
-                                                        <button
-                                                            onClick={() => {
-                                                                navigator.clipboard.writeText(viewingOrder.deposit?.paymentReference || '')
-                                                                toast.success('Reference copied to clipboard')
-                                                            }}
-                                                            className="text-brand-gold hover:text-brand-gold/80 transition-colors"
-                                                        >
-                                                            <Copy className="w-2.5 h-2.5" />
-                                                        </button>
-                                                    </div>
-                                                    <p className="text-[11px] font-mono text-brand-deep/60 dark:text-brand-cream/60 truncate">{viewingOrder.deposit.paymentReference}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/60 mb-1">Provider</p>
-                                                    <p className="text-[11px] font-bold text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-tighter">{viewingOrder.deposit.provider}</p>
-                                                </div>
-                                            </div>
-                                        </GlassCard>
-                                    </div>
-                                )}
-
-                                <div className="flex gap-4 pt-6">
-                                    <Button
-                                        variant="outline"
-                                        className="flex-1 rounded-2xl h-14 border-brand-deep/5"
-                                        onClick={() => viewingOrder && handlePrintReceipt(viewingOrder)}
-                                    >
-                                        <ReceiptText className="w-4 h-4 mr-2" />
-                                        Print Receipt
-                                    </Button>
-                                    <DrawerClose asChild>
-                                        <Button className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
-                                            Done
-                                        </Button>
-                                    </DrawerClose>
-                                </div>
-
-                                <div className={cn("pt-6 border-t border-brand-deep/5 dark:border-white/5 mt-6",
-                                    viewingOrder?.isAutomated && viewingOrder?.status?.toUpperCase() !== 'PENDING' ? "hidden" : "")
-                                }>
-                                    {viewingOrder?.isAutomated ? (
-                                        <div className="space-y-3">
-                                            {viewingOrder.status?.toUpperCase() === 'PENDING' ? (
-                                                <Button
-                                                    variant="outline"
-                                                    onClick={async () => {
-                                                        if (viewingOrder) {
-                                                            await updateOrder({ id: viewingOrder.id, updates: { status: 'CANCELLED' as any } })
-                                                            setViewingOrder(null)
-                                                        }
-                                                    }}
-                                                    disabled={isUpdating}
-                                                    className="flex items-center justify-center gap-2 w-full h-14 text-xs font-bold text-amber-600 hover:text-amber-700 transition-all uppercase tracking-widest border-amber-600/10 rounded-2xl"
-                                                >
-                                                    <RefreshCw className={cn("w-4 h-4", isUpdating && "animate-spin")} />
-                                                    {isUpdating ? "Cancelling..." : "Cancel Order"}
-                                                </Button>
-                                            ) : null
-                                            }
-                                        </div>
-                                    ) : (
-                                        <Button
-                                            variant="ghost"
-                                            onClick={async () => {
-                                                if (viewingOrder) {
-                                                    await deleteOrder(viewingOrder.id)
-                                                    setViewingOrder(null)
-                                                }
-                                            }}
-                                            disabled={isDeleting}
-                                            className="flex items-center justify-center gap-2 w-full h-14 text-xs font-bold text-rose-500/60 hover:text-rose-500 hover:bg-rose-500/5 transition-all uppercase tracking-widest disabled:opacity-50 rounded-2xl"
-                                        >
-                                            <Trash2 className={cn("w-4 h-4", isDeleting && "animate-spin")} />
-                                            {isDeleting ? "Deleting..." : "Cancel & Delete Order"}
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </DrawerContent>
-                </Drawer>
+                    onUpdateStatus={handleUpdateStatus}
+                    onDelete={async (id) => { await deleteOrder(id) }}
+                    onPrintReceipt={handlePrintReceipt}
+                    isUpdating={isUpdating}
+                    isDeleting={isDeleting}
+                />
             </div>
 
             {/* Mobile Floating Action Button */}
