@@ -99,31 +99,61 @@ function mapProduct(item: any, lowStockThreshold: number): Product {
     }
 }
 
+export interface UseInventoryOptions {
+    search?: string
+    category?: string | null
+    page?: number
+}
+
 /**
  * Hook to fetch products/inventory for the POS catalog.
  * Uses business config for low_stock_threshold.
+ * Implements a Hybrid Search approach:
+ * - Fetches up to 500 items initially.
+ * - If total <= 500, it enables `isLocalMode`, meaning the UI can filter in-memory.
+ * - If total > 500, `isLocalMode` is false, meaning the UI must debounce and pass `search` here.
  * Falls back to mock data if the backend endpoint is not yet available.
  */
-export function useInventory() {
+export function useInventory(options: UseInventoryOptions = {}) {
+    const { search = '', category = null, page = 1 } = options
     const { activeBusiness } = useBusiness()
     const { data: settings } = useSettings()
     const lowStockThreshold = settings?.business?.configs?.low_stock_threshold ?? 5
 
-    const { data, isLoading, error } = useQuery<Product[]>({
-        queryKey: ['inventory', activeBusiness?.id, lowStockThreshold],
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['inventory', activeBusiness?.id, lowStockThreshold, search, category, page],
         queryFn: async () => {
             try {
-                const response = await apiClient.get<any>('/products', {
-                    page: '1',
-                    limit: '200',
-                }, { fullResponse: true })
+                const params: Record<string, string> = {
+                    page: String(page),
+                    limit: '500', // Fetch up to 500 for local mode
+                }
+
+                if (search) params.search = search
+                if (category) params.category = category // Assuming backend supports this, or we fallback to local filtering if the DB is small
+
+                const response = await apiClient.get<any>('/products', params, { fullResponse: true })
 
                 // fullResponse: true means we get { success, data, meta }
                 const raw = Array.isArray(response?.data) ? response.data : []
-                return raw.map((item: any) => mapProduct(item, lowStockThreshold)).filter((p: Product) => p.product !== 'Unknown')
+                const mappedProducts = raw.map((item: any) => mapProduct(item, lowStockThreshold)).filter((p: Product) => p.product !== 'Unknown')
+
+                const meta = response?.meta || {}
+                const total = meta.total || mappedProducts.length
+
+                return {
+                    products: mappedProducts,
+                    total,
+                    isLocalMode: total <= 500
+                }
             } catch {
                 // Gracefully fall back to mock data if endpoint not available
-                return initialInventory.map((item: any) => mapProduct(item, lowStockThreshold))
+                const mockProducts = initialInventory.map((item: any) => mapProduct(item, lowStockThreshold))
+                return {
+                    products: mockProducts,
+                    total: mockProducts.length,
+                    isLocalMode: true
+                }
             }
         },
         enabled: !!activeBusiness?.id,
@@ -131,7 +161,9 @@ export function useInventory() {
     })
 
     return {
-        products: data ?? initialInventory.map((item: any) => mapProduct(item, lowStockThreshold)),
+        products: data?.products ?? initialInventory.map((item: any) => mapProduct(item, lowStockThreshold)),
+        totalProducts: data?.total ?? 0,
+        isLocalMode: data?.isLocalMode ?? true,
         isLoadingProducts: isLoading,
         productError: error,
     }

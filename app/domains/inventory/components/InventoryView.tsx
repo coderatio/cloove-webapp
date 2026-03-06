@@ -247,11 +247,19 @@ export function InventoryView() {
             let status: string
 
             if (selectedStoreId === 'all-stores') {
-                const lowInAnyStore = assignedStores.length === 0 ||
-                    assignedStores.some((s) => (perStoreStock[s.id] || 0) <= threshold)
-                status = lowInAnyStore ? 'Low Stock' : 'In Stock'
+                if (globalStock === 0) {
+                    status = 'Out of Stock'
+                } else {
+                    const lowInAnyStore = assignedStores.length === 0 ||
+                        assignedStores.some((s) => (perStoreStock[s.id] || 0) <= threshold)
+                    status = lowInAnyStore ? 'Low Stock' : 'In Stock'
+                }
             } else {
-                status = localStock <= threshold ? 'Low Stock' : 'In Stock'
+                if (localStock === 0) {
+                    status = 'Out of Stock'
+                } else {
+                    status = localStock <= threshold ? 'Low Stock' : 'In Stock'
+                }
             }
 
             return {
@@ -526,7 +534,10 @@ export function InventoryView() {
             header: 'Status',
             width: '100px',
             render: (value: string) => (
-                <Badge variant={value === 'In Stock' ? 'success' : 'warning'} className='uppercase'>
+                <Badge
+                    variant={value === 'In Stock' ? 'success' : value === 'Out of Stock' ? 'destructive' : 'warning'}
+                    className='uppercase'
+                >
                     {value}
                 </Badge>
             )
@@ -741,7 +752,7 @@ export function InventoryView() {
                                         subtitle={item.category}
                                         image={item.image}
                                         status={item.status}
-                                        statusColor={item.status === 'Low Stock' ? 'danger' : 'success'}
+                                        statusColor={item.status === 'Out of Stock' ? 'danger' : item.status === 'Low Stock' ? 'warning' : 'success'}
                                         value={`${!isAllStores ? item.localStock : item.stock}`}
                                         valueLabel={!isAllStores ? `in ${selectedStoreName}` : "Units"}
                                         onClick={() => {

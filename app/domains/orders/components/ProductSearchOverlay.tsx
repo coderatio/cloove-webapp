@@ -15,6 +15,9 @@ interface ProductSearchOverlayProps {
     onClose: () => void
     products: Product[]
     onSelect: (product: Product) => void
+    isLoading?: boolean
+    isLocalMode?: boolean
+    onSearchChange?: (search: string) => void
 }
 
 export function ProductSearchOverlay({
@@ -22,12 +25,22 @@ export function ProductSearchOverlay({
     onClose,
     products,
     onSelect,
+    isLoading = false,
+    isLocalMode = true,
+    onSearchChange,
 }: ProductSearchOverlayProps) {
     const { activeBusiness } = useBusiness()
     const [search, setSearch] = React.useState("")
     const [activeIndex, setActiveIndex] = React.useState(0)
     const listRef = React.useRef<HTMLDivElement>(null)
     const inputRef = React.useRef<HTMLInputElement>(null)
+
+    // Report search changes to parent if not in local mode
+    React.useEffect(() => {
+        if (!isLocalMode && onSearchChange) {
+            onSearchChange(search)
+        }
+    }, [search, isLocalMode, onSearchChange])
 
     // Filter products
     const filteredProducts = React.useMemo(() => {
@@ -150,13 +163,21 @@ export function ProductSearchOverlay({
 
                 {/* Results List */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10" ref={listRef}>
-                    <div className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-accent/40 dark:text-brand-cream/40 px-10 sticky top-0 bg-white dark:bg-brand-deep py-6 z-20 border-b border-brand-accent/5 dark:border-white/5">
-                        Catalog Results • {filteredProducts.length} Found
+                    <div className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-accent/40 dark:text-brand-cream/40 px-10 sticky top-0 bg-white dark:bg-brand-deep py-6 z-20 border-b border-brand-accent/5 dark:border-white/5 flex items-center justify-between">
+                        <span>
+                            {isLocalMode ? 'Local Catalog' : 'Cloud Search'} • {(isLocalMode ? filteredProducts : products).length} Results
+                        </span>
+                        {isLoading && (
+                            <div className="flex items-center gap-2 text-brand-gold animate-pulse">
+                                <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-bounce" />
+                                <span className="text-[9px]">Searching backend...</span>
+                            </div>
+                        )}
                     </div>
 
                     <div className="p-6 px-10 space-y-2">
-                        {filteredProducts.length > 0 ? (
-                            filteredProducts.map((product, index) => (
+                        {(isLocalMode ? filteredProducts : products).length > 0 ? (
+                            (isLocalMode ? filteredProducts : products).map((product, index) => (
                                 <div
                                     key={product.id}
                                     data-item-index={index}
@@ -250,8 +271,8 @@ export function ProductSearchOverlay({
                         </div>
                     </div>
                     <div className="hidden sm:flex items-center gap-2 shrink-0">
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-gold">
-                            CLOOVE POS SYSTEM
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-deep dark:text-brand-cream">
+                            CLOOVE POS
                         </p>
                     </div>
                 </div>

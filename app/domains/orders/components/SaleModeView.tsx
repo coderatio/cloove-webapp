@@ -58,6 +58,7 @@ import { useCustomers } from '../hooks/useCustomers'
 import { usePromotions } from '../hooks/usePromotions'
 import { formatCurrency } from '@/app/lib/formatters'
 import { ProductSearchOverlay } from './ProductSearchOverlay'
+import { Product } from '../hooks/useInventory'
 
 // Stagger variants for the container
 const containerVariants: Variants = {
@@ -83,20 +84,35 @@ const itemVariants: Variants = {
     }
 }
 
+// Simple debounce hook for search
+function useDebounce<T>(value: T, delay?: number): T {
+    const [debouncedValue, setDebouncedValue] = React.useState<T>(value)
+
+    React.useEffect(() => {
+        const timer = setTimeout(() => setDebouncedValue(value), delay || 300)
+        return () => clearTimeout(timer)
+    }, [value, delay])
+
+    return debouncedValue
+}
+
 export function SaleModeView() {
     const router = useRouter()
-    const [mounted, setMounted] = React.useState(false)
-    React.useEffect(() => { setMounted(true) }, [])
-    const [search, setSearch] = React.useState("")
-    const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
     const [cart, setCart] = React.useState<CartItem[]>([])
+    const [search, setSearch] = React.useState('')
+    const debouncedSearch = useDebounce(search, 300)
+    const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
     const [paymentMethod, setPaymentMethod] = React.useState<'Cash' | 'Transfer' | 'Card'>('Cash')
+    const [currentPage, setCurrentPage] = React.useState(1)
     const [mobileView, setMobileView] = React.useState<'catalog' | 'cart'>('catalog')
+    const [customerSearch, setCustomerSearch] = React.useState('')
     const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | null>(null)
-    const [customerSearch, setCustomerSearch] = React.useState("")
     const [isCustomerSearchOpen, setIsCustomerSearchOpen] = React.useState(false)
     const customerDropdownRef = React.useRef<HTMLDivElement>(null)
-    const [currentPage, setCurrentPage] = React.useState(1)
+    const [mounted, setMounted] = React.useState(false)
+    React.useEffect(() => { setMounted(true) }, [])
+
+    // Extras Panel State
     const itemsPerPage = 12
     const [discount, setDiscount] = React.useState(0)
     const [note, setNote] = React.useState('')
@@ -113,7 +129,13 @@ export function SaleModeView() {
     const { currency, activeBusiness } = useBusiness()
     const { printReceipt } = useReceiptPrinter()
     const { recordSale, isRecording } = useRecordSale()
-    const { products, isLoadingProducts } = useInventory()
+
+    // Initial fetch checks if we can use local mode. If not, it passes the debounced search to the backend.
+    const { products, isLoadingProducts, isLocalMode, totalProducts } = useInventory({
+        search: search ? debouncedSearch : '', // Only pass search if there is one, to prevent initial refetching on mount
+        category: selectedCategory
+    })
+
     const { customers, createCustomer } = useCustomers(customerSearch)
     const { data: promotions } = usePromotions()
 
@@ -159,13 +181,18 @@ export function SaleModeView() {
     }, [activeBusiness, cart, subtotal, selectedCustomer, paymentMethod, printReceipt])
 
     // Derived State
-    const categories = Array.from(new Set(products.map(item => item.category)))
+    const categories = Array.from(new Set(products.map((item: Product) => item.category))) as string[]
 
-    const filteredProducts = products.filter(p => {
+    const filteredProducts = products.filter((p: Product) => {
+        // If not in local mode and there's a search term, the backend already verified matches
+        // We still filter locally to avoid weird UI flashes before backend returns, 
+        // but if isLocalMode is false and isLoadingProducts is true, we will just show what we have.
         const matchesSearch = p.product?.toLowerCase().includes(search.toLowerCase()) ||
             (p.barcode && p.barcode.includes(search))
         const matchesCategory = !selectedCategory || p.category === selectedCategory
-        return matchesSearch && matchesCategory
+
+        // In complete server mode, we just trust the backend. For hybrid, we local filter what we can see.
+        return isLocalMode ? (matchesSearch && matchesCategory) : matchesCategory
     })
 
     const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
@@ -494,7 +521,7 @@ export function SaleModeView() {
                             >
                                 Catalog
                             </Button>
-                            {categories.map(cat => (
+                            {categories.map((cat: string) => (
                                 <Button
                                     key={cat}
                                     variant={selectedCategory === cat ? 'base' : 'outline'}
@@ -513,113 +540,132 @@ export function SaleModeView() {
                     {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
                     <div className="flex-1 min-h-0 flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-0">
                         <motion.div
-                            key={`${selectedCategory}-${search}-${currentPage}-${products.length}`}
+                            key={String(`${selectedCategory}-${search}-${currentPage}-${products.length}`)}
                             variants={containerVariants}
                             initial="hidden"
                             animate="show"
-                            className="flex-1 overflow-y-auto pr-1 lg:pr-2 custom-scrollbar -mr-1 lg:-mr-2"
+                            className="flex-1 overflow-y-auto custom-scrollbar pr-1 lg:pr-2 -mr-1 lg:-mr-2 min-h-0"
                         >
-                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8 pb-24 lg:pb-6 pt-1 lg:pt-3">
-                                {paginatedProducts.map((product) => (
-                                    <motion.div key={product.id} variants={itemVariants}>
-                                        <GlassCard
-                                            onClick={() => addToCart(product)}
-                                            hoverEffect
-                                            className={cn(
-                                                "group cursor-pointer flex flex-col h-[220px] relative overflow-hidden p-0 rounded-[32px] transition-none!",
-                                                product.image
-                                                    ? "bg-brand-deep! border-none!"
-                                                    : "bg-white! dark:bg-brand-deep! border! border-brand-gold/25! dark:border-white/10!"
-                                            )}
-                                        >
-                                            {/* Immersive Background Image or Editorial Watermark */}
-                                            {product.image ? (
-                                                <div className="absolute inset-0 z-0">
-                                                    <img
-                                                        src={product.image}
-                                                        alt={product.product}
-                                                        className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                                                    />
-                                                    {/* Top Protection Gradient */}
-                                                    <div className="absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-brand-deep/80 via-brand-deep/40 to-transparent z-10 pointer-events-none" />
-
-                                                    {/* Base Image Overlay */}
-                                                    <div className="absolute inset-0 bg-brand-deep/20 z-10" />
-
-                                                    {/* Bottom Protection Gradient */}
-                                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-brand-deep/90 via-brand-deep/50 to-transparent z-10 pointer-events-none backdrop-blur-[1px]" />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 pb-6">
+                                <AnimatePresence mode="popLayout">
+                                    {filteredProducts.length === 0 ? (
+                                        <div className="col-span-full py-24 flex flex-col items-center justify-center text-brand-accent/40 dark:text-brand-cream/30">
+                                            {isLoadingProducts ? (
+                                                <div className="flex flex-col items-center">
+                                                    <div className="w-12 h-12 border-4 border-brand-gold/20 border-t-brand-gold rounded-full animate-spin mb-4" />
+                                                    <p className="text-xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">Searching...</p>
                                                 </div>
                                             ) : (
-                                                <div className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none overflow-hidden">
-                                                    <div className="absolute -right-8 -bottom-8 scale-[2] rotate-[-15deg]">
-                                                        <h4 className="font-serif text-8xl font-black select-none tracking-tighter">CLOOVE</h4>
-                                                    </div>
-                                                    <div className="absolute -left-4 top-1/4 scale-[1.5] rotate-10 opacity-50">
-                                                        <h4 className="font-serif text-6xl font-black select-none tracking-tighter">EST 2024</h4>
-                                                    </div>
-                                                </div>
+                                                <>
+                                                    <Layers className="h-20 w-20 mb-6 opacity-20" />
+                                                    <p className="text-2xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">No items found</p>
+                                                    <p className="text-sm mt-2">{search ? `No results for "${search}"` : 'Your catalog is empty'}</p>
+                                                </>
                                             )}
+                                        </div>
+                                    ) : (
+                                        paginatedProducts.map((product: Product) => (
+                                            <motion.div key={product.id} variants={itemVariants}>
+                                                <GlassCard
+                                                    onClick={() => addToCart(product)}
+                                                    hoverEffect
+                                                    className={cn(
+                                                        "group cursor-pointer flex flex-col h-[220px] relative overflow-hidden p-0 rounded-[32px] transition-none!",
+                                                        product.image
+                                                            ? "bg-brand-deep! border-none!"
+                                                            : "bg-white! dark:bg-brand-deep! border! border-brand-gold/25! dark:border-white/10!"
+                                                    )}
+                                                >
+                                                    {/* Immersive Background Image or Editorial Watermark */}
+                                                    {product.image ? (
+                                                        <div className="absolute inset-0 z-0">
+                                                            <img
+                                                                src={product.image}
+                                                                alt={product.product}
+                                                                className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                                            />
+                                                            {/* Top Protection Gradient */}
+                                                            <div className="absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-brand-deep/80 via-brand-deep/40 to-transparent z-10 pointer-events-none" />
 
-                                            {/* Content Layer */}
-                                            <div className="relative z-20 flex flex-col h-full p-5 lg:p-6">
-                                                <div className="absolute top-4 right-4 lg:top-5 lg:right-5">
-                                                    <div className={cn(
-                                                        "w-2 h-2 rounded-full border-2 border-white/20 shadow-xl",
-                                                        product.status === 'In Stock' ? "bg-emerald-500 shadow-emerald-500/40" : "bg-rose-500 shadow-rose-500/40"
-                                                    )} />
-                                                </div>
+                                                            {/* Base Image Overlay */}
+                                                            <div className="absolute inset-0 bg-brand-deep/20 z-10" />
 
-                                                <div className="space-y-4 flex flex-col h-full">
-                                                    <div className="space-y-1">
-                                                        <h3 className={cn(
-                                                            "font-serif text-xl lg:text-2xl leading-[1.15] transition-colors duration-500 line-clamp-2 min-h-[2.3em]",
-                                                            product.image
-                                                                ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                                                                : "text-brand-deep dark:text-brand-cream"
-                                                        )}>
-                                                            {product.product}
-                                                        </h3>
-                                                        <p className={cn(
-                                                            "text-[9px] font-bold uppercase tracking-[0.2em]",
-                                                            product.image
-                                                                ? "text-brand-cream opacity-80 drop-shadow-sm"
-                                                                : "text-brand-accent dark:text-brand-cream opacity-40"
-                                                        )}>
-                                                            {product.status} • {product.stock} units
-                                                        </p>
-                                                    </div>
+                                                            {/* Bottom Protection Gradient */}
+                                                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-brand-deep/90 via-brand-deep/50 to-transparent z-10 pointer-events-none backdrop-blur-[1px]" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none overflow-hidden">
+                                                            <div className="absolute -right-8 -bottom-8 scale-[2] rotate-[-15deg]">
+                                                                <h4 className="font-serif text-8xl font-black select-none tracking-tighter">CLOOVE</h4>
+                                                            </div>
+                                                            <div className="absolute -left-4 top-1/4 scale-[1.5] rotate-10 opacity-50">
+                                                                <h4 className="font-serif text-6xl font-black select-none tracking-tighter">EST 2024</h4>
+                                                            </div>
+                                                        </div>
+                                                    )}
 
-                                                    <div className={cn(
-                                                        "flex items-center justify-between pt-4 border-t transition-colors duration-500 mt-auto",
-                                                        product.image ? "border-white/20" : "border-brand-accent/5 dark:border-white/10"
-                                                    )}>
-                                                        <p className={cn(
-                                                            "font-serif font-black text-xl lg:text-2xl tracking-tight",
-                                                            product.image
-                                                                ? "text-brand-gold drop-shadow-md"
-                                                                : "text-brand-deep dark:text-brand-gold"
-                                                        )}>
-                                                            {formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}
-                                                        </p>
-                                                        <div className={cn(
-                                                            "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 shadow-2xl",
-                                                            product.image
-                                                                ? "bg-brand-gold text-brand-deep shadow-brand-gold/20"
-                                                                : "bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep shadow-xl"
-                                                        )}>
-                                                            <Plus className="h-5 w-5" />
+                                                    {/* Content Layer */}
+                                                    <div className="relative z-20 flex flex-col h-full p-5 lg:p-6">
+                                                        <div className="absolute top-4 right-4 lg:top-5 lg:right-5">
+                                                            <div className={cn(
+                                                                "w-2 h-2 rounded-full border-2 border-white/20 shadow-xl",
+                                                                product.status === 'In Stock' ? "bg-emerald-500 shadow-emerald-500/40" : "bg-rose-500 shadow-rose-500/40"
+                                                            )} />
+                                                        </div>
+
+                                                        <div className="space-y-4 flex flex-col h-full">
+                                                            <div className="space-y-1">
+                                                                <h3 className={cn(
+                                                                    "font-serif text-xl lg:text-2xl leading-[1.15] transition-colors duration-500 line-clamp-2 min-h-[2.3em]",
+                                                                    product.image
+                                                                        ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+                                                                        : "text-brand-deep dark:text-brand-cream"
+                                                                )}>
+                                                                    {product.product}
+                                                                </h3>
+                                                                <p className={cn(
+                                                                    "text-[9px] font-bold uppercase tracking-[0.2em]",
+                                                                    product.image
+                                                                        ? "text-brand-cream opacity-80 drop-shadow-sm"
+                                                                        : "text-brand-accent dark:text-brand-cream opacity-40"
+                                                                )}>
+                                                                    {product.status} • {product.stock} units
+                                                                </p>
+                                                            </div>
+
+                                                            <div className={cn(
+                                                                "flex items-center justify-between pt-4 border-t transition-colors duration-500 mt-auto",
+                                                                product.image ? "border-white/20" : "border-brand-accent/5 dark:border-white/10"
+                                                            )}>
+                                                                <p className={cn(
+                                                                    "font-serif font-black text-xl lg:text-2xl tracking-tight",
+                                                                    product.image
+                                                                        ? "text-brand-gold drop-shadow-md"
+                                                                        : "text-brand-deep dark:text-brand-gold"
+                                                                )}>
+                                                                    {formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}
+                                                                </p>
+                                                                <div className={cn(
+                                                                    "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 shadow-2xl",
+                                                                    product.image
+                                                                        ? "bg-brand-gold text-brand-deep shadow-brand-gold/20"
+                                                                        : "bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep shadow-xl"
+                                                                )}>
+                                                                    <Plus className="h-5 w-5" />
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
 
-                                            {/* Glass Overlay on Bottom for depth (only for images) */}
-                                            {product.image && (
-                                                <div className="absolute bottom-0 inset-x-0 h-2/5 bg-linear-to-t from-brand-deep via-brand-deep/40 to-transparent backdrop-blur-[1px] z-10 pointer-events-none" />
-                                            )}
-                                        </GlassCard>
-                                    </motion.div>
-                                ))}
+                                                    {/* Glass Overlay on Bottom for depth (only for images) */}
+                                                    {product.image && (
+                                                        <div className="absolute bottom-0 inset-x-0 h-2/5 bg-linear-to-t from-brand-deep via-brand-deep/40 to-transparent backdrop-blur-[1px] z-10 pointer-events-none" />
+                                                    )}
+                                                </GlassCard>
+                                            </motion.div>
+                                        ))
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </motion.div>
 
@@ -1249,7 +1295,10 @@ export function SaleModeView() {
                 isOpen={isSearchOpen}
                 onClose={() => setIsSearchOpen(false)}
                 products={products}
-                onSelect={(product) => addToCart(product)}
+                isLoading={isLoadingProducts}
+                isLocalMode={isLocalMode}
+                onSearchChange={(s) => setSearch(s)}
+                onSelect={(product: Product) => addToCart(product)}
             />
 
             {/* Global Refinements */}
