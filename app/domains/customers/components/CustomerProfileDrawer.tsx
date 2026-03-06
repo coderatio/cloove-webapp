@@ -101,19 +101,15 @@ export function CustomerProfileDrawer({
                                 variant="outline"
                                 size="sm"
                                 className={cn(
-                                    "rounded-xl h-9 px-4 gap-2 border-brand-deep/5",
-                                    customer.isVip ? "text-brand-accent/40" : "text-brand-gold border-brand-gold/20 bg-brand-gold/5"
+                                    "rounded-xl h-9 px-4 gap-2 border-brand-deep/5 transition-all duration-300",
+                                    customer.isVip
+                                        ? "text-brand-accent border-brand-accent/20 bg-brand-accent/5 hover:bg-brand-accent/10"
+                                        : "text-brand-gold border-brand-gold/20 bg-brand-gold/5 hover:bg-brand-gold/10"
                                 )}
                                 onClick={() => onUpdateVip?.(customer.id, !customer.isVip)}
                             >
-                                {customer.isVip ? (
-                                    <>Remove VIP</>
-                                ) : (
-                                    <>
-                                        <Star className="w-3.5 h-3.5 fill-brand-gold" />
-                                        Make VIP
-                                    </>
-                                )}
+                                <Star className={cn("w-3.5 h-3.5", customer.isVip ? "text-brand-accent fill-brand-accent/20" : "text-brand-gold")} />
+                                Make VIP
                             </Button>
                             <Button
                                 variant="outline"
@@ -195,7 +191,10 @@ export function CustomerProfileDrawer({
                     </div>
 
                     {/* Contact Actions */}
-                    <div className="space-y-4">
+                    <div className={cn(
+                        "space-y-4",
+                        !customer.phoneNumber && !customer.email && "hidden"
+                    )}>
                         <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
                             Connect & Communicate
                         </h4>

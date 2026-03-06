@@ -122,12 +122,38 @@ export function useCustomers(
     const updateCustomerMutation = useMutation({
         mutationFn: ({ id, data }: { id: string; data: UpdateCustomerPayload }) =>
             apiClient.patch(`/customers/${id}`, data),
+        onMutate: async ({ id, data }) => {
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: ["customers", businessId] })
+
+            // Snapshot the previous value
+            const previousResponse = queryClient.getQueryData<ApiResponse<CustomerListItemApi[]>>(["customers", businessId, page, limit, search, storeIds])
+
+            // Optimistically update to the new value
+            if (previousResponse) {
+                queryClient.setQueryData(["customers", businessId, page, limit, search, storeIds], {
+                    ...previousResponse,
+                    data: previousResponse.data.map((customer) =>
+                        customer.id === id ? { ...customer, ...data } : customer
+                    ),
+                })
+            }
+
+            return { previousResponse }
+        },
         onSuccess: () => {
             toast.success("Customer updated")
-            queryClient.invalidateQueries({ queryKey: ["customers", businessId] })
         },
-        onError: (err: { message?: string }) => {
+        onError: (err: { message?: string }, _variables, context) => {
             toast.error(err.message ?? "Failed to update customer")
+            // Rollback to the previous value if mutation fails
+            if (context?.previousResponse) {
+                queryClient.setQueryData(["customers", businessId, page, limit, search, storeIds], context.previousResponse)
+            }
+        },
+        onSettled: () => {
+            // Always refetch after error or success to ensure we are in sync with the server
+            queryClient.invalidateQueries({ queryKey: ["customers", businessId] })
         },
     })
 

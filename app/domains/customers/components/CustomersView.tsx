@@ -66,7 +66,7 @@ export function CustomersView() {
     const [editingItem, setEditingItem] = React.useState<Customer | null>(null)
     const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
     const [itemToDelete, setItemToDelete] = React.useState<Customer | null>(null)
-    const [viewingCustomer, setViewingCustomer] = React.useState<Customer | null>(null)
+    const [viewingCustomerId, setViewingCustomerId] = React.useState<string | null>(null)
     const [recordingPaymentFor, setRecordingPaymentFor] = React.useState<Customer | null>(null)
 
     const storeIds = React.useMemo(() => stores.map((s) => s.id), [stores])
@@ -142,6 +142,11 @@ export function CustomersView() {
         const val = parseInt(curr.owing.replace(/[^0-9]/g, ""), 10) || 0
         return acc + val
     }, 0)
+
+    const viewingCustomer = React.useMemo(() =>
+        customers.find(c => c.id === viewingCustomerId) || null,
+        [customers, viewingCustomerId]
+    )
 
     const resetForm = () => {
         setFormData({ name: "", phoneNumber: "", email: "", isBlacklisted: false })
@@ -264,7 +269,7 @@ export function CustomersView() {
                                 Relationship Actions
                             </DropdownMenuLabel>
                             <DropdownMenuItem
-                                onClick={() => setViewingCustomer(item)}
+                                onClick={() => setViewingCustomerId(item.id)}
                                 className="rounded-xl flex items-center gap-3 cursor-pointer"
                             >
                                 <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green">
@@ -349,17 +354,17 @@ export function CustomersView() {
                                     })
                                 }}
                                 className={cn(
-                                    "rounded-xl flex items-center gap-3 cursor-pointer",
-                                    item.isVip ? "text-brand-accent/60" : "text-brand-gold"
+                                    "rounded-xl flex items-center gap-3 cursor-pointer transition-colors",
+                                    item.isVip ? "text-brand-accent font-semibold" : "text-brand-gold font-medium"
                                 )}
                             >
                                 <div className={cn(
-                                    "h-8 w-8 rounded-full flex items-center justify-center",
-                                    item.isVip ? "bg-brand-deep/5" : "bg-brand-gold/10"
+                                    "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
+                                    item.isVip ? "bg-brand-accent/10" : "bg-brand-gold/10"
                                 )}>
-                                    <Star className={cn("w-4 h-4", item.isVip ? "text-brand-accent/40" : "text-brand-gold")} />
+                                    <Star className={cn("w-4 h-4", item.isVip ? "text-brand-accent fill-brand-accent/20" : "text-brand-gold")} />
                                 </div>
-                                <span className="font-medium">{item.isVip ? "Demote from VIP" : "Make VIP"}</span>
+                                <span>{item.isVip ? "Demote from VIP" : "Make VIP"}</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -748,10 +753,10 @@ export function CustomersView() {
 
                 <CustomerProfileDrawer
                     customer={viewingCustomer}
-                    open={!!viewingCustomer}
-                    onOpenChange={(open) => !open && setViewingCustomer(null)}
+                    open={!!viewingCustomerId}
+                    onOpenChange={(open) => !open && setViewingCustomerId(null)}
                     onEdit={(c) => {
-                        setViewingCustomer(null)
+                        setViewingCustomerId(null)
                         openEdit(c)
                     }}
                     onUpdateVip={async (id, isVip) => {
