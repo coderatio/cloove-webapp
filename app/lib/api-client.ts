@@ -92,9 +92,12 @@ export const apiClient = {
             ? API_BASE_URL
             : (typeof window !== 'undefined' ? window.location.origin : '')
 
-        // Correctly join paths to avoid stripping base path (like /api)
         const normalizedBase = base.endsWith('/') ? base : `${base}/`
-        const normalizedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint
+        let normalizedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint
+        // When using same-origin (no explicit API base), requests must go to /api/* so Next.js rewrites can proxy
+        if (!API_BASE_URL.startsWith('http') && !normalizedEndpoint.startsWith('api/')) {
+            normalizedEndpoint = `api/${normalizedEndpoint}`
+        }
 
         const url = new URL(normalizedEndpoint, normalizedBase)
         this.appendParams(url, params)

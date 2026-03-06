@@ -1,25 +1,50 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
-import { Upload, Check, Palette, Smartphone, RefreshCw } from "lucide-react"
-import { toast } from "sonner"
+import { Check, Palette, Smartphone, RefreshCw, Upload } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import { useStorefrontTheme, useUpdateStorefrontTheme } from "@/app/domains/storefront/hooks/useStorefrontTheme"
+import { uploadService } from "@/app/lib/upload/upload-service"
+import { toast } from "sonner"
 
 const themeColors = [
-    { name: 'Forest', bg: 'bg-[#062C21]', border: 'border-[#062C21]' },
-    { name: 'Midnight', bg: 'bg-[#0F172A]', border: 'border-[#0F172A]' },
-    { name: 'Berry', bg: 'bg-[#4A044E]', border: 'border-[#4A044E]' },
-    { name: 'Ocean', bg: 'bg-[#1E3A8A]', border: 'border-[#1E3A8A]' },
-    { name: 'Chocolate', bg: 'bg-[#431407]', border: 'border-[#431407]' },
-    { name: 'Charcoal', bg: 'bg-[#18181B]', border: 'border-[#18181B]' },
+    { name: 'Forest', hex: '#062C21', bg: 'bg-[#062C21]', border: 'border-[#062C21]' },
+    { name: 'Midnight', hex: '#0F172A', bg: 'bg-[#0F172A]', border: 'border-[#0F172A]' },
+    { name: 'Berry', hex: '#4A044E', bg: 'bg-[#4A044E]', border: 'border-[#4A044E]' },
+    { name: 'Ocean', hex: '#1E3A8A', bg: 'bg-[#1E3A8A]', border: 'border-[#1E3A8A]' },
+    { name: 'Chocolate', hex: '#431407', bg: 'bg-[#431407]', border: 'border-[#431407]' },
+    { name: 'Charcoal', hex: '#18181B', bg: 'bg-[#18181B]', border: 'border-[#18181B]' },
 ]
 
 export default function StorefrontCustomization() {
-    const [selectedColor, setSelectedColor] = useState('Forest')
+    const { data: theme, isLoading } = useStorefrontTheme()
+    const updateTheme = useUpdateStorefrontTheme()
+    const primaryHex = theme?.colors?.primary ?? themeColors[0].hex
+    const matchedColor = themeColors.find((c) => c.hex.toLowerCase() === primaryHex?.toLowerCase()) ?? themeColors[0]
+    const [selectedColor, setSelectedColor] = useState(matchedColor.name)
     const [logo, setLogo] = useState<string | null>(null)
+    const [logoUploading, setLogoUploading] = useState(false)
+
+    useEffect(() => {
+        if (theme?.colors?.primary) {
+            const m = themeColors.find((c) => c.hex.toLowerCase() === theme.colors!.primary?.toLowerCase())
+            if (m) setSelectedColor(m.name)
+        }
+    }, [theme?.colors?.primary])
+    useEffect(() => {
+        if (theme?.logoUrl) setLogo(theme.logoUrl as string)
+    }, [theme?.logoUrl])
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[200px]">
+                <div className="w-8 h-8 border-2 border-brand-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col lg:flex-row gap-8">
@@ -37,15 +62,18 @@ export default function StorefrontCustomization() {
                     <GlassCard className="p-6 space-y-6">
                         <div className="space-y-3">
                             <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Brand Logo</label>
-                            <div className="flex items-center gap-6">
-                                <div className="h-24 w-24 rounded-2xl border-2 border-dashed border-brand-accent/20 dark:border-white/20 flex items-center justify-center bg-brand-accent/5 dark:bg-white/5 relative overflow-hidden group">
+                            <div className="flex flex-col sm:flex-row items-start gap-6">
+                                <div className="h-24 w-24 rounded-2xl border-2 border-dashed border-brand-accent/20 dark:border-white/20 flex items-center justify-center bg-brand-accent/5 dark:bg-white/5 relative overflow-hidden group shrink-0">
                                     {logo ? (
                                         <img src={logo} alt="Logo" className="w-full h-full object-cover" />
+                                    ) : logoUploading ? (
+                                        <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60 font-medium">Uploading…</span>
                                     ) : (
-                                        <span className="text-xs text-brand-accent/40 dark:text-white/40 font-medium group-hover:text-brand-green dark:group-hover:text-emerald-400 transition-colors">Upload</span>
+                                        <span className="text-xs text-brand-accent/40 dark:text-white/40 font-medium">Logo</span>
                                     )}
-                                    {logo && (
+                                    {logo && !logoUploading && (
                                         <button
+                                            type="button"
                                             onClick={() => setLogo(null)}
                                             className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold"
                                         >
@@ -53,14 +81,60 @@ export default function StorefrontCustomization() {
                                         </button>
                                     )}
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 flex-1 min-w-0">
                                     <p className="text-sm text-brand-deep/80 dark:text-brand-cream/80 max-w-xs">
-                                        Upload your business logo. Recommended size: 512x512px (PNG or JPG).
+                                        Upload an image or paste a logo URL. Recommended: 512×512px (PNG or JPG).
                                     </p>
-                                    <Button variant="outline" className="rounded-xl h-9 text-xs border-brand-accent/10 dark:border-white/10">
-                                        <Upload className="w-3 h-3 mr-2" />
-                                        Choose File
-                                    </Button>
+                                    <div className="flex flex-wrap gap-2">
+                                        <input
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/webp,image/gif"
+                                            className="hidden"
+                                            id="storefront-logo-upload"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0]
+                                                if (!file) return
+                                                if (!file.type.startsWith('image/')) {
+                                                    toast.error('Please choose an image file (PNG, JPG, WEBP, GIF)')
+                                                    return
+                                                }
+                                                if (file.size > 5 * 1024 * 1024) {
+                                                    toast.error('Image must be under 5MB')
+                                                    return
+                                                }
+                                                setLogoUploading(true)
+                                                try {
+                                                    const url = await uploadService.uploadFile(file)
+                                                    setLogo(url)
+                                                    toast.success('Logo uploaded')
+                                                } catch (err) {
+                                                    toast.error('Upload failed. Try a URL instead.')
+                                                } finally {
+                                                    setLogoUploading(false)
+                                                    e.target.value = ''
+                                                }
+                                            }}
+                                        />
+                                        <label
+                                            htmlFor={logoUploading ? undefined : 'storefront-logo-upload'}
+                                            className={cn(
+                                                "inline-flex items-center gap-2 rounded-xl h-10 px-4 text-sm font-medium border border-brand-deep/10 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-colors text-brand-deep dark:text-brand-cream",
+                                                logoUploading ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                                            )}
+                                        >
+                                            <Upload className="w-4 h-4" />
+                                            {logoUploading ? 'Uploading…' : 'Choose File'}
+                                        </label>
+                                        <span className="text-brand-deep/40 dark:text-brand-cream/40 text-sm self-center">or</span>
+                                        <input
+                                            type="url"
+                                            placeholder="Paste image URL"
+                                            value={logo ?? ''}
+                                            onChange={(e) => setLogo(e.target.value.trim() || null)}
+                                            disabled={logoUploading}
+                                            className="flex-1 min-w-[180px] rounded-xl h-10 px-4 text-sm bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream disabled:opacity-50"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -98,10 +172,26 @@ export default function StorefrontCustomization() {
 
                 <div className="flex justify-end pt-4">
                     <Button
-                        onClick={() => toast.success("Storefront theme updated successfully")}
+                        onClick={() => {
+                            const color = themeColors.find((c) => c.name === selectedColor)
+                            if (!theme) return
+                            const payload = {
+                                ...theme,
+                                welcomeMessage: theme.welcomeMessage ?? '',
+                                colors: {
+                                    primary: color?.hex ?? primaryHex,
+                                    secondary: theme.colors?.secondary ?? '#d4af37',
+                                    background: theme.colors?.background ?? '#ffffff',
+                                    text: theme.colors?.text ?? '#062c21',
+                                },
+                                logoUrl: logo ?? null,
+                            }
+                            updateTheme.mutate(payload)
+                        }}
+                        disabled={updateTheme.isPending || isLoading}
                         className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-12 shadow-xl hover:scale-105 transition-all"
                     >
-                        Save Changes
+                        {updateTheme.isPending ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </div>
             </div>

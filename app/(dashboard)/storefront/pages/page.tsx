@@ -1,69 +1,79 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
-import { Switch } from "@/app/components/ui/switch"
-import { FileText, Eye, Edit2, Plus, Info, MessageSquare, ShieldCheck, Save, ArrowLeft, Check, ChevronDown } from "lucide-react"
+import { FileText, Eye, Edit2, Plus, Info, MessageSquare, ShieldCheck } from "lucide-react"
 import { cn } from "@/app/lib/utils"
-import {
-    Drawer,
-    DrawerContent,
-    DrawerHeader,
-    DrawerTitle,
-    DrawerDescription,
-    DrawerFooter,
-    DrawerClose,
-} from "@/app/components/ui/drawer"
-import { toast } from "sonner"
+import { useStorefrontPages, type StorefrontPageListItem } from "@/app/domains/storefront/hooks/useStorefrontPages"
+import { useStorefront } from "@/app/domains/storefront/hooks/useStorefront"
 
+const iconBySlug: Record<string, typeof Info> = {
+    about: Info,
+    contact: MessageSquare,
+    policy: ShieldCheck,
+}
 
-const initialPages = [
-    { id: '1', title: 'About Us', slug: 'about', status: 'Published', icon: Info, date: 'Last updated 2 days ago', content: "Welcome to our store. We are passionate about..." },
-    { id: '2', title: 'Contact Support', slug: 'contact', status: 'Published', icon: MessageSquare, date: 'Last updated 1 week ago', content: "Contact us at support@example.com" },
-    { id: '3', title: 'Return Policy', slug: 'policy', status: 'Draft', icon: ShieldCheck, date: 'Created 2 weeks ago', content: "Returns are accepted within 30 days." },
-]
+function getIcon(page: StorefrontPageListItem) {
+    return iconBySlug[page.slug] ?? FileText
+}
+
+function formatDate(iso: string) {
+    try {
+        const d = new Date(iso)
+        const now = new Date()
+        const diffMs = now.getTime() - d.getTime()
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+        if (diffDays === 0) return 'Updated today'
+        if (diffDays === 1) return 'Last updated yesterday'
+        if (diffDays < 7) return `Last updated ${diffDays} days ago`
+        if (diffDays < 30) return `Last updated ${Math.floor(diffDays / 7)} weeks ago`
+        return `Created ${d.toLocaleDateString()}`
+    } catch {
+        return ''
+    }
+}
 
 export default function StorefrontPages() {
-    const [pages, setPages] = useState(initialPages)
     const searchParams = useSearchParams()
     const router = useRouter()
+    const { data: storefront } = useStorefront()
+    const { data: pages = [], isLoading, error } = useStorefrontPages()
 
-    // Drawer State
-    const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-    const [editingPage, setEditingPage] = useState<typeof initialPages[0] | null>(null)
-
-    // Handle Deep Linking
     useEffect(() => {
         const action = searchParams.get('action')
         const slug = searchParams.get('slug')
-
         if (action === 'edit' && slug) {
-            const pageToEdit = pages.find(p => p.slug === slug)
-            if (pageToEdit) {
-                setEditingPage(pageToEdit)
-                setIsDrawerOpen(true)
-            }
+            const pageToEdit = pages.find((p) => p.slug === slug)
+            if (pageToEdit) router.push(`/storefront/editor/${pageToEdit.slug}`)
         }
-    }, [searchParams, pages])
+    }, [searchParams, pages, router])
 
-    const handleEdit = (page: typeof initialPages[0]) => {
-        router.push(`/storefront/editor/${page.id}`)
+    const handleEdit = (page: StorefrontPageListItem) => {
+        router.push(`/storefront/editor/${page.slug}`)
     }
 
     const handleCreate = () => {
-        router.push(`/storefront/editor/new`)
+        router.push('/storefront/editor/new')
     }
 
-    const handleSave = () => {
-        toast.success("Page saved successfully")
-        setIsDrawerOpen(false)
-        // clean up URL if deep linked
-        if (searchParams.get('action')) {
-            router.push('/storefront/pages')
-        }
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[200px]">
+                <div className="w-8 h-8 border-2 border-brand-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-brand-cream/50 dark:bg-black/20 p-8 text-center">
+                <p className="text-brand-deep/70 dark:text-brand-cream/70">
+                    {(error as Error)?.message ?? 'Failed to load pages.'}
+                </p>
+            </div>
+        )
     }
 
     return (
@@ -84,55 +94,65 @@ export default function StorefrontPages() {
 
             <GlassCard className="overflow-hidden p-0">
                 <div className="grid grid-cols-1 divide-y divide-brand-deep/5 dark:divide-white/5">
-                    {pages.map((page) => (
-                        <div key={page.id} className="p-4 md:p-6 flex items-center justify-between group hover:bg-brand-cream/40 dark:hover:bg-white/5 transition-colors">
-                            <div className="flex items-center gap-4">
-                                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center",
-                                    page.status === 'Published'
-                                        ? "bg-brand-green/10 text-brand-green dark:text-emerald-400 dark:bg-emerald-400/10"
-                                        : "bg-brand-accent/10 text-brand-accent/60 dark:text-brand-cream/60"
-                                )}>
-                                    <page.icon className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream">{page.title}</h3>
-                                    <div className="flex items-center gap-3 text-xs">
-                                        <span className={cn(
-                                            "font-bold uppercase tracking-widest",
-                                            page.status === 'Published' ? "text-brand-green dark:text-emerald-400" : "text-brand-accent/60 dark:text-brand-cream/60"
+                    {pages.length === 0 ? (
+                        <div className="p-8 text-center text-brand-accent/60 dark:text-brand-cream/60 text-sm">
+                            No pages yet. Create one to get started.
+                        </div>
+                    ) : (
+                        pages.map((page) => {
+                            const Icon = getIcon(page)
+                            const status = page.isPublished ? 'Published' : 'Draft'
+                            return (
+                                <div key={page.id} className="p-4 md:p-6 flex items-center justify-between group hover:bg-brand-cream/40 dark:hover:bg-white/5 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "w-12 h-12 rounded-xl flex items-center justify-center",
+                                            page.isPublished
+                                                ? "bg-brand-green/10 text-brand-green dark:text-emerald-400 dark:bg-emerald-400/10"
+                                                : "bg-brand-accent/10 text-brand-accent/60 dark:text-brand-cream/60"
                                         )}>
-                                            {page.status}
-                                        </span>
-                                        <span className="w-1 h-1 rounded-full bg-brand-deep/20 dark:bg-white/20" />
-                                        <span className="text-brand-accent/60 dark:text-brand-cream/60">{page.date}</span>
+                                            <Icon className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream">{page.title}</h3>
+                                            <div className="flex items-center gap-3 text-xs">
+                                                <span className={cn(
+                                                    "font-bold uppercase tracking-widest",
+                                                    page.isPublished ? "text-brand-green dark:text-emerald-400" : "text-brand-accent/60 dark:text-brand-cream/60"
+                                                )}>
+                                                    {status}
+                                                </span>
+                                                <span className="w-1 h-1 rounded-full bg-brand-deep/20 dark:bg-white/20" />
+                                                <span className="text-brand-accent/60 dark:text-brand-cream/60">{formatDate(page.updatedAt)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-9 px-3 text-brand-accent/60 hover:text-brand-deep dark:text-white/60 dark:hover:text-white"
+                                            onClick={() => storefront?.url && window.open(page.isHome ? storefront.url : `${storefront.url.replace(/\/$/, '')}/${page.slug}`, '_blank')}
+                                        >
+                                            <Eye className="w-4 h-4 mr-2" />
+                                            View
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleEdit(page)}
+                                            className="h-9 px-4 border-brand-accent/10 hover:bg-white/60 dark:border-white/10 dark:hover:bg-white/10 rounded-lg group/edit"
+                                        >
+                                            <Edit2 className="w-3.5 h-3.5 mr-2 group-hover/edit:text-brand-green dark:group-hover/edit:text-emerald-400 transition-colors" />
+                                            Edit
+                                        </Button>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-9 px-3 text-brand-accent/60 hover:text-brand-deep dark:text-white/60 dark:hover:text-white"
-                                >
-                                    <Eye className="w-4 h-4 mr-2" />
-                                    View
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleEdit(page)}
-                                    className="h-9 px-4 border-brand-accent/10 hover:bg-white/60 dark:border-white/10 dark:hover:bg-white/10 rounded-lg group/edit"
-                                >
-                                    <Edit2 className="w-3.5 h-3.5 mr-2 group-hover/edit:text-brand-green dark:group-hover/edit:text-emerald-400 transition-colors" />
-                                    Edit
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
+                            )
+                        })
+                    )}
                 </div>
             </GlassCard>
-
         </div>
     )
 }

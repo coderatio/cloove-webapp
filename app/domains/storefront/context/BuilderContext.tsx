@@ -1,9 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from "react"
+import React, { createContext, useContext, useState, useRef } from "react"
 import { StorefrontSection, StorefrontConfig, SectionType } from "../types"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
 
 interface BuilderContextType {
     sections: StorefrontSection[]
@@ -12,7 +11,6 @@ interface BuilderContextType {
     isMagicOpen: boolean
     activeTab: 'add' | 'layers' | 'theme'
 
-    // Actions
     setSections: React.Dispatch<React.SetStateAction<StorefrontSection[]>>
     setSelectedSectionId: (id: string | null) => void
     setIsMagicOpen: (open: boolean) => void
@@ -23,13 +21,14 @@ interface BuilderContextType {
     removeSection: (id: string) => void
     duplicateSection: (id: string) => void
     saveAndPublish: () => Promise<void>
+    registerSaveHandler: (handler: (sections: StorefrontSection[], config: StorefrontConfig) => Promise<void>) => void
 }
 
+type SaveHandler = (sections: StorefrontSection[], config: StorefrontConfig) => Promise<void>
 const BuilderContext = createContext<BuilderContextType | undefined>(undefined)
 
 export function BuilderProvider({ children }: { children: React.ReactNode }) {
-    const router = useRouter()
-
+    const saveHandlerRef = useRef<SaveHandler | null>(null)
     const [sections, setSections] = useState<StorefrontSection[]>([])
     const [config, setConfig] = useState<StorefrontConfig>({
         theme: {
@@ -94,19 +93,35 @@ export function BuilderProvider({ children }: { children: React.ReactNode }) {
         toast.success("Section duplicated")
     }
 
+    const registerSaveHandler = (handler: (sections: StorefrontSection[], config: StorefrontConfig) => Promise<void>) => {
+        saveHandlerRef.current = handler
+    }
+
     const saveAndPublish = async () => {
-        toast.loading("Publishing your changes...")
-        // Real API call would go here
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        toast.dismiss()
-        toast.success("Storefront published successfully!")
+        if (saveHandlerRef.current) {
+            toast.loading("Publishing your changes...")
+            try {
+                await saveHandlerRef.current!(sections, config)
+                toast.dismiss()
+                toast.success("Page published successfully!")
+            } catch (err) {
+                toast.dismiss()
+                toast.error(err instanceof Error ? err.message : "Failed to save")
+            }
+        } else {
+            toast.loading("Publishing your changes...")
+            await new Promise((r) => setTimeout(r, 1500))
+            toast.dismiss()
+            toast.success("Storefront published successfully!")
+        }
     }
 
     return (
         <BuilderContext.Provider value={{
             sections, config, selectedSectionId, isMagicOpen, activeTab,
             setSections, setSelectedSectionId, setIsMagicOpen, setActiveTab,
-            updateTheme, addSection, updateSection, removeSection, duplicateSection, saveAndPublish
+            updateTheme, addSection, updateSection, removeSection, duplicateSection,
+            saveAndPublish, registerSaveHandler,
         }}>
             {children}
         </BuilderContext.Provider>

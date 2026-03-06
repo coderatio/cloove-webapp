@@ -4,29 +4,43 @@ import { GlassCard } from "../ui/glass-card"
 export function DashboardSkeleton() {
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-20">
-            {/* Header Skeleton */}
-            <div className="pt-4 px-2 flex justify-between items-end">
-                <div className="space-y-2">
+            {/* Header Skeleton - greeting + 2-column filters */}
+            <div className="pt-1 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div className="space-y-2 min-w-0">
                     <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-10 w-48" />
+                    <Skeleton className="h-8 md:h-10 w-48" />
                 </div>
-                <Skeleton className="h-8 w-24 rounded-full hidden md:block" />
+                <div className="grid grid-cols-2 gap-2 md:gap-3 w-full md:w-auto">
+                    <Skeleton className="h-10 rounded-xl min-w-0" />
+                    <Skeleton className="h-10 rounded-xl min-w-0" />
+                </div>
             </div>
 
-            {/* Hero Skeleton - The big card */}
-            <GlassCard className="h-[380px] md:h-[420px] rounded-[32px] p-8 md:p-12 flex flex-col justify-center items-center">
-                <Skeleton className="h-4 w-24 mb-6" />
-                <Skeleton className="h-20 w-64 mb-6 rounded-2xl" />
-                <Skeleton className="h-8 w-32 rounded-full" />
-                <div className="absolute bottom-6 flex gap-2">
-                    <Skeleton className="h-2 w-6 rounded-full" />
-                    <Skeleton className="h-2 w-2 rounded-full" />
+            {/* Hero Skeleton - Wallet + Sales (matches DashboardHero layout) */}
+            <GlassCard className="rounded-[32px] md:rounded-[40px] p-6 md:px-10 md:py-10 min-h-[320px] md:min-h-[280px] border-white/20 dark:border-white/5">
+                <div className="relative flex flex-col md:flex-row md:items-stretch gap-8 md:gap-10 md:min-h-[200px]">
+                    {/* Wallet block */}
+                    <div className="flex-1 flex flex-col items-center md:items-start justify-center">
+                        <Skeleton className="h-3 w-24 mb-3" />
+                        <Skeleton className="h-10 sm:h-12 md:h-14 w-40 mb-4 rounded-xl" />
+                        <div className="flex flex-wrap gap-2 md:gap-3 justify-center md:justify-start">
+                            <Skeleton className="h-9 md:h-10 w-28 rounded-full" />
+                            <Skeleton className="h-9 md:h-10 w-24 rounded-full" />
+                        </div>
+                    </div>
+                    <div className="hidden md:block w-px bg-brand-deep/10 dark:bg-white/10 shrink-0" aria-hidden />
+                    {/* Sales block */}
+                    <div className="flex-1 flex flex-col items-center md:items-end justify-center">
+                        <Skeleton className="h-3 w-28 mb-3 md:ml-auto" />
+                        <Skeleton className="h-10 sm:h-12 md:h-14 w-36 mb-3 rounded-xl md:ml-auto" />
+                        <Skeleton className="h-8 w-32 rounded-full md:ml-auto" />
+                    </div>
                 </div>
             </GlassCard>
 
             {/* Insight Whisper Skeleton */}
             <GlassCard className="rounded-[32px] p-6 md:p-8 h-24 flex items-center gap-6">
-                <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
                 <div className="flex-1 space-y-2">
                     <Skeleton className="h-4 w-full" />
                     <Skeleton className="h-4 w-2/3" />

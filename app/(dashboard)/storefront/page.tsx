@@ -6,26 +6,39 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import Link from "next/link"
 import { Copy, ExternalLink, QrCode, Share2, Eye, ShoppingCart, TrendingUp } from "lucide-react"
-import { useBusiness } from "@/app/components/BusinessProvider"
-import { useStores } from "@/app/domains/stores/providers/StoreProvider"
+import { useStorefront } from "@/app/domains/storefront/hooks/useStorefront"
 import { toast } from "sonner"
 
 export default function StorefrontOverview() {
-    const { currentStore } = useStores()
     const [isCopied, setIsCopied] = useState(false)
+    const { data: storefront, isLoading, error } = useStorefront()
 
-    // Mock data based on current store
-    const storeSlug = !currentStore ? 'default' :
-        currentStore.id === '1' ? 'adebayo-textiles' :
-            currentStore.id === '2' ? 'adebayo-ikeja' : 'adebayo-abuja'
-
-    const storeUrl = `clooveai.com/b/${storeSlug}`
+    const displayUrl = storefront?.url ?? ''
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(`https://${storeUrl}`)
+        if (!displayUrl) return
+        navigator.clipboard.writeText(displayUrl)
         setIsCopied(true)
         toast.success("Store link copied to clipboard")
         setTimeout(() => setIsCopied(false), 2000)
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[200px]">
+                <div className="w-8 h-8 border-2 border-brand-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+        )
+    }
+
+    if (error || !storefront) {
+        return (
+            <div className="rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-brand-cream/50 dark:bg-black/20 p-8 text-center">
+                <p className="text-brand-deep/70 dark:text-brand-cream/70">
+                    {(error as Error)?.message ?? 'Storefront not found. Set up your store link first.'}
+                </p>
+            </div>
+        )
     }
 
     return (
@@ -41,7 +54,7 @@ export default function StorefrontOverview() {
                         </h2>
                         <div className="flex items-center gap-3 p-1 rounded-2xl bg-white/50 dark:bg-black/20 border border-brand-deep/5 dark:border-white/5 backdrop-blur-sm">
                             <div className="px-4 py-2 flex-1 font-mono text-sm md:text-base text-brand-deep dark:text-brand-cream truncate">
-                                {storeUrl}
+                                {displayUrl}
                             </div>
                             <Button
                                 size="sm"
@@ -60,7 +73,7 @@ export default function StorefrontOverview() {
                         QR Code
                     </Button>
                     <a
-                        href={`https://${storeUrl}`}
+                        href={displayUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 md:flex-none"

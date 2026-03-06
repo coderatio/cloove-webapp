@@ -20,7 +20,7 @@ export function InventoryPulse({ totalItems, lowStockItems, className }: Invento
     const healthPercentage = Math.round((safeItems / (totalItems || 1)) * 100)
 
     return (
-        <GlassCard className="rounded-[24px] p-6 md:p-8 flex flex-col justify-between h-full relative overflow-hidden group">
+        <GlassCard className="p-6 md:p-8 flex flex-col justify-between h-full relative overflow-hidden group">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                     <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full">

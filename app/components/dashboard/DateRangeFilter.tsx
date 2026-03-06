@@ -64,7 +64,7 @@ export function DateRangeFilter({
                         id="date"
                         variant={"outline"}
                         className={cn(
-                            "w-auto md:w-[260px] justify-start text-left font-medium rounded-xl border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300 shadow-sm hover:shadow-md text-brand-deep/80 dark:text-brand-cream/80 px-2.5 md:px-4 text-[10px] md:text-sm",
+                            "w-auto md:min-w-[260px] justify-start text-left font-medium rounded-2xl h-12 border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300 shadow-sm hover:shadow-md text-brand-deep/80 dark:text-brand-cream/80 px-3 md:px-4 text-[10px] md:text-sm",
                             !date && "text-muted-foreground"
                         )}
                     >
@@ -91,7 +91,7 @@ export function DateRangeFilter({
                             <SelectTrigger className="w-full h-9 text-xs cursor-pointer border-brand-accent/10 dark:border-white/10 bg-white/40 dark:bg-black/20 backdrop-blur-sm rounded-xl hover:bg-white/60 dark:hover:bg-black/40 transition-all duration-300">
                                 <SelectValue placeholder="Quick Filter" />
                             </SelectTrigger>
-                            <SelectContent position="popper" className="z-[110]">
+                            <SelectContent position="popper" className="z-110">
                                 <SelectItem value="today">Today</SelectItem>
                                 <SelectItem value="yesterday">Yesterday</SelectItem>
                                 <SelectItem value="last7">Last 7 Days</SelectItem>

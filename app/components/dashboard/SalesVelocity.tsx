@@ -1,21 +1,51 @@
 "use client"
 
 import { GlassCard } from "../ui/glass-card"
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts"
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts"
 import { TrendingUp, TrendingDown } from "lucide-react"
+import { formatCurrency } from "@/app/lib/formatters"
 
 interface SalesVelocityProps {
     data: { date: string; value: number }[]
     total: string
     trend: string
+    currencyCode?: string
     className?: string
 }
 
-export function SalesVelocity({ data, total, trend, className }: SalesVelocityProps) {
+function ChartTooltip({
+    active,
+    payload,
+    label,
+    currencyCode,
+}: {
+    active?: boolean
+    payload?: ReadonlyArray<{ value?: unknown }>
+    label?: string | number
+    currencyCode: string
+}) {
+    if (!active || !payload?.length) return null
+    const raw = payload[0]
+    const value = typeof raw?.value === 'number' ? raw.value : Number(raw?.value) || 0
+    return (
+        <div className="rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/95 dark:bg-brand-deep/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+            {label != null && (
+                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-accent/60 dark:text-brand-cream/60">
+                    {label}
+                </p>
+            )}
+            <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                {formatCurrency(value, { currency: currencyCode })}
+            </p>
+        </div>
+    )
+}
+
+export function SalesVelocity({ data, total, trend, currencyCode = "NGN", className }: SalesVelocityProps) {
     const isPositive = trend.startsWith("+")
 
     return (
-        <GlassCard className="rounded-[24px] p-6 md:p-8 flex flex-col h-full relative overflow-hidden">
+        <GlassCard className="p-6 md:p-8 flex flex-col h-full relative overflow-hidden">
             <div className="flex items-center justify-between mb-6 z-10">
                 <div className="space-y-1">
                     <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream tracking-wide flex items-center gap-2">
@@ -47,13 +77,14 @@ export function SalesVelocity({ data, total, trend, className }: SalesVelocityPr
                             </linearGradient>
                         </defs>
                         <Tooltip
-                            contentStyle={{
-                                background: 'rgba(255, 255, 255, 0.8)',
-                                borderRadius: '12px',
-                                border: 'none',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                fontSize: '12px'
-                            }}
+                            content={({ active, payload, label }) => (
+                                <ChartTooltip
+                                    active={active}
+                                    payload={payload}
+                                    label={label}
+                                    currencyCode={currencyCode}
+                                />
+                            )}
                             cursor={{ stroke: '#d4af37', strokeWidth: 1, strokeDasharray: '3 3' }}
                         />
                         <Area

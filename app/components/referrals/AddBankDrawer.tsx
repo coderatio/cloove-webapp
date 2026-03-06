@@ -7,10 +7,18 @@ import { Input } from "@/app/components/ui/input"
 import { Building2, Loader2, CheckCircle2, AlertCircle, ChevronsUpDown, ArrowLeft } from "lucide-react"
 import { BankSelector } from "@/app/components/shared/BankSelector"
 
+export interface AddBankDetails {
+    bankName: string
+    accountNumber: string
+    accountName: string
+    bankCode?: string
+}
+
 interface AddBankDrawerProps {
     isOpen: boolean
     onOpenChange: (open: boolean) => void
-    onContinue: (details: { bankName: string, accountNumber: string, accountName: string }) => void
+    onContinue: (details: AddBankDetails) => void
+    onResolveAccount?: (accountNumber: string, bankCode: string) => Promise<{ accountName: string }>
 }
 
 type DrawerView = "form" | "selection"
@@ -19,45 +27,42 @@ export function AddBankDrawer({
     isOpen,
     onOpenChange,
     onContinue,
+    onResolveAccount,
 }: AddBankDrawerProps) {
     const [view, setView] = useState<DrawerView>("form")
-    const [details, setDetails] = useState({ bankName: "", accountNumber: "", accountName: "" })
+    const [details, setDetails] = useState<AddBankDetails>({ bankName: "", accountNumber: "", accountName: "", bankCode: "" })
     const [isResolving, setIsResolving] = useState(false)
     const [resolveError, setResolveError] = useState("")
 
-    // Reset state when drawer opens/closes
     useEffect(() => {
         if (!isOpen) {
-            setDetails({ bankName: "", accountNumber: "", accountName: "" })
+            setDetails({ bankName: "", accountNumber: "", accountName: "", bankCode: "" })
             setResolveError("")
             setIsResolving(false)
             setView("form")
         }
     }, [isOpen])
 
-    // Mock Account Name Resolution
     useEffect(() => {
-        if (details.bankName && details.accountNumber.length === 10) {
-            resolveAccount()
-        }
-    }, [details.bankName, details.accountNumber])
-
-    const resolveAccount = async () => {
-        setIsResolving(true)
-        setResolveError("")
-        setDetails(prev => ({ ...prev, accountName: "" }))
-
-        // Simulate API delay
-        setTimeout(() => {
-            setIsResolving(false)
-            // hardcoded mock resolution success for demo
-            if (details.accountNumber === "0000000000") {
-                setResolveError("Invalid account number")
-            } else {
-                setDetails(prev => ({ ...prev, accountName: "JOSIAH YAHAYA" }))
+        const bankCode = details.bankCode
+        if (!onResolveAccount || !bankCode || details.accountNumber.length !== 10) return
+        let cancelled = false
+        const run = async () => {
+            setIsResolving(true)
+            setResolveError("")
+            setDetails((prev) => ({ ...prev, accountName: "" }))
+            try {
+                const result = await onResolveAccount(details.accountNumber, bankCode)
+                if (!cancelled) setDetails((prev) => ({ ...prev, accountName: result.accountName }))
+            } catch (err) {
+                if (!cancelled) setResolveError((err as Error).message ?? "Failed to resolve account")
+            } finally {
+                if (!cancelled) setIsResolving(false)
             }
-        }, 1500)
-    }
+        }
+        run()
+        return () => { cancelled = true }
+    }, [details.bankCode, details.accountNumber, onResolveAccount])
 
     const handleContinue = () => {
         onContinue(details)
@@ -171,7 +176,7 @@ export function AddBankDrawer({
                             <BankSelector
                                 selectedBankName={details.bankName}
                                 onSelect={(bank) => {
-                                    setDetails({ ...details, bankName: bank.name })
+                                    setDetails((prev) => ({ ...prev, bankName: bank.name, bankCode: bank.code }))
                                     setView("form")
                                 }}
                             />

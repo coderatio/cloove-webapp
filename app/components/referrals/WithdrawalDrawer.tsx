@@ -13,15 +13,19 @@ interface WithdrawalDrawerProps {
     onOpenChange: (open: boolean) => void
     onContinue: (amount: number, bankId: string) => void
     availableBalance: number
-    banks: Array<{ id: string, bankName: string, accountNumber: string }>
+    banks: Array<{ id: string; bankName: string; accountNumber: string }>
+    minAmount?: number
 }
+
+const DEFAULT_MIN = 5000
 
 export function WithdrawalDrawer({
     isOpen,
     onOpenChange,
     onContinue,
     availableBalance,
-    banks
+    banks,
+    minAmount = DEFAULT_MIN,
 }: WithdrawalDrawerProps) {
     const [amount, setAmount] = useState("")
     const [selectedBank, setSelectedBank] = useState("")
@@ -33,7 +37,7 @@ export function WithdrawalDrawer({
     }
 
     const numericAmount = Number(amount.replace(/,/g, ""))
-    const isValid = numericAmount >= 5000 && numericAmount <= availableBalance && selectedBank !== ""
+    const isValid = numericAmount >= minAmount && numericAmount <= availableBalance && selectedBank !== ""
 
     return (
         <Drawer open={isOpen} onOpenChange={onOpenChange}>
@@ -54,7 +58,7 @@ export function WithdrawalDrawer({
                     <div className="p-4 space-y-6">
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">Amount (Min ₦5,000)</label>
+                                <label className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">Amount (Min ₦{minAmount.toLocaleString()})</label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-deep/40 dark:text-brand-cream/40 font-serif">₦</span>
                                     <Input
@@ -78,7 +82,7 @@ export function WithdrawalDrawer({
                                     {(() => {
                                         const numAmount = Number(amount.replace(/,/g, ""))
                                         if (numAmount > availableBalance) return <span className="text-red-500">Insufficient balance</span>
-                                        if (amount && numAmount < 5000) return <span className="text-orange-500">Minimum withdrawal is ₦5,000</span>
+                                        if (amount && numAmount < minAmount) return <span className="text-orange-500">Minimum withdrawal is ₦{minAmount.toLocaleString()}</span>
                                         return null
                                     })()}
                                 </div>
@@ -86,57 +90,11 @@ export function WithdrawalDrawer({
 
                             <div className="space-y-3">
                                 <label className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">Destination</label>
-
                                 <div className="space-y-2">
-                                    {/* Cloove Wallet Option */}
-                                    <button
-                                        onClick={() => setSelectedBank("CLOOVE_WALLET")}
-                                        className={cn(
-                                            "w-full p-4 rounded-3xl cursor-pointer border flex items-center gap-4 transition-all group relative overflow-hidden",
-                                            selectedBank === "CLOOVE_WALLET"
-                                                ? "bg-brand-deep/5 dark:bg-white/5 border-brand-deep/20 dark:border-brand-cream/20 ring-1 ring-brand-deep/20 dark:ring-brand-cream/20"
-                                                : "bg-white dark:bg-white/5 border-border hover:border-brand-deep/20 dark:hover:border-brand-cream/20"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-                                            selectedBank === "CLOOVE_WALLET"
-                                                ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep"
-                                                : "bg-brand-deep/5 dark:bg-white/10 text-brand-deep dark:text-brand-cream"
-                                        )}>
-                                            <Wallet className="w-5 h-5" />
-                                        </div>
-
-                                        <div className="text-left flex-1 min-w-0">
-                                            <div className="font-medium text-brand-deep dark:text-brand-cream">
-                                                Cloove Business Wallet
-                                            </div>
-                                            <div className="text-xs text-brand-deep/60 dark:text-brand-cream/60">
-                                                Instant transfer, zero fees
-                                            </div>
-                                        </div>
-
-                                        {selectedBank === "CLOOVE_WALLET" && (
-                                            <div className="w-5 h-5 rounded-full bg-brand-deep dark:bg-brand-gold flex items-center justify-center text-brand-gold dark:text-brand-deep animate-in zoom-in spin-in-12">
-                                                <Check className="w-3 h-3" strokeWidth={3} />
-                                            </div>
-                                        )}
-                                    </button>
-
-                                    {/* Divider for Banks */}
-                                    {banks.length > 0 && (
-                                        <div className="relative py-2">
-                                            <div className="absolute inset-0 flex items-center">
-                                                <span className="w-full border-t border-brand-deep/5 dark:border-white/5" />
-                                            </div>
-                                            <div className="relative flex justify-center text-xs uppercase">
-                                                <span className="bg-brand-cream dark:bg-[#021a12] px-2 text-muted-foreground">Or to Bank Account</span>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Bank Options */}
-                                    {banks.map((bank) => (
+                                    {banks.length === 0 ? (
+                                        <p className="text-sm text-brand-deep/60 dark:text-brand-cream/60">Add a bank account first to withdraw.</p>
+                                    ) : (
+                                    banks.map((bank) => (
                                         <button
                                             key={bank.id}
                                             onClick={() => setSelectedBank(bank.id)}
@@ -164,7 +122,8 @@ export function WithdrawalDrawer({
                                                 </div>
                                             )}
                                         </button>
-                                    ))}
+                                    ))
+                                    )}
                                 </div>
                             </div>
                         </div>

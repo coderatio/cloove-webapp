@@ -1,6 +1,7 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useRef } from "react"
+import { useParams } from "next/navigation"
 import {
     LayoutTemplate,
     Layers,
@@ -21,13 +22,70 @@ import { SectionInspector } from "../../components/SectionInspector"
 import { MagicGenerator } from "../../components/MagicGenerator"
 import { ThemeEditor } from "../../components/ThemeEditor"
 import { useBuilder } from "../../../../domains/storefront/context/BuilderContext"
+import { useStorefrontPage } from "../../../../domains/storefront/hooks/useStorefrontPages"
+import { useStorefrontTheme } from "../../../../domains/storefront/hooks/useStorefrontTheme"
+import { useCreateStorefrontPage, useUpdateStorefrontPage } from "../../../../domains/storefront/hooks/useStorefrontPages"
+import { apiSectionsToBuilder, builderSectionsToApi, type ApiSection } from "../../../../domains/storefront/lib/sectionMapping"
 
 export default function StorefrontEditorPage() {
+    const params = useParams()
+    const pageId = (params?.pageId as string) ?? 'new'
+    const isNewPage = pageId === 'new'
+
     const {
         sections, config, selectedSectionId, activeTab, isMagicOpen,
-        setSelectedSectionId, setActiveTab, setIsMagicOpen,
-        updateTheme, addSection, updateSection, removeSection, duplicateSection
+        setSections, setSelectedSectionId, setActiveTab, setIsMagicOpen,
+        updateTheme, addSection, updateSection, removeSection, duplicateSection,
+        registerSaveHandler,
     } = useBuilder()
+
+    const { data: pageData, isLoading: pageLoading } = useStorefrontPage(isNewPage ? null : pageId)
+    const { data: themeData } = useStorefrontTheme()
+    const createPage = useCreateStorefrontPage()
+    const updatePage = useUpdateStorefrontPage(pageId)
+    const initialLoadDone = useRef(false)
+
+    useEffect(() => {
+        if (isNewPage || !pageData) return
+        if (initialLoadDone.current) return
+        const apiSections = (pageData.content?.sections ?? []) as ApiSection[]
+        if (apiSections.length > 0) {
+            setSections(apiSectionsToBuilder(apiSections))
+        }
+        initialLoadDone.current = true
+    }, [pageData, isNewPage, setSections])
+
+    useEffect(() => {
+        if (themeData?.colors?.primary) {
+            updateTheme({
+                primaryColor: themeData.colors.primary,
+                fontHeading: themeData.fonts?.heading ? 'serif' : config.theme.fontHeading,
+                fontBody: themeData.fonts?.body ? 'sans' : config.theme.fontBody,
+            })
+        }
+    }, [themeData?.colors?.primary])
+
+    useEffect(() => {
+        registerSaveHandler(async (sectionsToSave) => {
+            const apiSections = builderSectionsToApi(sectionsToSave)
+            if (isNewPage) {
+                await createPage.mutateAsync({
+                    title: 'Untitled Page',
+                    slug: `page-${Date.now().toString(36)}`,
+                    isPublished: true,
+                    content: { sections: apiSections },
+                })
+            } else {
+                await updatePage.mutateAsync({
+                    isPublished: true,
+                    content: { sections: apiSections },
+                })
+            }
+        })
+        return () => {
+            registerSaveHandler(async (_s, _c) => {})
+        }
+    }, [isNewPage, pageId, registerSaveHandler])
 
     const selectedSection = sections.find(s => s.id === selectedSectionId) || null
 
@@ -49,11 +107,20 @@ export default function StorefrontEditorPage() {
         }
     }
 
-    const handleGenerateAI = (id: string, prompt: string) => {
-        // Placeholder for AI generation logic
-        updateSection(id, { settings: { ...selectedSection!.settings, aiSuggested: true } });
-    };
+    const handleGenerateAI = (_id: string, _prompt: string) => {
+        if (selectedSectionId) {
+            const section = sections.find((s) => s.id === selectedSectionId)
+            if (section) updateSection(section.id, { settings: { ...section.settings, aiSuggested: true } })
+        }
+    }
 
+    if (!isNewPage && pageLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-zinc-100 dark:bg-zinc-950">
+                <div className="w-8 h-8 border-2 border-brand-gold border-t-transparent rounded-full animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <div className="flex-1 flex overflow-hidden">

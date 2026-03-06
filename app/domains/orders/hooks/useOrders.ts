@@ -4,6 +4,24 @@ import { toast } from "sonner"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { Order, OrderFilterParams, OrdersResponse } from "../types"
 
+export function useOrder(orderId: string | null) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const { data: response, isLoading, error, refetch } = useQuery<ApiResponse<Order>>({
+        queryKey: ['sales', 'detail', businessId, orderId],
+        queryFn: () => apiClient.get<ApiResponse<Order>>(`/sales/${orderId}`, {}, { fullResponse: true }),
+        enabled: !!businessId && !!orderId,
+    })
+
+    return {
+        order: response?.data ?? null,
+        isLoading,
+        error,
+        refetch,
+    }
+}
+
 /**
  * Hook for managing orders/sales.
  * Supports server-side search, filtering and pagination.

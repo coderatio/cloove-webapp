@@ -42,16 +42,16 @@ export function StoreContextSelector({ value, onChange, className }: StoreContex
             renderTrigger={(currValue) => (
                 <button
                     className={cn(
-                        "h-12 px-6 cursor-pointer rounded-full border border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/2 dark:hover:bg-white/10 transition-all flex items-center gap-3 shadow-sm active:scale-95",
+                        "h-12 px-6 cursor-pointer rounded-full border border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/2 dark:hover:bg-white/10 transition-all flex w-full items-center gap-3 shadow-sm active:scale-95",
                         className
                     )}
                 >
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold">
                             {currValue === 'all-stores' ? <LayoutGrid className="h-3.5 w-3.5" /> : <StoreIcon className="h-3.5 w-3.5" />}
                         </div>
-                        <div className="flex flex-col items-start overflow-hidden">
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-brand-accent/40 dark:text-brand-cream/40 leading-none mb-0.5">Viewing</span>
+                        <div className="min-w-0 flex-1 flex flex-col justify-center overflow-hidden text-left">
+                            <span className="text-[10px] uppercase tracking-widest font-bold text-brand-accent/40 dark:text-brand-cream/40 leading-none mb-0.5 truncate">Viewing</span>
                             <span className="truncate text-xs font-bold leading-none text-brand-deep dark:text-brand-cream">
                                 {selectedOption.label}
                             </span>

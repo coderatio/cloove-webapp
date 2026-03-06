@@ -1,23 +1,25 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowDownLeft, ShoppingBag, CreditCard, UserPlus, ChevronRight, PackageSearch, Sparkles } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, ShoppingBag, CreditCard, UserPlus, ChevronRight, PackageSearch, Sparkles, ArrowRight, Wallet } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "../ui/glass-card"
 import Link from "next/link"
 
 export interface ActivityItem {
     id: string
-    type: 'sale' | 'payment' | 'debt' | 'customer' | 'inventory'
+    type: 'sale' | 'payment' | 'debt' | 'customer' | 'inventory' | 'deposit' | 'withdrawal'
     description: string
     amount?: string
     timeAgo: string
     customer?: string
     href?: string
+    orderId?: string
 }
 
 interface ActivityStreamProps {
     activities: ActivityItem[]
+    onOrderClick?: (orderId: string) => void
     className?: string
 }
 
@@ -33,6 +35,10 @@ const ActivityIcon = ({ type }: { type: ActivityItem['type'] }) => {
             return <div className="p-2 bg-brand-accent/10 text-brand-accent dark:bg-brand-gold/10 dark:text-brand-gold rounded-full"><UserPlus className="w-4 h-4" /></div>
         case 'inventory':
             return <div className="p-2 bg-brand-blue/10 text-brand-blue dark:bg-brand-gold/10 dark:text-brand-gold rounded-full"><PackageSearch className="w-4 h-4" /></div>
+        case 'deposit':
+            return <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full"><Wallet className="w-4 h-4" /></div>
+        case 'withdrawal':
+            return <div className="p-2 bg-brand-accent/10 text-brand-accent dark:bg-brand-accent/20 dark:text-brand-gold rounded-full"><ArrowUpRight className="w-4 h-4" /></div>
     }
 }
 
@@ -112,14 +118,15 @@ const ActivityEmptyState = () => {
     )
 }
 
-export function ActivityStream({ activities, className }: ActivityStreamProps) {
+export function ActivityStream({ activities, onOrderClick, className }: ActivityStreamProps) {
     return (
         <div className={cn("space-y-4", className)}>
             <div className="flex items-center justify-between px-2">
                 <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream font-medium">Recent Activity</h3>
                 {activities.length > 0 && (
-                    <Link href="/activity" className="text-xs font-semibold text-brand-accent/60 hover:text-brand-green dark:text-brand-cream/60 dark:hover:text-brand-gold transition-colors">
-                        View all
+                    <Link href="/activity" className="flex items-center gap-1 text-xs font-semibold text-brand-accent/60 hover:text-brand-green dark:text-brand-cream/60 dark:hover:text-brand-gold transition-colors">
+                        <span>View all</span>
+                        <ArrowRight className="w-4 h-4" />
                     </Link>
                 )}
             </div>
@@ -151,9 +158,9 @@ export function ActivityStream({ activities, className }: ActivityStreamProps) {
                                     {item.amount && (
                                         <div className={cn(
                                             "text-sm font-bold whitespace-nowrap",
-                                            item.type === 'sale' || item.type === 'payment' ? "text-brand-green dark:text-brand-gold" : "text-brand-deep dark:text-brand-cream"
+                                            item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? "text-brand-green dark:text-brand-gold" : item.type === 'withdrawal' ? "text-brand-accent dark:text-brand-gold" : "text-brand-deep dark:text-brand-cream"
                                         )}>
-                                            {item.type === 'sale' ? '+' : ''}{item.amount}
+                                            {item.type === 'withdrawal' ? '-' : item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? '+' : ''}{item.amount}
                                         </div>
                                     )}
                                     <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors" />
@@ -161,11 +168,26 @@ export function ActivityStream({ activities, className }: ActivityStreamProps) {
                             </motion.div>
                         )
 
-                        return item.href ? (
-                            <Link key={item.id} href={item.href} className="block">
-                                {Content}
-                            </Link>
-                        ) : (
+                        if (item.type === 'sale' && item.orderId && onOrderClick) {
+                            return (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => onOrderClick(item.orderId!)}
+                                    className="block w-full text-left"
+                                >
+                                    {Content}
+                                </button>
+                            )
+                        }
+                        if (item.href) {
+                            return (
+                                <Link key={item.id} href={item.href} className="block">
+                                    {Content}
+                                </Link>
+                            )
+                        }
+                        return (
                             <div key={item.id}>
                                 {Content}
                             </div>

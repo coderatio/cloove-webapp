@@ -21,6 +21,10 @@ export interface FinanceSummary {
     creditsTotal?: number
     creditsTotalLabel?: string
     pendingTransactionsCount?: number
+    startDate?: string | null
+    endDate?: string | null
+    periodLabel?: string
+    totalDays?: number
 }
 
 export interface FinanceTransactionRow {
@@ -33,6 +37,7 @@ export interface FinanceTransactionRow {
     date: string
     dateLabel?: string
     fullDate?: string
+    createdAt?: string
     method: string
     storeId: string | null
     metadata?: any
@@ -83,17 +88,38 @@ export interface WithdrawalResponse {
 
 const FINANCE_PAGE_SIZE = 10
 
-export function useFinanceSummary(storeId?: string) {
+export function useFinanceSummary(storeId?: string, date?: string, enabled = true) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
     const params: Record<string, string> = {}
     if (storeId && storeId !== 'all-stores') params.storeId = storeId
+    if (date) params.date = date
 
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<FinanceSummary>>({
-        queryKey: ['finance', 'summary', businessId, storeId],
+        queryKey: ['finance', 'summary', businessId, storeId, date],
         queryFn: () => apiClient.get<ApiResponse<FinanceSummary>>('/finance/summary', params, { fullResponse: true }),
-        enabled: !!businessId,
+        enabled: !!businessId && enabled,
+    })
+
+    return {
+        summary: response?.data,
+        isLoading,
+        isFetching,
+        error,
+    }
+}
+
+export function useFinancePeriodSummary(from: string, to: string, storeId?: string, enabled = true) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const params: Record<string, string> = { from, to }
+    if (storeId && storeId !== 'all-stores') params.storeId = storeId
+    const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<FinanceSummary>>({
+        queryKey: ['finance', 'summary', 'period', businessId, from, to, storeId],
+        queryFn: () => apiClient.get<ApiResponse<FinanceSummary>>('/finance/summary', params, { fullResponse: true }),
+        enabled: !!businessId && !!from && !!to && enabled,
     })
 
     return {

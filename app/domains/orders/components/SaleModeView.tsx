@@ -795,7 +795,7 @@ export function SaleModeView() {
                                 <ArrowLeft className="h-5 w-5" />
                             </Button>
 
-                            <div className="hidden lg:flex h-10 w-10 rounded-[14px] bg-brand-deep dark:bg-brand-accent items-center justify-center text-brand-gold shadow-lg shadow-brand-deep/20">
+                            <div className="hidden lg:flex h-10 w-10 rounded-[14px] border border-brand-accent/15 bg-brand-cream/60 dark:bg-brand-accent items-center justify-center text-brand-deep dark:text-brand-gold shadow-sm shadow-brand-deep/20">
                                 <ShoppingCart className="h-4 w-4" />
                             </div>
                             <div>
