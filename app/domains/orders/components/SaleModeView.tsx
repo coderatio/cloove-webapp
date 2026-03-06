@@ -433,9 +433,18 @@ export function SaleModeView() {
 
             {/* Left Side: Product Catalog */}
             <div className={cn(
-                "flex-1 flex flex-col min-w-0 h-full relative z-10",
+                "flex-1 flex flex-col min-w-0 h-full relative z-10 overflow-hidden isolate",
                 mobileView === 'cart' ? "hidden lg:flex" : "flex"
             )}>
+                <ProductSearchOverlay
+                    isOpen={isSearchOpen}
+                    onClose={() => setIsSearchOpen(false)}
+                    products={products}
+                    onSelect={addToCart}
+                    isLoading={isLoadingProducts}
+                    isLocalMode={isLocalMode}
+                    onSearchChange={setSearch}
+                />
                 <div className="flex-1 flex flex-col p-4 lg:pt-2 lg:px-8 lg:pb-8 space-y-4 lg:space-y-6 min-h-0">
                     <header className="flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-6">
@@ -546,7 +555,10 @@ export function SaleModeView() {
                             animate="show"
                             className="flex-1 overflow-y-auto custom-scrollbar pr-1 lg:pr-2 -mr-1 lg:-mr-2 min-h-0"
                         >
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 pb-6">
+                            <div className={cn(
+                                "grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 pb-6",
+                                cart.length > 0 && "pb-40 lg:pb-6"
+                            )}>
                                 <AnimatePresence mode="popLayout">
                                     {filteredProducts.length === 0 ? (
                                         <div className="col-span-full py-24 flex flex-col items-center justify-center text-brand-accent/40 dark:text-brand-cream/30">
@@ -1291,15 +1303,6 @@ export function SaleModeView() {
                 onRemove={removeQueuedSale}
             />
 
-            <ProductSearchOverlay
-                isOpen={isSearchOpen}
-                onClose={() => setIsSearchOpen(false)}
-                products={products}
-                isLoading={isLoadingProducts}
-                isLocalMode={isLocalMode}
-                onSearchChange={(s) => setSearch(s)}
-                onSelect={(product: Product) => addToCart(product)}
-            />
 
             {/* Global Refinements */}
             <style jsx global>{`
