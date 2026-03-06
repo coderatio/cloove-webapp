@@ -202,7 +202,7 @@ export function OrdersView() {
             header: 'Summary',
             width: 'auto',
             cellClassName: 'whitespace-normal min-w-[200px]',
-            render: (_: any, row: Order) => <span className="text-xs">{row.summary}</span>
+            render: (_: any, row: Order) => <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">{row.summary}</span>
         },
         {
             key: 'totalAmount',
@@ -242,7 +242,7 @@ export function OrdersView() {
             header: 'Time',
             width: '120px',
             render: (_: any, order: Order) => (
-                <span className="text-xs text-brand-accent/60">{formatDate(order.date, 'MMM d, h:mm a')}</span>
+                <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">{formatDate(order.date, 'MMM d, h:mm a')}</span>
             )
         },
         {

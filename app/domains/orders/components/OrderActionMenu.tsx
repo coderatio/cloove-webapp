@@ -72,20 +72,20 @@ export function OrderActionMenu({
                     )}
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 rounded-2xl p-1.5 shadow-xl border-brand-deep/5 dark:border-white/5 bg-white/90 dark:bg-[#021a12] backdrop-blur-xl">
+            <DropdownMenuContent align="end" className="w-48 rounded-2xl p-1.5 shadow-xl border-brand-deep/5 dark:border-white/5 bg-white/90 dark:bg-brand-deep-900 backdrop-blur-xl">
                 <DropdownMenuItem
                     onSelect={() => onViewDetails(order)}
-                    className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep/5 dark:focus:bg-white/5 cursor-pointer"
+                    className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer"
                     disabled={isProcessing}
                 >
-                    <Eye className="w-4 h-4 text-brand-accent/60" />
+                    <Eye className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
                     <span className="font-medium text-sm">View Details</span>
                 </DropdownMenuItem>
 
                 {hasBalance && (
                     <DropdownMenuItem
                         onSelect={() => onRecordPayment(order)}
-                        className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep/5 dark:focus:bg-white/5 cursor-pointer text-brand-green dark:text-brand-gold"
+                        className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer text-brand-green dark:text-brand-gold"
                         disabled={isProcessing}
                     >
                         <Check className="w-4 h-4" />
@@ -126,10 +126,10 @@ export function OrderActionMenu({
                         e.preventDefault()
                         onPrintReceipt(order)
                     }}
-                    className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep/5 dark:focus:bg-white/5 cursor-pointer"
+                    className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer"
                     disabled={isProcessing}
                 >
-                    <Printer className={cn("w-4 h-4 text-brand-accent/60")} />
+                    <Printer className={cn("w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40")} />
                     <span className="font-medium text-sm">Print Receipt</span>
                 </DropdownMenuItem>
 
@@ -138,10 +138,10 @@ export function OrderActionMenu({
                         e.preventDefault()
                         handleAction('receipt', 'Download Receipt', () => onGenerateReceipt(order.id))
                     }}
-                    className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep/5 dark:focus:bg-white/5 cursor-pointer"
+                    className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer"
                     disabled={isProcessing}
                 >
-                    <Download className={cn("w-4 h-4 text-brand-accent/60", activeAction === 'receipt' && "animate-pulse")} />
+                    <Download className={cn("w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40", activeAction === 'receipt' && "animate-pulse")} />
                     <span className="font-medium text-sm">Download Receipt</span>
                 </DropdownMenuItem>
 
