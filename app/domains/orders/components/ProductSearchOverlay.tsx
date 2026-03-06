@@ -138,11 +138,11 @@ export function ProductSearchOverlay({
                             placeholder="Find products by name, category or scan..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 h-16 text-2xl font-serif text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 bg-transparent border-none focus:outline-none focus:ring-0"
+                            className="w-full pl-10 pr-4 h-16 text-lg sm:text-2xl font-serif text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 bg-transparent border-none focus:outline-none focus:ring-0"
                         />
                     </div>
-                    {/* Added margin right to avoid close button conflict */}
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-brand-gold/10 text-brand-gold dark:text-brand-gold text-[10px] font-black uppercase tracking-[0.2em] border border-brand-gold/30 shadow-sm whitespace-nowrap shrink-0 mr-16">
+                    {/* Hidden on mobile to avoid close button conflict */}
+                    <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-2xl bg-brand-gold/10 text-brand-gold dark:text-brand-gold text-[10px] font-black uppercase tracking-[0.2em] border border-brand-gold/30 shadow-sm whitespace-nowrap shrink-0 mr-16">
                         <Barcode className="h-4 w-4" />
                         Scan Active
                     </div>
@@ -234,22 +234,22 @@ export function ProductSearchOverlay({
                 </div>
 
                 {/* Footer Controls */}
-                <div className="p-5 bg-brand-accent/5 dark:bg-white/5 flex items-center justify-between shrink-0 border-t border-brand-accent/5 dark:border-white/5 relative z-30">
-                    <div className="flex items-center gap-8">
-                        <div className="flex items-center gap-3">
-                            <kbd className="flex items-center justify-center w-8 h-8 rounded-xl bg-white dark:bg-brand-deep text-[10px] font-black border border-brand-accent/20 dark:border-white/20 shadow-sm text-brand-deep dark:text-brand-cream">↑↓</kbd>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">Navigate</span>
+                <div className="p-4 sm:p-5 bg-brand-accent/5 dark:bg-white/5 flex flex-col sm:flex-row items-center justify-between shrink-0 border-t border-brand-accent/5 dark:border-white/5 relative z-30 gap-4 sm:gap-0">
+                    <div className="flex items-center gap-4 sm:gap-8 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 touch-pan-x hide-scrollbar">
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                            <kbd className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white dark:bg-brand-deep text-[10px] font-black border border-brand-accent/20 dark:border-white/20 shadow-sm text-brand-deep dark:text-brand-cream">↑↓</kbd>
+                            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">Navigate</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <kbd className="flex items-center justify-center w-8 h-8 rounded-xl bg-white dark:bg-brand-deep text-[10px] font-black border border-brand-accent/20 dark:border-white/20 shadow-sm text-brand-deep dark:text-brand-cream">↵</kbd>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">Select</span>
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                            <kbd className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white dark:bg-brand-deep text-[10px] font-black border border-brand-accent/20 dark:border-white/20 shadow-sm text-brand-deep dark:text-brand-cream">↵</kbd>
+                            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">Select</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <kbd className="flex items-center justify-center px-2 h-8 rounded-xl bg-white dark:bg-brand-deep text-[10px] font-black border border-brand-accent/20 dark:border-white/20 shadow-sm text-brand-deep dark:text-brand-cream">ESC</kbd>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">Close</span>
+                        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                            <kbd className="flex items-center justify-center px-1.5 sm:px-2 h-7 sm:h-8 rounded-xl bg-white dark:bg-brand-deep text-[10px] font-black border border-brand-accent/20 dark:border-white/20 shadow-sm text-brand-deep dark:text-brand-cream">ESC</kbd>
+                            <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">Close</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="hidden sm:flex items-center gap-2 shrink-0">
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-gold">
                             CLOOVE POS SYSTEM
                         </p>

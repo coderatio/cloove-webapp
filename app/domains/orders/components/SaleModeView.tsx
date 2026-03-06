@@ -455,15 +455,32 @@ export function SaleModeView() {
 
                     {/* Filters & Search */}
                     <div className="flex flex-col lg:flex-row gap-4 items-start">
-                        <div
-                            className="relative flex-2 w-full lg:w-auto min-w-[320px] group flex items-center cursor-pointer"
-                            onClick={() => setIsSearchOpen(true)}
-                        >
-                            <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
-                                <Search className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
+                        <div className="w-full lg:w-auto min-w-[320px] flex-2">
+                            {/* Desktop: Opens Overlay */}
+                            <div
+                                className="relative hidden lg:flex items-center group cursor-pointer"
+                                onClick={() => setIsSearchOpen(true)}
+                            >
+                                <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
+                                </div>
+                                <div className="pl-12 pr-6 h-14 bg-white/40 dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-2xl flex items-center text-brand-accent/40 dark:text-brand-cream/40 text-sm select-none w-full group-hover:border-brand-gold/30 transition-all">
+                                    Search catalog or scan barcode... <span className="ml-auto text-[10px] font-black bg-brand-accent/5 dark:bg-white/5 px-2 py-1 rounded-lg border border-brand-accent/10">/</span>
+                                </div>
                             </div>
-                            <div className="pl-12 pr-6 h-14 bg-white/40 dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-2xl flex items-center text-brand-accent/40 dark:text-brand-cream/40 text-sm select-none w-full group-hover:border-brand-gold/30 transition-all">
-                                Search catalog or scan barcode... <span className="ml-auto text-[10px] font-black bg-brand-accent/5 dark:bg-white/5 px-2 py-1 rounded-lg border border-brand-accent/10">/</span>
+
+                            {/* Mobile: Inline Search Input */}
+                            <div className="relative flex lg:hidden items-center group">
+                                <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-focus-within:text-brand-gold transition-colors" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search catalog or scan..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full pl-12 pr-6 h-14 bg-white/40 dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-2xl text-brand-deep dark:text-brand-cream text-sm placeholder:text-brand-accent/40 dark:placeholder:text-brand-cream/40 focus:outline-none focus:border-brand-gold/30 focus:ring-1 focus:ring-brand-gold/30 transition-all"
+                                />
                             </div>
                         </div>
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth w-full">
