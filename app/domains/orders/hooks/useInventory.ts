@@ -14,6 +14,7 @@ export interface Product {
     stock: number
     status: 'In Stock' | 'Out of Stock' | 'Low Stock'
     barcode?: string
+    image?: string
 }
 
 /**
@@ -91,6 +92,10 @@ function mapProduct(item: any, lowStockThreshold: number): Product {
         stock,
         status,
         barcode: item.barcode,
+        // API uses "images" array (prefer primary), mocks may use "image"
+        image: Array.isArray(item.images)
+            ? (item.images.find((img: any) => img.isPrimary)?.url || item.images[0]?.url)
+            : (item.image || item.imageUrl),
     }
 }
 

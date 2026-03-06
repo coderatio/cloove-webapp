@@ -194,7 +194,13 @@ export function useCustomerStats() {
         totalDebt: number
     }>>({
         queryKey: ["customers-stats", businessId],
-        queryFn: () => apiClient.get("/customers/stats"),
+        queryFn: () =>
+            apiClient.get<ApiResponse<{
+                totalCustomers: number
+                activeCustomers: number
+                newCustomers: number
+                totalDebt: number
+            }>>("/customers/stats", undefined, { fullResponse: true }),
         enabled: !!businessId,
     })
 }

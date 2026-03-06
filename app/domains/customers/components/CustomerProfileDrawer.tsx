@@ -103,13 +103,13 @@ export function CustomerProfileDrawer({
                                 className={cn(
                                     "rounded-xl h-9 px-4 gap-2 border-brand-deep/5 transition-all duration-300",
                                     customer.isVip
-                                        ? "text-brand-accent border-brand-accent/20 bg-brand-accent/5 hover:bg-brand-accent/10"
+                                        ? "text-brand-accent border-brand-accent/20 bg-brand-accent/5 hover:bg-brand-accent/10 dark:text-brand-cream/60"
                                         : "text-brand-gold border-brand-gold/20 bg-brand-gold/5 hover:bg-brand-gold/10"
                                 )}
                                 onClick={() => onUpdateVip?.(customer.id, !customer.isVip)}
                             >
-                                <Star className={cn("w-3.5 h-3.5", customer.isVip ? "text-brand-accent fill-brand-accent/20" : "text-brand-gold")} />
-                                Make VIP
+                                <Star className={cn("w-3.5 h-3.5", customer.isVip ? "text-brand-accent fill-brand-accent/20 dark:text-brand-cream/60 dark:hover:text-brand-gold" : "text-brand-gold")} />
+                                {customer.isVip ? "Remove VIP" : "Make VIP"}
                             </Button>
                             <Button
                                 variant="outline"
@@ -126,7 +126,7 @@ export function CustomerProfileDrawer({
                 <div className="p-6 md:p-8 space-y-8 overflow-y-auto max-h-[75vh]">
                     {/* Quick Stats Grid - Academic Luxury Overhaul */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group rounded-3xl">
+                        <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                             <div className="absolute -right-2 -top-2 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
                                 <ShoppingBag className="w-20 h-20 text-brand-deep/10 dark:text-white/10" />
                             </div>
@@ -134,14 +134,14 @@ export function CustomerProfileDrawer({
                                 Total Orders
                             </span>
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green">
+                                <div className="h-10 w-10 rounded-2xl bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
                                     <ShoppingBag className="w-5 h-5" />
                                 </div>
                                 <span className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{customer.orders}</span>
                             </div>
                         </GlassCard>
 
-                        <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group rounded-3xl">
+                        <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                             <div className="absolute -right-2 -top-2 opacity-10 group-hover:opacity-20 transition-opacity transform -rotate-12">
                                 <TrendingUp className="w-20 h-20 text-brand-gold/10" />
                             </div>
@@ -159,7 +159,7 @@ export function CustomerProfileDrawer({
                         </GlassCard>
 
                         <GlassCard className={cn(
-                            "p-6 flex flex-col gap-3 border-none relative overflow-hidden group transition-all duration-500 rounded-3xl",
+                            "p-6 flex flex-col gap-3 border-none relative overflow-hidden group transition-all duration-500 rounded-3xl before:rounded-3xl",
                             hasDebt
                                 ? "bg-rose-500/4 border border-rose-500/10 shadow-[0_0_30px_rgba(239,68,68,0.05)]"
                                 : "bg-brand-deep/3 dark:bg-white/3"
@@ -176,7 +176,7 @@ export function CustomerProfileDrawer({
                             <div className="flex items-center gap-3">
                                 <div className={cn(
                                     "h-10 w-10 rounded-2xl flex items-center justify-center transition-colors",
-                                    hasDebt ? "bg-rose-500/10 text-rose-500" : "bg-brand-accent/10 text-brand-accent/40"
+                                    hasDebt ? "bg-rose-500/10 text-rose-500 dark:text-rose-400" : "bg-brand-accent/10 dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40"
                                 )}>
                                     <ShieldAlert className="w-5 h-5" />
                                 </div>
@@ -208,32 +208,32 @@ export function CustomerProfileDrawer({
                                             asChild
                                         >
                                             <a href={`tel:${customer.phoneNumber}`} className="w-full flex items-center gap-4">
-                                                <div className="h-9 w-9 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
+                                                <div className="h-9 w-9 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400 group-hover:bg-brand-green group-hover:text-white transition-all">
                                                     <Phone className="w-4.5 h-4.5" />
                                                 </div>
                                                 <div className="flex flex-col items-start flex-1">
                                                     <span className="text-xs font-bold uppercase tracking-wider text-brand-deep dark:text-brand-cream">Call Customer</span>
-                                                    <span className="text-[10px] text-brand-accent/60">{customer.phoneNumber}</span>
+                                                    <span className="text-[10px] text-brand-accent/60 dark:text-brand-cream/60">{customer.phoneNumber}</span>
                                                 </div>
-                                                <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:translate-x-0.5 transition-transform" />
+                                                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/20 group-hover:translate-x-0.5 transition-transform" />
                                             </a>
                                         </Button>
 
                                         {whatsappUrl && (
                                             <Button
                                                 variant="ghost"
-                                                className="h-16 rounded-none justify-start gap-4 px-6 hover:bg-brand-green/2 group"
+                                                className="h-16 rounded-none justify-start gap-4 px-6 hover:bg-brand-green/2 dark:hover:bg-brand-green/10 group"
                                                 asChild
                                             >
                                                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-4">
-                                                    <div className="h-9 w-9 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green group-hover:bg-brand-green group-hover:text-white transition-all">
+                                                    <div className="h-9 w-9 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400 group-hover:bg-brand-green group-hover:text-white transition-all">
                                                         <MessageSquare className="w-4.5 h-4.5" />
                                                     </div>
                                                     <div className="flex flex-col items-start flex-1">
-                                                        <span className="text-xs font-bold uppercase tracking-wider text-brand-green">WhatsApp Chat</span>
-                                                        <span className="text-[10px] text-brand-green/60 uppercase tracking-tighter font-medium">Fastest response</span>
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-brand-green dark:text-emerald-400">WhatsApp Chat</span>
+                                                        <span className="text-[10px] text-brand-green/60 dark:text-emerald-400/60 uppercase tracking-tighter font-medium">Fastest response</span>
                                                     </div>
-                                                    <ChevronRight className="w-4 h-4 text-brand-green/20 group-hover:translate-x-0.5 transition-transform" />
+                                                    <ChevronRight className="w-4 h-4 text-brand-green/20 dark:text-emerald-400/20 group-hover:translate-x-0.5 transition-transform" />
                                                 </a>
                                             </Button>
                                         )}
@@ -243,7 +243,7 @@ export function CustomerProfileDrawer({
                                 {customer.email && (
                                     <Button
                                         variant="ghost"
-                                        className="h-16 rounded-none justify-start gap-4 px-6 hover:bg-brand-gold/2 group"
+                                        className="h-16 rounded-none justify-start gap-4 px-6 hover:bg-brand-gold/2 dark:hover:bg-brand-gold/10 group"
                                         asChild
                                     >
                                         <a href={`mailto:${customer.email}`} className="w-full flex items-center gap-4">
@@ -252,9 +252,9 @@ export function CustomerProfileDrawer({
                                             </div>
                                             <div className="flex flex-col items-start flex-1">
                                                 <span className="text-xs font-bold uppercase tracking-wider text-brand-deep dark:text-brand-cream">Send Email</span>
-                                                <span className="text-[10px] text-brand-accent/60">{customer.email}</span>
+                                                <span className="text-[10px] text-brand-accent/60 dark:text-brand-cream/60">{customer.email}</span>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 group-hover:translate-x-0.5 transition-transform" />
+                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/20 group-hover:translate-x-0.5 transition-transform" />
                                         </a>
                                     </Button>
                                 )}
@@ -275,6 +275,7 @@ export function CustomerProfileDrawer({
                                 className="text-brand-gold text-[10px] uppercase font-bold tracking-widest h-auto p-0"
                             >
                                 View Full Ledger
+                                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold group-hover:translate-x-0.5 transition-transform" />
                             </Button>
                         </div>
 
@@ -297,7 +298,7 @@ export function CustomerProfileDrawer({
                                         <Button
                                             variant="ghost"
                                             onClick={() => setIsLedgerOpen(true)}
-                                            className="w-full h-10 text-[10px] uppercase font-bold tracking-widest text-brand-accent/40 hover:text-brand-gold transition-colors"
+                                            className="w-full h-10 text-[10px] uppercase font-bold tracking-widest text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-transparent! transition-colors"
                                         >
                                             + {txResponse.data.length - 5} More Transactions
                                         </Button>
@@ -313,7 +314,7 @@ export function CustomerProfileDrawer({
                                             <Sparkles className="w-32 h-32 text-brand-gold" />
                                         </div>
                                         <div className="absolute bottom-0 left-0 p-8 transform -translate-x-1/4 translate-y-1/4 opacity-5">
-                                            <Activity className="w-24 h-24 text-brand-green" />
+                                            <Activity className="w-24 h-24 text-brand-green dark:text-emerald-400" />
                                         </div>
 
                                         <div className="w-20 h-20 rounded-full bg-white dark:bg-brand-deep shadow-2xl shadow-brand-gold/10 flex items-center justify-center mb-6 relative">
@@ -329,22 +330,22 @@ export function CustomerProfileDrawer({
                                         </p>
 
                                         <Badge variant="outline" className="rounded-full bg-white/50 dark:bg-brand-deep/50 border-brand-deep/5 backdrop-blur-sm px-4 py-1.5 flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Waiting for activity</span>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-brand-green dark:bg-emerald-400 animate-pulse" />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Waiting for activity</span>
                                         </Badge>
                                     </div>
                                 </div>
                             )}
 
                             <div className="flex items-center gap-4 p-5 rounded-3xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm">
-                                <div className="h-10 w-10 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green">
+                                <div className="h-10 w-10 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
                                     <ShoppingBag className="w-5 h-5" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 mb-0.5">Registration Status</p>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 mb-0.5">Registration Status</p>
                                     <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">Customer Profile Active</p>
                                 </div>
-                                <div className="h-8 px-3 rounded-xl bg-brand-green/10 flex items-center text-[10px] font-bold text-brand-green uppercase tracking-wider">
+                                <div className="h-8 px-3 rounded-xl bg-brand-green/10 dark:bg-emerald-500/10 flex items-center text-[10px] font-bold text-brand-green dark:text-emerald-400 uppercase tracking-wider">
                                     Verified
                                 </div>
                             </div>
@@ -354,7 +355,7 @@ export function CustomerProfileDrawer({
 
                 <div className="p-6 md:p-8 pt-0 sm:hidden">
                     <DrawerClose asChild>
-                        <Button variant="outline" className="w-full h-12 rounded-xl border-brand-deep/5">
+                        <Button variant="outline" className="w-full h-12 rounded-xl border-brand-deep/5 dark:border-white/5 dark:text-brand-cream">
                             Close
                         </Button>
                     </DrawerClose>

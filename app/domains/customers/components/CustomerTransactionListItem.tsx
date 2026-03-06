@@ -17,17 +17,17 @@ interface CustomerTransactionListItemProps {
 const statusColorMap: Record<string, { label: string, className: string, icon: React.ComponentType<{ className?: string }> }> = {
     COMPLETED: {
         label: 'Completed',
-        className: "text-emerald-600 bg-emerald-500/10 dark:bg-emerald-400/10",
+        className: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-400/10",
         icon: CheckCircle2
     },
     PENDING: {
         label: 'Pending',
-        className: "text-amber-600 bg-amber-600/5 dark:bg-amber-400/5",
+        className: "text-amber-600 dark:text-amber-400 bg-amber-600/5 dark:bg-amber-400/5",
         icon: Clock
     },
     CANCELLED: {
         label: 'Cancelled',
-        className: "text-red-600 bg-red-600/5 dark:bg-red-400/5",
+        className: "text-red-600 dark:text-red-400 bg-red-600/5 dark:bg-red-400/5",
         icon: XCircle
     }
 }
@@ -40,7 +40,7 @@ export function CustomerTransactionListItem({
     const status = transaction.status?.toUpperCase() || 'UNKNOWN'
     const config = statusColorMap[status] || {
         label: transaction.status || 'Unknown',
-        className: "text-brand-deep/60 bg-brand-deep/5 dark:bg-white/5",
+        className: "text-brand-deep/60 dark:text-brand-cream/60 bg-brand-deep/5 dark:bg-white/5",
         icon: AlertCircle
     }
     const StatusIcon = config.icon
@@ -49,9 +49,9 @@ export function CustomerTransactionListItem({
         <Button
             variant="ghost"
             onClick={onClick}
-            className="w-full h-auto flex items-center gap-4 p-4 rounded-3xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm group hover:border-brand-gold/20 hover:bg-white dark:hover:bg-brand-deep/40 transition-all text-left justify-start"
+            className="w-full h-auto flex items-center gap-4 p-4 rounded-3xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm group hover:border-brand-gold/20 dark:hover:border-brand-gold/20 hover:bg-white dark:hover:bg-brand-deep/60 transition-all text-left justify-start"
         >
-            <div className="h-10 w-10 shrink-0 rounded-full bg-brand-gold/5 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold group-hover:text-white transition-all">
+            <div className="h-10 w-10 shrink-0 rounded-full bg-brand-gold/5 dark:bg-brand-gold/10 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold group-hover:text-white transition-all">
                 <ShoppingBag className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
@@ -76,7 +76,7 @@ export function CustomerTransactionListItem({
                     </Badge>
                 </div>
             </div>
-            <ChevronRight className="w-4 h-4 shrink-0 text-brand-accent/20 group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all" />
+            <ChevronRight className="w-4 h-4 shrink-0 text-brand-accent/20 dark:text-brand-cream/20 group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all" />
         </Button>
     )
 }

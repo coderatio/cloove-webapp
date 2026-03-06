@@ -126,7 +126,7 @@ export function CustomerLedgerDrawer({
                     <DrawerStickyHeader className="border-b border-brand-deep/5 dark:border-white/5">
                         <div className="flex items-center gap-4">
                             <DrawerClose asChild>
-                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+                                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full dark:text-brand-cream hover:dark:bg-white/10">
                                     <ArrowLeft className="w-5 h-5" />
                                 </Button>
                             </DrawerClose>
@@ -146,27 +146,31 @@ export function CustomerLedgerDrawer({
                                 value={search}
                                 onChange={(val) => { setSearch(val); setPage(1); }}
                                 placeholder="Search transactions..."
-                                className="flex-1"
+                                className="flex-1 w-full"
                             />
-                            <div className="flex items-center gap-2">
-                                <FilterPopover
-                                    groups={filterGroups}
-                                    selectedValues={selectedFilters}
-                                    onSelectionChange={(values) => { setSelectedFilters(values); setPage(1); }}
-                                    onClear={() => { setSelectedFilters([]); setPage(1); }}
-                                />
-                                <DateRangePicker
-                                    value={{
-                                        from: startDate ? new Date(startDate) : undefined,
-                                        to: endDate ? new Date(endDate) : undefined
-                                    }}
-                                    onChange={(range) => {
-                                        setStartDate(range?.from);
-                                        setEndDate(range?.to);
-                                        setPage(1);
-                                    }}
-                                    placeholder="Dates"
-                                />
+                            <div className="flex flex-row items-center gap-2 w-full md:w-auto">
+                                <div className="flex-1 md:flex-none">
+                                    <FilterPopover
+                                        groups={filterGroups}
+                                        selectedValues={selectedFilters}
+                                        onSelectionChange={(values) => { setSelectedFilters(values); setPage(1); }}
+                                        onClear={() => { setSelectedFilters([]); setPage(1); }}
+                                    />
+                                </div>
+                                <div className="flex-1 md:flex-none">
+                                    <DateRangePicker
+                                        value={{
+                                            from: startDate ? new Date(startDate) : undefined,
+                                            to: endDate ? new Date(endDate) : undefined
+                                        }}
+                                        onChange={(range) => {
+                                            setStartDate(range?.from);
+                                            setEndDate(range?.to);
+                                            setPage(1);
+                                        }}
+                                        placeholder="Dates"
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -198,11 +202,11 @@ export function CustomerLedgerDrawer({
                             ) : (
                                 <div className="py-20 text-center space-y-4">
                                     <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-deep/5 dark:bg-white/5">
-                                        <Filter className="w-8 h-8 text-brand-accent/20" />
+                                        <Filter className="w-8 h-8 text-brand-accent/20 dark:text-brand-cream/20" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-serif font-medium text-brand-deep dark:text-brand-cream">No records found</p>
-                                        <p className="text-[10px] text-brand-accent/40 uppercase tracking-widest">Try adjusting your filters</p>
+                                        <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">Try adjusting your filters</p>
                                     </div>
                                 </div>
                             )}

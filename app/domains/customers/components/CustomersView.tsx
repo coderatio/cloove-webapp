@@ -198,6 +198,121 @@ export function CustomersView() {
         setEditingItem(item)
     }
 
+    const renderCustomerActions = (item: Customer) => (
+        <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-full">
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-brand-deep/5 dark:border-white/5 shadow-2xl">
+                    <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 p-3">
+                        Relationship Actions
+                    </DropdownMenuLabel>
+                    <DropdownMenuItem
+                        onClick={() => setViewingCustomerId(item.id)}
+                        className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                    >
+                        <div className="h-8 w-8 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
+                            <User className="w-4 h-4" />
+                        </div>
+                        <span className="font-medium">View Profile</span>
+                    </DropdownMenuItem>
+
+                    {item.owing !== "—" && (
+                        <DropdownMenuItem
+                            onClick={() => setRecordingPaymentFor(item)}
+                            className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                        >
+                            <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                                <Receipt className="w-4 h-4" />
+                            </div>
+                            <span className="font-medium">Record Payment</span>
+                        </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
+
+                    {item.phoneNumber && (
+                        <>
+                            <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5" asChild>
+                                <a href={`tel:${item.phoneNumber}`}>
+                                    <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
+                                        <Phone className="w-4 h-4" />
+                                    </div>
+                                    <span className="font-medium">Direct Call</span>
+                                </a>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5" asChild>
+                                <a href={`https://wa.me/${item.phoneNumber.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer">
+                                    <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                        <MessageSquare className="w-4 h-4" />
+                                    </div>
+                                    <span className="font-medium">WhatsApp Chat</span>
+                                </a>
+                            </DropdownMenuItem>
+                        </>
+                    )}
+
+                    <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
+
+                    <DropdownMenuItem
+                        onClick={() => openEdit(item)}
+                        className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                    >
+                        <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
+                            <UserPenIcon className="w-4 h-4" />
+                        </div>
+                        <span className="font-medium">Edit Profile</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                        onClick={async () => {
+                            await updateCustomer({
+                                id: item.id,
+                                data: { isBlacklisted: !item.isBlacklisted }
+                            })
+                        }}
+                        className={cn(
+                            "rounded-xl flex items-center gap-3 cursor-pointer dark:focus:bg-white/5",
+                            item.isBlacklisted ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"
+                        )}
+                    >
+                        <div className={cn(
+                            "h-8 w-8 rounded-full flex items-center justify-center",
+                            item.isBlacklisted ? "bg-emerald-500/10" : "bg-rose-500/10"
+                        )}>
+                            {item.isBlacklisted ? <CheckCircle2 className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                        </div>
+                        <span className="font-medium">{item.isBlacklisted ? "Un-blacklist" : "Blacklist"}</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                        onClick={async () => {
+                            await updateCustomer({
+                                id: item.id,
+                                data: { isVip: !item.isVip }
+                            })
+                        }}
+                        className={cn(
+                            "rounded-xl flex items-center gap-3 cursor-pointer transition-colors dark:focus:bg-white/5",
+                            item.isVip ? "text-brand-accent dark:text-brand-cream font-semibold" : "text-brand-gold font-medium"
+                        )}
+                    >
+                        <div className={cn(
+                            "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
+                            item.isVip ? "bg-brand-accent/10 dark:bg-white/5" : "bg-brand-gold/10"
+                        )}>
+                            <Star className={cn("w-4 h-4", item.isVip ? "text-brand-accent fill-brand-accent/20" : "text-brand-gold")} />
+                        </div>
+                        <span>{item.isVip ? "Demote from VIP" : "Make VIP"}</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    )
+
     const columns: Column<Customer>[] = [
         {
             key: "name",
@@ -242,7 +357,7 @@ export function CustomersView() {
                             "font-medium px-2 py-0.5 rounded-full text-xs inline-flex items-center gap-1.5",
                             owing !== "—"
                                 ? "bg-brand-gold/10 text-brand-deep dark:text-brand-gold border border-brand-gold/20"
-                                : "text-brand-accent/30"
+                                : "text-brand-accent/30 dark:text-brand-cream/30"
                         )}
                     >
                         {owing !== "—" && (
@@ -256,120 +371,7 @@ export function CustomersView() {
         {
             key: "actions" as any,
             header: "",
-            render: (_value, item: Customer) => (
-                <div onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-full">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-brand-deep/5 shadow-2xl">
-                            <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 p-3">
-                                Relationship Actions
-                            </DropdownMenuLabel>
-                            <DropdownMenuItem
-                                onClick={() => setViewingCustomerId(item.id)}
-                                className="rounded-xl flex items-center gap-3 cursor-pointer"
-                            >
-                                <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green">
-                                    <User className="w-4 h-4" />
-                                </div>
-                                <span className="font-medium">View Profile</span>
-                            </DropdownMenuItem>
-
-                            {item.owing !== "—" && (
-                                <DropdownMenuItem
-                                    onClick={() => setRecordingPaymentFor(item)}
-                                    className="rounded-xl flex items-center gap-3 cursor-pointer"
-                                >
-                                    <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                        <Receipt className="w-4 h-4" />
-                                    </div>
-                                    <span className="font-medium">Record Payment</span>
-                                </DropdownMenuItem>
-                            )}
-
-                            <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
-
-                            {item.phoneNumber && (
-                                <>
-                                    <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer" asChild>
-                                        <a href={`tel:${item.phoneNumber}`}>
-                                            <div className="h-8 w-8 rounded-full bg-brand-deep/5 flex items-center justify-center text-brand-accent">
-                                                <Phone className="w-4 h-4" />
-                                            </div>
-                                            <span className="font-medium">Direct Call</span>
-                                        </a>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer" asChild>
-                                        <a href={`https://wa.me/${item.phoneNumber.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer">
-                                            <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                                                <MessageSquare className="w-4 h-4" />
-                                            </div>
-                                            <span className="font-medium">WhatsApp Chat</span>
-                                        </a>
-                                    </DropdownMenuItem>
-                                </>
-                            )}
-
-                            <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
-
-                            <DropdownMenuItem
-                                onClick={() => openEdit(item)}
-                                className="rounded-xl flex items-center gap-3 cursor-pointer"
-                            >
-                                <div className="h-8 w-8 rounded-full bg-brand-deep/5 flex items-center justify-center text-brand-accent">
-                                    <UserPenIcon className="w-4 h-4" />
-                                </div>
-                                <span className="font-medium">Edit Profile</span>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                                onClick={async () => {
-                                    await updateCustomer({
-                                        id: item.id,
-                                        data: { isBlacklisted: !item.isBlacklisted }
-                                    })
-                                }}
-                                className={cn(
-                                    "rounded-xl flex items-center gap-3 cursor-pointer",
-                                    item.isBlacklisted ? "text-emerald-600" : "text-rose-500"
-                                )}
-                            >
-                                <div className={cn(
-                                    "h-8 w-8 rounded-full flex items-center justify-center",
-                                    item.isBlacklisted ? "bg-emerald-500/10" : "bg-rose-500/10"
-                                )}>
-                                    {item.isBlacklisted ? <CheckCircle2 className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
-                                </div>
-                                <span className="font-medium">{item.isBlacklisted ? "Un-blacklist" : "Blacklist"}</span>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem
-                                onClick={async () => {
-                                    await updateCustomer({
-                                        id: item.id,
-                                        data: { isVip: !item.isVip }
-                                    })
-                                }}
-                                className={cn(
-                                    "rounded-xl flex items-center gap-3 cursor-pointer transition-colors",
-                                    item.isVip ? "text-brand-accent font-semibold" : "text-brand-gold font-medium"
-                                )}
-                            >
-                                <div className={cn(
-                                    "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
-                                    item.isVip ? "bg-brand-accent/10" : "bg-brand-gold/10"
-                                )}>
-                                    <Star className={cn("w-4 h-4", item.isVip ? "text-brand-accent fill-brand-accent/20" : "text-brand-gold")} />
-                                </div>
-                                <span>{item.isVip ? "Demote from VIP" : "Make VIP"}</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            )
+            render: (_value, item: Customer) => renderCustomerActions(item),
         },
     ]
 
@@ -395,7 +397,7 @@ export function CustomersView() {
                         <Button
                             variant="outline"
                             onClick={() => window.location.reload()}
-                            className="rounded-2xl"
+                            className="rounded-2xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
                             Retry
                         </Button>
@@ -450,7 +452,7 @@ export function CustomersView() {
                             <TrendingUp className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-brand-gold/60 uppercase tracking-widest">
+                            <p className="text-[10px] font-bold text-brand-gold/60 dark:text-brand-gold/80 uppercase tracking-widest">
                                 Active (30d)
                             </p>
                             {isStatsLoading ? (
@@ -471,7 +473,7 @@ export function CustomersView() {
                             <User className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-brand-accent/40 uppercase tracking-widest">
+                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
                                 New This Month
                             </p>
                             {isStatsLoading ? (
@@ -514,22 +516,25 @@ export function CustomersView() {
                 </div>
 
                 <div className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
                             Relationship List
                         </p>
-                        <div className="flex items-center gap-3 font-sans">
+                        <div className="flex items-center gap-3 font-sans w-full md:w-auto">
                             <TableSearch
                                 value={search}
                                 onChange={setSearch}
                                 placeholder="Search by name..."
+                                className="flex-1 min-w-0 w-full"
                             />
-                            <FilterPopover
-                                groups={filterGroups}
-                                selectedValues={selectedFilters}
-                                onSelectionChange={setSelectedFilters}
-                                onClear={() => setSelectedFilters([])}
-                            />
+                            <div className="shrink-0">
+                                <FilterPopover
+                                    groups={filterGroups}
+                                    selectedValues={selectedFilters}
+                                    onSelectionChange={setSelectedFilters}
+                                    onClear={() => setSelectedFilters([])}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -546,13 +551,19 @@ export function CustomersView() {
                             <ListCard
                                 key={customer.id}
                                 title={customer.name}
-                                subtitle={`${customer.orders} orders • Last: ${customer.lastOrder}`}
+                                subtitle={customer.lastOrder !== "Never" ? `Last order: ${customer.lastOrder}` : "No orders yet"}
+                                meta={`${customer.orders} orders total`}
+                                icon={User}
+                                iconClassName="text-brand-deep/40 dark:text-brand-cream/40"
+                                status={customer.isBlacklisted ? "Blacklisted" : customer.isVip ? "VIP" : undefined}
                                 statusColor={customer.isBlacklisted ? "danger" : customer.isVip ? "warning" : undefined}
                                 value={
                                     customer.owing !== "—" ? customer.owing : customer.totalSpent
                                 }
-                                valueLabel={customer.owing !== "—" ? "Debt" : "Total Spent"}
+                                valueLabel={customer.owing !== "—" ? "Current Debt" : "Total Lifetime Spend"}
                                 delay={index * 0.05}
+                                actions={renderCustomerActions(customer)}
+                                onClick={() => setViewingCustomerId(customer.id)}
                             />
                         ))}
                     </div>
@@ -573,7 +584,7 @@ export function CustomersView() {
                             size="sm"
                             disabled={!canPrev || isPending}
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            className="rounded-xl"
+                            className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
                             <ChevronLeft className="w-4 h-4" />
                             Previous
@@ -586,7 +597,7 @@ export function CustomersView() {
                             size="sm"
                             disabled={!canNext || isPending}
                             onClick={() => setCurrentPage((p) => p + 1)}
-                            className="rounded-xl"
+                            className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
                             Next
                             <ChevronRight className="w-4 h-4" />
@@ -696,7 +707,7 @@ export function CustomersView() {
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            className="flex-1 rounded-2xl h-14"
+                                            className="flex-1 rounded-2xl h-14 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
                                         >
                                             Cancel
                                         </Button>

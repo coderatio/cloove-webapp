@@ -97,7 +97,7 @@ export function OrderDetailsDrawer({
                     <div className="max-w-lg mx-auto space-y-8">
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Itemized List</h3>
-                            <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 border-brand-deep/5 rounded-2xl">
+                            <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 border-brand-deep/5 rounded-3xl before:rounded-3xl">
                                 {order.items?.map((item, idx) => (
                                     <div key={idx} className="p-4 flex justify-between items-center">
                                         <div>
@@ -147,7 +147,7 @@ export function OrderDetailsDrawer({
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Payment Information</h3>
                             <div className="grid grid-cols-2 gap-4">
-                                <GlassCard className="p-4 rounded-3xl">
+                                <GlassCard className="p-4 rounded-3xl before:rounded-3xl">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-2">Status</p>
                                     <div className="flex">
                                         <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10 whitespace-nowrap", config.className)}>
@@ -158,7 +158,7 @@ export function OrderDetailsDrawer({
                                         </div>
                                     </div>
                                 </GlassCard>
-                                <GlassCard className="p-4 rounded-3xl">
+                                <GlassCard className="p-4 rounded-3xl before:rounded-3xl">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-2">Method</p>
                                     <p className="text-sm font-bold text-brand-deep dark:text-brand-cream capitalize tracking-tight leading-none">
                                         {(order.isAutomated || order.paymentMethod === 'TRANSFER') ? 'Bank Transfer' : order.paymentMethod?.replace('_', ' ').toLowerCase()}
@@ -166,7 +166,7 @@ export function OrderDetailsDrawer({
                                 </GlassCard>
                             </div>
                             {order.notes && (
-                                <GlassCard className="p-4 rounded-3xl">
+                                <GlassCard className="p-4 rounded-3xl before:rounded-3xl">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-1">Notes</p>
                                     <p className="text-sm text-brand-deep/70 dark:text-brand-cream/70 leading-relaxed">{order.notes}</p>
                                 </GlassCard>
@@ -176,7 +176,7 @@ export function OrderDetailsDrawer({
                         {order.deposit && (
                             <div className="space-y-4">
                                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Automated Payment Details</h3>
-                                <GlassCard className="p-6 rounded-3xl space-y-4 bg-brand-gold/5 border-brand-gold/10">
+                                <GlassCard className="p-6 rounded-3xl space-y-4 bg-brand-gold/5 border-brand-gold/10 before:rounded-3xl">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/60 mb-1">Bank Name</p>

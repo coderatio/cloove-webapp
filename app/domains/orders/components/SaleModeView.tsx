@@ -60,30 +60,32 @@ import { formatCurrency } from '@/app/lib/formatters'
 
 // Stagger variants for the container
 const containerVariants: Variants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 1 },
     show: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.05
+            staggerChildren: 0.04
         }
     }
 }
 
 const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 12 },
     show: {
         opacity: 1,
         y: 0,
         transition: {
             type: "spring",
-            stiffness: 300,
-            damping: 24
+            stiffness: 400,
+            damping: 28
         }
     }
 }
 
 export function SaleModeView() {
     const router = useRouter()
+    const [mounted, setMounted] = React.useState(false)
+    React.useEffect(() => { setMounted(true) }, [])
     const [search, setSearch] = React.useState("")
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
     const [cart, setCart] = React.useState<CartItem[]>([])
@@ -94,7 +96,7 @@ export function SaleModeView() {
     const [isCustomerSearchOpen, setIsCustomerSearchOpen] = React.useState(false)
     const customerDropdownRef = React.useRef<HTMLDivElement>(null)
     const [currentPage, setCurrentPage] = React.useState(1)
-    const itemsPerPage = 8
+    const itemsPerPage = 12
     const [discount, setDiscount] = React.useState(0)
     const [note, setNote] = React.useState('')
     const [amountPaid, setAmountPaid] = React.useState<number | "">("")
@@ -217,7 +219,14 @@ export function SaleModeView() {
             if (existing) {
                 return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
             }
-            return [...prev, { id: product.id, product: product.product, price, category: product.category, quantity: 1 }]
+            return [...prev, {
+                id: product.id,
+                product: product.product,
+                price,
+                category: product.category,
+                quantity: 1,
+                image: product.image
+            }]
         })
     }
 
@@ -369,7 +378,7 @@ export function SaleModeView() {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col lg:flex-row overflow-hidden theme-transition bg-brand-cream dark:bg-brand-deep">
+        <div className={cn("fixed inset-0 z-50 flex flex-col lg:flex-row overflow-hidden bg-brand-cream dark:bg-brand-deep", mounted && "theme-transition")}>
             {/* Background Decorative Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-40 dark:opacity-20">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/10 blur-[120px] animate-float-slow" />
@@ -381,7 +390,7 @@ export function SaleModeView() {
                 "flex-1 flex flex-col min-w-0 h-full relative z-10",
                 mobileView === 'cart' ? "hidden lg:flex" : "flex"
             )}>
-                <div className="flex-1 flex flex-col p-4 lg:p-8 space-y-4 lg:space-y-8 min-h-0">
+                <div className="flex-1 flex flex-col p-4 lg:pt-2 lg:px-8 lg:pb-8 space-y-4 lg:space-y-6 min-h-0">
                     <header className="flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-6">
                             <Link href="/orders" className="hidden lg:block">
@@ -487,33 +496,104 @@ export function SaleModeView() {
                             animate="show"
                             className="flex-1 overflow-y-auto pr-1 lg:pr-2 custom-scrollbar -mr-1 lg:-mr-2"
                         >
-                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 pb-24 lg:pb-6 pt-1 lg:pt-3">
+                            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8 pb-24 lg:pb-6 pt-1 lg:pt-3">
                                 {paginatedProducts.map((product) => (
                                     <motion.div key={product.id} variants={itemVariants}>
                                         <GlassCard
                                             onClick={() => addToCart(product)}
                                             hoverEffect
-                                            className="p-5 cursor-pointer group flex flex-col h-full bg-white/40 dark:bg-white/3 border-brand-accent/5 dark:border-white/5"
+                                            className={cn(
+                                                "group cursor-pointer flex flex-col h-[220px] relative overflow-hidden p-0 rounded-[32px] transition-none!",
+                                                product.image
+                                                    ? "bg-brand-deep! border-none!"
+                                                    : "bg-white! dark:bg-brand-deep! border! border-brand-gold/25! dark:border-white/10!"
+                                            )}
                                         >
-                                            <div className="flex-1 space-y-4">
-                                                <div className="flex justify-between items-start">
-                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold/80">{product.category}</span>
+                                            {/* Immersive Background Image or Editorial Watermark */}
+                                            {product.image ? (
+                                                <div className="absolute inset-0 z-0">
+                                                    <img
+                                                        src={product.image}
+                                                        alt={product.product}
+                                                        className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                                    />
+                                                    {/* Top Protection Gradient */}
+                                                    <div className="absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-brand-deep/80 via-brand-deep/40 to-transparent z-10 pointer-events-none" />
+
+                                                    {/* Base Image Overlay */}
+                                                    <div className="absolute inset-0 bg-brand-deep/20 z-10" />
+
+                                                    {/* Bottom Protection Gradient */}
+                                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-brand-deep/90 via-brand-deep/50 to-transparent z-10 pointer-events-none backdrop-blur-[1px]" />
+                                                </div>
+                                            ) : (
+                                                <div className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none overflow-hidden">
+                                                    <div className="absolute -right-8 -bottom-8 scale-[2] rotate-[-15deg]">
+                                                        <h4 className="font-serif text-8xl font-black select-none tracking-tighter">CLOOVE</h4>
+                                                    </div>
+                                                    <div className="absolute -left-4 top-1/4 scale-[1.5] rotate-10 opacity-50">
+                                                        <h4 className="font-serif text-6xl font-black select-none tracking-tighter">EST 2024</h4>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Content Layer */}
+                                            <div className="relative z-20 flex flex-col h-full p-5 lg:p-6">
+                                                <div className="absolute top-4 right-4 lg:top-5 lg:right-5">
                                                     <div className={cn(
-                                                        "w-2 h-2 rounded-full",
-                                                        product.status === 'In Stock' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"
+                                                        "w-2 h-2 rounded-full border-2 border-white/20 shadow-xl",
+                                                        product.status === 'In Stock' ? "bg-emerald-500 shadow-emerald-500/40" : "bg-rose-500 shadow-rose-500/40"
                                                     )} />
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <h3 className="font-serif text-xl leading-tight text-brand-deep dark:text-brand-cream group-hover:text-brand-gold transition-colors duration-300">{product.product}</h3>
-                                                    <p className="text-[10px] font-medium text-brand-accent/40 dark:text-brand-cream/30 uppercase tracking-widest">{product.status} • {product.stock} units</p>
+
+                                                <div className="space-y-4 flex flex-col h-full">
+                                                    <div className="space-y-1">
+                                                        <h3 className={cn(
+                                                            "font-serif text-xl lg:text-2xl leading-[1.15] transition-colors duration-500 line-clamp-2 min-h-[2.3em]",
+                                                            product.image
+                                                                ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+                                                                : "text-brand-deep dark:text-brand-cream"
+                                                        )}>
+                                                            {product.product}
+                                                        </h3>
+                                                        <p className={cn(
+                                                            "text-[9px] font-bold uppercase tracking-[0.2em]",
+                                                            product.image
+                                                                ? "text-brand-cream opacity-80 drop-shadow-sm"
+                                                                : "text-brand-accent dark:text-brand-cream opacity-40"
+                                                        )}>
+                                                            {product.status} • {product.stock} units
+                                                        </p>
+                                                    </div>
+
+                                                    <div className={cn(
+                                                        "flex items-center justify-between pt-4 border-t transition-colors duration-500 mt-auto",
+                                                        product.image ? "border-white/20" : "border-brand-accent/5 dark:border-white/10"
+                                                    )}>
+                                                        <p className={cn(
+                                                            "font-serif font-black text-xl lg:text-2xl tracking-tight",
+                                                            product.image
+                                                                ? "text-brand-gold drop-shadow-md"
+                                                                : "text-brand-deep dark:text-brand-gold"
+                                                        )}>
+                                                            {formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}
+                                                        </p>
+                                                        <div className={cn(
+                                                            "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 shadow-2xl",
+                                                            product.image
+                                                                ? "bg-brand-gold text-brand-deep shadow-brand-gold/20"
+                                                                : "bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep shadow-xl"
+                                                        )}>
+                                                            <Plus className="h-5 w-5" />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="mt-6 flex items-center justify-between pt-4 border-t border-brand-accent/5 dark:border-white/5">
-                                                <p className="font-serif font-bold text-xl text-brand-deep-700 dark:text-brand-cream tracking-tight">{formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}</p>
-                                                <div className="h-10 w-10 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300 shadow-xl shadow-brand-gold/10">
-                                                    <Plus className="h-5 w-5" />
-                                                </div>
-                                            </div>
+
+                                            {/* Glass Overlay on Bottom for depth (only for images) */}
+                                            {product.image && (
+                                                <div className="absolute bottom-0 inset-x-0 h-2/5 bg-linear-to-t from-brand-deep via-brand-deep/40 to-transparent backdrop-blur-[1px] z-10 pointer-events-none" />
+                                            )}
                                         </GlassCard>
                                     </motion.div>
                                 ))}
@@ -621,7 +701,7 @@ export function SaleModeView() {
                 "w-full lg:w-[420px] lg:h-full bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20 min-h-0",
                 mobileView === 'catalog' ? "hidden lg:flex" : "flex h-full fixed inset-0 z-50 lg:relative lg:inset-auto"
             )}>
-                <div className="p-4 lg:p-5 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-3 bg-brand-gold/5 dark:bg-brand-gold/5 relative">
+                <div className="p-4 lg:pt-3 lg:px-5 lg:pb-5 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-3 bg-brand-gold/5 dark:bg-brand-gold/5 relative">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             {/* Mobile Back to Catalog Button */}
@@ -832,8 +912,19 @@ export function SaleModeView() {
                                     className="group"
                                 >
                                     <GlassCard className="p-4 rounded-[20px] before:rounded-[20px] sm:rounded-3xl flex flex-col gap-3 bg-white/40 dark:bg-white/10 border-brand-accent/10 dark:border-white/5 group-hover:border-brand-gold/20 transition-all duration-300">
-                                        <div className="min-w-0">
-                                            <h4 className="font-medium text-brand-deep dark:text-brand-cream truncate text-lg group-hover:text-brand-gold transition-colors">{item.product}</h4>
+                                        <div className="flex gap-4 items-center min-w-0">
+                                            {item.image && (
+                                                <div className="h-12 w-12 rounded-xl overflow-hidden bg-brand-deep/5 dark:bg-white/5 shrink-0 border border-brand-accent/5 dark:border-white/5 relative">
+                                                    <img
+                                                        src={item.image}
+                                                        alt={item.product}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="min-w-0 flex-1">
+                                                <h4 className="font-medium text-brand-deep dark:text-brand-cream truncate text-lg group-hover:text-brand-gold transition-colors">{item.product}</h4>
+                                            </div>
                                         </div>
 
                                         <div className="flex items-center justify-between gap-4">
