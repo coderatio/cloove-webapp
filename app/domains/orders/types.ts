@@ -75,4 +75,5 @@ export interface OrderFilterParams {
     endDate?: string
     storeId?: string
     storeIds?: string[]
+    customerId?: string
 }

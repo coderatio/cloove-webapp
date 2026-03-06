@@ -6,7 +6,7 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { AlertCircle, Users, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { AlertCircle, Users, Trash2, Loader2, ChevronLeft, ChevronRight, UserPenIcon } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
@@ -27,7 +27,29 @@ import {
 import { Switch } from "@/app/components/ui/switch"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { Skeleton } from "@/app/components/ui/skeleton"
-import { useCustomers, type Customer } from "../hooks/useCustomers"
+import { useCustomers, useCustomerStats, type Customer } from "../hooks/useCustomers"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuLabel
+} from "@/app/components/ui/dropdown-menu"
+import {
+    MoreHorizontal,
+    Phone,
+    MessageSquare,
+    Receipt,
+    User,
+    Ban,
+    CheckCircle2,
+    TrendingUp,
+    Crown,
+    Star
+} from "lucide-react"
+import { CustomerProfileDrawer } from "./CustomerProfileDrawer"
+import { RecordPaymentDrawer } from "@/app/domains/orders/components/RecordPaymentDrawer"
 
 const PAGE_SIZE = 20
 
@@ -44,6 +66,8 @@ export function CustomersView() {
     const [editingItem, setEditingItem] = React.useState<Customer | null>(null)
     const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
     const [itemToDelete, setItemToDelete] = React.useState<Customer | null>(null)
+    const [viewingCustomer, setViewingCustomer] = React.useState<Customer | null>(null)
+    const [recordingPaymentFor, setRecordingPaymentFor] = React.useState<Customer | null>(null)
 
     const storeIds = React.useMemo(() => stores.map((s) => s.id), [stores])
     const selectedStoreIds = React.useMemo(
@@ -76,6 +100,9 @@ export function CustomersView() {
         deferredSearch,
         selectedStoreIds.length > 0 ? selectedStoreIds : undefined
     )
+
+    const { data: statsData, isLoading: isStatsLoading } = useCustomerStats()
+    const stats = statsData?.data
 
     const filterGroups = [
         {
@@ -182,8 +209,14 @@ export function CustomersView() {
                     >
                         {item.name}
                     </span>
+                    {item.isVip && (
+                        <div className="flex items-center gap-1 mt-1">
+                            <Crown className="w-3 h-3 text-brand-gold fill-brand-gold/20" />
+                            <span className="text-[9px] font-bold text-brand-gold uppercase tracking-widest">VIP</span>
+                        </div>
+                    )}
                     {item.isBlacklisted && (
-                        <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tighter">
+                        <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tighter mt-1">
                             Blacklisted
                         </span>
                     )}
@@ -214,6 +247,124 @@ export function CustomersView() {
                     </span>
                 )
             },
+        },
+        {
+            key: "actions" as any,
+            header: "",
+            render: (_value, item: Customer) => (
+                <div onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-full">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-brand-deep/5 shadow-2xl">
+                            <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 p-3">
+                                Relationship Actions
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem
+                                onClick={() => setViewingCustomer(item)}
+                                className="rounded-xl flex items-center gap-3 cursor-pointer"
+                            >
+                                <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green">
+                                    <User className="w-4 h-4" />
+                                </div>
+                                <span className="font-medium">View Profile</span>
+                            </DropdownMenuItem>
+
+                            {item.owing !== "—" && (
+                                <DropdownMenuItem
+                                    onClick={() => setRecordingPaymentFor(item)}
+                                    className="rounded-xl flex items-center gap-3 cursor-pointer"
+                                >
+                                    <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                                        <Receipt className="w-4 h-4" />
+                                    </div>
+                                    <span className="font-medium">Record Payment</span>
+                                </DropdownMenuItem>
+                            )}
+
+                            <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
+
+                            {item.phoneNumber && (
+                                <>
+                                    <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer" asChild>
+                                        <a href={`tel:${item.phoneNumber}`}>
+                                            <div className="h-8 w-8 rounded-full bg-brand-deep/5 flex items-center justify-center text-brand-accent">
+                                                <Phone className="w-4 h-4" />
+                                            </div>
+                                            <span className="font-medium">Direct Call</span>
+                                        </a>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer" asChild>
+                                        <a href={`https://wa.me/${item.phoneNumber.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer">
+                                            <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                                                <MessageSquare className="w-4 h-4" />
+                                            </div>
+                                            <span className="font-medium">WhatsApp Chat</span>
+                                        </a>
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+
+                            <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
+
+                            <DropdownMenuItem
+                                onClick={() => openEdit(item)}
+                                className="rounded-xl flex items-center gap-3 cursor-pointer"
+                            >
+                                <div className="h-8 w-8 rounded-full bg-brand-deep/5 flex items-center justify-center text-brand-accent">
+                                    <UserPenIcon className="w-4 h-4" />
+                                </div>
+                                <span className="font-medium">Edit Profile</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={async () => {
+                                    await updateCustomer({
+                                        id: item.id,
+                                        data: { isBlacklisted: !item.isBlacklisted }
+                                    })
+                                }}
+                                className={cn(
+                                    "rounded-xl flex items-center gap-3 cursor-pointer",
+                                    item.isBlacklisted ? "text-emerald-600" : "text-rose-500"
+                                )}
+                            >
+                                <div className={cn(
+                                    "h-8 w-8 rounded-full flex items-center justify-center",
+                                    item.isBlacklisted ? "bg-emerald-500/10" : "bg-rose-500/10"
+                                )}>
+                                    {item.isBlacklisted ? <CheckCircle2 className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                                </div>
+                                <span className="font-medium">{item.isBlacklisted ? "Un-blacklist" : "Blacklist"}</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onClick={async () => {
+                                    await updateCustomer({
+                                        id: item.id,
+                                        data: { isVip: !item.isVip }
+                                    })
+                                }}
+                                className={cn(
+                                    "rounded-xl flex items-center gap-3 cursor-pointer",
+                                    item.isVip ? "text-brand-accent/60" : "text-brand-gold"
+                                )}
+                            >
+                                <div className={cn(
+                                    "h-8 w-8 rounded-full flex items-center justify-center",
+                                    item.isVip ? "bg-brand-deep/5" : "bg-brand-gold/10"
+                                )}>
+                                    <Star className={cn("w-4 h-4", item.isVip ? "text-brand-accent/40" : "text-brand-gold")} />
+                                </div>
+                                <span className="font-medium">{item.isVip ? "Demote from VIP" : "Make VIP"}</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            )
         },
     ]
 
@@ -264,7 +415,7 @@ export function CustomersView() {
 
                 <InsightWhisper insight={intelligenceWhisper} />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Users className="w-24 h-24" />
@@ -273,14 +424,56 @@ export function CustomersView() {
                             <Users className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">
+                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-widest">
                                 Total Customers
                             </p>
-                            {isPending && !customers.length ? (
+                            {isStatsLoading ? (
                                 <Skeleton className="h-8 w-16 mt-1" />
                             ) : (
                                 <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                    {meta?.total ?? customers.length}
+                                    {stats?.totalCustomers ?? meta?.total ?? customers.length}
+                                </p>
+                            )}
+                        </div>
+                    </GlassCard>
+
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
+                        <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <TrendingUp className="w-24 h-24" />
+                        </div>
+                        <div className="h-12 w-12 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                            <TrendingUp className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-brand-gold/60 uppercase tracking-widest">
+                                Active (30d)
+                            </p>
+                            {isStatsLoading ? (
+                                <Skeleton className="h-8 w-12 mt-1" />
+                            ) : (
+                                <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-gold">
+                                    {stats?.activeCustomers ?? 0}
+                                </p>
+                            )}
+                        </div>
+                    </GlassCard>
+
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
+                        <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <User className="w-24 h-24" />
+                        </div>
+                        <div className="h-12 w-12 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                            <User className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-brand-accent/40 uppercase tracking-widest">
+                                New This Month
+                            </p>
+                            {isStatsLoading ? (
+                                <Skeleton className="h-8 w-12 mt-1" />
+                            ) : (
+                                <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                    {stats?.newCustomers ?? 0}
                                 </p>
                             )}
                         </div>
@@ -289,35 +482,28 @@ export function CustomersView() {
                     <GlassCard
                         className={cn(
                             "p-5 flex items-center gap-4 relative overflow-hidden group transition-all",
-                            owingCustomersOnPage > 0
-                                ? "border-brand-gold/30 bg-brand-gold/5"
+                            (stats?.totalDebt ?? 0) > 0
+                                ? "border-rose-500/20 bg-rose-500/5 shadow-[0_0_20px_rgba(239,68,68,0.05)]"
                                 : "border-brand-deep/5"
                         )}
                     >
-                        <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-brand-gold">
+                        <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-rose-500">
                             <AlertCircle className="w-24 h-24" />
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                        <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
                             <AlertCircle className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">
-                                Payments Pending
+                            <p className="text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">
+                                Total Credit
                             </p>
-                            <div className="flex items-baseline gap-2">
-                                {isPending && !customers.length ? (
-                                    <Skeleton className="h-8 w-12 mt-1" />
-                                ) : (
-                                    <>
-                                        <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-gold">
-                                            {owingCustomersOnPage}
-                                        </p>
-                                        <span className="text-sm text-brand-accent/40">
-                                            {formatCurrency(totalDebtOnPage, { currency: currencyCode })} due
-                                        </span>
-                                    </>
-                                )}
-                            </div>
+                            {isStatsLoading ? (
+                                <Skeleton className="h-8 w-12 mt-1" />
+                            ) : (
+                                <p className="text-2xl font-serif font-medium text-rose-500">
+                                    {formatCurrency(stats?.totalDebt ?? 0, { currency: currencyCode })}
+                                </p>
+                            )}
                         </div>
                     </GlassCard>
                 </div>
@@ -356,14 +542,12 @@ export function CustomersView() {
                                 key={customer.id}
                                 title={customer.name}
                                 subtitle={`${customer.orders} orders • Last: ${customer.lastOrder}`}
-                                status={customer.owing !== "—" ? "Owing" : undefined}
-                                statusColor={customer.owing !== "—" ? "warning" : undefined}
+                                statusColor={customer.isBlacklisted ? "danger" : customer.isVip ? "warning" : undefined}
                                 value={
                                     customer.owing !== "—" ? customer.owing : customer.totalSpent
                                 }
                                 valueLabel={customer.owing !== "—" ? "Debt" : "Total Spent"}
                                 delay={index * 0.05}
-                                onClick={() => openEdit(customer)}
                             />
                         ))}
                     </div>
@@ -373,7 +557,6 @@ export function CustomersView() {
                             columns={columns}
                             data={filteredCustomers}
                             emptyMessage="No customers found"
-                            onRowClick={(item: Customer) => openEdit(item)}
                         />
                     </GlassCard>
                 )}
@@ -561,6 +744,36 @@ export function CustomersView() {
                     description={`Are you sure you want to remove ${itemToDelete?.name}? This action cannot be undone and will remove their contact records.`}
                     confirmText="Delete Profile"
                     variant="destructive"
+                />
+
+                <CustomerProfileDrawer
+                    customer={viewingCustomer}
+                    open={!!viewingCustomer}
+                    onOpenChange={(open) => !open && setViewingCustomer(null)}
+                    onEdit={(c) => {
+                        setViewingCustomer(null)
+                        openEdit(c)
+                    }}
+                    onUpdateVip={async (id, isVip) => {
+                        await updateCustomer({ id, data: { isVip } })
+                    }}
+                />
+
+                <RecordPaymentDrawer
+                    order={recordingPaymentFor ? ({
+                        id: recordingPaymentFor.id,
+                        totalAmount: recordingPaymentFor.owing.replace(/[^0-9]/g, ""),
+                        amountPaid: "0",
+                        currency: currencyCode,
+                        shortCode: recordingPaymentFor.name.substring(0, 8),
+                    } as any) : null}
+                    open={!!recordingPaymentFor}
+                    onOpenChange={(open) => !open && setRecordingPaymentFor(null)}
+                    onSuccess={async (amount, method) => {
+                        // This would typically call a Collect Payment API
+                        console.log(`Collecting ${amount} via ${method} for ${recordingPaymentFor?.name}`)
+                    }}
+                    isSubmitting={false}
                 />
             </div>
         </PageTransition>

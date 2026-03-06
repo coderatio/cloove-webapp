@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient, ApiResponse } from "@/app/lib/api-client"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { Order } from "../../orders/types"
 import { toast } from "sonner"
 
 export interface CustomerListItemApi {
@@ -13,6 +14,11 @@ export interface CustomerListItemApi {
     ltv: string
     lastSeen: string
     debt: string
+    isVip: boolean
+    joinedAt: string
+    joined_at?: string
+    createdAt?: string
+    created_at?: string
 }
 
 export interface Customer {
@@ -24,7 +30,10 @@ export interface Customer {
     owing: string
     phoneNumber: string
     email: string
+    whatsappNumber?: string
     isBlacklisted: boolean
+    isVip: boolean
+    joinedAt: string
 }
 
 function mapApiItemToCustomer(item: CustomerListItemApi): Customer {
@@ -38,6 +47,8 @@ function mapApiItemToCustomer(item: CustomerListItemApi): Customer {
         phoneNumber: item.phoneNumber ?? "",
         email: item.email ?? "",
         isBlacklisted: item.isBlacklisted,
+        isVip: item.isVip,
+        joinedAt: item.joinedAt || item.joined_at || item.createdAt || item.created_at || "",
     }
 }
 
@@ -47,6 +58,7 @@ export interface CreateCustomerPayload {
     email?: string
     whatsappNumber?: string
     isBlacklisted?: boolean
+    isVip?: boolean
 }
 
 export interface UpdateCustomerPayload {
@@ -55,6 +67,7 @@ export interface UpdateCustomerPayload {
     email?: string
     whatsappNumber?: string
     isBlacklisted?: boolean
+    isVip?: boolean
 }
 
 const CUSTOMERS_PAGE_SIZE = 20
@@ -101,7 +114,7 @@ export function useCustomers(
             toast.success("Customer added")
             queryClient.invalidateQueries({ queryKey: ["customers", businessId] })
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
             toast.error(err.message ?? "Failed to add customer")
         },
     })
@@ -113,7 +126,7 @@ export function useCustomers(
             toast.success("Customer updated")
             queryClient.invalidateQueries({ queryKey: ["customers", businessId] })
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
             toast.error(err.message ?? "Failed to update customer")
         },
     })
@@ -124,7 +137,7 @@ export function useCustomers(
             toast.success("Customer removed")
             queryClient.invalidateQueries({ queryKey: ["customers", businessId] })
         },
-        onError: (err: any) => {
+        onError: (err: { message?: string }) => {
             toast.error(err.message ?? "Failed to remove customer")
         },
     })
@@ -142,4 +155,32 @@ export function useCustomers(
         isUpdating: updateCustomerMutation.isPending,
         isDeleting: deleteCustomerMutation.isPending,
     }
+}
+
+export function useCustomerStats() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useQuery<ApiResponse<{
+        totalCustomers: number
+        activeCustomers: number
+        newCustomers: number
+        totalDebt: number
+    }>>({
+        queryKey: ["customers-stats", businessId],
+        queryFn: () => apiClient.get("/customers/stats"),
+        enabled: !!businessId,
+    })
+}
+
+export function useCustomerTransactions(customerId: string) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useQuery<ApiResponse<Order[]>>({
+        queryKey: ["customer-transactions", businessId, customerId],
+        queryFn: () =>
+            apiClient.get<ApiResponse<Order[]>>("/sales", { customerId, limit: "10" }, { fullResponse: true }),
+        enabled: !!businessId && !!customerId,
+    })
 }
