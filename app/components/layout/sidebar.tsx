@@ -282,7 +282,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                             variant="ghost"
                             size="sm"
                             className={cn(
-                                "flex-1 h-10 flex items-center gap-2 text-brand-cream/50 hover:text-brand-cream hover:bg-white/5",
+                                "flex-1 h-10 flex items-center gap-2 text-brand-cream/50 hover:text-brand-cream hover:bg-white/5 rounded-xl",
                                 isCollapsed ? "justify-center px-0" : "justify-start px-2"
                             )}
                             onClick={() => setIsCollapsed(!isCollapsed)}

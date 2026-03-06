@@ -12,6 +12,8 @@ export const STORAGE_KEYS = {
     LOGIN_COUNTRY_ID: 'cloove_login_country',
     /** Queued sales for the POS system */
     POS_QUEUED_SALES: 'cloove_pos_queued_sales',
+    /** Sidebar collapsed state */
+    SIDEBAR_COLLAPSED: 'cloove_sidebar_collapsed',
 } as const
 
 type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]
@@ -248,5 +250,19 @@ export const storage = {
      */
     setQueuedSales(value: any[]): void {
         this.set(STORAGE_KEYS.POS_QUEUED_SALES, JSON.stringify(value))
+    },
+
+    /**
+     * Get sidebar collapsed state
+     */
+    getSidebarCollapsed(): boolean {
+        return this.get(STORAGE_KEYS.SIDEBAR_COLLAPSED) === 'true'
+    },
+
+    /**
+     * Set sidebar collapsed state
+     */
+    setSidebarCollapsed(collapsed: boolean): void {
+        this.set(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(collapsed))
     }
 }

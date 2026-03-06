@@ -25,26 +25,41 @@ import { useAuth } from "../providers/auth-provider"
 import { usePermission } from "@/app/hooks/usePermission"
 import { StoreProvider } from "../../domains/stores/providers/StoreProvider"
 
+import { storage } from "@/app/lib/storage"
+
 export default function AppLayout({ children }: AppLayoutProps) {
     const [mounted, setMounted] = React.useState(false)
     const [isCollapsed, setIsCollapsed] = React.useState(false)
     const isTablet = useIsTablet()
 
+    // 1. Initial mount: Load saved state and determine initial collapse
     React.useEffect(() => {
-        // Auto-collapse on tablet, auto-expand on desktop
+        const saved = storage.getSidebarCollapsed()
         if (isTablet) {
             setIsCollapsed(true)
-        } else if (mounted) {
-            // Only auto-expand if we aren't on mobile (where it's hidden anyway)
-            // and we've already mounted to avoid hydration flashes
-            setIsCollapsed(false)
+        } else {
+            setIsCollapsed(saved)
+        }
+        setMounted(true)
+    }, [])
+
+    // 2. Responsive behavior: Handle screen size changes after mount
+    React.useEffect(() => {
+        if (!mounted) return
+
+        if (isTablet) {
+            setIsCollapsed(true)
+        } else {
+            // Restore from saved preference when moving back to desktop
+            setIsCollapsed(storage.getSidebarCollapsed())
         }
     }, [isTablet, mounted])
 
-
+    // 3. Persistence: Save manual toggle changes (only when allowed)
     React.useEffect(() => {
-        setMounted(true)
-    }, [])
+        if (!mounted || isTablet) return
+        storage.setSidebarCollapsed(isCollapsed)
+    }, [isCollapsed, isTablet, mounted])
 
 
     const pathname = usePathname()
