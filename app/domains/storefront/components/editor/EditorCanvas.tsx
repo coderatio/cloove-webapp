@@ -7,6 +7,7 @@ import { getDefaultTheme, GOOGLE_FONTS_ALLOWED, DEFAULT_COLORS, DEFAULT_COLORS_D
 interface EditorCanvasProps {
   children: ReactNode
   previewDark: boolean
+  pageBackground?: string
   className?: string
 }
 
@@ -32,7 +33,7 @@ function buildFontUrl(fonts: { heading: string; body: string }): string | null {
   return `https://fonts.googleapis.com/css2?${params}&display=swap`
 }
 
-export function EditorCanvas({ children, previewDark, className }: EditorCanvasProps) {
+export function EditorCanvas({ children, previewDark, pageBackground, className }: EditorCanvasProps) {
   const { data: theme } = useStorefrontTheme()
   const defaults = getDefaultTheme()
   const merged: StorefrontThemeData = useMemo(() => ({ ...defaults, ...theme }), [theme, defaults])
@@ -64,17 +65,17 @@ export function EditorCanvas({ children, previewDark, className }: EditorCanvasP
       style: {
         "--sf-primary": colors.primary,
         "--sf-secondary": colors.secondary,
-        "--sf-background": colors.background,
+        "--sf-background": pageBackground || colors.background,
         "--sf-text": colors.text,
         "--sf-font-heading": `'${fonts.heading}', serif`,
         "--sf-font-body": `'${fonts.body}', sans-serif`,
-        backgroundColor: colors.background,
+        backgroundColor: pageBackground || colors.background,
         color: colors.text,
         fontFamily: `'${fonts.heading}', serif`,
       } as React.CSSProperties,
       dataTheme: previewDark ? "dark" : "light",
     }),
-    [colors, fonts, previewDark]
+    [colors, fonts, previewDark, pageBackground]
   )
 
   return (
@@ -84,7 +85,9 @@ export function EditorCanvas({ children, previewDark, className }: EditorCanvasP
         <link rel="stylesheet" href={fontUrl} />
       )}
       <StorefrontPreviewThemeContext.Provider value={previewTheme}>
-        <div className={className}>{children}</div>
+        <div className={className} style={previewTheme.style} data-theme={previewTheme.dataTheme}>
+          {children}
+        </div>
       </StorefrontPreviewThemeContext.Provider>
     </>
   )

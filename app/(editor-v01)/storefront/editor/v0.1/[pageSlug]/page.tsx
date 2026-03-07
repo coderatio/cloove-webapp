@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Trash2, GripVertical, ChevronUp, Settings2 } from "lucide-react"
@@ -24,6 +24,7 @@ import { BlockRenderer } from "@/app/domains/storefront/components/editor/BlockR
 import { BlockEditor } from "@/app/domains/storefront/components/editor/BlockEditor"
 import { AddBlockMenu } from "@/app/domains/storefront/components/editor/AddBlockMenu"
 import { ImageUrlField } from "@/app/domains/storefront/components/editor/ImageUrlField"
+import { ColorPicker } from "@/app/components/ui/color-picker"
 import { BLOCK_META, createBlock, type BlockSection, type BlockType } from "@/app/domains/storefront/components/editor/block-types"
 import { cn } from "@/app/lib/utils"
 
@@ -43,10 +44,13 @@ export default function EditorV01Page() {
   const [sections, setSections] = useState<BlockSection[]>([])
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null)
   const [previewDark, setPreviewDark] = useState(false)
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [showPageSettings, setShowPageSettings] = useState(false)
   const [metaTitle, setMetaTitle] = useState("")
   const [metaDescription, setMetaDescription] = useState("")
   const [metaImageUrl, setMetaImageUrl] = useState("")
+  const [globalPageBgLight, setGlobalPageBgLight] = useState<string>("")
+  const [globalPageBgDark, setGlobalPageBgDark] = useState<string>("")
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -73,6 +77,12 @@ export default function EditorV01Page() {
     setMetaTitle(pageData.metaTitle ?? "")
     setMetaDescription(pageData.metaDescription ?? "")
     setMetaImageUrl(pageData.metaImageUrl ?? "")
+
+    // Explicitly parse the page-level config from content.config
+    const pConfig = (pageData.content as { config?: Record<string, string> })?.config
+    setGlobalPageBgLight(pConfig?.globalBackgroundLight ?? "")
+    setGlobalPageBgDark(pConfig?.globalBackgroundDark ?? "")
+
     const raw = (pageData.content?.sections ?? []) as Array<{
       id: string
       type: string
@@ -161,7 +171,10 @@ export default function EditorV01Page() {
           title: title || "Untitled",
           slug: finalSlug,
           isPublished: true,
-          content: { sections: payloadSections },
+          content: {
+            sections: payloadSections,
+            config: { globalBackgroundLight: globalPageBgLight, globalBackgroundDark: globalPageBgDark }
+          } as any,
           ...meta,
         },
         { onSuccess: () => router.replace(`/storefront/editor/v0.1/${finalSlug}`) }
@@ -170,11 +183,16 @@ export default function EditorV01Page() {
       updatePage.mutate({
         title: title || "Untitled",
         isPublished: true,
-        content: { sections: payloadSections },
+        content: {
+          sections: payloadSections,
+          config: { globalBackgroundLight: globalPageBgLight, globalBackgroundDark: globalPageBgDark }
+        } as any,
         ...meta,
       })
     }
   }, [isNewPage, slug, title, metaTitle, metaDescription, metaImageUrl, payloadSections, createPage, updatePage, router])
+
+  const [scrollToBlockId, setScrollToBlockId] = useState<string | null>(null)
 
   const addBlock = useCallback(
     (type: BlockType, afterIndex?: number) => {
@@ -188,6 +206,7 @@ export default function EditorV01Page() {
         return [...prev, block]
       })
       setActiveBlockId(block.id)
+      setScrollToBlockId(block.id)
     },
     []
   )
@@ -237,21 +256,23 @@ export default function EditorV01Page() {
   return (
     <div className="h-dvh flex flex-col min-h-0">
       <header className="shrink-0">
-      <EditorHeader
-        title={title}
-        isSaving={isSaving}
-        onSave={handleSave}
-        previewDark={previewDark}
-        onTogglePreviewDark={() => {
-          setPreviewDark((p) => !p)
-          setActiveBlockId(null)
-        }}
-      />
+        <EditorHeader
+          title={title}
+          isSaving={isSaving}
+          onSave={handleSave}
+          previewDark={previewDark}
+          onTogglePreviewDark={() => {
+            setPreviewDark((p) => !p)
+            setActiveBlockId(null)
+          }}
+          isPreviewMode={isPreviewMode}
+          onTogglePreviewMode={() => setIsPreviewMode((p) => !p)}
+        />
       </header>
 
       <main className="flex-1 overflow-y-auto min-h-0 max-w-4xl w-full mx-auto px-4 py-8 space-y-6">
         {/* Page title + settings */}
-        <GlassCard className="p-5">
+        <GlassCard className={cn("p-5 transition-all duration-300 rounded-3xl")}>
           <div className="flex items-center gap-3">
             <input
               value={title ?? ""}
@@ -275,7 +296,6 @@ export default function EditorV01Page() {
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
               >
                 <div className="pt-4 space-y-3 border-t border-brand-deep/5 dark:border-white/5 mt-4">
                   {isNewPage && (
@@ -310,7 +330,7 @@ export default function EditorV01Page() {
                       value={metaDescription ?? ""}
                       onChange={(e) => setMetaDescription(e.target.value)}
                       placeholder="Optional"
-                      className="w-full rounded-xl p-2.5 text-sm min-h-[60px] bg-white/50 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 resize-none text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-1 focus:ring-brand-green/20"
+                      className="w-full rounded-2xl p-2.5 text-sm min-h-[60px] bg-white/50 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 resize-none text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-1 focus:ring-brand-green/20"
                     />
                   </div>
                   <div>
@@ -323,6 +343,28 @@ export default function EditorV01Page() {
                       placeholder="Paste URL or upload (optional)"
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-brand-deep/5 dark:border-white/5 mt-4">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                        Global BG (Light)
+                      </label>
+                      <ColorPicker
+                        color={globalPageBgLight || ""}
+                        onChange={(c) => setGlobalPageBgLight(c)}
+                        showHexInput
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                        Global BG (Dark)
+                      </label>
+                      <ColorPicker
+                        color={globalPageBgDark || ""}
+                        onChange={(c) => setGlobalPageBgDark(c)}
+                        showHexInput
+                      />
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -332,7 +374,8 @@ export default function EditorV01Page() {
         {/* Block canvas */}
         <EditorCanvas
           previewDark={previewDark}
-          className="rounded-[32px] border border-brand-deep/10 dark:border-white/10 shadow-[0_8px_32px_rgba(6,44,33,0.04)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] overflow-hidden min-h-[300px]"
+          pageBackground={previewDark ? globalPageBgDark : globalPageBgLight}
+          className="rounded-[32px] py-4 border border-brand-deep/10 dark:border-white/10 shadow-[0_8px_32px_rgba(6,44,33,0.04)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] overflow-hidden min-h-[300px]"
         >
           {sections.length === 0 && (
             <PreviewThemeScope className="flex flex-col items-center justify-center py-20 opacity-40 min-h-[200px]">
@@ -345,27 +388,40 @@ export default function EditorV01Page() {
           <SortableBlockList
             items={sections}
             onReorder={setSections}
-            itemClassName="!rounded-none !border-0 !border-b border-brand-deep/5 !bg-transparent !shadow-none"
-            renderItem={(block) => (
-              <EditableBlock
-                block={block}
-                previewDark={previewDark}
-                isActive={activeBlockId === block.id}
-                onActivate={() => setActiveBlockId(block.id)}
-                onDeactivate={() => setActiveBlockId(null)}
-                onUpdate={(data) => updateBlock(block.id, { data })}
-                onUpdateConfig={(config) => updateBlock(block.id, { config })}
-                onDelete={() => deleteBlock(block.id)}
-                onAddBelow={(type) => {
-                  const idx = sections.findIndex((s) => s.id === block.id)
-                  addBlock(type, idx)
-                }}
-              />
-            )}
+            itemClassName="!rounded-none !border-0 !bg-transparent !shadow-none"
+            renderItem={(block) => {
+              if (isPreviewMode) {
+                return (
+                  <div className="relative group/block my-4">
+                    <PreviewThemeScope>
+                      <BlockRenderer block={block} previewDark={previewDark} />
+                    </PreviewThemeScope>
+                  </div>
+                )
+              }
+              return (
+                <EditableBlock
+                  block={block}
+                  previewDark={previewDark}
+                  isActive={activeBlockId === block.id}
+                  scrollToBlockId={scrollToBlockId}
+                  onClearScrollTo={() => setScrollToBlockId(null)}
+                  onActivate={() => setActiveBlockId(block.id)}
+                  onDeactivate={() => setActiveBlockId(null)}
+                  onUpdate={(data) => updateBlock(block.id, { data })}
+                  onUpdateConfig={(config) => updateBlock(block.id, { config })}
+                  onDelete={() => deleteBlock(block.id)}
+                  onAddBelow={(type) => {
+                    const idx = sections.findIndex((s) => s.id === block.id)
+                    addBlock(type, idx)
+                  }}
+                />
+              )
+            }}
           />
         </EditorCanvas>
 
-        <AddBlockMenu onAdd={(type) => addBlock(type)} />
+        {!isPreviewMode && <AddBlockMenu onAdd={(type) => addBlock(type)} />}
       </main>
     </div>
   )
@@ -375,6 +431,8 @@ interface EditableBlockProps {
   block: BlockSection
   previewDark: boolean
   isActive: boolean
+  scrollToBlockId: string | null
+  onClearScrollTo: () => void
   onActivate: () => void
   onDeactivate: () => void
   onUpdate: (data: Record<string, unknown>) => void
@@ -383,25 +441,38 @@ interface EditableBlockProps {
   onAddBelow: (type: BlockType) => void
 }
 
-function EditableBlock({ block, previewDark, isActive, onActivate, onDeactivate, onUpdate, onUpdateConfig, onDelete, onAddBelow }: EditableBlockProps) {
+function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearScrollTo, onActivate, onDeactivate, onUpdate, onUpdateConfig, onDelete, onAddBelow }: EditableBlockProps) {
   const meta = BLOCK_META[block.type]
+  const blockRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (scrollToBlockId !== block.id || !blockRef.current) return
+    blockRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    onClearScrollTo()
+  }, [scrollToBlockId, block.id, onClearScrollTo])
 
   return (
-    <div className="relative group/block">
+    <div ref={blockRef} className="relative group/block">
       {/* Block type label */}
-      <div className="absolute -top-0.5 left-0 z-10 flex items-center gap-1.5 px-2 py-0.5 opacity-0 group-hover/block:opacity-100 transition-opacity duration-200">
-        <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--sf-secondary)" }}>
+      <div className={cn(
+        "absolute -top-3 left-5 z-20 flex items-center gap-1.5 transition-opacity duration-200 pointer-events-none",
+        isActive ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+      )}>
+        <span className="text-[10px] font-bold uppercase tracking-widest bg-white dark:bg-black px-2.5 py-1.5 rounded-[6px] shadow-sm border border-brand-deep/10 dark:border-white/10 leading-none flex items-center" style={{ color: "var(--sf-secondary)" }}>
           {meta?.label ?? block.type}
         </span>
       </div>
 
       {/* Delete button */}
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-1 opacity-0 group-hover/block:opacity-100 transition-opacity duration-200">
+      <div className={cn(
+        "absolute -top-3 right-5 z-20 flex items-center gap-1 transition-opacity duration-200",
+        isActive ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
+      )}>
         <Button
           variant="ghost"
           size="icon"
           onClick={(e) => { e.stopPropagation(); onDelete() }}
-          className="h-7 w-7 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-600"
+          className="h-7 w-7 rounded-full bg-white dark:bg-black border border-brand-deep/10 dark:border-white/10 text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </Button>
@@ -411,10 +482,9 @@ function EditableBlock({ block, previewDark, isActive, onActivate, onDeactivate,
       <PreviewThemeScope
         onClick={() => (isActive ? onDeactivate() : onActivate())}
         className={cn(
-          "cursor-pointer transition-all duration-300 rounded-lg",
-          isActive ? "ring-2 ring-[var(--sf-secondary)] ring-offset-2" : "hover:ring-1 hover:ring-[var(--sf-secondary)]/30"
+          "relative cursor-pointer transition-all duration-300 rounded-2xl overflow-hidden",
+          isActive ? "border border-brand-deep/10 dark:border-white/10 shadow-sm" : "border border-transparent hover:border-brand-deep/10 dark:hover:border-white/10 hover:shadow-sm"
         )}
-        style={{ ["--tw-ring-offset-color" as string]: "var(--sf-background)" }}
       >
         <BlockRenderer block={block} previewDark={previewDark} />
       </PreviewThemeScope>
@@ -430,9 +500,8 @@ function EditableBlock({ block, previewDark, isActive, onActivate, onDeactivate,
             className="overflow-hidden"
           >
             <div
-              className="border-t mt-1 rounded-b-xl"
+              className="mt-1 rounded-3xl"
               style={{
-                borderColor: "color-mix(in srgb, var(--sf-text) 8%, transparent)",
                 backgroundColor: "color-mix(in srgb, var(--sf-background) 97%, var(--sf-text))",
               }}
             >

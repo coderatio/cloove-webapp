@@ -141,7 +141,7 @@ function HeroPreview({
   const subtitleColor = sectionColor ?? (imageUrl ? "#fff" : "var(--sf-background)")
 
   return (
-    <div className="relative overflow-hidden rounded-lg" style={{ minHeight: 240 }}>
+    <div className="relative overflow-hidden rounded-3xl" style={{ minHeight: 240 }}>
       {imageUrl ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -180,7 +180,7 @@ function RichTextPreview({ data, sectionColor }: { data: Record<string, unknown>
   const isEmpty = !html || html === "<p></p>" || html === "<p><br></p>"
 
   return (
-    <div className="px-6 py-8">
+    <div className="px-6 pb-8 pt-4">
       {isEmpty ? (
         <p
           className="opacity-40 italic text-sm"
@@ -229,7 +229,7 @@ function CtaPreview({ data }: { data: Record<string, unknown> }) {
 
   return (
     <div
-      className="rounded-lg px-8 py-12 text-center border border-transparent"
+      className="rounded-3xl px-8 py-12 text-center border border-transparent"
       style={style.wrapper}
     >
       <h2
@@ -272,7 +272,7 @@ function FaqPreview({ data, sectionColor }: { data: Record<string, unknown>; sec
         {items.map((item, i) => (
           <div
             key={i}
-            className="rounded-lg border px-4 py-3"
+            className="rounded-2xl border px-4 py-3"
             style={{ borderColor: "color-mix(in srgb, var(--sf-text) 10%, transparent)" }}
           >
             <div className="flex items-center gap-2">
@@ -313,7 +313,7 @@ function TestimonialsPreview({ data, sectionColor }: { data: Record<string, unkn
         {items.map((item, i) => (
           <div
             key={i}
-            className="rounded-xl p-5 border"
+            className="rounded-2xl p-5 border"
             style={{
               borderColor: "color-mix(in srgb, var(--sf-text) 10%, transparent)",
               backgroundColor: "color-mix(in srgb, var(--sf-background) 95%, var(--sf-text))",
@@ -386,10 +386,10 @@ function ContactPreview({ data, sectionColor }: { data: Record<string, unknown>;
           {description}
         </p>
       )}
-      <div className="rounded-lg border p-6 space-y-3" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 10%, transparent)" }}>
-        <div className="h-9 rounded-md border opacity-30" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 20%, transparent)" }} />
-        <div className="h-9 rounded-md border opacity-30" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 20%, transparent)" }} />
-        <div className="h-20 rounded-md border opacity-30" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 20%, transparent)" }} />
+      <div className="rounded-2xl border p-6 space-y-3" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 10%, transparent)" }}>
+        <div className="h-9 rounded-xl border opacity-30" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 20%, transparent)" }} />
+        <div className="h-9 rounded-xl border opacity-30" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 20%, transparent)" }} />
+        <div className="h-20 rounded-xl border opacity-30" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 20%, transparent)" }} />
         <div
           className="h-9 rounded-full w-32"
           style={{ backgroundColor: "var(--sf-primary)", opacity: 0.5 }}
@@ -414,7 +414,7 @@ function ImageGalleryPreview({ data, sectionColor }: { data: Record<string, unkn
       {images.length === 0 ? (
         <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
           {[1, 2, 3].map((i) => (
-            <div key={i} className="aspect-square rounded-lg border-2 border-dashed flex items-center justify-center" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 15%, transparent)" }}>
+            <div key={i} className="aspect-square rounded-2xl border-2 border-dashed flex items-center justify-center" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 15%, transparent)" }}>
               <ImageIcon className="w-8 h-8 opacity-20" />
             </div>
           ))}
@@ -422,7 +422,7 @@ function ImageGalleryPreview({ data, sectionColor }: { data: Record<string, unkn
       ) : (
         <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
           {images.map((url, i) => (
-            <div key={i} className="aspect-square rounded-lg overflow-hidden bg-black/5">
+            <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-black/5">
               <img src={url} alt="" className="w-full h-full object-cover" />
             </div>
           ))}

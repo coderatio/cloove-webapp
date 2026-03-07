@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { ArrowLeft, Save, Sun, Moon } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
+import { cn } from "@/app/lib/utils"
 
 interface EditorHeaderProps {
   title: string
@@ -10,9 +11,11 @@ interface EditorHeaderProps {
   onSave: () => void
   previewDark: boolean
   onTogglePreviewDark: () => void
+  isPreviewMode: boolean
+  onTogglePreviewMode: () => void
 }
 
-export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePreviewDark }: EditorHeaderProps) {
+export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePreviewDark, isPreviewMode, onTogglePreviewMode }: EditorHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-brand-deep/10 dark:border-white/10 bg-brand-cream/80 dark:bg-zinc-900/80 backdrop-blur-md">
       <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
@@ -37,11 +40,23 @@ export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePre
           <Button
             variant="ghost"
             size="sm"
+            onClick={onTogglePreviewMode}
+            className={cn("rounded-full h-9 gap-2 text-xs font-medium", isPreviewMode && "bg-brand-green/10 text-brand-green")}
+          >
+            <Sun className="w-3.5 h-3.5" />
+            {isPreviewMode ? "Exit preview" : "Preview"}
+          </Button>
+
+          <div className="h-5 w-px bg-brand-deep/10 dark:bg-white/10 mx-1" />
+
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onTogglePreviewDark}
             className="rounded-full h-9 gap-2 text-xs font-medium"
           >
             {previewDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-            {previewDark ? "Light" : "Dark"} preview
+            {previewDark ? "Light" : "Dark"}
           </Button>
 
           <Button

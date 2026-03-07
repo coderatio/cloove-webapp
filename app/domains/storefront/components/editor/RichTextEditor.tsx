@@ -66,7 +66,7 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 py-3",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 py-3 [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 text-brand-deep dark:text-brand-cream",
       },
     },
   })

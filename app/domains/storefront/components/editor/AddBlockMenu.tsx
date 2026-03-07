@@ -7,12 +7,15 @@ import { Button } from "@/app/components/ui/button"
 import { CREATABLE_BLOCK_TYPES, BLOCK_META, type BlockType } from "./block-types"
 import { cn } from "@/app/lib/utils"
 
+const MENU_HEIGHT_ESTIMATE = 340
+
 interface AddBlockMenuProps {
   onAdd: (type: BlockType) => void
 }
 
 export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
   const [open, setOpen] = useState(false)
+  const [openAbove, setOpenAbove] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -23,6 +26,15 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
+
+  const handleToggle = () => {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      const spaceBelow = typeof window !== "undefined" ? window.innerHeight - rect.bottom : MENU_HEIGHT_ESTIMATE
+      setOpenAbove(spaceBelow < MENU_HEIGHT_ESTIMATE)
+    }
+    setOpen((prev) => !prev)
+  }
 
   const handleAdd = (type: BlockType) => {
     onAdd(type)
@@ -36,7 +48,7 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setOpen(!open)}
+          onClick={handleToggle}
           className={cn(
             "rounded-full h-8 w-8 p-0 border-brand-deep/10 dark:border-white/10 transition-all duration-300",
             open && "bg-brand-green/10 border-brand-green/20 dark:bg-brand-gold/10 dark:border-brand-gold/20"
@@ -50,11 +62,14 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+            initial={{ opacity: 0, y: openAbove ? 8 : -8, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+            exit={{ opacity: 0, y: openAbove ? 8 : -8, scale: 0.95 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute top-10 z-30 w-80 rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-3"
+            className={cn(
+              "absolute z-30 w-80 rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl p-3",
+              openAbove ? "bottom-10" : "top-10"
+            )}
           >
             <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 px-2 mb-2">
               Add a block
@@ -91,8 +106,11 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
   )
 }
 
+const INLINE_MENU_HEIGHT_ESTIMATE = 280
+
 export function InlineAddBlockButton({ onAdd }: AddBlockMenuProps) {
   const [open, setOpen] = useState(false)
+  const [openAbove, setOpenAbove] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -104,10 +122,19 @@ export function InlineAddBlockButton({ onAdd }: AddBlockMenuProps) {
     return () => document.removeEventListener("mousedown", handler)
   }, [open])
 
+  const handleToggle = () => {
+    if (!open && ref.current && typeof window !== "undefined") {
+      const rect = ref.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      setOpenAbove(spaceBelow < INLINE_MENU_HEIGHT_ESTIMATE)
+    }
+    setOpen((prev) => !prev)
+  }
+
   return (
     <div ref={ref} className="relative flex items-center justify-center py-2">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className={cn(
           "w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-200 opacity-0 group-hover/adder:opacity-100 hover:opacity-100 focus:opacity-100",
           open
@@ -121,11 +148,14 @@ export function InlineAddBlockButton({ onAdd }: AddBlockMenuProps) {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, y: openAbove ? 6 : -6, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: openAbove ? 6 : -6, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-8 z-30 w-72 rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-xl p-2"
+            className={cn(
+              "absolute z-30 w-72 rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-xl p-2",
+              openAbove ? "bottom-8" : "top-8"
+            )}
           >
             {CREATABLE_BLOCK_TYPES.map((type) => {
               const meta = BLOCK_META[type]
