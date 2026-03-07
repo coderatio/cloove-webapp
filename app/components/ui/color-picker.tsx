@@ -49,14 +49,13 @@ export const ColorPicker = React.forwardRef<HTMLDivElement, ColorPickerProps>(
       <div ref={ref} className={cn("flex flex-col gap-3", className)}>
         <div
           className={cn(
-            "rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 p-4",
-            "[&_.react-colorful]:h-32 [&_.react-colorful]:w-full",
+            "rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 p-3",
             "[&_.react-colorful__saturation]:rounded-xl [&_.react-colorful__saturation]:border-0",
             "[&_.react-colorful__hue]:rounded-full [&_.react-colorful__hue]:mt-3 [&_.react-colorful__hue]:h-3",
             "[&_.react-colorful__pointer]:w-4 [&_.react-colorful__pointer]:h-4 [&_.react-colorful__pointer]:border-2 [&_.react-colorful__pointer]:border-white [&_.react-colorful__pointer]:shadow-lg"
           )}
         >
-          <HexColorPicker color={color} onChange={onChange} className="w-full" />
+          <HexColorPicker color={color} onChange={onChange} style={{ width: "100%", height: "160px" }} />
         </div>
         {showHexInput && (
           <Input

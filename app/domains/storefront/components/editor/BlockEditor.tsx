@@ -9,6 +9,8 @@ import type { BlockSection, FaqItem, TestimonialItem, FeatureItem, CtaButton, Se
 import { Plus, Trash2 } from "lucide-react"
 import { Switch } from "@/app/components/ui/switch"
 import { cn } from "@/app/lib/utils"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
+import { Textarea } from "@/app/components/ui/textarea"
 
 const GRADIENT_DIR_OPTIONS = [
   { value: "to-br", label: "↘ Bottom right" },
@@ -162,7 +164,6 @@ function SectionBackgroundEditor({
             <ColorPicker
               color={bg.color}
               onChange={(color) => setBg({ ...bg, color })}
-              className="max-w-[200px]"
             />
           </div>
         )}
@@ -170,24 +171,27 @@ function SectionBackgroundEditor({
         {bg?.type === "gradient" && (
           <div className="mt-3 space-y-3">
             <Field label="Direction">
-              <select
-                value={bg.direction}
-                onChange={(e) => setBg({ ...bg, direction: e.target.value })}
-                className="w-full h-9 rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 px-3 text-sm text-brand-deep dark:text-brand-cream"
-              >
-                {GRADIENT_DIR_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              <Select value={bg.direction} onValueChange={(value) => setBg({ ...bg, direction: value })}>
+                <SelectTrigger className="w-full h-9 bg-white/50 dark:bg-white/5 border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GRADIENT_DIR_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
-            <Field label="Color 1">
-              <ColorPicker color={bg.color1} onChange={(color1) => setBg({ ...bg, color1 })} className="max-w-[200px]" />
-            </Field>
-            <Field label="Color 2">
-              <ColorPicker color={bg.color2} onChange={(color2) => setBg({ ...bg, color2 })} className="max-w-[200px]" />
-            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Color 1">
+                <ColorPicker color={bg.color1} onChange={(color1) => setBg({ ...bg, color1 })} />
+              </Field>
+              <Field label="Color 2">
+                <ColorPicker color={bg.color2} onChange={(color2) => setBg({ ...bg, color2 })} />
+              </Field>
+            </div>
           </div>
         )}
 
@@ -238,36 +242,36 @@ function SectionTextColorEditor({
   const dark = config.textColorDark ?? ""
 
   return (
-    <div className="space-y-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
-      <EditorSection title="Section text color (light mode)">
+    <div className="grid grid-cols-2 gap-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
+      <EditorSection title="Text color (light)">
         <div className="flex items-center gap-2">
           <input
             type="color"
             value={light || "#000000"}
             onChange={(e) => onUpdateConfig({ textColorLight: e.target.value || undefined })}
-            className="h-9 w-14 cursor-pointer rounded border border-brand-deep/10 dark:border-white/10 bg-transparent"
+            className="h-9 w-10 shrink-0 cursor-pointer rounded border border-brand-deep/10 dark:border-white/10 bg-transparent"
           />
           <Input
             value={light}
             onChange={(e) => onUpdateConfig({ textColorLight: e.target.value || undefined })}
-            placeholder="e.g. #111111 or leave default"
-            className="h-9 font-mono text-xs flex-1"
+            placeholder="#111111 or default"
+            className="h-9 font-mono text-xs flex-1 min-w-0"
           />
         </div>
       </EditorSection>
-      <EditorSection title="Section text color (dark mode)">
+      <EditorSection title="Text color (dark)">
         <div className="flex items-center gap-2">
           <input
             type="color"
             value={dark || "#ffffff"}
             onChange={(e) => onUpdateConfig({ textColorDark: e.target.value || undefined })}
-            className="h-9 w-14 cursor-pointer rounded border border-brand-deep/10 dark:border-white/10 bg-transparent"
+            className="h-9 w-10 shrink-0 cursor-pointer rounded border border-brand-deep/10 dark:border-white/10 bg-transparent"
           />
           <Input
             value={dark}
             onChange={(e) => onUpdateConfig({ textColorDark: e.target.value || undefined })}
-            placeholder="e.g. #eeeeee or leave default"
-            className="h-9 font-mono text-xs flex-1"
+            placeholder="#eeeeee or default"
+            className="h-9 font-mono text-xs flex-1 min-w-0"
           />
         </div>
       </EditorSection>
@@ -413,14 +417,14 @@ function FaqEditor({ data, onUpdate }: { data: Record<string, unknown>; onUpdate
             <div className="flex items-start gap-2">
               <div className="flex-1 space-y-2">
                 <Input value={item.question ?? ""} onChange={(e) => updateItem(i, "question", e.target.value)} placeholder={`Question ${i + 1}`} className="h-9" />
-                <textarea
+                <Textarea
                   value={item.answer ?? ""}
                   onChange={(e) => updateItem(i, "answer", e.target.value)}
                   placeholder="Answer"
-                  className="w-full rounded-xl p-2.5 text-sm min-h-[60px] bg-white/50 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 resize-none text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-1 focus:ring-brand-green/20"
+                  className="min-h-[60px] resize-none"
                 />
               </div>
-              <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500">
+              <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-0.5">
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -454,18 +458,18 @@ function TestimonialsEditor({ data, onUpdate }: { data: Record<string, unknown>;
           <div key={i} className="space-y-2 pb-3 mb-3 border-b border-brand-deep/5 dark:border-white/5 last:border-0">
             <div className="flex items-start gap-2">
               <div className="flex-1 space-y-2">
-                <textarea
+                <Textarea
                   value={item.quote ?? ""}
                   onChange={(e) => updateItem(i, "quote", e.target.value)}
                   placeholder="Customer quote"
-                  className="w-full rounded-xl p-2.5 text-sm min-h-[60px] bg-white/50 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 resize-none text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-1 focus:ring-brand-green/20"
+                  className="min-h-[60px] resize-none"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Input value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Name" className="h-9" />
                   <Input value={item.role ?? ""} onChange={(e) => updateItem(i, "role", e.target.value)} placeholder="Role / Company" className="h-9" />
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500">
+              <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-1">
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -518,7 +522,7 @@ function GridFeaturesEditor({ data, onUpdate }: { data: Record<string, unknown>;
               <Input value={item.title ?? ""} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder={`Feature ${i + 1}`} className="h-9" />
               <Input value={item.description ?? ""} onChange={(e) => updateItem(i, "description", e.target.value)} placeholder="Description" className="h-9 text-xs" />
             </div>
-            <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500">
+            <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-0.5">
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -539,11 +543,11 @@ function ContactEditor({ data, set }: { data: Record<string, unknown>; set: (k: 
           <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Contact Us" className="h-9" />
         </Field>
         <Field label="Description">
-          <textarea
+          <Textarea
             value={(data.description as string) ?? ""}
             onChange={(e) => set("description", e.target.value)}
             placeholder="Optional description"
-            className="w-full rounded-xl p-2.5 text-sm min-h-[60px] bg-white/50 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 resize-none text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-1 focus:ring-brand-green/20"
+            className="min-h-[60px] resize-none"
           />
         </Field>
       </EditorSection>
