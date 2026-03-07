@@ -2,6 +2,15 @@
 
 import type { BlockSection, FaqItem, TestimonialItem, FeatureItem, CtaButton, SectionBackground } from "./block-types"
 import { HelpCircle, ChevronDown, Quote, Star, Image as ImageIcon, ShoppingBag, Tag, Megaphone } from "lucide-react"
+import { formatCurrency } from "@/app/lib/formatters"
+import { useBusiness } from "@/app/components/BusinessProvider"
+import { useStorefront } from "@/app/domains/storefront/hooks/useStorefront"
+import {
+  useStorefrontProducts,
+  useStorefrontFeatured,
+  useStorefrontOnSale,
+  type StorefrontProductItem,
+} from "@/app/domains/storefront/hooks/useStorefrontProducts"
 
 interface BlockRendererProps {
   block: BlockSection
@@ -84,6 +93,8 @@ function getSectionTextColor(config: BlockSection["config"], previewDark: boolea
 }
 
 export function BlockRenderer({ block, previewDark = false }: BlockRendererProps) {
+  const { data: storefront } = useStorefront()
+  const storefrontSlug = storefront?.slug
   const sectionColor = getSectionTextColor(block.config, previewDark)
   const content = (() => {
     switch (block.type) {
@@ -103,6 +114,14 @@ export function BlockRenderer({ block, previewDark = false }: BlockRendererProps
         return <ContactPreview data={block.data} sectionColor={sectionColor} />
       case "image_gallery":
         return <ImageGalleryPreview data={block.data} sectionColor={sectionColor} />
+      case "product_listing":
+        return <ProductListingPreview data={block.data} sectionColor={sectionColor} slug={storefrontSlug} />
+      case "featured_products":
+        return <FeaturedProductsPreview data={block.data} sectionColor={sectionColor} slug={storefrontSlug} />
+      case "on_sale":
+        return <OnSalePreview data={block.data} sectionColor={sectionColor} slug={storefrontSlug} />
+      case "promotion_banner":
+        return <PromotionBannerPreview data={block.data} sectionColor={sectionColor} />
       default:
         return <PlaceholderPreview type={block.type} />
     }
@@ -137,8 +156,9 @@ function HeroPreview({
   const layout = (data.layout as keyof typeof HERO_LAYOUT_CLASSES) || "center"
   const layoutClasses = HERO_LAYOUT_CLASSES[layout] ?? HERO_LAYOUT_CLASSES.center
   const sectionColor = getSectionTextColor(config, previewDark)
-  const titleColor = sectionColor ?? (imageUrl ? "#fff" : "var(--sf-background)")
-  const subtitleColor = sectionColor ?? (imageUrl ? "#fff" : "var(--sf-background)")
+  const isDarkBg = previewDark || !!imageUrl
+  const titleColor = sectionColor || (isDarkBg ? "#ffffff" : "var(--sf-text)")
+  const subtitleColor = sectionColor || (isDarkBg ? "rgba(255,255,255,0.85)" : "color-mix(in srgb, var(--sf-text) 70%, transparent)")
 
   return (
     <div className="relative overflow-hidden rounded-3xl" style={{ minHeight: 240 }}>
@@ -432,13 +452,241 @@ function ImageGalleryPreview({ data, sectionColor }: { data: Record<string, unkn
   )
 }
 
+function ProductTile({
+  product,
+  sectionColor,
+  className,
+}: {
+  product: StorefrontProductItem
+  sectionColor?: string
+  className?: string
+}) {
+  const { activeBusiness } = useBusiness()
+  const currency = activeBusiness?.currency ?? "NGN"
+  const firstImage = Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null
+  const imgUrl = typeof firstImage === "string" ? firstImage : firstImage?.url ?? null
+  const price = product.salePrice != null ? product.salePrice : product.price
+  const hasSale = product.salePrice != null && product.salePrice < product.price
+  const priceNum = typeof price === "number" ? price : 0
+  const originalNum = typeof product.price === "number" ? product.price : 0
+  return (
+    <div className={className}>
+      <div className="aspect-square rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 overflow-hidden">
+        {imgUrl ? (
+          <img src={imgUrl} alt={product.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <ShoppingBag className="w-8 h-8 opacity-30" />
+          </div>
+        )}
+      </div>
+      <p className="text-sm font-medium mt-2 line-clamp-2" style={{ color: sectionColor ?? "var(--sf-text)" }}>
+        {product.name}
+      </p>
+      <p className="text-xs mt-0.5" style={{ color: sectionColor ?? "var(--sf-text)", opacity: 0.9 }}>
+        {hasSale && <span className="line-through opacity-70 mr-1">{formatCurrency(originalNum, { currency })}</span>}
+        {formatCurrency(priceNum, { currency })}
+      </p>
+    </div>
+  )
+}
+
+function ProductListingPreview({
+  data,
+  sectionColor,
+  slug,
+}: { data: Record<string, unknown>; sectionColor?: string; slug?: string }) {
+  const title = (data.title as string) || "Our Products"
+  const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+  const showFilters = data.showFilters !== false
+  const { data: products, isLoading, isError } = useStorefrontProducts(slug, { limit, page: 1 })
+  const list = products ?? []
+  return (
+    <div className="px-6 py-8" style={sectionColor ? { color: sectionColor } : undefined}>
+      <h2 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--sf-font-heading)", color: sectionColor ?? "var(--sf-text)" }}>
+        {title}
+      </h2>
+      {!slug ? (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="aspect-square rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+              <ShoppingBag className="w-8 h-8 opacity-30" />
+            </div>
+          ))}
+        </div>
+      ) : isLoading ? (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="aspect-square rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 animate-pulse" />
+          ))}
+        </div>
+      ) : isError ? (
+        <p className="text-sm opacity-70">Could not load products.</p>
+      ) : list.length === 0 ? (
+        <p className="text-sm opacity-70">No products yet.</p>
+      ) : (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+          {list.map((p) => (
+            <ProductTile key={p.id} product={p} sectionColor={sectionColor} />
+          ))}
+        </div>
+      )}
+      <p className="text-xs mt-3 opacity-60">
+        Up to {limit} products{showFilters ? " · Filters on" : ""}
+      </p>
+    </div>
+  )
+}
+
+function FeaturedProductsPreview({
+  data,
+  sectionColor,
+  slug,
+}: { data: Record<string, unknown>; sectionColor?: string; slug?: string }) {
+  const { activeBusiness } = useBusiness()
+  const featuredCurrency = activeBusiness?.currency ?? "NGN"
+  const title = (data.title as string) || "Featured"
+  const subtitle = (data.subtitle as string) || ""
+  const limit = Math.min(12, Math.max(4, Number(data.limit) || 8))
+  const { data: products, isLoading, isError } = useStorefrontFeatured(slug, limit)
+  const list = products ?? []
+  return (
+    <div className="px-6 py-8" style={sectionColor ? { color: sectionColor } : undefined}>
+      <h2 className="text-xl font-bold mb-1" style={{ fontFamily: "var(--sf-font-heading)", color: sectionColor ?? "var(--sf-text)" }}>
+        {title}
+      </h2>
+      {subtitle && <p className="text-sm opacity-80 mb-4">{subtitle}</p>}
+      {!slug ? (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="w-40 shrink-0 aspect-[3/4] rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+              <Star className="w-6 h-6 opacity-30" />
+            </div>
+          ))}
+        </div>
+      ) : isLoading ? (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="w-40 shrink-0 aspect-[3/4] rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 animate-pulse" />
+          ))}
+        </div>
+      ) : isError ? (
+        <p className="text-sm opacity-70">Could not load featured products.</p>
+      ) : list.length === 0 ? (
+        <p className="text-sm opacity-70">No featured products yet.</p>
+      ) : (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {list.map((p) => (
+            <div key={p.id} className="w-40 shrink-0">
+              <div className="aspect-[3/4] rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 overflow-hidden">
+                {Array.isArray(p.images) && p.images[0] ? (
+                  <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Star className="w-6 h-6 opacity-30" />
+                  </div>
+                )}
+              </div>
+              <p className="text-sm font-medium mt-2 line-clamp-2" style={{ color: sectionColor ?? "var(--sf-text)" }}>{p.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: sectionColor ?? "var(--sf-text)", opacity: 0.9 }}>
+                {formatCurrency(typeof (p.salePrice ?? p.price) === "number" ? (p.salePrice ?? p.price) : 0, { currency: featuredCurrency })}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-xs mt-2 opacity-60">Featured products · up to {limit}</p>
+    </div>
+  )
+}
+
+function OnSalePreview({
+  data,
+  sectionColor,
+  slug,
+}: { data: Record<string, unknown>; sectionColor?: string; slug?: string }) {
+  const title = (data.title as string) || "On Sale"
+  const subtitle = (data.subtitle as string) || ""
+  const promotionId = data.promotionId as string | undefined
+  const limit = Number(data.limit) || 8
+  const { data: products, isLoading, isError } = useStorefrontOnSale(slug, { limit, promotionId })
+  const list = products ?? []
+  return (
+    <div className="px-6 py-8" style={sectionColor ? { color: sectionColor } : undefined}>
+      <h2 className="text-xl font-bold mb-1" style={{ fontFamily: "var(--sf-font-heading)", color: sectionColor ?? "var(--sf-text)" }}>
+        {title}
+      </h2>
+      {subtitle && <p className="text-sm opacity-80 mb-4">{subtitle}</p>}
+      {promotionId && (
+        <span className="inline-block px-2 py-0.5 rounded text-xs font-medium mb-3" style={{ backgroundColor: "var(--sf-secondary)", color: "var(--sf-primary)" }}>
+          One promotion
+        </span>
+      )}
+      {!slug ? (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 aspect-square flex items-center justify-center">
+              <Tag className="w-6 h-6 opacity-30" />
+            </div>
+          ))}
+        </div>
+      ) : isLoading ? (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 aspect-square animate-pulse" />
+          ))}
+        </div>
+      ) : isError ? (
+        <p className="text-sm opacity-70">Could not load on-sale products.</p>
+      ) : list.length === 0 ? (
+        <p className="text-sm opacity-70">No products on sale.</p>
+      ) : (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+          {list.map((p) => (
+            <ProductTile key={p.id} product={p} sectionColor={sectionColor} />
+          ))}
+        </div>
+      )}
+      <p className="text-xs mt-2 opacity-60">On sale · up to {limit}</p>
+    </div>
+  )
+}
+
+function PromotionBannerPreview({ data, sectionColor }: { data: Record<string, unknown>; sectionColor?: string }) {
+  const title = (data.title as string) || "Promotion"
+  const subtitle = (data.subtitle as string) || ""
+  const imageUrl = data.imageUrl as string | undefined
+  const badgeLabel = (data.badgeLabel as string) || ""
+  const cta = data.cta as { label: string; href: string } | undefined
+  const endsAt = data.endsAt as string | undefined
+  const showCountdown = !!data.showCountdown
+  const textColor = sectionColor ?? "var(--sf-background)"
+  return (
+    <div className="relative overflow-hidden rounded-lg px-6 py-8 min-h-[140px] flex flex-col justify-center" style={{ backgroundColor: "var(--sf-primary)" }}>
+      {imageUrl && (
+        <div className="absolute inset-0 bg-cover bg-center opacity-30" style={{ backgroundImage: `url(${imageUrl})` }} />
+      )}
+      <div className="relative z-10" style={{ color: textColor }}>
+        {badgeLabel && (
+          <span className="inline-block px-2 py-0.5 rounded text-xs font-medium mb-2" style={{ backgroundColor: "var(--sf-secondary)", color: "var(--sf-primary)" }}>
+            {badgeLabel}
+          </span>
+        )}
+        <h2 className="text-xl font-bold" style={{ fontFamily: "var(--sf-font-heading)" }}>{title}</h2>
+        {subtitle && <p className="text-sm opacity-90 mt-1">{subtitle}</p>}
+        {cta?.label && (
+          <span className="inline-block mt-4 px-4 py-2 rounded-full text-sm font-semibold" style={{ backgroundColor: "var(--sf-secondary)", color: "var(--sf-primary)" }}>
+            {cta.label}
+          </span>
+        )}
+        {(endsAt || showCountdown) && <p className="text-xs mt-3 opacity-80">Ends {endsAt ? new Date(endsAt).toLocaleDateString() : "—"}</p>}
+      </div>
+    </div>
+  )
+}
+
 function PlaceholderPreview({ type }: { type: string }) {
-  const icons: Record<string, React.ReactNode> = {
-    product_listing: <ShoppingBag className="w-8 h-8" />,
-    featured_products: <Star className="w-8 h-8" />,
-    on_sale: <Tag className="w-8 h-8" />,
-    promotion_banner: <Megaphone className="w-8 h-8" />,
-  }
+  const icons: Record<string, React.ReactNode> = {}
 
   return (
     <div className="px-6 py-12 flex flex-col items-center justify-center opacity-30">

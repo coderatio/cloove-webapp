@@ -72,7 +72,8 @@ const WALLET_BALANCE_NUMERIC = 0
 function getTransactionCategory(method: string | undefined): { label: string; variant: 'success' | 'warning' | 'gold' | 'outline' } {
     if (!method) return { label: 'Other', variant: 'outline' }
     const m = method.toLowerCase()
-    if (m.includes('sale') || m.includes('refund')) return { label: 'Sale', variant: 'success' }
+    if (m.includes('refund')) return { label: 'Refund', variant: 'warning' }
+    if (m.includes('sale')) return { label: 'Sale', variant: 'success' }
     if (m.includes('expense') || m.includes('supplier') || m.includes('debt')) return { label: 'Expense', variant: 'warning' }
     if (m.includes('wallet') || m.includes('withdrawal') || m.includes('deposit')) return { label: 'Wallet', variant: 'gold' }
     return { label: 'Other', variant: 'outline' }
@@ -110,6 +111,7 @@ export function FinanceView() {
     ] as const
     const categoryFilterOptions = [
         { label: "Sale", value: "Sale" },
+        { label: "Refund", value: "Refund" },
         { label: "Expense", value: "Expense" },
         { label: "Wallet", value: "Wallet" },
         { label: "Other", value: "Other" },
@@ -298,10 +300,11 @@ export function FinanceView() {
         {
             key: 'status',
             header: 'Status',
-            render: (value: string) => {
-                const isCleared = value === 'Cleared'
-                const isFailed = value === 'Failed'
-                const isProcessing = value === 'Processing'
+            render: (value: string, row: TransactionRow) => {
+                const statusLabel = value ?? (row as any).status ?? '—'
+                const isCleared = statusLabel === 'Cleared'
+                const isFailed = statusLabel === 'Failed'
+                const isProcessing = statusLabel === 'Processing'
                 const icon = isCleared ? (
                     <CheckCircle2 className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
                 ) : isFailed ? (
@@ -327,7 +330,7 @@ export function FinanceView() {
                     <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10", colorClass, bgClass)}>
                         {icon}
                         <span className="text-[10px] font-bold uppercase tracking-wider">
-                            {value}
+                            {statusLabel}
                         </span>
                     </div>
                 )
@@ -709,7 +712,7 @@ export function FinanceView() {
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 mb-0.5">Payment Status</p>
-                                                    <p className="font-bold text-xl text-brand-deep dark:text-brand-cream">{viewingTx?.status}</p>
+                                                    <p className="font-bold text-xl text-brand-deep dark:text-brand-cream">{viewingTx?.status ?? '—'}</p>
                                                 </div>
                                             </div>
 

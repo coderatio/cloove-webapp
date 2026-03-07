@@ -15,11 +15,15 @@ export interface ActivityItem {
     customer?: string
     href?: string
     orderId?: string
+    txId?: string
+    /** ISO timestamp for sorting when merging with other sources */
+    timestamp?: string
 }
 
 interface ActivityStreamProps {
     activities: ActivityItem[]
     onOrderClick?: (orderId: string) => void
+    onFinanceClick?: (txId: string) => void
     className?: string
 }
 
@@ -118,7 +122,7 @@ const ActivityEmptyState = () => {
     )
 }
 
-export function ActivityStream({ activities, onOrderClick, className }: ActivityStreamProps) {
+export function ActivityStream({ activities, onOrderClick, onFinanceClick, className }: ActivityStreamProps) {
     return (
         <div className={cn("space-y-4", className)}>
             <div className="flex items-center justify-between px-2">
@@ -158,12 +162,16 @@ export function ActivityStream({ activities, onOrderClick, className }: Activity
                                     {item.amount && (
                                         <div className={cn(
                                             "text-sm font-bold whitespace-nowrap",
-                                            item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? "text-brand-green dark:text-brand-gold" : item.type === 'withdrawal' ? "text-brand-accent dark:text-brand-gold" : "text-brand-deep dark:text-brand-cream"
+                                            item.type === 'sale' || item.type === 'payment' || item.type === 'deposit'
+                                                ? "text-brand-green dark:text-brand-gold"
+                                                : item.type === 'withdrawal' || item.type === 'debt'
+                                                  ? "text-rose-600 dark:text-rose-400"
+                                                  : "text-brand-deep dark:text-brand-cream"
                                         )}>
-                                            {item.type === 'withdrawal' ? '-' : item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? '+' : ''}{item.amount}
+                                            {item.type === 'withdrawal' || item.type === 'debt' ? '-' : item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? '+' : ''}{item.amount}
                                         </div>
                                     )}
-                                    <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors" />
+                                    <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors shrink-0" />
                                 </div>
                             </motion.div>
                         )
@@ -174,6 +182,18 @@ export function ActivityStream({ activities, onOrderClick, className }: Activity
                                     key={item.id}
                                     type="button"
                                     onClick={() => onOrderClick(item.orderId!)}
+                                    className="block w-full text-left"
+                                >
+                                    {Content}
+                                </button>
+                            )
+                        }
+                        if (item.txId && onFinanceClick) {
+                            return (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => onFinanceClick(item.txId!)}
                                     className="block w-full text-left"
                                 >
                                     {Content}

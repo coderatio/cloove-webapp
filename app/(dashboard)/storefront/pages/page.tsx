@@ -46,16 +46,12 @@ export default function StorefrontPages() {
         const slug = searchParams.get('slug')
         if (action === 'edit' && slug) {
             const pageToEdit = pages.find((p) => p.slug === slug)
-            if (pageToEdit) router.push(`/storefront/editor/${pageToEdit.slug}`)
+            if (pageToEdit) router.push(`/storefront/editor/v0.1/${pageToEdit.slug}`)
         }
     }, [searchParams, pages, router])
 
-    const handleEdit = (page: StorefrontPageListItem) => {
-        router.push(`/storefront/editor/${page.slug}`)
-    }
-
     const handleCreate = () => {
-        router.push('/storefront/editor/new')
+        router.push('/storefront/editor/v0.1/new')
     }
 
     if (isLoading) {
@@ -84,14 +80,6 @@ export default function StorefrontPages() {
                     <p className="text-brand-accent/60 dark:text-brand-cream/60 text-sm">Design and compose your storefront pages with modular sections.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={() => router.push('/storefront/editor/v0.1/new')}
-                        className="rounded-full border-brand-accent/10 dark:border-white/10 px-4 h-10"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        New (simple)
-                    </Button>
                     <Button
                         onClick={handleCreate}
                         className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-6 h-10 shadow-lg hover:scale-105 transition-all"
@@ -148,17 +136,9 @@ export default function StorefrontPages() {
                                             View
                                         </Button>
                                         <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => router.push(`/storefront/editor/v0.1/${page.slug}`)}
-                                            className="h-9 px-3 text-brand-accent/60 hover:text-brand-deep dark:text-white/60 dark:hover:text-white"
-                                        >
-                                            Simple
-                                        </Button>
-                                        <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => handleEdit(page)}
+                                            onClick={() => router.push(`/storefront/editor/v0.1/${page.slug}`)}
                                             className="h-9 px-4 border-brand-accent/10 hover:bg-white/60 dark:border-white/10 dark:hover:bg-white/10 rounded-lg group/edit"
                                         >
                                             <Edit2 className="w-3.5 h-3.5 mr-2 group-hover/edit:text-brand-green dark:group-hover/edit:text-emerald-400 transition-colors" />

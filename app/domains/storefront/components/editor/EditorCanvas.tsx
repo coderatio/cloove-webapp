@@ -8,6 +8,7 @@ interface EditorCanvasProps {
   children: ReactNode
   previewDark: boolean
   pageBackground?: string
+  pageTextColor?: string
   className?: string
 }
 
@@ -33,7 +34,7 @@ function buildFontUrl(fonts: { heading: string; body: string }): string | null {
   return `https://fonts.googleapis.com/css2?${params}&display=swap`
 }
 
-export function EditorCanvas({ children, previewDark, pageBackground, className }: EditorCanvasProps) {
+export function EditorCanvas({ children, previewDark, pageBackground, pageTextColor, className }: EditorCanvasProps) {
   const { data: theme } = useStorefrontTheme()
   const defaults = getDefaultTheme()
   const merged: StorefrontThemeData = useMemo(() => ({ ...defaults, ...theme }), [theme, defaults])
@@ -43,17 +44,17 @@ export function EditorCanvas({ children, previewDark, pageBackground, className 
     if (previewDark) {
       const dark = merged.colorsDark ?? DEFAULT_COLORS_DARK
       return {
-        primary: dark.primary ?? base.primary,
-        secondary: dark.secondary ?? base.secondary,
-        background: dark.background ?? DEFAULT_COLORS_DARK.background,
-        text: dark.text ?? DEFAULT_COLORS_DARK.text,
+        primary: dark.primary || base.primary || DEFAULT_COLORS_DARK.primary,
+        secondary: dark.secondary || base.secondary || DEFAULT_COLORS_DARK.secondary,
+        background: dark.background || DEFAULT_COLORS_DARK.background,
+        text: dark.text || DEFAULT_COLORS_DARK.text,
       }
     }
     return {
-      primary: base.primary ?? DEFAULT_COLORS.primary,
-      secondary: base.secondary ?? DEFAULT_COLORS.secondary,
-      background: base.background ?? DEFAULT_COLORS.background,
-      text: base.text ?? DEFAULT_COLORS.text,
+      primary: base.primary || DEFAULT_COLORS.primary,
+      secondary: base.secondary || DEFAULT_COLORS.secondary,
+      background: base.background || DEFAULT_COLORS.background,
+      text: base.text || DEFAULT_COLORS.text,
     }
   }, [previewDark, merged])
 
@@ -66,16 +67,16 @@ export function EditorCanvas({ children, previewDark, pageBackground, className 
         "--sf-primary": colors.primary,
         "--sf-secondary": colors.secondary,
         "--sf-background": pageBackground || colors.background,
-        "--sf-text": colors.text,
+        "--sf-text": pageTextColor || colors.text,
         "--sf-font-heading": `'${fonts.heading}', serif`,
         "--sf-font-body": `'${fonts.body}', sans-serif`,
         backgroundColor: pageBackground || colors.background,
-        color: colors.text,
+        color: pageTextColor || colors.text,
         fontFamily: `'${fonts.heading}', serif`,
       } as React.CSSProperties,
       dataTheme: previewDark ? "dark" : "light",
     }),
-    [colors, fonts, previewDark, pageBackground]
+    [colors, fonts, previewDark, pageBackground, pageTextColor]
   )
 
   return (
@@ -85,7 +86,7 @@ export function EditorCanvas({ children, previewDark, pageBackground, className 
         <link rel="stylesheet" href={fontUrl} />
       )}
       <StorefrontPreviewThemeContext.Provider value={previewTheme}>
-        <div className={className} style={previewTheme.style} data-theme={previewTheme.dataTheme}>
+        <div className={className}>
           {children}
         </div>
       </StorefrontPreviewThemeContext.Provider>

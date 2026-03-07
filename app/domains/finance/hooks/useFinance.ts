@@ -175,6 +175,23 @@ export function useFinanceTransactions(
     }
 }
 
+export function useTransaction(id: string | null) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const { data: response, isLoading, error } = useQuery<ApiResponse<FinanceTransactionRow>>({
+        queryKey: ['finance', 'transaction', businessId, id],
+        queryFn: () => apiClient.get<ApiResponse<FinanceTransactionRow>>(`/finance/transactions/${id}`, {}, { fullResponse: true }),
+        enabled: !!businessId && !!id,
+    })
+
+    return {
+        transaction: response?.data ?? null,
+        isLoading,
+        error,
+    }
+}
+
 export function useWalletBalance() {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id

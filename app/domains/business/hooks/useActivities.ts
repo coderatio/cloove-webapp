@@ -92,6 +92,7 @@ function mapTypedDtoToActivityItem(dto: TypedActivityDto): ActivityItem {
             customer: order.customerName,
             href: "/orders",
             orderId: order.orderId,
+            timestamp: order.timestamp,
         }
     }
 
@@ -107,6 +108,7 @@ function mapTypedDtoToActivityItem(dto: TypedActivityDto): ActivityItem {
             description,
             amount: inv.change !== 0 ? (inv.change > 0 ? `+${inv.change}` : `${inv.change}`) : undefined,
             timeAgo,
+            timestamp: inv.timestamp,
         }
     }
 
@@ -120,6 +122,7 @@ function mapTypedDtoToActivityItem(dto: TypedActivityDto): ActivityItem {
             amount: pay.amount != null ? formatCurrency(pay.amount, { currency: pay.currency }) : undefined,
             timeAgo,
             href: "/finance",
+            timestamp: pay.timestamp,
         }
     }
 
@@ -135,6 +138,7 @@ function mapTypedDtoToActivityItem(dto: TypedActivityDto): ActivityItem {
         timeAgo,
         customer: debt.customerName ?? undefined,
         href: "/finance",
+        timestamp: debt.timestamp,
     }
 }
 

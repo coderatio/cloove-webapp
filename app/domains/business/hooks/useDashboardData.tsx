@@ -12,7 +12,8 @@ import { formatCurrency } from "@/app/lib/formatters"
 import type { ActivityItem } from "@/app/components/dashboard/ActivityStream"
 
 const ALL_STORES_ID = "all-stores"
-const ACTIVITIES_MERGE_LIMIT = 25
+const ACTIVITIES_MERGE_LIMIT = 10
+const DASHBOARD_TRANSACTIONS_LIMIT = 5
 
 export interface DashboardWallet {
     balance: string
@@ -91,14 +92,14 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
 
     const activityQueries = useQueries({
         queries: activityStoreIds.map((sid) => ({
-            queryKey: ["store-activities", sid] as const,
+            queryKey: ["store-activities", sid, 10] as const,
             queryFn: () =>
-                apiClient.get<ApiResponse<any[]>>(`/stores/${sid}/activities`, {}, { fullResponse: true }),
+                apiClient.get<ApiResponse<any[]>>(`/stores/${sid}/activities`, { limit: '10' }, { fullResponse: true }),
             enabled: activityStoreIds.length > 0,
         })),
     })
 
-    const { transactions: transactionsList, isLoading: transactionsLoading } = useFinanceTransactions(undefined, 1, 20)
+    const { transactions: transactionsList, isLoading: transactionsLoading } = useFinanceTransactions(undefined, 1, DASHBOARD_TRANSACTIONS_LIMIT)
     const transactions = transactionsList ?? []
     const currency = summary?.currency ?? wallet?.currency ?? "NGN"
 
@@ -169,8 +170,8 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
                 type = tx.sale ? "payment" : "deposit"
                 description = tx.sale ? `Payment from ${tx.sale.customerName ?? tx.customer}` : tx.customer || "Deposit"
             } else {
-                type = "payment"
-                description = tx.customer || "Debit"
+                type = "debt"
+                description = tx.method || tx.customer || "Debit"
             }
 
             withSortKey.push({
@@ -182,6 +183,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
                     amount: amountStr,
                     timeAgo: tx.dateLabel ?? tx.date ?? "",
                     customer: tx.sale?.customerName ?? (type === "deposit" ? undefined : tx.customer),
+                    txId: tx.id,
                     href: "/finance",
                 },
             })

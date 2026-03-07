@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ChevronRight, Sparkles } from "lucide-react"
@@ -23,6 +23,17 @@ import { DateRange } from "react-day-picker"
 import { subDays } from "date-fns"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
+import {
+    useFinanceTransactions,
+    useTransaction,
+    useRequeryTransaction,
+    type FinanceTransactionRow,
+} from "@/app/domains/finance/hooks/useFinance"
+import { useBusiness } from "@/app/components/BusinessProvider"
+import { useStores } from "@/app/domains/stores/providers/StoreProvider"
+import { TransactionDetailsDrawer } from "@/app/components/shared/TransactionDetailsDrawer"
+import { formatCurrency } from "@/app/lib/formatters"
+import { useQueryClient } from "@tanstack/react-query"
 
 const PAGE_SIZE = 20
 
@@ -45,12 +56,47 @@ const TYPE_TO_EVENT_TYPES: Record<string, string[]> = {
     Debt: ["DEBT_CREATED", "DEBT_REPAYMENT", "DEBT_CLEARED"],
 }
 
+const ACTIVITY_PAGE_TRANSACTIONS_LIMIT = 15
+
+function transactionToActivityItem(tx: FinanceTransactionRow, currency: string): ActivityItem {
+    const amountStr = formatCurrency(tx.amount, { currency })
+    let type: ActivityItem["type"]
+    let description: string
+    if (tx.withdrawal) {
+        type = "withdrawal"
+        description = tx.withdrawal.accountName
+            ? `Withdrawal to ${tx.withdrawal.accountName}`
+            : "Withdrawal"
+    } else if (tx.type === "Credit") {
+        type = tx.sale ? "payment" : "deposit"
+        description = tx.sale
+            ? `Payment from ${tx.sale.customerName ?? tx.customer}`
+            : tx.customer || "Deposit"
+    } else {
+        type = "debt"
+        description = tx.method || tx.customer || "Debit"
+    }
+    return {
+        id: `tx-${tx.id}`,
+        type,
+        description,
+        amount: amountStr,
+        timeAgo: tx.dateLabel ?? tx.date ?? "",
+        customer: tx.sale?.customerName ?? (type === "deposit" ? undefined : tx.customer),
+        txId: tx.id,
+        href: "/finance",
+        timestamp: tx.createdAt,
+    }
+}
+
 function ActivityRow({
     item,
     onOrderClick,
+    onFinanceClick,
 }: {
     item: ActivityItem
     onOrderClick?: (orderId: string) => void
+    onFinanceClick?: (txId: string) => void
 }) {
     const content = (
         <div className="flex items-center gap-4 p-3 hover:bg-white/60 dark:hover:bg-white/5 rounded-2xl transition-all group">
@@ -75,16 +121,16 @@ function ActivityRow({
                             "text-sm font-bold whitespace-nowrap",
                             (item.type === "sale" || item.type === "payment" || item.type === "deposit")
                                 ? "text-brand-green dark:text-brand-gold"
-                                : item.type === "withdrawal"
-                                  ? "text-brand-accent dark:text-brand-gold"
+                                : item.type === "withdrawal" || item.type === "debt"
+                                  ? "text-rose-600 dark:text-rose-400"
                                   : "text-brand-deep dark:text-brand-cream"
                         )}
                     >
-                        {item.type === "withdrawal" ? "-" : item.type === "sale" || item.type === "payment" || item.type === "deposit" ? "+" : ""}
+                        {item.type === "withdrawal" || item.type === "debt" ? "-" : item.type === "sale" || item.type === "payment" || item.type === "deposit" ? "+" : ""}
                         {item.amount}
                     </span>
                 )}
-                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors" />
+                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors shrink-0" />
             </div>
         </div>
     )
@@ -94,6 +140,17 @@ function ActivityRow({
             <button
                 type="button"
                 onClick={() => onOrderClick(item.orderId!)}
+                className="block w-full text-left"
+            >
+                {content}
+            </button>
+        )
+    }
+    if (item.txId && onFinanceClick) {
+        return (
+            <button
+                type="button"
+                onClick={() => onFinanceClick(item.txId!)}
                 className="block w-full text-left"
             >
                 {content}
@@ -113,9 +170,11 @@ function ActivityRow({
 function ActivityTable({
     activities,
     onOrderClick,
+    onFinanceClick,
 }: {
     activities: ActivityItem[]
     onOrderClick?: (orderId: string) => void
+    onFinanceClick?: (txId: string) => void
 }) {
     return (
         <div className="overflow-x-auto">
@@ -134,11 +193,19 @@ function ActivityTable({
                         <th className="text-right py-3 px-3 text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60 w-20">
                             Time
                         </th>
+                        <th className="w-10 py-3 px-3" aria-hidden />
                     </tr>
                 </thead>
                 <tbody>
                     {activities.map((item, index) => {
-                        const isClickable = !!(item.orderId && onOrderClick)
+                        const isOrderClickable = !!(item.orderId && onOrderClick)
+                        const isFinanceClickable = !!(item.txId && onFinanceClick)
+                        const isClickable = isOrderClickable || isFinanceClickable
+                        const handleClick = isOrderClickable
+                            ? () => onOrderClick!(item.orderId!)
+                            : isFinanceClickable
+                              ? () => onFinanceClick!(item.txId!)
+                              : undefined
                         return (
                             <motion.tr
                                 key={item.id}
@@ -151,13 +218,13 @@ function ActivityTable({
                                     "border-b border-brand-deep/5 dark:border-white/5 transition-colors",
                                     isClickable && "cursor-pointer hover:bg-white/40 dark:hover:bg-white/5"
                                 )}
-                                onClick={isClickable ? () => onOrderClick(item.orderId!) : undefined}
+                                onClick={handleClick}
                                 onKeyDown={
-                                    isClickable
+                                    isClickable && handleClick
                                         ? (e) => {
                                               if (e.key === "Enter" || e.key === " ") {
                                                   e.preventDefault()
-                                                  onOrderClick(item.orderId!)
+                                                  handleClick()
                                               }
                                           }
                                         : undefined
@@ -185,15 +252,21 @@ function ActivityTable({
                                                 "text-sm font-bold",
                                                 (item.type === "sale" || item.type === "payment" || item.type === "deposit")
                                                     ? "text-brand-green dark:text-brand-gold"
-                                                    : "text-brand-deep dark:text-brand-cream"
+                                                    : (item.type === "withdrawal" || item.type === "debt")
+                                                      ? "text-rose-600 dark:text-rose-400"
+                                                      : "text-brand-deep dark:text-brand-cream"
                                             )}
                                         >
+                                            {(item.type === "withdrawal" || item.type === "debt" ? "-" : item.type === "sale" || item.type === "payment" || item.type === "deposit" ? "+" : "")}
                                             {item.amount}
                                         </span>
                                     )}
                                 </td>
                                 <td className="py-3 px-3 text-right text-xs text-brand-accent/60 dark:text-brand-cream/60">
                                     {item.timeAgo}
+                                </td>
+                                <td className="py-3 px-3 text-right w-10">
+                                    <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 inline-block" />
                                 </td>
                             </motion.tr>
                         )
@@ -207,9 +280,11 @@ function ActivityTable({
 function ActivityCards({
     activities,
     onOrderClick,
+    onFinanceClick,
 }: {
     activities: ActivityItem[]
     onOrderClick?: (orderId: string) => void
+    onFinanceClick?: (txId: string) => void
 }) {
     return (
         <div className="space-y-2">
@@ -220,7 +295,11 @@ function ActivityCards({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03, duration: 0.2 }}
                 >
-                    <ActivityRow item={item} onOrderClick={onOrderClick} />
+                    <ActivityRow
+                        item={item}
+                        onOrderClick={onOrderClick}
+                        onFinanceClick={onFinanceClick}
+                    />
                 </motion.div>
             ))}
         </div>
@@ -272,6 +351,9 @@ function ActivitySkeleton() {
 
 export function ActivityView() {
     const isDesktop = useMediaQuery("(min-width: 768px)")
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const { stores } = useStores()
     const [page, setPage] = useState(1)
     const [storeId, setStoreId] = useState<string>(ALL_STORES_ID)
     const [date, setDate] = useState<DateRange | undefined>({
@@ -280,11 +362,13 @@ export function ActivityView() {
     })
     const [selectedTypeFilters, setSelectedTypeFilters] = useState<string[]>([])
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+    const [selectedTxId, setSelectedTxId] = useState<string | null>(null)
 
     const dateRange = { from: date?.from, to: date?.to }
     const typeParam = selectedTypeFilters.flatMap((cat) => TYPE_TO_EVENT_TYPES[cat] ?? [])
+    const currency = activeBusiness?.currency ?? "NGN"
 
-    const { activities, meta, isLoading, error } = useActivities({
+    const { activities: businessActivities, meta, isLoading, error } = useActivities({
         page,
         limit: PAGE_SIZE,
         storeId,
@@ -293,7 +377,37 @@ export function ActivityView() {
         limitPerType: typeParam.length === 0 ? 3 : undefined,
     })
 
+    const { transactions: transactionsList } = useFinanceTransactions(
+        storeId === ALL_STORES_ID ? undefined : storeId,
+        1,
+        ACTIVITY_PAGE_TRANSACTIONS_LIMIT
+    )
+    const transactions = transactionsList ?? []
+
+    const activities = useMemo(() => {
+        if (page !== 1) return businessActivities
+        const txItems: ActivityItem[] = transactions.map((tx) =>
+            transactionToActivityItem(tx, currency)
+        )
+        const withSortKey: { sortKey: number; item: ActivityItem }[] = [
+            ...businessActivities.map((a) => ({
+                sortKey: a.timestamp ? new Date(a.timestamp).getTime() : 0,
+                item: a,
+            })),
+            ...txItems.map((a) => ({
+                sortKey: a.timestamp ? new Date(a.timestamp).getTime() : 0,
+                item: a,
+            })),
+        ]
+        const merged = withSortKey
+            .sort((x, y) => y.sortKey - x.sortKey)
+            .map((x) => x.item)
+        return merged.slice(0, PAGE_SIZE)
+    }, [page, businessActivities, transactions, currency])
+
     const { order, isLoading: orderLoading } = useOrder(selectedOrderId)
+    const { transaction, isLoading: transactionLoading } = useTransaction(selectedTxId)
+    const { mutateAsync: requeryTx, isPending: isRequerying } = useRequeryTransaction()
 
     useEffect(() => {
         if (error) {
@@ -355,11 +469,13 @@ export function ActivityView() {
                         <ActivityTable
                             activities={activities}
                             onOrderClick={(id) => setSelectedOrderId(id)}
+                            onFinanceClick={(id) => setSelectedTxId(id)}
                         />
                     ) : (
                         <ActivityCards
                             activities={activities}
                             onOrderClick={(id) => setSelectedOrderId(id)}
+                            onFinanceClick={(id) => setSelectedTxId(id)}
                         />
                     )}
 
@@ -382,6 +498,37 @@ export function ActivityView() {
                     if (!open) setSelectedOrderId(null)
                 }}
                 isLoading={orderLoading}
+            />
+
+            <TransactionDetailsDrawer
+                transaction={transaction ?? null}
+                open={!!selectedTxId}
+                onOpenChange={(open) => {
+                    if (!open) setSelectedTxId(null)
+                }}
+                currencyCode={currency}
+                stores={stores}
+                isLoading={transactionLoading}
+                onRequery={
+                    selectedTxId
+                        ? async () => {
+                              try {
+                                  await requeryTx(selectedTxId)
+                                  await queryClient.invalidateQueries({
+                                      queryKey: [
+                                          "finance",
+                                          "transaction",
+                                          activeBusiness?.id,
+                                          selectedTxId,
+                                      ],
+                                  })
+                              } catch {
+                                  // toast handled by hook
+                              }
+                          }
+                        : undefined
+                }
+                isRequerying={isRequerying}
             />
         </PageTransition>
     )

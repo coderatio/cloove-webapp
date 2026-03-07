@@ -95,10 +95,10 @@ export const BLOCK_META: Record<
   grid_features: { label: "Feature Grid", icon: Grid3X3, description: "Icon + title + description grid", creatable: true },
   contact_block: { label: "Contact", icon: Mail, description: "Contact section with optional form", creatable: true },
   image_gallery: { label: "Image Gallery", icon: Image, description: "Grid of images", creatable: true },
-  product_listing: { label: "Product Listing", icon: ShoppingBag, description: "Display products from catalog", creatable: false },
-  featured_products: { label: "Featured Products", icon: Star, description: "Highlighted product selection", creatable: false },
-  on_sale: { label: "On Sale", icon: Tag, description: "Products currently on sale", creatable: false },
-  promotion_banner: { label: "Promotion", icon: Megaphone, description: "Promotional banner", creatable: false },
+  product_listing: { label: "Product Listing", icon: ShoppingBag, description: "Display products from catalog", creatable: true },
+  featured_products: { label: "Featured Products", icon: Star, description: "Highlighted product selection", creatable: true },
+  on_sale: { label: "On Sale", icon: Tag, description: "Products currently on sale", creatable: true },
+  promotion_banner: { label: "Promotion", icon: Megaphone, description: "Promotional banner", creatable: true },
 }
 
 export const CREATABLE_BLOCK_TYPES = (Object.keys(BLOCK_META) as BlockType[]).filter(
@@ -151,10 +151,19 @@ const DEFAULT_DATA: Record<BlockType, () => Record<string, unknown>> = {
     images: [] as string[],
     columns: 3,
   }),
-  product_listing: () => ({ title: "Our Products", limit: 12 }),
-  featured_products: () => ({ title: "Featured", limit: 4 }),
-  on_sale: () => ({ title: "On Sale", limit: 8 }),
-  promotion_banner: () => ({ title: "", subtitle: "", imageUrl: "" }),
+  product_listing: () => ({ title: "Our Products", categoryId: undefined as string | undefined, limit: 8, showFilters: true }),
+  featured_products: () => ({ title: "Featured", subtitle: "", limit: 8 }),
+  on_sale: () => ({ title: "On Sale", subtitle: "", promotionId: undefined as string | undefined, limit: 8 }),
+  promotion_banner: () => ({
+    promotionId: undefined as string | undefined,
+    title: "Promotion",
+    subtitle: "",
+    imageUrl: "",
+    badgeLabel: "",
+    cta: undefined as { label: string; href: string } | undefined,
+    endsAt: "",
+    showCountdown: false,
+  }),
 }
 
 export function createBlock(type: BlockType): BlockSection {

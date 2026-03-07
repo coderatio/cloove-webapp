@@ -22,9 +22,10 @@ import { EditorHeader } from "@/app/domains/storefront/components/editor/EditorH
 import { EditorCanvas, PreviewThemeScope } from "@/app/domains/storefront/components/editor/EditorCanvas"
 import { BlockRenderer } from "@/app/domains/storefront/components/editor/BlockRenderer"
 import { BlockEditor } from "@/app/domains/storefront/components/editor/BlockEditor"
-import { AddBlockMenu } from "@/app/domains/storefront/components/editor/AddBlockMenu"
+import { AddBlockMenu, InlineAddBlockButton } from "@/app/domains/storefront/components/editor/AddBlockMenu"
 import { ImageUrlField } from "@/app/domains/storefront/components/editor/ImageUrlField"
 import { ColorPicker } from "@/app/components/ui/color-picker"
+import { Switch } from "@/app/components/ui/switch"
 import { BLOCK_META, createBlock, type BlockSection, type BlockType } from "@/app/domains/storefront/components/editor/block-types"
 import { cn } from "@/app/lib/utils"
 
@@ -51,6 +52,10 @@ export default function EditorV01Page() {
   const [metaImageUrl, setMetaImageUrl] = useState("")
   const [globalPageBgLight, setGlobalPageBgLight] = useState<string>("")
   const [globalPageBgDark, setGlobalPageBgDark] = useState<string>("")
+  const [globalPageTextColorLight, setGlobalPageTextColorLight] = useState<string>("")
+  const [globalPageTextColorDark, setGlobalPageTextColorDark] = useState<string>("")
+  const [isPublished, setIsPublished] = useState(true)
+  const [isHome, setIsHome] = useState(false)
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -82,6 +87,10 @@ export default function EditorV01Page() {
     const pConfig = (pageData.content as { config?: Record<string, string> })?.config
     setGlobalPageBgLight(pConfig?.globalBackgroundLight ?? "")
     setGlobalPageBgDark(pConfig?.globalBackgroundDark ?? "")
+    setGlobalPageTextColorLight(pConfig?.globalTextColorLight ?? "")
+    setGlobalPageTextColorDark(pConfig?.globalTextColorDark ?? "")
+    setIsPublished(!!pageData.isPublished)
+    setIsHome(!!pageData.isHome)
 
     const raw = (pageData.content?.sections ?? []) as Array<{
       id: string
@@ -170,10 +179,16 @@ export default function EditorV01Page() {
         {
           title: title || "Untitled",
           slug: finalSlug,
-          isPublished: true,
+          isPublished,
+          isHome,
           content: {
             sections: payloadSections,
-            config: { globalBackgroundLight: globalPageBgLight, globalBackgroundDark: globalPageBgDark }
+            config: {
+              globalBackgroundLight: globalPageBgLight,
+              globalBackgroundDark: globalPageBgDark,
+              globalTextColorLight: globalPageTextColorLight,
+              globalTextColorDark: globalPageTextColorDark,
+            }
           } as any,
           ...meta,
         },
@@ -182,15 +197,21 @@ export default function EditorV01Page() {
     } else {
       updatePage.mutate({
         title: title || "Untitled",
-        isPublished: true,
+        isPublished,
+        isHome,
         content: {
           sections: payloadSections,
-          config: { globalBackgroundLight: globalPageBgLight, globalBackgroundDark: globalPageBgDark }
+          config: {
+            globalBackgroundLight: globalPageBgLight,
+            globalBackgroundDark: globalPageBgDark,
+            globalTextColorLight: globalPageTextColorLight,
+            globalTextColorDark: globalPageTextColorDark,
+          }
         } as any,
         ...meta,
       })
     }
-  }, [isNewPage, slug, title, metaTitle, metaDescription, metaImageUrl, payloadSections, createPage, updatePage, router])
+  }, [isNewPage, slug, title, metaTitle, metaDescription, metaImageUrl, payloadSections, isPublished, isHome, globalPageBgLight, globalPageBgDark, globalPageTextColorLight, globalPageTextColorDark, createPage, updatePage, router])
 
   const [scrollToBlockId, setScrollToBlockId] = useState<string | null>(null)
 
@@ -253,8 +274,13 @@ export default function EditorV01Page() {
     )
   }
 
+  const activeBg = previewDark ? globalPageBgDark : globalPageBgLight
+
   return (
-    <div className="h-dvh flex flex-col min-h-0">
+    <div
+      className="h-dvh flex flex-col min-h-0 transition-colors duration-300"
+      style={isPreviewMode && activeBg ? { backgroundColor: activeBg } : undefined}
+    >
       <header className="shrink-0">
         <EditorHeader
           title={title}
@@ -270,155 +296,227 @@ export default function EditorV01Page() {
         />
       </header>
 
-      <main className="flex-1 overflow-y-auto min-h-0 max-w-4xl w-full mx-auto px-4 py-8 space-y-6">
-        {/* Page title + settings */}
-        <GlassCard className={cn("p-5 transition-all duration-300 rounded-3xl")}>
-          <div className="flex items-center gap-3">
-            <input
-              value={title ?? ""}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Page title…"
-              className="flex-1 bg-transparent text-2xl font-serif font-bold text-brand-deep dark:text-brand-cream placeholder:text-brand-deep/20 dark:placeholder:text-white/20 focus:outline-none"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowPageSettings((p) => !p)}
-              className={cn("h-9 w-9 rounded-full transition-all duration-300", showPageSettings && "bg-brand-green/10 dark:bg-brand-gold/10")}
-            >
-              {showPageSettings ? <ChevronUp className="w-4 h-4" /> : <Settings2 className="w-4 h-4" />}
-            </Button>
-          </div>
-          <AnimatePresence>
-            {showPageSettings && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="pt-4 space-y-3 border-t border-brand-deep/5 dark:border-white/5 mt-4">
-                  {isNewPage && (
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
-                        URL Slug
-                      </label>
-                      <Input
-                        value={slug ?? ""}
-                        onChange={(e) => setSlug(e.target.value)}
-                        placeholder="about-us"
-                        className="h-9 font-mono text-sm"
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
-                      SEO Title
-                    </label>
-                    <Input
-                      value={metaTitle ?? ""}
-                      onChange={(e) => setMetaTitle(e.target.value)}
-                      placeholder="Optional"
-                      className="h-9"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
-                      SEO Description
-                    </label>
-                    <textarea
-                      value={metaDescription ?? ""}
-                      onChange={(e) => setMetaDescription(e.target.value)}
-                      placeholder="Optional"
-                      className="w-full rounded-2xl p-2.5 text-sm min-h-[60px] bg-white/50 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 resize-none text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-1 focus:ring-brand-green/20"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
-                      SEO Image
-                    </label>
-                    <ImageUrlField
-                      value={metaImageUrl ?? ""}
-                      onChange={setMetaImageUrl}
-                      placeholder="Paste URL or upload (optional)"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-brand-deep/5 dark:border-white/5 mt-4">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
-                        Global BG (Light)
-                      </label>
-                      <ColorPicker
-                        color={globalPageBgLight || ""}
-                        onChange={(c) => setGlobalPageBgLight(c)}
-                        showHexInput
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
-                        Global BG (Dark)
-                      </label>
-                      <ColorPicker
-                        color={globalPageBgDark || ""}
-                        onChange={(c) => setGlobalPageBgDark(c)}
-                        showHexInput
-                      />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </GlassCard>
-
-        {/* Block canvas */}
+      <main className={cn(
+        "flex-1 overflow-y-auto min-h-0 w-full mx-auto flex flex-col",
+        isPreviewMode ? "max-w-none px-0 py-0 space-y-0" : "max-w-4xl px-4 py-8 space-y-6"
+      )}>
         <EditorCanvas
           previewDark={previewDark}
           pageBackground={previewDark ? globalPageBgDark : globalPageBgLight}
-          className="rounded-[32px] py-4 border border-brand-deep/10 dark:border-white/10 shadow-[0_8px_32px_rgba(6,44,33,0.04)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] overflow-hidden min-h-[300px]"
-        >
-          {sections.length === 0 && (
-            <PreviewThemeScope className="flex flex-col items-center justify-center py-20 opacity-40 min-h-[200px]">
-              <p className="text-sm mb-4" style={{ fontFamily: "var(--sf-font-body)" }}>
-                Your page is empty. Add your first block below.
-              </p>
-            </PreviewThemeScope>
+          pageTextColor={previewDark ? globalPageTextColorDark : globalPageTextColorLight}
+          className={cn(
+            "flex-1 w-full mx-auto transition-all duration-500",
+            isPreviewMode ? "max-w-none" : "max-w-4xl space-y-6"
           )}
-
-          <SortableBlockList
-            items={sections}
-            onReorder={setSections}
-            itemClassName="!rounded-none !border-0 !bg-transparent !shadow-none"
-            renderItem={(block) => {
-              if (isPreviewMode) {
-                return (
-                  <div className="relative group/block my-4">
-                    <PreviewThemeScope>
-                      <BlockRenderer block={block} previewDark={previewDark} />
-                    </PreviewThemeScope>
-                  </div>
-                )
-              }
-              return (
-                <EditableBlock
-                  block={block}
-                  previewDark={previewDark}
-                  isActive={activeBlockId === block.id}
-                  scrollToBlockId={scrollToBlockId}
-                  onClearScrollTo={() => setScrollToBlockId(null)}
-                  onActivate={() => setActiveBlockId(block.id)}
-                  onDeactivate={() => setActiveBlockId(null)}
-                  onUpdate={(data) => updateBlock(block.id, { data })}
-                  onUpdateConfig={(config) => updateBlock(block.id, { config })}
-                  onDelete={() => deleteBlock(block.id)}
-                  onAddBelow={(type) => {
-                    const idx = sections.findIndex((s) => s.id === block.id)
-                    addBlock(type, idx)
+        >
+          {/* Page title + settings */}
+          <div className={cn(
+            !isPreviewMode && "p-5 transition-all duration-300 rounded-3xl bg-white/40 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 backdrop-blur-md shadow-[0_8px_32px_rgba(6,44,33,0.04)]",
+            isPreviewMode && "px-4 pt-12 pb-6 max-w-4xl mx-auto"
+          )}>
+            <div className="flex items-center gap-3">
+              {isPreviewMode ? (
+                <h1
+                  className="flex-1 text-4xl font-serif font-bold py-1 transition-colors duration-300"
+                  style={{
+                    color: previewDark
+                      ? (globalPageTextColorDark || "#f5f0e6") // Light cream fallback for dark mode
+                      : (globalPageTextColorLight || "#062c21") // Dark green fallback for light mode
                   }}
-                />
-              )
-            }}
-          />
+                >
+                  {title || "Untitled Page"}
+                </h1>
+              ) : (
+                <>
+                  <input
+                    value={title ?? ""}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Page title…"
+                    className="flex-1 bg-transparent text-2xl font-serif font-bold text-brand-deep dark:text-brand-cream placeholder:text-brand-deep/20 dark:placeholder:text-white/20 focus:outline-none"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowPageSettings((p) => !p)}
+                    className={cn("h-9 w-9 rounded-full transition-all duration-300", showPageSettings && "bg-brand-green/10 dark:bg-brand-gold/10")}
+                  >
+                    {showPageSettings ? <ChevronUp className="w-4 h-4" /> : <Settings2 className="w-4 h-4" />}
+                  </Button>
+                </>
+              )}
+            </div>
+            <AnimatePresence>
+              {!isPreviewMode && showPageSettings && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="pt-4 space-y-3 border-t border-brand-deep/5 dark:border-white/5 mt-4">
+                    {isNewPage && (
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                          URL Slug
+                        </label>
+                        <Input
+                          value={slug ?? ""}
+                          onChange={(e) => setSlug(e.target.value)}
+                          placeholder="about-us"
+                          className="h-9 font-mono text-sm"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                        SEO Title
+                      </label>
+                      <Input
+                        value={metaTitle ?? ""}
+                        onChange={(e) => setMetaTitle(e.target.value)}
+                        placeholder="Optional"
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                        SEO Description
+                      </label>
+                      <textarea
+                        value={metaDescription ?? ""}
+                        onChange={(e) => setMetaDescription(e.target.value)}
+                        placeholder="Optional"
+                        className="w-full rounded-2xl p-2.5 text-sm min-h-[60px] bg-white/50 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 resize-none text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-1 focus:ring-brand-green/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                        SEO Image
+                      </label>
+                      <ImageUrlField
+                        value={metaImageUrl ?? ""}
+                        onChange={setMetaImageUrl}
+                        placeholder="Paste URL or upload (optional)"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-brand-deep/5 dark:border-white/5 mt-4">
+                      <div className="flex items-center justify-between col-span-2 py-2">
+                        <div>
+                          <span className="text-sm font-medium text-brand-deep dark:text-brand-cream block">Home Page</span>
+                          <span className="text-[10px] text-brand-accent/40 dark:text-white/40 uppercase tracking-wider">Set as storefront landing</span>
+                        </div>
+                        <Switch checked={isHome} onCheckedChange={setIsHome} />
+                      </div>
+                      <div className="flex items-center justify-between col-span-2 py-2">
+                        <div>
+                          <span className="text-sm font-medium text-brand-deep dark:text-brand-cream block">Published</span>
+                          <span className="text-[10px] text-brand-accent/40 dark:text-white/40 uppercase tracking-wider">Visible to customers</span>
+                        </div>
+                        <Switch checked={isPublished} onCheckedChange={setIsPublished} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                          Global BG (Light)
+                        </label>
+                        <ColorPicker
+                          color={globalPageBgLight || ""}
+                          onChange={(c) => setGlobalPageBgLight(c)}
+                          showHexInput
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                          Global BG (Dark)
+                        </label>
+                        <ColorPicker
+                          color={globalPageBgDark || ""}
+                          onChange={(c) => setGlobalPageBgDark(c)}
+                          showHexInput
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                          Text Color (Light)
+                        </label>
+                        <ColorPicker
+                          color={globalPageTextColorLight || ""}
+                          onChange={(c) => setGlobalPageTextColorLight(c)}
+                          showHexInput
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 mb-1 block">
+                          Text Color (Dark)
+                        </label>
+                        <ColorPicker
+                          color={globalPageTextColorDark || ""}
+                          onChange={(c) => setGlobalPageTextColorDark(c)}
+                          showHexInput
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Block canvas */}
+          <div className={cn(
+            "overflow-hidden min-h-[300px]",
+            !isPreviewMode && "rounded-[32px] py-4 border border-brand-deep/10 dark:border-white/10 shadow-[0_8px_32px_rgba(6,44,33,0.04)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] bg-white/10 dark:bg-white/5",
+            isPreviewMode && "max-w-5xl mx-auto"
+          )}>
+            {!isPreviewMode && (
+              <div className="group px-4 -mb-4 relative z-10">
+                <InlineAddBlockButton onAdd={(type) => addBlock(type, -1)} />
+              </div>
+            )}
+            {sections.length === 0 && (
+              <PreviewThemeScope className="flex flex-col items-center justify-center py-20 opacity-40 min-h-[200px]">
+                <p className="text-sm mb-4" style={{ fontFamily: "var(--sf-font-body)" }}>
+                  Your page is empty. Add your first block below.
+                </p>
+              </PreviewThemeScope>
+            )}
+
+            <SortableBlockList
+              items={sections}
+              onReorder={setSections}
+              hideHandle={isPreviewMode}
+              itemClassName="!rounded-none !border-0 !bg-transparent !shadow-none"
+              renderItem={(block) => {
+                if (isPreviewMode) {
+                  return (
+                    <div className="relative group/block first:mt-0 last:mb-0">
+                      <PreviewThemeScope>
+                        <BlockRenderer block={block} previewDark={previewDark} />
+                      </PreviewThemeScope>
+                    </div>
+                  )
+                }
+                return (
+                  <EditableBlock
+                    block={block}
+                    previewDark={previewDark}
+                    isActive={activeBlockId === block.id}
+                    scrollToBlockId={scrollToBlockId}
+                    onClearScrollTo={() => setScrollToBlockId(null)}
+                    onActivate={() => setActiveBlockId(block.id)}
+                    onDeactivate={() => setActiveBlockId(null)}
+                    onUpdate={(data) => updateBlock(block.id, { data })}
+                    onUpdateConfig={(config) => updateBlock(block.id, { config })}
+                    onDelete={() => deleteBlock(block.id)}
+                    isLast={sections.findIndex(s => s.id === block.id) === sections.length - 1}
+                    onAddBelow={(type) => {
+                      const idx = sections.findIndex((s) => s.id === block.id)
+                      addBlock(type, idx)
+                    }}
+                  />
+                )
+              }}
+            />
+          </div>
         </EditorCanvas>
 
         {!isPreviewMode && <AddBlockMenu onAdd={(type) => addBlock(type)} />}
@@ -439,9 +537,10 @@ interface EditableBlockProps {
   onUpdateConfig: (config: Partial<BlockSection["config"]>) => void
   onDelete: () => void
   onAddBelow: (type: BlockType) => void
+  isLast?: boolean
 }
 
-function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearScrollTo, onActivate, onDeactivate, onUpdate, onUpdateConfig, onDelete, onAddBelow }: EditableBlockProps) {
+function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearScrollTo, onActivate, onDeactivate, onUpdate, onUpdateConfig, onDelete, onAddBelow, isLast }: EditableBlockProps) {
   const meta = BLOCK_META[block.type]
   const blockRef = useRef<HTMLDivElement>(null)
 
@@ -452,7 +551,7 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
   }, [scrollToBlockId, block.id, onClearScrollTo])
 
   return (
-    <div ref={blockRef} className="relative group/block">
+    <div ref={blockRef} className="relative group group/block">
       {/* Block type label */}
       <div className={cn(
         "absolute -top-3 left-5 z-20 flex items-center gap-1.5 transition-opacity duration-200 pointer-events-none",
@@ -524,6 +623,12 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
           </motion.div>
         )}
       </AnimatePresence>
+
+      {!isLast && (
+        <div className="group -mt-4 relative z-10">
+          <InlineAddBlockButton onAdd={onAddBelow} />
+        </div>
+      )}
     </div>
   )
 }

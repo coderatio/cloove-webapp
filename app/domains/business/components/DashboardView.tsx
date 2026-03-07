@@ -21,6 +21,10 @@ import { OrderDetailsDrawer } from "@/app/domains/orders/components/OrderDetails
 import { useOrder } from "@/app/domains/orders/hooks/useOrders"
 import { useDashboardData } from "../hooks/useDashboardData"
 import { toast } from "sonner"
+import { useTransaction, useRequeryTransaction } from "@/app/domains/finance/hooks/useFinance"
+import { useStores } from "@/app/domains/stores/providers/StoreProvider"
+import { TransactionDetailsDrawer } from "@/app/components/shared/TransactionDetailsDrawer"
+import { useQueryClient } from "@tanstack/react-query"
 
 function getTimeBasedGreeting(): string {
     const h = new Date().getHours()
@@ -30,16 +34,21 @@ function getTimeBasedGreeting(): string {
 }
 
 export function DashboardView() {
-    const { ownerName } = useBusiness()
+    const { ownerName, activeBusiness } = useBusiness()
     const isDesktop = useMediaQuery("(min-width: 768px)")
+    const queryClient = useQueryClient()
+    const { stores } = useStores()
     const [date, setDate] = useState<DateRange | undefined>({
         from: subDays(new Date(), 30),
         to: new Date(),
     })
     const [storeId, setStoreId] = useState<string>(ALL_STORES_ID)
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+    const [selectedTxId, setSelectedTxId] = useState<string | null>(null)
     const dateRange = { from: date?.from, to: date?.to }
-    const { order, isLoading: orderLoading } = useOrder(selectedOrderId)
+    const { order } = useOrder(selectedOrderId)
+    const { transaction, isLoading: transactionLoading } = useTransaction(selectedTxId)
+    const { mutateAsync: requeryTx, isPending: isRequerying } = useRequeryTransaction()
     const {
         wallet,
         sales,
@@ -125,6 +134,7 @@ export function DashboardView() {
                     <ActivityStream
                         activities={activities}
                         onOrderClick={(id) => setSelectedOrderId(id)}
+                        onFinanceClick={(id) => setSelectedTxId(id)}
                     />
                 </section>
 
@@ -134,6 +144,32 @@ export function DashboardView() {
                     onOpenChange={(open) => {
                         if (!open) setSelectedOrderId(null)
                     }}
+                />
+
+                <TransactionDetailsDrawer
+                    transaction={transaction ?? null}
+                    open={!!selectedTxId}
+                    onOpenChange={(open) => {
+                        if (!open) setSelectedTxId(null)
+                    }}
+                    currencyCode={activeBusiness?.currency ?? "NGN"}
+                    stores={stores}
+                    isLoading={transactionLoading}
+                    onRequery={
+                        selectedTxId
+                            ? async () => {
+                                  try {
+                                      await requeryTx(selectedTxId)
+                                      await queryClient.invalidateQueries({
+                                          queryKey: ["finance", "transaction", activeBusiness?.id, selectedTxId],
+                                      })
+                                  } catch {
+                                      // toast handled by hook
+                                  }
+                              }
+                            : undefined
+                    }
+                    isRequerying={isRequerying}
                 />
             </div>
         </PageTransition>

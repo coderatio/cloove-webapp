@@ -22,6 +22,8 @@ import {
     CTA_STYLES,
 } from "@/app/domains/storefront/lib/theme-defaults"
 import { toast } from "sonner"
+import { SearchableSelect } from "@/app/components/ui/searchable-select"
+import { Textarea } from "@/app/components/ui/textarea"
 
 const themeColors = [
     { name: 'Forest', hex: '#062C21', bg: 'bg-[#062C21]' },
@@ -64,6 +66,8 @@ export default function StorefrontCustomization() {
     const [productCardForm, setProductCardForm] = useState(productCard)
     const [ctaButtonForm, setCtaButtonForm] = useState(ctaButton)
     const [welcomeMessage, setWelcomeMessage] = useState((base.welcomeMessage as string) ?? '')
+    const trimmedWelcomeMessage = welcomeMessage.trim()
+    const marqueeDuration = `${Math.max(16, Math.min(32, trimmedWelcomeMessage.length * 0.32))}s`
 
     useEffect(() => {
         if (!theme) return
@@ -94,7 +98,7 @@ export default function StorefrontCustomization() {
     return (
         <div className="flex flex-col lg:flex-row gap-8">
             {/* Editor Panel */}
-            <div className="flex-1 space-y-8">
+            <div className="flex-1 space-y-8 pb-24">
                 {/* Brand Identity */}
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
@@ -173,13 +177,13 @@ export default function StorefrontCustomization() {
                                             {logoUploading ? 'Uploading…' : 'Choose File'}
                                         </label>
                                         <span className="text-brand-deep/40 dark:text-brand-cream/40 text-sm self-center">or</span>
-                                        <input
+                                        <Input
                                             type="url"
                                             placeholder="Paste image URL"
                                             value={logo ?? ''}
                                             onChange={(e) => setLogo(e.target.value.trim() || null)}
                                             disabled={logoUploading}
-                                            className="flex-1 min-w-[180px] rounded-xl h-10 px-4 text-sm bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream disabled:opacity-50"
+                                            className="flex-1 min-w-[180px]"
                                         />
                                     </div>
                                 </div>
@@ -195,10 +199,13 @@ export default function StorefrontCustomization() {
                                         variant="ghost"
                                         size="icon"
                                         className={cn(
-                                            "w-12 h-12 rounded-full relative transition-all hover:scale-110",
+                                            "w-12 h-12 rounded-full relative transition-all hover:scale-110 hover:!bg-[var(--swatch)]",
                                             color.bg,
                                             primaryHex?.toLowerCase() === color.hex.toLowerCase() && "ring-4 ring-brand-green/20 dark:ring-white/20 scale-110"
                                         )}
+                                        style={{
+                                            ['--swatch' as string]: color.hex,
+                                        } as React.CSSProperties}
                                         title={color.name}
                                         onClick={() => {
                                             setPrimaryHex(color.hex)
@@ -335,27 +342,23 @@ export default function StorefrontCustomization() {
                     <GlassCard className="p-6 space-y-4">
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Heading</label>
-                            <select
+                            <SearchableSelect
+                                options={GOOGLE_FONTS_ALLOWED.map((f) => ({ label: f, value: f }))}
                                 value={fontsForm.heading}
-                                onChange={(e) => setFontsForm((f) => ({ ...f, heading: e.target.value }))}
-                                className="w-full rounded-xl h-11 px-4 bg-white dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-brand-green/20"
-                            >
-                                {GOOGLE_FONTS_ALLOWED.map((f) => (
-                                    <option key={f} value={f}>{f}</option>
-                                ))}
-                            </select>
+                                onChange={(v) => setFontsForm((f) => ({ ...f, heading: v }))}
+                                placeholder="Select heading font"
+                                searchPlaceholder="Search fonts..."
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Body</label>
-                            <select
+                            <SearchableSelect
+                                options={GOOGLE_FONTS_ALLOWED.map((f) => ({ label: f, value: f }))}
                                 value={fontsForm.body}
-                                onChange={(e) => setFontsForm((f) => ({ ...f, body: e.target.value }))}
-                                className="w-full rounded-xl h-11 px-4 bg-white dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-brand-green/20"
-                            >
-                                {GOOGLE_FONTS_ALLOWED.map((f) => (
-                                    <option key={f} value={f}>{f}</option>
-                                ))}
-                            </select>
+                                onChange={(v) => setFontsForm((f) => ({ ...f, body: v }))}
+                                placeholder="Select body font"
+                                searchPlaceholder="Search fonts..."
+                            />
                         </div>
                     </GlassCard>
                 </section>
@@ -456,8 +459,8 @@ export default function StorefrontCustomization() {
                 <section className="space-y-4">
                     <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Welcome message</h2>
                     <GlassCard className="p-6">
-                        <textarea
-                            className="w-full rounded-xl p-4 min-h-[100px] bg-white dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-brand-green/20 resize-none"
+                        <Textarea
+                            className="min-h-[100px] resize-none"
                             value={welcomeMessage}
                             onChange={(e) => setWelcomeMessage(e.target.value.slice(0, 500))}
                             placeholder="Optional message at the top of your store (max 500 characters)"
@@ -466,10 +469,11 @@ export default function StorefrontCustomization() {
                         <p className="text-xs text-brand-accent/60 mt-1">{welcomeMessage.length}/500</p>
                     </GlassCard>
                 </section>
+            </div>
 
-
-
-                <div className="flex justify-end pt-4">
+            {/* Sticky save bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-brand-deep/10 dark:border-white/10 bg-white/95 dark:bg-brand-deep/95 backdrop-blur-md py-4 px-4 safe-area-pb">
+                <div className="max-w-5xl mx-auto flex justify-end">
                     <Button
                         onClick={() => {
                             const fullTheme: StorefrontThemeData = {
@@ -509,45 +513,107 @@ export default function StorefrontCustomization() {
                 </div>
             </div>
 
-            {/* Mobile Preview */}
-            <div className="w-full lg:w-[380px] shrink-0 sticky top-8">
+            {/* Mobile Preview - sticky */}
+            <div className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-8 lg:self-start order-first lg:order-none pb-24 lg:pb-0">
                 <div className="flex items-center gap-2 mb-4 justify-center lg:justify-start">
                     <div className="p-2 rounded-lg bg-brand-gold/10 text-brand-gold">
                         <Smartphone className="w-5 h-5" />
                     </div>
                     <h2 className="font-serif text-lg text-brand-deep dark:text-brand-cream">Live Preview</h2>
-                    <Button variant="ghost" size="icon" className="ml-auto rounded-full w-8 h-8 text-brand-accent/40 hover:text-brand-deep dark:hover:text-brand-cream">
-                        <RefreshCw className="w-4 h-4" />
-                    </Button>
                 </div>
 
-                <div className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-900 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-xl">
-                    <div className="h-[32px] w-[3px] bg-gray-800 absolute -left-[17px] top-[72px] rounded-l-lg"></div>
-                    <div className="h-[46px] w-[3px] bg-gray-800 absolute -left-[17px] top-[124px] rounded-l-lg"></div>
-                    <div className="h-[64px] w-[3px] bg-gray-800 absolute -right-[17px] top-[142px] rounded-r-lg"></div>
-                    <div className="rounded-[2rem] overflow-hidden w-full h-full bg-[#f8f9fa] dark:bg-[#1a1a1a] relative">
-                        {/* Mock Store Content */}
-                        <div className="h-full overflow-y-auto no-scrollbar">
-                            {/* Header */}
-                            <div className="p-6 pb-4 bg-white dark:bg-black/40 sticky top-0 z-10 backdrop-blur-md border-b border-black/5">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center font-serif font-bold text-xs text-gray-500">
+                <div
+                    className="relative mx-auto border-gray-800 dark:border-gray-800 bg-gray-900 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-xl"
+                    style={{
+                        fontFamily: `${fontsForm.heading}, serif`,
+                        ['--preview-primary' as string]: ensureHex(primaryHex, '#062c21'),
+                        ['--preview-secondary' as string]: ensureHex(colorsForm.secondary, '#d4af37'),
+                        ['--preview-bg' as string]: ensureHex(colorsForm.background, '#ffffff'),
+                        ['--preview-text' as string]: ensureHex(colorsForm.text, '#062c21'),
+                    }}
+                >
+                    <div className="h-[32px] w-[3px] bg-gray-800 absolute -left-[17px] top-[72px] rounded-l-lg" />
+                    <div className="h-[46px] w-[3px] bg-gray-800 absolute -left-[17px] top-[124px] rounded-l-lg" />
+                    <div className="h-[64px] w-[3px] bg-gray-800 absolute -right-[17px] top-[142px] rounded-r-lg" />
+                    <div
+                        className="rounded-[2rem] overflow-hidden w-full h-full relative transition-colors duration-300"
+                        style={{
+                            backgroundColor: themeMode === 'dark' ? ensureHex(colorsDarkForm?.background, '#1a1a1a') : ensureHex(colorsForm.background, '#f8f9fa'),
+                        }}
+                    >
+                        <div className="storefront-preview-scroll h-full overflow-y-auto no-scrollbar" style={{ fontFamily: `${fontsForm.body}, sans-serif` }}>
+                            {trimmedWelcomeMessage && (
+                                <div
+                                    className="flex items-center gap-3 overflow-hidden border-b border-black/10 px-3 py-2.5 shrink-0 w-full"
+                                    style={{
+                                        backgroundColor: 'var(--preview-primary)',
+                                        color: 'rgba(255,255,255,0.95)',
+                                    }}
+                                    role="marquee"
+                                    aria-live="polite"
+                                >
+                                    <span className="shrink-0 rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-white/85">
+                                        Notice
+                                    </span>
+                                    <div
+                                        className="min-w-0 flex-1 overflow-hidden"
+                                        style={{
+                                            maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+                                            WebkitMaskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)',
+                                        }}
+                                    >
+                                        <div
+                                            className="flex w-max items-center gap-8 whitespace-nowrap will-change-transform shrink-0"
+                                            style={{
+                                                animation: `storefront-marquee ${marqueeDuration} linear infinite`,
+                                            }}
+                                        >
+                                            {[0, 1].map((copy) => (
+                                                <div key={copy} className="flex shrink-0 items-center gap-8 pr-8">
+                                                    <span className="h-1.5 w-1.5 rounded-full bg-white/65" aria-hidden />
+                                                    <span className="shrink-0 text-sm font-medium text-white/95">
+                                                        {trimmedWelcomeMessage}
+                                                    </span>
+                                                    <span className="h-1.5 w-1.5 rounded-full bg-white/65" aria-hidden />
+                                                    <span className="shrink-0 text-sm font-medium text-white/95">
+                                                        {trimmedWelcomeMessage}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <div
+                                className={cn(
+                                    "p-6 pb-4 sticky top-0 z-10 backdrop-blur-md border-b border-black/5",
+                                    headerForm.style === 'minimal' && "py-3",
+                                    headerForm.style === 'centered' && "text-center"
+                                )}
+                                style={{ backgroundColor: themeMode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.9)' }}
+                            >
+                                <div className={cn(
+                                    "flex items-center gap-2 mb-4",
+                                    headerForm.style === 'centered' && "justify-center",
+                                    headerForm.style === 'minimal' && "mb-2"
+                                )}>
+                                    {logo ? (
+                                        <img src={logo} alt="" className="w-8 h-8 rounded-full object-cover" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-serif font-bold text-xs opacity-70" style={{ backgroundColor: 'var(--preview-primary)', color: '#fff' }}>
                                             L
                                         </div>
-                                        <span className="font-bold text-sm text-gray-900 dark:text-white">Adebayo</span>
-                                    </div>
-                                    <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-                                        <div className="w-4 h-4 rounded-full bg-black/20" />
-                                    </div>
+                                    )}
+                                    <span className="font-bold text-sm" style={{ color: 'var(--preview-text)' }}>Store</span>
                                 </div>
-                                <div className="h-8 w-full bg-gray-100 dark:bg-white/5 rounded-lg flex items-center px-3 gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-gray-300" />
-                                    <div className="h-2 w-24 bg-gray-300 rounded-full opacity-50" />
-                                </div>
+                                {headerForm.showSearch !== false && (
+                                    <div className="h-8 w-full rounded-lg flex items-center px-3 gap-2 opacity-80" style={{ backgroundColor: 'var(--preview-bg)' }}>
+                                        <div className="w-3 h-3 rounded-full opacity-50" style={{ backgroundColor: 'var(--preview-text)' }} />
+                                        <div className="h-2 w-24 rounded-full opacity-40" style={{ backgroundColor: 'var(--preview-text)' }} />
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Hero Banner with Selected Color */}
                             <div
                                 className="m-4 p-6 rounded-2xl text-white relative overflow-hidden transition-colors duration-500"
                                 style={{ backgroundColor: ensureHex(primaryHex, '#062c21') }}
@@ -555,23 +621,53 @@ export default function StorefrontCustomization() {
                                 <div className="relative z-10">
                                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">New Arrivals</p>
                                     <h3 className="font-serif text-xl mb-3">Summer Collection</h3>
-                                    <div className="h-8 px-4 rounded-full bg-white/20 backdrop-blur-sm inline-flex items-center text-xs font-bold">
+                                    <div
+                                        className={cn(
+                                            "h-8 px-4 bg-white/20 backdrop-blur-sm inline-flex items-center text-xs font-bold",
+                                            ctaButtonForm.shape === 'pill' && "rounded-full",
+                                            ctaButtonForm.shape === 'rounded' && "rounded-lg",
+                                            ctaButtonForm.shape === 'square' && "rounded-none"
+                                        )}
+                                    >
                                         Shop Now
                                     </div>
                                 </div>
                                 <div className="absolute -right-4 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
                             </div>
 
-                            {/* Product Grid */}
-                            <div className="p-4 pt-0 grid grid-cols-2 gap-3">
-                                {[1, 2, 3, 4].map(i => (
-                                    <div key={i} className="bg-white dark:bg-white/5 rounded-xl p-3 shadow-sm space-y-2">
+                            <div className={cn("p-4 pt-0 grid gap-3", layout === 'compact' ? 'grid-cols-2' : 'grid-cols-2')}>
+                                {[1, 2, 3, 4].map((i) => (
+                                    <div
+                                        key={i}
+                                        className={cn(
+                                            "bg-white dark:bg-white/5 p-3 space-y-2 transition-all",
+                                            productCardForm.borderRadius === 'none' && "rounded-none",
+                                            productCardForm.borderRadius === 'sm' && "rounded-lg",
+                                            productCardForm.borderRadius === 'md' && "rounded-xl",
+                                            productCardForm.borderRadius === 'lg' && "rounded-2xl",
+                                            productCardForm.borderRadius === 'xl' && "rounded-3xl",
+                                            productCardForm.shadow === 'sm' && "shadow-sm",
+                                            productCardForm.shadow === 'md' && "shadow-md",
+                                            productCardForm.shadow === 'lg' && "shadow-lg",
+                                            productCardForm.shadow === 'none' && "shadow-none"
+                                        )}
+                                    >
                                         <div className="aspect-square rounded-lg bg-gray-100 dark:bg-white/5 relative mb-2" />
-                                        <div className="h-2 w-16 bg-gray-200 dark:bg-white/10 rounded-full" />
-                                        <div className="h-2 w-10 bg-gray-200 dark:bg-white/10 rounded-full opacity-60" />
+                                        <div className="h-2 w-16 rounded-full opacity-60" style={{ backgroundColor: 'var(--preview-text)' }} />
+                                        <div className="h-2 w-10 rounded-full opacity-40" style={{ backgroundColor: 'var(--preview-text)' }} />
                                         <div
-                                            className="h-8 w-full rounded-lg mt-2 flex items-center justify-center text-[10px] font-bold text-white transition-colors duration-500"
-                                            style={{ backgroundColor: ensureHex(primaryHex, '#062c21') }}
+                                            className={cn(
+                                                "h-8 w-full mt-2 flex items-center justify-center text-[10px] font-bold text-white transition-colors duration-500",
+                                                ctaButtonForm.shape === 'pill' && "rounded-full",
+                                                ctaButtonForm.shape === 'rounded' && "rounded-lg",
+                                                ctaButtonForm.shape === 'square' && "rounded-none",
+                                                ctaButtonForm.style === 'outline' && "bg-transparent border-2 border-current"
+                                            )}
+                                            style={{
+                                                backgroundColor: ctaButtonForm.style === 'solid' ? ensureHex(primaryHex, '#062c21') : undefined,
+                                                color: ctaButtonForm.style === 'outline' ? ensureHex(primaryHex, '#062c21') : undefined,
+                                                borderColor: ctaButtonForm.style === 'outline' ? ensureHex(primaryHex, '#062c21') : undefined,
+                                            }}
                                         >
                                             Add to Cart
                                         </div>

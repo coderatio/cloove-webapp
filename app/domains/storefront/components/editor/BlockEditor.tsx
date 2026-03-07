@@ -11,6 +11,8 @@ import { Switch } from "@/app/components/ui/switch"
 import { cn } from "@/app/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Textarea } from "@/app/components/ui/textarea"
+import { useProductCategories } from "@/app/domains/inventory/hooks/useProductCategories"
+import { usePromotions } from "@/app/domains/orders/hooks/usePromotions"
 
 const GRADIENT_DIR_OPTIONS = [
   { value: "to-br", label: "↘ Bottom right" },
@@ -62,6 +64,18 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
       break
     case "image_gallery":
       content = <ImageGalleryEditor data={data} onUpdate={onUpdate} set={set} />
+      break
+    case "product_listing":
+      content = <ProductListingEditor data={data} set={set} />
+      break
+    case "featured_products":
+      content = <FeaturedProductsEditor data={data} set={set} />
+      break
+    case "on_sale":
+      content = <OnSaleEditor data={data} set={set} />
+      break
+    case "promotion_banner":
+      content = <PromotionBannerEditor data={data} set={set} setNested={setNested} />
       break
     default:
       content = <GenericEditor data={data} set={set} />
@@ -614,6 +628,154 @@ function ImageGalleryEditor({ data, onUpdate, set }: { data: Record<string, unkn
         <Button variant="outline" size="sm" onClick={addImage} className="rounded-lg text-xs gap-1.5">
           <Plus className="w-3.5 h-3.5" /> Add image
         </Button>
+      </EditorSection>
+    </div>
+  )
+}
+
+function ProductListingEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
+  const { categories, isLoading } = useProductCategories()
+  const categoryId = (data.categoryId as string) ?? ""
+  const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+
+  return (
+    <div className="space-y-4 p-4">
+      <EditorSection title="Content">
+        <Field label="Title">
+          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Our Products" className="h-9" />
+        </Field>
+        <Field label="Category">
+          <Select value={categoryId || "__all__"} onValueChange={(v) => set("categoryId", v === "__all__" ? undefined : v)} disabled={isLoading}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All categories</SelectItem>
+              {(categories ?? []).map((c: { id: string; name: string }) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="Limit">
+          <Input type="number" min={4} max={24} value={String(limit)} onChange={(e) => set("limit", Math.min(24, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
+        </Field>
+        <div className="flex items-center justify-between py-1">
+          <span className="text-sm text-brand-deep dark:text-brand-cream">Show filters</span>
+          <Switch checked={data.showFilters !== false} onCheckedChange={(v) => set("showFilters", v)} />
+        </div>
+      </EditorSection>
+    </div>
+  )
+}
+
+function FeaturedProductsEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
+  const limit = Math.min(12, Math.max(4, Number(data.limit) || 8))
+  return (
+    <div className="space-y-4 p-4">
+      <EditorSection title="Content">
+        <Field label="Title">
+          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Featured" className="h-9" />
+        </Field>
+        <Field label="Subtitle">
+          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Optional" className="h-9" />
+        </Field>
+        <Field label="Limit">
+          <Input type="number" min={4} max={12} value={String(limit)} onChange={(e) => set("limit", Math.min(12, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
+        </Field>
+      </EditorSection>
+    </div>
+  )
+}
+
+function OnSaleEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
+  const { data: promotions, isLoading } = usePromotions()
+  const promotionId = (data.promotionId as string) ?? ""
+  const limit = Math.min(16, Math.max(4, Number(data.limit) || 8))
+  return (
+    <div className="space-y-4 p-4">
+      <EditorSection title="Content">
+        <Field label="Title">
+          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="On Sale" className="h-9" />
+        </Field>
+        <Field label="Subtitle">
+          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Optional" className="h-9" />
+        </Field>
+        <Field label="Promotion">
+          <Select value={promotionId || "__any__"} onValueChange={(v) => set("promotionId", v === "__any__" ? undefined : v)} disabled={isLoading}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Any promotion" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__any__">Any promotion</SelectItem>
+              {(promotions ?? []).map((p: { id: string; name: string }) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="Limit">
+          <Input type="number" min={4} max={16} value={String(limit)} onChange={(e) => set("limit", Math.min(16, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
+        </Field>
+      </EditorSection>
+    </div>
+  )
+}
+
+function PromotionBannerEditor({
+  data,
+  set,
+  setNested,
+}: { data: Record<string, unknown>; set: (k: string, v: unknown) => void; setNested: (p: string, k: string, v: unknown) => void }) {
+  const { data: promotions } = usePromotions()
+  const promotionId = (data.promotionId as string) ?? ""
+  const cta = (data.cta as { label: string; href: string }) ?? { label: "", href: "" }
+
+  return (
+    <div className="space-y-4 p-4">
+      <EditorSection title="Promotion (optional)">
+        <Select value={promotionId || "__none__"} onValueChange={(v) => set("promotionId", v === "__none__" ? undefined : v)}>
+          <SelectTrigger className="h-9">
+            <SelectValue placeholder="Manual / no promotion" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__">Manual (no promotion link)</SelectItem>
+            {(promotions ?? []).map((p: { id: string; name: string }) => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </EditorSection>
+      <EditorSection title="Banner">
+        <Field label="Title">
+          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Promotion title" className="h-9" />
+        </Field>
+        <Field label="Subtitle">
+          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Optional" className="h-9" />
+        </Field>
+        <Field label="Image URL">
+          <ImageUrlField value={(data.imageUrl as string) ?? ""} onChange={(url) => set("imageUrl", url)} placeholder="Optional banner image" />
+        </Field>
+        <Field label="Badge label">
+          <Input value={(data.badgeLabel as string) ?? ""} onChange={(e) => set("badgeLabel", e.target.value)} placeholder="e.g. Sale" className="h-9" />
+        </Field>
+        <EditorSection title="CTA">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Label">
+              <Input value={cta?.label ?? ""} onChange={(e) => setNested("cta", "label", e.target.value)} placeholder="Shop now" className="h-9" />
+            </Field>
+            <Field label="Link">
+              <Input value={cta?.href ?? ""} onChange={(e) => setNested("cta", "href", e.target.value)} placeholder="/shop" className="h-9 font-mono text-xs" />
+            </Field>
+          </div>
+        </EditorSection>
+        <Field label="Ends at">
+          <Input type="datetime-local" value={(data.endsAt as string)?.slice(0, 16) ?? ""} onChange={(e) => set("endsAt", e.target.value ? new Date(e.target.value).toISOString() : "")} className="h-9 font-mono text-xs" />
+        </Field>
+        <div className="flex items-center justify-between py-1">
+          <span className="text-sm text-brand-deep dark:text-brand-cream">Show countdown</span>
+          <Switch checked={!!data.showCountdown} onCheckedChange={(v) => set("showCountdown", v)} />
+        </div>
       </EditorSection>
     </div>
   )

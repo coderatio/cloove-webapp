@@ -681,6 +681,28 @@ h6 {
   background: rgba(10, 61, 49, 0.25);
 }
 
+.no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.storefront-preview-scroll {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.storefront-preview-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    ANIMATIONS
    ───────────────────────────────────────────────────────────────────────────── */
@@ -903,4 +925,18 @@ h6 {
 
 .dark [data-sonner-toast] [data-cancel-button]:hover {
   background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Storefront welcome message marquee */
+@keyframes storefront-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-storefront-marquee {
+  animation: storefront-marquee 25s linear infinite;
 }

@@ -30,19 +30,24 @@ export interface SortableBlockListProps<T extends { id: string }> {
   className?: string
   /** Optional class for each sortable row */
   itemClassName?: string
+  /** Whether to hide the drag handle */
+  hideHandle?: boolean
 }
 
 function SortableRow<T extends { id: string }>({
   item,
   renderItem,
   itemClassName,
+  hideHandle,
 }: {
   item: T
   renderItem: (item: T) => React.ReactNode
   itemClassName?: string
+  hideHandle?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
+    disabled: hideHandle,
   })
 
   const style: React.CSSProperties = {
@@ -55,22 +60,25 @@ function SortableRow<T extends { id: string }>({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-stretch gap-2 rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 transition-all duration-300",
+        "flex items-stretch rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 transition-all duration-300",
+        !hideHandle && "gap-2",
         isDragging && "opacity-80 shadow-lg z-10",
         itemClassName
       )}
     >
-      <div
-        className="flex items-center justify-center shrink-0 w-10 cursor-grab active:cursor-grabbing text-brand-deep/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream touch-none"
-        {...attributes}
-        {...listeners}
-        aria-label="Drag to reorder"
-      >
-        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg pointer-events-none">
-          <GripVertical className="w-4 h-4" />
-        </Button>
-      </div>
-      <div className="flex-1 min-w-0 py-3 pr-3">{renderItem(item)}</div>
+      {!hideHandle && (
+        <div
+          className="flex items-center justify-center shrink-0 w-10 cursor-grab active:cursor-grabbing text-brand-deep/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream touch-none"
+          {...attributes}
+          {...listeners}
+          aria-label="Drag to reorder"
+        >
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg pointer-events-none">
+            <GripVertical className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+      <div className={cn("flex-1 min-w-0 py-3", !hideHandle && "pr-3")}>{renderItem(item)}</div>
     </div>
   )
 }
@@ -81,7 +89,8 @@ export function SortableBlockList<T extends { id: string }>({
   renderItem,
   className,
   itemClassName,
-}: SortableBlockListProps<T>) {
+  hideHandle,
+}: SortableBlockListProps<T> & { hideHandle?: boolean }) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
