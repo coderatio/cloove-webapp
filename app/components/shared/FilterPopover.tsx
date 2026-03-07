@@ -38,6 +38,7 @@ interface FilterPopoverProps {
     onClear: () => void
     className?: string
     align?: "start" | "center" | "end"
+    iconOnly?: boolean
 }
 
 export function FilterPopover({
@@ -46,7 +47,8 @@ export function FilterPopover({
     onSelectionChange,
     onClear,
     className,
-    align = "start"
+    align = "start",
+    iconOnly = false
 }: FilterPopoverProps) {
     const isMobile = useIsMobile()
     const [isOpen, setIsOpen] = React.useState(false)
@@ -59,9 +61,6 @@ export function FilterPopover({
         if (isCurrentlySelected) {
             newSelectedValues = selectedValues.filter(v => v !== value)
         } else {
-            // @Note: Remove other options from the same group if you want single-select per group,
-            // but the current behavior is multi-select across all groups.
-            // Let's stick to multi-select but handle it correctly.
             newSelectedValues = [...selectedValues, value]
         }
 
@@ -70,7 +69,27 @@ export function FilterPopover({
 
     const activeCount = selectedValues.length
 
-    const FilterTrigger = (
+    const FilterTrigger = iconOnly ? (
+        <Button
+            type="button"
+            variant="outline"
+            aria-label={activeCount > 0 ? `Filter (${activeCount} selected)` : "Filter"}
+            className={cn(
+                "rounded-2xl h-12 w-12 p-0 shrink-0 bg-white border-brand-deep/8 dark:border-brand-gold/20 dark:bg-brand-deep/20 transition-all duration-300 relative",
+                isOpen
+                    ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep border-transparent shadow-lg"
+                    : "text-brand-accent/90 dark:text-brand-cream/90 hover:bg-brand-deep/5 dark:hover:bg-white/5",
+                activeCount > 0 && !isOpen && "border-brand-green/30 dark:border-brand-gold/30 bg-brand-green/5 dark:bg-brand-gold/5"
+            )}
+        >
+            <Filter className={cn("w-4 h-4 transition-transform", isOpen && "scale-110")} />
+            {activeCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-sm">
+                    {activeCount}
+                </span>
+            )}
+        </Button>
+    ) : (
         <Button
             variant="outline"
             className={cn(
@@ -84,7 +103,7 @@ export function FilterPopover({
             <Filter className={cn("w-4 h-4 mr-2 transition-transform", isOpen && "scale-110")} />
             Filter
             {activeCount > 0 && (
-                <span className="ml-2 w-5 h-5 flex items-center justify-center rounded-full bg-brand-green text-brand-cream text-[10px] font-bold dark:bg-brand-gold dark:text-brand-deep shadow-sm">
+                <span className="ml-2 w-5 h-5 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-sm">
                     {activeCount}
                 </span>
             )}

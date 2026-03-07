@@ -23,7 +23,7 @@ interface ActivityStreamProps {
     className?: string
 }
 
-const ActivityIcon = ({ type }: { type: ActivityItem['type'] }) => {
+export const ActivityIcon = ({ type }: { type: ActivityItem['type'] }) => {
     switch (type) {
         case 'sale':
             return <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full"><ShoppingBag className="w-4 h-4" /></div>

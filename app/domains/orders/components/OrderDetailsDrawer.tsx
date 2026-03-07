@@ -37,6 +37,7 @@ interface OrderDetailsDrawerProps {
     onPrintReceipt?: (order: Order) => Promise<void>
     isUpdating?: boolean
     isDeleting?: boolean
+    isLoading?: boolean
 }
 
 const statusColorMap: Record<string, { label: string, color: string, className: string, icon: any }> = {
@@ -68,11 +69,24 @@ export function OrderDetailsDrawer({
     onDelete,
     onPrintReceipt,
     isUpdating,
-    isDeleting
+    isDeleting,
+    isLoading,
 }: OrderDetailsDrawerProps) {
     const { activeBusiness } = useBusiness()
     const currencyCode = order?.currency || activeBusiness?.currency || 'NGN'
 
+    if (open && !order && isLoading) {
+        return (
+            <Drawer open={open} onOpenChange={onOpenChange}>
+                <DrawerContent>
+                    <DrawerTitle className="sr-only">Order details</DrawerTitle>
+                    <div className="p-8 flex items-center justify-center min-h-[200px] text-brand-accent/60 dark:text-brand-cream/60">
+                        Loading order details…
+                    </div>
+                </DrawerContent>
+            </Drawer>
+        )
+    }
     if (!order) return null
 
     const status = order.status?.toUpperCase() || 'UNKNOWN'

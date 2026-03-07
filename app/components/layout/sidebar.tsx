@@ -20,7 +20,8 @@ import {
     Store,
     Gift,
     Banknote,
-    ShieldCheck
+    ShieldCheck,
+    Activity
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
@@ -70,6 +71,7 @@ const navGroups: NavGroup[] = [
         items: [
             { href: "/inventory", icon: Package, label: "Inventory", permission: 'MANAGE_PRODUCTS' },
             { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STAFF' },
+            { href: "/activity", icon: Activity, label: "Activity", permission: 'VIEW_DASHBOARD' },
         ]
     },
     // {
