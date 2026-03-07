@@ -330,7 +330,7 @@ export function ActivityView() {
                                 className="min-w-0 shrink-0"
                             />
                             <FilterPopover
-                                groups={[...ACTIVITY_TYPE_GROUPS]}
+                                groups={ACTIVITY_TYPE_GROUPS.map((g) => ({ title: g.title, options: [...g.options] }))}
                                 selectedValues={selectedTypeFilters}
                                 onSelectionChange={(values) => {
                                     setSelectedTypeFilters(values)

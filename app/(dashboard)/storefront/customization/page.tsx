@@ -1,39 +1,84 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
-import { Check, Palette, Smartphone, RefreshCw, Upload } from "lucide-react"
+import { Input } from "@/app/components/ui/input"
+import { Switch } from "@/app/components/ui/switch"
+import { Check, Palette, Smartphone, RefreshCw, Upload, Type, Layout, Sun, Moon } from "lucide-react"
 import { cn } from "@/app/lib/utils"
-import { useStorefrontTheme, useUpdateStorefrontTheme } from "@/app/domains/storefront/hooks/useStorefrontTheme"
+import { useStorefrontTheme, useUpdateStorefrontTheme, type StorefrontThemeData } from "@/app/domains/storefront/hooks/useStorefrontTheme"
 import { uploadService } from "@/app/lib/upload/upload-service"
+import { ColorPicker } from "@/app/components/ui/color-picker"
+import {
+    getDefaultTheme,
+    STOREFRONT_LAYOUT_IDS,
+    THEME_MODES,
+    GOOGLE_FONTS_ALLOWED,
+    HEADER_STYLES,
+    PRODUCT_CARD_RADIUS,
+    SHADOW_OPTIONS,
+    CTA_SHAPES,
+    CTA_STYLES,
+} from "@/app/domains/storefront/lib/theme-defaults"
 import { toast } from "sonner"
 
 const themeColors = [
-    { name: 'Forest', hex: '#062C21', bg: 'bg-[#062C21]', border: 'border-[#062C21]' },
-    { name: 'Midnight', hex: '#0F172A', bg: 'bg-[#0F172A]', border: 'border-[#0F172A]' },
-    { name: 'Berry', hex: '#4A044E', bg: 'bg-[#4A044E]', border: 'border-[#4A044E]' },
-    { name: 'Ocean', hex: '#1E3A8A', bg: 'bg-[#1E3A8A]', border: 'border-[#1E3A8A]' },
-    { name: 'Chocolate', hex: '#431407', bg: 'bg-[#431407]', border: 'border-[#431407]' },
-    { name: 'Charcoal', hex: '#18181B', bg: 'bg-[#18181B]', border: 'border-[#18181B]' },
+    { name: 'Forest', hex: '#062C21', bg: 'bg-[#062C21]' },
+    { name: 'Midnight', hex: '#0F172A', bg: 'bg-[#0F172A]' },
+    { name: 'Berry', hex: '#4A044E', bg: 'bg-[#4A044E]' },
+    { name: 'Ocean', hex: '#1E3A8A', bg: 'bg-[#1E3A8A]' },
+    { name: 'Chocolate', hex: '#431407', bg: 'bg-[#431407]' },
+    { name: 'Charcoal', hex: '#18181B', bg: 'bg-[#18181B]' },
 ]
+
+const HEX_REGEX = /^#[0-9A-Fa-f]{6}$/
+function ensureHex(s: string | undefined, fallback: string): string {
+    if (s && HEX_REGEX.test(s)) return s
+    return fallback
+}
 
 export default function StorefrontCustomization() {
     const { data: theme, isLoading } = useStorefrontTheme()
     const updateTheme = useUpdateStorefrontTheme()
-    const primaryHex = theme?.colors?.primary ?? themeColors[0].hex
-    const matchedColor = themeColors.find((c) => c.hex.toLowerCase() === primaryHex?.toLowerCase()) ?? themeColors[0]
-    const [selectedColor, setSelectedColor] = useState(matchedColor.name)
+    const defaultTheme = getDefaultTheme()
+    const base = theme ?? defaultTheme
+    const colors = base.colors ?? defaultTheme.colors
+    const colorsDark = base.colorsDark ?? defaultTheme.colorsDark
+    const fonts = base.fonts ?? defaultTheme.fonts
+    const components = base.components as Record<string, Record<string, unknown>> | undefined
+    const header = components?.header ?? defaultTheme.components.header
+    const productCard = components?.productCard ?? defaultTheme.components.productCard
+    const ctaButton = components?.ctaButton ?? defaultTheme.components.ctaButton
+
     const [logo, setLogo] = useState<string | null>(null)
     const [logoUploading, setLogoUploading] = useState(false)
+    const [layout, setLayout] = useState(base.layout ?? 'classic')
+    const [themeMode, setThemeMode] = useState(base.themeMode ?? 'auto')
+    const [primaryHex, setPrimaryHex] = useState(colors.primary ?? '#062c21')
+    const [colorsForm, setColorsForm] = useState(colors)
+    const [colorsDarkForm, setColorsDarkForm] = useState(colorsDark)
+    const [showDarkColors, setShowDarkColors] = useState(!!base.colorsDark)
+    const [fontsForm, setFontsForm] = useState(fonts)
+    const [headerForm, setHeaderForm] = useState(header)
+    const [productCardForm, setProductCardForm] = useState(productCard)
+    const [ctaButtonForm, setCtaButtonForm] = useState(ctaButton)
+    const [welcomeMessage, setWelcomeMessage] = useState((base.welcomeMessage as string) ?? '')
 
     useEffect(() => {
-        if (theme?.colors?.primary) {
-            const m = themeColors.find((c) => c.hex.toLowerCase() === theme.colors!.primary?.toLowerCase())
-            if (m) setSelectedColor(m.name)
-        }
-    }, [theme?.colors?.primary])
+        if (!theme) return
+        setLayout((theme.layout as string) ?? 'classic')
+        setThemeMode((theme.themeMode as string) ?? 'auto')
+        setPrimaryHex(theme.colors?.primary ?? '#062c21')
+        setColorsForm(theme.colors ?? defaultTheme.colors)
+        setColorsDarkForm(theme.colorsDark ?? defaultTheme.colorsDark)
+        setShowDarkColors(!!theme.colorsDark)
+        setFontsForm(theme.fonts ?? defaultTheme.fonts)
+        setHeaderForm((theme.components as any)?.header ?? defaultTheme.components.header)
+        setProductCardForm((theme.components as any)?.productCard ?? defaultTheme.components.productCard)
+        setCtaButtonForm((theme.components as any)?.ctaButton ?? defaultTheme.components.ctaButton)
+        setWelcomeMessage((theme.welcomeMessage as string) ?? '')
+    }, [theme])
     useEffect(() => {
         if (theme?.logoUrl) setLogo(theme.logoUrl as string)
     }, [theme?.logoUrl])
@@ -72,13 +117,15 @@ export default function StorefrontCustomization() {
                                         <span className="text-xs text-brand-accent/40 dark:text-white/40 font-medium">Logo</span>
                                     )}
                                     {logo && !logoUploading && (
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold rounded-none h-full"
                                             onClick={() => setLogo(null)}
-                                            className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold"
                                         >
                                             Remove
-                                        </button>
+                                        </Button>
                                     )}
                                 </div>
                                 <div className="space-y-2 flex-1 min-w-0">
@@ -140,31 +187,283 @@ export default function StorefrontCustomization() {
                         </div>
 
                         <div className="space-y-3 pt-4 border-t border-brand-deep/5 dark:border-white/5">
-                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Theme Color</label>
+                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Primary (presets)</label>
                             <div className="flex flex-wrap gap-3">
                                 {themeColors.map((color) => (
-                                    <button
+                                    <Button
                                         key={color.name}
-                                        onClick={() => setSelectedColor(color.name)}
+                                        variant="ghost"
+                                        size="icon"
                                         className={cn(
                                             "w-12 h-12 rounded-full relative transition-all hover:scale-110",
                                             color.bg,
-                                            selectedColor === color.name && "ring-4 ring-brand-green/20 dark:ring-white/20 scale-110"
+                                            primaryHex?.toLowerCase() === color.hex.toLowerCase() && "ring-4 ring-brand-green/20 dark:ring-white/20 scale-110"
                                         )}
                                         title={color.name}
+                                        onClick={() => {
+                                            setPrimaryHex(color.hex)
+                                            setColorsForm((c) => ({ ...c, primary: color.hex }))
+                                        }}
                                     >
-                                        {selectedColor === color.name && (
+                                        {primaryHex?.toLowerCase() === color.hex.toLowerCase() && (
                                             <div className="absolute inset-0 flex items-center justify-center">
                                                 <Check className="w-5 h-5 text-white stroke-[3px]" />
                                             </div>
                                         )}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
-                            <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60 pt-2">
-                                This color will be used for buttons, links, and highlights on your storefront.
-                            </p>
+                            <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60">Primary is used for buttons, links, and highlights.</p>
                         </div>
+                    </GlassCard>
+                </section>
+
+                {/* Layout & mode */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Layout className="w-5 h-5 text-brand-green dark:text-emerald-400" />
+                        <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Layout & Mode</h2>
+                    </div>
+                    <GlassCard className="p-6 space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Layout</label>
+                            <div className="flex flex-wrap gap-2">
+                                {STOREFRONT_LAYOUT_IDS.map((id) => (
+                                    <Button
+                                        key={id}
+                                        variant={layout === id ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="rounded-xl capitalize"
+                                        onClick={() => setLayout(id)}
+                                    >
+                                        {id}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 flex items-center gap-2">
+                                <Sun className="w-3.5 h-3.5" /> <Moon className="w-3.5 h-3.5" /> Theme mode
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {THEME_MODES.map((mode) => (
+                                    <Button
+                                        key={mode}
+                                        variant={themeMode === mode ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="rounded-xl capitalize"
+                                        onClick={() => setThemeMode(mode)}
+                                    >
+                                        {mode}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    </GlassCard>
+                </section>
+
+                {/* Colors */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Palette className="w-5 h-5 text-brand-green dark:text-emerald-400" />
+                        <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Colors</h2>
+                    </div>
+                    <GlassCard className="p-6 space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Primary</label>
+                                <ColorPicker
+                                    color={ensureHex(primaryHex, '#062c21')}
+                                    onChange={(v) => { setPrimaryHex(v); setColorsForm((c) => ({ ...c, primary: v })) }}
+                                    showHexInput={true}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Secondary</label>
+                                <ColorPicker
+                                    color={ensureHex(colorsForm.secondary, '#d4af37')}
+                                    onChange={(v) => setColorsForm((c) => ({ ...c, secondary: v }))}
+                                    showHexInput={true}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Background</label>
+                                <ColorPicker
+                                    color={ensureHex(colorsForm.background, '#ffffff')}
+                                    onChange={(v) => setColorsForm((c) => ({ ...c, background: v }))}
+                                    showHexInput={true}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Text</label>
+                                <ColorPicker
+                                    color={ensureHex(colorsForm.text, '#062c21')}
+                                    onChange={(v) => setColorsForm((c) => ({ ...c, text: v }))}
+                                    showHexInput={true}
+                                />
+                            </div>
+                        </div>
+                        <div className="border-t border-brand-deep/5 dark:border-white/5 pt-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">Dark mode colors</span>
+                                <Switch checked={showDarkColors} onCheckedChange={setShowDarkColors} />
+                            </div>
+                            {showDarkColors && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {(['primary', 'secondary', 'background', 'text'] as const).map((key) => (
+                                        <div key={key} className="space-y-1">
+                                            <label className="text-xs text-brand-accent/50 capitalize">{key}</label>
+                                            <ColorPicker
+                                                color={ensureHex(colorsDarkForm[key], defaultTheme.colorsDark[key])}
+                                                onChange={(v) => setColorsDarkForm((c) => ({ ...c, [key]: v }))}
+                                                showHexInput={true}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </GlassCard>
+                </section>
+
+                {/* Fonts */}
+                <section className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Type className="w-5 h-5 text-brand-green dark:text-emerald-400" />
+                        <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Fonts</h2>
+                    </div>
+                    <GlassCard className="p-6 space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Heading</label>
+                            <select
+                                value={fontsForm.heading}
+                                onChange={(e) => setFontsForm((f) => ({ ...f, heading: e.target.value }))}
+                                className="w-full rounded-xl h-11 px-4 bg-white dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+                            >
+                                {GOOGLE_FONTS_ALLOWED.map((f) => (
+                                    <option key={f} value={f}>{f}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Body</label>
+                            <select
+                                value={fontsForm.body}
+                                onChange={(e) => setFontsForm((f) => ({ ...f, body: e.target.value }))}
+                                className="w-full rounded-xl h-11 px-4 bg-white dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+                            >
+                                {GOOGLE_FONTS_ALLOWED.map((f) => (
+                                    <option key={f} value={f}>{f}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </GlassCard>
+                </section>
+
+                {/* Components */}
+                <section className="space-y-4">
+                    <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Components</h2>
+                    <GlassCard className="p-6 space-y-6">
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Header</label>
+                            <div className="flex flex-wrap gap-2">
+                                {HEADER_STYLES.map((s) => (
+                                    <Button
+                                        key={s}
+                                        variant={(headerForm.style as string) === s ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="rounded-xl capitalize"
+                                        onClick={() => setHeaderForm((h) => ({ ...h, style: s }))}
+                                    >
+                                        {s}
+                                    </Button>
+                                ))}
+                            </div>
+                            <div className="flex items-center justify-between py-2">
+                                <span className="text-sm text-brand-deep dark:text-brand-cream">Show search</span>
+                                <Switch
+                                    checked={!!headerForm.showSearch}
+                                    onCheckedChange={(v) => setHeaderForm((h) => ({ ...h, showSearch: v }))}
+                                />
+                            </div>
+                        </div>
+                        <div className="border-t border-brand-deep/5 dark:border-white/5 pt-4 space-y-3">
+                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">Product card</label>
+                            <div className="flex flex-wrap gap-2">
+                                <span className="text-xs text-brand-accent/60 mr-1">Radius:</span>
+                                {PRODUCT_CARD_RADIUS.map((r) => (
+                                    <Button
+                                        key={r}
+                                        variant={(productCardForm.borderRadius as string) === r ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="rounded-xl capitalize"
+                                        onClick={() => setProductCardForm((p) => ({ ...p, borderRadius: r }))}
+                                    >
+                                        {r}
+                                    </Button>
+                                ))}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <span className="text-xs text-brand-accent/60 mr-1">Shadow:</span>
+                                {SHADOW_OPTIONS.map((s) => (
+                                    <Button
+                                        key={s}
+                                        variant={(productCardForm.shadow as string) === s ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="rounded-xl capitalize"
+                                        onClick={() => setProductCardForm((p) => ({ ...p, shadow: s }))}
+                                    >
+                                        {s}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="border-t border-brand-deep/5 dark:border-white/5 pt-4 space-y-3">
+                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40">CTA button</label>
+                            <div className="flex flex-wrap gap-2">
+                                <span className="text-xs text-brand-accent/60 mr-1">Shape:</span>
+                                {CTA_SHAPES.map((s) => (
+                                    <Button
+                                        key={s}
+                                        variant={(ctaButtonForm.shape as string) === s ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="rounded-xl capitalize"
+                                        onClick={() => setCtaButtonForm((c) => ({ ...c, shape: s }))}
+                                    >
+                                        {s}
+                                    </Button>
+                                ))}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <span className="text-xs text-brand-accent/60 mr-1">Style:</span>
+                                {CTA_STYLES.map((s) => (
+                                    <Button
+                                        key={s}
+                                        variant={(ctaButtonForm.style as string) === s ? 'default' : 'outline'}
+                                        size="sm"
+                                        className="rounded-xl capitalize"
+                                        onClick={() => setCtaButtonForm((c) => ({ ...c, style: s }))}
+                                    >
+                                        {s}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+                    </GlassCard>
+                </section>
+
+                {/* Welcome message */}
+                <section className="space-y-4">
+                    <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Welcome message</h2>
+                    <GlassCard className="p-6">
+                        <textarea
+                            className="w-full rounded-xl p-4 min-h-[100px] bg-white dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-brand-green/20 resize-none"
+                            value={welcomeMessage}
+                            onChange={(e) => setWelcomeMessage(e.target.value.slice(0, 500))}
+                            placeholder="Optional message at the top of your store (max 500 characters)"
+                            maxLength={500}
+                        />
+                        <p className="text-xs text-brand-accent/60 mt-1">{welcomeMessage.length}/500</p>
                     </GlassCard>
                 </section>
 
@@ -173,20 +472,34 @@ export default function StorefrontCustomization() {
                 <div className="flex justify-end pt-4">
                     <Button
                         onClick={() => {
-                            const color = themeColors.find((c) => c.name === selectedColor)
-                            if (!theme) return
-                            const payload = {
-                                ...theme,
-                                welcomeMessage: theme.welcomeMessage ?? '',
+                            const fullTheme: StorefrontThemeData = {
+                                ...defaultTheme,
+                                ...base,
+                                schemaVersion: 1,
+                                layout,
+                                themeMode,
                                 colors: {
-                                    primary: color?.hex ?? primaryHex,
-                                    secondary: theme.colors?.secondary ?? '#d4af37',
-                                    background: theme.colors?.background ?? '#ffffff',
-                                    text: theme.colors?.text ?? '#062c21',
+                                    primary: ensureHex(primaryHex, defaultTheme.colors.primary),
+                                    secondary: ensureHex(colorsForm.secondary, defaultTheme.colors.secondary),
+                                    background: ensureHex(colorsForm.background, defaultTheme.colors.background),
+                                    text: ensureHex(colorsForm.text, defaultTheme.colors.text),
                                 },
+                                colorsDark: showDarkColors ? {
+                                    primary: ensureHex(colorsDarkForm.primary, defaultTheme.colorsDark.primary),
+                                    secondary: ensureHex(colorsDarkForm.secondary, defaultTheme.colorsDark.secondary),
+                                    background: ensureHex(colorsDarkForm.background, defaultTheme.colorsDark.background),
+                                    text: ensureHex(colorsDarkForm.text, defaultTheme.colorsDark.text),
+                                } : undefined,
+                                fonts: fontsForm,
+                                components: {
+                                    header: headerForm,
+                                    productCard: productCardForm,
+                                    ctaButton: ctaButtonForm,
+                                },
+                                welcomeMessage: welcomeMessage.slice(0, 500),
                                 logoUrl: logo ?? null,
                             }
-                            updateTheme.mutate(payload)
+                            updateTheme.mutate(fullTheme)
                         }}
                         disabled={updateTheme.isPending || isLoading}
                         className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-12 shadow-xl hover:scale-105 transition-all"
@@ -235,9 +548,10 @@ export default function StorefrontCustomization() {
                             </div>
 
                             {/* Hero Banner with Selected Color */}
-                            <div className={cn("m-4 p-6 rounded-2xl text-white relative overflow-hidden transition-colors duration-500",
-                                themeColors.find(c => c.name === selectedColor)?.bg || 'bg-[#062C21]'
-                            )}>
+                            <div
+                                className="m-4 p-6 rounded-2xl text-white relative overflow-hidden transition-colors duration-500"
+                                style={{ backgroundColor: ensureHex(primaryHex, '#062c21') }}
+                            >
                                 <div className="relative z-10">
                                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">New Arrivals</p>
                                     <h3 className="font-serif text-xl mb-3">Summer Collection</h3>
@@ -255,9 +569,10 @@ export default function StorefrontCustomization() {
                                         <div className="aspect-square rounded-lg bg-gray-100 dark:bg-white/5 relative mb-2" />
                                         <div className="h-2 w-16 bg-gray-200 dark:bg-white/10 rounded-full" />
                                         <div className="h-2 w-10 bg-gray-200 dark:bg-white/10 rounded-full opacity-60" />
-                                        <div className={cn("h-8 w-full rounded-lg mt-2 flex items-center justify-center text-[10px] font-bold text-white transition-colors duration-500",
-                                            themeColors.find(c => c.name === selectedColor)?.bg || 'bg-[#062C21]'
-                                        )}>
+                                        <div
+                                            className="h-8 w-full rounded-lg mt-2 flex items-center justify-center text-[10px] font-bold text-white transition-colors duration-500"
+                                            style={{ backgroundColor: ensureHex(primaryHex, '#062c21') }}
+                                        >
                                             Add to Cart
                                         </div>
                                     </div>

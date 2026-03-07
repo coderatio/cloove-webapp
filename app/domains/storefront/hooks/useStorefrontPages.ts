@@ -57,6 +57,9 @@ export function useCreateStorefrontPage() {
       isHome?: boolean
       isPublished?: boolean
       content?: { sections: unknown[] }
+      metaTitle?: string | null
+      metaDescription?: string | null
+      metaImageUrl?: string | null
     }) => {
       return apiClient.post<StorefrontPageListItem>('storefront/pages', body)
     },
@@ -78,6 +81,9 @@ export function useUpdateStorefrontPage(slug: string) {
       isHome?: boolean
       isPublished?: boolean
       content?: { sections: unknown[] }
+      metaTitle?: string | null
+      metaDescription?: string | null
+      metaImageUrl?: string | null
     }) => {
       return apiClient.patch<StorefrontPageListItem>(
         `storefront/pages/${encodeURIComponent(slug)}`,

@@ -1,19 +1,41 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import Link from "next/link"
-import { Copy, ExternalLink, QrCode, Share2, Eye, ShoppingCart, TrendingUp } from "lucide-react"
+import { Copy, ExternalLink, QrCode, Share2, Eye, ShoppingCart, X } from "lucide-react"
 import { useStorefront } from "@/app/domains/storefront/hooks/useStorefront"
+import { useStorefrontPages } from "@/app/domains/storefront/hooks/useStorefrontPages"
+import { useStorefrontTheme } from "@/app/domains/storefront/hooks/useStorefrontTheme"
+import { useProductCount } from "@/app/domains/storefront/hooks/useProductCount"
+import { QRCodeDisplay } from "@/app/components/ui/qr-code-display"
 import { toast } from "sonner"
 
 export default function StorefrontOverview() {
     const [isCopied, setIsCopied] = useState(false)
+    const [showQrModal, setShowQrModal] = useState(false)
     const { data: storefront, isLoading, error } = useStorefront()
+    const { data: pages = [] } = useStorefrontPages()
+    const { data: theme } = useStorefrontTheme()
+    const { data: productCount = 0 } = useProductCount()
 
     const displayUrl = storefront?.url ?? ''
+    const hasStoreUrl = !!storefront?.slug
+    const hasLogo = !!(theme && (theme as Record<string, unknown>).logoUrl)
+    const hasEnoughProducts = productCount >= 5
+    const pageSlugs = pages.map((p) => p.slug)
+    const hasAboutPage = pageSlugs.some((s) => s.toLowerCase() === 'about' || s.toLowerCase() === 'about-us')
+    const hasAnyPage = pages.length > 0
+
+    const checklistSteps = [
+        { done: hasStoreUrl, label: 'Create your store URL', href: '/storefront/settings' },
+        { done: hasEnoughProducts, label: 'Add first 5 products', href: '/inventory' },
+        { done: hasLogo, label: 'Add a store logo and cover image', href: '/storefront/customization' },
+        { done: hasAboutPage || hasAnyPage, label: 'Configure "About Us" page', href: '/storefront/pages' },
+    ]
+    const completedCount = checklistSteps.filter((s) => s.done).length
+    const progressPct = checklistSteps.length ? Math.round((completedCount / checklistSteps.length) * 100) : 0
 
     const handleCopy = () => {
         if (!displayUrl) return
@@ -68,7 +90,11 @@ export default function StorefrontOverview() {
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto relative z-10">
-                    <Button variant="outline" className="flex-1 md:flex-none border-brand-accent/10 hover:bg-white/40 dark:border-white/10 dark:hover:bg-white/5 h-12 rounded-xl group/btn">
+                    <Button
+                        variant="outline"
+                        className="flex-1 md:flex-none border-brand-accent/10 hover:bg-white/40 dark:border-white/10 dark:hover:bg-white/5 h-12 rounded-xl group/btn"
+                        onClick={() => setShowQrModal(true)}
+                    >
                         <QrCode className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" />
                         QR Code
                     </Button>
@@ -86,7 +112,7 @@ export default function StorefrontOverview() {
                 </div>
             </GlassCard>
 
-            {/* Performance Stats */}
+            {/* Performance Stats — placeholders until analytics API exists */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <GlassCard className="p-5 flex flex-col justify-between h-32 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
                     <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -94,11 +120,8 @@ export default function StorefrontOverview() {
                     </div>
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Store Views (Today)</p>
                     <div className="space-y-1">
-                        <p className="text-3xl font-serif text-brand-deep dark:text-brand-cream">128</p>
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-brand-green dark:text-emerald-400">
-                            <TrendingUp className="w-3 h-3" />
-                            <span>+12% vs yesterday</span>
-                        </div>
+                        <p className="text-3xl font-serif text-brand-deep dark:text-brand-cream">—</p>
+                        <p className="text-xs text-brand-accent/60 dark:text-white/40">Connect analytics to see views</p>
                     </div>
                 </GlassCard>
 
@@ -108,10 +131,8 @@ export default function StorefrontOverview() {
                     </div>
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-gold/60">Active Carts</p>
                     <div className="space-y-1">
-                        <p className="text-3xl font-serif text-brand-deep dark:text-brand-cream">5</p>
-                        <p className="text-xs text-brand-accent/40 dark:text-white/40">
-                            Potential sales: <span className="text-brand-deep dark:text-brand-cream font-bold">₦42,500</span>
-                        </p>
+                        <p className="text-3xl font-serif text-brand-deep dark:text-brand-cream">—</p>
+                        <p className="text-xs text-brand-accent/60 dark:text-white/40">Coming soon</p>
                     </div>
                 </GlassCard>
 
@@ -121,15 +142,13 @@ export default function StorefrontOverview() {
                     </div>
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Share Rate</p>
                     <div className="space-y-1">
-                        <p className="text-3xl font-serif text-brand-deep dark:text-brand-cream">8.4%</p>
-                        <p className="text-xs text-brand-accent/40 dark:text-white/40">
-                            Customers sharing products
-                        </p>
+                        <p className="text-3xl font-serif text-brand-deep dark:text-brand-cream">—</p>
+                        <p className="text-xs text-brand-accent/60 dark:text-white/40">Coming soon</p>
                     </div>
                 </GlassCard>
             </div>
 
-            {/* Setup Progress */}
+            {/* Setup Progress — dynamic checklist */}
             <div className="pt-4">
                 <GlassCard className="p-6 md:p-8 space-y-6">
                     <div className="flex items-center justify-between">
@@ -138,36 +157,53 @@ export default function StorefrontOverview() {
                             <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">Complete these steps to optimize your sales channel.</p>
                         </div>
                         <div className="h-12 w-12 rounded-full border-4 border-brand-gold/20 flex items-center justify-center text-xs font-bold text-brand-gold">
-                            65%
+                            {progressPct}%
                         </div>
                     </div>
 
                     <div className="space-y-3">
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-green/5 dark:bg-emerald-400/10 border border-brand-green/10 dark:border-emerald-400/20">
-                            <div className="h-5 w-5 rounded-full bg-brand-green/20 dark:bg-emerald-400/20 flex items-center justify-center text-brand-green dark:text-emerald-400 text-[10px] font-bold">✓</div>
-                            <span className="text-sm font-medium text-brand-deep dark:text-emerald-400/80 line-through opacity-60 dark:opacity-80">Create your store URL</span>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-green/5 dark:bg-emerald-400/10 border border-brand-green/10 dark:border-emerald-400/20">
-                            <div className="h-5 w-5 rounded-full bg-brand-green/20 dark:bg-emerald-400/20 flex items-center justify-center text-brand-green dark:text-emerald-400 text-[10px] font-bold">✓</div>
-                            <span className="text-sm font-medium text-brand-deep dark:text-emerald-400/80 line-through opacity-60 dark:opacity-80">Add first 5 products</span>
-                        </div>
-                        <Link href="/storefront/customization" className="block">
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-cream/40 dark:bg-white/5 border border-brand-deep/5 hover:bg-brand-cream/60 dark:hover:bg-emerald-400/5 dark:hover:border-emerald-400/20 transition-all cursor-pointer group">
-                                <div className="h-5 w-5 rounded-full border border-brand-deep/20 dark:border-white/40 group-hover:border-brand-deep/40 dark:group-hover:border-emerald-400 transition-colors" />
-                                <span className="text-sm font-medium text-brand-deep dark:text-brand-cream group-hover:dark:text-white transition-colors">Add a store logo and cover image</span>
-                                <Button size="sm" variant="ghost" className="ml-auto text-xs h-7 text-brand-deep dark:text-emerald-400 font-bold hover:bg-brand-deep/5 dark:hover:bg-emerald-400/10">Start</Button>
-                            </div>
-                        </Link>
-                        <Link href="/storefront/pages?action=edit&slug=about" className="block">
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-brand-cream/40 dark:bg-white/5 border border-brand-deep/5 hover:bg-brand-cream/60 dark:hover:bg-emerald-400/5 dark:hover:border-emerald-400/20 transition-all cursor-pointer group">
-                                <div className="h-5 w-5 rounded-full border border-brand-deep/20 dark:border-white/40 group-hover:border-brand-deep/40 dark:group-hover:border-emerald-400 transition-colors" />
-                                <span className="text-sm font-medium text-brand-deep dark:text-brand-cream group-hover:dark:text-white transition-colors">Configure "About Us" page</span>
-                                <Button size="sm" variant="ghost" className="ml-auto text-xs h-7 text-brand-deep dark:text-emerald-400 font-bold hover:bg-brand-deep/5 dark:hover:bg-emerald-400/10">Start</Button>
-                            </div>
-                        </Link>
+                        {checklistSteps.map((step) => (
+                            <Link key={step.label} href={step.href} className="block">
+                                <div className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer group ${
+                                    step.done
+                                        ? 'bg-brand-green/5 dark:bg-emerald-400/10 border-brand-green/10 dark:border-emerald-400/20'
+                                        : 'bg-brand-cream/40 dark:bg-white/5 border-brand-deep/5 hover:bg-brand-cream/60 dark:hover:bg-emerald-400/5 dark:hover:border-emerald-400/20'
+                                }`}>
+                                    {step.done ? (
+                                        <div className="h-5 w-5 rounded-full bg-brand-green/20 dark:bg-emerald-400/20 flex items-center justify-center text-brand-green dark:text-emerald-400 text-[10px] font-bold">✓</div>
+                                    ) : (
+                                        <div className="h-5 w-5 rounded-full border border-brand-deep/20 dark:border-white/40 group-hover:border-brand-deep/40 dark:group-hover:border-emerald-400 transition-colors" />
+                                    )}
+                                    <span className={`text-sm font-medium ${step.done ? 'text-brand-deep dark:text-emerald-400/80 line-through opacity-60 dark:opacity-80' : 'text-brand-deep dark:text-brand-cream group-hover:dark:text-white transition-colors'}`}>
+                                        {step.label}
+                                    </span>
+                                    {!step.done && (
+                                        <Button size="sm" variant="ghost" className="ml-auto text-xs h-7 text-brand-deep dark:text-emerald-400 font-bold hover:bg-brand-deep/5 dark:hover:bg-emerald-400/10">Start</Button>
+                                    )}
+                                </div>
+                            </Link>
+                        ))}
                     </div>
                 </GlassCard>
             </div>
+
+            {/* QR Code modal */}
+            {showQrModal && displayUrl && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setShowQrModal(false)}>
+                    <div className="relative rounded-2xl bg-brand-cream dark:bg-brand-deep/95 p-6 shadow-xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream">Store QR Code</h3>
+                            <Button variant="ghost" size="icon" className="rounded-full h-9 w-9" onClick={() => setShowQrModal(false)}>
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
+                        <div className="flex justify-center">
+                            <QRCodeDisplay value={displayUrl} size={256} withCard />
+                        </div>
+                        <p className="mt-3 text-center text-xs text-brand-accent/60 dark:text-white/40 truncate">{displayUrl}</p>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

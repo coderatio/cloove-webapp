@@ -83,13 +83,23 @@ export default function StorefrontPages() {
                     <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream font-medium">Website Builder</h2>
                     <p className="text-brand-accent/60 dark:text-brand-cream/60 text-sm">Design and compose your storefront pages with modular sections.</p>
                 </div>
-                <Button
-                    onClick={handleCreate}
-                    className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-6 h-10 shadow-lg hover:scale-105 transition-all"
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Page
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => router.push('/storefront/editor/v0.1/new')}
+                        className="rounded-full border-brand-accent/10 dark:border-white/10 px-4 h-10"
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
+                        New (simple)
+                    </Button>
+                    <Button
+                        onClick={handleCreate}
+                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-6 h-10 shadow-lg hover:scale-105 transition-all"
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Page
+                    </Button>
+                </div>
             </div>
 
             <GlassCard className="overflow-hidden p-0">
@@ -136,6 +146,14 @@ export default function StorefrontPages() {
                                         >
                                             <Eye className="w-4 h-4 mr-2" />
                                             View
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => router.push(`/storefront/editor/v0.1/${page.slug}`)}
+                                            className="h-9 px-3 text-brand-accent/60 hover:text-brand-deep dark:text-white/60 dark:hover:text-white"
+                                        >
+                                            Simple
                                         </Button>
                                         <Button
                                             variant="outline"

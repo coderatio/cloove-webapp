@@ -98,8 +98,8 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         })),
     })
 
-    const { data: transactionsData, isLoading: transactionsLoading } = useFinanceTransactions(undefined, 1, 20)
-    const transactions = transactionsData?.data?.transactions ?? []
+    const { transactions: transactionsList, isLoading: transactionsLoading } = useFinanceTransactions(undefined, 1, 20)
+    const transactions = transactionsList ?? []
     const currency = summary?.currency ?? wallet?.currency ?? "NGN"
 
     const activities: ActivityItem[] = useMemo(() => {
