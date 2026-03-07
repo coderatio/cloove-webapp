@@ -2,13 +2,12 @@
 
 import { GlassCard } from "../ui/glass-card"
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts"
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { TrendingUp } from "lucide-react"
 import { formatCurrency } from "@/app/lib/formatters"
 
 interface SalesVelocityProps {
     data: { date: string; value: number }[]
     total: string
-    trend: string
     currencyCode?: string
     className?: string
 }
@@ -41,30 +40,17 @@ function ChartTooltip({
     )
 }
 
-export function SalesVelocity({ data, total, trend, currencyCode = "NGN", className }: SalesVelocityProps) {
-    const isPositive = trend.startsWith("+")
-
+export function SalesVelocity({ data, total, currencyCode = "NGN", className }: SalesVelocityProps) {
     return (
         <GlassCard className="p-6 md:p-8 flex flex-col h-full relative overflow-hidden">
-            <div className="flex items-center justify-between mb-6 z-10">
-                <div className="space-y-1">
-                    <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream tracking-wide flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-brand-green dark:text-brand-gold" />
-                        Sales Velocity
-                    </span>
-                    <h3 className="text-2xl font-serif text-brand-deep dark:text-brand-cream font-medium">
-                        {total}
-                    </h3>
-                </div>
-                <div className={`
-                    px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1
-                    ${isPositive
-                        ? 'bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-gold'
-                        : 'bg-red-500/10 text-red-600 dark:bg-red-500/20 dark:text-red-400'}
-                `}>
-                    {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                    {trend}
-                </div>
+            <div className="mb-6 z-10">
+                <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream tracking-wide flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                    Sales Velocity
+                </span>
+                <h3 className="text-2xl font-serif text-brand-deep dark:text-brand-cream font-medium mt-1">
+                    {total}
+                </h3>
             </div>
 
             <div className="h-32 -mx-4 -mb-4">

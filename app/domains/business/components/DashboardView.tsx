@@ -104,7 +104,6 @@ export function DashboardView() {
                     <SalesVelocity
                         data={velocityData}
                         total={sales.value}
-                        trend={sales.trend}
                         currencyCode={currency}
                     />
                     <InventoryPulse
