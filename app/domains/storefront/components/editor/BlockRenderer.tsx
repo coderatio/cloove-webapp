@@ -1,10 +1,11 @@
 "use client"
 
-import type { BlockSection, FaqItem, TestimonialItem, FeatureItem, CtaButton, SectionBackground } from "./block-types"
-import { HelpCircle, ChevronDown, Quote, Star, Image as ImageIcon, ShoppingBag, Tag, Megaphone } from "lucide-react"
+import type { BlockSection, FaqItem, TestimonialItem, FeatureItem, CtaButton, SectionBackground, GridLayoutColumn, GridLayoutStyle } from "./block-types"
+import { HelpCircle, ChevronDown, Quote, Star, Image as ImageIcon, ShoppingBag, Tag, Megaphone, Plus } from "lucide-react"
 import { formatCurrency } from "@/app/lib/formatters"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useStorefront } from "@/app/domains/storefront/hooks/useStorefront"
+import { cn } from "@/app/lib/utils"
 import {
   useStorefrontProducts,
   useStorefrontFeatured,
@@ -28,8 +29,6 @@ interface BlockRendererProps {
   /** When true, use sectionBackgroundDark if set, else sectionBackground. */
   previewDark?: boolean
 }
-
-import { cn } from "@/app/lib/utils"
 
 const SECTION_ALIGN_CLASS = {
   left: "text-left",
@@ -121,6 +120,10 @@ export function BlockRenderer({ block, previewDark = false }: BlockRendererProps
         return <OnSalePreview data={block.data} sectionColor={derivedColor} slug={storefrontSlug} />
       case "promotion_banner":
         return <PromotionBannerPreview data={block.data} sectionColor={derivedColor} textAlign={block.config.textAlign} />
+      case "image":
+        return <ImagePreview data={block.data} />
+      case "grid_layout":
+        return <GridPreview data={block.data} previewDark={previewDark} />
       default:
         return <PlaceholderPreview type={block.type} />
     }
@@ -752,6 +755,85 @@ function PlaceholderPreview({ type }: { type: string }) {
       {icons[type] || <ShoppingBag className="w-8 h-8" />}
       <span className="text-xs mt-2 font-medium capitalize">{type.replace(/_/g, " ")}</span>
       <span className="text-[10px] mt-1">Data-driven block — configured automatically</span>
+    </div>
+  )
+}
+
+function ImagePreview({ data }: { data: Record<string, unknown> }) {
+  const imageUrl = data.imageUrl as string
+  const alt = (data.alt as string) || ""
+  const caption = data.caption as string
+  const aspectRatio = (data.aspectRatio as string) || "auto"
+  const rounded = (data.rounded as string) || "xl"
+
+  const ratioClasses: Record<string, string> = {
+    auto: "",
+    "1:1": "aspect-square",
+    "4:3": "aspect-[4/3]",
+    "16:9": "aspect-video",
+    "21:9": "aspect-[21/9]",
+  }
+
+  const roundedClasses: Record<string, string> = {
+    none: "rounded-none",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+    "3xl": "rounded-3xl",
+    full: "rounded-full",
+  }
+
+  if (!imageUrl) {
+    return (
+      <div className="px-6 py-12 flex flex-col items-center justify-center bg-black/5 dark:bg-white/5 rounded-3xl opacity-30">
+        <ImageIcon className="w-8 h-8 mb-2" />
+        <span className="text-xs">No image selected</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="px-6 py-4">
+      <div className={cn("overflow-hidden mx-auto", ratioClasses[aspectRatio] || "", roundedClasses[rounded] || "rounded-xl")}>
+        <img src={imageUrl} alt={alt} className="w-full h-full object-cover" />
+      </div>
+      {caption && <p className="text-center text-xs mt-3 opacity-60 italic">{caption}</p>}
+    </div>
+  )
+}
+
+function GridPreview({ data, previewDark }: { data: Record<string, unknown>; previewDark: boolean }) {
+  const columns = (data.columns as GridLayoutColumn[]) || []
+  const style = (data.style as GridLayoutStyle) || {}
+  const proportions = style.proportions || columns.map(() => "1fr").join(" ")
+  const gap = style.gap || "md"
+
+  const gapClasses: Record<string, string> = {
+    none: "gap-0",
+    sm: "gap-4",
+    md: "gap-8",
+    lg: "gap-12",
+  }
+
+  return (
+    <div
+      className={cn("grid w-full px-6 py-4", gapClasses[gap])}
+      style={{ gridTemplateColumns: proportions }}
+    >
+      {columns.map((col, idx) => (
+        <div key={idx} className="flex flex-col gap-6 min-w-0">
+          {col.blocks.length === 0 ? (
+            <div className="h-full min-h-[100px] rounded-2xl border-2 border-dashed border-brand-deep/5 dark:border-white/5 flex items-center justify-center opacity-30">
+              <Plus className="w-5 h-5 mr-2" />
+              <span className="text-[10px] font-medium uppercase tracking-wider">Empty Column</span>
+            </div>
+          ) : (
+            col.blocks.map((block) => (
+              <BlockRenderer key={block.id} block={block} previewDark={previewDark} />
+            ))
+          )}
+        </div>
+      ))}
     </div>
   )
 }

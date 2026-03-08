@@ -1,14 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
 import { ColorPicker } from "@/app/components/ui/color-picker"
 import { RichTextEditor } from "./RichTextEditor"
 import { ImageUrlField } from "./ImageUrlField"
-import type { BlockSection, FaqItem, TestimonialItem, FeatureItem, CtaButton, SectionBackground } from "./block-types"
 import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight } from "lucide-react"
 import { Switch } from "@/app/components/ui/switch"
 import { cn } from "@/app/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
+import { BLOCK_META, createBlock, type BlockSection, type BlockType, type GridLayoutColumn, type GridLayoutStyle, type FaqItem, type TestimonialItem, type FeatureItem, type CtaButton, type SectionBackground } from "./block-types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Textarea } from "@/app/components/ui/textarea"
 import { useProductCategories } from "@/app/domains/inventory/hooks/useProductCategories"
@@ -76,6 +78,12 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
       break
     case "promotion_banner":
       content = <PromotionBannerEditor data={data} set={set} setNested={setNested} />
+      break
+    case "image":
+      content = <ImageEditor data={data} set={set} />
+      break
+    case "grid_layout":
+      content = <GridLayoutEditor data={data} onUpdate={onUpdate} />
       break
     default:
       content = <GenericEditor data={data} set={set} />
@@ -778,6 +786,205 @@ function PromotionBannerEditor({
           <Switch checked={!!data.showCountdown} onCheckedChange={(v) => set("showCountdown", v)} />
         </div>
       </EditorSection>
+    </div>
+  )
+}
+
+function ImageEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
+  return (
+    <div className="space-y-4 p-4">
+      <EditorSection title="Image Details">
+        <Field label="Image">
+          <ImageUrlField
+            value={(data.imageUrl as string) ?? ""}
+            onChange={(url) => set("imageUrl", url)}
+            placeholder="Upload or paste image URL"
+          />
+        </Field>
+        <Field label="Alt Text">
+          <Input value={(data.alt as string) ?? ""} onChange={(e) => set("alt", e.target.value)} placeholder="Describe image for accessibility" className="h-9" />
+        </Field>
+        <Field label="Caption">
+          <Input value={(data.caption as string) ?? ""} onChange={(e) => set("caption", e.target.value)} placeholder="Add a caption" className="h-9" />
+        </Field>
+      </EditorSection>
+      <div className="grid grid-cols-2 gap-4">
+        <EditorSection title="Aspect Ratio">
+          <Select value={(data.aspectRatio as string) || "auto"} onValueChange={(v) => set("aspectRatio", v)}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["auto", "1:1", "4:3", "16:9", "21:9"].map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </EditorSection>
+        <EditorSection title="Rounding">
+          <Select value={(data.rounded as string) || "xl"} onValueChange={(v) => set("rounded", v)}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["none", "lg", "xl", "2xl", "3xl", "full"].map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </EditorSection>
+      </div>
+    </div>
+  )
+}
+
+function GridLayoutEditor({ data, onUpdate }: { data: Record<string, unknown>; onUpdate: (d: Record<string, unknown>) => void }) {
+  const columns = (data.columns as GridLayoutColumn[]) || []
+  const style = (data.style as GridLayoutStyle) || {}
+  const [activeCol, setActiveCol] = useState<number | null>(null)
+
+  const updateColumns = (nextCols: GridLayoutColumn[]) => onUpdate({ ...data, columns: nextCols })
+
+  const addColumn = () => {
+    if (columns.length >= 8) return
+    updateColumns([...columns, { blocks: [] }])
+  }
+
+  const removeColumn = (idx: number) => {
+    updateColumns(columns.filter((_, i) => i !== idx))
+  }
+
+  const addBlockToColumn = (colIdx: number, type: any) => {
+    const next = [...columns]
+    next[colIdx].blocks = [...next[colIdx].blocks, createBlock(type)]
+    updateColumns(next)
+  }
+
+  const updateNestedBlock = (colIdx: number, blockId: string, updates: any) => {
+    const next = [...columns]
+    next[colIdx].blocks = next[colIdx].blocks.map(b => {
+      if (b.id !== blockId) return b
+      return {
+        ...b,
+        ...(updates.data && { data: updates.data }),
+        ...(updates.config && { config: { ...b.config, ...updates.config } })
+      }
+    })
+    updateColumns(next)
+  }
+
+  const removeNestedBlock = (colIdx: number, blockId: string) => {
+    const next = [...columns]
+    next[colIdx].blocks = next[colIdx].blocks.filter(b => b.id !== blockId)
+    updateColumns(next)
+  }
+
+  return (
+    <div className="space-y-4 p-4">
+      <EditorSection title="Layout Configuration">
+        <Field label="Columns (up to 8)">
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: Math.min(8, columns.length + 1) }).map((_, i) => (
+              <Button
+                key={i}
+                variant={columns.length === i + 1 ? "base" : "ghost"}
+                size="sm"
+                onClick={() => {
+                  if (i + 1 > columns.length) {
+                    updateColumns([...columns, ...Array(i + 1 - columns.length).fill(null).map(() => ({ blocks: [] }))])
+                  } else {
+                    updateColumns(columns.slice(0, i + 1))
+                  }
+                }}
+                className="w-8 h-8 p-0 rounded-lg text-xs"
+              >
+                {i + 1}
+              </Button>
+            ))}
+          </div>
+        </Field>
+        <Field label="Column proportions (e.g. 1fr 2fr)">
+          <Input
+            value={style.proportions || ""}
+            onChange={(e) => onUpdate({ ...data, style: { ...style, proportions: e.target.value } })}
+            placeholder="Leave empty for equal columns"
+            className="h-9 font-mono text-xs"
+          />
+        </Field>
+        <Field label="Gap size">
+          <div className="flex gap-2">
+            {(["none", "sm", "md", "lg"] as const).map(g => (
+              <Button
+                key={g}
+                variant={style.gap === g ? "base" : "ghost"}
+                size="sm"
+                onClick={() => onUpdate({ ...data, style: { ...style, gap: g } })}
+                className="rounded-lg text-xs capitalize"
+              >
+                {g}
+              </Button>
+            ))}
+          </div>
+        </Field>
+      </EditorSection>
+
+      <div className="space-y-2">
+        <span className={labelCn}>Content per Column</span>
+        {columns.map((col, cIdx) => (
+          <div key={cIdx} className="rounded-2xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+            <button
+              onClick={() => setActiveCol(activeCol === cIdx ? null : cIdx)}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+            >
+              <span className="text-xs font-semibold">Column {cIdx + 1}</span>
+              <span className="text-[10px] opacity-40 uppercase tracking-widest">{col.blocks.length} blocks</span>
+            </button>
+            <AnimatePresence>
+              {activeCol === cIdx && (
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: "auto" }}
+                  exit={{ height: 0 }}
+                  className="overflow-hidden border-t border-brand-deep/5 dark:border-white/5"
+                >
+                  <div className="p-4 space-y-4">
+                    {col.blocks.map((block) => (
+                      <div key={block.id} className="relative bg-white/40 dark:bg-white/5 rounded-2xl border p-4 group">
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-[9px] font-bold uppercase tracking-widest opacity-40">
+                            {BLOCK_META[block.type]?.label || block.type}
+                          </span>
+                          <Button variant="ghost" size="icon" onClick={() => removeNestedBlock(cIdx, block.id)} className="h-6 w-6 text-red-400 hover:text-red-500">
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <BlockEditor
+                          block={block}
+                          onUpdate={(d) => updateNestedBlock(cIdx, block.id, { data: d })}
+                          onUpdateConfig={(c) => updateNestedBlock(cIdx, block.id, { config: c })}
+                        />
+                      </div>
+                    ))}
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-dashed border-brand-deep/10 dark:border-white/10">
+                      {Object.entries(BLOCK_META).filter(([t]) => t !== "grid_layout").map(([type, meta]) => (
+                        <Button
+                          key={type}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addBlockToColumn(cIdx, type as any)}
+                          className="h-7 text-[10px] px-2 rounded-md gap-1"
+                        >
+                          <Plus className="w-2.5 h-2.5" /> {meta.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

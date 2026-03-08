@@ -27,6 +27,8 @@ export type BlockType =
   | "featured_products"
   | "on_sale"
   | "promotion_banner"
+  | "grid_layout"
+  | "image"
 
 export interface BlockSection {
   id: string
@@ -76,6 +78,15 @@ export interface CtaButton {
   href: string
 }
 
+export interface GridLayoutColumn {
+  blocks: BlockSection[]
+}
+
+export interface GridLayoutStyle {
+  proportions?: string // e.g. "1fr 1fr", "1fr 2fr"
+  gap?: "none" | "sm" | "md" | "lg"
+}
+
 const DEFAULT_CONFIG: BlockConfig = {
   padding: "md",
   background: "default",
@@ -99,6 +110,8 @@ export const BLOCK_META: Record<
   featured_products: { label: "Featured Products", icon: Star, description: "Highlighted product selection", creatable: true },
   on_sale: { label: "On Sale", icon: Tag, description: "Products currently on sale", creatable: true },
   promotion_banner: { label: "Promotion", icon: Megaphone, description: "Promotional banner", creatable: true },
+  grid_layout: { label: "Grid Layout", icon: Layout, description: "Multi-column container for other blocks", creatable: true },
+  image: { label: "Image", icon: Image, description: "Single high-quality image", creatable: true },
 }
 
 export const CREATABLE_BLOCK_TYPES = (Object.keys(BLOCK_META) as BlockType[]).filter(
@@ -163,6 +176,17 @@ const DEFAULT_DATA: Record<BlockType, () => Record<string, unknown>> = {
     cta: undefined as { label: string; href: string } | undefined,
     endsAt: "",
     showCountdown: false,
+  }),
+  grid_layout: () => ({
+    columns: [{ blocks: [] }, { blocks: [] }] as GridLayoutColumn[],
+    style: { gap: "md" } as GridLayoutStyle,
+  }),
+  image: () => ({
+    imageUrl: "",
+    alt: "",
+    caption: "",
+    aspectRatio: "auto", // "auto", "1:1", "4:3", "16:9"
+    rounded: "xl", // "none", "lg", "xl", "2xl", "3xl", "full"
   }),
 }
 
