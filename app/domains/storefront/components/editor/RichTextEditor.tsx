@@ -16,6 +16,7 @@ import {
   Italic,
   Heading2,
   Heading3,
+  Type,
   List,
   ListOrdered,
   Quote,
@@ -95,12 +96,14 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
     if (url) editor.chain().focus().setImage({ src: url }).run()
   }, [editor])
 
-  if (!editor) return null
-
   return (
     <div className={cn("rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 overflow-hidden transition-all duration-300", className)}>
-      {/* Fixed toolbar */}
+      {/* Toolbar: always visible so formatting options are clear */}
       <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-brand-deep/5 dark:border-white/5 bg-brand-cream/30 dark:bg-white/3">
+        {!editor ? (
+          <span className="text-xs text-brand-deep/50 dark:text-brand-cream/50 px-2 py-1.5">Loading editor…</span>
+        ) : (
+          <>
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -133,6 +136,12 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           icon={Heading3}
           label="Heading 3"
+        />
+        <ToolbarButton
+          active={editor.isActive("heading", { level: 4 })}
+          onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+          icon={Type}
+          label="Heading 4"
         />
         <ToolbarSeparator />
         <ToolbarButton
@@ -187,9 +196,11 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
           label="Redo"
           disabled={!editor.can().redo()}
         />
+          </>
+        )}
       </div>
 
-      <EditorContent editor={editor} />
+      {editor ? <EditorContent editor={editor} /> : <div className="min-h-[120px] px-4 py-3 text-sm text-brand-deep/40 dark:text-brand-cream/40">Loading…</div>}
     </div>
   )
 }

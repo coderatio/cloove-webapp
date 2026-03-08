@@ -12,12 +12,6 @@ import {
   type StorefrontProductItem,
 } from "@/app/domains/storefront/hooks/useStorefrontProducts"
 
-interface BlockRendererProps {
-  block: BlockSection
-  /** When true, use sectionBackgroundDark if set, else sectionBackground. */
-  previewDark?: boolean
-}
-
 const GRADIENT_DIRECTIONS: Record<string, string> = {
   "to-br": "135deg",
   "to-r": "90deg",
@@ -29,108 +23,151 @@ const GRADIENT_DIRECTIONS: Record<string, string> = {
   "to-bl": "225deg",
 }
 
-function renderSectionBackground(
-  bg: SectionBackground,
-  paddingClass: string,
-  children: React.ReactNode
-): React.ReactNode {
-  if (bg.type === "solid") {
-    return (
-      <div className={paddingClass} style={{ backgroundColor: bg.color }}>
-        {children}
-      </div>
-    )
-  }
-  if (bg.type === "gradient") {
-    const dirKey = bg.direction || "to-br"
-    const angle = GRADIENT_DIRECTIONS[dirKey] ?? "135deg"
-    return (
-      <div
-        className={paddingClass}
-        style={{ background: `linear-gradient(${angle}, ${bg.color1}, ${bg.color2})` }}
-      >
-        {children}
-      </div>
-    )
-  }
-  if (bg.type === "image" && bg.imageUrl) {
-    const overlay = bg.overlayColor ?? "#000000"
-    const opacity = Math.max(0, Math.min(1, bg.overlayOpacity ?? 0.4))
-    return (
-      <div className={`relative overflow-hidden ${paddingClass}`}>
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${bg.imageUrl})` }}
-        />
-        <div className="absolute inset-0" style={{ backgroundColor: overlay, opacity }} />
-        <div className="relative z-10">{children}</div>
-      </div>
-    )
-  }
-  return <div className={paddingClass}>{children}</div>
+interface BlockRendererProps {
+  block: BlockSection
+  /** When true, use sectionBackgroundDark if set, else sectionBackground. */
+  previewDark?: boolean
 }
 
-function SectionWrapper({
-  config,
-  previewDark,
-  children,
-}: {
-  config: BlockSection["config"]
-  previewDark: boolean
-  children: React.ReactNode
-}) {
-  const paddingClass = config.padding === "sm" ? "px-4 py-6" : config.padding === "lg" ? "px-8 py-12" : "px-6 py-8"
-  const bg = previewDark && config.sectionBackgroundDark ? config.sectionBackgroundDark : config.sectionBackground
+import { cn } from "@/app/lib/utils"
 
-  if (!bg) return <>{children}</>
-  return <>{renderSectionBackground(bg, paddingClass, children)}</>
+const SECTION_ALIGN_CLASS = {
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
+} as const
+
+function isValidHex(color?: string): boolean {
+  if (!color) return false
+  return /^#([A-Fa-f0-9]{3}){1,2}$/.test(color.trim())
+}
+
+function getBrightness(hex: string): number {
+  let c = hex.trim().substring(1)
+  if (c.length === 3) {
+    c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2]
+  }
+  const r = parseInt(c.substring(0, 2), 16)
+  const g = parseInt(c.substring(2, 4), 16)
+  const b = parseInt(c.substring(4, 6), 16)
+  return (r * 299 + g * 587 + b * 114) / 1000
+}
+
+function isDarkColor(color?: string): boolean {
+  if (!isValidHex(color)) return false
+  return getBrightness(color!) < 160 // Threshold for "dark" backgrounds
 }
 
 function getSectionTextColor(config: BlockSection["config"], previewDark: boolean): string | undefined {
-  if (previewDark && config.textColorDark) return config.textColorDark
-  if (!previewDark && config.textColorLight) return config.textColorLight
-  return undefined
+  const dark = typeof config.textColorDark === "string" ? config.textColorDark.trim() : ""
+  const light = typeof config.textColorLight === "string" ? config.textColorLight.trim() : ""
+
+  const chosen = previewDark ? dark : light
+  return isValidHex(chosen) ? chosen : undefined
 }
 
 export function BlockRenderer({ block, previewDark = false }: BlockRendererProps) {
   const { data: storefront } = useStorefront()
   const storefrontSlug = storefront?.slug
-  const sectionColor = getSectionTextColor(block.config, previewDark)
+  // Decide which background to use
+  const bg = previewDark && block.config.sectionBackgroundDark ? block.config.sectionBackgroundDark : block.config.sectionBackground
+
+  // Detect if background is effectively dark to provide high-contrast default text color
+  let isBackgroundDark = previewDark
+  if (bg) {
+    if (bg.type === "solid") {
+      isBackgroundDark = isDarkColor(bg.color)
+    } else if (bg.type === "gradient") {
+      // average brightness of both colors
+      const b1 = isValidHex(bg.color1) ? getBrightness(bg.color1) : 255
+      const b2 = isValidHex(bg.color2) ? getBrightness(bg.color2) : 255
+      isBackgroundDark = (b1 + b2) / 2 < 160
+    } else if (bg.type === "image") {
+      isBackgroundDark = true // Assume dark due to overlay
+    }
+  }
+
+  const userColor = getSectionTextColor(block.config, previewDark)
+  const derivedColor = userColor || (isBackgroundDark ? "#ffffff" : "var(--sf-text)")
+  const alignClass = SECTION_ALIGN_CLASS[block.config.textAlign === "center" || block.config.textAlign === "right" ? block.config.textAlign : "left"]
+
+  // Padding logic: ensure it's always applied unless explicitly "none" or default to md
+  const padding = block.config.padding ?? "md"
+  const paddingClass = (padding as string) === "none" ? "" : padding === "sm" ? "px-4 py-6" : padding === "lg" ? "px-8 py-12" : "px-6 py-8"
+
   const content = (() => {
     switch (block.type) {
       case "hero":
-        return <HeroPreview data={block.data} config={block.config} previewDark={previewDark} />
+        return <HeroPreview data={block.data} derivedColor={derivedColor} textAlign={block.config.textAlign} />
       case "rich_text":
-        return <RichTextPreview data={block.data} sectionColor={sectionColor} />
+        return <RichTextPreview data={block.data} sectionColor={derivedColor} />
       case "cta":
-        return <CtaPreview data={block.data} />
+        return <CtaPreview data={block.data} textAlign={block.config.textAlign} />
       case "faq":
-        return <FaqPreview data={block.data} sectionColor={sectionColor} />
+        return <FaqPreview data={block.data} sectionColor={derivedColor} />
       case "testimonials":
-        return <TestimonialsPreview data={block.data} sectionColor={sectionColor} />
+        return <TestimonialsPreview data={block.data} sectionColor={derivedColor} />
       case "grid_features":
-        return <GridFeaturesPreview data={block.data} sectionColor={sectionColor} />
+        return <GridFeaturesPreview data={block.data} sectionColor={derivedColor} />
       case "contact_block":
-        return <ContactPreview data={block.data} sectionColor={sectionColor} />
+        return <ContactPreview data={block.data} sectionColor={derivedColor} />
       case "image_gallery":
-        return <ImageGalleryPreview data={block.data} sectionColor={sectionColor} />
+        return <ImageGalleryPreview data={block.data} sectionColor={derivedColor} />
       case "product_listing":
-        return <ProductListingPreview data={block.data} sectionColor={sectionColor} slug={storefrontSlug} />
+        return <ProductListingPreview data={block.data} sectionColor={derivedColor} slug={storefrontSlug} />
       case "featured_products":
-        return <FeaturedProductsPreview data={block.data} sectionColor={sectionColor} slug={storefrontSlug} />
+        return <FeaturedProductsPreview data={block.data} sectionColor={derivedColor} slug={storefrontSlug} />
       case "on_sale":
-        return <OnSalePreview data={block.data} sectionColor={sectionColor} slug={storefrontSlug} />
+        return <OnSalePreview data={block.data} sectionColor={derivedColor} slug={storefrontSlug} />
       case "promotion_banner":
-        return <PromotionBannerPreview data={block.data} sectionColor={sectionColor} />
+        return <PromotionBannerPreview data={block.data} sectionColor={derivedColor} textAlign={block.config.textAlign} />
       default:
         return <PlaceholderPreview type={block.type} />
     }
   })()
 
+  // Build combined section style
+  const sectionStyle: React.CSSProperties = {
+    color: derivedColor,
+    position: "relative",
+  }
+
+  if (bg) {
+    if (bg.type === "solid") {
+      sectionStyle.backgroundColor = bg.color
+    } else if (bg.type === "gradient") {
+      const dirKey = bg.direction || "to-br"
+      const angle = GRADIENT_DIRECTIONS[dirKey] ?? "135deg"
+      sectionStyle.background = `linear-gradient(${angle}, ${bg.color1}, ${bg.color2})`
+    }
+  }
+
+  // If image background, we need the overlay logic which requires a nested structure
+  if (bg && bg.type === "image" && bg.imageUrl) {
+    const overlay = bg.overlayColor ?? "#000000"
+    const opacity = Math.max(0, Math.min(1, bg.overlayOpacity ?? 0.4))
+    return (
+      <section
+        className={cn("relative overflow-hidden w-full transition-colors duration-300", paddingClass, alignClass)}
+        style={sectionStyle}
+      >
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${bg.imageUrl})` }}
+        />
+        <div className="absolute inset-0" style={{ backgroundColor: overlay, opacity }} />
+        <div className="relative z-10 w-full">{content}</div>
+      </section>
+    )
+  }
+
   return (
-    <SectionWrapper config={block.config} previewDark={previewDark}>
+    <section
+      className={cn("w-full transition-colors duration-300", paddingClass, alignClass)}
+      style={sectionStyle}
+    >
       {content}
-    </SectionWrapper>
+    </section>
   )
 }
 
@@ -142,44 +179,41 @@ const HERO_LAYOUT_CLASSES = {
 
 function HeroPreview({
   data,
-  config,
-  previewDark,
+  derivedColor,
+  textAlign,
 }: {
   data: Record<string, unknown>
-  config: BlockSection["config"]
-  previewDark: boolean
+  derivedColor: string
+  textAlign?: "left" | "center" | "right"
 }) {
   const title = (data.title as string) || "Hero Title"
   const subtitle = (data.subtitle as string) || "Add a subtitle for your hero section"
   const imageUrl = data.imageUrl as string
   const primaryCta = data.primaryCta as CtaButton | undefined
   const layout = (data.layout as keyof typeof HERO_LAYOUT_CLASSES) || "center"
-  const layoutClasses = HERO_LAYOUT_CLASSES[layout] ?? HERO_LAYOUT_CLASSES.center
-  const sectionColor = getSectionTextColor(config, previewDark)
-  const isDarkBg = previewDark || !!imageUrl
-  const titleColor = sectionColor || (isDarkBg ? "#ffffff" : "var(--sf-text)")
-  const subtitleColor = sectionColor || (isDarkBg ? "rgba(255,255,255,0.85)" : "color-mix(in srgb, var(--sf-text) 70%, transparent)")
+
+  // Use textAlign from config as primary override, fall back to block-specific layout
+  const effectiveAlign = textAlign || layout
+  const layoutClasses = HERO_LAYOUT_CLASSES[effectiveAlign] ?? HERO_LAYOUT_CLASSES.center
 
   return (
-    <div className="relative overflow-hidden rounded-3xl" style={{ minHeight: 240 }}>
-      {imageUrl ? (
+    <div className="relative overflow-hidden rounded-3xl" style={{ minHeight: 240, color: derivedColor }}>
+      {imageUrl && (
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${imageUrl})` }}
         >
           <div className="absolute inset-0 bg-black/40" />
         </div>
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--sf-primary)] to-[var(--sf-secondary)] opacity-90" />
       )}
-      <div className={`relative z-10 flex flex-col min-h-[240px] justify-center px-8 py-16 ${layoutClasses}`}>
+      <div className={cn("relative z-10 flex flex-col min-h-[240px] justify-center px-8 py-16", layoutClasses)}>
         <h1
           className="text-3xl font-bold mb-3 leading-tight"
-          style={{ fontFamily: "var(--sf-font-heading)", color: titleColor }}
+          style={{ fontFamily: "var(--sf-font-heading)", color: derivedColor }}
         >
           {title}
         </h1>
-        <p className="text-base opacity-80 max-w-lg mb-6" style={{ color: subtitleColor }}>
+        <p className="text-base opacity-80 max-w-lg mb-6" style={{ color: derivedColor }}>
           {subtitle}
         </p>
         {primaryCta?.label && (
@@ -195,7 +229,13 @@ function HeroPreview({
   )
 }
 
-function RichTextPreview({ data, sectionColor }: { data: Record<string, unknown>; sectionColor?: string }) {
+function RichTextPreview({
+  data,
+  sectionColor,
+}: {
+  data: Record<string, unknown>
+  sectionColor?: string
+}) {
   const html = (data.html as string) || "<p>Start writing your content…</p>"
   const isEmpty = !html || html === "<p></p>" || html === "<p><br></p>"
 
@@ -210,7 +250,7 @@ function RichTextPreview({ data, sectionColor }: { data: Record<string, unknown>
         </p>
       ) : (
         <div
-          className="prose prose-sm max-w-none"
+          className="prose prose-sm max-w-none text-inherit"
           style={{ fontFamily: "var(--sf-font-body)", color: sectionColor ?? "var(--sf-text)" }}
           dangerouslySetInnerHTML={{ __html: html }}
         />
@@ -240,16 +280,24 @@ const CTA_THEME_STYLES = {
   },
 } as const
 
-function CtaPreview({ data }: { data: Record<string, unknown> }) {
+function CtaPreview({
+  data,
+  textAlign,
+}: {
+  data: Record<string, unknown>
+  textAlign?: "left" | "center" | "right"
+}) {
   const title = (data.title as string) || "Call to Action"
   const subtitle = (data.subtitle as string) || "Add a compelling message"
   const primaryCta = data.primaryCta as CtaButton | undefined
   const theme = (data.theme as keyof typeof CTA_THEME_STYLES) || "brand"
   const style = CTA_THEME_STYLES[theme] ?? CTA_THEME_STYLES.brand
 
+  const alignClass = textAlign === "right" ? "text-right" : textAlign === "left" ? "text-left" : "text-center"
+
   return (
     <div
-      className="rounded-3xl px-8 py-12 text-center border border-transparent"
+      className={cn("rounded-3xl px-8 py-12 border border-transparent", alignClass)}
       style={style.wrapper}
     >
       <h2
@@ -652,7 +700,15 @@ function OnSalePreview({
   )
 }
 
-function PromotionBannerPreview({ data, sectionColor }: { data: Record<string, unknown>; sectionColor?: string }) {
+function PromotionBannerPreview({
+  data,
+  sectionColor,
+  textAlign,
+}: {
+  data: Record<string, unknown>
+  sectionColor?: string
+  textAlign?: "left" | "center" | "right"
+}) {
   const title = (data.title as string) || "Promotion"
   const subtitle = (data.subtitle as string) || ""
   const imageUrl = data.imageUrl as string | undefined
@@ -661,8 +717,11 @@ function PromotionBannerPreview({ data, sectionColor }: { data: Record<string, u
   const endsAt = data.endsAt as string | undefined
   const showCountdown = !!data.showCountdown
   const textColor = sectionColor ?? "var(--sf-background)"
+
+  const alignClass = textAlign === "right" ? "items-end text-right" : textAlign === "left" ? "items-start text-left" : "items-center text-center"
+
   return (
-    <div className="relative overflow-hidden rounded-lg px-6 py-8 min-h-[140px] flex flex-col justify-center" style={{ backgroundColor: "var(--sf-primary)" }}>
+    <div className={cn("relative overflow-hidden rounded-lg px-6 py-8 min-h-[140px] flex flex-col justify-center", alignClass)} style={{ backgroundColor: "var(--sf-primary)" }}>
       {imageUrl && (
         <div className="absolute inset-0 bg-cover bg-center opacity-30" style={{ backgroundImage: `url(${imageUrl})` }} />
       )}

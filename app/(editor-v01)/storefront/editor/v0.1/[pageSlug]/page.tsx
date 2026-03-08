@@ -121,15 +121,20 @@ export default function EditorV01Page() {
             })),
           }
         }
+        const c = (s.config ?? {}) as Record<string, unknown>
         return {
           id: s.id,
           type: s.type as BlockType,
           config: {
-            padding: "md" as const,
-            background: "default" as const,
-            textAlign: "left" as const,
-            showBorder: false,
-            ...(s.config as Record<string, unknown>),
+            ...c,
+            padding: (c.padding === "sm" || c.padding === "lg" ? c.padding : "md") as "sm" | "md" | "lg",
+            background: (c.background === "muted" || c.background === "accent" ? c.background : "default") as "default" | "muted" | "accent",
+            textAlign: (c.textAlign === "center" || c.textAlign === "right" ? c.textAlign : "left") as "left" | "center" | "right",
+            showBorder: Boolean(c.showBorder),
+            sectionBackground: c.sectionBackground,
+            sectionBackgroundDark: c.sectionBackgroundDark,
+            textColorLight: typeof c.textColorLight === "string" ? c.textColorLight : undefined,
+            textColorDark: typeof c.textColorDark === "string" ? c.textColorDark : undefined,
           },
           data,
         }
@@ -581,9 +586,13 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
       <PreviewThemeScope
         onClick={() => (isActive ? onDeactivate() : onActivate())}
         className={cn(
-          "relative cursor-pointer transition-all duration-300 rounded-2xl overflow-hidden",
-          isActive ? "border border-brand-deep/10 dark:border-white/10 shadow-sm" : "border border-transparent hover:border-brand-deep/10 dark:hover:border-white/10 hover:shadow-sm"
+          "relative cursor-pointer transition-all duration-300 rounded-3xl overflow-hidden bg-white/50 dark:bg-white/5",
+          isActive ? "ring-2 ring-brand-deep/10 dark:ring-white/10 shadow-lg" : "border border-transparent hover:border-brand-deep/10 dark:hover:border-white/10 hover:shadow-sm"
         )}
+        style={{
+          // If the block has its own background, we want the card to be transparent so the block bg shows fully
+          backgroundColor: (block.config.sectionBackground || (previewDark && block.config.sectionBackgroundDark)) ? 'transparent' : undefined
+        }}
       >
         <BlockRenderer block={block} previewDark={previewDark} />
       </PreviewThemeScope>

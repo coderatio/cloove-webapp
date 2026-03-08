@@ -6,7 +6,7 @@ import { ColorPicker } from "@/app/components/ui/color-picker"
 import { RichTextEditor } from "./RichTextEditor"
 import { ImageUrlField } from "./ImageUrlField"
 import type { BlockSection, FaqItem, TestimonialItem, FeatureItem, CtaButton, SectionBackground } from "./block-types"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight } from "lucide-react"
 import { Switch } from "@/app/components/ui/switch"
 import { cn } from "@/app/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
@@ -98,6 +98,7 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
             configKey="sectionBackgroundDark"
             title="Section background (dark mode)"
           />
+          <SectionTextAlignEditor config={block.config} onUpdateConfig={onUpdateConfig} />
           <SectionTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
         </>
       )}
@@ -267,7 +268,7 @@ function SectionTextColorEditor({
           />
           <Input
             value={light}
-            onChange={(e) => onUpdateConfig({ textColorLight: e.target.value || undefined })}
+            onChange={(e) => onUpdateConfig({ textColorLight: e.target.value.trim() || undefined })}
             placeholder="#111111 or default"
             className="h-9 font-mono text-xs flex-1 min-w-0"
           />
@@ -283,7 +284,7 @@ function SectionTextColorEditor({
           />
           <Input
             value={dark}
-            onChange={(e) => onUpdateConfig({ textColorDark: e.target.value || undefined })}
+            onChange={(e) => onUpdateConfig({ textColorDark: e.target.value.trim() || undefined })}
             placeholder="#eeeeee or default"
             className="h-9 font-mono text-xs flex-1 min-w-0"
           />
@@ -775,6 +776,52 @@ function PromotionBannerEditor({
         <div className="flex items-center justify-between py-1">
           <span className="text-sm text-brand-deep dark:text-brand-cream">Show countdown</span>
           <Switch checked={!!data.showCountdown} onCheckedChange={(v) => set("showCountdown", v)} />
+        </div>
+      </EditorSection>
+    </div>
+  )
+}
+
+function SectionTextAlignEditor({
+  config,
+  onUpdateConfig,
+}: {
+  config: BlockSection["config"]
+  onUpdateConfig: (c: Partial<BlockSection["config"]>) => void
+}) {
+  const textAlign = config.textAlign || "left"
+
+  return (
+    <div className="p-4 border-t border-brand-deep/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02]">
+      <EditorSection title="Text alignment">
+        <div className="flex gap-2">
+          <Button
+            variant={textAlign === "left" ? "base" : "ghost"}
+            size="sm"
+            onClick={() => onUpdateConfig({ textAlign: "left" })}
+            className="rounded-lg text-xs"
+            title="Left align"
+          >
+            <AlignLeft className="w-4 h-4 mr-1.5 opacity-60" /> Left
+          </Button>
+          <Button
+            variant={textAlign === "center" ? "base" : "ghost"}
+            size="sm"
+            onClick={() => onUpdateConfig({ textAlign: "center" })}
+            className="rounded-lg text-xs"
+            title="Center align"
+          >
+            <AlignCenter className="w-4 h-4 mr-1.5 opacity-60" /> Center
+          </Button>
+          <Button
+            variant={textAlign === "right" ? "base" : "ghost"}
+            size="sm"
+            onClick={() => onUpdateConfig({ textAlign: "right" })}
+            className="rounded-lg text-xs"
+            title="Right align"
+          >
+            <AlignRight className="w-4 h-4 mr-1.5 opacity-60" /> Right
+          </Button>
         </div>
       </EditorSection>
     </div>
