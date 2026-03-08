@@ -6,7 +6,8 @@ import { Button } from "@/app/components/ui/button"
 import { ColorPicker } from "@/app/components/ui/color-picker"
 import { RichTextEditor } from "./RichTextEditor"
 import { ImageUrlField } from "./ImageUrlField"
-import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff } from "lucide-react"
+import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff, ChevronDown } from "lucide-react"
+import { Accordion } from "@base-ui/react/accordion"
 import { Switch } from "@/app/components/ui/switch"
 import { cn } from "@/app/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
@@ -149,38 +150,95 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
         ) : (
           <div className="space-y-0 pb-12 bg-black/2 dark:bg-white/2 min-h-full">
             {onUpdateConfig ? (
-              <>
-                <SectionBackgroundEditor
-                  config={block.config}
-                  onUpdateConfig={onUpdateConfig}
-                  configKey="sectionBackground"
-                  title="Background (Light Mode)"
-                />
-                <SectionBackgroundEditor
-                  config={block.config}
-                  onUpdateConfig={onUpdateConfig}
-                  configKey="sectionBackgroundDark"
-                  title="Background (Dark Mode)"
-                />
-                <SectionSpacingEditor config={block.config} onUpdateConfig={onUpdateConfig} />
-                <SectionTextAlignEditor config={block.config} onUpdateConfig={onUpdateConfig} />
-                <SectionTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
-                {(BLOCK_TYPES_WITH_SECTION_TITLE.includes(block.type) || BLOCK_TYPES_WITH_BODY.includes(block.type)) && (
-                  <SectionTitleAndBodySizeRow blockType={block.type} config={block.config} onUpdateConfig={onUpdateConfig} />
-                )}
-                {(block.type === "hero" || block.type === "cta") && (
-                  <>
-                    <SectionFontStyleRow config={block.config} onUpdateConfig={onUpdateConfig} />
-                    <ButtonTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
-                    <ButtonBgColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
-                  </>
-                )}
-              </>
+              <AppearanceAccordion block={block} onUpdateConfig={onUpdateConfig} />
             ) : null}
           </div>
         )}
       </div>
     </div>
+  )
+}
+
+const accordionTriggerClass =
+  "flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-brand-accent/50 dark:text-white/40 hover:bg-black/5 dark:hover:bg-white/5 transition-colors duration-200 rounded-none cursor-pointer data-panel-open:text-brand-deep dark:data-panel-open:text-brand-cream"
+const accordionPanelClass =
+  "overflow-hidden transition-[height] duration-300 ease-out motion-reduce:duration-[0.01ms]"
+const accordionItemClass = "border-t border-brand-deep/5 dark:border-white/5 first:border-t-0"
+
+function AppearanceAccordion({ block, onUpdateConfig }: { block: BlockSection; onUpdateConfig: (c: Partial<BlockSection["config"]>) => void }) {
+  const hasTypography = BLOCK_TYPES_WITH_SECTION_TITLE.includes(block.type) || BLOCK_TYPES_WITH_BODY.includes(block.type)
+  const hasButtons = block.type === "hero" || block.type === "cta"
+
+  return (
+    <Accordion.Root
+      defaultValue={["background"]}
+      className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 bg-black/2 dark:bg-white/2 overflow-hidden"
+    >
+      <Accordion.Item value="background" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Background
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="space-y-4 pt-2">
+            <SectionBackgroundEditor config={block.config} onUpdateConfig={onUpdateConfig} configKey="sectionBackground" title="Background (Light Mode)" />
+            <SectionBackgroundEditor config={block.config} onUpdateConfig={onUpdateConfig} configKey="sectionBackgroundDark" title="Background (Dark Mode)" />
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+
+      <Accordion.Item value="layout" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Layout
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="space-y-4 pt-2">
+            <SectionSpacingEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+            <SectionTextAlignEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+
+      {hasTypography && (
+        <Accordion.Item value="typography" className={accordionItemClass}>
+          <Accordion.Header>
+            <Accordion.Trigger className={accordionTriggerClass}>
+              Typography
+              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            </Accordion.Trigger>
+          </Accordion.Header>
+          <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+            <div className="space-y-4 pt-2">
+              <SectionTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+              <SectionTitleAndBodySizeRow blockType={block.type} config={block.config} onUpdateConfig={onUpdateConfig} />
+              {hasButtons && <SectionFontStyleRow config={block.config} onUpdateConfig={onUpdateConfig} />}
+            </div>
+          </Accordion.Panel>
+        </Accordion.Item>
+      )}
+
+      {hasButtons && (
+        <Accordion.Item value="buttons" className={accordionItemClass}>
+          <Accordion.Header>
+            <Accordion.Trigger className={accordionTriggerClass}>
+              Buttons
+              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            </Accordion.Trigger>
+          </Accordion.Header>
+          <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+            <div className="space-y-4 pt-2">
+              <ButtonTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+              <ButtonBgColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+            </div>
+          </Accordion.Panel>
+        </Accordion.Item>
+      )}
+    </Accordion.Root>
   )
 }
 
@@ -579,58 +637,96 @@ function HeroEditor({ data, set, setNested }: { data: Record<string, unknown>; s
   const secondaryCta = (data.secondaryCta as CtaButton) ?? { label: "", href: "" }
 
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Content">
-        <Field label="Title">
-          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Hero title" className="h-9" />
-        </Field>
-        <Field label="Subtitle">
-          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Supporting text" className="h-9" />
-        </Field>
-        <Field label="Background image">
-          <ImageUrlField
-            value={(data.imageUrl as string) ?? ""}
-            onChange={(url) => set("imageUrl", url)}
-            placeholder="Paste URL or upload"
-          />
-        </Field>
-      </EditorSection>
-      <EditorSection title="Primary Button">
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Label">
-            <Input value={primaryCta?.label ?? ""} onChange={(e) => setNested("primaryCta", "label", e.target.value)} placeholder="Get Started" className="h-9" />
-          </Field>
-          <Field label="Link">
-            <Input value={primaryCta?.href ?? ""} onChange={(e) => setNested("primaryCta", "href", e.target.value)} placeholder="/about" className="h-9 font-mono text-xs" />
-          </Field>
-        </div>
-      </EditorSection>
-      <EditorSection title="Secondary Button (optional)">
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Label">
-            <Input value={secondaryCta?.label ?? ""} onChange={(e) => setNested("secondaryCta", "label", e.target.value)} placeholder="" className="h-9" />
-          </Field>
-          <Field label="Link">
-            <Input value={secondaryCta?.href ?? ""} onChange={(e) => setNested("secondaryCta", "href", e.target.value)} placeholder="" className="h-9 font-mono text-xs" />
-          </Field>
-        </div>
-      </EditorSection>
-      <EditorSection title="Layout">
-        <div className="flex gap-2">
-          {(["center", "left", "right"] as const).map((l) => (
-            <Button
-              key={l}
-              variant={(data.layout as string) === l ? "base" : "ghost"}
-              size="sm"
-              onClick={() => set("layout", l)}
-              className="rounded-lg capitalize text-xs"
-            >
-              {l}
-            </Button>
-          ))}
-        </div>
-      </EditorSection>
-    </div>
+    <Accordion.Root defaultValue={["headline"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="headline" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Headline & media
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="space-y-3 pt-2">
+            <EditorSection title="Content">
+              <Field label="Title">
+                <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Hero title" className="h-9" />
+              </Field>
+              <Field label="Subtitle">
+                <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Supporting text" className="h-9" />
+              </Field>
+              <Field label="Background image">
+                <ImageUrlField value={(data.imageUrl as string) ?? ""} onChange={(url) => set("imageUrl", url)} placeholder="Paste URL or upload" />
+              </Field>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="primary" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Primary button
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Primary Button">
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Label">
+                  <Input value={primaryCta?.label ?? ""} onChange={(e) => setNested("primaryCta", "label", e.target.value)} placeholder="Get Started" className="h-9" />
+                </Field>
+                <Field label="Link">
+                  <Input value={primaryCta?.href ?? ""} onChange={(e) => setNested("primaryCta", "href", e.target.value)} placeholder="/about" className="h-9 font-mono text-xs" />
+                </Field>
+              </div>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="secondary" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Secondary button
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Secondary Button (optional)">
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Label">
+                  <Input value={secondaryCta?.label ?? ""} onChange={(e) => setNested("secondaryCta", "label", e.target.value)} placeholder="" className="h-9" />
+                </Field>
+                <Field label="Link">
+                  <Input value={secondaryCta?.href ?? ""} onChange={(e) => setNested("secondaryCta", "href", e.target.value)} placeholder="" className="h-9 font-mono text-xs" />
+                </Field>
+              </div>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="layout" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Layout
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Layout">
+              <div className="flex gap-2">
+                {(["center", "left", "right"] as const).map((l) => (
+                  <Button key={l} variant={(data.layout as string) === l ? "base" : "ghost"} size="sm" onClick={() => set("layout", l)} className="rounded-lg capitalize text-xs">
+                    {l}
+                  </Button>
+                ))}
+              </div>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
@@ -651,41 +747,71 @@ function CtaEditor({ data, set, setNested }: { data: Record<string, unknown>; se
   const primaryCta = (data.primaryCta as CtaButton) ?? { label: "", href: "" }
 
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Content">
-        <Field label="Title">
-          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="CTA title" className="h-9" />
-        </Field>
-        <Field label="Subtitle">
-          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Supporting text" className="h-9" />
-        </Field>
-      </EditorSection>
-      <EditorSection title="Button">
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Label">
-            <Input value={primaryCta?.label ?? ""} onChange={(e) => setNested("primaryCta", "label", e.target.value)} placeholder="Learn More" className="h-9" />
-          </Field>
-          <Field label="Link">
-            <Input value={primaryCta?.href ?? ""} onChange={(e) => setNested("primaryCta", "href", e.target.value)} placeholder="/about" className="h-9 font-mono text-xs" />
-          </Field>
-        </div>
-      </EditorSection>
-      <EditorSection title="Style">
-        <div className="flex gap-2">
-          {(["brand", "light", "dark"] as const).map((t) => (
-            <Button
-              key={t}
-              variant={(data.theme as string) === t ? "base" : "ghost"}
-              size="sm"
-              onClick={() => set("theme", t)}
-              className="rounded-lg capitalize text-xs"
-            >
-              {t}
-            </Button>
-          ))}
-        </div>
-      </EditorSection>
-    </div>
+    <Accordion.Root defaultValue={["content"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="content" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Content
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="space-y-3 pt-2">
+            <EditorSection title="Content">
+              <Field label="Title">
+                <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="CTA title" className="h-9" />
+              </Field>
+              <Field label="Subtitle">
+                <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Supporting text" className="h-9" />
+              </Field>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="button" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Button
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Button">
+              <div className="grid grid-cols-2 gap-2">
+                <Field label="Label">
+                  <Input value={primaryCta?.label ?? ""} onChange={(e) => setNested("primaryCta", "label", e.target.value)} placeholder="Learn More" className="h-9" />
+                </Field>
+                <Field label="Link">
+                  <Input value={primaryCta?.href ?? ""} onChange={(e) => setNested("primaryCta", "href", e.target.value)} placeholder="/about" className="h-9 font-mono text-xs" />
+                </Field>
+              </div>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="style" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Style
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Style">
+              <div className="flex gap-2">
+                {(["brand", "light", "dark"] as const).map((t) => (
+                  <Button key={t} variant={(data.theme as string) === t ? "base" : "ghost"} size="sm" onClick={() => set("theme", t)} className="rounded-lg capitalize text-xs">
+                    {t}
+                  </Button>
+                ))}
+              </div>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
@@ -700,34 +826,53 @@ function FaqEditor({ data, onUpdate }: { data: Record<string, unknown>; onUpdate
   const removeItem = (idx: number) => onUpdate({ ...data, items: items.filter((_, i) => i !== idx) })
 
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Section Title">
-        <Input value={(data.title as string) ?? ""} onChange={(e) => onUpdate({ ...data, title: e.target.value })} placeholder="FAQ" className="h-9" />
-      </EditorSection>
-      <EditorSection title="Questions">
-        {items.map((item, i) => (
-          <div key={i} className="space-y-2 pb-3 mb-3 border-b border-brand-deep/5 dark:border-white/5 last:border-0">
-            <div className="flex items-start gap-2">
-              <div className="flex-1 space-y-2">
-                <Input value={item.question ?? ""} onChange={(e) => updateItem(i, "question", e.target.value)} placeholder={`Question ${i + 1}`} className="h-9" />
-                <Textarea
-                  value={item.answer ?? ""}
-                  onChange={(e) => updateItem(i, "answer", e.target.value)}
-                  placeholder="Answer"
-                  className="min-h-[60px] resize-none"
-                />
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-0.5">
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+    <Accordion.Root defaultValue={["section-title"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="section-title" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Section title
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Section Title">
+              <Input value={(data.title as string) ?? ""} onChange={(e) => onUpdate({ ...data, title: e.target.value })} placeholder="FAQ" className="h-9" />
+            </EditorSection>
           </div>
-        ))}
-        <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
-          <Plus className="w-3.5 h-3.5" /> Add question
-        </Button>
-      </EditorSection>
-    </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="questions" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Questions
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Questions">
+              {items.map((item, i) => (
+                <div key={i} className="space-y-2 pb-3 mb-3 border-b border-brand-deep/5 dark:border-white/5 last:border-0">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 space-y-2">
+                      <Input value={item.question ?? ""} onChange={(e) => updateItem(i, "question", e.target.value)} placeholder={`Question ${i + 1}`} className="h-9" />
+                      <Textarea value={item.answer ?? ""} onChange={(e) => updateItem(i, "answer", e.target.value)} placeholder="Answer" className="min-h-[60px] resize-none" />
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-0.5">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
+                <Plus className="w-3.5 h-3.5" /> Add question
+              </Button>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
@@ -742,37 +887,56 @@ function TestimonialsEditor({ data, onUpdate }: { data: Record<string, unknown>;
   const removeItem = (idx: number) => onUpdate({ ...data, items: items.filter((_, i) => i !== idx) })
 
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Section Title">
-        <Input value={(data.title as string) ?? ""} onChange={(e) => onUpdate({ ...data, title: e.target.value })} placeholder="Testimonials" className="h-9" />
-      </EditorSection>
-      <EditorSection title="Testimonials">
-        {items.map((item, i) => (
-          <div key={i} className="space-y-2 pb-3 mb-3 border-b border-brand-deep/5 dark:border-white/5 last:border-0">
-            <div className="flex items-start gap-2">
-              <div className="flex-1 space-y-2">
-                <Textarea
-                  value={item.quote ?? ""}
-                  onChange={(e) => updateItem(i, "quote", e.target.value)}
-                  placeholder="Customer quote"
-                  className="min-h-[60px] resize-none"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <Input value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Name" className="h-9" />
-                  <Input value={item.role ?? ""} onChange={(e) => updateItem(i, "role", e.target.value)} placeholder="Role / Company" className="h-9" />
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-1">
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </div>
+    <Accordion.Root defaultValue={["section-title"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="section-title" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Section title
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Section Title">
+              <Input value={(data.title as string) ?? ""} onChange={(e) => onUpdate({ ...data, title: e.target.value })} placeholder="Testimonials" className="h-9" />
+            </EditorSection>
           </div>
-        ))}
-        <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
-          <Plus className="w-3.5 h-3.5" /> Add testimonial
-        </Button>
-      </EditorSection>
-    </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="testimonials" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Testimonials
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Testimonials">
+              {items.map((item, i) => (
+                <div key={i} className="space-y-2 pb-3 mb-3 border-b border-brand-deep/5 dark:border-white/5 last:border-0">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 space-y-2">
+                      <Textarea value={item.quote ?? ""} onChange={(e) => updateItem(i, "quote", e.target.value)} placeholder="Customer quote" className="min-h-[60px] resize-none" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input value={item.name ?? ""} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Name" className="h-9" />
+                        <Input value={item.role ?? ""} onChange={(e) => updateItem(i, "role", e.target.value)} placeholder="Role / Company" className="h-9" />
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-1">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
+                <Plus className="w-3.5 h-3.5" /> Add testimonial
+              </Button>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
@@ -787,74 +951,111 @@ function GridFeaturesEditor({ data, onUpdate }: { data: Record<string, unknown>;
   const removeItem = (idx: number) => onUpdate({ ...data, items: items.filter((_, i) => i !== idx) })
 
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Section">
-        <Field label="Title">
-          <Input value={(data.title as string) ?? ""} onChange={(e) => onUpdate({ ...data, title: e.target.value })} placeholder="Features" className="h-9" />
-        </Field>
-        <Field label="Columns">
-          <div className="flex gap-2">
-            {[2, 3, 4].map((n) => (
-              <Button
-                key={n}
-                variant={(data.columns as number) === n ? "base" : "ghost"}
-                size="sm"
-                onClick={() => onUpdate({ ...data, columns: n })}
-                className="rounded-lg text-xs"
-              >
-                {n}
+    <Accordion.Root defaultValue={["section"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="section" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Section
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Section">
+              <Field label="Title">
+                <Input value={(data.title as string) ?? ""} onChange={(e) => onUpdate({ ...data, title: e.target.value })} placeholder="Features" className="h-9" />
+              </Field>
+              <Field label="Columns">
+                <div className="flex gap-2">
+                  {[2, 3, 4].map((n) => (
+                    <Button key={n} variant={(data.columns as number) === n ? "base" : "ghost"} size="sm" onClick={() => onUpdate({ ...data, columns: n })} className="rounded-lg text-xs">
+                      {n}
+                    </Button>
+                  ))}
+                </div>
+              </Field>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="features" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Features
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Features">
+              {items.map((item, i) => (
+                <div key={i} className="flex items-start gap-2 pb-3 mb-3 border-b border-brand-deep/5 dark:border-white/5 last:border-0">
+                  <div className="flex-1 space-y-2">
+                    <Input value={item.title ?? ""} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder={`Feature ${i + 1}`} className="h-9" />
+                    <Input value={item.description ?? ""} onChange={(e) => updateItem(i, "description", e.target.value)} placeholder="Description" className="h-9 text-xs" />
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-0.5">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
+                <Plus className="w-3.5 h-3.5" /> Add feature
               </Button>
-            ))}
+            </EditorSection>
           </div>
-        </Field>
-      </EditorSection>
-      <EditorSection title="Features">
-        {items.map((item, i) => (
-          <div key={i} className="flex items-start gap-2 pb-3 mb-3 border-b border-brand-deep/5 dark:border-white/5 last:border-0">
-            <div className="flex-1 space-y-2">
-              <Input value={item.title ?? ""} onChange={(e) => updateItem(i, "title", e.target.value)} placeholder={`Feature ${i + 1}`} className="h-9" />
-              <Input value={item.description ?? ""} onChange={(e) => updateItem(i, "description", e.target.value)} placeholder="Description" className="h-9 text-xs" />
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-0.5">
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        ))}
-        <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
-          <Plus className="w-3.5 h-3.5" /> Add feature
-        </Button>
-      </EditorSection>
-    </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
 function ContactEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Content">
-        <Field label="Title">
-          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Contact Us" className="h-9" />
-        </Field>
-        <Field label="Description">
-          <Textarea
-            value={(data.description as string) ?? ""}
-            onChange={(e) => set("description", e.target.value)}
-            placeholder="Optional description"
-            className="min-h-[60px] resize-none"
-          />
-        </Field>
-      </EditorSection>
-      <EditorSection title="Options">
-        <div className="flex items-center justify-between py-1">
-          <span className="text-sm text-brand-deep dark:text-brand-cream">Show contact form</span>
-          <Switch checked={!!data.showForm} onCheckedChange={(v) => set("showForm", v)} />
-        </div>
-        <div className="flex items-center justify-between py-1">
-          <span className="text-sm text-brand-deep dark:text-brand-cream">Show map</span>
-          <Switch checked={!!data.showMap} onCheckedChange={(v) => set("showMap", v)} />
-        </div>
-      </EditorSection>
-    </div>
+    <Accordion.Root defaultValue={["content"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="content" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Content
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Content">
+              <Field label="Title">
+                <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Contact Us" className="h-9" />
+              </Field>
+              <Field label="Description">
+                <Textarea value={(data.description as string) ?? ""} onChange={(e) => set("description", e.target.value)} placeholder="Optional description" className="min-h-[60px] resize-none" />
+              </Field>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="options" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Options
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Options">
+              <div className="flex items-center justify-between py-1">
+                <span className="text-sm text-brand-deep dark:text-brand-cream">Show contact form</span>
+                <Switch checked={!!data.showForm} onCheckedChange={(v) => set("showForm", v)} />
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-sm text-brand-deep dark:text-brand-cream">Show map</span>
+                <Switch checked={!!data.showMap} onCheckedChange={(v) => set("showMap", v)} />
+              </div>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
@@ -869,46 +1070,59 @@ function ImageGalleryEditor({ data, onUpdate, set }: { data: Record<string, unkn
   const removeImage = (idx: number) => onUpdate({ ...data, images: images.filter((_, i) => i !== idx) })
 
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Gallery">
-        <Field label="Title (optional)">
-          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Gallery" className="h-9" />
-        </Field>
-        <Field label="Columns">
-          <div className="flex gap-2">
-            {[2, 3, 4].map((n) => (
-              <Button
-                key={n}
-                variant={(data.columns as number) === n ? "base" : "ghost"}
-                size="sm"
-                onClick={() => onUpdate({ ...data, columns: n })}
-                className="rounded-lg text-xs"
-              >
-                {n}
+    <Accordion.Root defaultValue={["gallery"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="gallery" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Gallery
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Gallery">
+              <Field label="Title (optional)">
+                <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Gallery" className="h-9" />
+              </Field>
+              <Field label="Columns">
+                <div className="flex gap-2">
+                  {[2, 3, 4].map((n) => (
+                    <Button key={n} variant={(data.columns as number) === n ? "base" : "ghost"} size="sm" onClick={() => onUpdate({ ...data, columns: n })} className="rounded-lg text-xs">
+                      {n}
+                    </Button>
+                  ))}
+                </div>
+              </Field>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="images" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Images
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Images">
+              {images.map((url, i) => (
+                <div key={i} className="flex items-center gap-2 mb-2">
+                  <ImageUrlField value={url ?? ""} onChange={(newUrl) => updateImage(i, newUrl)} placeholder="Paste URL or upload" className="flex-1 min-w-0" />
+                  <Button variant="ghost" size="icon" onClick={() => removeImage(i)} className="h-9 w-9 shrink-0 text-red-400 hover:text-red-500">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={addImage} className="rounded-lg text-xs gap-1.5">
+                <Plus className="w-3.5 h-3.5" /> Add image
               </Button>
-            ))}
+            </EditorSection>
           </div>
-        </Field>
-      </EditorSection>
-      <EditorSection title="Images">
-        {images.map((url, i) => (
-          <div key={i} className="flex items-center gap-2 mb-2">
-            <ImageUrlField
-              value={url ?? ""}
-              onChange={(newUrl) => updateImage(i, newUrl)}
-              placeholder="Paste URL or upload"
-              className="flex-1 min-w-0"
-            />
-            <Button variant="ghost" size="icon" onClick={() => removeImage(i)} className="h-9 w-9 shrink-0 text-red-400 hover:text-red-500">
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        ))}
-        <Button variant="outline" size="sm" onClick={addImage} className="rounded-lg text-xs gap-1.5">
-          <Plus className="w-3.5 h-3.5" /> Add image
-        </Button>
-      </EditorSection>
-    </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
@@ -928,95 +1142,95 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
   }
 
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Content">
-        <Field label="Title">
-          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Our Products" className="h-9" />
-        </Field>
-        <EditorSection title="Categories">
-          {isLoading ? (
-            <div className="animate-pulse h-10 bg-brand-deep/5 dark:bg-white/5 rounded-xl" />
-          ) : (
-            <MultiSelect
-              options={[{ label: "All Categories", value: "all" }, ...(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))]}
-              value={categoryIds.length === 0 ? ["all"] : categoryIds}
-              onChange={(ids) => {
-                if (ids.includes("all") && !categoryIds.includes("all")) {
-                  set("categoryIds", []) // Clear others if "All" is selected
-                } else {
-                  set("categoryIds", ids.filter(id => id !== "all")) // Remove "All" if specific categories are chosen
-                }
-              }}
-              placeholder="Select categories"
-              searchPlaceholder="Search categories..."
-            />
-          )}
-        </EditorSection>
-        <Field label="Layout Columns">
-          <div className="flex gap-2">
-            {[2, 3, 4, 6].map((n) => (
-              <Button
-                key={n}
-                variant={Number(data.columns || 4) === n ? "base" : "ghost"}
-                size="sm"
-                onClick={() => set("columns", n)}
-                className="w-10 h-8 rounded-lg text-xs"
-              >
-                {n}
-              </Button>
-            ))}
+    <Accordion.Root defaultValue={["content"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="content" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Content
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Content">
+              <Field label="Title">
+                <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Our Products" className="h-9" />
+              </Field>
+              <EditorSection title="Categories">
+                {isLoading ? (
+                  <div className="animate-pulse h-10 bg-brand-deep/5 dark:bg-white/5 rounded-xl" />
+                ) : (
+                  <MultiSelect
+                    options={[{ label: "All Categories", value: "all" }, ...(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))]}
+                    value={categoryIds.length === 0 ? ["all"] : categoryIds}
+                    onChange={(ids) => {
+                      if (ids.includes("all") && !categoryIds.includes("all")) {
+                        set("categoryIds", [])
+                      } else {
+                        set("categoryIds", ids.filter(id => id !== "all"))
+                      }
+                    }}
+                    placeholder="Select categories"
+                    searchPlaceholder="Search categories..."
+                  />
+                )}
+              </EditorSection>
+              <Field label="Layout Columns">
+                <div className="flex gap-2">
+                  {[2, 3, 4, 6].map((n) => (
+                    <Button key={n} variant={Number(data.columns || 4) === n ? "base" : "ghost"} size="sm" onClick={() => set("columns", n)} className="w-10 h-8 rounded-lg text-xs">
+                      {n}
+                    </Button>
+                  ))}
+                </div>
+              </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Default Sort">
+                  <Select value={defaultSort} onValueChange={(v) => set("defaultSort", v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest first</SelectItem>
+                      <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                      <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Pagination Type">
+                  <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="load_more">Load More button</SelectItem>
+                      <SelectItem value="pagination">Numeric Pagination</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Total Products to Display">
+                  <Input type="number" min={4} max={100} value={String(data.maxItems ?? 24)} onChange={(e) => set("maxItems", Math.min(100, Math.max(4, parseInt(e.target.value, 10) || 24)))} className="h-9 w-full" />
+                </Field>
+                <Field label="Products Per Page">
+                  <Input type="number" min={4} max={48} value={String(limit)} onChange={(e) => set("limit", Math.min(48, Math.max(4, parseInt(e.target.value, 10) || 12)))} className="h-9 w-full" />
+                </Field>
+              </div>
+            </EditorSection>
           </div>
-        </Field>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Default Sort">
-            <Select value={defaultSort} onValueChange={(v) => set("defaultSort", v)}>
-              <SelectTrigger className="h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest first</SelectItem>
-                <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                <SelectItem value="price_desc">Price: High to Low</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="Pagination Type">
-            <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
-              <SelectTrigger className="h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="load_more">Load More button</SelectItem>
-                <SelectItem value="pagination">Numeric Pagination</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Total Products to Display">
-            <Input
-              type="number"
-              min={4}
-              max={100}
-              value={String(data.maxItems ?? 24)}
-              onChange={(e) => set("maxItems", Math.min(100, Math.max(4, parseInt(e.target.value, 10) || 24)))}
-              className="h-9 w-full"
-            />
-          </Field>
-          <Field label="Products Per Page">
-            <Input
-              type="number"
-              min={4}
-              max={48}
-              value={String(limit)}
-              onChange={(e) => set("limit", Math.min(48, Math.max(4, parseInt(e.target.value, 10) || 12)))}
-              className="h-9 w-full"
-            />
-          </Field>
-        </div>
-      </EditorSection>
-
-      <EditorSection title="Features & Filters">
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="filters" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Features & Filters
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Features & Filters">
         <div className="space-y-2">
           <div className="flex items-center justify-between py-1">
             <span className="text-sm">Enable Search</span>
@@ -1046,9 +1260,12 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
               </div>
             </div>
           )}
-        </div>
-      </EditorSection>
-    </div>
+            </div>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
@@ -1223,100 +1440,142 @@ function PromotionBannerEditor({
   const cta = (data.cta as { label: string; href: string }) ?? { label: "", href: "" }
 
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Promotion (optional)">
-        <Select value={promotionId || "__none__"} onValueChange={(v) => set("promotionId", v === "__none__" ? undefined : v)}>
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Manual / no promotion" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none__">Manual (no promotion link)</SelectItem>
-            {(promotions ?? []).map((p: { id: string; name: string }) => (
-              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </EditorSection>
-      <EditorSection title="Banner">
-        <Field label="Title">
-          <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Promotion title" className="h-9" />
-        </Field>
-        <Field label="Subtitle">
-          <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Optional" className="h-9" />
-        </Field>
-        <Field label="Image URL">
-          <ImageUrlField value={(data.imageUrl as string) ?? ""} onChange={(url) => set("imageUrl", url)} placeholder="Optional banner image" />
-        </Field>
-        <Field label="Badge label">
-          <Input value={(data.badgeLabel as string) ?? ""} onChange={(e) => set("badgeLabel", e.target.value)} placeholder="e.g. Sale" className="h-9" />
-        </Field>
-        <EditorSection title="CTA">
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="Label">
-              <Input value={cta?.label ?? ""} onChange={(e) => setNested("cta", "label", e.target.value)} placeholder="Shop now" className="h-9" />
-            </Field>
-            <Field label="Link">
-              <Input value={cta?.href ?? ""} onChange={(e) => setNested("cta", "href", e.target.value)} placeholder="/shop" className="h-9 font-mono text-xs" />
-            </Field>
+    <Accordion.Root defaultValue={["promotion"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="promotion" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Promotion
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Promotion (optional)">
+              <Select value={promotionId || "__none__"} onValueChange={(v) => set("promotionId", v === "__none__" ? undefined : v)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Manual / no promotion" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Manual (no promotion link)</SelectItem>
+                  {(promotions ?? []).map((p: { id: string; name: string }) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </EditorSection>
           </div>
-        </EditorSection>
-        <Field label="Ends at">
-          <Input type="datetime-local" value={(data.endsAt as string)?.slice(0, 16) ?? ""} onChange={(e) => set("endsAt", e.target.value ? new Date(e.target.value).toISOString() : "")} className="h-9 font-mono text-xs" />
-        </Field>
-        <div className="flex items-center justify-between py-1">
-          <span className="text-sm text-brand-deep dark:text-brand-cream">Show countdown</span>
-          <Switch checked={!!data.showCountdown} onCheckedChange={(v) => set("showCountdown", v)} />
-        </div>
-      </EditorSection>
-    </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="banner" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Banner
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Banner">
+              <Field label="Title">
+                <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Promotion title" className="h-9" />
+              </Field>
+              <Field label="Subtitle">
+                <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Optional" className="h-9" />
+              </Field>
+              <Field label="Image URL">
+                <ImageUrlField value={(data.imageUrl as string) ?? ""} onChange={(url) => set("imageUrl", url)} placeholder="Optional banner image" />
+              </Field>
+              <Field label="Badge label">
+                <Input value={(data.badgeLabel as string) ?? ""} onChange={(e) => set("badgeLabel", e.target.value)} placeholder="e.g. Sale" className="h-9" />
+              </Field>
+              <EditorSection title="CTA">
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Label">
+                    <Input value={cta?.label ?? ""} onChange={(e) => setNested("cta", "label", e.target.value)} placeholder="Shop now" className="h-9" />
+                  </Field>
+                  <Field label="Link">
+                    <Input value={cta?.href ?? ""} onChange={(e) => setNested("cta", "href", e.target.value)} placeholder="/shop" className="h-9 font-mono text-xs" />
+                  </Field>
+                </div>
+              </EditorSection>
+              <Field label="Ends at">
+                <Input type="datetime-local" value={(data.endsAt as string)?.slice(0, 16) ?? ""} onChange={(e) => set("endsAt", e.target.value ? new Date(e.target.value).toISOString() : "")} className="h-9 font-mono text-xs" />
+              </Field>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-sm text-brand-deep dark:text-brand-cream">Show countdown</span>
+                <Switch checked={!!data.showCountdown} onCheckedChange={(v) => set("showCountdown", v)} />
+              </div>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 
 function ImageEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   return (
-    <div className="space-y-4 p-4">
-      <EditorSection title="Image Details">
-        <Field label="Image">
-          <ImageUrlField
-            value={(data.imageUrl as string) ?? ""}
-            onChange={(url) => set("imageUrl", url)}
-            placeholder="Upload or paste image URL"
-          />
-        </Field>
-        <Field label="Alt Text">
-          <Input value={(data.alt as string) ?? ""} onChange={(e) => set("alt", e.target.value)} placeholder="Describe image for accessibility" className="h-9" />
-        </Field>
-        <Field label="Caption">
-          <Input value={(data.caption as string) ?? ""} onChange={(e) => set("caption", e.target.value)} placeholder="Add a caption" className="h-9" />
-        </Field>
-      </EditorSection>
-      <div className="grid grid-cols-2 gap-4">
-        <EditorSection title="Aspect Ratio">
-          <Select value={(data.aspectRatio as string) || "auto"} onValueChange={(v) => set("aspectRatio", v)}>
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {["auto", "1:1", "4:3", "16:9", "21:9"].map((r) => (
-                <SelectItem key={r} value={r}>{r}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </EditorSection>
-        <EditorSection title="Rounding">
-          <Select value={(data.rounded as string) || "xl"} onValueChange={(v) => set("rounded", v)}>
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {["none", "lg", "xl", "2xl", "3xl", "full"].map((r) => (
-                <SelectItem key={r} value={r}>{r}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </EditorSection>
-      </div>
-    </div>
+    <Accordion.Root defaultValue={["details"]} className="rounded-b-3xl border border-brand-deep/5 dark:border-white/5 overflow-hidden">
+      <Accordion.Item value="details" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Image details
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2">
+            <EditorSection title="Image Details">
+              <Field label="Image">
+                <ImageUrlField value={(data.imageUrl as string) ?? ""} onChange={(url) => set("imageUrl", url)} placeholder="Upload or paste image URL" />
+              </Field>
+              <Field label="Alt Text">
+                <Input value={(data.alt as string) ?? ""} onChange={(e) => set("alt", e.target.value)} placeholder="Describe image for accessibility" className="h-9" />
+              </Field>
+              <Field label="Caption">
+                <Input value={(data.caption as string) ?? ""} onChange={(e) => set("caption", e.target.value)} placeholder="Add a caption" className="h-9" />
+              </Field>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+      <Accordion.Item value="display" className={accordionItemClass}>
+        <Accordion.Header>
+          <Accordion.Trigger className={accordionTriggerClass}>
+            Display
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+          </Accordion.Trigger>
+        </Accordion.Header>
+        <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
+          <div className="pt-2 grid grid-cols-2 gap-4">
+            <EditorSection title="Aspect Ratio">
+              <Select value={(data.aspectRatio as string) || "auto"} onValueChange={(v) => set("aspectRatio", v)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {["auto", "1:1", "4:3", "16:9", "21:9"].map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </EditorSection>
+            <EditorSection title="Rounding">
+              <Select value={(data.rounded as string) || "xl"} onValueChange={(v) => set("rounded", v)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {["none", "lg", "xl", "2xl", "3xl", "full"].map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </EditorSection>
+          </div>
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion.Root>
   )
 }
 

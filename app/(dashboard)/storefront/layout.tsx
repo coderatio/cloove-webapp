@@ -10,8 +10,8 @@ import { PageTransition } from "@/app/components/layout/page-transition"
 const tabs = [
     { name: "Overview", href: "/storefront", icon: LayoutGrid },
     { name: "Customization", href: "/storefront/customization", icon: Palette },
-    { name: "Pages", href: "/storefront/pages", icon: FileText },
     { name: "Settings", href: "/storefront/settings", icon: Settings },
+    { name: "Pages", href: "/storefront/pages", icon: FileText },
 ]
 
 export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
