@@ -5,7 +5,7 @@ import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import Link from "@tiptap/extension-link"
 import Image from "@tiptap/extension-image"
-import { TextStyle, Color } from "@tiptap/extension-text-style"
+import { TextStyle, Color, FontFamily, FontSize } from "@tiptap/extension-text-style"
 import { useEffect, useCallback, useState } from "react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -28,6 +28,21 @@ import {
   Minus,
   Palette,
 } from "lucide-react"
+
+const FONT_FAMILY_OPTIONS = [
+  { value: "", label: "Default" },
+  { value: "Georgia, serif", label: "Serif" },
+  { value: "system-ui, sans-serif", label: "Sans" },
+  { value: "monospace", label: "Monospace" },
+]
+
+const FONT_SIZE_OPTIONS = [
+  { value: "", label: "Default" },
+  { value: "12px", label: "Small" },
+  { value: "14px", label: "Medium" },
+  { value: "16px", label: "Large" },
+  { value: "18px", label: "X-Large" },
+]
 
 const TEXT_COLOR_PRESETS = [
   { value: "", label: "Default" },
@@ -60,6 +75,8 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
       Image.configure({ inline: false, allowBase64: true }),
       TextStyle,
       Color.configure({ types: ["textStyle"] }),
+      FontFamily.configure({ types: ["textStyle"] }),
+      FontSize.configure({ types: ["textStyle"] }),
     ],
     content,
     onUpdate: ({ editor: e }) => {
@@ -122,6 +139,9 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
           icon={Code}
           label="Code"
         />
+        <ToolbarSeparator />
+        <ToolbarFontFamily editor={editor} />
+        <ToolbarFontSize editor={editor} />
         <ToolbarSeparator />
         <ToolbarColorPicker editor={editor} />
         <ToolbarSeparator />
@@ -202,6 +222,94 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
 
       {editor ? <EditorContent editor={editor} /> : <div className="min-h-[120px] px-4 py-3 text-sm text-brand-deep/40 dark:text-brand-cream/40">Loading…</div>}
     </div>
+  )
+}
+
+function ToolbarFontFamily({ editor }: { editor: ReturnType<typeof useEditor> }) {
+  const [open, setOpen] = useState(false)
+  const current = editor?.getAttributes("textStyle").fontFamily ?? ""
+
+  if (!editor) return null
+
+  const label = FONT_FAMILY_OPTIONS.find((o) => o.value === current)?.label ?? "Font"
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label="Font family"
+          className="h-7 px-2 rounded-md text-xs font-medium gap-1"
+        >
+          {label}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-40 p-2" align="start">
+        {FONT_FAMILY_OPTIONS.map(({ value, label: l }) => (
+          <button
+            key={value || "default"}
+            type="button"
+            onClick={() => {
+              if (value) editor.chain().focus().setFontFamily(value).run()
+              else editor.chain().focus().unsetFontFamily().run()
+              setOpen(false)
+            }}
+            className={cn(
+              "w-full text-left px-2 py-1.5 rounded text-xs",
+              (value ? current === value : !current) && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
+            )}
+          >
+            {l}
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function ToolbarFontSize({ editor }: { editor: ReturnType<typeof useEditor> }) {
+  const [open, setOpen] = useState(false)
+  const current = editor?.getAttributes("textStyle").fontSize ?? ""
+
+  if (!editor) return null
+
+  const label = FONT_SIZE_OPTIONS.find((o) => o.value === current)?.label ?? "Size"
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label="Font size"
+          className="h-7 px-2 rounded-md text-xs font-medium gap-1"
+        >
+          {label}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-32 p-2" align="start">
+        {FONT_SIZE_OPTIONS.map(({ value, label: l }) => (
+          <button
+            key={value || "default"}
+            type="button"
+            onClick={() => {
+              if (value) editor.chain().focus().setFontSize(value).run()
+              else editor.chain().focus().unsetFontSize().run()
+              setOpen(false)
+            }}
+            className={cn(
+              "w-full text-left px-2 py-1.5 rounded text-xs",
+              (value ? current === value : !current) && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
+            )}
+          >
+            {l}
+          </button>
+        ))}
+      </PopoverContent>
+    </Popover>
   )
 }
 

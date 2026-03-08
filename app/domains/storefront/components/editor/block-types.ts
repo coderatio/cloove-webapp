@@ -55,6 +55,28 @@ export interface BlockConfig {
   textColorLight?: string
   /** Section text color (dark mode). */
   textColorDark?: string
+  /** When true, section is hidden on the public page; editor shows a placeholder. */
+  hidden?: boolean
+  /** Button text color (light mode). Hero, CTA. */
+  buttonTextColorLight?: string
+  /** Button text color (dark mode). */
+  buttonTextColorDark?: string
+  /** Button background color (light mode). Hero, CTA. */
+  buttonBgColorLight?: string
+  /** Button background color (dark mode). */
+  buttonBgColorDark?: string
+  /** Section title font size. Stored as sm | md | lg | custom. */
+  titleFontSize?: "sm" | "md" | "lg" | "custom"
+  /** Body/subtitle font size. Stored as sm | md | lg | custom. */
+  bodyFontSize?: "sm" | "md" | "lg" | "custom"
+  /** Custom CSS font-size when titleFontSize is custom (e.g. "1.25rem"). */
+  titleFontSizeCustom?: string
+  /** Custom CSS font-size when bodyFontSize is custom. */
+  bodyFontSizeCustom?: string
+  /** Title font style. Hero, CTA. */
+  titleFontStyle?: "normal" | "italic" | "bold" | "semibold"
+  /** Body/subtitle font style. Hero, CTA. */
+  bodyFontStyle?: "normal" | "italic" | "bold" | "semibold"
 }
 
 export interface FaqItem {

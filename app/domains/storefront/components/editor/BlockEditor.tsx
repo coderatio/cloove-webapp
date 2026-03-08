@@ -6,7 +6,7 @@ import { Button } from "@/app/components/ui/button"
 import { ColorPicker } from "@/app/components/ui/color-picker"
 import { RichTextEditor } from "./RichTextEditor"
 import { ImageUrlField } from "./ImageUrlField"
-import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight } from "lucide-react"
+import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff } from "lucide-react"
 import { Switch } from "@/app/components/ui/switch"
 import { cn } from "@/app/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
@@ -16,6 +16,27 @@ import { Textarea } from "@/app/components/ui/textarea"
 import { useProductCategories } from "@/app/domains/inventory/hooks/useProductCategories"
 import { usePromotions } from "@/app/domains/orders/hooks/usePromotions"
 import { MultiSelect } from "@/app/components/ui/multi-select"
+
+const BLOCK_TYPES_WITH_SECTION_TITLE: BlockType[] = [
+  "hero", "cta", "rich_text", "faq", "testimonials", "grid_features", "contact_block", "image_gallery", "promotion_banner",
+]
+const BLOCK_TYPES_WITH_BODY: BlockType[] = [
+  "hero", "cta", "rich_text", "faq", "testimonials", "grid_features", "contact_block",
+]
+
+const FONT_SIZE_OPTIONS = [
+  { value: "sm", label: "Small" },
+  { value: "md", label: "Medium" },
+  { value: "lg", label: "Large" },
+  { value: "custom", label: "Custom" },
+] as const
+
+const FONT_STYLE_OPTIONS = [
+  { value: "normal", label: "Normal" },
+  { value: "italic", label: "Italic" },
+  { value: "bold", label: "Bold" },
+  { value: "semibold", label: "Semi-bold" },
+] as const
 
 const GRADIENT_DIR_OPTIONS = [
   { value: "to-br", label: "↘ Bottom right" },
@@ -103,12 +124,12 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
                 variant={activeTab === tab ? "base" : "ghost"}
                 size="sm"
                 onClick={() => setActiveTab(tab)}
-                className="relative flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 z-10 rounded-lg h-8"
+                className="relative h-10 sm:h-12 flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 z-10 rounded-xl"
               >
                 {activeTab === tab && (
                   <motion.div
                     layoutId="activeTabBadge"
-                    className="absolute inset-0 bg-white dark:bg-brand-gold rounded-lg shadow-sm"
+                    className="absolute inset-0 bg-white dark:bg-brand-gold rounded-xl shadow-sm"
                     initial={false}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
@@ -144,6 +165,16 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
                 <SectionSpacingEditor config={block.config} onUpdateConfig={onUpdateConfig} />
                 <SectionTextAlignEditor config={block.config} onUpdateConfig={onUpdateConfig} />
                 <SectionTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+                {(BLOCK_TYPES_WITH_SECTION_TITLE.includes(block.type) || BLOCK_TYPES_WITH_BODY.includes(block.type)) && (
+                  <SectionTitleAndBodySizeRow blockType={block.type} config={block.config} onUpdateConfig={onUpdateConfig} />
+                )}
+                {(block.type === "hero" || block.type === "cta") && (
+                  <>
+                    <SectionFontStyleRow config={block.config} onUpdateConfig={onUpdateConfig} />
+                    <ButtonTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+                    <ButtonBgColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+                  </>
+                )}
               </>
             ) : null}
           </div>
@@ -333,6 +364,206 @@ function SectionTextColorEditor({
             value={dark}
             onChange={(e) => onUpdateConfig({ textColorDark: e.target.value.trim() || undefined })}
             placeholder="#eeeeee or default"
+            className="h-9 font-mono text-xs flex-1 min-w-0"
+          />
+        </div>
+      </EditorSection>
+    </div>
+  )
+}
+
+function SectionTitleAndBodySizeRow({
+  blockType,
+  config,
+  onUpdateConfig,
+}: {
+  blockType: BlockType
+  config: BlockSection["config"]
+  onUpdateConfig: (c: Partial<BlockSection["config"]>) => void
+}) {
+  const showTitle = BLOCK_TYPES_WITH_SECTION_TITLE.includes(blockType)
+  const showBody = BLOCK_TYPES_WITH_BODY.includes(blockType)
+  const titleValue = config.titleFontSize ?? "md"
+  const bodyValue = config.bodyFontSize ?? "md"
+  const titleCustom = titleValue === "custom"
+  const bodyCustom = bodyValue === "custom"
+
+  return (
+    <div className="grid grid-cols-2 gap-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
+      {showTitle && (
+        <EditorSection title="Section title size">
+          <Select value={titleValue} onValueChange={(v) => onUpdateConfig({ titleFontSize: v as "sm" | "md" | "lg" | "custom" })}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FONT_SIZE_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {titleCustom && (
+            <Input
+              value={config.titleFontSizeCustom ?? ""}
+              onChange={(e) => onUpdateConfig({ titleFontSizeCustom: e.target.value.trim() || undefined })}
+              placeholder="e.g. 1.25rem"
+              className="h-9 font-mono text-xs mt-2"
+            />
+          )}
+        </EditorSection>
+      )}
+      {showBody && (
+        <EditorSection title="Body text size">
+          <Select value={bodyValue} onValueChange={(v) => onUpdateConfig({ bodyFontSize: v as "sm" | "md" | "lg" | "custom" })}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FONT_SIZE_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {bodyCustom && (
+            <Input
+              value={config.bodyFontSizeCustom ?? ""}
+              onChange={(e) => onUpdateConfig({ bodyFontSizeCustom: e.target.value.trim() || undefined })}
+              placeholder="e.g. 1rem"
+              className="h-9 font-mono text-xs mt-2"
+            />
+          )}
+        </EditorSection>
+      )}
+    </div>
+  )
+}
+
+function SectionFontStyleRow({
+  config,
+  onUpdateConfig,
+}: {
+  config: BlockSection["config"]
+  onUpdateConfig: (c: Partial<BlockSection["config"]>) => void
+}) {
+  const titleValue = config.titleFontStyle ?? "normal"
+  const bodyValue = config.bodyFontStyle ?? "normal"
+  const fontStyleType = (v: string) => v as "normal" | "italic" | "bold" | "semibold"
+  return (
+    <div className="grid grid-cols-2 gap-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
+      <EditorSection title="Title font style">
+        <Select value={titleValue} onValueChange={(v) => onUpdateConfig({ titleFontStyle: fontStyleType(v) })}>
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_STYLE_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </EditorSection>
+      <EditorSection title="Body font style">
+        <Select value={bodyValue} onValueChange={(v) => onUpdateConfig({ bodyFontStyle: fontStyleType(v) })}>
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_STYLE_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </EditorSection>
+    </div>
+  )
+}
+
+function ButtonTextColorEditor({
+  config,
+  onUpdateConfig,
+}: {
+  config: BlockSection["config"]
+  onUpdateConfig: (c: Partial<BlockSection["config"]>) => void
+}) {
+  const light = config.buttonTextColorLight ?? ""
+  const dark = config.buttonTextColorDark ?? ""
+  return (
+    <div className="grid grid-cols-2 gap-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
+      <EditorSection title="Button text (light)">
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={light || "#000000"}
+            onChange={(e) => onUpdateConfig({ buttonTextColorLight: e.target.value || undefined })}
+            className="h-9 w-10 shrink-0 cursor-pointer rounded border border-brand-deep/10 dark:border-white/10 bg-transparent"
+          />
+          <Input
+            value={light}
+            onChange={(e) => onUpdateConfig({ buttonTextColorLight: e.target.value.trim() || undefined })}
+            placeholder="Default"
+            className="h-9 font-mono text-xs flex-1 min-w-0"
+          />
+        </div>
+      </EditorSection>
+      <EditorSection title="Button text (dark)">
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={dark || "#ffffff"}
+            onChange={(e) => onUpdateConfig({ buttonTextColorDark: e.target.value || undefined })}
+            className="h-9 w-10 shrink-0 cursor-pointer rounded border border-brand-deep/10 dark:border-white/10 bg-transparent"
+          />
+          <Input
+            value={dark}
+            onChange={(e) => onUpdateConfig({ buttonTextColorDark: e.target.value.trim() || undefined })}
+            placeholder="Default"
+            className="h-9 font-mono text-xs flex-1 min-w-0"
+          />
+        </div>
+      </EditorSection>
+    </div>
+  )
+}
+
+function ButtonBgColorEditor({
+  config,
+  onUpdateConfig,
+}: {
+  config: BlockSection["config"]
+  onUpdateConfig: (c: Partial<BlockSection["config"]>) => void
+}) {
+  const light = config.buttonBgColorLight ?? ""
+  const dark = config.buttonBgColorDark ?? ""
+  return (
+    <div className="grid grid-cols-2 gap-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
+      <EditorSection title="Button background (light)">
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={light || "#d4af37"}
+            onChange={(e) => onUpdateConfig({ buttonBgColorLight: e.target.value || undefined })}
+            className="h-9 w-10 shrink-0 cursor-pointer rounded border border-brand-deep/10 dark:border-white/10 bg-transparent"
+          />
+          <Input
+            value={light}
+            onChange={(e) => onUpdateConfig({ buttonBgColorLight: e.target.value.trim() || undefined })}
+            placeholder="Default"
+            className="h-9 font-mono text-xs flex-1 min-w-0"
+          />
+        </div>
+      </EditorSection>
+      <EditorSection title="Button background (dark)">
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={dark || "#d4af37"}
+            onChange={(e) => onUpdateConfig({ buttonBgColorDark: e.target.value || undefined })}
+            className="h-9 w-10 shrink-0 cursor-pointer rounded border border-brand-deep/10 dark:border-white/10 bg-transparent"
+          />
+          <Input
+            value={dark}
+            onChange={(e) => onUpdateConfig({ buttonBgColorDark: e.target.value.trim() || undefined })}
+            placeholder="Default"
             className="h-9 font-mono text-xs flex-1 min-w-0"
           />
         </div>
@@ -707,10 +938,16 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
             <div className="animate-pulse h-10 bg-brand-deep/5 dark:bg-white/5 rounded-xl" />
           ) : (
             <MultiSelect
-              options={(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))}
-              value={categoryIds}
-              onChange={(ids) => set("categoryIds", ids)}
-              placeholder="All categories"
+              options={[{ label: "All Categories", value: "all" }, ...(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))]}
+              value={categoryIds.length === 0 ? ["all"] : categoryIds}
+              onChange={(ids) => {
+                if (ids.includes("all") && !categoryIds.includes("all")) {
+                  set("categoryIds", []) // Clear others if "All" is selected
+                } else {
+                  set("categoryIds", ids.filter(id => id !== "all")) // Remove "All" if specific categories are chosen
+                }
+              }}
+              placeholder="Select categories"
               searchPlaceholder="Search categories..."
             />
           )}
@@ -730,39 +967,53 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
             ))}
           </div>
         </Field>
-        <Field label="Default Sort">
-          <Select value={defaultSort} onValueChange={(v) => set("defaultSort", v)}>
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest first</SelectItem>
-              <SelectItem value="price_asc">Price: Low to High</SelectItem>
-              <SelectItem value="price_desc">Price: High to Low</SelectItem>
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Pagination Type">
-          <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="load_more">Load More button</SelectItem>
-              <SelectItem value="pagination">Numeric Pagination</SelectItem>
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Products Per Page">
-          <Input
-            type="number"
-            min={4}
-            max={48}
-            value={String(limit)}
-            onChange={(e) => set("limit", Math.min(48, Math.max(4, parseInt(e.target.value, 10) || 12)))}
-            className="h-9 w-24"
-          />
-        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Default Sort">
+            <Select value={defaultSort} onValueChange={(v) => set("defaultSort", v)}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                <SelectItem value="price_desc">Price: High to Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Pagination Type">
+            <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="load_more">Load More button</SelectItem>
+                <SelectItem value="pagination">Numeric Pagination</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Total Products to Display">
+            <Input
+              type="number"
+              min={4}
+              max={100}
+              value={String(data.maxItems ?? 24)}
+              onChange={(e) => set("maxItems", Math.min(100, Math.max(4, parseInt(e.target.value, 10) || 24)))}
+              className="h-9 w-full"
+            />
+          </Field>
+          <Field label="Products Per Page">
+            <Input
+              type="number"
+              min={4}
+              max={48}
+              value={String(limit)}
+              onChange={(e) => set("limit", Math.min(48, Math.max(4, parseInt(e.target.value, 10) || 12)))}
+              className="h-9 w-full"
+            />
+          </Field>
+        </div>
       </EditorSection>
 
       <EditorSection title="Features & Filters">
@@ -770,6 +1021,10 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
           <div className="flex items-center justify-between py-1">
             <span className="text-sm">Enable Search</span>
             <Switch checked={!!data.enableSearch} onCheckedChange={(v) => set("enableSearch", v)} />
+          </div>
+          <div className="flex items-center justify-between py-1 border-t border-brand-deep/5 dark:border-white/5 pt-2">
+            <span className="text-sm">Show Product Counter</span>
+            <Switch checked={data.showProductCounter !== false} onCheckedChange={(v) => set("showProductCounter", v)} />
           </div>
           <div className="flex items-center justify-between py-1 border-t border-brand-deep/5 dark:border-white/5 pt-2">
             <span className="text-sm">Show Side Filters</span>
@@ -817,10 +1072,16 @@ function FeaturedProductsEditor({ data, set }: { data: Record<string, unknown>; 
             <div className="animate-pulse h-10 bg-brand-deep/5 dark:bg-white/5 rounded-xl" />
           ) : (
             <MultiSelect
-              options={(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))}
-              value={categoryIds}
-              onChange={(ids) => set("categoryIds", ids)}
-              placeholder="All categories"
+              options={[{ label: "All Categories", value: "all" }, ...(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))]}
+              value={categoryIds.length === 0 ? ["all"] : categoryIds}
+              onChange={(ids) => {
+                if (ids.includes("all") && !categoryIds.includes("all")) {
+                  set("categoryIds", [])
+                } else {
+                  set("categoryIds", ids.filter(id => id !== "all"))
+                }
+              }}
+              placeholder="Select categories"
               searchPlaceholder="Search categories..."
             />
           )}
@@ -840,9 +1101,14 @@ function FeaturedProductsEditor({ data, set }: { data: Record<string, unknown>; 
             ))}
           </div>
         </Field>
-        <Field label="Total Limit">
-          <Input type="number" min={4} max={24} value={String(limit)} onChange={(e) => set("limit", Math.min(24, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
-        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Total Products to Display">
+            <Input type="number" min={4} max={100} value={String(data.maxItems ?? 24)} onChange={(e) => set("maxItems", Math.min(100, Math.max(4, parseInt(e.target.value, 10) || 24)))} className="h-9 w-full" />
+          </Field>
+          <Field label="Products Per Page">
+            <Input type="number" min={4} max={24} value={String(limit)} onChange={(e) => set("limit", Math.min(24, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-full" />
+          </Field>
+        </div>
         <Field label="Pagination Type">
           <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
             <SelectTrigger className="h-9">
@@ -881,10 +1147,16 @@ function OnSaleEditor({ data, set }: { data: Record<string, unknown>; set: (k: s
             <div className="animate-pulse h-10 bg-brand-deep/5 dark:bg-white/5 rounded-xl" />
           ) : (
             <MultiSelect
-              options={(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))}
-              value={categoryIds}
-              onChange={(ids) => set("categoryIds", ids)}
-              placeholder="All categories"
+              options={[{ label: "All Categories", value: "all" }, ...(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))]}
+              value={categoryIds.length === 0 ? ["all"] : categoryIds}
+              onChange={(ids) => {
+                if (ids.includes("all") && !categoryIds.includes("all")) {
+                  set("categoryIds", [])
+                } else {
+                  set("categoryIds", ids.filter(id => id !== "all"))
+                }
+              }}
+              placeholder="Select categories"
               searchPlaceholder="Search categories..."
             />
           )}
@@ -917,9 +1189,14 @@ function OnSaleEditor({ data, set }: { data: Record<string, unknown>; set: (k: s
             ))}
           </div>
         </Field>
-        <Field label="Limit">
-          <Input type="number" min={4} max={24} value={String(limit)} onChange={(e) => set("limit", Math.min(24, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
-        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Total Products to Display">
+            <Input type="number" min={4} max={100} value={String(data.maxItems ?? 24)} onChange={(e) => set("maxItems", Math.min(100, Math.max(4, parseInt(e.target.value, 10) || 24)))} className="h-9 w-full" />
+          </Field>
+          <Field label="Products Per Page">
+            <Input type="number" min={4} max={24} value={String(limit)} onChange={(e) => set("limit", Math.min(24, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-full" />
+          </Field>
+        </div>
         <Field label="Pagination Type">
           <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
             <SelectTrigger className="h-9">
@@ -1175,15 +1452,32 @@ function GridLayoutEditor({ data, onUpdate }: { data: Record<string, unknown>; o
                           <span className="text-[9px] font-bold uppercase tracking-widest opacity-40">
                             {BLOCK_META[block.type]?.label || block.type}
                           </span>
-                          <Button variant="ghost" size="icon" onClick={() => removeNestedBlock(cIdx, block.id)} className="h-6 w-6 text-red-400 hover:text-red-500">
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                          <div className="flex items-center gap-0.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => updateNestedBlock(cIdx, block.id, { config: { ...block.config, hidden: !block.config.hidden } })}
+                              className="h-6 w-6 text-brand-deep/50 dark:text-white/50 hover:text-brand-deep dark:hover:text-white"
+                              title={block.config.hidden ? "Show section" : "Hide section"}
+                            >
+                              {block.config.hidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => removeNestedBlock(cIdx, block.id)} className="h-6 w-6 text-red-400 hover:text-red-500">
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
                         </div>
-                        <BlockEditor
-                          block={block}
-                          onUpdate={(d) => updateNestedBlock(cIdx, block.id, { data: d })}
-                          onUpdateConfig={(c) => updateNestedBlock(cIdx, block.id, { config: c })}
-                        />
+                        {block.config.hidden ? (
+                          <div className="py-3 text-center">
+                            <span className="text-[10px] font-medium uppercase tracking-wider text-brand-deep/40 dark:text-white/40">Section hidden</span>
+                          </div>
+                        ) : (
+                          <BlockEditor
+                            block={block}
+                            onUpdate={(d) => updateNestedBlock(cIdx, block.id, { data: d })}
+                            onUpdateConfig={(c) => updateNestedBlock(cIdx, block.id, { config: c })}
+                          />
+                        )}
                       </div>
                     ))}
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-dashed border-brand-deep/10 dark:border-white/10">

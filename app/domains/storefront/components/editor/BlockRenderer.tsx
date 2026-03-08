@@ -68,9 +68,10 @@ function getSectionTextColor(config: BlockSection["config"], previewDark: boolea
 }
 
 export function BlockRenderer({ block, previewDark = false }: BlockRendererProps) {
+  if (block.config.hidden) return null
+
   const { data: storefront } = useStorefront()
   const storefrontSlug = storefront?.slug
-  // Decide which background to use
   const bg = previewDark && block.config.sectionBackgroundDark ? block.config.sectionBackgroundDark : block.config.sectionBackground
 
   // Detect if background is effectively dark to provide high-contrast default text color
@@ -117,11 +118,11 @@ export function BlockRenderer({ block, previewDark = false }: BlockRendererProps
   const content = (() => {
     switch (block.type) {
       case "hero":
-        return <HeroPreview data={block.data} derivedColor={derivedColor} textAlign={block.config.textAlign} />
+        return <HeroPreview data={block.data} derivedColor={derivedColor} textAlign={block.config.textAlign} config={block.config} previewDark={previewDark} />
       case "rich_text":
         return <RichTextPreview data={block.data} sectionColor={derivedColor} />
       case "cta":
-        return <CtaPreview data={block.data} textAlign={block.config.textAlign} />
+        return <CtaPreview data={block.data} textAlign={block.config.textAlign} config={block.config} previewDark={previewDark} />
       case "faq":
         return <FaqPreview data={block.data} sectionColor={derivedColor} />
       case "testimonials":
@@ -200,14 +201,47 @@ const HERO_LAYOUT_CLASSES = {
   right: "items-end justify-end text-right pr-8",
 } as const
 
+const TITLE_FONT_SIZE_CLASSES: Record<string, string> = {
+  sm: "text-2xl",
+  md: "text-3xl",
+  lg: "text-4xl",
+}
+
+const BODY_FONT_SIZE_CLASSES: Record<string, string> = {
+  sm: "text-sm",
+  md: "text-base",
+  lg: "text-lg",
+}
+
+const FONT_STYLE_CLASSES: Record<string, string> = {
+  normal: "font-normal",
+  italic: "italic",
+  bold: "font-bold",
+  semibold: "font-semibold",
+}
+
+function getTitleSizeStyle(config: BlockSection["config"]): React.CSSProperties | undefined {
+  if (config.titleFontSize !== "custom" || !config.titleFontSizeCustom) return undefined
+  return { fontSize: config.titleFontSizeCustom }
+}
+
+function getBodySizeStyle(config: BlockSection["config"]): React.CSSProperties | undefined {
+  if (config.bodyFontSize !== "custom" || !config.bodyFontSizeCustom) return undefined
+  return { fontSize: config.bodyFontSizeCustom }
+}
+
 function HeroPreview({
   data,
   derivedColor,
   textAlign,
+  config,
+  previewDark,
 }: {
   data: Record<string, unknown>
   derivedColor: string
   textAlign?: "left" | "center" | "right"
+  config: BlockSection["config"]
+  previewDark: boolean
 }) {
   const title = (data.title as string) || "Hero Title"
   const subtitle = (data.subtitle as string) || "Add a subtitle for your hero section"
@@ -215,9 +249,26 @@ function HeroPreview({
   const primaryCta = data.primaryCta as CtaButton | undefined
   const layout = (data.layout as keyof typeof HERO_LAYOUT_CLASSES) || "center"
 
-  // Use textAlign from config as primary override, fall back to block-specific layout
   const effectiveAlign = textAlign || layout
   const layoutClasses = HERO_LAYOUT_CLASSES[effectiveAlign] ?? HERO_LAYOUT_CLASSES.center
+
+  const titleSize = config.titleFontSize ?? "md"
+  const titleClass = titleSize === "custom" ? "" : TITLE_FONT_SIZE_CLASSES[titleSize] ?? TITLE_FONT_SIZE_CLASSES.md
+  const titleStyle = getTitleSizeStyle(config)
+  const titleFontStyleClass = FONT_STYLE_CLASSES[config.titleFontStyle ?? "normal"] ?? "font-normal"
+
+  const bodySize = config.bodyFontSize ?? "md"
+  const bodyClass = bodySize === "custom" ? "" : BODY_FONT_SIZE_CLASSES[bodySize] ?? BODY_FONT_SIZE_CLASSES.md
+  const bodyStyle = getBodySizeStyle(config)
+  const bodyFontStyleClass = FONT_STYLE_CLASSES[config.bodyFontStyle ?? "normal"] ?? "font-normal"
+
+  const buttonTextColor = previewDark ? (config.buttonTextColorDark ?? config.buttonTextColorLight) : (config.buttonTextColorLight ?? config.buttonTextColorDark)
+  const buttonBgColor = previewDark ? (config.buttonBgColorDark ?? config.buttonBgColorLight) : (config.buttonBgColorLight ?? config.buttonBgColorDark)
+  const buttonStyle: React.CSSProperties = {
+    ...(buttonTextColor && { color: buttonTextColor }),
+    ...(buttonBgColor && { backgroundColor: buttonBgColor }),
+  }
+  const hasButtonOverride = buttonTextColor || buttonBgColor
 
   return (
     <div className="relative overflow-hidden rounded-3xl" style={{ minHeight: 240, color: derivedColor }}>
@@ -231,18 +282,18 @@ function HeroPreview({
       )}
       <div className={cn("relative z-10 flex flex-col min-h-[240px] justify-center px-8 py-16", layoutClasses)}>
         <h1
-          className="text-3xl font-bold mb-3 leading-tight"
-          style={{ fontFamily: "var(--sf-font-heading)", color: derivedColor }}
+          className={cn("mb-3 leading-tight", titleClass, titleFontStyleClass)}
+          style={{ fontFamily: "var(--sf-font-heading)", color: derivedColor, ...titleStyle }}
         >
           {title}
         </h1>
-        <p className="text-base opacity-80 max-w-lg mb-6" style={{ color: derivedColor }}>
+        <p className={cn("opacity-80 max-w-lg mb-6", bodyClass, bodyFontStyleClass)} style={{ color: derivedColor, ...bodyStyle }}>
           {subtitle}
         </p>
         {primaryCta?.label && (
           <span
             className="inline-block px-6 py-2.5 rounded-full text-sm font-semibold"
-            style={{ backgroundColor: "var(--sf-secondary)", color: "var(--sf-primary)" }}
+            style={hasButtonOverride ? buttonStyle : { backgroundColor: "var(--sf-secondary)", color: "var(--sf-primary)" }}
           >
             {primaryCta.label}
           </span>
@@ -306,9 +357,13 @@ const CTA_THEME_STYLES = {
 function CtaPreview({
   data,
   textAlign,
+  config,
+  previewDark,
 }: {
   data: Record<string, unknown>
   textAlign?: "left" | "center" | "right"
+  config: BlockSection["config"]
+  previewDark: boolean
 }) {
   const title = (data.title as string) || "Call to Action"
   const subtitle = (data.subtitle as string) || "Add a compelling message"
@@ -318,24 +373,42 @@ function CtaPreview({
 
   const alignClass = textAlign === "right" ? "text-right" : textAlign === "left" ? "text-left" : "text-center"
 
+  const titleSize = config.titleFontSize ?? "md"
+  const titleClass = titleSize === "custom" ? "" : TITLE_FONT_SIZE_CLASSES[titleSize] ?? TITLE_FONT_SIZE_CLASSES.md
+  const titleStyle = getTitleSizeStyle(config)
+  const titleFontStyleClass = FONT_STYLE_CLASSES[config.titleFontStyle ?? "normal"] ?? "font-normal"
+
+  const bodySize = config.bodyFontSize ?? "md"
+  const bodyClass = bodySize === "custom" ? "" : BODY_FONT_SIZE_CLASSES[bodySize] ?? BODY_FONT_SIZE_CLASSES.md
+  const bodyStyle = getBodySizeStyle(config)
+  const bodyFontStyleClass = FONT_STYLE_CLASSES[config.bodyFontStyle ?? "normal"] ?? "font-normal"
+
+  const buttonTextColor = previewDark ? (config.buttonTextColorDark ?? config.buttonTextColorLight) : (config.buttonTextColorLight ?? config.buttonTextColorDark)
+  const buttonBgColor = previewDark ? (config.buttonBgColorDark ?? config.buttonBgColorLight) : (config.buttonBgColorLight ?? config.buttonBgColorDark)
+  const buttonStyle: React.CSSProperties = {
+    ...(buttonTextColor && { color: buttonTextColor }),
+    ...(buttonBgColor && { backgroundColor: buttonBgColor }),
+  }
+  const hasButtonOverride = buttonTextColor || buttonBgColor
+
   return (
     <div
       className={cn("rounded-3xl px-8 py-12 border border-transparent", alignClass)}
       style={style.wrapper}
     >
       <h2
-        className="text-2xl font-bold mb-2"
-        style={{ fontFamily: "var(--sf-font-heading)", ...style.title }}
+        className={cn("mb-2", titleClass, titleFontStyleClass)}
+        style={{ fontFamily: "var(--sf-font-heading)", ...style.title, ...titleStyle }}
       >
         {title}
       </h2>
-      <p className="text-sm opacity-80 mb-6" style={style.subtitle}>
+      <p className={cn("opacity-80 mb-6", bodyClass, bodyFontStyleClass)} style={{ ...style.subtitle, ...bodyStyle }}>
         {subtitle}
       </p>
       {primaryCta?.label && (
         <span
           className="inline-block px-6 py-2.5 rounded-full text-sm font-semibold"
-          style={style.button}
+          style={hasButtonOverride ? buttonStyle : style.button}
         >
           {primaryCta.label}
         </span>
@@ -569,6 +642,7 @@ function ProductListingPreview({
 }: { data: Record<string, unknown>; sectionColor?: string; slug?: string }) {
   const title = (data.title as string) || "Our Products"
   const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+  const maxItems = Number(data.maxItems) || 24
   const columns = Number(data.columns) || 4
   const showFilters = data.showFilters !== false
   const { data: products, isLoading, isError } = useStorefrontProducts(slug, { limit, page: 1 })
@@ -614,7 +688,7 @@ function ProductListingPreview({
         </div>
       )}
       <p className="text-xs mt-3 opacity-60">
-        Up to {limit} products{showFilters ? " · Filters on" : ""}
+        Up to {maxItems} products (loads {limit} per page){showFilters ? " · Filters on" : ""}
       </p>
     </div>
   )
@@ -630,6 +704,7 @@ function FeaturedProductsPreview({
   const title = (data.title as string) || "Featured"
   const subtitle = (data.subtitle as string) || ""
   const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+  const maxItems = Number(data.maxItems) || 24
   const columns = Number(data.columns) || 4
   const { data: products, isLoading, isError } = useStorefrontFeatured(slug, { limit, page: 1 })
 
@@ -673,7 +748,7 @@ function FeaturedProductsPreview({
           ))}
         </div>
       )}
-      <p className="text-xs mt-2 opacity-60">Featured products · up to {limit}</p>
+      <p className="text-xs mt-2 opacity-60">Featured products · up to {maxItems} (loads {limit} per page)</p>
     </div>
   )
 }
@@ -687,6 +762,7 @@ function OnSalePreview({
   const subtitle = (data.subtitle as string) || ""
   const promotionId = data.promotionId as string | undefined
   const limit = Number(data.limit) || 8
+  const maxItems = Number(data.maxItems) || 24
   const columns = Number(data.columns) || 4
   const { data: products, isLoading, isError } = useStorefrontOnSale(slug, { limit, promotionId })
 
@@ -735,7 +811,7 @@ function OnSalePreview({
           ))}
         </div>
       )}
-      <p className="text-xs mt-2 opacity-60">On sale · up to {limit}</p>
+      <p className="text-xs mt-2 opacity-60">On sale · up to {maxItems} (loads {limit} per page)</p>
     </div>
   )
 }

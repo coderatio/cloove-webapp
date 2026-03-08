@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Trash2, GripVertical, ChevronUp, Settings2 } from "lucide-react"
+import { Trash2, GripVertical, ChevronUp, Settings2, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/app/components/ui/button"
@@ -567,11 +567,20 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
         </span>
       </div>
 
-      {/* Delete button */}
+      {/* Visibility toggle + Delete button */}
       <div className={cn(
         "absolute -top-3 right-5 z-20 flex items-center gap-1 transition-opacity duration-200",
         isActive ? "opacity-100" : "opacity-0 group-hover/block:opacity-100"
       )}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => { e.stopPropagation(); onUpdateConfig({ hidden: !block.config.hidden }) }}
+          className="h-7 w-7 rounded-full bg-white dark:bg-black border border-brand-deep/10 dark:border-white/10 text-brand-deep/60 dark:text-brand-cream/60 hover:text-brand-deep dark:hover:text-brand-cream"
+          title={block.config.hidden ? "Show section" : "Hide section"}
+        >
+          {block.config.hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -582,7 +591,7 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
         </Button>
       </div>
 
-      {/* Preview — click to open editor, click again to close; theme applies only here */}
+      {/* Preview — click to open editor; when hidden show placeholder */}
       <PreviewThemeScope
         onClick={() => (isActive ? onDeactivate() : onActivate())}
         className={cn(
@@ -590,11 +599,16 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
           isActive ? "ring-2 ring-brand-deep/10 dark:ring-white/10 shadow-lg" : "border border-transparent hover:border-brand-deep/10 dark:hover:border-white/10 hover:shadow-sm"
         )}
         style={{
-          // If the block has its own background, we want the card to be transparent so the block bg shows fully
-          backgroundColor: (block.config.sectionBackground || (previewDark && block.config.sectionBackgroundDark)) ? 'transparent' : undefined
+          backgroundColor: (block.config.sectionBackground || (previewDark && block.config.sectionBackgroundDark)) ? "transparent" : undefined,
         }}
       >
-        <BlockRenderer block={block} previewDark={previewDark} />
+        {block.config.hidden ? (
+          <div className="px-6 py-8 flex items-center justify-center border border-dashed border-brand-deep/15 dark:border-white/15 rounded-2xl min-h-[80px]">
+            <span className="text-xs font-medium uppercase tracking-wider text-brand-deep/40 dark:text-brand-cream/40">Section hidden</span>
+          </div>
+        ) : (
+          <BlockRenderer block={block} previewDark={previewDark} />
+        )}
       </PreviewThemeScope>
 
       {/* Inline editor */}
