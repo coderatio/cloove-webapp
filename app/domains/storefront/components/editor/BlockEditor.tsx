@@ -90,28 +90,65 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
       content = <GenericEditor data={data} set={set} />
   }
 
+  const [activeTab, setActiveTab] = useState<"content" | "appearance">("content")
+
   return (
-    <div className="space-y-0">
-      {content}
+    <div className="flex flex-col h-full">
       {onUpdateConfig && (
-        <>
-          <SectionBackgroundEditor
-            config={block.config}
-            onUpdateConfig={onUpdateConfig}
-            configKey="sectionBackground"
-            title="Section background (light)"
-          />
-          <SectionBackgroundEditor
-            config={block.config}
-            onUpdateConfig={onUpdateConfig}
-            configKey="sectionBackgroundDark"
-            title="Section background (dark mode)"
-          />
-          <SectionSpacingEditor config={block.config} onUpdateConfig={onUpdateConfig} />
-          <SectionTextAlignEditor config={block.config} onUpdateConfig={onUpdateConfig} />
-          <SectionTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
-        </>
+        <div className="px-4 py-3 border-b border-brand-deep/5 dark:border-white/5 bg-black/2 dark:bg-white/2 shrink-0 rounded-t-3xl">
+          <div className="relative flex p-1 bg-black/5 dark:bg-white/10 rounded-xl overflow-hidden gap-1">
+            {(["content", "appearance"] as const).map((tab) => (
+              <Button
+                key={tab}
+                variant={activeTab === tab ? "base" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab(tab)}
+                className="relative flex-1 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 z-10 rounded-lg h-8"
+              >
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="activeTabBadge"
+                    className="absolute inset-0 bg-white dark:bg-brand-gold rounded-lg shadow-sm"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className={cn("relative z-20", activeTab === tab ? "text-brand-deep" : "")}>{tab}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
       )}
+
+      <div className="flex-1 overflow-y-auto rounded-b-3xl">
+        {activeTab === "content" ? (
+          <div className="space-y-0 pb-12">
+            {content}
+          </div>
+        ) : (
+          <div className="space-y-0 pb-12 bg-black/2 dark:bg-white/2 min-h-full">
+            {onUpdateConfig ? (
+              <>
+                <SectionBackgroundEditor
+                  config={block.config}
+                  onUpdateConfig={onUpdateConfig}
+                  configKey="sectionBackground"
+                  title="Background (Light Mode)"
+                />
+                <SectionBackgroundEditor
+                  config={block.config}
+                  onUpdateConfig={onUpdateConfig}
+                  configKey="sectionBackgroundDark"
+                  title="Background (Dark Mode)"
+                />
+                <SectionSpacingEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+                <SectionTextAlignEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+                <SectionTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
+              </>
+            ) : null}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
