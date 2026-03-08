@@ -10,8 +10,10 @@ import {
   useStorefrontProducts,
   useStorefrontFeatured,
   useStorefrontOnSale,
+  useStorefrontCategories,
   type StorefrontProductItem,
 } from "@/app/domains/storefront/hooks/useStorefrontProducts"
+import { SearchableSelect } from "@/app/components/ui/searchable-select"
 
 const GRADIENT_DIRECTIONS: Record<string, string> = {
   "to-br": "135deg",
@@ -92,7 +94,25 @@ export function BlockRenderer({ block, previewDark = false }: BlockRendererProps
 
   // Padding logic: ensure it's always applied unless explicitly "none" or default to md
   const padding = block.config.padding ?? "md"
-  const paddingClass = (padding as string) === "none" ? "" : padding === "sm" ? "px-4 py-6" : padding === "lg" ? "px-8 py-12" : "px-6 py-8"
+  const paddingMap: Record<string, string> = {
+    none: "",
+    sm: "px-4 py-6",
+    md: "px-6 py-8",
+    lg: "px-8 py-12",
+  }
+  const paddingClass = paddingMap[padding] ?? ""
+  const paddingStyle = !paddingMap[padding] ? { paddingTop: padding, paddingBottom: padding } : {}
+
+  // Margin logic
+  const margin = block.config.margin ?? "none"
+  const marginMap: Record<string, string> = {
+    none: "",
+    sm: "my-4",
+    md: "my-8",
+    lg: "my-12",
+  }
+  const marginClass = marginMap[margin] ?? ""
+  const marginStyle = !marginMap[margin] ? { marginTop: margin, marginBottom: margin } : {}
 
   const content = (() => {
     switch (block.type) {
@@ -151,8 +171,8 @@ export function BlockRenderer({ block, previewDark = false }: BlockRendererProps
     const opacity = Math.max(0, Math.min(1, bg.overlayOpacity ?? 0.4))
     return (
       <section
-        className={cn("relative overflow-hidden w-full transition-colors duration-300", paddingClass, alignClass)}
-        style={sectionStyle}
+        className={cn("relative overflow-hidden w-full transition-colors duration-300", paddingClass, marginClass, alignClass)}
+        style={{ ...sectionStyle, ...paddingStyle, ...marginStyle }}
       >
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -166,8 +186,8 @@ export function BlockRenderer({ block, previewDark = false }: BlockRendererProps
 
   return (
     <section
-      className={cn("w-full transition-colors duration-300", paddingClass, alignClass)}
-      style={sectionStyle}
+      className={cn("w-full transition-colors duration-300", paddingClass, marginClass, alignClass)}
+      style={{ ...sectionStyle, ...paddingStyle, ...marginStyle }}
     >
       {content}
     </section>
@@ -549,17 +569,28 @@ function ProductListingPreview({
 }: { data: Record<string, unknown>; sectionColor?: string; slug?: string }) {
   const title = (data.title as string) || "Our Products"
   const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+  const columns = Number(data.columns) || 4
   const showFilters = data.showFilters !== false
   const { data: products, isLoading, isError } = useStorefrontProducts(slug, { limit, page: 1 })
-  const list = products ?? []
+
+  // For preview, we only show one row based on columns
+  const list = (products ?? []).slice(0, columns)
+
+  const gridColsClass = {
+    2: "grid-cols-2",
+    3: "grid-cols-2 sm:grid-cols-3",
+    4: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4",
+    6: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6",
+  }[columns as 2 | 3 | 4 | 6] || "grid-cols-2 md:grid-cols-4"
+
   return (
     <div className="px-6 py-8" style={sectionColor ? { color: sectionColor } : undefined}>
       <h2 className="text-xl font-bold mb-4" style={{ fontFamily: "var(--sf-font-heading)", color: sectionColor ?? "var(--sf-text)" }}>
         {title}
       </h2>
       {!slug ? (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className={cn("grid gap-3", gridColsClass)}>
+          {Array.from({ length: columns }).map((_, i) => (
             <div key={i} className="aspect-square rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
               <ShoppingBag className="w-8 h-8 opacity-30" />
             </div>
@@ -576,7 +607,7 @@ function ProductListingPreview({
       ) : list.length === 0 ? (
         <p className="text-sm opacity-70">No products yet.</p>
       ) : (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+        <div className={cn("grid gap-3", gridColsClass)}>
           {list.map((p) => (
             <ProductTile key={p.id} product={p} sectionColor={sectionColor} />
           ))}
@@ -598,9 +629,19 @@ function FeaturedProductsPreview({
   const featuredCurrency = activeBusiness?.currency ?? "NGN"
   const title = (data.title as string) || "Featured"
   const subtitle = (data.subtitle as string) || ""
-  const limit = Math.min(12, Math.max(4, Number(data.limit) || 8))
-  const { data: products, isLoading, isError } = useStorefrontFeatured(slug, limit)
-  const list = products ?? []
+  const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+  const columns = Number(data.columns) || 4
+  const { data: products, isLoading, isError } = useStorefrontFeatured(slug, { limit, page: 1 })
+
+  const list = (products ?? []).slice(0, columns)
+
+  const gridColsClass = {
+    2: "grid-cols-2",
+    3: "grid-cols-2 sm:grid-cols-3",
+    4: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4",
+    6: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6",
+  }[columns as 2 | 3 | 4 | 6] || "grid-cols-2 md:grid-cols-4"
+
   return (
     <div className="px-6 py-8" style={sectionColor ? { color: sectionColor } : undefined}>
       <h2 className="text-xl font-bold mb-1" style={{ fontFamily: "var(--sf-font-heading)", color: sectionColor ?? "var(--sf-text)" }}>
@@ -608,9 +649,9 @@ function FeaturedProductsPreview({
       </h2>
       {subtitle && <p className="text-sm opacity-80 mb-4">{subtitle}</p>}
       {!slug ? (
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="w-40 shrink-0 aspect-[3/4] rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+        <div className={cn("grid gap-3", gridColsClass)}>
+          {Array.from({ length: columns }).map((_, i) => (
+            <div key={i} className="aspect-square rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
               <Star className="w-6 h-6 opacity-30" />
             </div>
           ))}
@@ -626,23 +667,9 @@ function FeaturedProductsPreview({
       ) : list.length === 0 ? (
         <p className="text-sm opacity-70">No featured products yet.</p>
       ) : (
-        <div className="flex gap-3 overflow-x-auto pb-2">
+        <div className={cn("grid gap-3", gridColsClass)}>
           {list.map((p) => (
-            <div key={p.id} className="w-40 shrink-0">
-              <div className="aspect-[3/4] rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 overflow-hidden">
-                {Array.isArray(p.images) && p.images[0] ? (
-                  <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Star className="w-6 h-6 opacity-30" />
-                  </div>
-                )}
-              </div>
-              <p className="text-sm font-medium mt-2 line-clamp-2" style={{ color: sectionColor ?? "var(--sf-text)" }}>{p.name}</p>
-              <p className="text-xs mt-0.5" style={{ color: sectionColor ?? "var(--sf-text)", opacity: 0.9 }}>
-                {formatCurrency(typeof (p.salePrice ?? p.price) === "number" ? (p.salePrice ?? p.price) : 0, { currency: featuredCurrency })}
-              </p>
-            </div>
+            <ProductTile key={p.id} product={p} sectionColor={sectionColor} />
           ))}
         </div>
       )}
@@ -660,8 +687,18 @@ function OnSalePreview({
   const subtitle = (data.subtitle as string) || ""
   const promotionId = data.promotionId as string | undefined
   const limit = Number(data.limit) || 8
+  const columns = Number(data.columns) || 4
   const { data: products, isLoading, isError } = useStorefrontOnSale(slug, { limit, promotionId })
-  const list = products ?? []
+
+  const list = (products ?? []).slice(0, columns)
+
+  const gridColsClass = {
+    2: "grid-cols-2",
+    3: "grid-cols-2 sm:grid-cols-3",
+    4: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4",
+    6: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6",
+  }[columns as 2 | 3 | 4 | 6] || "grid-cols-2 md:grid-cols-4"
+
   return (
     <div className="px-6 py-8" style={sectionColor ? { color: sectionColor } : undefined}>
       <h2 className="text-xl font-bold mb-1" style={{ fontFamily: "var(--sf-font-heading)", color: sectionColor ?? "var(--sf-text)" }}>
@@ -674,8 +711,8 @@ function OnSalePreview({
         </span>
       )}
       {!slug ? (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className={cn("grid gap-3", gridColsClass)}>
+          {Array.from({ length: columns }).map((_, i) => (
             <div key={i} className="rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 aspect-square flex items-center justify-center">
               <Tag className="w-6 h-6 opacity-30" />
             </div>
@@ -692,7 +729,7 @@ function OnSalePreview({
       ) : list.length === 0 ? (
         <p className="text-sm opacity-70">No products on sale.</p>
       ) : (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+        <div className={cn("grid gap-3", gridColsClass)}>
           {list.map((p) => (
             <ProductTile key={p.id} product={p} sectionColor={sectionColor} />
           ))}
@@ -806,19 +843,20 @@ function GridPreview({ data, previewDark }: { data: Record<string, unknown>; pre
   const columns = (data.columns as GridLayoutColumn[]) || []
   const style = (data.style as GridLayoutStyle) || {}
   const proportions = style.proportions || columns.map(() => "1fr").join(" ")
-  const gap = style.gap || "md"
-
+  const gapRaw = style.gap || "md"
   const gapClasses: Record<string, string> = {
     none: "gap-0",
     sm: "gap-4",
     md: "gap-8",
     lg: "gap-12",
   }
+  const gapClass = gapClasses[gapRaw] ?? ""
+  const gapStyle = !gapClasses[gapRaw] ? { gap: gapRaw } : {}
 
   return (
     <div
-      className={cn("grid w-full px-6 py-4", gapClasses[gap])}
-      style={{ gridTemplateColumns: proportions }}
+      className={cn("grid w-full px-6 py-4", gapClass)}
+      style={{ gridTemplateColumns: proportions, ...gapStyle }}
     >
       {columns.map((col, idx) => (
         <div key={idx} className="flex flex-col gap-6 min-w-0">

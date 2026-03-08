@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/app/components/ui/textarea"
 import { useProductCategories } from "@/app/domains/inventory/hooks/useProductCategories"
 import { usePromotions } from "@/app/domains/orders/hooks/usePromotions"
+import { MultiSelect } from "@/app/components/ui/multi-select"
 
 const GRADIENT_DIR_OPTIONS = [
   { value: "to-br", label: "↘ Bottom right" },
@@ -106,6 +107,7 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
             configKey="sectionBackgroundDark"
             title="Section background (dark mode)"
           />
+          <SectionSpacingEditor config={block.config} onUpdateConfig={onUpdateConfig} />
           <SectionTextAlignEditor config={block.config} onUpdateConfig={onUpdateConfig} />
           <SectionTextColorEditor config={block.config} onUpdateConfig={onUpdateConfig} />
         </>
@@ -644,8 +646,18 @@ function ImageGalleryEditor({ data, onUpdate, set }: { data: Record<string, unkn
 
 function ProductListingEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   const { categories, isLoading } = useProductCategories()
-  const categoryId = (data.categoryId as string) ?? ""
+  const categoryIds = (data.categoryIds as string[]) ?? []
   const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+  const paginationType = (data.paginationType as string) || "load_more"
+  const defaultSort = (data.defaultSort as string) || "newest"
+
+  const toggleCategory = (id: string) => {
+    if (categoryIds.includes(id)) {
+      set("categoryIds", categoryIds.filter((cid) => cid !== id))
+    } else {
+      set("categoryIds", [...categoryIds, id])
+    }
+  }
 
   return (
     <div className="space-y-4 p-4">
@@ -653,25 +665,95 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
         <Field label="Title">
           <Input value={(data.title as string) ?? ""} onChange={(e) => set("title", e.target.value)} placeholder="Our Products" className="h-9" />
         </Field>
-        <Field label="Category">
-          <Select value={categoryId || "__all__"} onValueChange={(v) => set("categoryId", v === "__all__" ? undefined : v)} disabled={isLoading}>
+        <EditorSection title="Categories">
+          {isLoading ? (
+            <div className="animate-pulse h-10 bg-brand-deep/5 dark:bg-white/5 rounded-xl" />
+          ) : (
+            <MultiSelect
+              options={(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))}
+              value={categoryIds}
+              onChange={(ids) => set("categoryIds", ids)}
+              placeholder="All categories"
+              searchPlaceholder="Search categories..."
+            />
+          )}
+        </EditorSection>
+        <Field label="Layout Columns">
+          <div className="flex gap-2">
+            {[2, 3, 4, 6].map((n) => (
+              <Button
+                key={n}
+                variant={Number(data.columns || 4) === n ? "base" : "ghost"}
+                size="sm"
+                onClick={() => set("columns", n)}
+                className="w-10 h-8 rounded-lg text-xs"
+              >
+                {n}
+              </Button>
+            ))}
+          </div>
+        </Field>
+        <Field label="Default Sort">
+          <Select value={defaultSort} onValueChange={(v) => set("defaultSort", v)}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="All categories" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all__">All categories</SelectItem>
-              {(categories ?? []).map((c: { id: string; name: string }) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
+              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="price_asc">Price: Low to High</SelectItem>
+              <SelectItem value="price_desc">Price: High to Low</SelectItem>
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Limit">
-          <Input type="number" min={4} max={24} value={String(limit)} onChange={(e) => set("limit", Math.min(24, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
+        <Field label="Pagination Type">
+          <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="load_more">Load More button</SelectItem>
+              <SelectItem value="pagination">Numeric Pagination</SelectItem>
+            </SelectContent>
+          </Select>
         </Field>
-        <div className="flex items-center justify-between py-1">
-          <span className="text-sm text-brand-deep dark:text-brand-cream">Show filters</span>
-          <Switch checked={data.showFilters !== false} onCheckedChange={(v) => set("showFilters", v)} />
+        <Field label="Products Per Page">
+          <Input
+            type="number"
+            min={4}
+            max={48}
+            value={String(limit)}
+            onChange={(e) => set("limit", Math.min(48, Math.max(4, parseInt(e.target.value, 10) || 12)))}
+            className="h-9 w-24"
+          />
+        </Field>
+      </EditorSection>
+
+      <EditorSection title="Features & Filters">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between py-1">
+            <span className="text-sm">Enable Search</span>
+            <Switch checked={!!data.enableSearch} onCheckedChange={(v) => set("enableSearch", v)} />
+          </div>
+          <div className="flex items-center justify-between py-1 border-t border-brand-deep/5 dark:border-white/5 pt-2">
+            <span className="text-sm">Show Side Filters</span>
+            <Switch checked={data.showFilters !== false} onCheckedChange={(v) => set("showFilters", v)} />
+          </div>
+          {data.showFilters !== false && (
+            <div className="pl-4 space-y-2 border-l-2 border-brand-deep/10 dark:border-white/10 mt-2">
+              <div className="flex items-center justify-between py-1">
+                <span className="text-xs opacity-70">Price range</span>
+                <Switch checked={data.filterByPrice !== false} onCheckedChange={(v) => set("filterByPrice", v)} />
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-xs opacity-70">Categories</span>
+                <Switch checked={data.filterByCategories !== false} onCheckedChange={(v) => set("filterByCategories", v)} />
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-xs opacity-70">Date added</span>
+                <Switch checked={data.filterByDate !== false} onCheckedChange={(v) => set("filterByDate", v)} />
+              </div>
+            </div>
+          )}
         </div>
       </EditorSection>
     </div>
@@ -679,7 +761,11 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
 }
 
 function FeaturedProductsEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
-  const limit = Math.min(12, Math.max(4, Number(data.limit) || 8))
+  const { categories, isLoading: catsLoading } = useProductCategories()
+  const categoryIds = (data.categoryIds as string[]) ?? []
+  const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+  const paginationType = (data.paginationType as string) || "none"
+
   return (
     <div className="space-y-4 p-4">
       <EditorSection title="Content">
@@ -689,8 +775,47 @@ function FeaturedProductsEditor({ data, set }: { data: Record<string, unknown>; 
         <Field label="Subtitle">
           <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Optional" className="h-9" />
         </Field>
-        <Field label="Limit">
-          <Input type="number" min={4} max={12} value={String(limit)} onChange={(e) => set("limit", Math.min(12, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
+        <EditorSection title="Filter by Categories">
+          {catsLoading ? (
+            <div className="animate-pulse h-10 bg-brand-deep/5 dark:bg-white/5 rounded-xl" />
+          ) : (
+            <MultiSelect
+              options={(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))}
+              value={categoryIds}
+              onChange={(ids) => set("categoryIds", ids)}
+              placeholder="All categories"
+              searchPlaceholder="Search categories..."
+            />
+          )}
+        </EditorSection>
+        <Field label="Layout Columns">
+          <div className="flex gap-2">
+            {[2, 3, 4, 6].map((n) => (
+              <Button
+                key={n}
+                variant={Number(data.columns || 4) === n ? "base" : "ghost"}
+                size="sm"
+                onClick={() => set("columns", n)}
+                className="w-10 h-8 rounded-lg text-xs"
+              >
+                {n}
+              </Button>
+            ))}
+          </div>
+        </Field>
+        <Field label="Total Limit">
+          <Input type="number" min={4} max={24} value={String(limit)} onChange={(e) => set("limit", Math.min(24, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
+        </Field>
+        <Field label="Pagination Type">
+          <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None (just limit)</SelectItem>
+              <SelectItem value="load_more">Load More button</SelectItem>
+            </SelectContent>
+          </Select>
         </Field>
       </EditorSection>
     </div>
@@ -699,8 +824,12 @@ function FeaturedProductsEditor({ data, set }: { data: Record<string, unknown>; 
 
 function OnSaleEditor({ data, set }: { data: Record<string, unknown>; set: (k: string, v: unknown) => void }) {
   const { data: promotions, isLoading } = usePromotions()
+  const { categories, isLoading: catsLoading } = useProductCategories()
+  const categoryIds = (data.categoryIds as string[]) ?? []
   const promotionId = (data.promotionId as string) ?? ""
-  const limit = Math.min(16, Math.max(4, Number(data.limit) || 8))
+  const limit = Math.min(24, Math.max(4, Number(data.limit) || 8))
+  const paginationType = (data.paginationType as string) || "none"
+
   return (
     <div className="space-y-4 p-4">
       <EditorSection title="Content">
@@ -710,6 +839,19 @@ function OnSaleEditor({ data, set }: { data: Record<string, unknown>; set: (k: s
         <Field label="Subtitle">
           <Input value={(data.subtitle as string) ?? ""} onChange={(e) => set("subtitle", e.target.value)} placeholder="Optional" className="h-9" />
         </Field>
+        <EditorSection title="Filter by Categories">
+          {catsLoading ? (
+            <div className="animate-pulse h-10 bg-brand-deep/5 dark:bg-white/5 rounded-xl" />
+          ) : (
+            <MultiSelect
+              options={(categories ?? []).map((c: any) => ({ label: c.name, value: c.id }))}
+              value={categoryIds}
+              onChange={(ids) => set("categoryIds", ids)}
+              placeholder="All categories"
+              searchPlaceholder="Search categories..."
+            />
+          )}
+        </EditorSection>
         <Field label="Promotion">
           <Select value={promotionId || "__any__"} onValueChange={(v) => set("promotionId", v === "__any__" ? undefined : v)} disabled={isLoading}>
             <SelectTrigger className="h-9">
@@ -723,8 +865,34 @@ function OnSaleEditor({ data, set }: { data: Record<string, unknown>; set: (k: s
             </SelectContent>
           </Select>
         </Field>
+        <Field label="Layout Columns">
+          <div className="flex gap-2">
+            {[2, 3, 4, 6].map((n) => (
+              <Button
+                key={n}
+                variant={Number(data.columns || 4) === n ? "base" : "ghost"}
+                size="sm"
+                onClick={() => set("columns", n)}
+                className="w-10 h-8 rounded-lg text-xs"
+              >
+                {n}
+              </Button>
+            ))}
+          </div>
+        </Field>
         <Field label="Limit">
-          <Input type="number" min={4} max={16} value={String(limit)} onChange={(e) => set("limit", Math.min(16, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
+          <Input type="number" min={4} max={24} value={String(limit)} onChange={(e) => set("limit", Math.min(24, Math.max(4, parseInt(e.target.value, 10) || 8)))} className="h-9 w-24" />
+        </Field>
+        <Field label="Pagination Type">
+          <Select value={paginationType} onValueChange={(v) => set("paginationType", v)}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None (just limit)</SelectItem>
+              <SelectItem value="load_more">Load More button</SelectItem>
+            </SelectContent>
+          </Select>
         </Field>
       </EditorSection>
     </div>
@@ -912,18 +1080,34 @@ function GridLayoutEditor({ data, onUpdate }: { data: Record<string, unknown>; o
           />
         </Field>
         <Field label="Gap size">
-          <div className="flex gap-2">
-            {(["none", "sm", "md", "lg"] as const).map(g => (
-              <Button
-                key={g}
-                variant={style.gap === g ? "base" : "ghost"}
-                size="sm"
-                onClick={() => onUpdate({ ...data, style: { ...style, gap: g } })}
-                className="rounded-lg text-xs capitalize"
-              >
-                {g}
-              </Button>
-            ))}
+          <div className="flex flex-col gap-3">
+            <div className="flex gap-2">
+              {[
+                { value: "none", label: "None" },
+                { value: "sm", label: "Small" },
+                { value: "md", label: "Medium" },
+                { value: "lg", label: "Large" },
+              ].map((g) => (
+                <Button
+                  key={g.value}
+                  variant={style.gap === g.value ? "base" : "ghost"}
+                  size="sm"
+                  onClick={() => onUpdate({ ...data, style: { ...style, gap: g.value } })}
+                  className="rounded-lg text-xs flex-1"
+                >
+                  {g.label}
+                </Button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] uppercase opacity-40 font-bold shrink-0">Custom:</span>
+              <Input
+                value={["none", "sm", "md", "lg"].includes(style.gap || "") ? "" : style.gap}
+                onChange={(e) => onUpdate({ ...data, style: { ...style, gap: e.target.value } })}
+                placeholder="e.g. 20px, 2rem"
+                className="h-8 text-xs font-mono"
+              />
+            </div>
           </div>
         </Field>
       </EditorSection>
@@ -989,6 +1173,80 @@ function GridLayoutEditor({ data, onUpdate }: { data: Record<string, unknown>; o
   )
 }
 
+function SectionSpacingEditor({
+  config,
+  onUpdateConfig,
+}: {
+  config: BlockSection["config"]
+  onUpdateConfig: (c: Partial<BlockSection["config"]>) => void
+}) {
+  const padding = config.padding || "md"
+  const margin = config.margin || "none"
+
+  const presets = [
+    { value: "none", label: "None" },
+    { value: "sm", label: "Small" },
+    { value: "md", label: "Medium" },
+    { value: "lg", label: "Large" },
+  ]
+
+  const SpacingControl = ({
+    label,
+    value,
+    onChange
+  }: {
+    label: string;
+    value: string;
+    onChange: (val: string) => void
+  }) => {
+    const isPreset = presets.some(p => p.value === value)
+
+    return (
+      <EditorSection title={label}>
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2">
+            {presets.map((p) => (
+              <Button
+                key={p.value}
+                variant={value === p.value ? "base" : "ghost"}
+                size="sm"
+                onClick={() => onChange(p.value)}
+                className="rounded-lg text-xs flex-1"
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase opacity-40 font-bold shrink-0">Custom:</span>
+            <Input
+              value={isPreset ? "" : value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="e.g. 20px, 2rem"
+              className="h-8 text-xs font-mono"
+            />
+          </div>
+        </div>
+      </EditorSection>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
+      <SpacingControl
+        label="Padding (Internal)"
+        value={padding}
+        onChange={(val) => onUpdateConfig({ padding: val })}
+      />
+      <SpacingControl
+        label="Margin (External)"
+        value={margin}
+        onChange={(val) => onUpdateConfig({ margin: val })}
+      />
+    </div>
+  )
+}
+
 function SectionTextAlignEditor({
   config,
   onUpdateConfig,
@@ -999,7 +1257,7 @@ function SectionTextAlignEditor({
   const textAlign = config.textAlign || "left"
 
   return (
-    <div className="p-4 border-t border-brand-deep/5 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02]">
+    <div className="p-4 border-t border-brand-deep/5 dark:border-white/5 bg-black/2 dark:bg-white/2">
       <EditorSection title="Text alignment">
         <div className="flex gap-2">
           <Button

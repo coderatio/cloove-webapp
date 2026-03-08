@@ -43,7 +43,8 @@ export type SectionBackground =
   | { type: "image"; imageUrl: string; overlayOpacity: number; overlayColor?: string }
 
 export interface BlockConfig {
-  padding: "sm" | "md" | "lg"
+  padding: string
+  margin: string
   background: "default" | "muted" | "accent"
   textAlign: "left" | "center" | "right"
   showBorder: boolean
@@ -84,11 +85,12 @@ export interface GridLayoutColumn {
 
 export interface GridLayoutStyle {
   proportions?: string // e.g. "1fr 1fr", "1fr 2fr"
-  gap?: "none" | "sm" | "md" | "lg"
+  gap: string
 }
 
 const DEFAULT_CONFIG: BlockConfig = {
   padding: "md",
+  margin: "none",
   background: "default",
   textAlign: "left",
   showBorder: false,
@@ -164,9 +166,32 @@ const DEFAULT_DATA: Record<BlockType, () => Record<string, unknown>> = {
     images: [] as string[],
     columns: 3,
   }),
-  product_listing: () => ({ title: "Our Products", categoryId: undefined as string | undefined, limit: 8, showFilters: true }),
-  featured_products: () => ({ title: "Featured", subtitle: "", limit: 8 }),
-  on_sale: () => ({ title: "On Sale", subtitle: "", promotionId: undefined as string | undefined, limit: 8 }),
+  product_listing: () => ({
+    title: "Our Products",
+    categoryIds: [] as string[],
+    limit: 8,
+    columns: 4,
+    showFilters: true,
+    paginationType: "load_more", // "load_more" | "pagination" | "none"
+    enableSearch: true,
+    enabledFilters: ["price", "category"] as string[],
+    sortBy: "newest",
+  }),
+  featured_products: () => ({
+    title: "Featured",
+    subtitle: "",
+    limit: 8,
+    columns: 4,
+    paginationType: "none",
+  }),
+  on_sale: () => ({
+    title: "On Sale",
+    subtitle: "",
+    promotionId: undefined as string | undefined,
+    limit: 8,
+    columns: 4,
+    paginationType: "none",
+  }),
   promotion_banner: () => ({
     promotionId: undefined as string | undefined,
     title: "Promotion",
@@ -185,8 +210,8 @@ const DEFAULT_DATA: Record<BlockType, () => Record<string, unknown>> = {
     imageUrl: "",
     alt: "",
     caption: "",
-    aspectRatio: "auto", // "auto", "1:1", "4:3", "16:9"
-    rounded: "xl", // "none", "lg", "xl", "2xl", "3xl", "full"
+    aspectRatio: "auto",
+    rounded: "xl",
   }),
 }
 
