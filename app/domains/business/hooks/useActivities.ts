@@ -11,6 +11,10 @@ export type TypedActivityDto =
     | InventoryActivityDto
     | PaymentActivityDto
     | DebtActivityDto
+    | ExpenseActivityDto
+    | WithdrawalActivityDto
+    | WalletDepositActivityDto
+    | CustomerActivityDto
 
 export interface OrderActivityDto {
     id: string
@@ -55,6 +59,46 @@ export interface DebtActivityDto {
     storeId: string | null
 }
 
+export interface ExpenseActivityDto {
+    id: string
+    type: "EXPENSE_RECORDED"
+    timestamp: string
+    amount: number | null
+    currency: string
+    category: string
+    description: string
+    entityId: string
+    storeId: string | null
+}
+
+export interface WithdrawalActivityDto {
+    id: string
+    type: "WITHDRAWAL_REQUESTED" | "WITHDRAWAL_COMPLETED" | "WITHDRAWAL_FAILED"
+    timestamp: string
+    amount: number | null
+    currency: string
+    entityId: string
+    reason?: string | null
+}
+
+export interface WalletDepositActivityDto {
+    id: string
+    type: "WALLET_DEPOSIT"
+    timestamp: string
+    amount: number | null
+    currency: string
+    entityId: string
+    feeAmount?: number | null
+}
+
+export interface CustomerActivityDto {
+    id: string
+    type: "CUSTOMER_CREATED" | "CUSTOMER_UPDATED"
+    timestamp: string
+    entityId: string
+    customerName: string
+}
+
 export interface UseActivitiesParams {
     page: number
     limit: number
@@ -76,7 +120,9 @@ function mapTypedDtoToActivityItem(dto: TypedActivityDto): ActivityItem {
         ? new Date(dto.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         : ""
 
-    if ("orderId" in dto) {
+    const type = (dto as { type: string }).type
+
+    if ("orderId" in dto && type.startsWith("ORDER_")) {
         const order = dto as OrderActivityDto
         let description = "Activity recorded"
         if (order.type === "ORDER_CREATED") description = `New sale: ${order.itemCount} items`
@@ -112,8 +158,53 @@ function mapTypedDtoToActivityItem(dto: TypedActivityDto): ActivityItem {
         }
     }
 
+    if (type === "EXPENSE_RECORDED") {
+        const exp = dto as ExpenseActivityDto
+        return {
+            id: exp.id,
+            type: "withdrawal",
+            description: exp.description || `Expense: ${exp.category}`,
+            amount: exp.amount != null ? formatCurrency(exp.amount, { currency: exp.currency }) : undefined,
+            timeAgo,
+            txId: exp.entityId,
+            href: "/finance",
+            timestamp: exp.timestamp,
+        }
+    }
+
+    if (type.startsWith("WITHDRAWAL_")) {
+        const w = dto as WithdrawalActivityDto
+        let description = "Withdrawal requested"
+        if (w.type === "WITHDRAWAL_COMPLETED") description = "Withdrawal completed"
+        else if (w.type === "WITHDRAWAL_FAILED") description = "Withdrawal failed"
+        return {
+            id: w.id,
+            type: "withdrawal",
+            description,
+            amount: w.amount != null ? formatCurrency(w.amount, { currency: w.currency }) : undefined,
+            timeAgo,
+            txId: w.entityId,
+            href: "/finance",
+            timestamp: w.timestamp,
+        }
+    }
+
+    if (type === "WALLET_DEPOSIT") {
+        const d = dto as WalletDepositActivityDto
+        return {
+            id: d.id,
+            type: "deposit",
+            description: "Wallet deposit",
+            amount: d.amount != null ? formatCurrency(d.amount, { currency: d.currency }) : undefined,
+            timeAgo,
+            txId: d.entityId,
+            href: "/finance",
+            timestamp: d.timestamp,
+        }
+    }
+
     const payTypes = ["PAYMENT_RECEIVED", "PAYMENT_MARKED_PAID", "PAYMENT_MARKED_PARTIAL"]
-    if (payTypes.includes((dto as { type: string }).type)) {
+    if (payTypes.includes(type)) {
         const pay = dto as PaymentActivityDto
         return {
             id: pay.id,
@@ -121,24 +212,52 @@ function mapTypedDtoToActivityItem(dto: TypedActivityDto): ActivityItem {
             description: "Payment received",
             amount: pay.amount != null ? formatCurrency(pay.amount, { currency: pay.currency }) : undefined,
             timeAgo,
+            txId: pay.entityId,
             href: "/finance",
             timestamp: pay.timestamp,
         }
     }
 
-    const debt = dto as DebtActivityDto
-    let description = "Debt recorded"
-    if (debt.type === "DEBT_CLEARED") description = "Debt cleared"
-    else if (debt.type === "DEBT_REPAYMENT") description = "Debt repayment"
+    if (type.startsWith("DEBT_")) {
+        const debt = dto as DebtActivityDto
+        let description = "Debt recorded"
+        if (debt.type === "DEBT_CLEARED") description = "Debt cleared"
+        else if (debt.type === "DEBT_REPAYMENT") description = "Debt repayment"
+        return {
+            id: debt.id,
+            type: "debt",
+            description,
+            amount: debt.amount != null ? formatCurrency(debt.amount, { currency: debt.currency }) : undefined,
+            timeAgo,
+            txId: debt.entityId,
+            customer: debt.customerName ?? undefined,
+            href: "/finance",
+            timestamp: debt.timestamp,
+        }
+    }
+
+    if (type === "CUSTOMER_CREATED" || type === "CUSTOMER_UPDATED") {
+        const cust = dto as CustomerActivityDto
+        return {
+            id: cust.id,
+            type: "customer",
+            description: type === "CUSTOMER_CREATED"
+                ? `New customer: ${cust.customerName}`
+                : `Updated customer: ${cust.customerName}`,
+            timeAgo,
+            customer: cust.customerName,
+            href: "/customers",
+            timestamp: cust.timestamp,
+        }
+    }
+
+    // Generic Fallback
     return {
-        id: debt.id,
-        type: "debt",
-        description,
-        amount: debt.amount != null ? formatCurrency(debt.amount, { currency: debt.currency }) : undefined,
+        id: (dto as any).id,
+        type: "sale",
+        description: `Activity: ${type}`,
         timeAgo,
-        customer: debt.customerName ?? undefined,
-        href: "/finance",
-        timestamp: debt.timestamp,
+        timestamp: (dto as any).timestamp,
     }
 }
 

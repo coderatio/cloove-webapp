@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ChevronRight, Sparkles } from "lucide-react"
@@ -10,7 +10,6 @@ import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { Pagination } from "@/app/components/shared/Pagination"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { Button } from "@/app/components/ui/button"
 import { StoreContextSelector } from "@/app/components/shared/StoreContextSelector"
 import { DateRangeFilter } from "@/app/components/dashboard/DateRangeFilter"
 import { ActivityIcon, type ActivityItem } from "@/app/components/dashboard/ActivityStream"
@@ -24,18 +23,15 @@ import { subDays } from "date-fns"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
 import {
-    useFinanceTransactions,
     useTransaction,
     useRequeryTransaction,
-    type FinanceTransactionRow,
 } from "@/app/domains/finance/hooks/useFinance"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { TransactionDetailsDrawer } from "@/app/components/shared/TransactionDetailsDrawer"
-import { formatCurrency } from "@/app/lib/formatters"
 import { useQueryClient } from "@tanstack/react-query"
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 15
 
 const ACTIVITY_TYPE_GROUPS = [
     {
@@ -45,6 +41,10 @@ const ACTIVITY_TYPE_GROUPS = [
             { label: "Payments", value: "Payments" },
             { label: "Inventory", value: "Inventory" },
             { label: "Debt", value: "Debt" },
+            { label: "Customers", value: "Customers" },
+            { label: "Withdrawals", value: "Withdrawals" },
+            { label: "Deposits", value: "Deposits" },
+            { label: "Expenses", value: "Expenses" },
         ],
     },
 ] as const
@@ -54,39 +54,10 @@ const TYPE_TO_EVENT_TYPES: Record<string, string[]> = {
     Payments: ["PAYMENT_RECEIVED", "PAYMENT_MARKED_PAID", "PAYMENT_MARKED_PARTIAL"],
     Inventory: ["INVENTORY_INCREASED", "INVENTORY_DECREASED"],
     Debt: ["DEBT_CREATED", "DEBT_REPAYMENT", "DEBT_CLEARED"],
-}
-
-const ACTIVITY_PAGE_TRANSACTIONS_LIMIT = 15
-
-function transactionToActivityItem(tx: FinanceTransactionRow, currency: string): ActivityItem {
-    const amountStr = formatCurrency(tx.amount, { currency })
-    let type: ActivityItem["type"]
-    let description: string
-    if (tx.withdrawal) {
-        type = "withdrawal"
-        description = tx.withdrawal.accountName
-            ? `Withdrawal to ${tx.withdrawal.accountName}`
-            : "Withdrawal"
-    } else if (tx.type === "Credit") {
-        type = tx.sale ? "payment" : "deposit"
-        description = tx.sale
-            ? `Payment from ${tx.sale.customerName ?? tx.customer}`
-            : tx.customer || "Deposit"
-    } else {
-        type = "debt"
-        description = tx.method || tx.customer || "Debit"
-    }
-    return {
-        id: `tx-${tx.id}`,
-        type,
-        description,
-        amount: amountStr,
-        timeAgo: tx.dateLabel ?? tx.date ?? "",
-        customer: tx.sale?.customerName ?? (type === "deposit" ? undefined : tx.customer),
-        txId: tx.id,
-        href: "/finance",
-        timestamp: tx.createdAt,
-    }
+    Customers: ["CUSTOMER_CREATED", "CUSTOMER_UPDATED"],
+    Withdrawals: ["WITHDRAWAL_REQUESTED", "WITHDRAWAL_COMPLETED", "WITHDRAWAL_FAILED"],
+    Deposits: ["WALLET_DEPOSIT"],
+    Expenses: ["EXPENSE_RECORDED"],
 }
 
 function ActivityRow({
@@ -368,42 +339,13 @@ export function ActivityView() {
     const typeParam = selectedTypeFilters.flatMap((cat) => TYPE_TO_EVENT_TYPES[cat] ?? [])
     const currency = activeBusiness?.currency ?? "NGN"
 
-    const { activities: businessActivities, meta, isLoading, error } = useActivities({
+    const { activities, meta, isLoading, error } = useActivities({
         page,
         limit: PAGE_SIZE,
         storeId,
         type: typeParam,
         dateRange,
-        limitPerType: typeParam.length === 0 ? 3 : undefined,
     })
-
-    const { transactions: transactionsList } = useFinanceTransactions(
-        storeId === ALL_STORES_ID ? undefined : storeId,
-        1,
-        ACTIVITY_PAGE_TRANSACTIONS_LIMIT
-    )
-    const transactions = transactionsList ?? []
-
-    const activities = useMemo(() => {
-        if (page !== 1) return businessActivities
-        const txItems: ActivityItem[] = transactions.map((tx) =>
-            transactionToActivityItem(tx, currency)
-        )
-        const withSortKey: { sortKey: number; item: ActivityItem }[] = [
-            ...businessActivities.map((a) => ({
-                sortKey: a.timestamp ? new Date(a.timestamp).getTime() : 0,
-                item: a,
-            })),
-            ...txItems.map((a) => ({
-                sortKey: a.timestamp ? new Date(a.timestamp).getTime() : 0,
-                item: a,
-            })),
-        ]
-        const merged = withSortKey
-            .sort((x, y) => y.sortKey - x.sortKey)
-            .map((x) => x.item)
-        return merged.slice(0, PAGE_SIZE)
-    }, [page, businessActivities, transactions, currency])
 
     const { order, isLoading: orderLoading } = useOrder(selectedOrderId)
     const { transaction, isLoading: transactionLoading } = useTransaction(selectedTxId)
