@@ -438,7 +438,7 @@ export function useRequeryTransaction() {
 export function useTransactionReceipt() {
     return useMutation({
         mutationFn: async (id: string) => {
-            return apiClient.post<ApiResponse<{ url: string }>>(`/finance/transactions/${id}/receipt`, {})
+            return apiClient.post<{ url: string }>(`/finance/transactions/${id}/receipt`, {})
         },
         onError: (err: any) => {
             toast.error(err.data?.message || err.message || "Failed to generate receipt")
