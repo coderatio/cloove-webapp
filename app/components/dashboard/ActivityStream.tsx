@@ -9,6 +9,8 @@ import Link from "next/link"
 export interface ActivityItem {
     id: string
     type: 'sale' | 'payment' | 'debt' | 'customer' | 'inventory' | 'deposit' | 'withdrawal'
+    /** The raw business event type, e.g. "ORDER_CREATED", "CUSTOMER_UPDATED" */
+    eventType?: string
     description: string
     amount?: string
     timeAgo: string
@@ -18,6 +20,8 @@ export interface ActivityItem {
     txId?: string
     /** ISO timestamp for sorting when merging with other sources */
     timestamp?: string
+    /** Extra event metadata for displaying details */
+    metadata?: Record<string, unknown>
 }
 
 interface ActivityStreamProps {

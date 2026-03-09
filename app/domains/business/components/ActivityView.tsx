@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { motion } from "framer-motion"
 import { ChevronRight, Sparkles } from "lucide-react"
 import { PageTransition } from "@/app/components/layout/page-transition"
@@ -14,22 +13,13 @@ import { StoreContextSelector } from "@/app/components/shared/StoreContextSelect
 import { DateRangeFilter } from "@/app/components/dashboard/DateRangeFilter"
 import { ActivityIcon, type ActivityItem } from "@/app/components/dashboard/ActivityStream"
 import { useActivities } from "../hooks/useActivities"
-import { useOrder } from "@/app/domains/orders/hooks/useOrders"
-import { OrderDetailsDrawer } from "@/app/domains/orders/components/OrderDetailsDrawer"
 import { ALL_STORES_ID } from "@/app/domains/stores/data/storesMocks"
 import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 import { DateRange } from "react-day-picker"
 import { subDays } from "date-fns"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
-import {
-    useTransaction,
-    useRequeryTransaction,
-} from "@/app/domains/finance/hooks/useFinance"
-import { useBusiness } from "@/app/components/BusinessProvider"
-import { useStores } from "@/app/domains/stores/providers/StoreProvider"
-import { TransactionDetailsDrawer } from "@/app/components/shared/TransactionDetailsDrawer"
-import { useQueryClient } from "@tanstack/react-query"
+import { ActivityDetailsDrawer } from "@/app/components/shared/ActivityDetailsDrawer"
 
 const PAGE_SIZE = 15
 
@@ -62,186 +52,140 @@ const TYPE_TO_EVENT_TYPES: Record<string, string[]> = {
 
 function ActivityRow({
     item,
-    onOrderClick,
-    onFinanceClick,
+    onClick,
 }: {
     item: ActivityItem
-    onOrderClick?: (orderId: string) => void
-    onFinanceClick?: (txId: string) => void
+    onClick?: (item: ActivityItem) => void
 }) {
-    const content = (
-        <div className="flex items-center gap-4 p-3 hover:bg-white/60 dark:hover:bg-white/5 rounded-2xl transition-all group">
-            <ActivityIcon type={item.type} />
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors">
-                    {item.description}
-                </p>
-                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 truncate">
-                    {item.customer && (
-                        <span className="text-brand-accent/60 dark:text-brand-cream/80 font-medium">
-                            {item.customer} •{" "}
+    return (
+        <button
+            type="button"
+            onClick={() => onClick?.(item)}
+            className="block w-full text-left"
+        >
+            <div className="flex items-center gap-3.5 p-3 hover:bg-white/50 dark:hover:bg-white/[0.03] rounded-2xl transition-all duration-300 group cursor-pointer">
+                <ActivityIcon type={item.type} />
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors duration-300">
+                        {item.description}
+                    </p>
+                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 truncate mt-0.5">
+                        {item.customer && (
+                            <span className="text-brand-accent/60 dark:text-brand-cream/60 font-medium">
+                                {item.customer} •{" "}
+                            </span>
+                        )}
+                        {item.timeAgo}
+                    </p>
+                </div>
+                <div className="flex items-center gap-2.5">
+                    {item.amount && (
+                        <span
+                            className={cn(
+                                "text-sm font-bold whitespace-nowrap tabular-nums",
+                                (item.type === "sale" || item.type === "payment" || item.type === "deposit")
+                                    ? "text-brand-green dark:text-brand-gold"
+                                    : (item.type === "withdrawal" || item.type === "debt")
+                                      ? "text-rose-600 dark:text-rose-400"
+                                      : "text-brand-deep dark:text-brand-cream"
+                            )}
+                        >
+                            {(item.type === "withdrawal" || item.type === "debt") ? "-" : (item.type === "sale" || item.type === "payment" || item.type === "deposit") ? "+" : ""}
+                            {item.amount}
                         </span>
                     )}
-                    {item.timeAgo}
-                </p>
+                    <ChevronRight className="w-3.5 h-3.5 text-brand-accent/15 dark:text-brand-gold/20 group-hover:text-brand-green dark:group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all duration-300 shrink-0" />
+                </div>
             </div>
-            <div className="flex items-center gap-3">
-                {item.amount && (
-                    <span
-                        className={cn(
-                            "text-sm font-bold whitespace-nowrap",
-                            (item.type === "sale" || item.type === "payment" || item.type === "deposit")
-                                ? "text-brand-green dark:text-brand-gold"
-                                : item.type === "withdrawal" || item.type === "debt"
-                                  ? "text-rose-600 dark:text-rose-400"
-                                  : "text-brand-deep dark:text-brand-cream"
-                        )}
-                    >
-                        {item.type === "withdrawal" || item.type === "debt" ? "-" : item.type === "sale" || item.type === "payment" || item.type === "deposit" ? "+" : ""}
-                        {item.amount}
-                    </span>
-                )}
-                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors shrink-0" />
-            </div>
-        </div>
+        </button>
     )
-
-    if (item.type === "sale" && item.orderId && onOrderClick) {
-        return (
-            <button
-                type="button"
-                onClick={() => onOrderClick(item.orderId!)}
-                className="block w-full text-left"
-            >
-                {content}
-            </button>
-        )
-    }
-    if (item.txId && onFinanceClick) {
-        return (
-            <button
-                type="button"
-                onClick={() => onFinanceClick(item.txId!)}
-                className="block w-full text-left"
-            >
-                {content}
-            </button>
-        )
-    }
-    if (item.href) {
-        return (
-            <Link href={item.href} className="block">
-                {content}
-            </Link>
-        )
-    }
-    return <div>{content}</div>
 }
 
 function ActivityTable({
     activities,
-    onOrderClick,
-    onFinanceClick,
+    onActivityClick,
 }: {
     activities: ActivityItem[]
-    onOrderClick?: (orderId: string) => void
-    onFinanceClick?: (txId: string) => void
+    onActivityClick?: (item: ActivityItem) => void
 }) {
     return (
         <div className="overflow-x-auto">
             <table className="w-full min-w-[600px]">
                 <thead>
-                    <tr className="border-b border-brand-deep/5 dark:border-white/5">
-                        <th className="text-left py-3 px-3 text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60 w-14">
-                            Type
+                    <tr className="border-b border-brand-deep/8 dark:border-white/5">
+                        <th className="text-left py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-accent/50 dark:text-brand-cream/40 w-14" />
+                        <th className="text-left py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-accent/50 dark:text-brand-cream/40">
+                            Activity
                         </th>
-                        <th className="text-left py-3 px-3 text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">
-                            Description
-                        </th>
-                        <th className="text-right py-3 px-3 text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">
+                        <th className="text-left py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-accent/50 dark:text-brand-cream/40">
                             Amount
                         </th>
-                        <th className="text-right py-3 px-3 text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60 w-20">
-                            Time
+                        <th className="text-left py-3.5 px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-accent/50 dark:text-brand-cream/40 w-28">
+                            When
                         </th>
-                        <th className="w-10 py-3 px-3" aria-hidden />
+                        <th className="w-12 py-3.5 px-4" aria-hidden />
                     </tr>
                 </thead>
-                <tbody>
-                    {activities.map((item, index) => {
-                        const isOrderClickable = !!(item.orderId && onOrderClick)
-                        const isFinanceClickable = !!(item.txId && onFinanceClick)
-                        const isClickable = isOrderClickable || isFinanceClickable
-                        const handleClick = isOrderClickable
-                            ? () => onOrderClick!(item.orderId!)
-                            : isFinanceClickable
-                              ? () => onFinanceClick!(item.txId!)
-                              : undefined
-                        return (
-                            <motion.tr
-                                key={item.id}
-                                role={isClickable ? "button" : undefined}
-                                tabIndex={isClickable ? 0 : undefined}
-                                initial={{ opacity: 0, y: 4 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.02, duration: 0.2 }}
-                                className={cn(
-                                    "border-b border-brand-deep/5 dark:border-white/5 transition-colors",
-                                    isClickable && "cursor-pointer hover:bg-white/40 dark:hover:bg-white/5"
-                                )}
-                                onClick={handleClick}
-                                onKeyDown={
-                                    isClickable && handleClick
-                                        ? (e) => {
-                                              if (e.key === "Enter" || e.key === " ") {
-                                                  e.preventDefault()
-                                                  handleClick()
-                                              }
-                                          }
-                                        : undefined
+                <tbody className="divide-y divide-brand-deep/[0.04] dark:divide-white/[0.04]">
+                    {activities.map((item, index) => (
+                        <motion.tr
+                            key={item.id}
+                            role="button"
+                            tabIndex={0}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.02, duration: 0.3, ease: "easeOut" }}
+                            className="group cursor-pointer transition-all duration-300 hover:bg-white/50 dark:hover:bg-white/[0.03]"
+                            onClick={() => onActivityClick?.(item)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault()
+                                    onActivityClick?.(item)
                                 }
-                            >
-                                <td className="py-3 px-3">
-                                    <ActivityIcon type={item.type} />
-                                </td>
-                                <td className="py-3 px-3">
-                                    <div>
-                                        <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
-                                            {item.description}
+                            }}
+                        >
+                            <td className="py-3.5 px-4">
+                                <ActivityIcon type={item.type} />
+                            </td>
+                            <td className="py-3.5 px-4">
+                                <div>
+                                    <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors duration-300">
+                                        {item.description}
+                                    </p>
+                                    {item.customer && (
+                                        <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 mt-0.5">
+                                            {item.customer}
                                         </p>
-                                        {item.customer && (
-                                            <p className="text-xs text-brand-accent/50 dark:text-brand-cream/50">
-                                                {item.customer}
-                                            </p>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="py-3 px-3 text-right">
-                                    {item.amount && (
-                                        <span
-                                            className={cn(
-                                                "text-sm font-bold",
-                                                (item.type === "sale" || item.type === "payment" || item.type === "deposit")
-                                                    ? "text-brand-green dark:text-brand-gold"
-                                                    : (item.type === "withdrawal" || item.type === "debt")
-                                                      ? "text-rose-600 dark:text-rose-400"
-                                                      : "text-brand-deep dark:text-brand-cream"
-                                            )}
-                                        >
-                                            {(item.type === "withdrawal" || item.type === "debt" ? "-" : item.type === "sale" || item.type === "payment" || item.type === "deposit" ? "+" : "")}
-                                            {item.amount}
-                                        </span>
                                     )}
-                                </td>
-                                <td className="py-3 px-3 text-right text-xs text-brand-accent/60 dark:text-brand-cream/60">
+                                </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                                {item.amount && (
+                                    <span
+                                        className={cn(
+                                            "text-sm font-bold tabular-nums",
+                                            (item.type === "sale" || item.type === "payment" || item.type === "deposit")
+                                                ? "text-brand-green dark:text-brand-gold"
+                                                : (item.type === "withdrawal" || item.type === "debt")
+                                                  ? "text-rose-600 dark:text-rose-400"
+                                                  : "text-brand-deep dark:text-brand-cream"
+                                        )}
+                                    >
+                                        {(item.type === "withdrawal" || item.type === "debt") ? "-" : (item.type === "sale" || item.type === "payment" || item.type === "deposit") ? "+" : ""}
+                                        {item.amount}
+                                    </span>
+                                )}
+                            </td>
+                            <td className="py-3.5 px-4">
+                                <span className="text-xs text-brand-accent/50 dark:text-brand-cream/40 whitespace-nowrap">
                                     {item.timeAgo}
-                                </td>
-                                <td className="py-3 px-3 text-right w-10">
-                                    <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 inline-block" />
-                                </td>
-                            </motion.tr>
-                        )
-                    })}
+                                </span>
+                            </td>
+                            <td className="py-3.5 px-4 w-12">
+                                <ChevronRight className="w-3.5 h-3.5 text-brand-accent/15 dark:text-brand-gold/20 group-hover:text-brand-green dark:group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all duration-300 inline-block" />
+                            </td>
+                        </motion.tr>
+                    ))}
                 </tbody>
             </table>
         </div>
@@ -250,12 +194,10 @@ function ActivityTable({
 
 function ActivityCards({
     activities,
-    onOrderClick,
-    onFinanceClick,
+    onActivityClick,
 }: {
     activities: ActivityItem[]
-    onOrderClick?: (orderId: string) => void
-    onFinanceClick?: (txId: string) => void
+    onActivityClick?: (item: ActivityItem) => void
 }) {
     return (
         <div className="space-y-2">
@@ -266,11 +208,7 @@ function ActivityCards({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03, duration: 0.2 }}
                 >
-                    <ActivityRow
-                        item={item}
-                        onOrderClick={onOrderClick}
-                        onFinanceClick={onFinanceClick}
-                    />
+                    <ActivityRow item={item} onClick={onActivityClick} />
                 </motion.div>
             ))}
         </div>
@@ -322,9 +260,6 @@ function ActivitySkeleton() {
 
 export function ActivityView() {
     const isDesktop = useMediaQuery("(min-width: 768px)")
-    const queryClient = useQueryClient()
-    const { activeBusiness } = useBusiness()
-    const { stores } = useStores()
     const [page, setPage] = useState(1)
     const [storeId, setStoreId] = useState<string>(ALL_STORES_ID)
     const [date, setDate] = useState<DateRange | undefined>({
@@ -332,12 +267,10 @@ export function ActivityView() {
         to: new Date(),
     })
     const [selectedTypeFilters, setSelectedTypeFilters] = useState<string[]>([])
-    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
-    const [selectedTxId, setSelectedTxId] = useState<string | null>(null)
+    const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null)
 
     const dateRange = { from: date?.from, to: date?.to }
     const typeParam = selectedTypeFilters.flatMap((cat) => TYPE_TO_EVENT_TYPES[cat] ?? [])
-    const currency = activeBusiness?.currency ?? "NGN"
 
     const { activities, meta, isLoading, error } = useActivities({
         page,
@@ -346,10 +279,6 @@ export function ActivityView() {
         type: typeParam,
         dateRange,
     })
-
-    const { order, isLoading: orderLoading } = useOrder(selectedOrderId)
-    const { transaction, isLoading: transactionLoading } = useTransaction(selectedTxId)
-    const { mutateAsync: requeryTx, isPending: isRequerying } = useRequeryTransaction()
 
     useEffect(() => {
         if (error) {
@@ -402,7 +331,7 @@ export function ActivityView() {
                     }
                 />
 
-                <GlassCard className="rounded-[32px] p-4 md:p-6 overflow-hidden">
+                <GlassCard className="rounded-[32px] py-4 md:py-6 overflow-hidden">
                     {isLoading ? (
                         <ActivitySkeleton />
                     ) : activities.length === 0 ? (
@@ -410,14 +339,12 @@ export function ActivityView() {
                     ) : isDesktop ? (
                         <ActivityTable
                             activities={activities}
-                            onOrderClick={(id) => setSelectedOrderId(id)}
-                            onFinanceClick={(id) => setSelectedTxId(id)}
+                            onActivityClick={setSelectedActivity}
                         />
                     ) : (
                         <ActivityCards
                             activities={activities}
-                            onOrderClick={(id) => setSelectedOrderId(id)}
-                            onFinanceClick={(id) => setSelectedTxId(id)}
+                            onActivityClick={setSelectedActivity}
                         />
                     )}
 
@@ -427,50 +354,18 @@ export function ActivityView() {
                             totalPages={totalPages}
                             onPageChange={setPage}
                             isLoading={isLoading}
-                            className="mt-6"
+                            className="mt-6 px-4 md:px-6"
                         />
                     )}
                 </GlassCard>
             </div>
 
-            <OrderDetailsDrawer
-                order={order ?? null}
-                open={!!selectedOrderId}
+            <ActivityDetailsDrawer
+                activity={selectedActivity}
+                open={!!selectedActivity}
                 onOpenChange={(open) => {
-                    if (!open) setSelectedOrderId(null)
+                    if (!open) setSelectedActivity(null)
                 }}
-                isLoading={orderLoading}
-            />
-
-            <TransactionDetailsDrawer
-                transaction={transaction ?? null}
-                open={!!selectedTxId}
-                onOpenChange={(open) => {
-                    if (!open) setSelectedTxId(null)
-                }}
-                currencyCode={currency}
-                stores={stores}
-                isLoading={transactionLoading}
-                onRequery={
-                    selectedTxId
-                        ? async () => {
-                              try {
-                                  await requeryTx(selectedTxId)
-                                  await queryClient.invalidateQueries({
-                                      queryKey: [
-                                          "finance",
-                                          "transaction",
-                                          activeBusiness?.id,
-                                          selectedTxId,
-                                      ],
-                                  })
-                              } catch {
-                                  // toast handled by hook
-                              }
-                          }
-                        : undefined
-                }
-                isRequerying={isRequerying}
             />
         </PageTransition>
     )
