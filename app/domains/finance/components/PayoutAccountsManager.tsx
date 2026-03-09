@@ -33,9 +33,10 @@ import { cn } from "@/app/lib/utils"
 
 interface PayoutAccountsManagerProps {
     onClose?: () => void
+    showBackButton?: boolean
 }
 
-export function PayoutAccountsManager({ onClose }: PayoutAccountsManagerProps) {
+export function PayoutAccountsManager({ onClose, showBackButton = true }: PayoutAccountsManagerProps) {
     const { payoutAccounts, isLoading } = usePayoutAccounts()
     const [isAdding, setIsAdding] = useState(false)
     const [confirmAction, setConfirmAction] = useState<{ id: string, type: 'delete' | 'default' } | null>(null)
@@ -81,7 +82,7 @@ export function PayoutAccountsManager({ onClose }: PayoutAccountsManagerProps) {
         <div className="space-y-6 relative min-h-[400px]">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
-                    {onClose && (
+                    {showBackButton && onClose && (
                         <Button
                             variant="ghost"
                             size="icon"

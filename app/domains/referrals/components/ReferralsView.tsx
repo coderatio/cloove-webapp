@@ -5,25 +5,22 @@ import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import { Copy, Wallet, ArrowUpRight, Clock, CheckCircle2, Plus, Building2, Trash2, MoreVertical, ChevronRight, Loader2 } from "lucide-react"
+import { Copy, Wallet, ArrowUpRight, Clock, CheckCircle2, Building2, ChevronRight, Loader2, Users, Share2 } from "lucide-react"
 import { toast } from "sonner"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { PinVerificationDrawer } from "@/app/components/security/PinVerificationDrawer"
 import { WithdrawalDrawer } from "@/app/components/referrals/WithdrawalDrawer"
 import { AddBankDrawer } from "@/app/components/referrals/AddBankDrawer"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/app/components/ui/dropdown-menu"
-import {
     Drawer,
     DrawerContent,
     DrawerDescription,
     DrawerHeader,
     DrawerTitle,
+    DrawerBody,
+    DrawerStickyHeader,
 } from "@/app/components/ui/drawer"
+import { PayoutAccountsManager } from "@/app/domains/finance/components/PayoutAccountsManager"
 import {
     Dialog,
     DialogContent,
@@ -70,6 +67,7 @@ export function ReferralsView() {
 
     const [isWithdrawalDrawerOpen, setIsWithdrawalDrawerOpen] = useState(false)
     const [isAddBankDrawerOpen, setIsAddBankDrawerOpen] = useState(false)
+    const [isAccountsDrawerOpen, setIsAccountsDrawerOpen] = useState(false)
     const [isPinDrawerOpen, setIsPinDrawerOpen] = useState(false)
     const [selectedPayout, setSelectedPayout] = useState<ReferralPayout | null>(null)
     const [bankToDelete, setBankToDelete] = useState<ReferralBankAccount | null>(null)
@@ -212,14 +210,23 @@ export function ReferralsView() {
                                     {isLoading ? "..." : formatCurrency(availableBalance, currency)}
                                 </div>
                             </div>
-                            <Button
-                                onClick={startWithdrawal}
-                                disabled={isWithdrawing || !canWithdraw}
-                                className="w-full justify-between bg-brand-deep/5 hover:bg-brand-deep/10 dark:bg-white/5 dark:hover:bg-white/10 text-brand-deep dark:text-brand-cream mt-4 rounded-2xl h-12"
-                            >
-                                {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Withdraw Funds"}
-                                <ArrowUpRight className="w-4 h-4" />
-                            </Button>
+                            <div className="flex gap-2 mt-4">
+                                <Button
+                                    onClick={startWithdrawal}
+                                    disabled={isWithdrawing || !canWithdraw}
+                                    className="flex-1 justify-between bg-brand-deep/5 hover:bg-brand-deep/10 dark:bg-white/5 dark:hover:bg-white/10 text-brand-deep dark:text-brand-cream rounded-2xl h-12"
+                                >
+                                    {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Withdraw Funds"}
+                                    <ArrowUpRight className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    onClick={() => setIsAccountsDrawerOpen(true)}
+                                    variant="outline"
+                                    className="rounded-2xl h-12 border-brand-deep/10 dark:border-white/10 hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                                >
+                                    <Building2 className="w-4 h-4" />
+                                </Button>
+                            </div>
                         </GlassCard>
 
                         <div className="grid grid-cols-2 gap-6">
@@ -244,112 +251,71 @@ export function ReferralsView() {
                     </div>
                 </section>
 
-                <div className="grid md:grid-cols-2 gap-8">
-                    <section className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-serif text-xl text-brand-deep dark:text-brand-cream px-1">Bank Accounts</h3>
-                            <Button size="sm" variant="ghost" className="text-brand-gold hover:text-brand-gold/80 rounded-xl" onClick={startAddBank}>
-                                <Plus className="w-4 h-4 mr-1" /> Add New
-                            </Button>
-                        </div>
-                        <div className="space-y-3">
-                            {banksLoading ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <Loader2 className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
+                <section className="space-y-4">
+                    <h3 className="font-serif text-xl text-brand-deep dark:text-brand-cream px-1">Payout History</h3>
+                    <div className="space-y-3">
+                        {payoutsLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
+                            </div>
+                        ) : payouts.length === 0 ? (
+                            <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10 rounded-3xl">
+                                <div className="w-14 h-14 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+                                    <Wallet className="w-7 h-7 text-brand-deep/20 dark:text-white/20" />
                                 </div>
-                            ) : banks.length === 0 ? (
-                                <GlassCard className="p-6 rounded-3xl text-center text-brand-deep/60 dark:text-brand-cream/60 text-sm">
-                                    No bank accounts. Add one to withdraw referral earnings.
-                                </GlassCard>
-                            ) : (
-                                banks.map((bank) => (
-                                    <GlassCard key={bank.id} className="p-4 flex items-center justify-between group rounded-3xl">
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">No payouts yet</p>
+                                    <p className="text-xs text-brand-accent/40 dark:text-white/30 max-w-[240px]">
+                                        Your withdrawal history will appear here once you make your first payout.
+                                    </p>
+                                </div>
+                                {canWithdraw && (
+                                    <Button
+                                        onClick={startWithdrawal}
+                                        size="sm"
+                                        className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl gap-2"
+                                    >
+                                        <ArrowUpRight className="w-4 h-4" />
+                                        Withdraw Funds
+                                    </Button>
+                                )}
+                            </GlassCard>
+                        ) : (
+                            payouts.map((payout) => (
+                                <GlassCard
+                                    key={payout.id}
+                                    className="p-4 group hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors cursor-pointer rounded-3xl"
+                                    onClick={() => setSelectedPayout(payout)}
+                                >
+                                    <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                                <Building2 className="w-5 h-5 text-brand-deep/60 dark:text-brand-cream/60" />
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${payout.status === "completed"
+                                                ? "bg-emerald-500/10 text-emerald-500"
+                                                : "bg-amber-500/10 text-amber-500"
+                                                }`}>
+                                                {payout.status === "completed" ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
                                             </div>
                                             <div>
-                                                <div className="font-medium text-brand-deep dark:text-brand-cream flex items-center gap-2">
-                                                    {bank.bankName}
-                                                    {bank.isPrimary && (
-                                                        <span className="text-[10px] bg-brand-gold/10 text-brand-gold px-1.5 py-0.5 rounded-full font-bold uppercase">Primary</span>
-                                                    )}
-                                                </div>
-                                                <div className="text-sm text-brand-deep/60 dark:text-brand-cream/60">
-                                                    {bank.accountNumber} • {bank.accountName}
+                                                <div className="font-medium text-brand-deep dark:text-brand-cream">Withdrawal</div>
+                                                <div className="text-xs text-brand-deep/60 dark:text-brand-cream/60">
+                                                    {formatDate(payout.createdAt)} • {payout.reference}
                                                 </div>
                                             </div>
                                         </div>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
-                                                    <MoreVertical className="w-4 h-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem
-                                                    className="text-red-500 focus:text-red-600 cursor-pointer"
-                                                    onClick={() => handleDeleteBank(bank)}
-                                                    disabled={isDeletingBank}
-                                                >
-                                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </GlassCard>
-                                ))
-                            )}
-                        </div>
-                    </section>
-
-                    <section className="space-y-4">
-                        <h3 className="font-serif text-xl text-brand-deep dark:text-brand-cream px-1">Payout History</h3>
-                        <div className="space-y-3">
-                            {payoutsLoading ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <Loader2 className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
-                                </div>
-                            ) : payouts.length === 0 ? (
-                                <GlassCard className="p-6 rounded-3xl text-center text-brand-deep/60 dark:text-brand-cream/60 text-sm">
-                                    No payouts yet.
+                                        <div className="text-right">
+                                            <div className="font-serif text-lg text-brand-deep dark:text-brand-cream">
+                                                {formatCurrency(payout.amount, payout.currency)}
+                                            </div>
+                                            <div className="text-xs text-brand-deep/40 dark:text-brand-cream/40 flex items-center justify-end gap-1">
+                                                View Details <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </GlassCard>
-                            ) : (
-                                payouts.map((payout) => (
-                                    <GlassCard
-                                        key={payout.id}
-                                        className="p-4 group hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors cursor-pointer rounded-3xl"
-                                        onClick={() => setSelectedPayout(payout)}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${payout.status === "completed"
-                                                    ? "bg-emerald-500/10 text-emerald-500"
-                                                    : "bg-amber-500/10 text-amber-500"
-                                                    }`}>
-                                                    {payout.status === "completed" ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                                                </div>
-                                                <div>
-                                                    <div className="font-medium text-brand-deep dark:text-brand-cream">Withdrawal</div>
-                                                    <div className="text-xs text-brand-deep/60 dark:text-brand-cream/60">
-                                                        {formatDate(payout.createdAt)} • {payout.reference}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-serif text-lg text-brand-deep dark:text-brand-cream">
-                                                    {formatCurrency(payout.amount, payout.currency)}
-                                                </div>
-                                                <div className="text-xs text-brand-deep/40 dark:text-brand-cream/40 flex items-center justify-end gap-1">
-                                                    View Details <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </GlassCard>
-                                ))
-                            )}
-                        </div>
-                    </section>
-                </div>
+                            ))
+                        )}
+                    </div>
+                </section>
 
                 <section className="space-y-4">
                     <h3 className="font-serif text-xl text-brand-deep dark:text-brand-cream px-1">People you referred</h3>
@@ -359,8 +325,25 @@ export function ReferralsView() {
                                 <Loader2 className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
                             </div>
                         ) : referralList.length === 0 ? (
-                            <GlassCard className="p-6 rounded-3xl text-center text-brand-deep/60 dark:text-brand-cream/60 text-sm">
-                                No referrals yet. Share your code to get started.
+                            <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10 rounded-3xl">
+                                <div className="w-14 h-14 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+                                    <Users className="w-7 h-7 text-brand-deep/20 dark:text-white/20" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">No referrals yet</p>
+                                    <p className="text-xs text-brand-accent/40 dark:text-white/30 max-w-[240px]">
+                                        Share your referral code with other businesses and start earning commissions.
+                                    </p>
+                                </div>
+                                <Button
+                                    onClick={() => stats?.referralCode && copyToClipboard(stats.referralCode)}
+                                    disabled={!stats?.referralCode}
+                                    size="sm"
+                                    className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl gap-2"
+                                >
+                                    <Share2 className="w-4 h-4" />
+                                    Share Your Code
+                                </Button>
                             </GlassCard>
                         ) : (
                             referralList.map((ref) => (
@@ -444,7 +427,20 @@ export function ReferralsView() {
                     </DrawerContent>
                 </Drawer>
 
+                <Drawer open={isAccountsDrawerOpen} onOpenChange={setIsAccountsDrawerOpen}>
+                    <DrawerContent>
+                        <DrawerStickyHeader>
+                            <DrawerTitle>Payout Accounts</DrawerTitle>
+                            <DrawerDescription>Manage your bank accounts for referral payouts.</DrawerDescription>
+                        </DrawerStickyHeader>
+                        <DrawerBody className="p-4 pb-12">
+                            <PayoutAccountsManager onClose={() => setIsAccountsDrawerOpen(false)} showBackButton={false} />
+                        </DrawerBody>
+                    </DrawerContent>
+                </Drawer>
+
                 <Dialog open={!!bankToDelete} onOpenChange={(open) => !open && (setBankToDelete(null), setDeletePin(""))}>
+
                     <DialogContent className="max-w-[400px]">
                         <DialogHeader>
                             <DialogTitle>Remove bank account?</DialogTitle>

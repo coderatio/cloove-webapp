@@ -365,9 +365,9 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                     </div>
                                     <div className="space-y-2">
                                         <h4 className="text-3xl font-serif font-black text-brand-deep dark:text-white tracking-tight">Authorize Withdrawal</h4>
-                                        <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase font-black tracking-[0.2em]">Enter your 4-digit pin to authorize withdrawal of</p>
+                                        <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase font-black tracking-[0.2em]">Enter your 4-digit pin to authorize debit of</p>
                                         <div className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">
-                                            {formatCurrency(amountNum, { currency: currencyCode })}
+                                            {formatCurrency(amountNum + fee, { currency: currencyCode })}
                                         </div>
                                     </div>
                                 </div>
