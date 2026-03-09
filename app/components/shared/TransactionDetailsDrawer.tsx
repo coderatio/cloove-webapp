@@ -13,10 +13,22 @@ import {
     CreditCard,
     Globe,
     Share2,
+    FileText,
+    Image as ImageIcon,
 } from "lucide-react"
 import { toast } from "sonner"
+import { toPng } from "html-to-image"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
+import { useBusiness } from "@/app/components/BusinessProvider"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu"
+import { useTransactionReceipt } from "@/app/domains/finance/hooks/useFinance"
+import { TransactionReceipt } from "@/app/domains/finance/components/TransactionReceipt"
 import {
     Drawer,
     DrawerContent,
@@ -33,8 +45,10 @@ import { Badge } from "@/app/components/ui/badge"
 import { Skeleton } from "@/app/components/ui/skeleton"
 import type { FinanceTransactionRow } from "@/app/domains/finance/hooks/useFinance"
 
+export type TransactionDetailsTransaction = FinanceTransactionRow | (Omit<FinanceTransactionRow, 'amount' | 'storeId'> & { amount: string | number; amountNumeric?: number; storeId?: string | null })
+
 export interface TransactionDetailsDrawerProps {
-    transaction: FinanceTransactionRow | null
+    transaction: TransactionDetailsTransaction | null
     open: boolean
     onOpenChange: (open: boolean) => void
     currencyCode: string
@@ -42,6 +56,7 @@ export interface TransactionDetailsDrawerProps {
     onRequery?: () => void
     isRequerying?: boolean
     isLoading?: boolean
+    onApproveManually?: () => void
 }
 
 const statusDisplay = (status: string) => {
@@ -81,10 +96,99 @@ export function TransactionDetailsDrawer({
     onRequery,
     isRequerying = false,
     isLoading = false,
+    onApproveManually,
 }: TransactionDetailsDrawerProps) {
     const tx = transaction
     const status = (tx?.status ?? "") as string
     const isPendingOrProcessing = status === "Pending" || status === "Processing"
+    const amountValue = tx ? (typeof tx.amount === "number" ? tx.amount : ((tx as any).amountNumeric ?? 0)) : 0
+
+    const { activeBusiness } = useBusiness()
+    const { mutateAsync: generatePdf, isPending: isGeneratingPdf } = useTransactionReceipt()
+    const [isGeneratingImage, setIsGeneratingImage] = React.useState(false)
+    const receiptRef = React.useRef<HTMLDivElement>(null)
+
+    const handleSharePDF = async () => {
+        if (!tx) return
+        const toastId = toast.loading("Preparing PDF receipt...")
+        try {
+            const result = await generatePdf(tx.id)
+            const url = result?.url
+            if (url) {
+                if (navigator.share) {
+                    const response = await fetch(url)
+                    const blob = await response.blob()
+                    const file = new File([blob], `receipt-${tx.reference || tx.id}.pdf`, { type: 'application/pdf' })
+
+                    if (navigator.canShare?.({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Transaction Receipt',
+                            text: `Receipt for transaction ${tx.reference || tx.id}`
+                        })
+                    } else {
+                        window.open(url, '_blank')
+                    }
+                } else {
+                    window.open(url, '_blank')
+                    toast.success("Opening PDF receipt")
+                }
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("Failed to generate PDF receipt")
+        } finally {
+            toast.dismiss(toastId)
+        }
+    }
+
+    const handleShareImage = async () => {
+        if (!tx || !receiptRef.current) return
+        setIsGeneratingImage(true)
+        const toastId = toast.loading("Generating receipt image...")
+
+        try {
+            // Give it a tiny moment to ensure it's rendered
+            await new Promise(resolve => setTimeout(resolve, 100))
+
+            const dataUrl = await toPng(receiptRef.current, {
+                quality: 1,
+                pixelRatio: 2,
+                backgroundColor: '#fdfcf8'
+            })
+
+            if (navigator.share) {
+                const response = await fetch(dataUrl)
+                const blob = await response.blob()
+                const file = new File([blob], `receipt-${tx.reference || tx.id}.png`, { type: 'image/png' })
+
+                if (navigator.canShare?.({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Transaction Receipt',
+                        text: `Receipt for transaction ${tx.reference || tx.id}`
+                    })
+                } else {
+                    const link = document.createElement('a')
+                    link.download = `receipt-${tx.reference || tx.id}.png`
+                    link.href = dataUrl
+                    link.click()
+                }
+            } else {
+                const link = document.createElement('a')
+                link.download = `receipt-${tx.reference || tx.id}.png`
+                link.href = dataUrl
+                link.click()
+                toast.success("Receipt image downloaded")
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("Failed to generate image")
+        } finally {
+            setIsGeneratingImage(false)
+            toast.dismiss(toastId)
+        }
+    }
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
@@ -93,7 +197,7 @@ export function TransactionDetailsDrawer({
                     <DrawerTitle>Transaction Details</DrawerTitle>
                     <DrawerDescription>View detailed information about this transaction.</DrawerDescription>
                 </VisuallyHidden>
-                <DrawerStickyHeader className="border-b-0 pb-0">
+                <DrawerStickyHeader className="border-b-0">
                     <div className="flex flex-col items-center text-center pt-4">
                         {isLoading && !tx ? (
                             <div className="space-y-4 w-full max-w-sm">
@@ -122,7 +226,7 @@ export function TransactionDetailsDrawer({
                                 <h2 className="text-5xl sm:text-7xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                                     {tx ? (
                                         <CurrencyDisplay
-                                            value={typeof tx.amount === "number" ? tx.amount : 0}
+                                            value={amountValue}
                                             currency={currencyCode}
                                             className="justify-center"
                                         />
@@ -147,256 +251,309 @@ export function TransactionDetailsDrawer({
                             <Skeleton className="h-40 w-full rounded-2xl" />
                         </div>
                     ) : (
-                    <div className="max-w-2xl mx-auto space-y-8">
-                        <div className="px-1">
-                            <div
-                                className={cn(
-                                    "p-1 rounded-4xl border transition-all duration-500",
-                                    status === "Cleared" && "bg-emerald-500/5 border-emerald-500/10",
-                                    isPendingOrProcessing && "bg-amber-500/5 border-amber-500/10",
-                                    status === "Failed" && "bg-rose-500/5 border-rose-500/10"
-                                )}
-                            >
-                                <div className="flex items-center justify-between p-4 pr-6">
-                                    <div className="flex items-center gap-4">
-                                        <div
-                                            className={cn(
-                                                "h-14 w-14 rounded-2xl flex items-center justify-center shadow-sm",
-                                                status === "Cleared" &&
+                        <div className="max-w-2xl mx-auto space-y-8">
+                            <div className="px-1">
+                                <div
+                                    className={cn(
+                                        "p-1 rounded-4xl border transition-all duration-500",
+                                        status === "Cleared" && "bg-emerald-500/5 border-emerald-500/10",
+                                        isPendingOrProcessing && "bg-amber-500/5 border-amber-500/10",
+                                        status === "Failed" && "bg-rose-500/5 border-rose-500/10"
+                                    )}
+                                >
+                                    <div className="flex items-center justify-between p-4 pr-6">
+                                        <div className="flex items-center gap-4">
+                                            <div
+                                                className={cn(
+                                                    "h-14 w-14 rounded-2xl flex items-center justify-center shadow-sm",
+                                                    status === "Cleared" &&
                                                     "bg-emerald-500 text-white shadow-emerald-500/20",
-                                                isPendingOrProcessing &&
+                                                    isPendingOrProcessing &&
                                                     "bg-amber-500 text-white shadow-amber-500/20",
-                                                status === "Failed" &&
+                                                    status === "Failed" &&
                                                     "bg-rose-500 text-white shadow-rose-500/20"
-                                            )}
-                                        >
-                                            {status === "Cleared" && (
-                                                <CheckCircle2 className="w-7 h-7" />
-                                            )}
-                                            {isPendingOrProcessing && (
-                                                <Clock
+                                                )}
+                                            >
+                                                {status === "Cleared" && (
+                                                    <CheckCircle2 className="w-7 h-7" />
+                                                )}
+                                                {isPendingOrProcessing && (
+                                                    <Clock
+                                                        className={cn(
+                                                            "w-7 h-7",
+                                                            status === "Processing" && "animate-pulse"
+                                                        )}
+                                                    />
+                                                )}
+                                                {status === "Failed" && (
+                                                    <XCircle className="w-7 h-7" />
+                                                )}
+                                                {!status || (!["Cleared", "Pending", "Processing", "Failed"].includes(status)) && (
+                                                    <Clock className="w-7 h-7 opacity-70" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 mb-0.5">
+                                                    Payment Status
+                                                </p>
+                                                <p className="font-bold text-xl text-brand-deep dark:text-brand-cream">
+                                                    {status || "—"}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {isPendingOrProcessing && onRequery ? (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={onRequery}
+                                                disabled={isRequerying}
+                                                className="h-10 rounded-xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold/10 px-4"
+                                            >
+                                                <RefreshCcw
                                                     className={cn(
-                                                        "w-7 h-7",
-                                                        status === "Processing" && "animate-pulse"
+                                                        "w-4 h-4 mr-2",
+                                                        isRequerying && "animate-spin"
                                                     )}
                                                 />
-                                            )}
-                                            {status === "Failed" && (
-                                                <XCircle className="w-7 h-7" />
-                                            )}
-                                            {!status || (!["Cleared", "Pending", "Processing", "Failed"].includes(status)) && (
-                                                <Clock className="w-7 h-7 opacity-70" />
+                                                {isRequerying ? "Querying..." : "Re-query"}
+                                            </Button>
+                                        ) : (
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 mb-0.5">
+                                                    Verification
+                                                </p>
+                                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                                    {verificationLabel(status)}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between px-1">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30">
+                                        Transaction Information
+                                    </h3>
+                                    <Badge
+                                        variant="outline"
+                                        className="text-[9px] uppercase tracking-wider h-5 flex items-center"
+                                    >
+                                        {tx?.method}
+                                    </Badge>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-3">
+                                    <div className="p-6 rounded-[2.5rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 space-y-6">
+                                        <div className="flex items-center justify-between group">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">
+                                                    Reference ID
+                                                </p>
+                                                <p className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream truncate">
+                                                    {tx?.reference ?? tx?.id ?? "—"}
+                                                </p>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 rounded-xl transition-all duration-300 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
+                                                onClick={() => {
+                                                    const id = tx?.reference ?? tx?.id ?? ""
+                                                    navigator.clipboard.writeText(id)
+                                                    toast.success("ID copied to clipboard")
+                                                }}
+                                            >
+                                                <Copy className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1.5">
+                                                    Transaction Type
+                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center">
+                                                        <CreditCard className="w-3 h-3 text-brand-gold" />
+                                                    </div>
+                                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                                        {tx?.method}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {tx?.storeId && (
+                                                <div className="text-right">
+                                                    <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1.5">
+                                                        Location
+                                                    </p>
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                                            {stores.find((s) => s.id === tx?.storeId)
+                                                                ?.name ?? "Main Branch"}
+                                                        </p>
+                                                        <Globe className="w-3 h-3 text-emerald-500" />
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
-                                        <div>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 mb-0.5">
-                                                Payment Status
+
+                                        <div className="pt-4 border-t border-brand-deep/5 dark:border-white/5">
+                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-2">
+                                                Time & Date
                                             </p>
-                                            <p className="font-bold text-xl text-brand-deep dark:text-brand-cream">
-                                                {status || "—"}
-                                            </p>
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                                        {tx?.fullDate ?? tx?.date}
+                                                    </p>
+                                                    <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 mt-1">
+                                                        {tx?.dateLabel ?? tx?.date} • {statusDisplay(status)}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {isPendingOrProcessing && onRequery ? (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={onRequery}
-                                            disabled={isRequerying}
-                                            className="h-10 rounded-xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold/10 px-4"
-                                        >
-                                            <RefreshCcw
-                                                className={cn(
-                                                    "w-4 h-4 mr-2",
-                                                    isRequerying && "animate-spin"
-                                                )}
-                                            />
-                                            {isRequerying ? "Querying..." : "Re-query"}
-                                        </Button>
-                                    ) : (
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 mb-0.5">
-                                                Verification
-                                            </p>
-                                            <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
-                                                {verificationLabel(status)}
-                                            </p>
+                                    {(tx?.withdrawal ?? tx?.sale) && (
+                                        <div className="p-6 rounded-[2.5rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
+                                            {tx?.withdrawal && (
+                                                <div>
+                                                    <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-4">
+                                                        Destination Account
+                                                    </p>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-12 rounded-2xl bg-brand-deep/10 dark:bg-brand-gold/10 flex items-center justify-center">
+                                                            <Banknote className="w-6 h-6 text-brand-deep dark:text-brand-gold" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-base font-bold text-brand-deep dark:text-brand-cream">
+                                                                {tx.withdrawal.bankName}
+                                                            </p>
+                                                            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                                                                {tx.withdrawal.accountNumber} •{" "}
+                                                                {tx.withdrawal.accountName}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {tx?.sale && (
+                                                <div className="space-y-6">
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
+                                                            Linked Sale
+                                                        </p>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-[9px] uppercase tracking-wider"
+                                                        >
+                                                            {tx.sale.status === "COMPLETED" ||
+                                                                tx.sale.status === "completed"
+                                                                ? "Completed"
+                                                                : tx.sale.status}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <div>
+                                                            <p className="text-base font-bold text-brand-deep dark:text-brand-cream">
+                                                                {tx.sale.customerName ?? "Walking Customer"}
+                                                            </p>
+                                                            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 mt-0.5">
+                                                                Sale #{tx.sale.shortCode}
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">
+                                                                Sale Total
+                                                            </p>
+                                                            <p className="text-base font-bold font-mono text-brand-deep dark:text-brand-cream">
+                                                                {formatCurrency(tx.sale.totalAmount, {
+                                                                    currency: currencyCode,
+                                                                })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between px-1">
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/30">
-                                    Transaction Information
-                                </h3>
-                                <Badge
-                                    variant="outline"
-                                    className="text-[9px] uppercase tracking-wider h-5 flex items-center"
-                                >
-                                    {tx?.method}
-                                </Badge>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3">
-                                <div className="p-6 rounded-[2.5rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 space-y-6">
-                                    <div className="flex items-center justify-between group">
-                                        <div>
-                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">
-                                                Reference ID
-                                            </p>
-                                            <p className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream truncate">
-                                                {tx?.reference ?? tx?.id ?? "—"}
-                                            </p>
-                                        </div>
+                            <div className="flex flex-col sm:flex-row gap-4 pt-4 px-1">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
                                         <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 rounded-xl transition-all duration-300 bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
-                                            onClick={() => {
-                                                const id = tx?.reference ?? tx?.id ?? ""
-                                                navigator.clipboard.writeText(id)
-                                                toast.success("ID copied to clipboard")
-                                            }}
+                                            variant="outline"
+                                            disabled={isGeneratingPdf || isGeneratingImage}
+                                            className="flex-1 h-14 rounded-3xl border-brand-deep/10 dark:border-white/10 font-bold flex items-center justify-center gap-3 transition-all duration-300 hover:bg-brand-deep/5"
                                         >
-                                            <Copy className="w-3.5 h-3.5" />
+                                            <Share2 className={cn("w-4 h-4", (isGeneratingPdf || isGeneratingImage) && "animate-pulse")} />
+                                            {isGeneratingPdf || isGeneratingImage ? "Generating..." : "Share Receipt"}
                                         </Button>
-                                    </div>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="w-56 rounded-2xl p-2 bg-white/80 backdrop-blur-xl border-brand-deep/5">
+                                        <DropdownMenuItem
+                                            onClick={handleShareImage}
+                                            className="rounded-xl h-12 flex items-center gap-3 cursor-pointer hover:bg-brand-deep/5 focus:bg-brand-deep/5"
+                                        >
+                                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                                                <ImageIcon className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-sm">Share as Image</span>
+                                                <span className="text-[10px] text-brand-accent/40 uppercase tracking-widest">Mobile friendly</span>
+                                            </div>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={handleSharePDF}
+                                            className="rounded-xl h-12 flex items-center gap-3 cursor-pointer hover:bg-brand-deep/5 focus:bg-brand-deep/5"
+                                        >
+                                            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                                                <FileText className="w-4 h-4" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-sm">Share as PDF</span>
+                                                <span className="text-[10px] text-brand-accent/40 uppercase tracking-widest">Formal Document</span>
+                                            </div>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
 
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1.5">
-                                                Transaction Type
-                                            </p>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center">
-                                                    <CreditCard className="w-3 h-3 text-brand-gold" />
-                                                </div>
-                                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
-                                                    {tx?.method}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        {tx?.storeId && (
-                                            <div className="text-right">
-                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1.5">
-                                                    Location
-                                                </p>
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
-                                                        {stores.find((s) => s.id === tx?.storeId)
-                                                            ?.name ?? "Main Branch"}
-                                                    </p>
-                                                    <Globe className="w-3 h-3 text-emerald-500" />
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="pt-4 border-t border-brand-deep/5 dark:border-white/5">
-                                        <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-2">
-                                            Time & Date
-                                        </p>
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div>
-                                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
-                                                    {tx?.fullDate ?? tx?.date}
-                                                </p>
-                                                <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 mt-1">
-                                                    {tx?.dateLabel ?? tx?.date} • {statusDisplay(status)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {(tx?.withdrawal ?? tx?.sale) && (
-                                    <div className="p-6 rounded-[2.5rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
-                                        {tx?.withdrawal && (
-                                            <div>
-                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-4">
-                                                    Destination Account
-                                                </p>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-2xl bg-brand-deep/10 dark:bg-brand-gold/10 flex items-center justify-center">
-                                                        <Banknote className="w-6 h-6 text-brand-deep dark:text-brand-gold" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-base font-bold text-brand-deep dark:text-brand-cream">
-                                                            {tx.withdrawal.bankName}
-                                                        </p>
-                                                        <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
-                                                            {tx.withdrawal.accountNumber} •{" "}
-                                                            {tx.withdrawal.accountName}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {tx?.sale && (
-                                            <div className="space-y-6">
-                                                <div className="flex items-center justify-between">
-                                                    <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
-                                                        Linked Sale
-                                                    </p>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="text-[9px] uppercase tracking-wider"
-                                                    >
-                                                        {tx.sale.status === "COMPLETED" ||
-                                                        tx.sale.status === "completed"
-                                                            ? "Completed"
-                                                            : tx.sale.status}
-                                                    </Badge>
-                                                </div>
-                                                <div className="flex items-center justify-between gap-4">
-                                                    <div>
-                                                        <p className="text-base font-bold text-brand-deep dark:text-brand-cream">
-                                                            {tx.sale.customerName ?? "Walking Customer"}
-                                                        </p>
-                                                        <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 mt-0.5">
-                                                            Sale #{tx.sale.shortCode}
-                                                        </p>
-                                                    </div>
-                                                    <div className="text-right shrink-0">
-                                                        <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">
-                                                            Sale Total
-                                                        </p>
-                                                        <p className="text-base font-bold font-mono text-brand-deep dark:text-brand-cream">
-                                                            {formatCurrency(tx.sale.totalAmount, {
-                                                                currency: currencyCode,
-                                                            })}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                {onApproveManually && status === "Pending" ? (
+                                    <Button
+                                        onClick={onApproveManually}
+                                        className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:hover:text-brand-deep font-bold shadow-xl"
+                                    >
+                                        Approve Manually
+                                    </Button>
+                                ) : (
+                                    <DrawerClose asChild>
+                                        <Button className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep dark:hover:text-brand-deep font-bold shadow-xl">
+                                            Close
+                                        </Button>
+                                    </DrawerClose>
                                 )}
                             </div>
                         </div>
-
-                        <div className="flex flex-col sm:flex-row gap-4 pt-4 px-1">
-                            <Button
-                                variant="outline"
-                                className="flex-1 h-14 rounded-3xl border-brand-deep/10 dark:border-white/10 font-bold flex items-center justify-center gap-3"
-                            >
-                                <Share2 className="w-4 h-4" />
-                                Share Receipt
-                            </Button>
-                            <DrawerClose asChild>
-                                <Button className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep dark:hover:text-brand-deep font-bold shadow-xl">
-                                    Close
-                                </Button>
-                            </DrawerClose>
-                        </div>
-                    </div>
                     )}
                 </DrawerBody>
+
+                {/* Hidden Receipt for capturing */}
+                <div className="fixed left-[-1000px] top-0 opacity-0 pointer-events-none">
+                    {tx && (
+                        <TransactionReceipt
+                            ref={receiptRef}
+                            transaction={{ ...tx, amount: amountValue, storeId: tx.storeId ?? null } as FinanceTransactionRow}
+                            currencyCode={currencyCode}
+                            businessName={activeBusiness?.name}
+                        />
+                    )}
+                </div>
             </DrawerContent>
         </Drawer>
     )
