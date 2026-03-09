@@ -1231,36 +1231,36 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
           <div className="pt-2">
             <EditorSection title="Features & Filters">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between py-1">
-            <span className="text-sm">Enable Search</span>
-            <Switch checked={!!data.enableSearch} onCheckedChange={(v) => set("enableSearch", v)} />
-          </div>
-          <div className="flex items-center justify-between py-1 border-t border-brand-deep/5 dark:border-white/5 pt-2">
-            <span className="text-sm">Show Product Counter</span>
-            <Switch checked={data.showProductCounter !== false} onCheckedChange={(v) => set("showProductCounter", v)} />
-          </div>
-          <div className="flex items-center justify-between py-1 border-t border-brand-deep/5 dark:border-white/5 pt-2">
-            <span className="text-sm">Show Side Filters</span>
-            <Switch checked={data.showFilters !== false} onCheckedChange={(v) => set("showFilters", v)} />
-          </div>
-          {data.showFilters !== false && (
-            <div className="pl-4 space-y-2 border-l-2 border-brand-deep/10 dark:border-white/10 mt-2">
-              <div className="flex items-center justify-between py-1">
-                <span className="text-xs opacity-70">Price range</span>
-                <Switch checked={data.filterByPrice !== false} onCheckedChange={(v) => set("filterByPrice", v)} />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-sm">Enable Search</span>
+                  <Switch checked={!!data.enableSearch} onCheckedChange={(v) => set("enableSearch", v)} />
+                </div>
+                <div className="flex items-center justify-between py-1 border-t border-brand-deep/5 dark:border-white/5 pt-2">
+                  <span className="text-sm">Show Product Counter</span>
+                  <Switch checked={data.showProductCounter !== false} onCheckedChange={(v) => set("showProductCounter", v)} />
+                </div>
+                <div className="flex items-center justify-between py-1 border-t border-brand-deep/5 dark:border-white/5 pt-2">
+                  <span className="text-sm">Show Side Filters</span>
+                  <Switch checked={data.showFilters !== false} onCheckedChange={(v) => set("showFilters", v)} />
+                </div>
+                {data.showFilters !== false && (
+                  <div className="pl-4 space-y-2 border-l-2 border-brand-deep/10 dark:border-white/10 mt-2">
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-xs opacity-70">Price range</span>
+                      <Switch checked={data.filterByPrice !== false} onCheckedChange={(v) => set("filterByPrice", v)} />
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-xs opacity-70">Categories</span>
+                      <Switch checked={data.filterByCategories !== false} onCheckedChange={(v) => set("filterByCategories", v)} />
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-xs opacity-70">Date added</span>
+                      <Switch checked={data.filterByDate !== false} onCheckedChange={(v) => set("filterByDate", v)} />
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center justify-between py-1">
-                <span className="text-xs opacity-70">Categories</span>
-                <Switch checked={data.filterByCategories !== false} onCheckedChange={(v) => set("filterByCategories", v)} />
-              </div>
-              <div className="flex items-center justify-between py-1">
-                <span className="text-xs opacity-70">Date added</span>
-                <Switch checked={data.filterByDate !== false} onCheckedChange={(v) => set("filterByDate", v)} />
-              </div>
-            </div>
-          )}
-            </div>
             </EditorSection>
           </div>
         </Accordion.Panel>
@@ -1780,60 +1780,65 @@ function SectionSpacingEditor({
     { value: "lg", label: "Large" },
   ]
 
-  const SpacingControl = ({
-    label,
-    value,
-    onChange
-  }: {
-    label: string;
-    value: string;
-    onChange: (val: string) => void
-  }) => {
-    const isPreset = presets.some(p => p.value === value)
-
-    return (
-      <EditorSection title={label}>
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-2">
-            {presets.map((p) => (
-              <Button
-                key={p.value}
-                variant={value === p.value ? "base" : "ghost"}
-                size="sm"
-                onClick={() => onChange(p.value)}
-                className="rounded-lg text-xs flex-1"
-              >
-                {p.label}
-              </Button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase opacity-40 font-bold shrink-0">Custom:</span>
-            <Input
-              value={isPreset ? "" : value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="e.g. 20px, 2rem"
-              className="h-8 text-xs font-mono"
-            />
-          </div>
-        </div>
-      </EditorSection>
-    )
-  }
 
   return (
     <div className="grid grid-cols-2 gap-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
       <SpacingControl
         label="Padding (Internal)"
         value={padding}
+        presets={presets}
         onChange={(val) => onUpdateConfig({ padding: val })}
       />
       <SpacingControl
         label="Margin (External)"
         value={margin}
+        presets={presets}
         onChange={(val) => onUpdateConfig({ margin: val })}
       />
     </div>
+  )
+}
+
+function SpacingControl({
+  label,
+  value,
+  presets,
+  onChange
+}: {
+  label: string;
+  value: string;
+  presets: { value: string; label: string }[];
+  onChange: (val: string) => void
+}) {
+  const isPreset = presets.some(p => p.value === value)
+
+  return (
+    <EditorSection title={label}>
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-2">
+          {presets.map((p) => (
+            <Button
+              key={p.value}
+              variant={value === p.value ? "base" : "ghost"}
+              size="sm"
+              onClick={() => onChange(p.value)}
+              className="rounded-lg text-xs flex-1"
+            >
+              {p.label}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase opacity-40 font-bold shrink-0">Custom:</span>
+          <Input
+            value={isPreset ? "" : value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="e.g. 20px, 2rem"
+            className="h-8 text-xs font-mono"
+          />
+        </div>
+      </div>
+    </EditorSection>
   )
 }
 
