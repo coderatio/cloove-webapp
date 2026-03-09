@@ -26,7 +26,7 @@ import { AddBlockMenu, InlineAddBlockButton } from "@/app/domains/storefront/com
 import { ImageUrlField } from "@/app/domains/storefront/components/editor/ImageUrlField"
 import { ColorPicker } from "@/app/components/ui/color-picker"
 import { Switch } from "@/app/components/ui/switch"
-import { BLOCK_META, createBlock, type BlockSection, type BlockType } from "@/app/domains/storefront/components/editor/block-types"
+import { BLOCK_META, createBlock, type BlockSection, type BlockType, type SectionBackground } from "@/app/domains/storefront/components/editor/block-types"
 import { cn } from "@/app/lib/utils"
 
 export default function EditorV01Page() {
@@ -128,11 +128,12 @@ export default function EditorV01Page() {
           config: {
             ...c,
             padding: (c.padding === "sm" || c.padding === "lg" ? c.padding : "md") as "sm" | "md" | "lg",
+            margin: typeof c.margin === "string" ? c.margin : "none",
             background: (c.background === "muted" || c.background === "accent" ? c.background : "default") as "default" | "muted" | "accent",
             textAlign: (c.textAlign === "center" || c.textAlign === "right" ? c.textAlign : "left") as "left" | "center" | "right",
             showBorder: Boolean(c.showBorder),
-            sectionBackground: c.sectionBackground,
-            sectionBackgroundDark: c.sectionBackgroundDark,
+            sectionBackground: c.sectionBackground as SectionBackground | undefined,
+            sectionBackgroundDark: c.sectionBackgroundDark as SectionBackground | undefined,
             textColorLight: typeof c.textColorLight === "string" ? c.textColorLight : undefined,
             textColorDark: typeof c.textColorDark === "string" ? c.textColorDark : undefined,
           },

@@ -10,7 +10,6 @@ import {
   useStorefrontProducts,
   useStorefrontFeatured,
   useStorefrontOnSale,
-  useStorefrontCategories,
   type StorefrontProductItem,
 } from "@/app/domains/storefront/hooks/useStorefrontProducts"
 import { SearchableSelect } from "@/app/components/ui/searchable-select"
