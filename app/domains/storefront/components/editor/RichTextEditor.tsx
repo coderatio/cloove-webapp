@@ -54,6 +54,30 @@ const TEXT_COLOR_PRESETS = [
   { value: "#d97706", label: "Amber" },
 ]
 
+/**
+ * Handles Tab key for lists to avoid circular dependencies in hooks
+ */
+const ListKeymap = Extension.create({
+  name: "listKeymap",
+  addKeyboardShortcuts() {
+    return {
+      Tab: () => {
+        if (this.editor.isActive("bulletList") || this.editor.isActive("orderedList")) {
+          return this.editor.commands.sinkListItem("listItem")
+        }
+        return false
+      },
+      "Shift-Tab": () => {
+        if (this.editor.isActive("bulletList") || this.editor.isActive("orderedList")) {
+          return this.editor.commands.liftListItem("listItem")
+        }
+        return false
+      },
+    }
+  },
+})
+
+
 const FontSize = Extension.create({
   name: "fontSize",
   addOptions() {
@@ -99,12 +123,27 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({ content, onChange, placeholder = "Start writing…", className }: RichTextEditorProps) {
   const [fontsLoaded, setFontsLoaded] = useState<Set<string>>(new Set())
+  const isInternalUpdate = useRef(false)
 
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+          HTMLAttributes: {
+            class: "list-disc ml-4 space-y-1",
+          },
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+          HTMLAttributes: {
+            class: "list-decimal ml-4 space-y-1",
+          },
+        },
       }),
       Placeholder.configure({ placeholder }),
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "underline text-[var(--sf-primary)]" } }),
@@ -114,29 +153,32 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
       Color.configure({ types: ["textStyle"] }),
       FontFamily.configure({ types: ["textStyle"] }),
       FontSize.configure({ types: ["textStyle"] }),
+      ListKeymap,
     ],
     content,
     onUpdate: ({ editor: e }) => {
+      isInternalUpdate.current = true
       onChange(e.getHTML())
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 py-3 [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 text-brand-deep dark:text-brand-cream",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 py-3 text-brand-deep dark:text-brand-cream [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4",
       },
     },
   })
 
+  // Sync editor content with props, only when props change from outside
   useEffect(() => {
     if (!editor) return
+
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false
+      return
+    }
+
     const currentHTML = editor.getHTML()
-    if (content !== currentHTML && content !== "") {
-      // Small delay to ensure we don't conflict with in-progress updates
-      const timer = setTimeout(() => {
-        if (content !== editor.getHTML()) {
-          editor.commands.setContent(content, { emitUpdate: false })
-        }
-      }, 0)
-      return () => clearTimeout(timer)
+    if (content !== undefined && content !== currentHTML) {
+      editor.commands.setContent(content, { emitUpdate: false })
     }
   }, [content, editor])
 

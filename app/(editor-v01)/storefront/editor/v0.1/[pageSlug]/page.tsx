@@ -596,15 +596,19 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
       <PreviewThemeScope
         onClick={() => (isActive ? onDeactivate() : onActivate())}
         className={cn(
-          "relative cursor-pointer transition-all duration-300 rounded-3xl overflow-hidden bg-white/50 dark:bg-white/5",
-          isActive ? "ring-2 ring-brand-deep/10 dark:ring-white/10 shadow-lg" : "border border-transparent hover:border-brand-deep/10 dark:hover:border-white/10 hover:shadow-sm"
+          "relative cursor-pointer transition-all duration-300 rounded-3xl bg-white/50 dark:bg-white/5",
+          isActive ? "ring-2 ring-brand-deep/10 dark:ring-white/10 shadow-lg" : "border border-transparent hover:border-brand-deep/10 dark:hover:border-white/10 hover:shadow-sm",
+          !block.config.hidden ? "overflow-hidden" : ""
         )}
         style={{
           backgroundColor: (block.config.sectionBackground || (previewDark && block.config.sectionBackgroundDark)) ? "transparent" : undefined,
         }}
       >
         {block.config.hidden ? (
-          <div className="px-6 py-8 flex items-center justify-center border border-dashed border-brand-deep/15 dark:border-white/15 rounded-2xl min-h-[80px]">
+          <div className={cn(
+            "px-6 py-8 flex items-center justify-center  rounded-3xl min-h-[80px] sm:min-h-[100px]",
+            !isActive ? "border border-dashed border-brand-deep/15 dark:border-white/15" : ''
+          )}>
             <span className="text-xs font-medium uppercase tracking-wider text-brand-deep/40 dark:text-brand-cream/40">Section hidden</span>
           </div>
         ) : (
