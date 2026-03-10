@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "../providers/auth-provider"
 
-const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"]
+const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/pay"]
 
 /**
  * Global authentication guard to protect dashboard routes

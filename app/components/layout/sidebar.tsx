@@ -12,6 +12,7 @@ import {
     ShoppingBag,
     ChevronRight,
     ChevronLeft,
+    ChevronDown,
     Moon,
     Sun,
     LayoutGrid,
@@ -24,7 +25,8 @@ import {
     Activity,
     AlertCircle,
     Receipt,
-    Truck
+    Truck,
+    Link2,
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
@@ -46,6 +48,7 @@ interface NavItem {
     icon: any;
     label: string;
     permission?: string;
+    children?: NavItem[];
 }
 
 interface NavGroup {
@@ -65,7 +68,9 @@ const navGroups: NavGroup[] = [
         label: "Sales & Finance",
         items: [
             { href: "/orders", icon: ShoppingBag, label: "Orders", permission: 'VIEW_SALES' },
-            { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS' },
+            { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS', children: [
+                { href: "/finance/payment-links", icon: Link2, label: "Payment Links", permission: 'VIEW_FINANCIALS' },
+            ] },
             { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
             { href: "/debts", icon: AlertCircle, label: "Debts", permission: 'VIEW_CUSTOMERS' },
             { href: "/expenses", icon: Receipt, label: "Expenses", permission: 'VIEW_EXPENSES' },
@@ -109,8 +114,44 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname()
     const { theme, setTheme } = useTheme()
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+    const [expandedItems, setExpandedItems] = React.useState<Set<string>>(() => {
+        // Auto-expand parents whose children match the current path
+        const expanded = new Set<string>()
+        for (const group of navGroups) {
+            for (const item of group.items) {
+                if (item.children?.some(child => pathname.startsWith(child.href))) {
+                    expanded.add(item.href)
+                }
+            }
+        }
+        return expanded
+    })
     const { can, role } = usePermission()
     const { user } = useAuth()
+
+    // Auto-expand when pathname changes
+    React.useEffect(() => {
+        for (const group of navGroups) {
+            for (const item of group.items) {
+                if (item.children?.some(child => pathname.startsWith(child.href))) {
+                    setExpandedItems(prev => {
+                        const next = new Set(prev)
+                        next.add(item.href)
+                        return next
+                    })
+                }
+            }
+        }
+    }, [pathname])
+
+    const toggleExpanded = (href: string) => {
+        setExpandedItems(prev => {
+            const next = new Set(prev)
+            if (next.has(href)) next.delete(href)
+            else next.add(href)
+            return next
+        })
+    }
 
     const getInitials = (name: string) => {
         return name
@@ -200,55 +241,133 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 <div className="space-y-1">
                                     {filteredItems.map((item) => {
                                         const isActive = pathname === item.href
+                                        const hasChildren = item.children && item.children.length > 0
+                                        const isExpanded = expandedItems.has(item.href)
+                                        const isChildActive = item.children?.some(child => pathname.startsWith(child.href))
+                                        const filteredChildren = item.children?.filter(child => !child.permission || can(child.permission))
 
                                         return (
-                                            <Tooltip key={item.href} delayDuration={0}>
-                                                <TooltipTrigger asChild>
-                                                    <Link
-                                                        href={item.href}
-                                                        className={cn(
-                                                            "group relative flex items-center rounded-xl transition-all duration-200",
-                                                            isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-4 py-3",
-                                                            isActive
-                                                                ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
-                                                                : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
-                                                        )}
-                                                    >
-                                                        <item.icon
+                                            <div key={item.href}>
+                                                <Tooltip delayDuration={0}>
+                                                    <TooltipTrigger asChild>
+                                                        <div
                                                             className={cn(
-                                                                "h-5 w-5 shrink-0 transition-colors",
-                                                                isActive ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                                                "group relative flex items-center rounded-xl transition-all duration-200",
+                                                                isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-4 py-3",
+                                                                (isActive || isChildActive)
+                                                                    ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
+                                                                    : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
                                                             )}
-                                                        />
+                                                        >
+                                                            <Link
+                                                                href={item.href}
+                                                                className="flex items-center gap-3 flex-1 min-w-0"
+                                                            >
+                                                                <item.icon
+                                                                    className={cn(
+                                                                        "h-5 w-5 shrink-0 transition-colors",
+                                                                        (isActive || isChildActive) ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                                                    )}
+                                                                />
 
-                                                        <AnimatePresence mode="wait">
-                                                            {!isCollapsed && (
-                                                                <motion.span
-                                                                    initial={{ opacity: 0, x: -5 }}
-                                                                    animate={{ opacity: 1, x: 0 }}
-                                                                    exit={{ opacity: 0, x: -5 }}
-                                                                    className="whitespace-nowrap"
+                                                                <AnimatePresence mode="wait">
+                                                                    {!isCollapsed && (
+                                                                        <motion.span
+                                                                            initial={{ opacity: 0, x: -5 }}
+                                                                            animate={{ opacity: 1, x: 0 }}
+                                                                            exit={{ opacity: 0, x: -5 }}
+                                                                            className="whitespace-nowrap"
+                                                                        >
+                                                                            {item.label}
+                                                                        </motion.span>
+                                                                    )}
+                                                                </AnimatePresence>
+                                                            </Link>
+
+                                                            {hasChildren && !isCollapsed && (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); toggleExpanded(item.href) }}
+                                                                    className="p-1 rounded-lg hover:bg-white/10 transition-all shrink-0"
                                                                 >
-                                                                    {item.label}
-                                                                </motion.span>
+                                                                    <ChevronDown className={cn(
+                                                                        "h-3.5 w-3.5 transition-transform duration-200",
+                                                                        isExpanded ? "rotate-0" : "-rotate-90"
+                                                                    )} />
+                                                                </button>
                                                             )}
-                                                        </AnimatePresence>
 
-                                                        {isActive && !isCollapsed && (
+                                                            {(isActive || isChildActive) && !isCollapsed && (
+                                                                <motion.div
+                                                                    layoutId="sidebar-active"
+                                                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
+                                                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    {isCollapsed && (
+                                                        <TooltipContent side="right" className="flex flex-col gap-1">
+                                                            <span>{item.label}</span>
+                                                            {filteredChildren && filteredChildren.length > 0 && (
+                                                                <>
+                                                                    <div className="h-px bg-white/10 my-1" />
+                                                                    {filteredChildren.map(child => (
+                                                                        <Link
+                                                                            key={child.href}
+                                                                            href={child.href}
+                                                                            className={cn(
+                                                                                "text-xs py-1 px-1 rounded hover:bg-white/10 transition-colors",
+                                                                                pathname.startsWith(child.href) ? "text-brand-gold font-medium" : ""
+                                                                            )}
+                                                                        >
+                                                                            {child.label}
+                                                                        </Link>
+                                                                    ))}
+                                                                </>
+                                                            )}
+                                                        </TooltipContent>
+                                                    )}
+                                                </Tooltip>
+
+                                                {/* Submenu Children */}
+                                                {hasChildren && !isCollapsed && (
+                                                    <AnimatePresence>
+                                                        {isExpanded && filteredChildren && filteredChildren.length > 0 && (
                                                             <motion.div
-                                                                layoutId="sidebar-active"
-                                                                className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
-                                                                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                                            />
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: "auto", opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                transition={{ duration: 0.2 }}
+                                                                className="overflow-hidden"
+                                                            >
+                                                                <div className="pl-12 space-y-0.5 pt-1">
+                                                                    {filteredChildren.map(child => {
+                                                                        const isChildItemActive = pathname.startsWith(child.href)
+                                                                        return (
+                                                                            <Link
+                                                                                key={child.href}
+                                                                                href={child.href}
+                                                                                className={cn(
+                                                                                    "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                                                                                    isChildItemActive
+                                                                                        ? "text-brand-gold bg-white/5"
+                                                                                        : "text-brand-cream/50 hover:text-brand-cream hover:bg-white/5"
+                                                                                )}
+                                                                            >
+                                                                                <child.icon className={cn(
+                                                                                    "h-4 w-4 shrink-0",
+                                                                                    isChildItemActive ? "text-brand-gold" : "text-brand-cream/40"
+                                                                                )} />
+                                                                                <span className="text-[13px]">{child.label}</span>
+                                                                            </Link>
+                                                                        )
+                                                                    })}
+                                                                </div>
+                                                            </motion.div>
                                                         )}
-                                                    </Link>
-                                                </TooltipTrigger>
-                                                {isCollapsed && (
-                                                    <TooltipContent side="right">
-                                                        {item.label}
-                                                    </TooltipContent>
+                                                    </AnimatePresence>
                                                 )}
-                                            </Tooltip>
+                                            </div>
                                         )
                                     })}
                                 </div>

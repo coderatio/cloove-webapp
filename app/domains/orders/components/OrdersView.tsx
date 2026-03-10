@@ -38,6 +38,8 @@ import { OrderActionMenu } from './OrderActionMenu'
 import { toast } from 'sonner'
 import { useReceiptPrinter } from '@/app/hooks/useReceiptPrinter'
 import { format } from 'date-fns'
+import { useCreatePaymentLink } from '@/app/domains/checkout/hooks/usePaymentLinks'
+import { PaymentLinkDialog } from '@/app/domains/checkout/components/PaymentLinkDialog'
 
 export function OrdersView() {
     const isMobile = useIsMobile()
@@ -50,6 +52,8 @@ export function OrdersView() {
     const [endDate, setEndDate] = React.useState<string | undefined>()
     const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
     const [recordingPaymentOrder, setRecordingPaymentOrder] = React.useState<Order | null>(null)
+    const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = React.useState(false)
+    const [generatedPaymentLink, setGeneratedPaymentLink] = React.useState<string | null>(null)
     const statusColorMap: Record<string, { label: string, color: 'success' | 'warning' | 'danger' | 'neutral', className: string, icon: any }> = {
         COMPLETED: {
             label: 'Completed',
@@ -100,6 +104,25 @@ export function OrdersView() {
     })
 
     const { printReceipt } = useReceiptPrinter()
+    const createPaymentLink = useCreatePaymentLink()
+
+    const handleGeneratePaymentLink = React.useCallback(async (order: Order) => {
+        setPaymentLinkDialogOpen(true)
+        setGeneratedPaymentLink(null)
+        try {
+            const result = await createPaymentLink.mutateAsync({
+                targetType: 'SALE',
+                targetId: order.id,
+            })
+            const reference = result?.reference || (result as any)?.data?.reference
+            if (reference) {
+                const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+                setGeneratedPaymentLink(`${baseUrl}/pay/${reference}`)
+            }
+        } catch {
+            // Error handled by the hook's onError
+        }
+    }, [createPaymentLink])
 
     const handlePrintReceipt = React.useCallback(async (order: Order) => {
         if (!activeBusiness) return
@@ -258,6 +281,7 @@ export function OrdersView() {
                     onGenerateReceipt={generateReceipt}
                     onPrintReceipt={handlePrintReceipt}
                     onRecordPayment={setRecordingPaymentOrder}
+                    onGeneratePaymentLink={handleGeneratePaymentLink}
                 />
             )
         }
@@ -529,6 +553,7 @@ export function OrdersView() {
                     onUpdateStatus={handleUpdateStatus}
                     onDelete={async (id) => { await deleteOrder(id) }}
                     onPrintReceipt={handlePrintReceipt}
+                    onGeneratePaymentLink={handleGeneratePaymentLink}
                     isUpdating={isUpdating}
                     isDeleting={isDeleting}
                 />
@@ -554,6 +579,13 @@ export function OrdersView() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <PaymentLinkDialog
+                isOpen={paymentLinkDialogOpen}
+                onClose={() => setPaymentLinkDialogOpen(false)}
+                link={generatedPaymentLink}
+                isLoading={createPaymentLink.isPending}
+            />
 
             <RecordPaymentDrawer
                 order={recordingPaymentOrder}

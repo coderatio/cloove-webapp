@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Phone, Banknote, Bell, FileText, Clock, Download, Send } from "lucide-react"
+import { Loader2, Phone, Banknote, Bell, FileText, Clock, Download, Send, Link2 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -23,6 +23,8 @@ interface DebtDetailDrawerProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onRecordPayment: (debt: Debt) => void
+    onGeneratePaymentLink?: (debt: Debt) => void
+    isGeneratingPaymentLink?: boolean
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -37,6 +39,8 @@ export function DebtDetailDrawer({
     open,
     onOpenChange,
     onRecordPayment,
+    onGeneratePaymentLink,
+    isGeneratingPaymentLink,
 }: DebtDetailDrawerProps) {
     const { activeBusiness } = useBusiness()
     const currencyCode = activeBusiness?.currency ?? "NGN"
@@ -47,16 +51,16 @@ export function DebtDetailDrawer({
     // Track which invoice action is in progress
     const [invoiceAction, setInvoiceAction] = React.useState<"generate" | "send" | null>(null)
 
-    const handleGenerateInvoice = () => {
+    const handleGenerateInvoice = async () => {
         if (!debt) return
         setInvoiceAction("generate")
-        generateInvoice({ debtId: debt.id }).finally(() => setInvoiceAction(null))
+        try { await generateInvoice({ debtId: debt.id }) } finally { setInvoiceAction(null) }
     }
 
-    const handleSendInvoice = () => {
+    const handleSendInvoice = async () => {
         if (!debt) return
         setInvoiceAction("send")
-        generateInvoice({ debtId: debt.id, sendTo: "CUSTOMER" }).finally(() => setInvoiceAction(null))
+        try { await generateInvoice({ debtId: debt.id, sendTo: "CUSTOMER" }) } finally { setInvoiceAction(null) }
     }
 
     if (!debt) return null
@@ -226,6 +230,24 @@ export function DebtDetailDrawer({
                                 <Banknote className="w-5 h-5 mr-2" />
                                 Record Payment
                             </Button>
+                            {onGeneratePaymentLink && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        onOpenChange(false)
+                                        onGeneratePaymentLink(debt)
+                                    }}
+                                    disabled={isGeneratingPaymentLink}
+                                    className="w-full rounded-2xl h-12 border-brand-gold/20 text-brand-gold hover:bg-brand-gold/5 dark:border-brand-gold/20 dark:text-brand-gold"
+                                >
+                                    {isGeneratingPaymentLink ? (
+                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                    ) : (
+                                        <Link2 className="w-4 h-4 mr-2" />
+                                    )}
+                                    Send Payment Link
+                                </Button>
+                            )}
                             <Button
                                 variant="outline"
                                 onClick={() => sendReminder(debt.id)}

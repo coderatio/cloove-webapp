@@ -6,7 +6,7 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { AlertCircle, Users, Clock, TrendingUp, ChevronLeft, ChevronRight, MoreHorizontal, Banknote, Bell, FileText, Eye, Download, Send } from "lucide-react"
+import { AlertCircle, Users, Clock, TrendingUp, ChevronLeft, ChevronRight, MoreHorizontal, Banknote, Bell, FileText, Eye, Download, Send, Link2, Loader2 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -19,6 +19,16 @@ import { useDebts, useDebtStats, useDebtActions, type Debt } from "../hooks/useD
 import { AddDebtDrawer } from "./AddDebtDrawer"
 import { DebtDetailDrawer } from "./DebtDetailDrawer"
 import { RecordRepaymentDrawer } from "./RecordRepaymentDrawer"
+import { useCreatePaymentLink } from "@/app/domains/checkout/hooks/usePaymentLinks"
+import { PaymentLinkDialog } from "@/app/domains/checkout/components/PaymentLinkDialog"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/app/components/ui/dialog"
+import { Switch } from "@/app/components/ui/switch"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -62,6 +72,11 @@ export function DebtsView() {
     const [isAddOpen, setIsAddOpen] = React.useState(false)
     const [viewingDebt, setViewingDebt] = React.useState<Debt | null>(null)
     const [repayingDebt, setRepayingDebt] = React.useState<Debt | null>(null)
+    const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = React.useState(false)
+    const [generatedPaymentLink, setGeneratedPaymentLink] = React.useState<string | null>(null)
+    const [paymentLinkConfirmOpen, setPaymentLinkConfirmOpen] = React.useState(false)
+    const [paymentLinkDebt, setPaymentLinkDebt] = React.useState<Debt | null>(null)
+    const [recordAsSale, setRecordAsSale] = React.useState(false)
 
     const statusFilter = selectedFilters.find(f => STATUS_OPTIONS.some(s => s.value === f)) || undefined
 
@@ -78,6 +93,54 @@ export function DebtsView() {
     const stats = statsData?.data
 
     const { recordRepayment, sendReminder, generateInvoice, isRecordingRepayment, isSendingReminder } = useDebtActions()
+    const createPaymentLink = useCreatePaymentLink()
+
+    const handlePaymentLinkClick = React.useCallback((debt: Debt) => {
+        setPaymentLinkDebt(debt)
+        setRecordAsSale(false)
+        // If debt already has a sale, skip the "record as sale" dialog and generate directly
+        if (debt.saleId) {
+            setPaymentLinkConfirmOpen(false)
+            setPaymentLinkDialogOpen(true)
+            setGeneratedPaymentLink(null)
+            createPaymentLink.mutateAsync({
+                targetType: 'DEBT',
+                targetId: debt.id,
+                recordAsSale: false,
+            }).then((result) => {
+                const reference = result?.reference || (result as any)?.data?.reference
+                if (reference) {
+                    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+                    setGeneratedPaymentLink(`${baseUrl}/pay/${reference}`)
+                }
+            }).catch(() => {
+                // Error handled by the hook's onError
+            })
+        } else {
+            setPaymentLinkConfirmOpen(true)
+        }
+    }, [createPaymentLink])
+
+    const handleConfirmGeneratePaymentLink = React.useCallback(async () => {
+        if (!paymentLinkDebt) return
+        setPaymentLinkConfirmOpen(false)
+        setPaymentLinkDialogOpen(true)
+        setGeneratedPaymentLink(null)
+        try {
+            const result = await createPaymentLink.mutateAsync({
+                targetType: 'DEBT',
+                targetId: paymentLinkDebt.id,
+                recordAsSale,
+            })
+            const reference = result?.reference || (result as any)?.data?.reference
+            if (reference) {
+                const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+                setGeneratedPaymentLink(`${baseUrl}/pay/${reference}`)
+            }
+        } catch {
+            // Error handled by the hook's onError
+        }
+    }, [createPaymentLink, paymentLinkDebt, recordAsSale])
 
     const filterGroups = [
         {
@@ -130,6 +193,15 @@ export function DebtsView() {
                                         <Banknote className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">Record Payment</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => handlePaymentLinkClick(item)}
+                                    className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                                >
+                                    <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                                        <Link2 className="w-4 h-4" />
+                                    </div>
+                                    <span className="font-medium">Payment Link</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
                                 <DropdownMenuItem
@@ -492,6 +564,64 @@ export function DebtsView() {
                         setViewingDebt(null)
                         setRepayingDebt(debt)
                     }}
+                    onGeneratePaymentLink={handlePaymentLinkClick}
+                    isGeneratingPaymentLink={createPaymentLink.isPending}
+                />
+
+                <Dialog open={paymentLinkConfirmOpen} onOpenChange={setPaymentLinkConfirmOpen}>
+                    <DialogContent className="max-w-sm rounded-3xl! p-6 gap-5">
+                        <DialogHeader>
+                            <DialogTitle className="font-serif text-lg text-brand-deep dark:text-brand-cream">
+                                Generate Payment Link
+                            </DialogTitle>
+                            <DialogDescription className="text-brand-accent/50 dark:text-white/50 text-sm">
+                                Create a payment link for this debt
+                                {paymentLinkDebt ? ` of ${formatCurrency(paymentLinkDebt.remainingAmount, { currency: currencyCode })}` : ''}.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="flex items-center justify-between gap-3 bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 rounded-2xl p-4">
+                            <div className="space-y-0.5">
+                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">Record as a sale</p>
+                                <p className="text-xs text-brand-accent/40 dark:text-white/40">
+                                    When paid, also create a sale record in your books
+                                </p>
+                            </div>
+                            <Switch
+                                checked={recordAsSale}
+                                onCheckedChange={setRecordAsSale}
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setPaymentLinkConfirmOpen(false)}
+                                className="flex-1 h-12 rounded-2xl font-semibold"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleConfirmGeneratePaymentLink}
+                                disabled={createPaymentLink.isPending}
+                                className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold gap-2"
+                            >
+                                {createPaymentLink.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Link2 className="w-4 h-4" />
+                                )}
+                                Generate
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                <PaymentLinkDialog
+                    isOpen={paymentLinkDialogOpen}
+                    onClose={() => setPaymentLinkDialogOpen(false)}
+                    link={generatedPaymentLink}
+                    isLoading={createPaymentLink.isPending}
                 />
 
                 <RecordRepaymentDrawer

@@ -6,6 +6,7 @@ import { toast } from "sonner"
 export interface DebtApi {
     id: string
     customerId: string
+    saleId: string | null
     customer: { id: string; name: string; phoneNumber: string | null }
     amount: number
     remainingAmount: number
@@ -18,6 +19,7 @@ export interface DebtApi {
 export interface Debt {
     id: string
     customerId: string
+    saleId: string | null
     customerName: string
     customerPhone: string
     amount: number
@@ -32,6 +34,7 @@ function mapApiToDebt(item: DebtApi): Debt {
     return {
         id: item.id,
         customerId: item.customerId,
+        saleId: item.saleId ?? null,
         customerName: item.customer?.name ?? "Unknown",
         customerPhone: item.customer?.phoneNumber ?? "",
         amount: item.amount,

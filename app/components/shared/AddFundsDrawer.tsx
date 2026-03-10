@@ -13,6 +13,8 @@ import {
     Building2,
     AlertCircle,
     ArrowRight,
+    ArrowLeft,
+    Link2,
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -29,8 +31,12 @@ import { VisuallyHidden } from "@/app/components/ui/visually-hidden"
 import { Skeleton } from "@/app/components/ui/skeleton"
 import { useDepositAccounts, useWalletBalance, type DepositAccount } from "@/app/domains/finance/hooks/useFinance"
 import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
+import { useCreateWalletPaymentLink, useWalletPaymentLink } from "@/app/domains/checkout/hooks/usePaymentLinks"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+
+type DrawerView = 'method-select' | 'bank-transfer' | 'payment-link' | 'qr-code'
 
 interface AddFundsDrawerProps {
     isOpen: boolean
@@ -38,11 +44,27 @@ interface AddFundsDrawerProps {
     currencyCode: string
 }
 
+const viewTitles: Record<DrawerView, string> = {
+    'method-select': 'Add Funds',
+    'bank-transfer': 'Bank Transfer',
+    'payment-link': 'Payment Link',
+    'qr-code': 'QR Code',
+}
+
 export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsDrawerProps) {
     const { depositData, isLoading } = useDepositAccounts()
     const { wallet } = useWalletBalance()
+    const { activeBusiness } = useBusiness()
     const router = useRouter()
     const [showQr, setShowQr] = React.useState<string | null>(null)
+    const [activeView, setActiveView] = React.useState<DrawerView>('method-select')
+
+    // Reset view when drawer opens
+    React.useEffect(() => {
+        if (isOpen) {
+            setActiveView('method-select')
+        }
+    }, [isOpen])
 
     const isEligible = depositData?.isEligible ?? false
     const verificationLevel = depositData?.verificationLevel ?? 0
@@ -53,6 +75,8 @@ export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsD
         setTimeout(() => router.push("/settings?tab=verification"), 300)
     }
 
+    const showBackButton = activeView !== 'method-select' && isEligible && accounts.length > 0
+
     return (
         <Drawer open={isOpen} onOpenChange={onOpenChange}>
             <DrawerContent className="max-h-[92vh]">
@@ -61,21 +85,31 @@ export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsD
                 </VisuallyHidden>
                 <DrawerStickyHeader className="border-b border-brand-deep/5 dark:border-white/5">
                     <div className="flex items-center justify-between w-full">
-                        <div className="space-y-1">
-                            <DrawerTitle className="text-xl font-serif text-brand-deep dark:text-brand-cream">
-                                Add Funds
-                            </DrawerTitle>
-                            {wallet && (
-                                <div className="flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
-                                    <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60 font-medium">
-                                        Balance:{" "}
-                                        <span className="text-brand-deep dark:text-brand-cream font-bold">
-                                            <CurrencyDisplay value={wallet.balance} currency={currencyCode} />
-                                        </span>
-                                    </p>
-                                </div>
+                        <div className="flex items-center gap-3">
+                            {showBackButton && (
+                                <button
+                                    onClick={() => setActiveView('method-select')}
+                                    className="h-9 w-9 rounded-xl bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 flex items-center justify-center transition-all"
+                                >
+                                    <ArrowLeft className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                </button>
                             )}
+                            <div className="space-y-1">
+                                <DrawerTitle className="text-xl font-serif text-brand-deep dark:text-brand-cream">
+                                    {viewTitles[activeView]}
+                                </DrawerTitle>
+                                {wallet && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" />
+                                        <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60 font-medium">
+                                            Balance:{" "}
+                                            <span className="text-brand-deep dark:text-brand-cream font-bold">
+                                                <CurrencyDisplay value={wallet.balance} currency={currencyCode} />
+                                            </span>
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </DrawerStickyHeader>
@@ -101,18 +135,361 @@ export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsD
                             />
                         ) : accounts.length === 0 ? (
                             <NoAccountsView onStartVerification={handleStartVerification} />
-                        ) : (
+                        ) : activeView === 'method-select' ? (
+                            <MethodSelectView onSelect={setActiveView} />
+                        ) : activeView === 'bank-transfer' ? (
                             <DepositAccountsView
                                 accounts={accounts}
                                 currencyCode={currencyCode}
                                 showQr={showQr}
                                 onToggleQr={setShowQr}
                             />
-                        )}
+                        ) : activeView === 'payment-link' ? (
+                            <PaymentLinkView businessName={activeBusiness?.name ?? 'Business'} />
+                        ) : activeView === 'qr-code' ? (
+                            <QrCodeView accounts={accounts} />
+                        ) : null}
                     </AnimatePresence>
                 </DrawerBody>
             </DrawerContent>
         </Drawer>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Method Selection View
+// ─────────────────────────────────────────────────────────────────────────────
+
+const methods = [
+    {
+        view: 'bank-transfer' as DrawerView,
+        icon: Building2,
+        title: 'Bank Transfer',
+        description: 'Transfer from any bank account',
+    },
+    {
+        view: 'payment-link' as DrawerView,
+        icon: Link2,
+        title: 'Payment Link',
+        description: 'Share a link to receive payment',
+    },
+    {
+        view: 'qr-code' as DrawerView,
+        icon: QrCode,
+        title: 'QR Code',
+        description: 'Scan to pay with any banking app',
+    },
+]
+
+function MethodSelectView({ onSelect }: { onSelect: (view: DrawerView) => void }) {
+    return (
+        <motion.div
+            key="method-select"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-4 max-w-md mx-auto"
+        >
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 px-1">
+                Choose a Method
+            </p>
+
+            <div className="space-y-3">
+                {methods.map((method, i) => (
+                    <motion.div
+                        key={method.view}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.08 }}
+                    >
+                        <GlassCard
+                            className="p-5 cursor-pointer hover:bg-brand-deep/3 dark:hover:bg-white/3 active:scale-[0.98] transition-all border-brand-deep/5 dark:border-white/5"
+                            onClick={() => onSelect(method.view)}
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center shrink-0">
+                                    <method.icon className="w-6 h-6 text-brand-gold" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-base font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                        {method.title}
+                                    </p>
+                                    <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                                        {method.description}
+                                    </p>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-brand-accent/30 dark:text-brand-cream/30 shrink-0" />
+                            </div>
+                        </GlassCard>
+                    </motion.div>
+                ))}
+            </div>
+        </motion.div>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Payment Link View
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PaymentLinkView({ businessName }: { businessName: string }) {
+    const { data: walletLink, isLoading: isLoadingLink } = useWalletPaymentLink()
+    const createWalletLink = useCreateWalletPaymentLink()
+    const [slug, setSlug] = React.useState('')
+    const [copied, setCopied] = React.useState(false)
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const previewUrl = `${origin}/pay/${slug}`
+
+    const linkUrl = walletLink ? `${origin}/pay/${walletLink.reference}` : null
+
+    const handleCreate = async () => {
+        if (!slug.trim()) {
+            toast.error('Please enter a link name')
+            return
+        }
+
+        try {
+            await createWalletLink.mutateAsync({
+                slug: slug.trim(),
+                title: businessName,
+            })
+        } catch {
+            // Error is handled by the hook's onError
+        }
+    }
+
+    const handleCopy = () => {
+        if (!linkUrl) return
+        navigator.clipboard.writeText(linkUrl)
+        setCopied(true)
+        toast.success('Payment link copied')
+        setTimeout(() => setCopied(false), 2000)
+    }
+
+    const handleShare = async () => {
+        if (!linkUrl) return
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'Payment Link', url: linkUrl })
+            } catch {
+                handleCopy()
+            }
+        } else {
+            handleCopy()
+        }
+    }
+
+    // Loading state
+    if (isLoadingLink) {
+        return (
+            <motion.div
+                key="payment-link-loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4 max-w-md mx-auto"
+            >
+                <Skeleton className="h-6 w-48 mx-auto" />
+                <Skeleton className="h-40 w-full rounded-3xl" />
+            </motion.div>
+        )
+    }
+
+    // Link exists — show it
+    if (walletLink && linkUrl) {
+        return (
+            <motion.div
+                key="payment-link-existing"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="flex flex-col items-center text-center max-w-md mx-auto space-y-6"
+            >
+                <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+                    className="w-20 h-20 rounded-3xl bg-brand-green/10 flex items-center justify-center"
+                >
+                    <Link2 className="w-10 h-10 text-brand-green" />
+                </motion.div>
+
+                <div className="space-y-2">
+                    <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                        Your Payment Link
+                    </h3>
+                    <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                        Share this link to receive payments
+                    </p>
+                </div>
+
+                <div className="w-full bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 rounded-2xl p-3 break-all text-sm text-brand-deep/70 dark:text-white/70 font-mono">
+                    {linkUrl}
+                </div>
+
+                <div className="flex gap-3 w-full">
+                    <Button
+                        onClick={handleCopy}
+                        className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold gap-2"
+                    >
+                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copied ? "Copied" : "Copy"}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={handleShare}
+                        className="flex-1 h-12 rounded-2xl font-semibold gap-2"
+                    >
+                        <Share2 className="w-4 h-4" />
+                        Share
+                    </Button>
+                </div>
+            </motion.div>
+        )
+    }
+
+    // No link — show creation form
+    return (
+        <motion.div
+            key="payment-link-form"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-6 max-w-md mx-auto"
+        >
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 px-1">
+                Create Payment Link
+            </p>
+
+            <GlassCard className="p-6 space-y-5 border-brand-deep/5 dark:border-white/5">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                        Link Name
+                    </label>
+                    <input
+                        type="text"
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                        placeholder="my-business"
+                        className="w-full h-12 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 px-4 text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/30 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 transition-all"
+                    />
+                    <p className="text-xs text-brand-accent/50 dark:text-brand-cream/50">
+                        Choose a unique name for your payment link
+                    </p>
+                </div>
+
+                {slug && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="overflow-hidden"
+                    >
+                        <div className="bg-brand-deep/5 dark:bg-white/5 rounded-2xl p-3 break-all text-sm font-mono text-brand-accent/60 dark:text-brand-cream/60">
+                            {previewUrl}
+                        </div>
+                    </motion.div>
+                )}
+
+                <Button
+                    onClick={handleCreate}
+                    disabled={!slug.trim() || createWalletLink.isPending}
+                    className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {createWalletLink.isPending ? 'Creating...' : 'Create Payment Link'}
+                </Button>
+            </GlassCard>
+        </motion.div>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QR Code View
+// ─────────────────────────────────────────────────────────────────────────────
+
+function QrCodeView({ accounts }: { accounts: DepositAccount[] }) {
+    const accountsWithQr = accounts.filter(a => a.qrCodeUrl)
+
+    if (accountsWithQr.length === 0) {
+        return (
+            <motion.div
+                key="qr-empty"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="flex flex-col items-center text-center max-w-md mx-auto space-y-6 py-8"
+            >
+                <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+                    <QrCode className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
+                </div>
+                <div className="space-y-2">
+                    <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                        No QR Codes Available
+                    </h3>
+                    <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed max-w-[280px] mx-auto">
+                        QR code payments are not yet available for your deposit accounts. Try bank transfer instead.
+                    </p>
+                </div>
+            </motion.div>
+        )
+    }
+
+    return (
+        <motion.div
+            key="qr-codes"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="space-y-6 max-w-md mx-auto"
+        >
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 px-1">
+                Scan to Pay
+            </p>
+
+            <div className="space-y-4">
+                {accountsWithQr.map((account, index) => (
+                    <motion.div
+                        key={account.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                    >
+                        <GlassCard className="p-6 space-y-5 border-brand-deep/5 dark:border-white/5">
+                            {/* Bank Name Header */}
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+                                    <Building2 className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60" />
+                                </div>
+                                <p className="text-base font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                    {account.bankName}
+                                </p>
+                            </div>
+
+                            {/* Large QR Code */}
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="w-56 h-56 bg-white p-4 rounded-3xl shadow-inner">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={account.qrCodeUrl}
+                                        alt={`QR Code for ${account.bankName}`}
+                                        className="w-full h-full"
+                                    />
+                                </div>
+
+                                {/* Account Number */}
+                                <p className="text-lg font-mono font-bold text-brand-deep dark:text-brand-cream tracking-widest">
+                                    {account.accountNumber}
+                                </p>
+
+                                <p className="text-xs text-brand-accent/50 dark:text-brand-cream/50 text-center">
+                                    Scan with any banking app to pay instantly
+                                </p>
+                            </div>
+                        </GlassCard>
+                    </motion.div>
+                ))}
+            </div>
+        </motion.div>
     )
 }
 

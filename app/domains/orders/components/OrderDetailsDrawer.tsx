@@ -20,7 +20,8 @@ import {
     AlertCircle,
     CheckCircle2,
     Clock,
-    XCircle
+    XCircle,
+    Link2
 } from "lucide-react"
 import { Order, OrderStatus } from "../types"
 import { formatCurrency } from "@/app/lib/formatters"
@@ -35,6 +36,7 @@ interface OrderDetailsDrawerProps {
     onUpdateStatus?: (orderId: string, status: OrderStatus) => Promise<void>
     onDelete?: (orderId: string) => Promise<void>
     onPrintReceipt?: (order: Order) => Promise<void>
+    onGeneratePaymentLink?: (order: Order) => void
     isUpdating?: boolean
     isDeleting?: boolean
     isLoading?: boolean
@@ -68,6 +70,7 @@ export function OrderDetailsDrawer({
     onUpdateStatus,
     onDelete,
     onPrintReceipt,
+    onGeneratePaymentLink,
     isUpdating,
     isDeleting,
     isLoading,
@@ -252,6 +255,20 @@ export function OrderDetailsDrawer({
                                 </Button>
                             </DrawerClose>
                         </div>
+
+                        {status === 'PENDING' && onGeneratePaymentLink && (
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    onOpenChange(false)
+                                    onGeneratePaymentLink(order)
+                                }}
+                                className="w-full rounded-2xl h-12 border-brand-gold/20 text-brand-gold hover:bg-brand-gold/5 dark:border-brand-gold/20 dark:text-brand-gold"
+                            >
+                                <Link2 className="w-4 h-4 mr-2" />
+                                Generate Payment Link
+                            </Button>
+                        )}
 
                         <div className={cn("pt-6 border-t border-brand-deep/5 dark:border-white/5 mt-6",
                             order.isAutomated && status !== 'PENDING' ? "hidden" : "")

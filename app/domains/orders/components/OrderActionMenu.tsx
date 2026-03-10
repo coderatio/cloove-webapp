@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { MoreVertical, Eye, Check, RefreshCw, Printer, Download, XCircle, Loader2 } from 'lucide-react'
+import { MoreVertical, Eye, Check, RefreshCw, Printer, Download, XCircle, Loader2, Link2 } from 'lucide-react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,6 +22,7 @@ interface OrderActionMenuProps {
     onGenerateReceipt: (id: string) => Promise<any>
     onPrintReceipt: (order: Order) => void
     onRecordPayment: (order: Order) => void
+    onGeneratePaymentLink?: (order: Order) => void
 }
 
 export function OrderActionMenu({
@@ -31,7 +32,8 @@ export function OrderActionMenu({
     onRequery,
     onGenerateReceipt,
     onPrintReceipt,
-    onRecordPayment
+    onRecordPayment,
+    onGeneratePaymentLink
 }: OrderActionMenuProps) {
     const [isProcessing, setIsProcessing] = useState(false)
     const [activeAction, setActiveAction] = useState<string | null>(null)
@@ -90,6 +92,17 @@ export function OrderActionMenu({
                     >
                         <Check className="w-4 h-4" />
                         <span className="font-medium text-sm">Record Payment</span>
+                    </DropdownMenuItem>
+                )}
+
+                {order.status === 'PENDING' && onGeneratePaymentLink && (
+                    <DropdownMenuItem
+                        onSelect={() => onGeneratePaymentLink(order)}
+                        className="gap-3 rounded-xl py-2.5 focus:bg-brand-gold/10 cursor-pointer"
+                        disabled={isProcessing}
+                    >
+                        <Link2 className="w-4 h-4 text-brand-gold" />
+                        <span className="font-medium text-sm">Payment Link</span>
                     </DropdownMenuItem>
                 )}
 
