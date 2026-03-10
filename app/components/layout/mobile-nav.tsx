@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, Sparkles, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid, Banknote, ShieldCheck, Gift, Activity, Link2, ArrowLeft, ChevronRight } from "lucide-react"
+import { Home, Sparkles, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid, Banknote, ShieldCheck, Gift, Activity, Link2, ArrowLeft, ChevronRight, AlertCircle, Receipt, Truck } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
     Drawer,
@@ -13,6 +13,7 @@ import {
     DrawerTitle,
 } from "../ui/drawer"
 import { usePermission } from "@/app/hooks/usePermission"
+import { Button } from "../ui/button"
 
 interface MobileNavItem {
     href: string
@@ -28,17 +29,22 @@ const mainNavItems: MobileNavItem[] = [
 ]
 
 const secondaryNavItems: MobileNavItem[] = [
-    { href: "/activity", icon: Activity, label: "Activity", permission: 'VIEW_DASHBOARD' },
     { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS' },
 ]
 
 const moreItems: MobileNavItem[] = [
     { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
+    { href: "/debts", icon: AlertCircle, label: "Debts", permission: 'VIEW_CUSTOMERS' },
     { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STAFF' },
     { href: "/inventory", icon: Package, label: "Inventory", permission: 'MANAGE_PRODUCTS' },
-    { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS', children: [
-        { href: "/finance/payment-links", icon: Link2, label: "Payment Links", permission: 'VIEW_FINANCIALS' },
-    ] },
+    { href: "/expenses", icon: Receipt, label: "Expenses", permission: 'VIEW_EXPENSES' },
+    { href: "/vendors", icon: Truck, label: "Vendors", permission: 'VIEW_SUPPLIERS' },
+    {
+        href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS', children: [
+            { href: "/finance/payment-links", icon: Link2, label: "Payment Links", permission: 'VIEW_FINANCIALS' },
+        ]
+    },
+    { href: "/activity", icon: Activity, label: "Activity", permission: 'VIEW_DASHBOARD' },
     { href: "/staff", icon: ShieldCheck, label: "Staff", permission: 'MANAGE_STAFF' },
     { href: "/storefront", icon: ShoppingBag, label: "Storefront", permission: 'MANAGE_STAFF' },
 ]
@@ -92,7 +98,7 @@ export function MobileNav() {
                             </div>
                         )}
 
-                        <div className="relative h-16 w-full flex items-center px-2 rounded-[28px] border border-white/10 bg-brand-deep/95 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                        <div className="relative h-16 w-full flex items-center px-2 rounded-full border border-white/10 bg-brand-deep/95 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
 
                             {/* Prominent Assistant Button */}
                             <div className="absolute left-1/2 -top-6 -translate-x-1/2">
@@ -179,12 +185,14 @@ export function MobileNav() {
                         <DrawerTitle>
                             {submenuParent ? (
                                 <div className="flex items-center gap-3">
-                                    <button
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
                                         onClick={() => setSubmenuParent(null)}
-                                        className="h-8 w-8 rounded-lg bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center"
+                                        className="h-10 w-10 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center"
                                     >
-                                        <ArrowLeft className="h-4 w-4" />
-                                    </button>
+                                        <ArrowLeft className="h-6 w-6" />
+                                    </Button>
                                     <span>{submenuParent.label}</span>
                                 </div>
                             ) : (
@@ -192,7 +200,7 @@ export function MobileNav() {
                             )}
                         </DrawerTitle>
                     </DrawerStickyHeader>
-                    <div className="p-6 pb-12">
+                    <div className="p-6 pb-12 overflow-y-auto max-h-[70vh]">
                         <AnimatePresence mode="wait">
                             {submenuParent ? (
                                 <motion.div
@@ -201,17 +209,17 @@ export function MobileNav() {
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 40 }}
                                     transition={{ duration: 0.2 }}
-                                    className="grid grid-cols-2 gap-4"
+                                    className="flex flex-col gap-3"
                                 >
                                     {/* Parent item itself */}
                                     <Link
                                         href={submenuParent.href}
                                         onClick={() => handleMoreOpenChange(false)}
                                         className={cn(
-                                            "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95",
+                                            "flex items-center gap-4 rounded-[20px] p-4 transition-all duration-200 active:scale-95 border",
                                             pathname === submenuParent.href
-                                                ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/30"
-                                                : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80"
+                                                ? "bg-brand-gold/10 text-brand-gold border-brand-gold/30"
+                                                : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80 border-brand-deep/5 dark:border-white/5"
                                         )}
                                     >
                                         <div className={cn(
@@ -232,10 +240,10 @@ export function MobileNav() {
                                                 href={child.href}
                                                 onClick={() => handleMoreOpenChange(false)}
                                                 className={cn(
-                                                    "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95",
+                                                    "flex items-center gap-4 rounded-[20px] p-4 transition-all duration-200 active:scale-95 border",
                                                     pathname.startsWith(child.href)
-                                                        ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/30"
-                                                        : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80"
+                                                        ? "bg-brand-gold/10 text-brand-gold border-brand-gold/30"
+                                                        : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80 border-brand-deep/5 dark:border-white/5"
                                                 )}
                                             >
                                                 <div className={cn(
@@ -277,7 +285,7 @@ export function MobileNav() {
                                             </div>
                                         </Link>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex flex-col gap-3">
                                         {[...mainNavItems, ...moreItems].map((item) => {
                                             if (item.permission && !can(item.permission)) {
                                                 return null
@@ -295,10 +303,10 @@ export function MobileNav() {
                                                         }
                                                     }}
                                                     className={cn(
-                                                        "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95 text-left",
+                                                        "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95 text-left border",
                                                         pathname === item.href
-                                                            ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/30"
-                                                            : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80"
+                                                            ? "bg-brand-gold/10 text-brand-gold border-brand-gold/30"
+                                                            : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80 border-brand-deep/5 dark:border-white/5"
                                                     )}
                                                 >
                                                     <div className={cn(
@@ -315,7 +323,7 @@ export function MobileNav() {
                                             )
                                         })}
                                         <button
-                                            className="flex items-center gap-4 rounded-2xl p-4 bg-red-50 dark:bg-red-500/10 text-red-600 active:scale-95 transition-all"
+                                            className="flex items-center gap-4 rounded-2xl p-4 bg-red-50 dark:bg-red-500/10 text-red-600 border border-red-200/50 dark:border-red-500/10 active:scale-95 transition-all"
                                         >
                                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-white/10 shadow-sm">
                                                 <LogOut className="h-5 w-5" />

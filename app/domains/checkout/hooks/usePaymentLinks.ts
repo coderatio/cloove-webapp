@@ -64,17 +64,52 @@ export function useWalletPaymentLink() {
   })
 }
 
-export function usePaymentLinks(page = 1, limit = 20, status?: string) {
+export function usePaymentLinks(page = 1, limit = 20, search?: string, status?: string, targetType?: string) {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
 
   const params: Record<string, string> = { page: String(page), limit: String(limit) }
-  if (status) params.status = status
+  if (search?.trim()) params.search = search.trim()
+  if (status && status !== 'ALL') params.status = status
+  if (targetType && targetType !== 'ALL') params.targetType = targetType
 
   return useQuery<ApiResponse<PaymentLinkResponse[]>>({
-    queryKey: ['payment-links', businessId, page, limit, status],
+    queryKey: ['payment-links', businessId, page, limit, search, status, targetType],
     queryFn: () => apiClient.get<ApiResponse<PaymentLinkResponse[]>>('/payment-links', params, { fullResponse: true }),
     enabled: !!businessId,
+  })
+}
+
+export function usePaymentLinkStats() {
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useQuery<ApiResponse<{
+    total: number
+    active: number
+    paid: number
+    expired: number
+  }>>({
+    queryKey: ['payment-links-stats', businessId],
+    queryFn: () => apiClient.get('/payment-links/stats', undefined, { fullResponse: true }),
+    enabled: !!businessId,
+  })
+}
+
+export function useCreateDynamicWalletLink() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: { title: string; description?: string; amount: number }) =>
+      apiClient.post<PaymentLinkResponse>('/payment-links/wallet/dynamic', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payment-links'] })
+      queryClient.invalidateQueries({ queryKey: ['payment-links-stats'] })
+      toast.success('Payment link created')
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Failed to create payment link')
+    },
   })
 }
 
@@ -84,6 +119,7 @@ export function useCancelPaymentLink() {
     mutationFn: (id: string) => apiClient.delete(`/payment-links/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-links'] })
+      queryClient.invalidateQueries({ queryKey: ['payment-links-stats'] })
       toast.success('Payment link cancelled')
     },
     onError: (err: Error) => {

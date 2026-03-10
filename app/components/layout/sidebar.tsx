@@ -68,9 +68,11 @@ const navGroups: NavGroup[] = [
         label: "Sales & Finance",
         items: [
             { href: "/orders", icon: ShoppingBag, label: "Orders", permission: 'VIEW_SALES' },
-            { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS', children: [
-                { href: "/finance/payment-links", icon: Link2, label: "Payment Links", permission: 'VIEW_FINANCIALS' },
-            ] },
+            {
+                href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS', children: [
+                    { href: "/finance/payment-links", icon: Link2, label: "Payment Links", permission: 'VIEW_FINANCIALS' },
+                ]
+            },
             { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
             { href: "/debts", icon: AlertCircle, label: "Debts", permission: 'VIEW_CUSTOMERS' },
             { href: "/expenses", icon: Receipt, label: "Expenses", permission: 'VIEW_EXPENSES' },
@@ -131,17 +133,18 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
     // Auto-expand when pathname changes
     React.useEffect(() => {
-        for (const group of navGroups) {
-            for (const item of group.items) {
-                if (item.children?.some(child => pathname.startsWith(child.href))) {
-                    setExpandedItems(prev => {
-                        const next = new Set(prev)
+        setExpandedItems(prev => {
+            const next = new Set(prev)
+            for (const group of navGroups) {
+                for (const item of group.items) {
+                    const isChildActive = item.children?.some(child => pathname.startsWith(child.href))
+                    if (isChildActive) {
                         next.add(item.href)
-                        return next
-                    })
+                    }
                 }
             }
-        }
+            return next
+        })
     }, [pathname])
 
     const toggleExpanded = (href: string) => {
@@ -223,7 +226,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </div>
 
                 {/* Nav Items Grouped */}
-                <nav className="flex-1 space-y-6 px-4 overflow-y-auto scrollbar-hide pb-6">
+                <nav className={cn("flex-1 overflow-y-auto scrollbar-hide pb-6", isCollapsed ? "space-y-2 px-2" : "space-y-6 px-4")}>
                     {navGroups.map((group) => {
                         // Filter items in the group based on permissions
                         const filteredItems = group.items.filter(item => !item.permission || can(item.permission))
@@ -261,7 +264,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                         >
                                                             <Link
                                                                 href={item.href}
-                                                                className="flex items-center gap-3 flex-1 min-w-0"
+                                                                className={cn(
+                                                                    "flex items-center gap-3",
+                                                                    isCollapsed ? "justify-center" : "flex-1 min-w-0"
+                                                                )}
                                                             >
                                                                 <item.icon
                                                                     className={cn(
@@ -285,15 +291,17 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                             </Link>
 
                                                             {hasChildren && !isCollapsed && (
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); toggleExpanded(item.href) }}
-                                                                    className="p-1 rounded-lg hover:bg-white/10 transition-all shrink-0"
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleExpanded(item.href) }}
+                                                                    className="h-7 w-7 rounded-lg hover:bg-white/10 transition-all shrink-0 text-brand-cream/40 hover:text-brand-gold"
                                                                 >
                                                                     <ChevronDown className={cn(
-                                                                        "h-3.5 w-3.5 transition-transform duration-200",
+                                                                        "h-3.5 w-3.5 transition-transform duration-300",
                                                                         isExpanded ? "rotate-0" : "-rotate-90"
                                                                     )} />
-                                                                </button>
+                                                                </Button>
                                                             )}
 
                                                             {(isActive || isChildActive) && !isCollapsed && (
@@ -337,28 +345,39 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                 initial={{ height: 0, opacity: 0 }}
                                                                 animate={{ height: "auto", opacity: 1 }}
                                                                 exit={{ height: 0, opacity: 0 }}
-                                                                transition={{ duration: 0.2 }}
+                                                                transition={{ duration: 0.3, ease: "easeInOut" }}
                                                                 className="overflow-hidden"
                                                             >
-                                                                <div className="pl-12 space-y-0.5 pt-1">
+                                                                <div className="relative ml-[16px] pl-4 py-1 space-y-1">
+                                                                    {/* Vertical Connection Line */}
+                                                                    <div className="absolute left-0 top-0 bottom-0 w-px bg-white/20" />
+
                                                                     {filteredChildren.map(child => {
-                                                                        const isChildItemActive = pathname.startsWith(child.href)
+                                                                        const isChildItemActive = pathname === child.href || pathname.startsWith(child.href)
                                                                         return (
                                                                             <Link
                                                                                 key={child.href}
                                                                                 href={child.href}
                                                                                 className={cn(
-                                                                                    "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                                                                                    "group/sub relative flex items-center gap-3 py-2 rounded-xl text-sm transition-all duration-200",
                                                                                     isChildItemActive
-                                                                                        ? "text-brand-gold bg-white/5"
-                                                                                        : "text-brand-cream/50 hover:text-brand-cream hover:bg-white/5"
+                                                                                        ? "text-brand-gold"
+                                                                                        : "text-brand-cream/50 hover:text-brand-gold"
                                                                                 )}
                                                                             >
-                                                                                <child.icon className={cn(
-                                                                                    "h-4 w-4 shrink-0",
-                                                                                    isChildItemActive ? "text-brand-gold" : "text-brand-cream/40"
+                                                                                {/* Active Indicator Dot */}
+                                                                                <div className={cn(
+                                                                                    "absolute -left-[19px] w-1.5 h-1.5 rounded-full transition-all duration-300",
+                                                                                    isChildItemActive
+                                                                                        ? "bg-brand-gold ring-4 ring-brand-gold/20"
+                                                                                        : "bg-white/10 group-hover/sub:bg-white/30"
                                                                                 )} />
-                                                                                <span className="text-[13px]">{child.label}</span>
+
+                                                                                <child.icon className={cn(
+                                                                                    "h-4 w-4 shrink-0 transition-colors",
+                                                                                    isChildItemActive ? "text-brand-gold" : "text-brand-cream/40 group-hover/sub:text-brand-cream"
+                                                                                )} />
+                                                                                <span className="font-medium">{child.label}</span>
                                                                             </Link>
                                                                         )
                                                                     })}
@@ -373,7 +392,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 </div>
                                 {/* Divider for grouped look when collapsed */}
                                 {isCollapsed && group !== navGroups[navGroups.length - 1] && (
-                                    <div className="mx-4 my-4 h-px bg-white/5" />
+                                    <div className="mx-3 my-2 h-px bg-white/5" />
                                 )}
                             </div>
                         )

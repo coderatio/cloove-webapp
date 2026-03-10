@@ -55,13 +55,8 @@ export function CheckoutWalletStep({ checkout }: Props) {
       <CheckoutBusinessHeader
         businessName={checkout.businessName}
         businessLogo={checkout.businessLogo}
-        title={checkout.title || checkout.businessName}
         className="mb-6"
-      >
-        {checkout.description && (
-          <p className="text-brand-accent/50 dark:text-white/50 text-sm">{checkout.description}</p>
-        )}
-      </CheckoutBusinessHeader>
+      />
 
       {accounts.length === 0 ? (
         <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-brand-deep/10 dark:border-white/10 rounded-3xl p-8 text-center space-y-3 shadow-sm dark:shadow-none max-w-md mx-auto">
@@ -93,7 +88,7 @@ export function CheckoutWalletStep({ checkout }: Props) {
                         className={`w-full flex items-center gap-3 px-3 py-3 h-auto rounded-2xl border transition-all justify-start ${isSelected
                           ? 'border-brand-gold/30 bg-brand-gold/5 dark:border-brand-gold/40 dark:bg-brand-gold/10'
                           : 'border-transparent bg-brand-deep/3 dark:bg-white/3 hover:bg-brand-deep/6 dark:hover:bg-white/6'
-                        }`}
+                          }`}
                       >
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-brand-gold/10 dark:bg-brand-gold/15' : 'bg-brand-deep/5 dark:bg-white/5'}`}>
                           <Building2 className={`w-4 h-4 ${isSelected ? 'text-brand-gold' : 'text-brand-accent/40 dark:text-white/40'}`} />
@@ -117,6 +112,17 @@ export function CheckoutWalletStep({ checkout }: Props) {
 
           {/* Account Cards */}
           <div className="flex-1 min-w-0 space-y-4">
+            {/* Title & Description inside content area */}
+            {checkout.title && (
+              <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-brand-deep/10 dark:border-white/10 rounded-3xl px-6 py-4 shadow-sm dark:shadow-none space-y-1">
+                <h3 className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream">
+                  {checkout.title}
+                </h3>
+                {checkout.description && (
+                  <p className="text-brand-accent/50 dark:text-white/50 text-sm">{checkout.description}</p>
+                )}
+              </div>
+            )}
             {filteredAccounts.map((account, index) => (
               <WalletAccountCard key={account.id} account={account} index={index} />
             ))}

@@ -121,16 +121,8 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
       <CheckoutBusinessHeader
         businessName={checkout.businessName}
         businessLogo={checkout.businessLogo}
-        title={checkout.title || checkout.businessName}
         className="mb-6 md:pl-60"
-      >
-        {checkout.title && checkout.businessName !== checkout.title && (
-          <p className="text-brand-accent/60 dark:text-white/60 text-sm">{checkout.businessName}</p>
-        )}
-        {checkout.description && (
-          <p className="text-brand-accent/50 dark:text-white/50 text-sm">{checkout.description}</p>
-        )}
-      </CheckoutBusinessHeader>
+      />
 
       {/* Two-column layout: providers sidebar + payment content */}
       <div className="flex flex-col md:flex-row gap-4">
@@ -194,6 +186,18 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
         {/* Right — Payment Details Content */}
         <div className="flex-1 min-w-0">
           <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-brand-deep/10 dark:border-white/10 rounded-3xl p-6 space-y-5 shadow-sm dark:shadow-none">
+            {/* Title & Description */}
+            {checkout.title && (
+              <div className="space-y-1">
+                <h3 className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream">
+                  {checkout.title}
+                </h3>
+                {checkout.description && (
+                  <p className="text-brand-accent/50 dark:text-white/50 text-sm">{checkout.description}</p>
+                )}
+              </div>
+            )}
+
             {/* Amount */}
             <div className="space-y-1">
               <p className="text-brand-accent/40 dark:text-white/40 text-[10px] font-bold uppercase tracking-widest">
@@ -343,7 +347,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
             <div className="flex items-center justify-center gap-1.5 pt-2">
               <ShieldCheck className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
               <p className="text-brand-accent/30 dark:text-white/30 text-xs text-center">
-                Secured by Cloove
+                Secured by CloovePay
               </p>
             </div>
           </div>
