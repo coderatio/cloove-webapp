@@ -196,7 +196,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/10 blur-[60px] rounded-full" />
             </div>
 
-            <div className="relative z-10 flex flex-col h-full text-brand-cream overflow-hidden">
+            <div className={cn(
+                "relative z-10 flex flex-col h-full text-brand-cream",
+                !isCollapsed && "overflow-hidden"
+            )}>
                 {/* Header: when collapsed stack logo + expand; when expanded logo + label left, collapse right */}
                 <div className={cn("p-4 mb-2", isCollapsed ? "flex flex-col items-center gap-3" : "flex items-center justify-between")}>
                     <div className="flex items-center gap-3 overflow-hidden min-w-0">
