@@ -32,7 +32,7 @@ function SelectBusinessContent() {
     if (isLoading) return null
 
     return (
-        <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+        <div className="min-h-screen bg-background dark:bg-background flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
             {/* Background Effects */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
                 <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-brand-green/20 blur-3xl filter animate-pulse" />

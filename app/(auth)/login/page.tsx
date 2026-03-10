@@ -28,7 +28,7 @@ const LoginFlowWrapper = dynamic(
 
 export default function LoginPage() {
     return (
-        <div className="min-h-dvh w-full flex flex-col items-center justify-center p-4 relative overflow-hidden bg-brand-deep">
+        <div className="min-h-dvh w-full flex flex-col items-center justify-center p-4 relative overflow-hidden bg-brand-deep-950">
             <BackgroundDecor />
 
             {/* Noise Overlay */}

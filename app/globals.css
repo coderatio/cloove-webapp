@@ -199,15 +199,16 @@
 
 :root {
   --background: var(--color-cloove-cream);
+  --background-dark: #0f241c;
   --foreground: var(--color-cloove-deep);
 }
 
 .dark {
-  --background: #0f241c;
+  --background: var(--background-dark);
   --foreground: var(--color-cloove-cream);
 
   /* Semantic Overrides for Dark Mode - True Dark Palette */
-  --color-surface: #0f241c;
+  --color-surface: var(--background-dark);
   --color-surface-alt: #121b18;
   --color-surface-hover: #182420;
 
@@ -226,7 +227,7 @@
 }
 
 /* Next.js dev overlay portal: give it proper dimensions so it doesn't report 0×0 */
-nextjs-portal {
+/* nextjs-portal {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -237,7 +238,7 @@ nextjs-portal {
 
 nextjs-portal>* {
   pointer-events: auto;
-}
+} */
 
 * {
   box-sizing: border-box;

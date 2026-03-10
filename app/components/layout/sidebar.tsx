@@ -116,35 +116,35 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname()
     const { theme, setTheme } = useTheme()
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
-    const [expandedItems, setExpandedItems] = React.useState<Set<string>>(() => {
-        // Auto-expand parents whose children match the current path
+    const getExpandedForPath = (path: string) => {
         const expanded = new Set<string>()
         for (const group of navGroups) {
             for (const item of group.items) {
-                if (item.children?.some(child => pathname.startsWith(child.href))) {
-                    expanded.add(item.href)
-                }
+                const isParentOrChildActive = path === item.href || item.children?.some(child => path.startsWith(child.href))
+                if (isParentOrChildActive && item.children?.length) expanded.add(item.href)
             }
         }
         return expanded
-    })
+    }
+    const [expandedItems, setExpandedItems] = React.useState<Set<string>>(() => getExpandedForPath(pathname))
+    const [collapsedSettled, setCollapsedSettled] = React.useState(false)
+    const settleRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    React.useEffect(() => {
+        if (settleRef.current) clearTimeout(settleRef.current)
+        if (isCollapsed) {
+            settleRef.current = setTimeout(() => setCollapsedSettled(true), 220)
+        } else {
+            setCollapsedSettled(false)
+        }
+        return () => { if (settleRef.current) clearTimeout(settleRef.current) }
+    }, [isCollapsed])
+
     const { can, role } = usePermission()
     const { user } = useAuth()
 
-    // Auto-expand when pathname changes
     React.useEffect(() => {
-        setExpandedItems(prev => {
-            const next = new Set(prev)
-            for (const group of navGroups) {
-                for (const item of group.items) {
-                    const isChildActive = item.children?.some(child => pathname.startsWith(child.href))
-                    if (isChildActive) {
-                        next.add(item.href)
-                    }
-                }
-            }
-            return next
-        })
+        setExpandedItems(getExpandedForPath(pathname))
     }, [pathname])
 
     const toggleExpanded = (href: string) => {
@@ -185,7 +185,8 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         <motion.aside
             initial={false}
             animate={{ width: isCollapsed ? 80 : 280 }}
-            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-[20px] bg-brand-deep dark:bg-[#050a08] shadow-2xl transition-all duration-300 border border-white/5"
+            transition={{ type: "tween", duration: 0.05, ease: [0.25, 0.1, 0.25, 1] }}
+            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-[20px] bg-brand-deep dark:bg-[#050a08] shadow-2xl border border-white/5"
         >
             {/* Background Texture/Gradient for depth */}
             <div className="absolute inset-0 pointer-events-none opacity-50">
@@ -193,7 +194,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/10 blur-[60px] rounded-full" />
             </div>
 
-            <div className="relative z-10 flex flex-col h-full text-brand-cream">
+            <div className="relative z-10 flex flex-col h-full text-brand-cream overflow-hidden">
                 {/* Header */}
                 <div className={cn("flex items-center p-6 mb-2", isCollapsed ? "justify-center" : "justify-between")}>
                     <div className="flex items-center gap-3 overflow-hidden">
@@ -205,18 +206,11 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 className="object-contain"
                             />
                         </div>
-                        <AnimatePresence>
-                            {!isCollapsed && (
-                                <motion.span
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    className="font-serif text-2xl font-medium tracking-tight whitespace-nowrap text-brand-cream"
-                                >
-                                    Cloove
-                                </motion.span>
-                            )}
-                        </AnimatePresence>
+                        {!isCollapsed && (
+                            <span className="font-serif text-2xl font-medium tracking-tight whitespace-nowrap text-brand-cream">
+                                Cloove
+                            </span>
+                        )}
                     </div>
                 </div>
 
@@ -251,7 +245,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
                                         return (
                                             <div key={item.href}>
-                                                <Tooltip delayDuration={0}>
+                                                <Tooltip delayDuration={collapsedSettled ? 200 : 99999}>
                                                     <TooltipTrigger asChild>
                                                         <div
                                                             className={cn(
@@ -276,18 +270,9 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                     )}
                                                                 />
 
-                                                                <AnimatePresence mode="wait">
-                                                                    {!isCollapsed && (
-                                                                        <motion.span
-                                                                            initial={{ opacity: 0, x: -5 }}
-                                                                            animate={{ opacity: 1, x: 0 }}
-                                                                            exit={{ opacity: 0, x: -5 }}
-                                                                            className="whitespace-nowrap"
-                                                                        >
-                                                                            {item.label}
-                                                                        </motion.span>
-                                                                    )}
-                                                                </AnimatePresence>
+                                                                {!isCollapsed && (
+                                                                    <span className="whitespace-nowrap">{item.label}</span>
+                                                                )}
                                                             </Link>
 
                                                             {hasChildren && !isCollapsed && (
@@ -305,15 +290,11 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                             )}
 
                                                             {(isActive || isChildActive) && !isCollapsed && (
-                                                                <motion.div
-                                                                    layoutId="sidebar-active"
-                                                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold-light rounded-r-full"
-                                                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                                                />
+                                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold-light rounded-r-full" />
                                                             )}
                                                         </div>
                                                     </TooltipTrigger>
-                                                    {isCollapsed && (
+                                                    {isCollapsed && collapsedSettled && (
                                                         <TooltipContent side="right" className="flex flex-col gap-1">
                                                             <span>{item.label}</span>
                                                             {filteredChildren && filteredChildren.length > 0 && (
@@ -338,53 +319,43 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                 </Tooltip>
 
                                                 {/* Submenu Children */}
-                                                {hasChildren && !isCollapsed && (
-                                                    <AnimatePresence>
-                                                        {isExpanded && filteredChildren && filteredChildren.length > 0 && (
-                                                            <motion.div
-                                                                initial={{ height: 0, opacity: 0 }}
-                                                                animate={{ height: "auto", opacity: 1 }}
-                                                                exit={{ height: 0, opacity: 0 }}
-                                                                transition={{ duration: 0.3, ease: "easeInOut" }}
-                                                                className="overflow-hidden"
-                                                            >
-                                                                <div className="relative ml-[16px] pl-4 py-1 space-y-1">
-                                                                    {/* Vertical Connection Line */}
-                                                                    <div className="absolute left-0 top-0 bottom-0 w-px bg-white/20" />
+                                                {hasChildren && !isCollapsed && isExpanded && filteredChildren && filteredChildren.length > 0 && (
+                                                    <div className="overflow-hidden">
+                                                        <div className="relative ml-[16px] pl-4 py-1 space-y-1">
+                                                            {/* Vertical Connection Line */}
+                                                            <div className="absolute left-0 top-0 bottom-0 w-px bg-white/20" />
 
-                                                                    {filteredChildren.map(child => {
-                                                                        const isChildItemActive = pathname === child.href || pathname.startsWith(child.href)
-                                                                        return (
-                                                                            <Link
-                                                                                key={child.href}
-                                                                                href={child.href}
-                                                                                className={cn(
-                                                                                    "group/sub relative flex items-center gap-3 py-2 rounded-xl text-sm transition-all duration-200",
-                                                                                    isChildItemActive
-                                                                                        ? "text-brand-gold-light"
-                                                                                        : "text-brand-cream/50 hover:text-brand-gold-light"
-                                                                                )}
-                                                                            >
-                                                                                {/* Active Indicator Dot */}
-                                                                                <div className={cn(
-                                                                                    "absolute -left-[19px] w-1.5 h-1.5 rounded-full transition-all duration-300",
-                                                                                    isChildItemActive
-                                                                                        ? "bg-brand-gold-light ring-4 ring-brand-gold-light/20"
-                                                                                        : "bg-white/10 group-hover/sub:bg-white/30"
-                                                                                )} />
+                                                            {filteredChildren.map(child => {
+                                                                const isChildItemActive = pathname === child.href || pathname.startsWith(child.href)
+                                                                return (
+                                                                    <Link
+                                                                        key={child.href}
+                                                                        href={child.href}
+                                                                        className={cn(
+                                                                            "group/sub relative flex items-center gap-3 py-2 rounded-xl text-sm transition-all duration-200",
+                                                                            isChildItemActive
+                                                                                ? "text-brand-gold-light"
+                                                                                : "text-brand-cream/50 hover:text-brand-gold-light"
+                                                                        )}
+                                                                    >
+                                                                        {/* Active Indicator Dot */}
+                                                                        <div className={cn(
+                                                                            "absolute -left-[19px] w-1.5 h-1.5 rounded-full transition-all duration-300",
+                                                                            isChildItemActive
+                                                                                ? "bg-brand-gold-light ring-4 ring-brand-gold-light/20"
+                                                                                : "bg-white/10 group-hover/sub:bg-white/30"
+                                                                        )} />
 
-                                                                                <child.icon className={cn(
-                                                                                    "h-4 w-4 shrink-0 transition-colors",
-                                                                                    isChildItemActive ? "text-brand-gold-light" : "text-brand-cream/40 group-hover/sub:text-brand-cream"
-                                                                                )} />
-                                                                                <span className="font-medium">{child.label}</span>
-                                                                            </Link>
-                                                                        )
-                                                                    })}
-                                                                </div>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
+                                                                        <child.icon className={cn(
+                                                                            "h-4 w-4 shrink-0 transition-colors",
+                                                                            isChildItemActive ? "text-brand-gold-light" : "text-brand-cream/40 group-hover/sub:text-brand-cream"
+                                                                        )} />
+                                                                        <span className="font-medium">{child.label}</span>
+                                                                    </Link>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
                                         )
@@ -416,9 +387,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                             )}
                         >
                             <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-brand-gold-light" : "text-brand-cream/70")} />
-                            {!isCollapsed && (
-                                <span className="whitespace-nowrap">Refer & Earn</span>
-                            )}
+                            {!isCollapsed && <span className="whitespace-nowrap">Refer & Earn</span>}
                         </Link>
                     )}
 
@@ -504,12 +473,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                             </div>
                             {!isCollapsed && (
                                 <>
-                                    <div className="flex flex-col flex-1 overflow-hidden">
+                                    <div className="flex flex-col flex-1 overflow-hidden min-w-0">
                                         <span className="text-xs font-bold truncate text-brand-cream">{user?.fullName}</span>
                                         <span className="text-[10px] text-brand-cream/50 truncate font-medium capitalize">{role?.toLowerCase().replace('_', ' ') || 'User'}</span>
                                     </div>
                                     <ChevronRight className={cn(
-                                        "h-4 w-4 text-brand-cream/30 transition-transform duration-300",
+                                        "h-4 w-4 shrink-0 text-brand-cream/30 transition-transform duration-300",
                                         isMenuOpen && "rotate-90 text-brand-gold-bright"
                                     )} />
                                 </>
