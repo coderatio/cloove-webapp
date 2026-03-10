@@ -240,7 +240,7 @@ export function FinanceView() {
                 return (
                     <div className={cn(
                         "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                        isCredit ? "bg-brand-green/10 text-brand-green" : "bg-rose-500/10 text-rose-500"
+                        isCredit ? "bg-brand-green/10 dark:bg-brand-green-600/10 text-brand-green dark:text-brand-green-600" : "bg-rose-500/10 dark:bg-rose-500/5 text-rose-500"
                     )}>
                         <Icon className="w-4 h-4" />
                     </div>

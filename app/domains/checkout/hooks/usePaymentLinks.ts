@@ -12,7 +12,9 @@ interface PaymentLinkResponse {
   status: string
   targetType: string
   isReusable: boolean
-  title: string | null
+  isStatic: boolean,
+  title: string | null,
+  slug: string | null,
   [key: string]: unknown
 }
 

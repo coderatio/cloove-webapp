@@ -424,7 +424,7 @@ export function SaleModeView() {
     }
 
     return (
-        <div className={cn("fixed inset-0 z-50 flex flex-col lg:flex-row overflow-hidden bg-brand-cream dark:bg-brand-deep", mounted && "theme-transition")}>
+        <div className={cn("fixed inset-0 z-50 flex flex-col lg:flex-row overflow-hidden bg-brand-cream dark:bg-background", mounted && "theme-transition")}>
             {/* Background Decorative Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-40 dark:opacity-20">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/10 blur-[120px] animate-float-slow" />
@@ -452,7 +452,7 @@ export function SaleModeView() {
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="rounded-2xl h-12 w-12 group border-brand-deep/15 dark:border-white/5 bg-white dark:bg-brand-deep-400 hover:bg-brand-gold/10 dark:hover:bg-brand-deep-500 hover:border-brand-deep/15 transition-all duration-500"
+                                    className="rounded-2xl h-12 w-12 group border-brand-deep/15 dark:border-white/5 bg-white dark:bg-brand-deep-800 hover:bg-brand-gold/10 dark:hover:bg-brand-deep-900 hover:border-brand-deep-800/15 transition-all duration-500"
                                 >
                                     <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
                                 </Button>
@@ -525,7 +525,7 @@ export function SaleModeView() {
                                 onClick={() => setSelectedCategory(null)}
                                 className={cn(
                                     "rounded-2xl h-14 px-8 min-w-max transition-all duration-500",
-                                    !selectedCategory && "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-sm"
+                                    !selectedCategory && "bg-brand-deep dark:bg-brand-deep-800 border-brand-deep dark:border-brand-deep-800 text-brand-gold dark:hover:bg-brand-deep-700 shadow-sm"
                                 )}
                             >
                                 Catalog
@@ -537,7 +537,7 @@ export function SaleModeView() {
                                     onClick={() => setSelectedCategory(cat)}
                                     className={cn(
                                         "rounded-2xl h-14 px-8 min-w-max transition-all duration-500",
-                                        selectedCategory === cat && "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-sm"
+                                        selectedCategory === cat && "bg-brand-deep dark:bg-brand-deep-800 border-brand-deep dark:border-brand-deep-800 text-brand-gold dark:hover:bg-brand-deep-700 shadow-sm"
                                     )}
                                 >
                                     {cat}
@@ -585,7 +585,7 @@ export function SaleModeView() {
                                                         "group cursor-pointer flex flex-col h-[220px] relative overflow-hidden p-0 rounded-[32px] transition-none!",
                                                         product.image
                                                             ? "bg-brand-deep! border-none!"
-                                                            : "bg-white! dark:bg-brand-deep! border! border-brand-gold/25! dark:border-white/10!"
+                                                            : "bg-white! dark:bg-brand-deep-900! border! border-brand-gold/25! dark:border-white/10!"
                                                     )}
                                                 >
                                                     {/* Immersive Background Image or Editorial Watermark */}
@@ -597,13 +597,13 @@ export function SaleModeView() {
                                                                 className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
                                                             />
                                                             {/* Top Protection Gradient */}
-                                                            <div className="absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-brand-deep/80 via-brand-deep/40 to-transparent z-10 pointer-events-none" />
+                                                            <div className="absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-brand-deep-900/80 via-brand-deep-800/40 to-transparent z-10 pointer-events-none" />
 
                                                             {/* Base Image Overlay */}
-                                                            <div className="absolute inset-0 bg-brand-deep/20 z-10" />
+                                                            <div className="absolute inset-0 bg-brand-deep-900/20 z-10" />
 
                                                             {/* Bottom Protection Gradient */}
-                                                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-brand-deep/90 via-brand-deep/50 to-transparent z-10 pointer-events-none backdrop-blur-[1px]" />
+                                                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-brand-deep-900/90 via-brand-deep-900/50 to-transparent z-10 pointer-events-none backdrop-blur-[1px]" />
                                                         </div>
                                                     ) : (
                                                         <div className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none overflow-hidden">
@@ -683,7 +683,7 @@ export function SaleModeView() {
 
                         {/* Pagination Controls - Fixed Bottom */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center lg:justify-center gap-2 lg:gap-6 py-3 lg:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-brand-deep/40 backdrop-blur-sm rounded-2xl shrink-0 relative">
+                            <div className="flex items-center justify-center lg:justify-center gap-2 lg:gap-6 py-3 lg:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-background backdrop-blur-sm rounded-2xl shrink-0 relative">
                                 {/* Mobile Back Button */}
                                 <div className="absolute left-2 lg:hidden">
                                     <Link href="/orders">
@@ -779,7 +779,7 @@ export function SaleModeView() {
 
             {/* Right Side: Cart & Checkout Summary */}
             <div className={cn(
-                "w-full lg:w-[420px] lg:h-full bg-white/60 dark:bg-brand-deep/80 backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20 min-h-0",
+                "w-full lg:w-[420px] lg:h-full bg-white/60 dark:bg-background backdrop-blur-3xl flex flex-col border-l border-brand-accent/10 dark:border-white/5 shadow-2xl relative z-20 min-h-0",
                 mobileView === 'catalog' ? "hidden lg:flex" : "flex h-full fixed inset-0 z-50 lg:relative lg:inset-auto"
             )}>
                 <div className="p-4 lg:pt-3 lg:px-5 lg:pb-5 border-b border-brand-accent/10 dark:border-white/5 flex flex-col gap-3 bg-brand-gold/5 dark:bg-brand-gold/5 relative">

@@ -185,12 +185,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         <motion.aside
             initial={false}
             animate={{ width: isCollapsed ? 80 : 280 }}
-            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-[20px] bg-brand-deep dark:bg-[#021a12] shadow-2xl transition-all duration-300"
+            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-[20px] bg-brand-deep dark:bg-[#050a08] shadow-2xl transition-all duration-300 border border-white/5"
         >
             {/* Background Texture/Gradient for depth */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-green/20 blur-[80px] rounded-full mix-blend-overlay" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-green/10 blur-[60px] rounded-full" />
+            <div className="absolute inset-0 pointer-events-none opacity-50">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 blur-[80px] rounded-full mix-blend-overlay" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/10 blur-[60px] rounded-full" />
             </div>
 
             <div className="relative z-10 flex flex-col h-full text-brand-cream">
@@ -258,7 +258,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                 "group relative flex items-center rounded-xl transition-all duration-200",
                                                                 isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-4 py-3",
                                                                 (isActive || isChildActive)
-                                                                    ? "bg-white/10 text-brand-gold shadow-sm backdrop-blur-sm"
+                                                                    ? "bg-white/10 text-brand-gold-light shadow-sm backdrop-blur-sm"
                                                                     : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
                                                             )}
                                                         >
@@ -272,7 +272,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                 <item.icon
                                                                     className={cn(
                                                                         "h-5 w-5 shrink-0 transition-colors",
-                                                                        (isActive || isChildActive) ? "text-brand-gold" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                                                        (isActive || isChildActive) ? "text-brand-gold-light" : "text-brand-cream/70 group-hover:text-brand-cream"
                                                                     )}
                                                                 />
 
@@ -295,7 +295,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                     variant="ghost"
                                                                     size="icon"
                                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleExpanded(item.href) }}
-                                                                    className="h-7 w-7 rounded-lg hover:bg-white/10 transition-all shrink-0 text-brand-cream/40 hover:text-brand-gold"
+                                                                    className="h-7 w-7 rounded-lg hover:bg-white/10 transition-all shrink-0 text-brand-cream/40 hover:text-brand-gold-light"
                                                                 >
                                                                     <ChevronDown className={cn(
                                                                         "h-3.5 w-3.5 transition-transform duration-300",
@@ -307,7 +307,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                             {(isActive || isChildActive) && !isCollapsed && (
                                                                 <motion.div
                                                                     layoutId="sidebar-active"
-                                                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold rounded-r-full"
+                                                                    className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold-light rounded-r-full"
                                                                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                                                 />
                                                             )}
@@ -325,7 +325,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                             href={child.href}
                                                                             className={cn(
                                                                                 "text-xs py-1 px-1 rounded hover:bg-white/10 transition-colors",
-                                                                                pathname.startsWith(child.href) ? "text-brand-gold font-medium" : ""
+                                                                                pathname.startsWith(child.href) ? "text-brand-gold-light font-medium" : ""
                                                                             )}
                                                                         >
                                                                             {child.label}
@@ -361,21 +361,21 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                                 className={cn(
                                                                                     "group/sub relative flex items-center gap-3 py-2 rounded-xl text-sm transition-all duration-200",
                                                                                     isChildItemActive
-                                                                                        ? "text-brand-gold"
-                                                                                        : "text-brand-cream/50 hover:text-brand-gold"
+                                                                                        ? "text-brand-gold-light"
+                                                                                        : "text-brand-cream/50 hover:text-brand-gold-light"
                                                                                 )}
                                                                             >
                                                                                 {/* Active Indicator Dot */}
                                                                                 <div className={cn(
                                                                                     "absolute -left-[19px] w-1.5 h-1.5 rounded-full transition-all duration-300",
                                                                                     isChildItemActive
-                                                                                        ? "bg-brand-gold ring-4 ring-brand-gold/20"
+                                                                                        ? "bg-brand-gold-light ring-4 ring-brand-gold-light/20"
                                                                                         : "bg-white/10 group-hover/sub:bg-white/30"
                                                                                 )} />
 
                                                                                 <child.icon className={cn(
                                                                                     "h-4 w-4 shrink-0 transition-colors",
-                                                                                    isChildItemActive ? "text-brand-gold" : "text-brand-cream/40 group-hover/sub:text-brand-cream"
+                                                                                    isChildItemActive ? "text-brand-gold-light" : "text-brand-cream/40 group-hover/sub:text-brand-cream"
                                                                                 )} />
                                                                                 <span className="font-medium">{child.label}</span>
                                                                             </Link>
@@ -411,11 +411,11 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 "flex items-center rounded-xl transition-all duration-200 mb-2",
                                 isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-3 py-2 text-sm font-medium",
                                 pathname === "/referrals"
-                                    ? "bg-brand-gold/10 text-brand-gold"
+                                    ? "bg-brand-gold-light/10 text-brand-gold-light"
                                     : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
                             )}
                         >
-                            <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-brand-gold" : "text-brand-cream/70")} />
+                            <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-brand-gold-light" : "text-brand-cream/70")} />
                             {!isCollapsed && (
                                 <span className="whitespace-nowrap">Refer & Earn</span>
                             )}
@@ -510,7 +510,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                     </div>
                                     <ChevronRight className={cn(
                                         "h-4 w-4 text-brand-cream/30 transition-transform duration-300",
-                                        isMenuOpen && "rotate-90 text-brand-gold"
+                                        isMenuOpen && "rotate-90 text-brand-gold-bright"
                                     )} />
                                 </>
                             )}

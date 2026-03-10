@@ -104,11 +104,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
 
     return (
-        <div className="min-h-screen bg-brand-cream dark:bg-brand-deep text-foreground transition-colors duration-300">
+        <div className="min-h-screen bg-brand-cream dark:bg-background text-foreground transition-colors duration-300">
             {/* Background Gradient Mesh (Optional "Premium" touch) */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-green/20 blur-3xl filter" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/20 blur-3xl filter" />
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-10">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/5 blur-3xl filter" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/10 blur-3xl filter" />
             </div>
 
             <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
