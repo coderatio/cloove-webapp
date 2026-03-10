@@ -6,7 +6,7 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { AlertCircle, Users, Clock, TrendingUp, ChevronLeft, ChevronRight, MoreHorizontal, Banknote, Bell, FileText, Eye } from "lucide-react"
+import { AlertCircle, Users, Clock, TrendingUp, ChevronLeft, ChevronRight, MoreHorizontal, Banknote, Bell, FileText, Eye, Download, Send } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -142,15 +142,30 @@ export function DebtsView() {
                                     </div>
                                     <span className="font-medium">Send Reminder</span>
                                 </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
+                                <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 p-3 pt-2">
+                                    Invoice
+                                </DropdownMenuLabel>
                                 <DropdownMenuItem
-                                    onClick={() => generateInvoice(item.id)}
+                                    onClick={() => generateInvoice({ debtId: item.id })}
                                     className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                                 >
                                     <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
-                                        <FileText className="w-4 h-4" />
+                                        <Download className="w-4 h-4" />
                                     </div>
-                                    <span className="font-medium">Generate Invoice</span>
+                                    <span className="font-medium">{item.invoiceUrl ? "View Invoice" : "Generate Invoice"}</span>
                                 </DropdownMenuItem>
+                                {item.customerPhone && (
+                                    <DropdownMenuItem
+                                        onClick={() => generateInvoice({ debtId: item.id, sendTo: "CUSTOMER" })}
+                                        className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                                    >
+                                        <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
+                                            <Send className="w-4 h-4" />
+                                        </div>
+                                        <span className="font-medium">Send Invoice</span>
+                                    </DropdownMenuItem>
+                                )}
                             </>
                         )}
                     </DropdownMenuContent>
@@ -262,7 +277,7 @@ export function DebtsView() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <GlassCard className={cn(
-                        "p-5 flex items-center gap-4 relative overflow-hidden group transition-all rounded-3xl",
+                        "p-5 flex items-center gap-4 relative overflow-hidden group transition-all rounded-3xl before:rounded-3xl",
                         (stats?.totalOutstanding ?? 0) > 0
                             ? "border-rose-500/20 bg-rose-500/5 shadow-[0_0_20px_rgba(239,68,68,0.05)]"
                             : "border-brand-deep/5"
@@ -287,7 +302,7 @@ export function DebtsView() {
                         </div>
                     </GlassCard>
 
-                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl">
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Users className="w-24 h-24" />
                         </div>
@@ -309,7 +324,7 @@ export function DebtsView() {
                     </GlassCard>
 
                     <GlassCard className={cn(
-                        "p-5 flex items-center gap-4 relative overflow-hidden group transition-all rounded-3xl",
+                        "p-5 flex items-center gap-4 relative overflow-hidden group transition-all rounded-3xl before:rounded-3xl",
                         (stats?.overdueCount ?? 0) > 0
                             ? "border-rose-500/20 bg-rose-500/5"
                             : "border-brand-deep/5"
@@ -348,7 +363,7 @@ export function DebtsView() {
                         </div>
                     </GlassCard>
 
-                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl">
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <TrendingUp className="w-24 h-24" />
                         </div>

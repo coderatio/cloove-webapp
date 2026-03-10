@@ -155,7 +155,7 @@ export function ReferralsView() {
                 />
 
                 <section className="grid md:grid-cols-2 gap-6">
-                    <GlassCard className="p-6 md:p-8 relative overflow-hidden bg-brand-deep/5 dark:bg-white/5 border-0 rounded-3xl">
+                    <GlassCard className="p-6 md:p-8 relative overflow-hidden bg-brand-deep/5 dark:bg-white/5 border-0 rounded-3xl before:rounded-3xl">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-brand-gold/10 to-transparent rounded-full -mr-16 -mt-16 blur-2xl" />
                         <div className="relative z-10 space-y-6">
                             <div className="space-y-2">
@@ -200,7 +200,7 @@ export function ReferralsView() {
                     </GlassCard>
 
                     <div className="grid grid-rows-2 gap-6">
-                        <GlassCard className="p-6 flex flex-col justify-between relative overflow-hidden rounded-3xl">
+                        <GlassCard className="p-6 flex flex-col justify-between relative overflow-hidden rounded-3xl before:rounded-3xl">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
                                 <Wallet className="w-12 h-12 text-brand-deep dark:text-brand-cream" />
                             </div>
@@ -230,13 +230,13 @@ export function ReferralsView() {
                         </GlassCard>
 
                         <div className="grid grid-cols-2 gap-6">
-                            <GlassCard className="p-6 flex flex-col justify-center space-y-2 rounded-3xl">
+                            <GlassCard className="p-6 flex flex-col justify-center space-y-2 rounded-3xl before:rounded-3xl">
                                 <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Total Earned</span>
                                 <div className="text-2xl font-serif text-brand-deep dark:text-brand-cream">
                                     {isLoading ? "..." : formatCurrency(stats?.totalEarnings ?? 0, currency)}
                                 </div>
                             </GlassCard>
-                            <GlassCard className="p-6 flex flex-col justify-center space-y-2 rounded-3xl">
+                            <GlassCard className="p-6 flex flex-col justify-center space-y-2 rounded-3xl before:rounded-3xl">
                                 <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Referrals</span>
                                 <div className="flex items-baseline gap-2">
                                     <div className="text-2xl font-serif text-brand-deep dark:text-brand-cream">
@@ -259,7 +259,7 @@ export function ReferralsView() {
                                 <Loader2 className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
                             </div>
                         ) : payouts.length === 0 ? (
-                            <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10 rounded-3xl">
+                            <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10 rounded-3xl before:rounded-3xl">
                                 <div className="w-14 h-14 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
                                     <Wallet className="w-7 h-7 text-brand-deep/20 dark:text-white/20" />
                                 </div>
@@ -325,7 +325,7 @@ export function ReferralsView() {
                                 <Loader2 className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
                             </div>
                         ) : referralList.length === 0 ? (
-                            <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10 rounded-3xl">
+                            <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10 rounded-3xl before:rounded-3xl">
                                 <div className="w-14 h-14 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
                                     <Users className="w-7 h-7 text-brand-deep/20 dark:text-white/20" />
                                 </div>
@@ -347,7 +347,7 @@ export function ReferralsView() {
                             </GlassCard>
                         ) : (
                             referralList.map((ref) => (
-                                <GlassCard key={ref.id} className="p-4 flex items-center justify-between rounded-3xl">
+                                <GlassCard key={ref.id} className="p-4 flex items-center justify-between rounded-3xl before:rounded-3xl">
                                     <div>
                                         <div className="font-medium text-brand-deep dark:text-brand-cream">
                                             {ref.referredBusinessName ?? "—"}

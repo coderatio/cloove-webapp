@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Phone, Banknote, Bell, FileText, Clock } from "lucide-react"
+import { Loader2, Phone, Banknote, Bell, FileText, Clock, Download, Send } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -10,7 +10,6 @@ import {
     DrawerStickyHeader,
     DrawerTitle,
     DrawerDescription,
-    DrawerClose,
     DrawerBody,
     DrawerFooter,
 } from "@/app/components/ui/drawer"
@@ -45,10 +44,26 @@ export function DebtDetailDrawer({
     const detail = detailData?.data
     const { sendReminder, generateInvoice, isSendingReminder, isGeneratingInvoice } = useDebtActions()
 
+    // Track which invoice action is in progress
+    const [invoiceAction, setInvoiceAction] = React.useState<"generate" | "send" | null>(null)
+
+    const handleGenerateInvoice = () => {
+        if (!debt) return
+        setInvoiceAction("generate")
+        generateInvoice({ debtId: debt.id }).finally(() => setInvoiceAction(null))
+    }
+
+    const handleSendInvoice = () => {
+        if (!debt) return
+        setInvoiceAction("send")
+        generateInvoice({ debtId: debt.id, sendTo: "CUSTOMER" }).finally(() => setInvoiceAction(null))
+    }
+
     if (!debt) return null
 
     const config = statusConfig[debt.status] ?? statusConfig.PENDING
     const isOverdue = debt.dueAt && new Date(debt.dueAt) < new Date() && debt.status !== "PAID"
+    const hasInvoice = !!debt.invoiceUrl
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
@@ -61,7 +76,7 @@ export function DebtDetailDrawer({
                 <DrawerBody>
                     <div className="space-y-6">
                         {/* Customer Info */}
-                        <GlassCard className="p-5 space-y-3 rounded-3xl">
+                        <GlassCard className="p-5 space-y-3 rounded-3xl before:rounded-3xl">
                             <div className="flex items-center justify-between">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
                                     Customer
@@ -81,7 +96,7 @@ export function DebtDetailDrawer({
 
                         {/* Amount Summary */}
                         <div className="grid grid-cols-2 gap-3">
-                            <GlassCard className="p-4 rounded-3xl">
+                            <GlassCard className="p-4 rounded-3xl before:rounded-3xl">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
                                     Original Amount
                                 </p>
@@ -89,7 +104,7 @@ export function DebtDetailDrawer({
                                     {formatCurrency(debt.amount, { currency: currencyCode })}
                                 </p>
                             </GlassCard>
-                            <GlassCard className={cn("p-4 rounded-3xl", debt.remainingAmount > 0 && "border-rose-500/20 bg-rose-500/5")}>
+                            <GlassCard className={cn("p-4 rounded-3xl before:rounded-3xl", debt.remainingAmount > 0 && "border-rose-500/20 bg-rose-500/5")}>
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-rose-500/60">
                                     Remaining
                                 </p>
@@ -112,6 +127,45 @@ export function DebtDetailDrawer({
                             </div>
                         )}
 
+                        {/* Invoice Actions */}
+                        {debt.status !== "PAID" && (
+                            <div className="space-y-3">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">
+                                    Invoice
+                                </p>
+                                <div className="flex gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleGenerateInvoice}
+                                        disabled={isGeneratingInvoice}
+                                        className="flex-1 rounded-2xl h-12 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
+                                    >
+                                        {invoiceAction === "generate" ? (
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                        ) : (
+                                            <Download className="w-4 h-4 mr-2" />
+                                        )}
+                                        {hasInvoice ? "View Invoice" : "Generate Invoice"}
+                                    </Button>
+                                    {debt.customerPhone && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleSendInvoice}
+                                            disabled={isGeneratingInvoice}
+                                            className="flex-1 rounded-2xl h-12 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
+                                        >
+                                            {invoiceAction === "send" ? (
+                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                            ) : (
+                                                <Send className="w-4 h-4 mr-2" />
+                                            )}
+                                            Send to Customer
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Repayment History */}
                         <div className="space-y-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">
@@ -122,7 +176,7 @@ export function DebtDetailDrawer({
                                     <Loader2 className="w-5 h-5 animate-spin text-brand-accent/40" />
                                 </div>
                             ) : !detail?.repayments?.length ? (
-                                <GlassCard className="p-8 text-center space-y-3 rounded-3xl">
+                                <GlassCard className="p-8 text-center space-y-3 rounded-3xl before:rounded-3xl">
                                     <div className="mx-auto h-12 w-12 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
                                         <Banknote className="w-6 h-6 text-brand-accent/20 dark:text-brand-cream/20" />
                                     </div>
@@ -137,7 +191,7 @@ export function DebtDetailDrawer({
                                 </GlassCard>
                             ) : (
                                 detail.repayments.map((repayment) => (
-                                    <GlassCard key={repayment.id} className="p-4 flex items-center justify-between rounded-3xl">
+                                    <GlassCard key={repayment.id} className="p-4 flex items-center justify-between rounded-3xl before:rounded-3xl">
                                         <div className="flex items-center gap-3">
                                             <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
                                                 <Banknote className="w-4 h-4 text-emerald-500" />
@@ -172,34 +226,19 @@ export function DebtDetailDrawer({
                                 <Banknote className="w-5 h-5 mr-2" />
                                 Record Payment
                             </Button>
-                            <div className="flex gap-3">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => sendReminder(debt.id)}
-                                    disabled={isSendingReminder}
-                                    className="flex-1 rounded-2xl h-12 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
-                                >
-                                    {isSendingReminder ? (
-                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                    ) : (
-                                        <Bell className="w-4 h-4 mr-2" />
-                                    )}
-                                    Send Reminder
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => generateInvoice(debt.id)}
-                                    disabled={isGeneratingInvoice}
-                                    className="flex-1 rounded-2xl h-12 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
-                                >
-                                    {isGeneratingInvoice ? (
-                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                    ) : (
-                                        <FileText className="w-4 h-4 mr-2" />
-                                    )}
-                                    Invoice
-                                </Button>
-                            </div>
+                            <Button
+                                variant="outline"
+                                onClick={() => sendReminder(debt.id)}
+                                disabled={isSendingReminder}
+                                className="w-full rounded-2xl h-12 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
+                            >
+                                {isSendingReminder ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : (
+                                    <Bell className="w-4 h-4 mr-2" />
+                                )}
+                                Send Reminder
+                            </Button>
                         </div>
                     </DrawerFooter>
                 )}

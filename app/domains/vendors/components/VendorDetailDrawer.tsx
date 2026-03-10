@@ -59,7 +59,7 @@ export function VendorDetailDrawer({
                 <DrawerBody>
                     <div className="space-y-6">
                         {/* Contact Info */}
-                        <GlassCard className="p-5 space-y-4 rounded-3xl">
+                        <GlassCard className="p-5 space-y-4 rounded-3xl before:rounded-3xl">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
                                 Contact Information
                             </p>
@@ -101,7 +101,7 @@ export function VendorDetailDrawer({
 
                         {/* Outstanding Summary */}
                         <GlassCard className={cn(
-                            "p-5 flex items-center justify-between rounded-3xl",
+                            "p-5 flex items-center justify-between rounded-3xl before:rounded-3xl",
                             vendor.outstanding > 0 && "border-rose-500/20 bg-rose-500/5"
                         )}>
                             <div>
@@ -134,7 +134,7 @@ export function VendorDetailDrawer({
                                     <Loader2 className="w-5 h-5 animate-spin text-brand-accent/40" />
                                 </div>
                             ) : payables.length === 0 ? (
-                                <GlassCard className="p-6 text-center rounded-3xl">
+                                <GlassCard className="p-6 text-center rounded-3xl before:rounded-3xl">
                                     <p className="text-sm text-brand-accent/40 dark:text-brand-cream/40">
                                         No payables recorded yet.
                                     </p>
@@ -143,7 +143,7 @@ export function VendorDetailDrawer({
                                 payables.map((payable) => {
                                     const config = statusConfig[payable.status] ?? statusConfig.PENDING
                                     return (
-                                        <GlassCard key={payable.id} className="p-4 space-y-3 rounded-3xl">
+                                        <GlassCard key={payable.id} className="p-4 space-y-3 rounded-3xl before:rounded-3xl">
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <p className="font-medium text-brand-deep dark:text-brand-cream">
@@ -174,7 +174,7 @@ export function VendorDetailDrawer({
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={() => onPayPayable(payable)}
-                                                        className="rounded-xl text-xs border-brand-green/20 text-brand-green hover:bg-brand-green/10"
+                                                        className="rounded-xl text-xs border-brand-green/20 text-brand-green dark:text-brand-cream hover:bg-brand-green/10"
                                                     >
                                                         <Banknote className="w-3 h-3 mr-1" />
                                                         Pay

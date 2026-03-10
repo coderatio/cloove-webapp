@@ -183,21 +183,42 @@ export function useDebtActions() {
     })
 
     const invoiceMutation = useMutation({
-        mutationFn: (debtId: string) =>
-            apiClient.post(`/debts/${debtId}/invoice`, {}),
-        onSuccess: () => {
-            toast.success("Invoice generated")
+        mutationFn: ({ debtId, sendTo }: { debtId: string; sendTo?: "MYSELF" | "CUSTOMER" | "BOTH" }) =>
+            apiClient.post<ApiResponse<{ url: string; debtAmount: number; customerName: string; customerHasWhatsapp: boolean; deliveryStatus: string[] }>>(
+                `/debts/${debtId}/invoice`,
+                sendTo ? { sendTo } : {},
+                { fullResponse: true }
+            ),
+        onSuccess: (data, variables) => {
+            const url = data?.data?.url
+            if (!variables.sendTo && url) {
+                window.open(url, "_blank")
+            }
             queryClient.invalidateQueries({ queryKey: ["debt-detail", businessId] })
-        },
-        onError: (err: { message?: string }) => {
-            toast.error(err.message ?? "Failed to generate invoice")
+            queryClient.invalidateQueries({ queryKey: ["debts", businessId] })
         },
     })
+
+    const generateInvoice = (args: { debtId: string; sendTo?: "MYSELF" | "CUSTOMER" | "BOTH" }) => {
+        const isSending = !!args.sendTo
+        return toast.promise(invoiceMutation.mutateAsync(args), {
+            loading: isSending ? "Sending invoice..." : "Generating invoice...",
+            success: (data) => {
+                if (isSending) {
+                    const statuses = data?.data?.deliveryStatus ?? []
+                    return statuses.length > 0 ? statuses.join(", ") : "Invoice sent"
+                }
+                return "Invoice generated"
+            },
+            error: (err: { message?: string }) =>
+                err.message ?? (isSending ? "Failed to send invoice" : "Failed to generate invoice"),
+        })
+    }
 
     return {
         recordRepayment: repaymentMutation.mutateAsync,
         sendReminder: reminderMutation.mutateAsync,
-        generateInvoice: invoiceMutation.mutateAsync,
+        generateInvoice,
         isRecordingRepayment: repaymentMutation.isPending,
         isSendingReminder: reminderMutation.isPending,
         isGeneratingInvoice: invoiceMutation.isPending,

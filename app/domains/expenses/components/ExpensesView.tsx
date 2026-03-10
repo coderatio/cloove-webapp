@@ -205,7 +205,7 @@ export function ExpensesView() {
                 />
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl">
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Banknote className="w-24 h-24" />
                         </div>
@@ -226,7 +226,7 @@ export function ExpensesView() {
                         </div>
                     </GlassCard>
 
-                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl">
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <TrendingDown className="w-24 h-24" />
                         </div>
@@ -247,7 +247,7 @@ export function ExpensesView() {
                         </div>
                     </GlassCard>
 
-                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl">
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Calculator className="w-24 h-24" />
                         </div>
@@ -268,7 +268,7 @@ export function ExpensesView() {
                         </div>
                     </GlassCard>
 
-                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl">
+                    <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Tag className="w-24 h-24" />
                         </div>

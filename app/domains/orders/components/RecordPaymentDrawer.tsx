@@ -76,7 +76,7 @@ export function RecordPaymentDrawer({
 
                 <div className="p-6 md:p-8 max-w-lg mx-auto w-full space-y-8 overflow-y-auto max-h-[70vh]">
                     {/* Summary Card */}
-                    <GlassCard className="p-6 space-y-4 bg-brand-deep/5 dark:bg-white/5 border-none rounded-3xl">
+                    <GlassCard className="p-6 space-y-4 bg-brand-deep/5 dark:bg-white/5 border-none rounded-3xl before:rounded-3xl">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-brand-accent/60 dark:text-brand-cream/60">Total Order Amount</span>
                             <span className="font-bold text-brand-deep dark:text-brand-cream">{formatCurrency(totalAmount, { currency: order.currency || 'NGN' })}</span>

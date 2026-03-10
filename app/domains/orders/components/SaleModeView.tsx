@@ -992,7 +992,7 @@ export function SaleModeView() {
                                     exit={{ opacity: 0, x: 20 }}
                                     className="group"
                                 >
-                                    <GlassCard className="p-4 rounded-[20px] before:rounded-[20px] sm:rounded-3xl flex flex-col gap-3 bg-white/40 dark:bg-white/10 border-brand-accent/10 dark:border-white/5 group-hover:border-brand-gold/20 transition-all duration-300">
+                                    <GlassCard className="p-4 rounded-[20px] before:rounded-[20px] sm:rounded-3xl sm:before:rounded-3xl flex flex-col gap-3 bg-white/40 dark:bg-white/10 border-brand-accent/10 dark:border-white/5 group-hover:border-brand-gold/20 transition-all duration-300">
                                         <div className="flex gap-4 items-center min-w-0">
                                             {item.image && (
                                                 <div className="h-12 w-12 rounded-xl overflow-hidden bg-brand-deep/5 dark:bg-white/5 shrink-0 border border-brand-accent/5 dark:border-white/5 relative">

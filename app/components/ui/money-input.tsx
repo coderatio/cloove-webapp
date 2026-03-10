@@ -88,7 +88,7 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     value={displayValue}
                     onChange={handleChange}
                     className={cn(
-                        "flex-1 border-0 rounded-none bg-transparent focus-visible:ring-0 font-medium tabular-nums placeholder:text-brand-accent/40 dark:placeholder:text-white/30 h-full",
+                        "flex-1 border-0 rounded-none bg-transparent! focus-visible:ring-0 font-medium tabular-nums placeholder:text-brand-accent/40 dark:placeholder:text-white/30 h-full",
                         isSmall ? "pl-2 pr-3 text-sm" : "pl-3 pr-4 text-base"
                     )}
                 />
