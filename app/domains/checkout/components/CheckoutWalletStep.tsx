@@ -55,7 +55,7 @@ export function CheckoutWalletStep({ checkout }: Props) {
       <CheckoutBusinessHeader
         businessName={checkout.businessName}
         businessLogo={checkout.businessLogo}
-        className="mb-6"
+        className="mb-6 md:pl-60"
       />
 
       {accounts.length === 0 ? (
@@ -113,7 +113,7 @@ export function CheckoutWalletStep({ checkout }: Props) {
           {/* Account Cards */}
           <div className="flex-1 min-w-0 space-y-4">
             {/* Title & Description inside content area */}
-            {checkout.title && (
+            {/* {checkout.title && (
               <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-brand-deep/10 dark:border-white/10 rounded-3xl px-6 py-4 shadow-sm dark:shadow-none space-y-1">
                 <h3 className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream">
                   {checkout.title}
@@ -122,20 +122,21 @@ export function CheckoutWalletStep({ checkout }: Props) {
                   <p className="text-brand-accent/50 dark:text-white/50 text-sm">{checkout.description}</p>
                 )}
               </div>
-            )}
+            )} */}
             {filteredAccounts.map((account, index) => (
               <WalletAccountCard key={account.id} account={account} index={index} />
             ))}
+
+            <div className="flex items-center justify-center gap-1.5 mt-6">
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
+              <p className="text-brand-accent/30 dark:text-white/30 text-xs">
+                Secured by CloovePay
+              </p>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-1.5 mt-6">
-        <ShieldCheck className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
-        <p className="text-brand-accent/30 dark:text-white/30 text-xs">
-          Secured by Cloove
-        </p>
-      </div>
     </motion.div>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { Check, ChevronsUpDown, LayoutGrid, Plus } from "lucide-react"
 import { cn } from "@/app/lib/utils"
@@ -25,8 +26,15 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
     const { data: subData } = useCurrentSubscription()
     const { data: usage, isLoading: isLoadingUsage } = useUsageStats()
     const [open, setOpen] = React.useState(false)
+    const [triggerRect, setTriggerRect] = React.useState<DOMRect | null>(null)
+    const triggerRef = React.useRef<HTMLButtonElement>(null)
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const router = useRouter()
+
+    React.useEffect(() => {
+        if (!open || !triggerRef.current) return
+        setTriggerRect(triggerRef.current.getBoundingClientRect())
+    }, [open])
 
     const planBenefits = subData?.currentPlan?.benefits as Record<string, number | null> | undefined
     const maxBusinesses = planBenefits?.maxBusinesses
@@ -44,19 +52,70 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
         router.push("/onboarding?from=switcher")
     }
 
+    const dropdownContent = open && triggerRect && (
+        <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
+            <div
+                className="fixed z-50 min-w-[200px] overflow-hidden rounded-2xl border border-white/10 bg-brand-deep-900/90 dark:bg-black/95 p-1 pb-2 px-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95"
+                style={
+                    isCollapsed
+                        ? { left: triggerRect.right + 8, top: triggerRect.top, minWidth: 200 }
+                        : { left: triggerRect.left, top: triggerRect.bottom + 8, width: triggerRect.width, minWidth: 200 }
+                }
+            >
+                <div className="px-2 py-2 text-[10px] uppercase tracking-widest font-bold text-white/30 border-b border-white/5 mb-1">Your Businesses</div>
+                <div className="space-y-0.5 max-h-[200px] overflow-y-auto">
+                    {businesses.map((business) => (
+                        <button
+                            key={business.id}
+                            onClick={() => {
+                                setActiveBusiness(business)
+                                setOpen(false)
+                            }}
+                            className={cn(
+                                "relative flex w-full cursor-pointer select-none items-center rounded-xl px-2 py-2.5 text-sm font-medium outline-none transition-all hover:bg-white/10 text-brand-cream",
+                                activeBusiness?.id === business.id && "bg-white/10 text-brand-gold"
+                            )}
+                        >
+                            <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0 bg-brand-gold/10">
+                                <LayoutGrid className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="flex-1 text-left truncate">{business.name}</span>
+                            {activeBusiness?.id === business.id && <Check className="ml-auto h-4 w-4 text-brand-gold" />}
+                        </button>
+                    ))}
+                    {canAddBusiness && (
+                        <button
+                            type="button"
+                            onClick={handleAddBusiness}
+                            className="relative flex w-full cursor-pointer select-none items-center rounded-lg px-2 py-2.5 text-sm font-medium outline-none transition-all hover:bg-white/10 text-brand-gold/90 border border-dashed border-white/20 mt-1"
+                        >
+                            <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0 bg-brand-gold/20">
+                                <Plus className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="flex-1 text-left">Add business</span>
+                        </button>
+                    )}
+                </div>
+            </div>
+        </>
+    )
+
     if (isDesktop) {
         return (
             <div className="relative">
                 <button
-                    onClick={() => setOpen(!open)}
+                    ref={triggerRef}
+                    onClick={() => {
+                        if (!open && triggerRef.current) setTriggerRect(triggerRef.current.getBoundingClientRect())
+                        setOpen(!open)
+                    }}
                     className={cn(
                         "flex cursor-pointer w-full items-center gap-2 rounded-[14px] border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10 text-brand-cream",
                         isCollapsed && "justify-center border-0 bg-transparent hover:bg-transparent p-0"
                     )}
                 >
-                    <div className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-gold text-brand-deep shadow-lg shadow-black/20",
-                    )}>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-gold text-brand-deep shadow-lg shadow-black/20">
                         <LayoutGrid className="h-4 w-4" />
                     </div>
                     {!isCollapsed && (
@@ -70,52 +129,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                     )}
                 </button>
 
-                {open && (
-                    <>
-                        <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-                        <div className={cn(
-                            "absolute z-50 mt-2 min-w-[200px] overflow-hidden rounded-2xl border border-white/10 bg-brand-deep-900/90 dark:bg-black/95 p-1 pb-2 px-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95",
-                            isCollapsed ? "left-12 top-0" : "top-full left-0 w-full"
-                        )}>
-                            <div className="px-2 py-2 text-[10px] uppercase tracking-widest font-bold text-white/30 border-b border-white/5 mb-1">Your Businesses</div>
-                            <div className="space-y-0.5 max-h-[200px] overflow-y-auto">
-                                {businesses.map((business) => (
-                                    <button
-                                        key={business.id}
-                                        onClick={() => {
-                                            setActiveBusiness(business)
-                                            setOpen(false)
-                                        }}
-                                        className={cn(
-                                            "relative flex w-full cursor-pointer select-none items-center rounded-xl px-2 py-2.5 text-sm font-medium outline-none transition-all hover:bg-white/10 text-brand-cream",
-                                            activeBusiness?.id === business.id && "bg-white/10 text-brand-gold"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0 bg-brand-gold/10",
-                                        )}>
-                                            <LayoutGrid className="h-3.5 w-3.5" />
-                                        </div>
-                                        <span className="flex-1 text-left truncate">{business.name}</span>
-                                        {activeBusiness?.id === business.id && <Check className="ml-auto h-4 w-4 text-brand-gold" />}
-                                    </button>
-                                ))}
-                                {canAddBusiness && (
-                                    <button
-                                        type="button"
-                                        onClick={handleAddBusiness}
-                                        className="relative flex w-full cursor-pointer select-none items-center rounded-lg px-2 py-2.5 text-sm font-medium outline-none transition-all hover:bg-white/10 text-brand-gold/90 border border-dashed border-white/20 mt-1"
-                                    >
-                                        <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0 bg-brand-gold/20">
-                                            <Plus className="h-3.5 w-3.5" />
-                                        </div>
-                                        <span className="flex-1 text-left">Add business</span>
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </>
-                )}
+                {typeof document !== "undefined" && createPortal(dropdownContent, document.body)}
             </div>
         )
     }

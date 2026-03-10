@@ -27,6 +27,8 @@ import {
     Receipt,
     Truck,
     Link2,
+    PanelRightClose,
+    PanelRightOpen,
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
@@ -195,9 +197,9 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
             </div>
 
             <div className="relative z-10 flex flex-col h-full text-brand-cream overflow-hidden">
-                {/* Header */}
-                <div className={cn("flex items-center p-6 mb-2", isCollapsed ? "justify-center" : "justify-between")}>
-                    <div className="flex items-center gap-3 overflow-hidden">
+                {/* Header: when collapsed stack logo + expand; when expanded logo + label left, collapse right */}
+                <div className={cn("p-4 mb-2", isCollapsed ? "flex flex-col items-center gap-3" : "flex items-center justify-between")}>
+                    <div className="flex items-center gap-3 overflow-hidden min-w-0">
                         <div className="relative h-8 w-8 shrink-0">
                             <Image
                                 src="/images/logo-white.png"
@@ -212,6 +214,32 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                             </span>
                         )}
                     </div>
+                    {isCollapsed ? (
+                        <Tooltip delayDuration={collapsedSettled ? 200 : 99999}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setIsCollapsed(!isCollapsed)}
+                                    className="h-8 w-8 shrink-0 rounded-xl text-brand-cream/80 hover:text-brand-cream hover:bg-white/10 transition-colors"
+                                    aria-label="Expand sidebar"
+                                >
+                                    <PanelRightOpen className="h-5 w-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">Expand sidebar</TooltipContent>
+                        </Tooltip>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsCollapsed(!isCollapsed)}
+                            className="h-8 w-8 shrink-0 rounded-xl text-brand-cream/50 hover:text-brand-cream hover:bg-white/10 transition-colors"
+                            aria-label="Collapse sidebar"
+                        >
+                            <PanelRightClose className="h-5 w-5" />
+                        </Button>
+                    )}
                 </div>
 
                 {/* Store Switcher */}
@@ -390,22 +418,6 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                             {!isCollapsed && <span className="whitespace-nowrap">Refer & Earn</span>}
                         </Link>
                     )}
-
-                    {/* Sidebar Toggle (Only visible when expanded or specifically requested) */}
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className={cn(
-                                "flex-1 h-10 flex items-center gap-2 text-brand-cream/50 hover:text-brand-cream hover:bg-white/5 rounded-xl",
-                                isCollapsed ? "justify-center px-0" : "justify-start px-2"
-                            )}
-                            onClick={() => setIsCollapsed(!isCollapsed)}
-                        >
-                            {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-                            {!isCollapsed && <span className="text-[11px] font-bold uppercase tracking-widest">Collapse</span>}
-                        </Button>
-                    </div>
 
                     {/* Profile Trigger & Popover */}
                     <div className="relative w-full">
