@@ -21,7 +21,10 @@ import {
     Gift,
     Banknote,
     ShieldCheck,
-    Activity
+    Activity,
+    AlertCircle,
+    Receipt,
+    Truck
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
@@ -64,6 +67,9 @@ const navGroups: NavGroup[] = [
             { href: "/orders", icon: ShoppingBag, label: "Orders", permission: 'VIEW_SALES' },
             { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS' },
             { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
+            { href: "/debts", icon: AlertCircle, label: "Debts", permission: 'VIEW_CUSTOMERS' },
+            { href: "/expenses", icon: Receipt, label: "Expenses", permission: 'VIEW_EXPENSES' },
+            { href: "/vendors", icon: Truck, label: "Vendors", permission: 'VIEW_SUPPLIERS' },
         ]
     },
     {

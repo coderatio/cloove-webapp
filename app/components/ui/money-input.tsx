@@ -64,15 +64,18 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
             )
         }
 
+        const isSmall = size === 'sm'
+
         return (
             <div className={cn(
-                "group flex items-stretch rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 focus-within:ring-2 focus-within:ring-brand-green/20 focus-within:border-brand-green/30 transition-all overflow-hidden",
+                "group flex items-center rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 focus-within:ring-2 focus-within:ring-brand-green/20 focus-within:border-brand-green/30 transition-all overflow-hidden",
+                isSmall ? "h-10" : "h-14",
                 props.disabled && "opacity-50",
                 className
             )}>
                 <div className={cn(
-                    "flex items-center shrink-0 border-r border-brand-deep/10 dark:border-white/10 bg-brand-deep/2 dark:bg-white/2",
-                    size === 'sm' ? "min-w-10 px-3 py-2" : "min-w-14 pl-4 pr-2 py-4"
+                    "flex items-center justify-center shrink-0 border-r border-brand-deep/10 dark:border-white/10 bg-brand-deep/2 dark:bg-white/2 self-stretch",
+                    isSmall ? "min-w-10 px-3" : "min-w-14 px-4"
                 )}>
                     <span className="text-brand-accent/50 dark:text-brand-cream/50 font-semibold text-sm tracking-tight transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold" aria-hidden>
                         {currencySymbol}
@@ -85,8 +88,8 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     value={displayValue}
                     onChange={handleChange}
                     className={cn(
-                        "flex-1 border-0 rounded-none bg-transparent focus-visible:ring-0 font-medium tabular-nums placeholder:text-brand-accent/40 dark:placeholder:text-white/30",
-                        size === 'sm' ? "py-2 h-10 pl-2 pr-3 text-sm" : "py-4 h-14 pl-3 pr-4"
+                        "flex-1 border-0 rounded-none bg-transparent focus-visible:ring-0 font-medium tabular-nums placeholder:text-brand-accent/40 dark:placeholder:text-white/30 h-full",
+                        isSmall ? "pl-2 pr-3 text-sm" : "pl-3 pr-4 text-base"
                     )}
                 />
             </div>

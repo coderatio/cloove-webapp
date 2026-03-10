@@ -93,7 +93,7 @@ export function SearchableSelect({
     }
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal>
             <PopoverTrigger asChild>
                 {renderTrigger ? renderTrigger(value, options) : defaultRenderTrigger()}
             </PopoverTrigger>
@@ -103,6 +103,7 @@ export function SearchableSelect({
                     className
                 )}
                 align="start"
+                onOpenAutoFocus={(e) => e.preventDefault()}
             >
                 <div className="flex flex-col max-h-[300px]">
                     {/* Search Input */}
@@ -128,7 +129,11 @@ export function SearchableSelect({
                     </div>
 
                     {/* Options List */}
-                    <div className="overflow-y-auto flex-1 p-1 custom-scrollbar">
+                    <div
+                        className="overflow-y-auto flex-1 p-1 custom-scrollbar"
+                        onWheel={(e) => e.stopPropagation()}
+                        onTouchMove={(e) => e.stopPropagation()}
+                    >
                         {filteredOptions.length === 0 ? (
                             <div className="py-6 text-center text-sm text-brand-deep/60 dark:text-brand-cream/60">
                                 {emptyMessage}
