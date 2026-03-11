@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -22,6 +22,8 @@ import { toast } from "sonner"
 import { useBusiness, type Business } from "@/app/components/BusinessProvider"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { useCountries } from "@/app/hooks/useCountries"
+import { usePermission } from "@/app/hooks/usePermission"
+import { useCurrentSubscription, useUsageStats } from "@/app/domains/business/hooks/useBilling"
 import Image from "next/image"
 
 interface Category {
@@ -57,6 +59,9 @@ export function OnboardingView() {
     const { user, logout } = useAuth()
     const { businesses, refreshBusinesses, setActiveBusiness } = useBusiness()
     const isAddBusinessFlow = fromSwitcher || (businesses?.length ?? 0) > 0
+    const { role } = usePermission()
+    const { data: subData } = useCurrentSubscription()
+    const { data: usage, isLoading: isLoadingUsage } = useUsageStats()
     const { data: countriesData, isError: isCountriesError, error: countriesError, refetch: refetchCountries } = useCountries()
     const countries = countriesData ?? []
 
@@ -102,6 +107,23 @@ export function OnboardingView() {
                 countries[0]) ?? null
         setSelectedCountry((prev) => prev ?? defaultCountry)
     }, [countries, user?.countryDetail])
+
+    const { canAddBusiness, maxBusinesses, isUnlimited } = useMemo(() => {
+        const planBenefits = subData?.currentPlan?.benefits as Record<string, number | null> | undefined
+        const max = planBenefits?.maxBusinesses
+        const unlimited = max === undefined || max === null || max === Infinity
+
+        const allowed =
+            role === "OWNER" &&
+            !isLoadingUsage &&
+            (unlimited || (usage != null && usage.businesses < Number(max)))
+
+        return {
+            canAddBusiness: allowed,
+            maxBusinesses: max,
+            isUnlimited: unlimited,
+        }
+    }, [role, subData?.currentPlan?.benefits, isLoadingUsage, usage])
 
     const handleNext = () => {
         if (step === 1 && !selectedCategory) {
@@ -169,6 +191,52 @@ export function OnboardingView() {
             }
         },
         exit: { opacity: 0, y: -20 }
+    }
+
+    const reachedBusinessLimit =
+        isAddBusinessFlow &&
+        !isLoadingUsage &&
+        !isUnlimited &&
+        usage != null &&
+        maxBusinesses != null &&
+        usage.businesses >= Number(maxBusinesses)
+
+    if (isAddBusinessFlow && (role !== "OWNER" || reachedBusinessLimit || !canAddBusiness)) {
+        const currentCount = usage?.businesses ?? businesses?.length ?? 0
+        return (
+            <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12">
+                <GlassCard className="max-w-lg w-full p-8 space-y-6 text-center">
+                    <h1 className="font-serif text-2xl sm:text-3xl text-brand-deep dark:text-brand-cream tracking-tight">
+                        You’ve reached your business limit
+                    </h1>
+                    <p className="text-sm text-brand-accent/70 dark:text-brand-cream/70">
+                        Your current plan allows{" "}
+                        <span className="font-semibold">
+                            {isUnlimited ? "unlimited" : `${maxBusinesses ?? 1}`}
+                        </span>{" "}
+                        business{!isUnlimited && Number(maxBusinesses) > 1 ? "es" : ""}. You already have{" "}
+                        <span className="font-semibold">{currentCount}</span>, so you can’t add another one.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center mt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push("/")}
+                            className="sm:min-w-[140px] rounded-xl!"
+                        >
+                            Back to dashboard
+                        </Button>
+                        {role === "OWNER" && (
+                            <Button
+                                onClick={() => router.push("/settings?tab=billing")}
+                                className="sm:min-w-[160px] rounded-xl!"
+                            >
+                                Manage plan
+                            </Button>
+                        )}
+                    </div>
+                </GlassCard>
+            </div>
+        )
     }
 
     return (

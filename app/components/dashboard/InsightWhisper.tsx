@@ -1,9 +1,10 @@
 "use client"
 
-import { motion, Variants } from "framer-motion"
+import { motion, Variants, useInView, useReducedMotion } from "framer-motion"
 import { Sparkles, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
+import { useRef } from "react"
 
 import { Markdown } from "../ui/markdown"
 import { GlassCard } from "../ui/glass-card"
@@ -38,10 +39,15 @@ const itemVariants: Variants = {
 }
 
 export function InsightWhisper({ insight, actionLabel, actionLink, className }: InsightWhisperProps) {
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const reducedMotion = useReducedMotion()
+    const isInView = useInView(wrapperRef, { margin: "-10% 0px -10% 0px", once: false })
+
     return (
         <motion.div
+            ref={wrapperRef}
             initial="hidden"
-            animate="visible"
+            animate={isInView ? "visible" : "hidden"}
             variants={containerVariants}
             className={cn("relative group", className)}
         >
@@ -61,16 +67,20 @@ export function InsightWhisper({ insight, actionLabel, actionLink, className }: 
                     <motion.div variants={itemVariants} className="shrink-0">
                         <div className="relative">
                             <motion.div
-                                animate={{
-                                    scale: [1, 1.1, 1],
-                                    opacity: [0.5, 0.8, 0.5],
-                                }}
+                                animate={
+                                    reducedMotion || !isInView
+                                        ? { scale: 1, opacity: 0.5 }
+                                        : {
+                                            scale: [1, 1.08, 1],
+                                            opacity: [0.45, 0.75, 0.45],
+                                        }
+                                }
                                 transition={{
-                                    duration: 4,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
+                                    duration: reducedMotion ? 0.01 : 5,
+                                    repeat: reducedMotion ? 0 : Infinity,
+                                    ease: "easeInOut",
                                 }}
-                                className="absolute inset-0 bg-brand-gold/20 blur-xl rounded-full"
+                                className="absolute inset-0 bg-brand-gold/20 blur-lg rounded-full will-change-transform"
                             />
                             <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center text-brand-gold backdrop-blur-sm shadow-inner overflow-hidden relative group/icon">
                                 <Sparkles className="w-6 h-6 transition-transform duration-500 group-hover/icon:scale-110 group-hover/icon:rotate-12" />

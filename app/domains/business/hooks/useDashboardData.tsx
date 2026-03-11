@@ -26,6 +26,8 @@ export interface DashboardSales {
     trend: string
     trendDirection: "up" | "down"
     label: string
+    storeName?: string
+    periodLabel?: string
     history?: { value: number }[]
 }
 
@@ -213,19 +215,26 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         }
     }, [wallet, isVerified])
 
-    const salesLabel = effectiveStoreId === ALL_STORES_ID ? "Total Sales (All Stores)" : "Total Sales"
+    const salesLabel = "Total Sales"
+    const storeNameForSales =
+        effectiveStoreId === ALL_STORES_ID
+            ? "All Stores"
+            : (stores.find((s) => s.id === effectiveStoreId)?.name ?? "")
+
     const salesDisplay: DashboardSales = useMemo(() => {
         const total = summary?.salesTotal ?? 0
         const currency = summary?.currency ?? "NGN"
         const value = summary?.salesTotalLabel ?? formatCurrency(total, { currency })
         return {
             value,
-            trend: summary?.periodLabel ? `Period: ${summary.periodLabel}` : "—",
+            trend: "—",
             trendDirection: "up" as const,
             label: salesLabel,
+            storeName: storeNameForSales,
+            periodLabel: summary?.periodLabel,
             history: [],
         }
-    }, [summary, salesLabel])
+    }, [summary, salesLabel, storeNameForSales])
 
     const actions: DashboardActionItem[] = useMemo(() => {
         const items: DashboardActionItem[] = []

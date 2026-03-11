@@ -753,7 +753,7 @@ export function SaleModeView() {
                     <motion.div
                         initial={{ y: 100, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="fixed bottom-24 left-6 right-6 z-40 lg:hidden"
+                        className="fixed bottom-20 sm:bottom-24 left-6 right-6 z-40 lg:hidden"
                     >
                         <Button
                             onClick={() => setMobileView('cart')}

@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'africanfabs.com',
       },
+      {
+        protocol: "https",
+        hostname: "**",
+      },
     ],
   },
   async rewrites() {

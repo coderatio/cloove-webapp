@@ -1,12 +1,14 @@
 "use client"
 
 import * as React from 'react'
-import { Trash2, Edit3, DollarSign, Package, Tag, AlertCircle } from 'lucide-react'
+import { Trash2, Edit3, DollarSign, Package, Tag, AlertCircle, FolderOpen } from 'lucide-react'
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { cn } from '@/app/lib/utils'
 import { MoneyInput } from '@/app/components/ui/money-input'
 import { useBusiness } from '@/app/components/BusinessProvider'
 import { MultiSelect } from '@/app/components/ui/multi-select'
+import { ImageUpload } from '@/app/components/ui/image-upload'
+import { SearchableSelect } from '@/app/components/ui/searchable-select'
 import { Store } from '@/app/domains/stores/providers/StoreProvider'
 import { Store as StoreIcon } from 'lucide-react'
 
@@ -16,6 +18,8 @@ export interface ExtractedProduct {
     price: number | string
     sku: string
     stockQuantity: number | string
+    category?: string
+    imageUrls?: string[]
     status: 'pending' | 'error' | 'success'
     errors?: string[]
     storeIds?: string[]
@@ -24,6 +28,7 @@ export interface ExtractedProduct {
 interface ProductExtractionCardProps {
     product: ExtractedProduct
     stores: Store[]
+    categories?: { label: string; value: string }[]
     onUpdate: (id: string, updates: Partial<ExtractedProduct>) => void
     onRemove: (id: string) => void
 }
@@ -31,13 +36,14 @@ interface ProductExtractionCardProps {
 export function ProductExtractionCard({
     product,
     stores,
+    categories = [],
     onUpdate,
     onRemove
 }: ProductExtractionCardProps) {
     const { currency } = useBusiness()
-    const [isEditing, setIsEditing] = React.useState(false)
 
     const hasErrors = product.errors && product.errors.length > 0
+    const categoryOptions = categories.map((c) => ({ label: c.label, value: c.label }))
 
     return (
         <div className="relative group">
@@ -71,6 +77,41 @@ export function ProductExtractionCard({
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
+                        </div>
+
+                        {/* Image Upload */}
+                        <ImageUpload
+                            value={product.imageUrls || []}
+                            onChange={(urls) => onUpdate(product.id, { imageUrls: urls })}
+                            maxFiles={5}
+                        />
+
+                        {/* Category Input + Selector */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                                <FolderOpen className="w-3 h-3" /> Category
+                            </label>
+
+                            <input
+                                value={product.category || ''}
+                                onChange={(e) => onUpdate(product.id, { category: e.target.value || undefined })}
+                                className="w-full bg-transparent text-sm text-brand-deep dark:text-brand-cream focus:outline-none border-b border-transparent hover:border-brand-deep/10 dark:hover:border-white/10"
+                                placeholder="Type category (e.g. Fashion, Fabrics)"
+                            />
+
+                            <SearchableSelect
+                                options={categoryOptions}
+                                value={product.category || undefined}
+                                onChange={(value) => onUpdate(product.id, { category: value || undefined })}
+                                placeholder={
+                                    categories.length > 0
+                                        ? 'Select existing category to apply'
+                                        : 'No existing categories yet'
+                                }
+                                searchPlaceholder="Search categories..."
+                                emptyMessage="No category found."
+                                triggerClassName="h-10 text-xs rounded-xl bg-transparent border-brand-deep/10 dark:border-white/10"
+                            />
                         </div>
 
                         <div className="grid grid-cols-3 gap-4">

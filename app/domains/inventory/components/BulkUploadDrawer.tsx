@@ -14,14 +14,16 @@ import {
 import { Button } from "@/app/components/ui/button"
 import { FileDropZone } from "@/app/components/ui/file-drop-zone"
 import { ProductExtractionCard, ExtractedProduct } from "./ProductExtractionCard"
-import { Sparkles, Loader2, CheckCircle2, ChevronRight, ArrowLeft, Edit3, Store as StoreIcon } from 'lucide-react'
+import { Sparkles, Loader2, CheckCircle2, ChevronRight, ArrowLeft, Edit3, Store as StoreIcon, AlertCircle, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { storage } from '@/app/lib/storage'
 import { useBulkUpload, BulkUploadPayload } from "../hooks/useBulkUpload"
 import { useBusiness } from '@/app/components/BusinessProvider'
 import { useStores } from '@/app/domains/stores/providers/StoreProvider'
+import { useProductCategories } from '../hooks/useProductCategories'
 import { MultiSelect } from '@/app/components/ui/multi-select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover'
 import { cn } from '@/app/lib/utils'
 
 type UploadStep = 'upload' | 'extracting' | 'review' | 'success'
@@ -42,8 +44,122 @@ export function BulkUploadDrawer({
     const [fileHash, setFileHash] = React.useState<string | null>(null)
     const [extractedProducts, setExtractedProducts] = React.useState<ExtractedProduct[]>([])
     const [selectedStoreIds, setSelectedStoreIds] = React.useState<string[]>([])
+    const [isValidatingImages, setIsValidatingImages] = React.useState(false)
+    const [brokenImageUrls, setBrokenImageUrls] = React.useState<string[]>([])
+    const [problemPopoverOpen, setProblemPopoverOpen] = React.useState(false)
     const { extractProducts, confirmUpload, isUploading } = useBulkUpload()
+
+    const totalBrokenImageCount = React.useMemo(() => {
+        const brokenSet = new Set(brokenImageUrls)
+        return extractedProducts.reduce(
+            (count, p) =>
+                count + (p.imageUrls || []).filter((url) => brokenSet.has(url)).length,
+            0
+        )
+    }, [extractedProducts, brokenImageUrls])
+
+    const submitBlockers = React.useMemo(() => {
+        const list: string[] = []
+        if (extractedProducts.some((p) => p.status === 'error')) {
+            list.push('Some products have errors (e.g. missing name or price). Fix them before submitting.')
+        }
+        if (totalBrokenImageCount > 0) {
+            list.push(
+                `${totalBrokenImageCount} broken image link${totalBrokenImageCount === 1 ? '' : 's'}. Remove or replace them before submitting.`
+            )
+        }
+        return list
+    }, [extractedProducts, totalBrokenImageCount])
     const { stores, currentStore } = useStores()
+    const { options: categoryOptions } = useProductCategories()
+    const foundImageCount = React.useMemo(
+        () => extractedProducts.reduce((count, product) => count + (product.imageUrls?.length || 0), 0),
+        [extractedProducts]
+    )
+
+    const imageUrlSignature = React.useMemo(
+        () =>
+            [...new Set(extractedProducts.flatMap((p) => p.imageUrls || []).filter(Boolean))].sort().join('\n'),
+        [extractedProducts]
+    )
+
+    React.useEffect(() => {
+        if (step !== 'review' || extractedProducts.length === 0) {
+            setBrokenImageUrls([])
+            setIsValidatingImages(false)
+            return
+        }
+
+        const urls = [...new Set(extractedProducts.flatMap((p) => p.imageUrls || []).filter(Boolean))]
+        if (urls.length === 0) {
+            setBrokenImageUrls([])
+            setIsValidatingImages(false)
+            return
+        }
+
+        let cancelled = false
+        setIsValidatingImages(true)
+
+        const run = async () => {
+            const broken = await findBrokenImageUrls(extractedProducts)
+            if (!cancelled) {
+                setBrokenImageUrls(broken)
+                setIsValidatingImages(false)
+                if (broken.length > 0) {
+                    const brokenSet = new Set(broken)
+                    const totalOccurrences = extractedProducts.reduce(
+                        (count, p) =>
+                            count + (p.imageUrls || []).filter((url) => brokenSet.has(url)).length,
+                        0
+                    )
+                    toast.error(
+                        `Found ${totalOccurrences} broken image link${totalOccurrences === 1 ? '' : 's'}. Fix or remove them to enable submit.`
+                    )
+                }
+            }
+        }
+
+        run()
+        return () => {
+            cancelled = true
+        }
+    }, [step, imageUrlSignature])
+
+    const checkImageReachable = (url: string, timeoutMs = 6000): Promise<boolean> => {
+        return new Promise((resolve) => {
+            const img = new Image()
+            let resolved = false
+
+            const done = (value: boolean) => {
+                if (!resolved) {
+                    resolved = true
+                    resolve(value)
+                }
+            }
+
+            const timeoutId = window.setTimeout(() => done(false), timeoutMs)
+            img.onload = () => {
+                window.clearTimeout(timeoutId)
+                done(true)
+            }
+            img.onerror = () => {
+                window.clearTimeout(timeoutId)
+                done(false)
+            }
+
+            img.src = url
+        })
+    }
+
+    const findBrokenImageUrls = async (products: ExtractedProduct[]) => {
+        const uniqueUrls = [...new Set(products.flatMap((p) => p.imageUrls || []).filter(Boolean))]
+        if (uniqueUrls.length === 0) return []
+
+        const checks = await Promise.all(
+            uniqueUrls.map(async (url) => ({ url, ok: await checkImageReachable(url) }))
+        )
+        return checks.filter((item) => !item.ok).map((item) => item.url)
+    }
 
     // Load session state on mount
     React.useEffect(() => {
@@ -196,6 +312,8 @@ export function BulkUploadDrawer({
                     price: p.price || 0,
                     sku: p.sku || '',
                     stockQuantity: p.stockQuantity || 0,
+                    category: p.category || '',
+                    imageUrls: p.imageUrls || [],
                     status: errors.length > 0 ? 'error' : 'success',
                     errors: errors,
                     storeIds: [...selectedStoreIds]
@@ -243,6 +361,9 @@ export function BulkUploadDrawer({
             toast.error("Please fix errors before uploading.")
             return
         }
+        if (brokenImageUrls.length > 0 || isValidatingImages) {
+            return
+        }
 
         try {
             const payload: BulkUploadPayload = {
@@ -252,6 +373,8 @@ export function BulkUploadDrawer({
                     price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
                     sku: p.sku || undefined,
                     stockQuantity: typeof p.stockQuantity === 'string' ? parseInt(p.stockQuantity) : p.stockQuantity,
+                    category: p.category || undefined,
+                    imageUrls: p.imageUrls?.length ? p.imageUrls : undefined,
                     storeIds: p.storeIds && p.storeIds.length > 0 ? p.storeIds : undefined
                 }))
             }
@@ -321,7 +444,10 @@ export function BulkUploadDrawer({
                                 </div>
 
                                 <FileDropZone onFileSelect={handleFileSelect} />
-                                <div className="mt-8 p-6 rounded-[24px] bg-brand-gold/5 border border-brand-gold/30">
+                                <p className="mt-3 text-center text-[11px] text-brand-accent/40 dark:text-brand-cream/40">
+                                    Maximum of 100 products per upload
+                                </p>
+                                <div className="mt-5 p-6 rounded-[24px] bg-brand-gold/5 border border-brand-gold/30">
                                     <h4 className="text-sm font-bold text-brand-deep-900 uppercase tracking-widest mb-2 flex items-center gap-2">
                                         <Sparkles className="w-4 h-4" /> Why use AI Bulk Upload?
                                     </h4>
@@ -393,11 +519,17 @@ export function BulkUploadDrawer({
                                             key={product.id}
                                             product={product}
                                             stores={stores}
+                                            categories={categoryOptions}
                                             onUpdate={handleUpdateProduct}
                                             onRemove={handleRemoveProduct}
                                         />
                                     ))}
                                 </div>
+                                <p className="text-xs text-brand-deep/60 dark:text-brand-cream/60">
+                                    {foundImageCount > 0
+                                        ? `${foundImageCount} image${foundImageCount === 1 ? '' : 's'} found and will be attached. Missing/unreachable images are skipped.`
+                                        : 'No valid images found yet. You can still submit and upload products without images.'}
+                                </p>
                             </motion.div>
                         )}
 
@@ -443,7 +575,8 @@ export function BulkUploadDrawer({
                 {step === 'review' && (
                     <DrawerFooter>
                         <div className="sticky bottom-0 pt-6 pb-2 flex items-center justify-between gap-4">
-                            <button
+                            <Button
+                                variant="ghost"
                                 onClick={() => {
                                     setStep('upload')
                                     setExtractedProducts([])
@@ -451,23 +584,84 @@ export function BulkUploadDrawer({
                                     setFileHash(null)
                                     storage.clearBulkUploadSession()
                                 }}
-                                className="flex cursor-pointer items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-accent/40 hover:text-brand-deep dark:text-brand-deep-300 dark:hover:text-brand-deep-400 transition-colors"
+                                className="flex cursor-pointer items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-accent/40 hover:text-brand-deep dark:text-brand-deep-300 dark:hover:text-brand-deep-400"
                             >
                                 <ArrowLeft className="w-4 h-4" /> Start Over
-                            </button>
-                            <Button
-                                onClick={handleConfirm}
-                                disabled={isUploading || extractedProducts.some(p => p.status === 'error')}
-                                className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep px-8 h-12 shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
-                            >
-                                {isUploading ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                ) : (
-                                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                                )}
-                                <span className="hidden md:inline">Confirm & Upload {extractedProducts.length} Products</span>
-                                <span className="md:hidden">Confirm</span>
                             </Button>
+                            <div className="relative inline-flex">
+                                <Button
+                                    onClick={handleConfirm}
+                                    disabled={
+                                        isUploading ||
+                                        isValidatingImages ||
+                                        extractedProducts.some(p => p.status === 'error') ||
+                                        brokenImageUrls.length > 0
+                                    }
+                                    className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep px-8 h-12 shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
+                                >
+                                    {isUploading || isValidatingImages ? (
+                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                    ) : (
+                                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                                    )}
+                                    <span className="hidden md:inline">
+                                        {isValidatingImages
+                                            ? 'Checking image links...'
+                                            : `Confirm & Upload ${extractedProducts.length} Products`}
+                                    </span>
+                                    <span className="md:hidden">{isValidatingImages ? 'Checking...' : 'Confirm'}</span>
+                                </Button>
+                                {submitBlockers.length > 0 && (
+                                    <Popover open={problemPopoverOpen} onOpenChange={setProblemPopoverOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="icon"
+                                                aria-label="View issues preventing submit"
+                                                className={cn(
+                                                    "absolute -top-0.5 -right-0.5 z-10 h-7 w-7 rounded-full opacity-100",
+                                                    "!bg-rose-500 text-white shadow-md hover:!bg-rose-600",
+                                                    "hover:scale-110 active:scale-95 transition-transform duration-200 ease-out",
+                                                    "focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-brand-deep-800"
+                                                )}
+                                            >
+                                                <AlertCircle className="h-4 w-4" strokeWidth={2.5} />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent
+                                            side="top"
+                                            align="end"
+                                            sideOffset={8}
+                                            className="w-80 rounded-2xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950 p-0 overflow-hidden shadow-lg"
+                                        >
+                                            <div className="flex items-start justify-between gap-2 px-3 py-2 border-b border-rose-200 dark:border-rose-800">
+                                                <p className="text-sm font-semibold text-rose-700 dark:text-rose-200">
+                                                    Cannot submit
+                                                </p>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setProblemPopoverOpen(false)}
+                                                    aria-label="Close"
+                                                    className="size-6 rounded-lg text-rose-600 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            <ul className="p-3 space-y-2 text-xs text-rose-700/90 dark:text-rose-200/90">
+                                                {submitBlockers.map((message, i) => (
+                                                    <li key={i} className="flex gap-2">
+                                                        <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+                                                        {message}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </PopoverContent>
+                                    </Popover>
+                                )}
+                            </div>
                         </div>
                     </DrawerFooter>
                 )}

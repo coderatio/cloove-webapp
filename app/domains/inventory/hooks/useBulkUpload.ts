@@ -10,7 +10,8 @@ export interface BulkUploadItem {
     sku?: string
     price: number
     stockQuantity?: number
-    category?: number
+    category?: string
+    imageUrls?: string[]
     storeIds?: string[]
 }
 

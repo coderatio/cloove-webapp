@@ -1,9 +1,9 @@
 "use client"
 
-import { motion, useReducedMotion } from "framer-motion"
+import { motion, useReducedMotion, useInView } from "framer-motion"
 import { TrendingUp, TrendingDown, Wallet, Plus, Send, Sparkles } from "lucide-react"
 import { cn } from "@/app/lib/utils"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "../ui/glass-card"
@@ -18,6 +18,8 @@ interface DashboardHeroProps {
         trend: string
         trendDirection: "up" | "down"
         label: string
+        storeName?: string
+        periodLabel?: string
         history?: { value: number }[]
     }
     wallet?: {
@@ -43,6 +45,9 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
     const { activeBusiness } = useBusiness()
     const currencyCode = activeBusiness?.currency || "NGN"
     const cardRef = useRef<HTMLDivElement>(null)
+    const isInView = useInView(cardRef, { margin: "-10% 0px -10% 0px" })
+    const rafRef = useRef<number | null>(null)
+    const nextTiltRef = useRef({ x: 0, y: 0 })
 
     const walletData = {
         balance: isWalletVerified ? (wallet?.balance ?? "₦0.00") : "₦0.00",
@@ -50,24 +55,43 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
         label: wallet?.label ?? "Wallet Balance",
     }
 
-    const sparklineData =
-        sales.history?.length ? sales.history : [
-            { value: 4000 },
-            { value: 3000 },
-            { value: 5000 },
-            { value: 2780 },
-            { value: 1890 },
-            { value: 2390 },
-            { value: 3490 },
-        ]
+    const sparklineData = useMemo(
+        () =>
+            sales.history?.length ? sales.history : [
+                { value: 4000 },
+                { value: 3000 },
+                { value: 5000 },
+                { value: 2780 },
+                { value: 1890 },
+                { value: 2390 },
+                { value: 3490 },
+            ],
+        [sales.history]
+    )
+
+    useEffect(() => {
+        return () => {
+            if (rafRef.current !== null) {
+                cancelAnimationFrame(rafRef.current)
+            }
+        }
+    }, [])
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!cardRef.current || reducedMotion) return
+        if (!cardRef.current || reducedMotion || !isInView) return
         const rect = cardRef.current.getBoundingClientRect()
-        const xPct = ((e.clientX - rect.left) / rect.width - 0.5) * 10
-        const yPct = ((e.clientY - rect.top) / rect.height - 0.5) * -10
-        cardRef.current.style.setProperty("--rotate-y", `${xPct}deg`)
-        cardRef.current.style.setProperty("--rotate-x", `${yPct}deg`)
+        nextTiltRef.current = {
+            x: ((e.clientX - rect.left) / rect.width - 0.5) * 10,
+            y: ((e.clientY - rect.top) / rect.height - 0.5) * -10,
+        }
+
+        if (rafRef.current !== null) return
+        rafRef.current = requestAnimationFrame(() => {
+            if (!cardRef.current) return
+            cardRef.current.style.setProperty("--rotate-y", `${nextTiltRef.current.x}deg`)
+            cardRef.current.style.setProperty("--rotate-x", `${nextTiltRef.current.y}deg`)
+            rafRef.current = null
+        })
     }
     const handleMouseLeave = () => {
         if (cardRef.current) {
@@ -87,6 +111,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                 transform: "perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg))",
                 transformStyle: "preserve-3d",
                 transition: "transform 0.15s ease-out",
+                willChange: reducedMotion ? "auto" : "transform",
             }}
             className="perspective-1000"
         >
@@ -99,14 +124,14 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
             >
                 <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                     <motion.div
-                        animate={reducedMotion ? {} : { x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.05, 1] }}
+                        animate={reducedMotion || !isInView ? {} : { x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.05, 1] }}
                         transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-                        className="absolute -top-1/4 -right-1/4 w-[70%] h-[70%] rounded-full bg-brand-gold/10 dark:bg-brand-gold/5 blur-[80px]"
+                        className="absolute -top-1/4 -right-1/4 w-[70%] h-[70%] rounded-full bg-brand-gold/10 dark:bg-brand-gold/5 blur-3xl will-change-transform"
                     />
                     <motion.div
-                        animate={reducedMotion ? {} : { x: [0, -30, 0], y: [0, 25, 0], scale: [1.02, 0.98, 1.02] }}
+                        animate={reducedMotion || !isInView ? {} : { x: [0, -30, 0], y: [0, 25, 0], scale: [1.02, 0.98, 1.02] }}
                         transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-                        className="absolute -bottom-1/4 -left-1/4 w-[60%] h-[60%] rounded-full bg-brand-green/12 dark:bg-brand-green/8 blur-[80px]"
+                        className="absolute -bottom-1/4 -left-1/4 w-[60%] h-[60%] rounded-full bg-brand-green/12 dark:bg-brand-green/8 blur-3xl will-change-transform"
                     />
                     <div className="absolute inset-0 bg-brand-deep/5 dark:bg-black/20" />
                 </div>
@@ -134,7 +159,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                 <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-4 select-all">
                                     {walletData.balance}
                                 </h2>
-                                <div className="flex flex-wrap items-center gap-2 md:gap-3 justify-center md:justify-start">
+                                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 md:gap-3 justify-center md:justify-start">
                                     <Button
                                         onClick={() => setIsAddMoneyOpen(true)}
                                         className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-9 md:h-10 px-5 md:px-8 shadow-lg font-bold text-xs md:text-sm transition-transform hover:scale-[1.02] active:scale-95"
@@ -200,27 +225,44 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                 </ResponsiveContainer>
                             </div>
                         )}
-                        <span className="text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase text-brand-accent/40 dark:text-brand-cream/40 mb-3 relative z-10">
-                            {sales.label}
-                        </span>
-                        <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-3 relative z-10">
-                            {sales.value}
-                        </h2>
-                        <div
+                        <span
                             className={cn(
-                                "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md relative z-10",
-                                sales.trendDirection === "up"
-                                    ? "bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold"
-                                    : "bg-danger/10 text-danger"
+                                "text-md font-bold tracking-[0.2em] uppercase text-brand-accent/40 dark:text-brand-cream/40 relative z-10 block",
+                                sales.storeName ? "mb-1" : "mb-3"
                             )}
                         >
-                            {sales.trendDirection === "up" ? (
-                                <TrendingUp className="w-3.5 h-3.5" />
-                            ) : (
-                                <TrendingDown className="w-3.5 h-3.5" />
-                            )}
-                            {sales.trend}
-                        </div>
+                            {sales.label}
+                        </span>
+                        {sales.storeName && (
+                            <span className="text-md -mt-2 text-brand-accent/35 dark:text-brand-cream/35 mb-3 relative z-10 block">
+                                {sales.storeName}
+                            </span>
+                        )}
+                        <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-2 relative z-10">
+                            {sales.value}
+                        </h2>
+                        {sales.periodLabel && (
+                            <p className="text-xs text-brand-accent/50 dark:text-brand-cream/50 mb-3 relative z-10">
+                                Period: {sales.periodLabel}
+                            </p>
+                        )}
+                        {sales.trend && sales.trend !== "—" && (
+                            <div
+                                className={cn(
+                                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md relative z-10",
+                                    sales.trendDirection === "up"
+                                        ? "bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold"
+                                        : "bg-danger/10 text-danger"
+                                )}
+                            >
+                                {sales.trendDirection === "up" ? (
+                                    <TrendingUp className="w-3.5 h-3.5" />
+                                ) : (
+                                    <TrendingDown className="w-3.5 h-3.5" />
+                                )}
+                                {sales.trend}
+                            </div>
+                        )}
                     </motion.div>
                 </div>
 
