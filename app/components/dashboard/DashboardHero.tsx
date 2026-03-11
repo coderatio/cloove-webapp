@@ -4,8 +4,8 @@ import { motion, useReducedMotion } from "framer-motion"
 import { TrendingUp, TrendingDown, Wallet, Plus, Send, Sparkles } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/app/components/ui/button"
-import { VerificationModal } from "./VerificationModal"
 import { GlassCard } from "../ui/glass-card"
 import { AddFundsDrawer } from "@/app/components/shared/AddFundsDrawer"
 import { WithdrawDrawer } from "@/app/domains/finance/components/WithdrawDrawer"
@@ -31,11 +31,11 @@ interface DashboardHeroProps {
 const TRANSITION_MS = 280
 
 export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) {
-    const [isVerificationOpen, setIsVerificationOpen] = useState(false)
     const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false)
     const [isWithdrawOpen, setIsWithdrawOpen] = useState(false)
     const [isWalletVerified, setIsWalletVerified] = useState(wallet?.isVerified ?? true)
     const reducedMotion = useReducedMotion()
+    const router = useRouter()
 
     useEffect(() => {
         setIsWalletVerified(wallet?.isVerified ?? true)
@@ -43,11 +43,6 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
     const { activeBusiness } = useBusiness()
     const currencyCode = activeBusiness?.currency || "NGN"
     const cardRef = useRef<HTMLDivElement>(null)
-
-    const handleVerifySuccess = () => {
-        setIsWalletVerified(true)
-        setIsVerificationOpen(false)
-    }
 
     const walletData = {
         balance: isWalletVerified ? (wallet?.balance ?? "₦0.00") : "₦0.00",
@@ -161,7 +156,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                     ₦***,***
                                 </h2>
                                 <Button
-                                    onClick={() => setIsVerificationOpen(true)}
+                                    onClick={() => router.push("/settings?tab=verification")}
                                     className="bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep font-bold px-6 h-11 rounded-2xl shadow-lg flex items-center gap-2 text-sm"
                                 >
                                     <Sparkles className="w-4 h-4" /> Verify Identity
@@ -229,11 +224,6 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                     </motion.div>
                 </div>
 
-                <VerificationModal
-                    isOpen={isVerificationOpen}
-                    onOpenChange={setIsVerificationOpen}
-                    onComplete={handleVerifySuccess}
-                />
                 <AddFundsDrawer
                     isOpen={isAddMoneyOpen}
                     onOpenChange={setIsAddMoneyOpen}

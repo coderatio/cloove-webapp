@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Wallet, Building2, Check, Lock, Loader2, X, AlertCircle, Plus, Settings2, CheckCircle2 } from "lucide-react"
+import { Wallet, Building2, Check, Lock, Loader2, X, AlertCircle, Plus, Settings2, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import {
@@ -12,12 +12,14 @@ import {
     DrawerDescription,
     DrawerBody,
 } from "@/app/components/ui/drawer"
-import { useWalletBalance, usePayoutAccounts, useWithdraw } from "@/app/domains/finance/hooks/useFinance"
+import { useWalletBalance, usePayoutAccounts, useWithdraw, useDepositAccounts } from "@/app/domains/finance/hooks/useFinance"
 import { formatCurrency } from "@/app/lib/formatters"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { AddPayoutAccountForm } from './AddPayoutAccountForm'
 import { PayoutAccountsManager } from './PayoutAccountsManager'
+import { useRouter } from "next/navigation"
+import { GlassCard } from "@/app/components/ui/glass-card"
 
 const FALLBACK_MIN_WITHDRAWAL = 1000
 
@@ -62,7 +64,12 @@ type Step = "details" | "pin" | "manage_payouts"
 export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep = "details" }: WithdrawDrawerProps) {
     const { wallet, isLoading: walletLoading } = useWalletBalance()
     const { payoutAccounts, isLoading: accountsLoading } = usePayoutAccounts()
+    const { depositData, isLoading: verificationLoading } = useDepositAccounts()
     const withdrawMutation = useWithdraw()
+    const router = useRouter()
+
+    const isVerified = depositData?.isEligible ?? false
+    const verificationLevel = depositData?.verificationLevel ?? 0
 
     const [step, setStep] = React.useState<Step>("details")
     const [amount, setAmount] = React.useState("")
@@ -211,7 +218,73 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
 
 
                     <DrawerBody className="p-4 flex-1 overflow-y-auto max-h-[calc(100vh-160px)]">
-                        {step === "manage_payouts" ? (
+                        {verificationLoading ? (
+                            <div className="py-12 flex items-center justify-center">
+                                <Loader2 className="w-6 h-6 animate-spin text-brand-gold" />
+                            </div>
+                        ) : !isVerified ? (
+                            <div className="py-8 flex flex-col items-center text-center max-w-md mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-700">
+                                <div className="relative">
+                                    <div className="w-24 h-24 rounded-3xl bg-brand-gold/10 flex items-center justify-center">
+                                        <ShieldCheck className="w-12 h-12 text-brand-gold" />
+                                    </div>
+                                    <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-brand-deep dark:bg-brand-cream flex items-center justify-center shadow-lg">
+                                        <Lock className="w-5 h-5 text-brand-gold dark:text-brand-deep" />
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                        Verification Required
+                                    </h3>
+                                    <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed max-w-[300px] mx-auto">
+                                        Complete Level 1 verification to unlock withdrawals and move funds to your bank account.
+                                    </p>
+                                </div>
+                                <div className="w-full space-y-2">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
+                                            Level {verificationLevel} of 3
+                                        </span>
+                                        <span className="text-brand-gold font-medium">
+                                            {Math.round((verificationLevel / 3) * 100)}%
+                                        </span>
+                                    </div>
+                                    <div className="h-2 rounded-full bg-brand-deep/5 dark:bg-white/5 overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full bg-linear-to-r from-brand-gold/60 to-brand-gold transition-all duration-800"
+                                            style={{ width: `${(verificationLevel / 3) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <GlassCard className="w-full p-6 space-y-4 border-brand-gold/10 bg-brand-gold/2">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">
+                                        What Level 1 Unlocks
+                                    </p>
+                                    <div className="space-y-3">
+                                        {["Withdraw funds to your bank account", "Full access to wallet features", "Higher transaction limits"].map((benefit, i) => (
+                                            <div key={i} className="flex items-start gap-3">
+                                                <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center shrink-0 mt-0.5">
+                                                    <Check className="w-3 h-3 text-brand-gold" />
+                                                </div>
+                                                <p className="text-sm text-brand-deep/80 dark:text-brand-cream/80 text-left leading-snug">
+                                                    {benefit}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </GlassCard>
+                                <Button
+                                    onClick={() => {
+                                        onOpenChange(false)
+                                        setTimeout(() => router.push("/settings?tab=verification"), 300)
+                                    }}
+                                    className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                                >
+                                    Start Verification
+                                    <ArrowRight className="w-5 h-5" />
+                                </Button>
+                            </div>
+                        ) : step === "manage_payouts" ? (
                             <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                                 <PayoutAccountsManager onClose={() => setStep("details")} />
                             </div>

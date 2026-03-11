@@ -1,9 +1,11 @@
 "use client"
 
-import Link from "next/link"
 import { AlertCircle, MessageCircle } from "lucide-react"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { cn } from "@/app/lib/utils"
+import { apiClient } from "@/app/lib/api-client"
+import { toast } from "sonner"
+import { useRef, useState } from "react"
 
 const WHATSAPP_BOT_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER?.replace(/\D/g, "") ?? ""
 
@@ -15,6 +17,9 @@ function buildWhatsAppUrl(): string {
 
 export function VerificationAlert() {
     const { user } = useAuth()
+    const [emailSent, setEmailSent] = useState(false)
+    const pendingRef = useRef(false)
+
     if (!user) return null
 
     const needsEmailVerify = user.email && user.emailVerified === false
@@ -22,6 +27,26 @@ export function VerificationAlert() {
     if (!needsEmailVerify && !needsPhoneVerify) return null
 
     const whatsAppUrl = buildWhatsAppUrl()
+
+    const handleResendEmail = () => {
+        if (pendingRef.current) return
+        pendingRef.current = true
+
+        toast.promise(
+            apiClient.post("/security/resend-verification-email", {}).then((data) => {
+                setEmailSent(true)
+                return data
+            }).finally(() => {
+                pendingRef.current = false
+            }),
+            {
+                loading: "Sending verification email...",
+                success: "Verification email sent! Check your inbox.",
+                error: (err) => err?.message || "Failed to send verification email. Try again later.",
+                position: "top-center",
+            }
+        )
+    }
 
     return (
         <div
@@ -35,13 +60,19 @@ export function VerificationAlert() {
             <div className="min-w-0 flex-1">
                 {needsEmailVerify && (
                     <p className="text-sm font-medium text-brand-deep-800 dark:text-brand-cream">
-                        Verify your email for full access.{" "}
-                        <Link
-                            href="/verify/email"
-                            className="underline font-semibold text-brand-deep-600 dark:text-brand-gold hover:text-brand-deep-800 dark:hover:text-brand-gold-300"
-                        >
-                            Verify now
-                        </Link>
+                        {emailSent ? (
+                            "Verification email sent! Check your inbox."
+                        ) : (
+                            <>
+                                Verify your email for full access.{" "}
+                                <button
+                                    onClick={handleResendEmail}
+                                    className="underline font-semibold text-brand-deep-600 dark:text-brand-gold hover:text-brand-deep-800 dark:hover:text-brand-gold-300 cursor-pointer"
+                                >
+                                    Verify now
+                                </button>
+                            </>
+                        )}
                     </p>
                 )}
                 {needsPhoneVerify && (
