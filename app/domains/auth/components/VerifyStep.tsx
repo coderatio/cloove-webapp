@@ -1,6 +1,6 @@
 "use client"
 
-import { Lock, Shield, Eye, EyeOff, ArrowRight } from "lucide-react"
+import { Lock, Shield, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -14,6 +14,59 @@ interface VerifyStepProps {
 
 export function VerifyStep({ flow }: VerifyStepProps) {
     const { state, actions } = flow
+
+    if (state.phoneActivationRequired) {
+        return (
+            <motion.div
+                key="verify-activate"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+                <GlassCard className="p-8 sm:p-10 text-center border-white/10 bg-white/5 shadow-2xl shadow-black/20">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.1, duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                        className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-gold/20 text-brand-gold"
+                    >
+                        <MessageCircle className="h-7 w-7" aria-hidden />
+                    </motion.div>
+                    <motion.h1
+                        className="font-serif text-2xl sm:text-3xl text-brand-cream font-medium tracking-tight mb-2"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.15, duration: 0.25 }}
+                    >
+                        Activate your number
+                    </motion.h1>
+                    <motion.p
+                        className="text-brand-cream/80 text-sm sm:text-base mb-8 max-w-sm mx-auto leading-relaxed"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.25 }}
+                    >
+                        Send a message to our WhatsApp bot to activate your phone number, then come back here to log in.
+                    </motion.p>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.28, duration: 0.25 }}
+                    >
+                        <Button
+                            onClick={actions.backToIdentifier}
+                            size="lg"
+                            className="w-full min-w-[180px] h-12 rounded-xl bg-brand-gold text-brand-deep font-semibold hover:bg-brand-gold/90 shadow-lg shadow-brand-gold/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                            Back to login
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                    </motion.div>
+                </GlassCard>
+            </motion.div>
+        )
+    }
 
     return (
         <motion.div

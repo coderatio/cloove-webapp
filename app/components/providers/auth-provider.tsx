@@ -23,6 +23,9 @@ interface User {
     country?: string | null
     countryDetail?: UserCountryDetail | null
     setupRequired: boolean
+    emailVerified?: boolean
+    phoneVerified?: boolean
+    signupChannel?: string
     session?: {
         expiresAt?: string
         refreshInterval?: string

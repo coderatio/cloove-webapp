@@ -5,11 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     ArrowRight,
-    CheckCircle2,
+    Check,
     ChevronLeft,
     Building2,
     MapPin,
-    Briefcase,
+    LogOut,
     X
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
@@ -54,7 +54,7 @@ export function OnboardingView() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const fromSwitcher = searchParams.get("from") === "switcher"
-    const { user } = useAuth()
+    const { user, logout } = useAuth()
     const { businesses, refreshBusinesses, setActiveBusiness } = useBusiness()
     const isAddBusinessFlow = fromSwitcher || (businesses?.length ?? 0) > 0
     const { data: countriesData, isError: isCountriesError, error: countriesError, refetch: refetchCountries } = useCountries()
@@ -98,6 +98,7 @@ export function OnboardingView() {
         if (countries.length === 0) return
         const defaultCountry =
             ((user?.countryDetail && countries.find((c) => c.id === user.countryDetail!.id || c.code === user.countryDetail!.code)) ||
+                countries.find((c) => c.isDefault) ||
                 countries[0]) ?? null
         setSelectedCountry((prev) => prev ?? defaultCountry)
     }, [countries, user?.countryDetail])
@@ -207,46 +208,44 @@ export function OnboardingView() {
                             initial="hidden"
                             animate="visible"
                             exit="exit"
-                            className="grid grid-cols-2 sm:grid-cols-3 gap-4"
+                            className="flex flex-wrap justify-center gap-3"
                         >
                             {isLoadingCategories ? (
                                 Array(6).fill(0).map((_, i) => (
-                                    <div key={i} className="h-40 rounded-3xl bg-white/5 animate-pulse border border-white/5" />
+                                    <div key={i} className="h-11 w-32 rounded-full bg-white/5 animate-pulse" />
                                 ))
                             ) : (
-                                categories.map((category) => (
-                                    <button
-                                        key={category.id}
-                                        type="button"
-                                        onClick={() => setSelectedCategory(category.id)}
-                                        className="group cursor-pointer text-left focus:outline-none"
-                                    >
-                                        <GlassCard className={cn(
-                                            "h-40 p-6 flex flex-col justify-between transition-all duration-300 group-hover:bg-white/10 group-hover:scale-[1.02] border-white/5",
-                                            selectedCategory === category.id && "bg-brand-gold/10 border-brand-gold/40 ring-1 ring-brand-gold/20 scale-[1.02]"
-                                        )}>
-                                            <div className={cn(
-                                                "h-10 w-10 rounded-xl flex items-center justify-center transition-colors shadow-inner border border-white/5",
-                                                selectedCategory === category.id ? "bg-brand-gold text-brand-deep" : "bg-white/5 text-brand-gold group-hover:bg-brand-gold/20"
-                                            )}>
-                                                <Briefcase className="h-5 w-5" />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <h3 className={cn(
-                                                    "font-bold text-sm transition-colors",
-                                                    selectedCategory === category.id ? "text-brand-gold" : "text-brand-deep dark:text-brand-cream group-hover:text-brand-gold"
-                                                )}>
-                                                    {category.name}
-                                                </h3>
-                                                {selectedCategory === category.id && (
-                                                    <motion.div layoutId="check" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}>
-                                                        <CheckCircle2 className="h-4 w-4 text-brand-gold" />
-                                                    </motion.div>
+                                categories.map((category) => {
+                                    const isSelected = selectedCategory === category.id
+                                    return (
+                                        <motion.button
+                                            key={category.id}
+                                            type="button"
+                                            onClick={() => setSelectedCategory(category.id)}
+                                            whileHover={{ scale: 1.04 }}
+                                            whileTap={{ scale: 0.97 }}
+                                            className={cn(
+                                                "relative cursor-pointer rounded-full px-5 py-2.5 text-sm font-semibold border transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/50",
+                                                isSelected
+                                                    ? "bg-brand-gold text-brand-deep border-brand-gold shadow-lg shadow-brand-gold/20"
+                                                    : "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-cream border-brand-deep/10 dark:border-white/10 hover:border-brand-gold/40 hover:bg-brand-gold/10"
+                                            )}
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                {isSelected && (
+                                                    <motion.span
+                                                        initial={{ scale: 0, opacity: 0 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                                                    >
+                                                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                                                    </motion.span>
                                                 )}
-                                            </div>
-                                        </GlassCard>
-                                    </button>
-                                ))
+                                                {category.name}
+                                            </span>
+                                        </motion.button>
+                                    )
+                                })
                             )}
                         </motion.div>
                     ) : (
@@ -270,7 +269,7 @@ export function OnboardingView() {
                                             value={businessName}
                                             onChange={(e) => setBusinessName(e.target.value)}
                                             placeholder="e.g. Martha's Kitchen"
-                                            className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-brand-gold/20 focus:border-brand-gold/30 text-lg transition-all"
+                                            className="h-14 sm:h-14 px-4 bg-white/5 border-white/10 rounded-2xl focus:ring-brand-gold/20 focus:border-brand-gold/30 text-lg transition-all"
                                             autoFocus
                                         />
                                     </div>
@@ -302,6 +301,7 @@ export function OnboardingView() {
                                                 onSelect={setSelectedCountry}
                                                 disabled={isSubmitting}
                                                 className="w-full"
+                                                dropdownVariant="light"
                                                 dropdownClassName="bg-brand-cream/95 dark:bg-brand-deep/95 border-brand-green/10 dark:border-white/10"
                                                 triggerRef={countryTriggerRef}
                                             />
@@ -320,7 +320,7 @@ export function OnboardingView() {
                                             value={fullName}
                                             onChange={(e) => setFullName(e.target.value)}
                                             placeholder="Full name of the business owner"
-                                            className="h-14 bg-white/5 border-white/10 rounded-2xl focus:ring-brand-gold/20 focus:border-brand-gold/30 transition-all"
+                                            className="h-14 sm:h-14 px-4 bg-white/5 border-white/10 rounded-2xl focus:ring-brand-gold/20 focus:border-brand-gold/30 transition-all"
                                         />
                                     </div>
                                 </div>
@@ -366,7 +366,19 @@ export function OnboardingView() {
                             </motion.div>
                         ) : isAddBusinessFlow ? (
                             <OnboardingCancelButton className="px-3 py-2" />
-                        ) : null}
+                        ) : (
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={logout}
+                                    className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-deep dark:text-brand-cream hover:bg-white/10 transition-colors duration-200 uppercase tracking-wider"
+                                >
+                                    <LogOut className="h-4 w-4 shrink-0" aria-hidden />
+                                    <span>Logout</span>
+                                </Button>
+                            </motion.div>
+                        )}
                     </div>
                     <div className="flex shrink-0 gap-2" aria-hidden>
                         <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 1 ? "bg-brand-gold" : "bg-white/10")} />

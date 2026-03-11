@@ -20,6 +20,7 @@ import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { BusinessGuard } from "../shared/BusinessGuard"
+import { VerificationAlert } from "../shared/VerificationAlert"
 import { apiClient } from "@/app/lib/api-client"
 import { useAuth } from "../providers/auth-provider"
 import { usePermission } from "@/app/hooks/usePermission"
@@ -119,6 +120,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
                 )}
             >
+                <div className="px-4 md:px-0 max-w-5xl md:mx-auto">
+                    <VerificationAlert />
+                </div>
                 {/* Mobile Header - Hide on Assistant Page */}
                 {!isAssistantPage && (
                     <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-white/10 dark:border-white/5">

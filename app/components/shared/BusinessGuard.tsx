@@ -18,9 +18,7 @@ export function BusinessGuard({ children }: { children: React.ReactNode }) {
 
         if (!isPublicPath && !activeBusiness) {
             if (businesses.length === 0) {
-                // If we know they have no businesses, maybe send to onboarding
-                // For now, just let it be or send to a 'no-business' page
-                // router.replace("/onboarding/create")
+                router.replace(`/onboarding?callbackUrl=${encodeURIComponent(pathname)}`)
             } else {
                 router.replace(`/select-business?callbackUrl=${encodeURIComponent(pathname)}`)
             }

@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { Loader2 } from "lucide-react"
 import dynamic from "next/dynamic"
+import { LoginSignupLink } from "@/app/domains/auth/components/LoginSignupLink"
 
 // 1. Background elements as stable divs to avoid framer-motion SSR mismatches
 function BackgroundDecor() {
@@ -62,7 +63,9 @@ export default function LoginPage() {
                     <LoginFlowWrapper />
                 </div>
 
-                <p className="mt-12 text-center text-[10px] text-brand-cream/30 uppercase tracking-[0.3em] font-medium">
+                <LoginSignupLink />
+
+                <p className="mt-6 text-center text-[10px] text-brand-cream/30 uppercase tracking-[0.3em] font-medium">
                     Cloove AI &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span>
                 </p>
             </div>

@@ -162,7 +162,7 @@ export const apiClient = {
                 const apiResponse = rawData as ApiResponse<T>
 
                 if (!apiResponse.success) {
-                    const errorMessage = apiResponse.message || `API Error: ${response.status}`
+                    const errorMessage = apiResponse.message || 'Request failed'
                     throw new ApiError(errorMessage, response.status, apiResponse.data)
                 }
 
@@ -191,12 +191,12 @@ export const apiClient = {
                 }
 
                 // Handle validation errors from AdonisJS/VineJS
-                let errorMessage = rawData.error || rawData.message || `API Error: ${response.status}`
-
-                if (rawData.errors && Array.isArray(rawData.errors)) {
-                    const validationMessages = rawData.errors.map((e: any) => e.message).join(', ')
-                    errorMessage = `${errorMessage}: ${validationMessages}`
-                }
+                const validationMessages =
+                    rawData.errors && Array.isArray(rawData.errors)
+                        ? rawData.errors.map((e: any) => e.message).join(', ')
+                        : ''
+                const errorMessage =
+                    validationMessages || rawData.error || rawData.message || 'Request failed'
 
                 throw new ApiError(errorMessage, response.status, rawData)
             }

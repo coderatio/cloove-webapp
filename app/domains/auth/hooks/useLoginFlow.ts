@@ -21,9 +21,13 @@ function resolveRedirectUrl(
     callbackUrl: string
 ): string {
     const businesses = response.user?.businesses ?? []
-    return businesses.length > 1
-        ? `/select-business?callbackUrl=${encodeURIComponent(callbackUrl)}`
-        : callbackUrl
+    if (businesses.length === 0) {
+        return `/onboarding?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    }
+    if (businesses.length > 1) {
+        return `/select-business?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    }
+    return callbackUrl
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -43,6 +47,9 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
     const [confirmPassword, setConfirmPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
     const [isPinLogin, setIsPinLogin] = useState(false)
+    const [signupChannel, setSignupChannel] = useState<string | null>(null)
+    const [setupVia, setSetupVia] = useState<'otp' | 'email_link' | 'whatsapp_activate' | null>(null)
+    const [phoneActivationRequired, setPhoneActivationRequired] = useState(false)
     const [selectedCountry, setSelectedCountry] = useState<CountryDetail | null>(null)
 
     useEffect(() => {
@@ -101,11 +108,14 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
             })
 
             if (response.exists) {
+                setSignupChannel(response.signupChannel ?? null)
+                setSetupVia(response.setupVia ?? null)
+                setPhoneActivationRequired(response.phoneActivationRequired ?? false)
                 if (response.authMethod === 'setup') {
                     setOtp('')   // clear any stale OTP from a previous attempt
                     setStep('verify-otp')
                     // If OTP dispatch degraded (e.g. cache/Redis unavailable), nudge the user to resend
-                    if (response.otpSent === false) {
+                    if (response.setupVia === 'otp' && response.otpSent === false) {
                         toast.info("We couldn't send your code right now. Use the Resend button to try again.")
                     }
                 } else {
@@ -232,6 +242,9 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
             confirmPassword,
             showPassword,
             isPinLogin,
+            signupChannel,
+            setupVia,
+            phoneActivationRequired,
             countries,
             isLoadingCountries,
             selectedCountry,
