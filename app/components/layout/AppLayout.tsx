@@ -120,7 +120,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
                 )}
             >
-                <div className="px-4 md:px-0 max-w-5xl md:mx-auto">
+                <div className="px-4 md:px-0 pt-3 sm:pt-0 max-w-5xl md:mx-auto">
                     <VerificationAlert />
                 </div>
                 {/* Mobile Header - Hide on Assistant Page */}

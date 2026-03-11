@@ -62,7 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${playfair.variable} antialiased`} suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{

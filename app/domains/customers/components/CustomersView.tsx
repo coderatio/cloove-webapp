@@ -547,25 +547,39 @@ export function CustomersView() {
                     </div>
                 ) : isMobile ? (
                     <div className="space-y-3">
-                        {filteredCustomers.map((customer, index) => (
-                            <ListCard
-                                key={customer.id}
-                                title={customer.name}
-                                subtitle={customer.lastOrder !== "Never" ? `Last order: ${customer.lastOrder}` : "No orders yet"}
-                                meta={`${customer.orders} orders total`}
-                                icon={User}
-                                iconClassName="text-brand-deep/40 dark:text-brand-cream/40"
-                                status={customer.isBlacklisted ? "Blacklisted" : customer.isVip ? "VIP" : undefined}
-                                statusColor={customer.isBlacklisted ? "danger" : customer.isVip ? "warning" : undefined}
-                                value={
-                                    customer.owing !== "—" ? customer.owing : customer.totalSpent
-                                }
-                                valueLabel={customer.owing !== "—" ? "Current Debt" : "Total Lifetime Spend"}
-                                delay={index * 0.05}
-                                actions={renderCustomerActions(customer)}
-                                onClick={() => setViewingCustomerId(customer.id)}
-                            />
-                        ))}
+                        {filteredCustomers.length === 0 ? (
+                            <GlassCard className="p-12 text-center border-dashed border-brand-deep/20 dark:border-white/10 bg-transparent">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
+                                        <Users className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                                    </div>
+                                    <h3 className="text-brand-deep dark:text-brand-cream font-medium">No customers found</h3>
+                                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
+                                        Try adjusting your filters or search terms to find what you're looking for.
+                                    </p>
+                                </div>
+                            </GlassCard>
+                        ) : (
+                            filteredCustomers.map((customer, index) => (
+                                <ListCard
+                                    key={customer.id}
+                                    title={customer.name}
+                                    subtitle={customer.lastOrder !== "Never" ? `Last order: ${customer.lastOrder}` : "No orders yet"}
+                                    meta={`${customer.orders} orders total`}
+                                    icon={User}
+                                    iconClassName="text-brand-deep/40 dark:text-brand-cream/40"
+                                    status={customer.isBlacklisted ? "Blacklisted" : customer.isVip ? "VIP" : undefined}
+                                    statusColor={customer.isBlacklisted ? "danger" : customer.isVip ? "warning" : undefined}
+                                    value={
+                                        customer.owing !== "—" ? customer.owing : customer.totalSpent
+                                    }
+                                    valueLabel={customer.owing !== "—" ? "Current Debt" : "Total Lifetime Spend"}
+                                    delay={index * 0.05}
+                                    actions={renderCustomerActions(customer)}
+                                    onClick={() => setViewingCustomerId(customer.id)}
+                                />
+                            ))
+                        )}
                     </div>
                 ) : (
                     <GlassCard className="overflow-hidden border-brand-deep/5 dark:border-white/5">

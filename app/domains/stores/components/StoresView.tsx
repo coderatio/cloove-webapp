@@ -19,6 +19,8 @@ import {
     Drawer,
     DrawerContent,
     DrawerStickyHeader,
+    DrawerBody,
+    DrawerFooter,
     DrawerTitle,
     DrawerDescription,
     DrawerClose,
@@ -234,104 +236,94 @@ export function StoresView() {
                         }
                     }}
                 >
-                    <DrawerContent>
-                        <div className="p-8 pb-12">
-                            <div className="space-y-6 max-w-lg mx-auto">
-                                <div className="text-center space-y-2">
-                                    <DrawerTitle>
-                                        {editingStore ? "Edit Branch" : "Add New Branch"}
-                                    </DrawerTitle>
-                                    <DrawerDescription>
-                                        {editingStore ? "Update details for this location." : "Expand your business with a new location."}
-                                    </DrawerDescription>
+                    <DrawerContent className="h-[80vh]">
+                        <DrawerStickyHeader>
+                            <DrawerTitle>
+                                {editingStore ? "Edit Branch" : "Add New Branch"}
+                            </DrawerTitle>
+                            <DrawerDescription>
+                                {editingStore ? "Update details for this location." : "Expand your business with a new location."}
+                            </DrawerDescription>
+                        </DrawerStickyHeader>
+
+                        <DrawerBody className="pb-6">
+                            <form id="store-form" onSubmit={editingStore ? handleUpdate : handleAdd} className="space-y-6 max-w-lg mx-auto">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Store Name</label>
+                                    <input
+                                        autoFocus
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        placeholder="e.g. Victoria Island Branch"
+                                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Location</label>
+                                    <input
+                                        value={newLocation}
+                                        onChange={(e) => setNewLocation(e.target.value)}
+                                        placeholder="e.g. 15 Admiralty Way, Lekki"
+                                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                    />
                                 </div>
 
-                                <form onSubmit={editingStore ? handleUpdate : handleAdd} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Store Name</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Name</label>
                                         <input
-                                            autoFocus
-                                            value={newName}
-                                            onChange={(e) => setNewName(e.target.value)}
-                                            placeholder="e.g. Victoria Island Branch"
+                                            value={managerName}
+                                            onChange={(e) => setManagerName(e.target.value)}
+                                            placeholder="Assign a manager"
                                             className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Location</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Phone</label>
                                         <input
-                                            value={newLocation}
-                                            onChange={(e) => setNewLocation(e.target.value)}
-                                            placeholder="e.g. 15 Admiralty Way, Lekki"
+                                            value={managerPhone}
+                                            onChange={(e) => setManagerPhone(e.target.value)}
+                                            placeholder="Manager contact #"
                                             className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
                                         />
                                     </div>
+                                </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Name</label>
-                                            <input
-                                                value={managerName}
-                                                onChange={(e) => setManagerName(e.target.value)}
-                                                placeholder="Assign a manager"
-                                                className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Phone</label>
-                                            <input
-                                                value={managerPhone}
-                                                onChange={(e) => setManagerPhone(e.target.value)}
-                                                placeholder="Manager contact #"
-                                                className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
-                                            />
-                                        </div>
-                                    </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Email</label>
+                                    <input
+                                        value={managerEmail}
+                                        onChange={(e) => setManagerEmail(e.target.value)}
+                                        placeholder="manager@example.com"
+                                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                    />
+                                </div>
 
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-brand-deep/5 dark:border-white/5">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Email</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Contact Email</label>
                                         <input
-                                            value={managerEmail}
-                                            onChange={(e) => setManagerEmail(e.target.value)}
-                                            placeholder="manager@example.com"
+                                            value={contactEmail}
+                                            onChange={(e) => setContactEmail(e.target.value)}
+                                            placeholder="Store email"
                                             className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
                                         />
                                     </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-brand-deep/5 dark:border-white/5">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Contact Email</label>
-                                            <input
-                                                value={contactEmail}
-                                                onChange={(e) => setContactEmail(e.target.value)}
-                                                placeholder="Store email"
-                                                className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Contact Phone</label>
-                                            <input
-                                                value={contactPhone}
-                                                onChange={(e) => setContactPhone(e.target.value)}
-                                                placeholder="Secondary contact"
-                                                className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
-                                            />
-                                        </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Contact Phone</label>
+                                        <input
+                                            value={contactPhone}
+                                            onChange={(e) => setContactPhone(e.target.value)}
+                                            placeholder="Secondary contact"
+                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                        />
                                     </div>
-
-                                    <div className="flex gap-4 pt-4">
-                                        <DrawerClose asChild>
-                                            <Button variant="outline" className="flex-1 rounded-2xl h-14">Cancel</Button>
-                                        </DrawerClose>
-                                        <Button type="submit" className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
-                                            {editingStore ? "Save Changes" : "Create Store"}
-                                        </Button>
-                                    </div>
-                                </form>
+                                </div>
 
                                 {editingStore && (
                                     <div className="pt-4 flex justify-center">
                                         <button
+                                            type="button"
                                             onClick={() => {
                                                 deleteStore(editingStore.id);
                                                 setEditingStore(null);
@@ -342,8 +334,19 @@ export function StoresView() {
                                         </button>
                                     </div>
                                 )}
+                            </form>
+                        </DrawerBody>
+
+                        <DrawerFooter>
+                            <div className="flex gap-4 max-w-lg mx-auto w-full">
+                                <DrawerClose asChild>
+                                    <Button variant="outline" className="flex-1 rounded-2xl h-14">Cancel</Button>
+                                </DrawerClose>
+                                <Button type="submit" form="store-form" className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
+                                    {editingStore ? "Save Changes" : "Create Store"}
+                                </Button>
                             </div>
-                        </div>
+                        </DrawerFooter>
                     </DrawerContent>
                 </Drawer>
 

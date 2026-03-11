@@ -74,27 +74,33 @@ export default function StorefrontPages() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream font-medium">Website Builder</h2>
                     <p className="text-brand-accent/60 dark:text-brand-cream/60 text-sm">Design and compose your storefront pages with modular sections.</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        onClick={handleCreate}
-                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-6 h-10 shadow-lg hover:scale-105 transition-all"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        New Page
-                    </Button>
-                </div>
+                <Button
+                    onClick={handleCreate}
+                    className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-6 h-10 shadow-lg hover:scale-105 transition-all w-full md:w-auto"
+                >
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Page
+                </Button>
             </div>
 
             <GlassCard className="overflow-hidden p-0">
                 <div className="grid grid-cols-1 divide-y divide-brand-deep/5 dark:divide-white/5">
                     {pages.length === 0 ? (
-                        <div className="p-8 text-center text-brand-accent/60 dark:text-brand-cream/60 text-sm">
-                            No pages yet. Create one to get started.
+                        <div className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
+                                    <FileText className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                                </div>
+                                <h3 className="text-brand-deep dark:text-brand-cream font-medium">No pages yet</h3>
+                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
+                                    Create your first page to start building your storefront.
+                                </p>
+                            </div>
                         </div>
                     ) : (
                         pages.map((page) => {
