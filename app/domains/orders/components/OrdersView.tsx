@@ -295,7 +295,7 @@ export function OrdersView() {
     const stats = [
         {
             label: "Total Revenue",
-            value: formatCurrency(summary?.totalRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' }),
+            value: formatCurrency((summary as any)?.completedRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' }),
             icon: TrendingUp,
             color: "brand-gold",
             description: "Revenue from selected filters"
@@ -366,7 +366,7 @@ export function OrdersView() {
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {stats.map((stat, i) => (
-                        <GlassCard key={i} className="p-4 flex flex-col gap-3 relative overflow-hidden group border-brand-deep/5 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300">
+                        <GlassCard key={i} className="p-4 flex flex-col gap-3 relative overflow-hidden group border-brand-green/10 bg-white dark:bg-white/5 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300">
                             <div className="absolute -right-2 -top-2 p-3 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity rotate-12 group-hover:rotate-0 duration-700">
                                 <stat.icon className="w-20 h-20 dark:text-brand-cream" />
                             </div>

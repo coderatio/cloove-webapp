@@ -91,8 +91,8 @@ export function DashboardView() {
                             </h1>
                         </div>
                         <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2 md:w-auto">
-                            <StoreContextSelector value={storeId} onChange={setStoreId} className="w-[180px] sm:w-[200px]" />
-                            <DateRangeFilter date={date} setDate={setDate} className="min-w-0" />
+                            <StoreContextSelector value={storeId} onChange={setStoreId} className="w-[180px] sm:w-[200px] shadow-sm border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300" />
+                            <DateRangeFilter date={date} setDate={setDate} className="min-w-0" buttonClassName="rounded-full" />
                         </div>
                     </motion.div>
                 </header>
@@ -158,15 +158,15 @@ export function DashboardView() {
                     onRequery={
                         selectedTxId
                             ? async () => {
-                                  try {
-                                      await requeryTx(selectedTxId)
-                                      await queryClient.invalidateQueries({
-                                          queryKey: ["finance", "transaction", activeBusiness?.id, selectedTxId],
-                                      })
-                                  } catch {
-                                      // toast handled by hook
-                                  }
-                              }
+                                try {
+                                    await requeryTx(selectedTxId)
+                                    await queryClient.invalidateQueries({
+                                        queryKey: ["finance", "transaction", activeBusiness?.id, selectedTxId],
+                                    })
+                                } catch {
+                                    // toast handled by hook
+                                }
+                            }
                             : undefined
                     }
                     isRequerying={isRequerying}

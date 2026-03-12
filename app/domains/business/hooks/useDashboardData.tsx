@@ -8,6 +8,7 @@ import { useBusiness } from "@/app/components/BusinessProvider"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { useFinanceSummary, useFinancePeriodSummary, useWalletBalance, useDepositAccounts, useFinanceTransactions } from "@/app/domains/finance/hooks/useFinance"
 import { useInventory } from "@/app/domains/inventory/hooks/useInventory"
+import { useDashboardInsights } from "./useDashboardInsights"
 import { apiClient, ApiResponse } from "@/app/lib/api-client"
 import { formatCurrency } from "@/app/lib/formatters"
 import type { ActivityItem } from "@/app/components/dashboard/ActivityStream"
@@ -87,6 +88,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         1,
         1
     )
+    const { actions: insightActions, isLoading: insightsLoading } = useDashboardInsights()
 
     const realStoreIds = useMemo(
         () => stores.filter((s) => s.id !== ALL_STORES_ID).map((s) => s.id),
@@ -270,30 +272,20 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
                 icon: <AlertCircle className="w-4 h-4" />,
             })
         }
+
+        // Add backend insights/recommendations
+        items.push(...insightActions)
+
+        // Sort by priority: urgent > warning > info
+        const priorityScore = { urgent: 3, warning: 2, info: 1 }
+        items.sort((a, b) => priorityScore[b.type] - priorityScore[a.type])
+
         return items.slice(0, 4)
-    }, [summary, inventorySummary])
+    }, [summary, inventorySummary, insightActions])
 
     const velocityData = useMemo(() => {
-        const total = summary?.salesTotal ?? 0
-        const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-
-        // Generate dynamic weights based on business ID to avoid identical patterns
-        // if real historic data is missing from the backend summary.
-        const seed = activeBusiness?.id || "default"
-        const hash = seed.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-        const weights = dayLabels.map((_, i) => {
-            const base = [120, 150, 110, 180, 240, 310, 215][i]
-            const variance = (hash % (i + 10)) - 5
-            return Math.max(10, base + variance)
-        })
-
-        const sum = weights.reduce((a, b) => a + b, 0)
-        if (!sum) return dayLabels.map((date) => ({ date, value: 0 }))
-        return dayLabels.map((date, i) => ({
-            date,
-            value: Math.round((weights[i] / sum) * total),
-        }))
-    }, [summary?.salesTotal, activeBusiness?.id])
+        return (summary as any)?.velocityData || []
+    }, [summary])
 
     const inventory: DashboardInventorySummary = useMemo(
         () => ({
@@ -304,7 +296,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
     )
 
     const isLoading =
-        financeLoading || walletLoading || inventoryLoading || activitiesLoading
+        financeLoading || walletLoading || inventoryLoading || activitiesLoading || insightsLoading
     const error = financeError ?? null
 
     return {

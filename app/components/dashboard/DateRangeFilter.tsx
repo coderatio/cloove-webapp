@@ -25,12 +25,14 @@ export interface DateRangeFilterProps {
     date: DateRange | undefined
     setDate: (date: DateRange | undefined) => void
     className?: string
+    buttonClassName?: string
 }
 
 export function DateRangeFilter({
     className,
     date,
     setDate,
+    buttonClassName,
 }: DateRangeFilterProps) {
     const handlePresetChange = (value: string) => {
         const today = new Date()
@@ -65,7 +67,8 @@ export function DateRangeFilter({
                         variant={"outline"}
                         className={cn(
                             "w-auto md:min-w-[260px] justify-start text-left font-medium rounded-2xl h-12 border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300 shadow-sm hover:shadow-md text-brand-deep/80 dark:text-brand-cream/80 px-3 md:px-4 text-[10px] md:text-sm",
-                            !date && "text-muted-foreground"
+                            !date && "text-muted-foreground",
+                            buttonClassName
                         )}
                     >
                         <CalendarIcon className="mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4 text-brand-accent/40" />
@@ -86,7 +89,7 @@ export function DateRangeFilter({
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="end">
-                    <div className="p-3 border-b border-brand-deep/5 dark:border-white/5 bg-brand-green/5 dark:bg-white/5">
+                    <div className="p-3 border-b border-brand-deep/5 dark:border-white/5 bg-brand-green/5 dark:bg-white/5 rounded-t-2xl">
                         <Select onValueChange={handlePresetChange}>
                             <SelectTrigger className="w-full h-9 text-xs cursor-pointer border-brand-accent/10 dark:border-white/10 bg-white/40 dark:bg-black/20 backdrop-blur-sm rounded-xl hover:bg-white/60 dark:hover:bg-black/40 transition-all duration-300">
                                 <SelectValue placeholder="Quick Filter" />
