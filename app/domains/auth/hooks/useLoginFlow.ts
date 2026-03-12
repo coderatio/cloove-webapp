@@ -21,12 +21,35 @@ function resolveRedirectUrl(
     callbackUrl: string
 ): string {
     const businesses = response.user?.businesses ?? []
+    const lowerPath = callbackUrl.toLowerCase();
+
+    // Explicitly check if they were in the middle of adding a business
+    const isAddingBusiness = lowerPath.includes('from=switcher')
+
+    // 1. If no businesses, they MUST go to onboarding
     if (businesses.length === 0) {
         return `/onboarding?callbackUrl=${encodeURIComponent(callbackUrl)}`
     }
-    if (businesses.length > 1) {
-        return `/select-business?callbackUrl=${encodeURIComponent(callbackUrl)}`
+
+    // 2. Identify "Auth/Onboarding landing" paths that should be bypassed if they already have businesses.
+    // However, if they were intentionally adding a business (isAddingBusiness), we let them stay.
+    const isAuthPath = lowerPath === '/login' || lowerPath === '/register' || callbackUrl === '/'
+    const isGenericOnboarding = lowerPath.startsWith('/onboarding') && !isAddingBusiness
+
+    if (businesses.length === 1) {
+        // If they have 1 business and were going to a generic onboarding/auth path, send to dashboard.
+        // Otherwise, honor the callbackUrl (e.g. they were adding a business or had a deep link).
+        return (isAuthPath || isGenericOnboarding) ? '/' : callbackUrl
     }
+
+    if (businesses.length > 1) {
+        // Multiple businesses: always require selection unless they have an intentional deep link
+        // that isn't a generic landing page.
+        return (isAuthPath || isGenericOnboarding)
+            ? `/select-business`
+            : `/select-business?callbackUrl=${encodeURIComponent(callbackUrl)}`
+    }
+
     return callbackUrl
 }
 

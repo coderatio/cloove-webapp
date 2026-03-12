@@ -104,7 +104,7 @@ export function DateRangeFilter({
                         </Select>
                     </div>
                     <Calendar
-                        initialFocus
+                        autoFocus
                         mode="range"
                         defaultMonth={date?.from}
                         selected={date}

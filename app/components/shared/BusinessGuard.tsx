@@ -3,16 +3,19 @@
 import { useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useBusiness } from "../BusinessProvider"
+import { useAuth } from "../providers/auth-provider"
 
 const PUBLIC_PATHS = ["/login", "/register", "/select-business", "/onboarding"]
 
 export function BusinessGuard({ children }: { children: React.ReactNode }) {
-    const { activeBusiness, isLoading, businesses } = useBusiness()
+    const { activeBusiness, isLoading: isBusinessLoading, businesses } = useBusiness()
+    const { user, isLoading: isAuthLoading } = useAuth()
     const pathname = usePathname()
     const router = useRouter()
 
     useEffect(() => {
-        if (isLoading) return
+        if (isBusinessLoading || isAuthLoading) return
+        if (!user) return // Let AuthGuard handle login redirection
 
         const isPublicPath = PUBLIC_PATHS.some(path => pathname.startsWith(path))
 
@@ -23,10 +26,10 @@ export function BusinessGuard({ children }: { children: React.ReactNode }) {
                 router.replace(`/select-business?callbackUrl=${encodeURIComponent(pathname)}`)
             }
         }
-    }, [activeBusiness, isLoading, pathname, router, businesses.length])
+    }, [activeBusiness, isBusinessLoading, isAuthLoading, user, pathname, router, businesses.length])
 
     // While loading, we might want to show a splash screen or just null
-    if (isLoading) {
+    if (isBusinessLoading || isAuthLoading) {
         return null // Or a full screen loader
     }
 
