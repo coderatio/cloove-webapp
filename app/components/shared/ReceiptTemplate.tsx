@@ -15,6 +15,7 @@ export interface ReceiptData {
     businessName: string
     businessAddress?: string
     businessPhone?: string
+    businessLogo?: string
     orderId: string
     shortCode?: string
     date: string

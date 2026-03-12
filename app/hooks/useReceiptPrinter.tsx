@@ -76,7 +76,6 @@ const KNOWN_SERVICE_UUIDS = [
 const ESC = 0x1b
 const GS = 0x1d
 const ESC_INIT = new Uint8Array([ESC, 0x40])           // Initialize printer
-const ESC_LEFT = new Uint8Array([ESC, 0x61, 0x00])     // Left alignment
 const FEED_AND_CUT = new Uint8Array([
     0x0a, 0x0a, 0x0a, 0x0a,  // Feed 4 lines
     GS, 0x56, 0x01,           // Partial cut
@@ -100,8 +99,9 @@ const DC2_DENSITY = new Uint8Array([
 const BLE_CHUNK_SIZE = 100
 const BLE_CHUNK_DELAY_MS = 30
 
-// Delay between printing each line
-const LINE_DELAY_MS = 250
+// Delay between printing each line — needs to be long enough for the
+// printer to cool down between lines and avoid thermal shutdown.
+const LINE_DELAY_MS = 400
 
 // ── Bluetooth connection engine (singleton, not tied to React) ───────────
 
@@ -207,15 +207,6 @@ async function connectToDevice(device: BluetoothDevice): Promise<boolean> {
 
         _btDevice = device
         _btCharacteristic = characteristic
-
-        try {
-            const config = new Uint8Array([
-                ...ESC_INIT, ...ESC_HEAT, ...DC2_DENSITY,
-            ])
-            await sendViaBluetooth(config)
-        } catch {
-            // Non-fatal
-        }
 
         return true
     } catch (err) {
@@ -331,10 +322,10 @@ export function ReceiptPrinterProvider({ children }: { children: React.ReactNode
         const text = formatReceiptText(data)
         const lines = text.split("\n")
 
-        const config = new Uint8Array([
-            ...ESC_INIT, ...ESC_HEAT, ...DC2_DENSITY, ...ESC_LEFT,
-        ])
-        const configOk = await sendViaBluetooth(config)
+        // Only send ESC @ (initialize). The MPT-II does not support ESC 7
+        // (heating params) or DC2 # (density) — it renders those bytes as
+        // visible garbage characters like <(<(.
+        const configOk = await sendViaBluetooth(ESC_INIT)
         if (!configOk) {
             setIsConnected(false)
             return
@@ -377,6 +368,10 @@ export function ReceiptPrinterProvider({ children }: { children: React.ReactNode
             return
         }
 
+        const logoHtml = data.businessLogo
+            ? `<div style="text-align:center;margin-bottom:8px"><img src="${escapeHtml(data.businessLogo)}" style="max-width:120px;max-height:80px" /></div>`
+            : ""
+
         iframeDoc.open()
         iframeDoc.write(`<!DOCTYPE html>
 <html>
@@ -394,7 +389,7 @@ pre {
 }
 </style>
 </head>
-<body><pre>${escapeHtml(text)}</pre></body>
+<body>${logoHtml}<pre>${escapeHtml(text)}</pre></body>
 </html>`)
         iframeDoc.close()
 

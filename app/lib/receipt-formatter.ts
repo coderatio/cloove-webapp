@@ -2,6 +2,22 @@ import type { ReceiptData } from "@/app/components/shared/ReceiptTemplate"
 
 const DEFAULT_WIDTH = 32 // chars for 80mm thermal paper
 
+// ── ESC/POS segment type ─────────────────────────────────────────────────
+
+/** Each segment is one BLE write. Command bytes are prepended to text so
+ *  we never send extra standalone writes that overwhelm the printer. */
+export interface ReceiptSegment { data: Uint8Array }
+
+// ESC/POS command constants — only universally-supported commands.
+// GS ! (select print size) and GS L (left margin) are NOT supported on
+// cheap BLE printers like MPT-II and get rendered as garbage text.
+const CMD_CENTER = [0x1b, 0x61, 0x01]
+const CMD_LEFT = [0x1b, 0x61, 0x00]
+const CMD_BOLD_ON = [0x1b, 0x45, 0x01]
+const CMD_BOLD_OFF = [0x1b, 0x45, 0x00]
+
+// ── Helpers ──────────────────────────────────────────────────────────────
+
 /** Map of Unicode currency symbols to ASCII-safe equivalents */
 const CURRENCY_ASCII: Record<string, string> = {
     "₦": "NGN ",
@@ -47,7 +63,11 @@ function center(text: string, width: number): string {
     return " ".repeat(pad) + text
 }
 
-function separator(width: number): string {
+function majorSeparator(width: number): string {
+    return "=".repeat(width)
+}
+
+function minorSeparator(width: number): string {
     return "-".repeat(width)
 }
 
@@ -60,12 +80,128 @@ function row(left: string, right: string, width: number): string {
     return left + " ".repeat(gap) + right
 }
 
+/**
+ * Parse an ISO date string into a human-readable format.
+ * Returns the input as-is if it's already formatted (non-ISO).
+ */
+export function formatReceiptDate(str: string): string {
+    // Detect ISO format (contains 'T' and timezone offset or Z)
+    if (!str.includes("T")) return str
+    const d = new Date(str)
+    if (isNaN(d.getTime())) return str
+    return new Intl.DateTimeFormat("en", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    }).format(d)
+}
+
+// ── Segment-based ESC/POS formatter (for Bluetooth thermal print) ────────
+
+const encoder = new TextEncoder()
+
+/** Build one segment: optional command prefix bytes + text, all in one write. */
+function seg(prefix: number[], str: string): ReceiptSegment {
+    const textBytes = encoder.encode(str)
+    const data = new Uint8Array(prefix.length + textBytes.length)
+    data.set(prefix, 0)
+    data.set(textBytes, prefix.length)
+    return { data }
+}
+
+/** Text-only segment (no command prefix). */
+function line(str: string): ReceiptSegment {
+    return { data: encoder.encode(str) }
+}
+
+export function formatReceiptCommands(
+    data: ReceiptData,
+    width: number = DEFAULT_WIDTH
+): ReceiptSegment[] {
+    const segments: ReceiptSegment[] = []
+    const curr = data.currency || "NGN"
+    const date = formatReceiptDate(data.date)
+
+    // 1. Business name — centered + bold (command bytes inlined with text)
+    segments.push(seg([...CMD_CENTER, ...CMD_BOLD_ON], data.businessName.toUpperCase() + "\n"))
+
+    // 2. Address, phone — still centered, bold off
+    if (data.businessAddress) {
+        segments.push(seg(CMD_BOLD_OFF, data.businessAddress + "\n"))
+    } else {
+        segments.push(seg(CMD_BOLD_OFF, ""))
+    }
+    if (data.businessPhone) {
+        segments.push(line("Tel: " + data.businessPhone + "\n"))
+    }
+
+    // 3. Major separator + left align
+    segments.push(seg(CMD_LEFT, majorSeparator(width) + "\n"))
+
+    // 4. Date, order#, customer
+    segments.push(line(row("Date:", date, width) + "\n"))
+    segments.push(line(row("Order:", data.shortCode || data.orderId.substring(0, 8), width) + "\n"))
+    if (data.customerName) {
+        segments.push(line(row("Customer:", data.customerName, width) + "\n"))
+    }
+
+    // 5. Minor separator
+    segments.push(line(minorSeparator(width) + "\n"))
+
+    // 6. Item lines
+    for (const item of data.items) {
+        const qty = item.quantity > 1 ? " x" + item.quantity : ""
+        const name = item.productName + qty
+        const price = formatAmount(item.total, curr)
+        segments.push(line(row(name, price, width) + "\n"))
+    }
+
+    // 7. Minor separator
+    segments.push(line(minorSeparator(width) + "\n"))
+
+    // 8. Discount section (if applicable)
+    if (data.discountAmount && data.discountAmount > 0) {
+        segments.push(line(row("Subtotal:", formatAmount(data.subtotal, curr), width) + "\n"))
+        segments.push(line(row("Discount:", "-" + formatAmount(data.discountAmount, curr), width) + "\n"))
+        segments.push(line(minorSeparator(width) + "\n"))
+    }
+
+    // 9. TOTAL — bold (command bytes inlined)
+    segments.push(seg(CMD_BOLD_ON, row("TOTAL:", formatAmount(data.totalAmount, curr), width) + "\n"))
+
+    // 10. Paid, balance, method — bold off inlined with first line
+    segments.push(seg(CMD_BOLD_OFF, row("Paid:", formatAmount(data.amountPaid, curr), width) + "\n"))
+    if (data.remainingAmount > 0) {
+        segments.push(line(row("Balance Due:", formatAmount(data.remainingAmount, curr), width) + "\n"))
+    }
+    if (data.paymentMethod) {
+        segments.push(line(row("Method:", data.paymentMethod, width) + "\n"))
+    }
+
+    // 11. Major separator
+    segments.push(line(majorSeparator(width) + "\n"))
+
+    // 12. Footer — centered (command inlined)
+    segments.push(seg(CMD_CENTER, "\n"))
+    segments.push(line("Thank you for your business!\n"))
+    segments.push(line("Powered by Cloove\n"))
+    segments.push(line("\n"))
+
+    return segments
+}
+
+// ── Plain-text formatter (for browser print) ─────────────────────────────
+
 export function formatReceiptText(
     data: ReceiptData,
     width: number = DEFAULT_WIDTH
 ): string {
     const lines: string[] = []
     const curr = data.currency || "NGN"
+    const date = formatReceiptDate(data.date)
 
     // Header
     lines.push(center(data.businessName.toUpperCase(), width))
@@ -75,15 +211,15 @@ export function formatReceiptText(
     if (data.businessPhone) {
         lines.push(center("Tel: " + data.businessPhone, width))
     }
-    lines.push(separator(width))
+    lines.push(majorSeparator(width))
 
     // Order meta
-    lines.push(row("Date:", data.date, width))
+    lines.push(row("Date:", date, width))
     lines.push(row("Order:", data.shortCode || data.orderId.substring(0, 8), width))
     if (data.customerName) {
         lines.push(row("Customer:", data.customerName, width))
     }
-    lines.push(separator(width))
+    lines.push(minorSeparator(width))
 
     // Items
     for (const item of data.items) {
@@ -92,13 +228,13 @@ export function formatReceiptText(
         const price = formatAmount(item.total, curr)
         lines.push(row(name, price, width))
     }
-    lines.push(separator(width))
+    lines.push(minorSeparator(width))
 
     // Totals
     if (data.discountAmount && data.discountAmount > 0) {
         lines.push(row("Subtotal:", formatAmount(data.subtotal, curr), width))
         lines.push(row("Discount:", "-" + formatAmount(data.discountAmount, curr), width))
-        lines.push(separator(width))
+        lines.push(minorSeparator(width))
     }
     lines.push(row("TOTAL:", formatAmount(data.totalAmount, curr), width))
     lines.push(row("Paid:", formatAmount(data.amountPaid, curr), width))
@@ -108,7 +244,7 @@ export function formatReceiptText(
     if (data.paymentMethod) {
         lines.push(row("Method:", data.paymentMethod, width))
     }
-    lines.push(separator(width))
+    lines.push(majorSeparator(width))
 
     // Footer
     lines.push("")

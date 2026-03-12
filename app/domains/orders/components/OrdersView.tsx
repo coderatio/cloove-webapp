@@ -131,6 +131,7 @@ export function OrdersView() {
             businessName: activeBusiness.name,
             businessAddress: (activeBusiness as any).address,
             businessPhone: (activeBusiness as any).phone,
+            businessLogo: activeBusiness.logo,
             orderId: order.id,
             shortCode: order.shortCode,
             date: order.date || format(new Date(), 'dd MMM yyyy, HH:mm'),
