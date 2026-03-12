@@ -16,6 +16,10 @@ export const STORAGE_KEYS = {
     SIDEBAR_COLLAPSED: 'cloove_sidebar_collapsed',
     /** Previously paired Bluetooth thermal printer */
     BT_PRINTER: 'cloove_bt_printer',
+    /** Selected printer profile (basic | standard) */
+    BT_PRINTER_PROFILE: 'cloove_bt_printer_profile',
+    /** Whether to always use Bluetooth for printing */
+    BT_ALWAYS_USE: 'cloove_bt_always_use',
 } as const
 
 type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]

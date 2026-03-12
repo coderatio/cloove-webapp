@@ -10,7 +10,8 @@ import {
     Lock,
     Save,
     CreditCard,
-    Loader2
+    Loader2,
+    Printer
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
@@ -19,11 +20,12 @@ import { VerificationSettings } from "@/app/domains/business/components/Verifica
 import { BusinessSettings } from "@/app/domains/business/components/BusinessSettings"
 import { ProfileSettings } from "@/app/domains/business/components/ProfileSettings"
 import { SecuritySettings } from "@/app/domains/business/components/SecuritySettings"
+import { PrinterSettings } from "@/app/domains/business/components/PrinterSettings"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { PersistedTabs, TabItem } from "@/app/components/shared/PersistedTabs"
 import { usePermission } from "@/app/hooks/usePermission"
 
-type Tab = "business" | "profile" | "billing" | "security" | "verification"
+type Tab = "business" | "profile" | "billing" | "security" | "verification" | "printer"
 
 function SettingsContent() {
     const { role } = usePermission()
@@ -37,11 +39,12 @@ function SettingsContent() {
         { id: "verification", label: "Verification", icon: ShieldCheck },
         { id: "billing", label: "Billing", icon: CreditCard },
         { id: "security", label: "Security", icon: Lock },
+        { id: "printer", label: "Printer", icon: Printer },
     ]
 
     // Role-based filtering
     const tabs = allTabs.filter(tab => {
-        if (tab.id === "profile" || tab.id === "security") return true
+        if (tab.id === "profile" || tab.id === "security" || tab.id === "printer") return true
         if (role === 'OWNER') return true
         if (tab.id === "billing" && role === 'ACCOUNTANT') return true
         return false
@@ -94,6 +97,7 @@ function SettingsContent() {
                     {activeTab === "verification" && role === 'OWNER' && <VerificationSettings />}
                     {activeTab === "billing" && (role === 'OWNER' || role === 'ACCOUNTANT') && <BillingSettings />}
                     {activeTab === "security" && <SecuritySettings />}
+                    {activeTab === "printer" && <PrinterSettings />}
                 </motion.div>
             </AnimatePresence>
 

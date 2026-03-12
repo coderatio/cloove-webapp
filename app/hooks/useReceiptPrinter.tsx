@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { formatReceiptText } from "@/app/lib/receipt-formatter"
+import { formatReceiptText, formatReceiptCommands, ESC_INIT, ESC_HEAT, DC2_DENSITY, FEED_AND_CUT } from "@/app/lib/receipt-formatter"
 import type { ReceiptData } from "@/app/components/shared/ReceiptTemplate"
 import { STORAGE_KEYS, storage } from "@/app/lib/storage"
+import { PRINTER_PROFILES, DEFAULT_PROFILE_ID, type PrinterProfileId } from "@/app/lib/printer-profiles"
 import { Bluetooth as BluetoothIcon, Printer as PrinterIcon } from "lucide-react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import {
@@ -72,36 +73,29 @@ const KNOWN_SERVICE_UUIDS = [
     "49535343-fe7d-4ae5-8fa9-9fafd205e455", // Telit/Stollmann transparent UART
 ]
 
-// ESC/POS command bytes
-const ESC = 0x1b
-const GS = 0x1d
-const ESC_INIT = new Uint8Array([ESC, 0x40])           // Initialize printer
-const FEED_AND_CUT = new Uint8Array([
-    0x0a, 0x0a, 0x0a, 0x0a,  // Feed 4 lines
-    GS, 0x56, 0x01,           // Partial cut
-])
-
-// Heating parameters: ESC 7 n1 n2 n3
-const ESC_HEAT = new Uint8Array([
-    ESC, 0x37,
-    2,    // n1: 2 → (2+1)*8 = 24 dots at a time (default ~80)
-    60,   // n2: 600µs heating time (lighter but legible)
-    40,   // n3: 400µs interval between rows (long cooldown)
-])
-
-// Print density: DC2 # n — bits 0-4: density, bits 5-7: break time
-const DC2_DENSITY = new Uint8Array([
-    0x12, 0x23,
-    (0b011 << 5) | 8,  // break time 3 (longest), density 8 (low-medium)
-])
-
 // BLE chunk size and delay
 const BLE_CHUNK_SIZE = 100
 const BLE_CHUNK_DELAY_MS = 30
 
-// Delay between printing each line — needs to be long enough for the
-// printer to cool down between lines and avoid thermal shutdown.
-const LINE_DELAY_MS = 400
+// ── Profile / preference persistence helpers ─────────────────────────────
+
+function getStoredProfileId(): PrinterProfileId {
+    const raw = storage.get(STORAGE_KEYS.BT_PRINTER_PROFILE)
+    if (raw === "basic" || raw === "standard") return raw
+    return DEFAULT_PROFILE_ID
+}
+
+function setStoredProfileId(id: PrinterProfileId) {
+    storage.set(STORAGE_KEYS.BT_PRINTER_PROFILE, id)
+}
+
+function getAlwaysUseBT(): boolean {
+    return storage.get(STORAGE_KEYS.BT_ALWAYS_USE) === "true"
+}
+
+function setAlwaysUseBTStorage(value: boolean) {
+    storage.set(STORAGE_KEYS.BT_ALWAYS_USE, String(value))
+}
 
 // ── Bluetooth connection engine (singleton, not tied to React) ───────────
 
@@ -262,6 +256,14 @@ interface ReceiptPrinterContextValue {
     forgetPrinter: () => void
     printReceipt: (data: ReceiptData) => Promise<void>
     printReceiptBT: (data: ReceiptData) => Promise<void>
+    /** Currently selected printer profile */
+    printerProfileId: PrinterProfileId
+    /** Update the selected printer profile */
+    setPrinterProfile: (id: PrinterProfileId) => void
+    /** Whether to always use Bluetooth (skip picker) */
+    alwaysUseBT: boolean
+    /** Toggle the "always use BT" preference */
+    setAlwaysUseBT: (value: boolean) => void
 }
 
 const ReceiptPrinterContext = React.createContext<ReceiptPrinterContextValue | null>(null)
@@ -269,10 +271,24 @@ const ReceiptPrinterContext = React.createContext<ReceiptPrinterContextValue | n
 export function ReceiptPrinterProvider({ children }: { children: React.ReactNode }) {
     const [isConnected, setIsConnected] = React.useState(false)
     const [pairedPrinterName, setPairedPrinterName] = React.useState<string | null>(null)
+    const [printerProfileId, setPrinterProfileIdState] = React.useState<PrinterProfileId>(DEFAULT_PROFILE_ID)
+    const [alwaysUseBT, setAlwaysUseBTState] = React.useState(false)
 
     // Sync localStorage state on mount
     React.useEffect(() => {
         setPairedPrinterName(getPairedPrinterName())
+        setPrinterProfileIdState(getStoredProfileId())
+        setAlwaysUseBTState(getAlwaysUseBT())
+    }, [])
+
+    const setPrinterProfile = React.useCallback((id: PrinterProfileId) => {
+        setPrinterProfileIdState(id)
+        setStoredProfileId(id)
+    }, [])
+
+    const setAlwaysUseBTValue = React.useCallback((value: boolean) => {
+        setAlwaysUseBTState(value)
+        setAlwaysUseBTStorage(value)
     }, [])
 
     const attachDisconnectListener = React.useCallback((device: BluetoothDevice) => {
@@ -313,42 +329,81 @@ export function ReceiptPrinterProvider({ children }: { children: React.ReactNode
         _btDevice = null
         _btCharacteristic = null
         clearPairedPrinter()
+        storage.remove(STORAGE_KEYS.BT_PRINTER_PROFILE)
+        storage.remove(STORAGE_KEYS.BT_ALWAYS_USE)
         setIsConnected(false)
         setPairedPrinterName(null)
+        setPrinterProfileIdState(DEFAULT_PROFILE_ID)
+        setAlwaysUseBTState(false)
     }, [])
 
     const printViaBluetooth = React.useCallback(async (data: ReceiptData) => {
-        const encoder = new TextEncoder()
-        const text = formatReceiptText(data)
-        const lines = text.split("\n")
+        const profile = PRINTER_PROFILES[printerProfileId]
 
-        // Only send ESC @ (initialize). The MPT-II does not support ESC 7
-        // (heating params) or DC2 # (density) — it renders those bytes as
-        // visible garbage characters like <(<(.
+        // Send init sequence
         const configOk = await sendViaBluetooth(ESC_INIT)
         if (!configOk) {
             setIsConnected(false)
             return
         }
 
-        await new Promise(resolve => setTimeout(resolve, 300))
-
-        for (const line of lines) {
-            const lineBytes = encoder.encode(line + "\n")
-            const ok = await sendViaBluetooth(lineBytes)
-            if (!ok) {
+        // Send heating params if supported
+        if (profile.supportsHeating) {
+            const heatOk = await sendViaBluetooth(ESC_HEAT)
+            if (!heatOk) {
                 setIsConnected(false)
                 return
             }
-            await new Promise(resolve => setTimeout(resolve, LINE_DELAY_MS))
         }
 
-        await new Promise(resolve => setTimeout(resolve, LINE_DELAY_MS))
-        const cutOk = await sendViaBluetooth(FEED_AND_CUT)
-        if (!cutOk) {
-            setIsConnected(false)
+        // Send density config if supported
+        if (profile.supportsDensity) {
+            const densityOk = await sendViaBluetooth(DC2_DENSITY)
+            if (!densityOk) {
+                setIsConnected(false)
+                return
+            }
         }
-    }, [])
+
+        await new Promise(resolve => setTimeout(resolve, 300))
+
+        if (profile.useSegmentedCommands) {
+            // Standard profile: use ESC/POS formatted segments
+            const segments = formatReceiptCommands(data)
+            for (const segment of segments) {
+                const ok = await sendViaBluetooth(segment.data)
+                if (!ok) {
+                    setIsConnected(false)
+                    return
+                }
+                await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
+            }
+        } else {
+            // Basic profile: plain text line by line
+            const encoder = new TextEncoder()
+            const text = formatReceiptText(data)
+            const lines = text.split("\n")
+
+            for (const line of lines) {
+                const lineBytes = encoder.encode(line + "\n")
+                const ok = await sendViaBluetooth(lineBytes)
+                if (!ok) {
+                    setIsConnected(false)
+                    return
+                }
+                await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
+            }
+        }
+
+        // Feed and cut if supported
+        if (profile.supportsCut) {
+            await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
+            const cutOk = await sendViaBluetooth(FEED_AND_CUT)
+            if (!cutOk) {
+                setIsConnected(false)
+            }
+        }
+    }, [printerProfileId])
 
     const printViaBrowser = React.useCallback(async (data: ReceiptData) => {
         const text = formatReceiptText(data)
@@ -436,13 +491,27 @@ pre {
     /**
      * Main print function.
      * - BT connected → print via BT
-     * - BT not connected, but previously paired → show picker (reconnect BT or browser)
+     * - BT not connected, previously paired, alwaysUseBT → attempt silent reconnect; fall back to picker
+     * - BT not connected, previously paired, NOT alwaysUseBT → show picker
      * - Never paired → browser print
      */
     const printReceipt = React.useCallback(async (data: ReceiptData) => {
         if (_btDevice && _btCharacteristic) {
             // Already connected — print directly
             await printViaBluetooth(data)
+        } else if (hasPairedPrinter() && alwaysUseBT) {
+            // "Always use BT" enabled — try silent reconnect
+            const success = await requestAndConnect()
+            if (success && _btDevice) {
+                attachDisconnectListener(_btDevice)
+                setPairedPrinterName(_btDevice.name || "Unknown")
+                setIsConnected(true)
+                await printViaBluetooth(data)
+            } else {
+                // Silent reconnect failed — fall back to picker
+                setPendingPrintData(data)
+                setShowPrintPicker(true)
+            }
         } else if (hasPairedPrinter()) {
             // Previously paired but disconnected — show choice
             setPendingPrintData(data)
@@ -451,7 +520,7 @@ pre {
             // No printer ever paired — browser print
             await printViaBrowser(data)
         }
-    }, [printViaBluetooth, printViaBrowser])
+    }, [printViaBluetooth, printViaBrowser, alwaysUseBT, attachDisconnectListener])
 
     const value = React.useMemo<ReceiptPrinterContextValue>(() => ({
         isConnected,
@@ -461,7 +530,11 @@ pre {
         forgetPrinter,
         printReceipt,
         printReceiptBT: printViaBluetooth,
-    }), [isConnected, pairedPrinterName, connectPrinter, forgetPrinter, printReceipt, printViaBluetooth])
+        printerProfileId,
+        setPrinterProfile,
+        alwaysUseBT,
+        setAlwaysUseBT: setAlwaysUseBTValue,
+    }), [isConnected, pairedPrinterName, connectPrinter, forgetPrinter, printReceipt, printViaBluetooth, printerProfileId, setPrinterProfile, alwaysUseBT, setAlwaysUseBTValue])
 
     return (
         <ReceiptPrinterContext.Provider value={value}>
@@ -498,8 +571,8 @@ function PrintMethodPicker({
                 </DrawerStickyHeader>
                 <DrawerBody>
                     <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto py-2">
-                        <GlassCard 
-                            hoverEffect 
+                        <GlassCard
+                            hoverEffect
                             className="p-1 group cursor-pointer border-none ring-1 ring-brand-deep/5 dark:ring-white/5"
                             onClick={() => onChoice("bluetooth")}
                         >
@@ -518,8 +591,8 @@ function PrintMethodPicker({
                             </div>
                         </GlassCard>
 
-                        <GlassCard 
-                            hoverEffect 
+                        <GlassCard
+                            hoverEffect
                             className="p-1 group cursor-pointer border-none ring-1 ring-brand-deep/5 dark:ring-white/5"
                             onClick={() => onChoice("browser")}
                         >

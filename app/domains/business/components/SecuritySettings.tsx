@@ -11,9 +11,6 @@ import {
     Eye,
     EyeOff,
     ChevronRight,
-    Printer,
-    Unplug,
-    CheckCircle2
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -28,7 +25,6 @@ import {
 
 import { formatDistanceToNow } from "date-fns"
 import { useChangePassword, useChangePin, useSecurityStatus } from "../hooks/useSecurity"
-import { useReceiptPrinter } from "@/app/hooks/useReceiptPrinter"
 
 export function SecuritySettings() {
     const [isChangingPin, setIsChangingPin] = useState(false)
@@ -37,24 +33,6 @@ export function SecuritySettings() {
     const changePassword = useChangePassword()
     const changePin = useChangePin()
     const { data: securityStatus } = useSecurityStatus()
-    const { connectPrinter, isConnected: printerConnected } = useReceiptPrinter()
-    const [isConnectingPrinter, setIsConnectingPrinter] = useState(false)
-
-    const handleConnectPrinter = async () => {
-        setIsConnectingPrinter(true)
-        try {
-            const success = await connectPrinter()
-            if (success) {
-                toast.success("Printer connected", { description: "Your thermal printer is ready for receipts." })
-            } else {
-                toast.error("Connection failed", { description: "Could not connect to printer. Make sure it's powered on and Bluetooth is enabled." })
-            }
-        } catch {
-            toast.error("Connection failed", { description: "Your browser may not support Bluetooth devices." })
-        } finally {
-            setIsConnectingPrinter(false)
-        }
-    }
 
     const formatLastChanged = (dateString: string | null | undefined) => {
         if (!dateString) return "Not set yet"
@@ -159,52 +137,6 @@ export function SecuritySettings() {
                         >
                             Update Password
                             <ChevronRight className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
-                        </Button>
-                    </div>
-                </GlassCard>
-            </section>
-
-            <section className="space-y-4">
-                <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">POS Printer</h2>
-                <GlassCard className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                                <Printer className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
-                                <span className="font-medium text-brand-deep dark:text-brand-cream">Bluetooth Thermal Printer</span>
-                                {printerConnected && (
-                                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" />
-                                        Connected
-                                    </span>
-                                )}
-                            </div>
-                            <p className="text-xs text-brand-accent/60 dark:text-white/40">
-                                {printerConnected
-                                    ? "Receipts will print directly via Bluetooth. Re-pair if you switch printers."
-                                    : "Connect your thermal printer (e.g. MPT-II) via Bluetooth to print receipts directly."
-                                }
-                            </p>
-                        </div>
-                        <Button
-                            onClick={handleConnectPrinter}
-                            disabled={isConnectingPrinter}
-                            variant="outline"
-                            className="rounded-xl px-4 text-xs font-bold border-brand-deep/20 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
-                        >
-                            {isConnectingPrinter ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : printerConnected ? (
-                                <>
-                                    <Unplug className="w-4 h-4 mr-2" />
-                                    Re-pair
-                                </>
-                            ) : (
-                                <>
-                                    Connect Printer
-                                    <ChevronRight className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
-                                </>
-                            )}
                         </Button>
                     </div>
                 </GlassCard>

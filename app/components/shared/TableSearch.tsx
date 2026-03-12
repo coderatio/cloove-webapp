@@ -20,7 +20,7 @@ export function TableSearch({
     return (
         <div className={cn("relative group flex-1 md:min-w-[300px] min-w-0", className)}>
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search className="w-4 h-4 text-brand-accent/70 dark:text-brand-cream/70 group-focus-within:text-brand-cream/60 dark:group-focus-within:text-brand-gold transition-colors" />
+                <Search className="w-4 h-4 text-brand-accent/70 dark:text-brand-cream/70 group-focus-within:text-brand-deep/60 dark:group-focus-within:text-brand-cream transition-colors" />
             </div>
             <input
                 type="text"

@@ -8,6 +8,32 @@ const DEFAULT_WIDTH = 32 // chars for 80mm thermal paper
  *  we never send extra standalone writes that overwhelm the printer. */
 export interface ReceiptSegment { data: Uint8Array }
 
+// ── Exported ESC/POS init constants (used by useReceiptPrinter) ──────────
+
+const ESC = 0x1b
+const GS = 0x1d
+
+export const ESC_INIT = new Uint8Array([ESC, 0x40])           // Initialize printer
+
+// Heating parameters: ESC 7 n1 n2 n3
+export const ESC_HEAT = new Uint8Array([
+    ESC, 0x37,
+    2,    // n1: 2 → (2+1)*8 = 24 dots at a time (default ~80)
+    60,   // n2: 600µs heating time (lighter but legible)
+    40,   // n3: 400µs interval between rows (long cooldown)
+])
+
+// Print density: DC2 # n — bits 0-4: density, bits 5-7: break time
+export const DC2_DENSITY = new Uint8Array([
+    0x12, 0x23,
+    (0b011 << 5) | 8,  // break time 3 (longest), density 8 (low-medium)
+])
+
+export const FEED_AND_CUT = new Uint8Array([
+    0x0a, 0x0a, 0x0a, 0x0a,  // Feed 4 lines
+    GS, 0x56, 0x01,           // Partial cut
+])
+
 // ESC/POS command constants — only universally-supported commands.
 // GS ! (select print size) and GS L (left margin) are NOT supported on
 // cheap BLE printers like MPT-II and get rendered as garbage text.
