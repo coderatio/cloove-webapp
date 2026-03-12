@@ -59,6 +59,23 @@ export function ProductSearchOverlay({
         setActiveIndex(0)
     }, [search])
 
+    // Barcode auto-add: exact match on barcode clears search and re-focuses
+    React.useEffect(() => {
+        if (search.length >= 8) {
+            const exactMatch = products.find(
+                (p) => p.barcode === search
+            )
+            if (exactMatch) {
+                onSelect(exactMatch)
+                setSearch("")
+                if (exactMatch.status !== 'Out of Stock') {
+                    toast.success(`Added ${exactMatch.product} via scan`, { duration: 1500 })
+                }
+                requestAnimationFrame(() => inputRef.current?.focus())
+            }
+        }
+    }, [search, products, onSelect])
+
     // Keyboard navigation
     React.useEffect(() => {
         if (!isOpen) return

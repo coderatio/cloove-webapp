@@ -10,6 +10,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { AuthProvider } from "./components/providers/auth-provider";
 import { AuthGuard } from "./components/shared/AuthGuard";
 import { RootSessionManager } from "./components/auth/RootSessionManager";
+import { ReceiptPrinterProvider } from "./hooks/useReceiptPrinter";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -90,7 +91,9 @@ export default function RootLayout({
               <AuthGuard>
                 <TooltipProvider>
                   <BusinessProvider>
-                    {children}
+                    <ReceiptPrinterProvider>
+                      {children}
+                    </ReceiptPrinterProvider>
                   </BusinessProvider>
                 </TooltipProvider>
               </AuthGuard>

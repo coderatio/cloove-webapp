@@ -15,7 +15,7 @@ export interface QueuedSale {
     id: string
     customer: Customer | null
     items: CartItem[]
-    paymentMethod: 'Cash' | 'Transfer' | 'Card'
+    paymentMethod: 'Cash' | 'Transfer' | 'POS'
     discount: number
     promotionId?: string
     note: string

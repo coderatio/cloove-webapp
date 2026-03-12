@@ -14,6 +14,8 @@ export const STORAGE_KEYS = {
     POS_QUEUED_SALES: 'cloove_pos_queued_sales',
     /** Sidebar collapsed state */
     SIDEBAR_COLLAPSED: 'cloove_sidebar_collapsed',
+    /** Previously paired Bluetooth thermal printer */
+    BT_PRINTER: 'cloove_bt_printer',
 } as const
 
 type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]

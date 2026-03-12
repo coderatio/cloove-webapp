@@ -42,7 +42,6 @@ import { Textarea } from '@/app/components/ui/textarea'
 import { MoneyInput } from '@/app/components/ui/money-input'
 import { Switch } from '@/app/components/ui/switch'
 import { cn } from '@/app/lib/utils'
-import { initialInventory } from '../data/inventoryMocks'
 import { mockCustomers, Customer } from '../data/customerMocks'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -184,7 +183,7 @@ export function SaleModeView() {
     const [search, setSearch] = React.useState('')
     const debouncedSearch = useDebounce(search, 300)
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
-    const [paymentMethod, setPaymentMethod] = React.useState<'Cash' | 'Transfer' | 'Card'>('Cash')
+    const [paymentMethod, setPaymentMethod] = React.useState<'Cash' | 'Transfer' | 'POS'>('Cash')
     const [currentPage, setCurrentPage] = React.useState(1)
     const [mobileView, setMobileView] = React.useState<'catalog' | 'cart'>('catalog')
     const [customerSearch, setCustomerSearch] = React.useState('')
@@ -284,19 +283,22 @@ export function SaleModeView() {
     )
 
     // Barcode Auto-Add Logic
+    const mobileInputRef = React.useRef<HTMLInputElement>(null)
     React.useEffect(() => {
         if (search.length >= 8) { // Typical minimum barcode length
-            const exactMatch = initialInventory.find(p => p.barcode === search)
+            const exactMatch = products.find((p: Product) => p.barcode === search)
             if (exactMatch) {
                 addToCart(exactMatch)
                 setSearch("")
+                // Re-focus the mobile input so consecutive scans work seamlessly
+                requestAnimationFrame(() => mobileInputRef.current?.focus())
                 toast.success(`Added ${exactMatch.product} via scan`, {
                     icon: <Barcode className="h-4 w-4" />,
                     duration: 1500
                 })
             }
         }
-    }, [search])
+    }, [search, products])
 
     // Reset to page 1 when search or category changes
     React.useEffect(() => {
@@ -593,6 +595,7 @@ export function SaleModeView() {
                                     <Search className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-focus-within:text-brand-gold transition-colors" />
                                 </div>
                                 <input
+                                    ref={mobileInputRef}
                                     type="text"
                                     placeholder="Search catalog or scan..."
                                     value={search}
@@ -1156,7 +1159,7 @@ export function SaleModeView() {
                             {[
                                 { id: 'Cash', icon: Banknote },
                                 { id: 'Transfer', icon: ArrowBigUpDash },
-                                { id: 'Card', icon: CreditCard }
+                                { id: 'POS', icon: CreditCard }
                             ].map((method) => (
                                 <Button
                                     key={method.id}
