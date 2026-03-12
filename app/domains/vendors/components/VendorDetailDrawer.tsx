@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { motion } from "framer-motion"
 import { Loader2, Phone, Mail, MapPin, FileText, Plus, Banknote } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -60,41 +61,65 @@ export function VendorDetailDrawer({
                     <div className="space-y-6">
                         {/* Contact Info */}
                         <GlassCard className="p-5 space-y-4 rounded-3xl before:rounded-3xl">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
-                                Contact Information
-                            </p>
+                            <div className="flex items-center justify-between">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
+                                    Contact Information
+                                </p>
+                                {(!vendor.phoneNumber && !vendor.email && !vendor.address) && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => onEdit(vendor)}
+                                        className="h-6 px-2 text-[10px] font-bold uppercase tracking-widest bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold hover:bg-brand-green/5 dark:hover:bg-brand-gold/5 rounded-lg"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add Details
+                                    </Button>
+                                )}
+                            </div>
+
                             <div className="space-y-3">
-                                {vendor.phoneNumber && (
-                                    <a href={`tel:${vendor.phoneNumber}`} className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream hover:text-brand-green transition-colors">
-                                        <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center">
-                                            <Phone className="w-4 h-4 text-brand-green" />
-                                        </div>
-                                        {vendor.phoneNumber}
-                                    </a>
-                                )}
-                                {vendor.email && (
-                                    <a href={`mailto:${vendor.email}`} className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream hover:text-brand-green transition-colors">
-                                        <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center">
-                                            <Mail className="w-4 h-4 text-brand-gold" />
-                                        </div>
-                                        {vendor.email}
-                                    </a>
-                                )}
-                                {vendor.address && (
-                                    <div className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream">
-                                        <div className="h-8 w-8 rounded-full bg-brand-accent/10 flex items-center justify-center">
-                                            <MapPin className="w-4 h-4 text-brand-accent" />
-                                        </div>
-                                        {vendor.address}
+                                {!vendor.phoneNumber && !vendor.email && !vendor.address && !vendor.notes ? (
+                                    <div className="py-2">
+                                        <p className="text-sm text-brand-accent/30 dark:text-brand-cream/30">
+                                            No contact information available for this vendor.
+                                        </p>
                                     </div>
-                                )}
-                                {vendor.notes && (
-                                    <div className="flex items-start gap-3 text-sm text-brand-accent/60 dark:text-brand-cream/60">
-                                        <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center shrink-0">
-                                            <FileText className="w-4 h-4" />
-                                        </div>
-                                        {vendor.notes}
-                                    </div>
+                                ) : (
+                                    <>
+                                        {vendor.phoneNumber && (
+                                            <a href={`tel:${vendor.phoneNumber}`} className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream hover:text-brand-green transition-colors">
+                                                <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center">
+                                                    <Phone className="w-4 h-4 text-brand-green" />
+                                                </div>
+                                                {vendor.phoneNumber}
+                                            </a>
+                                        )}
+                                        {vendor.email && (
+                                            <a href={`mailto:${vendor.email}`} className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream hover:text-brand-green transition-colors">
+                                                <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center">
+                                                    <Mail className="w-4 h-4 text-brand-gold" />
+                                                </div>
+                                                {vendor.email}
+                                            </a>
+                                        )}
+                                        {vendor.address && (
+                                            <div className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream">
+                                                <div className="h-8 w-8 rounded-full bg-brand-accent/10 flex items-center justify-center">
+                                                    <MapPin className="w-4 h-4 text-brand-accent" />
+                                                </div>
+                                                {vendor.address}
+                                            </div>
+                                        )}
+                                        {vendor.notes && (
+                                            <div className="flex items-start gap-3 text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                                                <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center shrink-0">
+                                                    <FileText className="w-4 h-4" />
+                                                </div>
+                                                {vendor.notes}
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </GlassCard>
@@ -115,13 +140,15 @@ export function VendorDetailDrawer({
                                     {formatCurrency(vendor.outstanding, { currency: currencyCode })}
                                 </p>
                             </div>
-                            <Button
-                                onClick={() => onRecordPayable(vendor)}
-                                className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Record Payable
-                            </Button>
+                            {vendor.outstanding > 0 && (
+                                <Button
+                                    onClick={() => onRecordPayable(vendor)}
+                                    className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Record Payable
+                                </Button>
+                            )}
                         </GlassCard>
 
                         {/* Payables History */}
@@ -134,11 +161,21 @@ export function VendorDetailDrawer({
                                     <Loader2 className="w-5 h-5 animate-spin text-brand-accent/40" />
                                 </div>
                             ) : payables.length === 0 ? (
-                                <GlassCard className="p-6 text-center rounded-3xl before:rounded-3xl">
-                                    <p className="text-sm text-brand-accent/40 dark:text-brand-cream/40">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="p-10 text-center space-y-3 rounded-3xl border border-dashed border-brand-deep/5 dark:border-white/5"
+                                >
+                                    <div className="h-12 w-12 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mx-auto mb-2">
+                                        <Banknote className="w-6 h-6 text-brand-deep/20 dark:text-white/20" />
+                                    </div>
+                                    <p className="text-sm font-medium text-brand-deep/40 dark:text-brand-cream/40">
                                         No payables recorded yet.
                                     </p>
-                                </GlassCard>
+                                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[200px] mx-auto">
+                                        All your business obligations with {vendor.name} will appear here.
+                                    </p>
+                                </motion.div>
                             ) : (
                                 payables.map((payable) => {
                                     const config = statusConfig[payable.status] ?? statusConfig.PENDING

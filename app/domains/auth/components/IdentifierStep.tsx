@@ -56,8 +56,8 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                                     required
                                     autoComplete="username"
                                     placeholder={state.isPhone && state.selectedCountry ? `+${state.selectedCountry.phoneCode} ...` : (state.isEmail ? "email@example.com" : "Phone or Email")}
-                                    value={state.identifier}
-                                    onChange={(e) => actions.setIdentifier(e.target.value)}
+                                    value={state.identifier.trim()}
+                                    onChange={(e) => actions.setIdentifier(e.target.value.trim())}
                                     className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-4 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all text-base"
                                 />
                             </div>

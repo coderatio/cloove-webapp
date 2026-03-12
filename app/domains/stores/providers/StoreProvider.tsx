@@ -49,9 +49,11 @@ export interface ActivityItem {
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
+    const { activeBusiness } = useBusiness()
     const { data: response, isLoading, error } = useQuery<ApiResponse<Store[]>>({
-        queryKey: ['stores'],
-        queryFn: () => apiClient.get<ApiResponse<Store[]>>('/stores', {}, { fullResponse: true })
+        queryKey: ['stores', activeBusiness?.id],
+        queryFn: () => apiClient.get<ApiResponse<Store[]>>('/stores', {}, { fullResponse: true }),
+        enabled: !!activeBusiness?.id
     })
     const queryClient = useQueryClient()
     const [currentStore, setCurrentStore] = useState<Store | null>(null)
@@ -123,7 +125,7 @@ export function useStoreActivities(storeId?: string) {
     const { activeBusiness } = useBusiness()
 
     return useQuery<ApiResponse<any[]>>({
-        queryKey: ['store-activities', storeId],
+        queryKey: ['store-activities', activeBusiness?.id, storeId],
         queryFn: () => apiClient.get<ApiResponse<any[]>>(`/stores/${storeId}/activities`, {}, { fullResponse: true }),
         enabled: !!storeId && !!activeBusiness,
         select: (response) => {

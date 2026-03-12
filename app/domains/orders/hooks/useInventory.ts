@@ -161,7 +161,7 @@ export function useInventory(options: UseInventoryOptions = {}) {
     })
 
     return {
-        products: data?.products ?? initialInventory.map((item: any) => mapProduct(item, lowStockThreshold)),
+        products: data?.products ?? [],
         totalProducts: data?.total ?? 0,
         isLocalMode: data?.isLocalMode ?? true,
         isLoadingProducts: isLoading,

@@ -348,23 +348,37 @@ export function VendorsView() {
                     </div>
                 ) : isMobile ? (
                     <div className="space-y-3">
-                        {vendors.map((vendor, index) => (
-                            <ListCard
-                                key={vendor.id}
-                                title={vendor.name}
-                                subtitle={vendor.phoneNumber || vendor.email || "No contact info"}
-                                meta={vendor.address || undefined}
-                                icon={Truck}
-                                iconClassName="text-brand-deep/40 dark:text-brand-cream/40"
-                                status={vendor.outstanding > 0 ? "Outstanding" : undefined}
-                                statusColor={vendor.outstanding > 0 ? "danger" : undefined}
-                                value={vendor.outstanding > 0 ? formatCurrency(vendor.outstanding, { currency: currencyCode }) : undefined}
-                                valueLabel={vendor.outstanding > 0 ? "Owed" : undefined}
-                                delay={index * 0.05}
-                                actions={renderActions(vendor)}
-                                onClick={() => setViewingVendor(vendor)}
-                            />
-                        ))}
+                        {vendors.length === 0 ? (
+                            <GlassCard className="p-12 text-center border-dashed border-brand-deep/20 dark:border-white/10 bg-transparent rounded-3xl before:rounded-3xl">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
+                                        <Truck className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                                    </div>
+                                    <h3 className="text-brand-deep dark:text-brand-cream font-medium">No vendors found</h3>
+                                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
+                                        Try adding a new vendor or adjusting your search terms to see your supplier directory.
+                                    </p>
+                                </div>
+                            </GlassCard>
+                        ) : (
+                            vendors.map((vendor, index) => (
+                                <ListCard
+                                    key={vendor.id}
+                                    title={vendor.name}
+                                    subtitle={vendor.phoneNumber || vendor.email || "No contact info"}
+                                    meta={vendor.address || undefined}
+                                    icon={Truck}
+                                    iconClassName="text-brand-deep/40 dark:text-brand-cream/40"
+                                    status={vendor.outstanding > 0 ? "Outstanding" : undefined}
+                                    statusColor={vendor.outstanding > 0 ? "danger" : undefined}
+                                    value={vendor.outstanding > 0 ? formatCurrency(vendor.outstanding, { currency: currencyCode }) : undefined}
+                                    valueLabel={vendor.outstanding > 0 ? "Owed" : undefined}
+                                    delay={index * 0.05}
+                                    actions={renderActions(vendor)}
+                                    onClick={() => setViewingVendor(vendor)}
+                                />
+                            ))
+                        )}
                     </div>
                 ) : (
                     <GlassCard className="overflow-hidden border-brand-deep/5 dark:border-white/5">

@@ -40,8 +40,8 @@ export function RecordPayableDrawer({
     onSubmit,
     isSubmitting,
 }: RecordPayableDrawerProps) {
-    const { activeBusiness } = useBusiness()
-    const currencySymbol = activeBusiness?.currency === "USD" ? "$" : activeBusiness?.currency === "GHS" ? "GH₵" : "₦"
+    const inputRef = React.useRef<HTMLInputElement>(null)
+    const { currency } = useBusiness()
 
     const [amount, setAmount] = React.useState(0)
     const [description, setDescription] = React.useState("")
@@ -52,6 +52,9 @@ export function RecordPayableDrawer({
             setAmount(0)
             setDescription("")
             setDueAt(undefined)
+            setTimeout(() => {
+                inputRef.current?.focus()
+            }, 100)
         }
     }, [open])
 
@@ -81,10 +84,10 @@ export function RecordPayableDrawer({
                                 Amount
                             </label>
                             <MoneyInput
-                                autoFocus
+                                ref={inputRef}
                                 value={amount}
                                 onChange={setAmount}
-                                currencySymbol={currencySymbol}
+                                currencySymbol={currency}
                                 placeholder="0.00"
                                 className="h-14 rounded-2xl"
                                 required

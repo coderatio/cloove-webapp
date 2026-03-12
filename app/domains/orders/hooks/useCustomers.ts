@@ -61,7 +61,7 @@ export function useCustomers(search?: string) {
     })
 
     return {
-        customers: data ?? mockCustomers,
+        customers: isLoading ? [] : (data ?? mockCustomers),
         isLoadingCustomers: isLoading,
         createCustomer: createCustomerMutation.mutateAsync,
         isCreatingCustomer: createCustomerMutation.isPending,

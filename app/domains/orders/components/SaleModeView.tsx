@@ -96,6 +96,88 @@ function useDebounce<T>(value: T, delay?: number): T {
     return debouncedValue
 }
 
+function CreativeLoader() {
+    return (
+        <div className="col-span-full py-32 flex flex-col items-center justify-center">
+            <div className="relative h-24 w-24 mb-10">
+                {/* Pulsing Core */}
+                <motion.div
+                    animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute inset-0 rounded-full bg-brand-gold/20 blur-xl"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-12 w-12 rounded-2xl bg-brand-deep dark:bg-brand-gold flex items-center justify-center shadow-2xl relative z-10">
+                        <Layers className="h-6 w-6 text-brand-gold dark:text-brand-deep animate-pulse" />
+                    </div>
+                </div>
+
+                {/* Orbiting Icons */}
+                {[Tag, ShoppingCart, Box, History].map((Icon, i) => (
+                    <motion.div
+                        key={i}
+                        animate={{ 
+                            rotate: 360,
+                        }}
+                        transition={{ 
+                            duration: 8, 
+                            repeat: Infinity, 
+                            ease: "linear",
+                            delay: i * 0.5
+                        }}
+                        className="absolute inset-x-0 h-full w-full pointer-events-none"
+                    >
+                        <motion.div
+                            animate={{ 
+                                scale: [0.8, 1.1, 0.8],
+                                opacity: [0.4, 0.8, 0.4]
+                            }}
+                            transition={{ duration: 3, repeat: Infinity, delay: i * 0.7 }}
+                            style={{ 
+                                position: 'absolute',
+                                left: '50%',
+                                top: '-10%',
+                                transform: 'translateX(-50%)'
+                            }}
+                            className="bg-white/40 dark:bg-white/5 p-2 rounded-xl backdrop-blur-md border border-brand-accent/10"
+                        >
+                            <Icon className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
+                        </motion.div>
+                    </motion.div>
+                ))}
+            </div>
+            <div className="space-y-2 text-center">
+                <h3 className="text-2xl font-serif text-brand-deep dark:text-brand-cream/80 tracking-tight">Curating your catalog</h3>
+                <p className="text-xs uppercase tracking-[0.3em] font-black text-brand-accent/40 dark:text-brand-cream/30">Just a moment...</p>
+            </div>
+        </div>
+    )
+}
+
+function Box(props: any) {
+    return (
+        <svg
+            {...props}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+            <path d="m3.3 7 8.7 5 8.7-5" />
+            <path d="M12 22V12" />
+        </svg>
+    )
+}
+
 export function SaleModeView() {
     const router = useRouter()
     const [cart, setCart] = React.useState<CartItem[]>([])
@@ -560,21 +642,27 @@ export function SaleModeView() {
                                 cart.length > 0 && "pb-40 lg:pb-6"
                             )}>
                                 <AnimatePresence mode="popLayout">
-                                    {filteredProducts.length === 0 ? (
-                                        <div className="col-span-full py-24 flex flex-col items-center justify-center text-brand-accent/40 dark:text-brand-cream/30">
-                                            {isLoadingProducts ? (
-                                                <div className="flex flex-col items-center">
-                                                    <div className="w-12 h-12 border-4 border-brand-gold/20 border-t-brand-gold rounded-full animate-spin mb-4" />
-                                                    <p className="text-xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">Searching...</p>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <Layers className="h-20 w-20 mb-6 opacity-20" />
-                                                    <p className="text-2xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">No items found</p>
-                                                    <p className="text-sm mt-2">{search ? `No results for "${search}"` : 'Your catalog is empty'}</p>
-                                                </>
-                                            )}
-                                        </div>
+                                    {isLoadingProducts || !activeBusiness ? (
+                                        <motion.div
+                                            key="loader"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="col-span-full h-full flex items-center justify-center p-12"
+                                        >
+                                            <CreativeLoader />
+                                        </motion.div>
+                                    ) : filteredProducts.length === 0 ? (
+                                        <motion.div 
+                                            key="empty"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="col-span-full py-24 flex flex-col items-center justify-center text-brand-accent/40 dark:text-brand-cream/30"
+                                        >
+                                            <Layers className="h-20 w-20 mb-6 opacity-20" />
+                                            <p className="text-2xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">No items found</p>
+                                            <p className="text-sm mt-2">{search ? `No results for "${search}"` : 'Your catalog is empty'}</p>
+                                        </motion.div>
                                     ) : (
                                         paginatedProducts.map((product: Product) => (
                                             <motion.div key={product.id} variants={itemVariants}>
