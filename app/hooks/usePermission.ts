@@ -3,7 +3,7 @@
 import { useBusiness } from "../components/BusinessProvider"
 
 export function usePermission() {
-    const { role, permissions } = useBusiness()
+    const { role, permissions, isLoading } = useBusiness()
 
     /**
      * Check if the user has a specific permission
@@ -34,6 +34,7 @@ export function usePermission() {
         canAny,
         hasRole,
         role,
-        permissions
+        permissions,
+        loading: isLoading
     }
 }

@@ -24,6 +24,7 @@ import { PrinterSettings } from "@/app/domains/business/components/PrinterSettin
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { PersistedTabs, TabItem } from "@/app/components/shared/PersistedTabs"
 import { usePermission } from "@/app/hooks/usePermission"
+import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
 
 type Tab = "business" | "profile" | "billing" | "security" | "verification" | "printer"
 
@@ -131,7 +132,9 @@ export default function SettingsPage() {
     return (
         <PageTransition>
             <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-8 h-8 animate-spin text-brand-gold" /></div>}>
-                <SettingsContent />
+                <PermissionGuard>
+                    <SettingsContent />
+                </PermissionGuard>
             </Suspense>
         </PageTransition>
     )
