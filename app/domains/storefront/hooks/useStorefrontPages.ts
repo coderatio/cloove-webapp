@@ -31,7 +31,7 @@ export function useStorefrontPages() {
       const data = await apiClient.get<StorefrontPageListItem[]>('storefront/pages')
       return Array.isArray(data) ? data : []
     },
-    staleTime: 60 * 1000,
+    staleTime: 5 * 1000,
   })
 }
 
