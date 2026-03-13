@@ -76,7 +76,10 @@ const KNOWN_SERVICE_UUIDS = [
 
 // BLE chunk size and delay
 const BLE_CHUNK_SIZE = 100
-const BLE_CHUNK_DELAY_MS = 30
+const BLE_CHUNK_DELAY_MS = 50
+
+// Guard against overlapping prints
+let _printInProgress = false
 
 // ── Profile / preference persistence helpers ─────────────────────────────
 
@@ -171,10 +174,12 @@ async function sendViaBluetooth(data: Uint8Array): Promise<boolean> {
         for (let offset = 0; offset < data.length; offset += BLE_CHUNK_SIZE) {
             const chunk = data.subarray(offset, Math.min(offset + BLE_CHUNK_SIZE, data.length))
             const buffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength) as ArrayBuffer
-            if (char.properties.writeWithoutResponse) {
-                await char.writeValueWithoutResponse(buffer)
-            } else {
+            // Prefer writeValue (with acknowledgment) for flow control —
+            // writeValueWithoutResponse can overflow the printer's buffer on mobile
+            if (char.properties.write) {
                 await char.writeValue(buffer)
+            } else {
+                await char.writeValueWithoutResponse(buffer)
             }
             if (offset + BLE_CHUNK_SIZE < data.length) {
                 await new Promise(resolve => setTimeout(resolve, BLE_CHUNK_DELAY_MS))
@@ -374,70 +379,81 @@ export function ReceiptPrinterProvider({ children }: { children: React.ReactNode
     }, [])
 
     const printViaBluetooth = React.useCallback(async (data: ReceiptData) => {
-        const profile = PRINTER_PROFILES[printerProfileId]
+        if (_printInProgress) return
+        _printInProgress = true
 
-        // Send init sequence
-        const configOk = await sendViaBluetooth(ESC_INIT)
-        if (!configOk) {
-            setIsConnected(false)
-            return
-        }
+        try {
+            const profile = PRINTER_PROFILES[printerProfileId]
 
-        // Send heating params if supported
-        if (profile.supportsHeating) {
-            const heatOk = await sendViaBluetooth(ESC_HEAT)
-            if (!heatOk) {
+            // Send init sequence + let printer settle
+            const configOk = await sendViaBluetooth(ESC_INIT)
+            if (!configOk) {
                 setIsConnected(false)
                 return
             }
-        }
+            await new Promise(resolve => setTimeout(resolve, 100))
 
-        // Send density config if supported
-        if (profile.supportsDensity) {
-            const densityOk = await sendViaBluetooth(DC2_DENSITY)
-            if (!densityOk) {
-                setIsConnected(false)
-                return
-            }
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 300))
-
-        if (profile.useSegmentedCommands) {
-            // Standard profile: use ESC/POS formatted segments
-            const segments = formatReceiptCommands(data)
-            for (const segment of segments) {
-                const ok = await sendViaBluetooth(segment.data)
-                if (!ok) {
+            // Send heating params if supported
+            if (profile.supportsHeating) {
+                const heatOk = await sendViaBluetooth(ESC_HEAT)
+                if (!heatOk) {
                     setIsConnected(false)
                     return
                 }
-                await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
+                await new Promise(resolve => setTimeout(resolve, 100))
             }
-        } else {
-            // Basic profile: plain text line by line
-            const encoder = new TextEncoder()
-            const text = formatReceiptText(data)
-            const lines = text.split("\n")
 
-            for (const line of lines) {
-                const lineBytes = encoder.encode(line + "\n")
-                const ok = await sendViaBluetooth(lineBytes)
-                if (!ok) {
+            // Send density config if supported
+            if (profile.supportsDensity) {
+                const densityOk = await sendViaBluetooth(DC2_DENSITY)
+                if (!densityOk) {
                     setIsConnected(false)
                     return
                 }
-                await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
+                await new Promise(resolve => setTimeout(resolve, 100))
             }
-        }
 
-        // Feed and cut if supported
-        if (profile.supportsCut) {
-            await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
-            const cutOk = await sendViaBluetooth(FEED_AND_CUT)
-            if (!cutOk) {
-                setIsConnected(false)
+            // Let printer fully process config before content
+            await new Promise(resolve => setTimeout(resolve, 300))
+
+            if (profile.useSegmentedCommands) {
+                // Standard profile: use ESC/POS formatted segments
+                const segments = formatReceiptCommands(data)
+                for (const segment of segments) {
+                    const ok = await sendViaBluetooth(segment.data)
+                    if (!ok) {
+                        setIsConnected(false)
+                        return
+                    }
+                    await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
+                }
+            } else {
+                // Basic profile: plain text line by line
+                const encoder = new TextEncoder()
+                const text = formatReceiptText(data)
+                const lines = text.split("\n")
+
+                for (const line of lines) {
+                    const lineBytes = encoder.encode(line + "\n")
+                    const ok = await sendViaBluetooth(lineBytes)
+                    if (!ok) {
+                        setIsConnected(false)
+                        return
+                    }
+                    await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
+                }
             }
+
+            // Feed and cut if supported
+            if (profile.supportsCut) {
+                await new Promise(resolve => setTimeout(resolve, profile.lineDelayMs))
+                const cutOk = await sendViaBluetooth(FEED_AND_CUT)
+                if (!cutOk) {
+                    setIsConnected(false)
+                }
+            }
+        } finally {
+            _printInProgress = false
         }
     }, [printerProfileId])
 
