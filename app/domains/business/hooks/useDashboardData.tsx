@@ -298,8 +298,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         [inventorySummary]
     )
 
-    const isLoading =
-        financeLoading || walletLoading || inventoryLoading || activitiesLoading || insightsLoading
+    const isLoading = financeLoading || walletLoading
     const error = financeError ?? null
 
     return {
@@ -312,6 +311,8 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         insight: "View your assistant for tailored insights and reports.",
         currency,
         isLoading,
+        inventoryLoading,
+        activitiesLoading,
         error,
     }
 }

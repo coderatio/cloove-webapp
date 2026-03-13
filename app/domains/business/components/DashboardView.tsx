@@ -62,6 +62,8 @@ export function DashboardView() {
         insight,
         currency,
         isLoading,
+        inventoryLoading,
+        activitiesLoading,
         error,
     } = useDashboardData({ dateRange, storeId })
 
@@ -121,10 +123,18 @@ export function DashboardView() {
                         />
                     </Can>
                     <Can permission="VIEW_PRODUCTS">
-                        <InventoryPulse
-                            totalItems={inventorySummary.totalItems}
-                            lowStockItems={inventorySummary.lowStockItems}
-                        />
+                        {inventoryLoading ? (
+                            <div className="rounded-2xl border border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 p-6 animate-pulse">
+                                <div className="h-4 w-32 bg-brand-accent/10 dark:bg-white/10 rounded mb-4" />
+                                <div className="h-8 w-24 bg-brand-accent/10 dark:bg-white/10 rounded mb-2" />
+                                <div className="h-4 w-48 bg-brand-accent/10 dark:bg-white/10 rounded" />
+                            </div>
+                        ) : (
+                            <InventoryPulse
+                                totalItems={inventorySummary.totalItems}
+                                lowStockItems={inventorySummary.lowStockItems}
+                            />
+                        )}
                     </Can>
                 </section>
 
@@ -149,11 +159,27 @@ export function DashboardView() {
                 })()}
 
                 <section>
-                    <ActivityStream
-                        activities={activities}
-                        onOrderClick={(id) => setSelectedOrderId(id)}
-                        onFinanceClick={(id) => setSelectedTxId(id)}
-                    />
+                    {activitiesLoading ? (
+                        <div className="space-y-3 animate-pulse">
+                            <div className="h-5 w-40 bg-brand-accent/10 dark:bg-white/10 rounded mb-4" />
+                            {[...Array(3)].map((_, i) => (
+                                <div key={i} className="rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 p-4 flex items-center gap-4">
+                                    <div className="h-10 w-10 rounded-full bg-brand-accent/10 dark:bg-white/10" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 w-48 bg-brand-accent/10 dark:bg-white/10 rounded" />
+                                        <div className="h-3 w-24 bg-brand-accent/10 dark:bg-white/10 rounded" />
+                                    </div>
+                                    <div className="h-4 w-16 bg-brand-accent/10 dark:bg-white/10 rounded" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <ActivityStream
+                            activities={activities}
+                            onOrderClick={(id) => setSelectedOrderId(id)}
+                            onFinanceClick={(id) => setSelectedTxId(id)}
+                        />
+                    )}
                 </section>
 
                 <OrderDetailsDrawer

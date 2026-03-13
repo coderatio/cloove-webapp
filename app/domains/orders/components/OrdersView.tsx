@@ -302,7 +302,7 @@ export function OrdersView() {
         },
         {
             label: "Total Orders",
-            value: summary?.totalOrders ?? orders.length,
+            value: summary?.totalOrders ?? meta?.total ?? '—',
             icon: ShoppingBag,
             color: "brand-green",
             description: "Count of filtered orders"
@@ -316,7 +316,7 @@ export function OrdersView() {
         },
         {
             label: "Pending Fulfillment",
-            value: summary?.pendingOrdersCount ?? orders.filter(o => o.status === 'PENDING').length,
+            value: summary?.pendingOrdersCount ?? '—',
             icon: Clock,
             color: "brand-gold",
             description: "Awaiting fulfillment"
