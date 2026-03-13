@@ -33,7 +33,7 @@ export function useStaff() {
     })
 
     const inviteStaffMutation = useMutation({
-        mutationFn: (data: { fullName: string; phoneNumber: string; role: Role; permissions?: Record<string, boolean> }) =>
+        mutationFn: (data: { fullName: string; email?: string; phoneNumber: string; role: Role; permissions?: Record<string, boolean> }) =>
             apiClient.post('/staff', data),
         onSuccess: () => {
             toast.success("Staff invitation sent successfully")
@@ -67,12 +67,36 @@ export function useStaff() {
         }
     })
 
+    const acceptInvitationMutation = useMutation({
+        mutationFn: (data: { token: string }) =>
+            apiClient.post('/staff/invitation/accept', data),
+        onSuccess: () => {
+            toast.success("Invitation accepted successfully")
+            queryClient.invalidateQueries({ queryKey: ['staff'] })
+        },
+        onError: (error: any) => {
+            toast.error(error.message || "Failed to accept invitation")
+        }
+    })
+
+    const resendInviteMutation = useMutation({
+        mutationFn: (userId: string) => apiClient.post(`/staff/${userId}/resend`, {}),
+        onSuccess: () => {
+            toast.success("Invitation resent successfully")
+        },
+        onError: (error: any) => {
+            toast.error(error.message || "Failed to resend invitation")
+        }
+    })
+
     return {
         staff,
         isLoading,
         error,
         inviteStaff: inviteStaffMutation.mutateAsync,
         updateStaff: (userId: string, data: any) => updateStaffMutation.mutateAsync({ userId, data }),
-        removeStaff: removeStaffMutation.mutateAsync
+        removeStaff: removeStaffMutation.mutateAsync,
+        acceptInvitation: acceptInvitationMutation.mutateAsync,
+        resendInvite: resendInviteMutation.mutateAsync
     }
 }

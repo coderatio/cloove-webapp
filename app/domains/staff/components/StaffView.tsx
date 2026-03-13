@@ -11,6 +11,7 @@ import { Switch } from "@/app/components/ui/switch"
 import {
     Search,
     Phone,
+    Mail,
     Shield,
     Save,
     UserCog,
@@ -18,6 +19,7 @@ import {
     Loader2
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import {
     Drawer,
     DrawerContent,
@@ -31,35 +33,41 @@ import { PERMISSIONS, Role } from "../data/staffMocks"
 import { useStaff, type StaffMember } from "../hooks/useStaff"
 
 export function StaffView() {
-    const { staff, isLoading, inviteStaff, updateStaff, removeStaff } = useStaff()
+    const { staff, isLoading, inviteStaff, updateStaff, removeStaff, resendInvite } = useStaff()
     const [searchTerm, setSearchTerm] = useState("")
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
 
     // Form State
     const [fullName, setFullName] = useState("")
+    const [email, setEmail] = useState("")
     const [phoneNumber, setPhoneNumber] = useState("")
     const [role, setRole] = useState<Role>('STAFF')
     const [permissions, setPermissions] = useState<Record<string, boolean>>({})
     const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
+        if (!isDrawerOpen) return
+
         if (editingStaff) {
             setFullName(editingStaff.user.fullName)
+            setEmail(editingStaff.user.email || "")
             setPhoneNumber(editingStaff.user.phoneNumber)
             setRole(editingStaff.role)
             setPermissions(editingStaff.permissions || {})
         } else {
             setFullName("")
+            setEmail("")
             setPhoneNumber("")
             setRole('STAFF')
             setPermissions({})
         }
-    }, [editingStaff])
+    }, [isDrawerOpen, editingStaff])
 
     const filteredStaff = staff?.filter(s =>
-        s.user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.user.phoneNumber.includes(searchTerm)
+        (s.user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+        (s.user.phoneNumber?.includes(searchTerm) || false)
     ) || []
 
     const handleEdit = (member: StaffMember) => {
@@ -74,29 +82,44 @@ export function StaffView() {
 
     const handleSave = async () => {
         setIsSaving(true)
-        let res: any
-        if (editingStaff) {
-            res = await updateStaff(editingStaff.userId, { role, permissions })
-        } else {
-            res = await inviteStaff({ fullName, phoneNumber, role, permissions })
-        }
-
-        setIsSaving(false)
-        if (res.success) {
+        try {
+            if (editingStaff) {
+                await updateStaff(editingStaff.userId, { role, permissions })
+            } else {
+                await inviteStaff({ fullName, email, phoneNumber, role, permissions })
+            }
             setIsDrawerOpen(false)
+        } catch (error) {
+            // Error is handled by the mutation's onError
+        } finally {
+            setIsSaving(false)
         }
     }
 
     const handleRemove = async () => {
         if (!editingStaff) return
-        if (!confirm("Are you sure you want to remove this staff member? This action cannot be undone.")) return
+        setIsConfirmDialogOpen(true)
+    }
 
+    const confirmRemove = async () => {
+        if (!editingStaff) return
         setIsSaving(true)
-        let res: any = await removeStaff(editingStaff.userId)
-        setIsSaving(false)
-        if (res.success) {
+        try {
+            await removeStaff(editingStaff.userId)
             setIsDrawerOpen(false)
+        } catch (error) {
+            // Error is handled by the mutation's onError
+        } finally {
+            setIsSaving(false)
         }
+    }
+
+    const handleResendInvite = async () => {
+        if (!editingStaff) return
+        setIsSaving(true)
+        await resendInvite(editingStaff.userId)
+        setIsSaving(false)
+        setIsDrawerOpen(false)
     }
 
     const togglePermission = (permId: string) => {
@@ -170,6 +193,20 @@ export function StaffView() {
                                             disabled={!!editingStaff}
                                             className="h-12 rounded-xl border-brand-deep/5 bg-white/50 dark:bg-white/5"
                                         />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-brand-deep dark:text-brand-cream pl-1">Email Address</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/40" />
+                                            <Input
+                                                type="email"
+                                                placeholder="e.g. blessing@example.com"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                disabled={!!editingStaff}
+                                                className="h-12 pl-12 rounded-xl border-brand-deep/5 bg-white/50 dark:bg-white/5"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-brand-deep dark:text-brand-cream pl-1">WhatsApp Number</label>
@@ -268,21 +305,44 @@ export function StaffView() {
                                     </Button>
                                 </div>
                                 {editingStaff && (
-                                    <Button
-                                        onClick={handleRemove}
-                                        disabled={isSaving}
-                                        variant="ghost"
-                                        className="w-full h-12 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 font-bold"
-                                    >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Remove Staff
-                                    </Button>
+                                    <div className="flex flex-col gap-2">
+                                        {editingStaff.status === 'PENDING' && (
+                                            <Button
+                                                onClick={handleResendInvite}
+                                                disabled={isSaving}
+                                                variant="outline"
+                                                className="w-full h-12 rounded-xl text-brand-gold border-brand-gold/20 hover:bg-brand-gold/5 font-bold"
+                                            >
+                                                Resend Invitation
+                                            </Button>
+                                        )}
+                                        <Button
+                                            onClick={handleRemove}
+                                            disabled={isSaving}
+                                            variant="ghost"
+                                            className="w-full h-12 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 font-bold"
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Remove Staff
+                                        </Button>
+                                    </div>
                                 )}
                             </div>
                         </DrawerFooter>
                     </DrawerContent>
                 </Drawer>
             </div>
+
+            <ConfirmDialog
+                open={isConfirmDialogOpen}
+                onOpenChange={setIsConfirmDialogOpen}
+                onConfirm={confirmRemove}
+                title="Remove Staff Member"
+                description={`Are you sure you want to remove ${editingStaff?.user.fullName}? This action cannot be undone and they will lose all access immediately.`}
+                confirmText="Remove Staff"
+                variant="destructive"
+                isLoading={isSaving}
+            />
         </PageTransition>
     )
 }

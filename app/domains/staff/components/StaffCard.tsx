@@ -142,7 +142,7 @@ export function StaffCard({ member, onClick, delay = 0 }: StaffCardProps) {
                             {isPending ? (
                                 <>
                                     <Clock className="w-3 h-3" />
-                                    <span>Awaiting login</span>
+                                    <span>Pending Invitation</span>
                                 </>
                             ) : (
                                 <>
