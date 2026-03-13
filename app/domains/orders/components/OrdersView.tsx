@@ -151,7 +151,7 @@ export function OrdersView() {
             currency: order.currency || activeBusiness.currency || 'NGN'
         }
 
-        await printReceipt(receiptData)
+        await printReceipt(receiptData, order.id)
     }, [activeBusiness, printReceipt])
 
     const handleUpdateStatus = async (orderId: string, status: OrderStatus) => {

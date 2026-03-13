@@ -117,7 +117,7 @@ export function CustomerLedgerDrawer({
             paymentMethod: order.paymentMethod,
             currency: order.currency || activeBusiness.currency || 'NGN'
         }
-        await printReceipt(receiptData)
+        await printReceipt(receiptData, order.id)
     }
 
     return (

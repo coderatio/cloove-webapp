@@ -563,8 +563,9 @@ pre {
             setPendingPrintData(data)
             setPendingSaleId(saleId || null)
             setShowPrintPicker(true)
-        } else if (isAndroidMobile() && !hasWebBluetooth() && saleId) {
-            // Android mobile without Web Bluetooth — show picker with BT app option
+        } else if (isAndroidMobile() && saleId) {
+            // Android mobile with a persisted sale — show picker with BT app option
+            // (Web Bluetooth may technically exist on Android Chrome but is unreliable)
             setPendingPrintData(data)
             setPendingSaleId(saleId)
             setShowPrintPicker(true)
@@ -574,7 +575,7 @@ pre {
         }
     }, [printViaBluetooth, printViaBrowser, alwaysUseBT, attachDisconnectListener])
 
-    const bluetoothAppAvailable = React.useMemo(() => isAndroidMobile() && !hasWebBluetooth(), [])
+    const bluetoothAppAvailable = React.useMemo(() => isAndroidMobile(), [])
 
     const value = React.useMemo<ReceiptPrinterContextValue>(() => ({
         isConnected,
@@ -599,7 +600,7 @@ pre {
                     printerName={pairedPrinterName}
                     onChoice={handlePickerChoice}
                     showBluetoothApp={!!pendingSaleId && isAndroidMobile()}
-                    showWebBluetooth={hasPairedPrinter() || hasWebBluetooth()}
+                    showWebBluetooth={hasPairedPrinter()}
                 />
             )}
         </ReceiptPrinterContext.Provider>
