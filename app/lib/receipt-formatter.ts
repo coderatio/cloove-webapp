@@ -115,14 +115,16 @@ export function formatReceiptDate(str: string): string {
     if (!str.includes("T")) return str
     const d = new Date(str)
     if (isNaN(d.getTime())) return str
-    return new Intl.DateTimeFormat("en", {
+    
+    // Using default locale (undefined) to respect user's browser settings
+    return d.toLocaleString(undefined, {
         month: "short",
         day: "numeric",
         year: "numeric",
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
-    }).format(d)
+    })
 }
 
 // ── Segment-based ESC/POS formatter (for Bluetooth thermal print) ────────

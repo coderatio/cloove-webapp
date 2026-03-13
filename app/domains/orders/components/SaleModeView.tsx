@@ -242,7 +242,7 @@ export function SaleModeView() {
             businessLogo: activeBusiness.logo,
             orderId: `SALE-${Date.now()}`,
             shortCode: `S${Math.floor(Math.random() * 9000) + 1000}`,
-            date: format(new Date(), 'dd MMM yyyy, HH:mm'),
+            date: new Date().toISOString(),
             customerName: selectedCustomer?.name || 'Walk-in Customer',
             items: cart.map(item => ({
                 productName: item.product,
@@ -407,7 +407,7 @@ export function SaleModeView() {
                 businessLogo: activeBusiness?.logo,
                 orderId: result?.saleId || `SALE-${Date.now()}`,
                 shortCode: result?.shortCode || `S${Math.floor(Math.random() * 9000) + 1000}`,
-                date: format(new Date(), 'dd MMM yyyy, HH:mm'),
+                date: new Date().toISOString(),
                 customerName: saleCustomer?.name || 'Walk-in Customer',
                 items: saleCart.map(item => ({
                     productName: item.product,

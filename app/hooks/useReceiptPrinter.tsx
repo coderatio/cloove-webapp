@@ -257,7 +257,10 @@ function hasWebBluetooth(): boolean {
 
 async function getPrintTokenUrl(saleId: string): Promise<string | null> {
     try {
-        const data = await apiClient.post<{ url: string }>(`/sales/${saleId}/print-token`, {})
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        const data = await apiClient.post<{ url: string }>(`/sales/${saleId}/print-token`, {
+            timezone
+        })
         return data.url || null
     } catch (err) {
         console.error("Failed to get print token:", err)

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { formatCurrency } from "@/app/lib/formatters"
+import { formatReceiptDate } from "@/app/lib/receipt-formatter"
 import { cn } from "@/app/lib/utils"
 
 interface ReceiptItem {
@@ -59,7 +60,7 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptTemplateP
                 <div className="space-y-0.5 mb-4">
                     <div className="flex justify-between">
                         <span>Date:</span>
-                        <span>{data.date}</span>
+                        <span>{formatReceiptDate(data.date)}</span>
                     </div>
                     <div className="flex justify-between">
                         <span>Order ID:</span>

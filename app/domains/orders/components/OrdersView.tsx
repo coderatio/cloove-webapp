@@ -134,7 +134,7 @@ export function OrdersView() {
             businessLogo: activeBusiness.logo,
             orderId: order.id,
             shortCode: order.shortCode,
-            date: order.date || format(new Date(), 'dd MMM yyyy, HH:mm'),
+            date: order.date || new Date().toISOString(),
             customerName: order.customer,
             items: order.items?.map(item => ({
                 productName: item.productName,
