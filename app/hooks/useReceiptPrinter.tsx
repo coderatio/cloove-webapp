@@ -5,7 +5,8 @@ import { formatReceiptText, formatReceiptCommands, ESC_INIT, ESC_HEAT, DC2_DENSI
 import type { ReceiptData } from "@/app/components/shared/ReceiptTemplate"
 import { STORAGE_KEYS, storage } from "@/app/lib/storage"
 import { PRINTER_PROFILES, DEFAULT_PROFILE_ID, type PrinterProfileId } from "@/app/lib/printer-profiles"
-import { Bluetooth as BluetoothIcon, Printer as PrinterIcon } from "lucide-react"
+import { Bluetooth as BluetoothIcon, Printer as PrinterIcon, Smartphone as SmartphoneIcon } from "lucide-react"
+import { apiClient } from "@/app/lib/api-client"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import {
     Drawer,
@@ -241,9 +242,38 @@ async function requestAndConnect(): Promise<boolean> {
     return success
 }
 
+// ── Platform detection ────────────────────────────────────────────────────
+
+function isAndroidMobile(): boolean {
+    if (typeof navigator === "undefined") return false
+    return /android/i.test(navigator.userAgent) && /mobile/i.test(navigator.userAgent)
+}
+
+function hasWebBluetooth(): boolean {
+    return typeof navigator !== "undefined" && !!navigator.bluetooth
+}
+
+// ── Bluetooth Print App helpers ──────────────────────────────────────────
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
+
+async function getPrintTokenUrl(saleId: string): Promise<string | null> {
+    try {
+        const data = await apiClient.post<{ url: string }>(`/sales/${saleId}/print-token`, {})
+        return data.url || null
+    } catch (err) {
+        console.error("Failed to get print token:", err)
+        return null
+    }
+}
+
+function launchBluetoothPrintApp(responseUrl: string) {
+    window.location.href = `my.bluetoothprint.scheme://${responseUrl}`
+}
+
 // ── React context ────────────────────────────────────────────────────────
 
-type PrintMethod = "bluetooth" | "browser"
+type PrintMethod = "bluetooth" | "browser" | "bluetooth-app"
 
 interface ReceiptPrinterContextValue {
     isConnected: boolean
@@ -254,7 +284,8 @@ interface ReceiptPrinterContextValue {
     connectPrinter: () => Promise<boolean>
     /** Forget the paired printer — clears localStorage and disconnects */
     forgetPrinter: () => void
-    printReceipt: (data: ReceiptData) => Promise<void>
+    /** Print a receipt. Pass saleId to enable Bluetooth Print App option on Android. */
+    printReceipt: (data: ReceiptData, saleId?: string) => Promise<void>
     printReceiptBT: (data: ReceiptData) => Promise<void>
     /** Currently selected printer profile */
     printerProfileId: PrinterProfileId
@@ -264,6 +295,8 @@ interface ReceiptPrinterContextValue {
     alwaysUseBT: boolean
     /** Toggle the "always use BT" preference */
     setAlwaysUseBT: (value: boolean) => void
+    /** Whether the Bluetooth Print App option is available (Android mobile, no Web Bluetooth) */
+    isBluetoothAppAvailable: boolean
 }
 
 const ReceiptPrinterContext = React.createContext<ReceiptPrinterContextValue | null>(null)
@@ -463,11 +496,14 @@ pre {
     } | null>(null)
     const [showPrintPicker, setShowPrintPicker] = React.useState(false)
     const [pendingPrintData, setPendingPrintData] = React.useState<ReceiptData | null>(null)
+    const [pendingSaleId, setPendingSaleId] = React.useState<string | null>(null)
 
     const handlePickerChoice = React.useCallback(async (method: PrintMethod | null) => {
         setShowPrintPicker(false)
         const data = pendingPrintData
+        const saleId = pendingSaleId
         setPendingPrintData(null)
+        setPendingSaleId(null)
 
         if (!method || !data) return
 
@@ -483,19 +519,28 @@ pre {
                 // BT pairing failed/cancelled — fall back to browser
                 await printViaBrowser(data)
             }
+        } else if (method === "bluetooth-app" && saleId) {
+            const url = await getPrintTokenUrl(saleId)
+            if (url) {
+                launchBluetoothPrintApp(url)
+            } else {
+                // Token generation failed — fall back to browser
+                await printViaBrowser(data)
+            }
         } else {
             await printViaBrowser(data)
         }
-    }, [pendingPrintData, attachDisconnectListener, printViaBluetooth, printViaBrowser])
+    }, [pendingPrintData, pendingSaleId, attachDisconnectListener, printViaBluetooth, printViaBrowser])
 
     /**
      * Main print function.
      * - BT connected → print via BT
      * - BT not connected, previously paired, alwaysUseBT → attempt silent reconnect; fall back to picker
      * - BT not connected, previously paired, NOT alwaysUseBT → show picker
+     * - Android mobile + no Web BT + saleId → show picker with Bluetooth Print App option
      * - Never paired → browser print
      */
-    const printReceipt = React.useCallback(async (data: ReceiptData) => {
+    const printReceipt = React.useCallback(async (data: ReceiptData, saleId?: string) => {
         if (_btDevice && _btCharacteristic) {
             // Already connected — print directly
             await printViaBluetooth(data)
@@ -510,17 +555,26 @@ pre {
             } else {
                 // Silent reconnect failed — fall back to picker
                 setPendingPrintData(data)
+                setPendingSaleId(saleId || null)
                 setShowPrintPicker(true)
             }
         } else if (hasPairedPrinter()) {
             // Previously paired but disconnected — show choice
             setPendingPrintData(data)
+            setPendingSaleId(saleId || null)
+            setShowPrintPicker(true)
+        } else if (isAndroidMobile() && !hasWebBluetooth() && saleId) {
+            // Android mobile without Web Bluetooth — show picker with BT app option
+            setPendingPrintData(data)
+            setPendingSaleId(saleId)
             setShowPrintPicker(true)
         } else {
             // No printer ever paired — browser print
             await printViaBrowser(data)
         }
     }, [printViaBluetooth, printViaBrowser, alwaysUseBT, attachDisconnectListener])
+
+    const bluetoothAppAvailable = React.useMemo(() => isAndroidMobile() && !hasWebBluetooth(), [])
 
     const value = React.useMemo<ReceiptPrinterContextValue>(() => ({
         isConnected,
@@ -534,7 +588,8 @@ pre {
         setPrinterProfile,
         alwaysUseBT,
         setAlwaysUseBT: setAlwaysUseBTValue,
-    }), [isConnected, pairedPrinterName, connectPrinter, forgetPrinter, printReceipt, printViaBluetooth, printerProfileId, setPrinterProfile, alwaysUseBT, setAlwaysUseBTValue])
+        isBluetoothAppAvailable: bluetoothAppAvailable,
+    }), [isConnected, pairedPrinterName, connectPrinter, forgetPrinter, printReceipt, printViaBluetooth, printerProfileId, setPrinterProfile, alwaysUseBT, setAlwaysUseBTValue, bluetoothAppAvailable])
 
     return (
         <ReceiptPrinterContext.Provider value={value}>
@@ -543,6 +598,8 @@ pre {
                 <PrintMethodPicker
                     printerName={pairedPrinterName}
                     onChoice={handlePickerChoice}
+                    showBluetoothApp={!!pendingSaleId && isAndroidMobile()}
+                    showWebBluetooth={hasPairedPrinter() || hasWebBluetooth()}
                 />
             )}
         </ReceiptPrinterContext.Provider>
@@ -550,46 +607,81 @@ pre {
 }
 
 /**
- * Inline print method picker — shown when BT was previously paired but not connected.
+ * Inline print method picker — shown when BT was previously paired but not connected,
+ * or on Android mobile when the Bluetooth Print App is available.
  * Rendered by the provider so consumers don't need any UI changes.
  */
 function PrintMethodPicker({
     printerName,
     onChoice,
+    showBluetoothApp = false,
+    showWebBluetooth = true,
 }: {
     printerName: string | null
     onChoice: (method: PrintMethod | null) => void
+    showBluetoothApp?: boolean
+    showWebBluetooth?: boolean
 }) {
+    const description = showWebBluetooth
+        ? `Your printer${printerName ? ` (${printerName})` : ""} is not connected. How would you like to proceed?`
+        : "Choose how you'd like to print this receipt."
+
     return (
         <Drawer open={true} onOpenChange={(open) => !open && onChoice(null)}>
             <DrawerContent className="pb-8">
                 <DrawerStickyHeader>
                     <DrawerTitle>Print Receipt</DrawerTitle>
-                    <DrawerDescription>
-                        Your printer{printerName ? ` (${printerName})` : ""} is not connected. How would you like to proceed?
-                    </DrawerDescription>
+                    <DrawerDescription>{description}</DrawerDescription>
                 </DrawerStickyHeader>
                 <DrawerBody>
-                    <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto py-2">
-                        <GlassCard
-                            hoverEffect
-                            className="p-1 group cursor-pointer border-none ring-1 ring-brand-deep/5 dark:ring-white/5"
-                            onClick={() => onChoice("bluetooth")}
-                        >
-                            <div className="flex flex-col items-center text-center p-8 space-y-4">
-                                <div className="w-16 h-16 rounded-2xl bg-blue-500/5 dark:bg-blue-500/10 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:bg-blue-500/10 dark:group-hover:bg-blue-500/20">
-                                    <BluetoothIcon className="w-8 h-8 text-blue-500 transition-transform duration-500 group-hover:rotate-12" />
+                    <div className={`grid gap-4 max-w-2xl mx-auto py-2 ${
+                        [showWebBluetooth, showBluetoothApp, true].filter(Boolean).length >= 3
+                            ? "sm:grid-cols-3"
+                            : "sm:grid-cols-2"
+                    }`}>
+                        {showWebBluetooth && (
+                            <GlassCard
+                                hoverEffect
+                                className="p-1 group cursor-pointer border-none ring-1 ring-brand-deep/5 dark:ring-white/5"
+                                onClick={() => onChoice("bluetooth")}
+                            >
+                                <div className="flex flex-col items-center text-center p-8 space-y-4">
+                                    <div className="w-16 h-16 rounded-2xl bg-blue-500/5 dark:bg-blue-500/10 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:bg-blue-500/10 dark:group-hover:bg-blue-500/20">
+                                        <BluetoothIcon className="w-8 h-8 text-blue-500 transition-transform duration-500 group-hover:rotate-12" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <h4 className="font-sans font-semibold text-lg text-brand-deep dark:text-brand-cream">
+                                            Reconnect Printer
+                                        </h4>
+                                        <p className="text-xs text-brand-accent/60 dark:text-white/40 leading-relaxed max-w-[180px]">
+                                            Wait for {printerName || "your device"} to connect via Bluetooth
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <h4 className="font-sans font-semibold text-lg text-brand-deep dark:text-brand-cream">
-                                        Reconnect Printer
-                                    </h4>
-                                    <p className="text-xs text-brand-accent/60 dark:text-white/40 leading-relaxed max-w-[180px]">
-                                        Wait for {printerName || "your device"} to connect via Bluetooth
-                                    </p>
+                            </GlassCard>
+                        )}
+
+                        {showBluetoothApp && (
+                            <GlassCard
+                                hoverEffect
+                                className="p-1 group cursor-pointer border-none ring-1 ring-brand-deep/5 dark:ring-white/5"
+                                onClick={() => onChoice("bluetooth-app")}
+                            >
+                                <div className="flex flex-col items-center text-center p-8 space-y-4">
+                                    <div className="w-16 h-16 rounded-2xl bg-purple-500/5 dark:bg-purple-500/10 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:bg-purple-500/10 dark:group-hover:bg-purple-500/20">
+                                        <SmartphoneIcon className="w-8 h-8 text-purple-500 transition-transform duration-500 group-hover:rotate-12" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <h4 className="font-sans font-semibold text-lg text-brand-deep dark:text-brand-cream">
+                                            Bluetooth Print App
+                                        </h4>
+                                        <p className="text-xs text-brand-accent/60 dark:text-white/40 leading-relaxed max-w-[180px]">
+                                            Print via the Bluetooth Print app on your phone
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        </GlassCard>
+                            </GlassCard>
+                        )}
 
                         <GlassCard
                             hoverEffect

@@ -95,6 +95,10 @@ export function useOrders(
         }
     })
 
+    const getPrintTokenMutation = useMutation({
+        mutationFn: (id: string) => apiClient.post<{ url: string }>(`/sales/${id}/print-token`, {}),
+    })
+
     const generateReceiptMutation = useMutation({
         mutationFn: (id: string) => apiClient.post(`/invoices/receipt`, { saleId: id, businessId }),
         onSuccess: async (data: any, id: string) => {
@@ -140,6 +144,8 @@ export function useOrders(
         requeryOrder: requeryOrderMutation.mutateAsync,
         isRequerying: requeryOrderMutation.isPending,
         generateReceipt: generateReceiptMutation.mutateAsync,
-        isGeneratingReceipt: generateReceiptMutation.isPending
+        isGeneratingReceipt: generateReceiptMutation.isPending,
+        getPrintToken: getPrintTokenMutation.mutateAsync,
+        isGettingPrintToken: getPrintTokenMutation.isPending,
     }
 }

@@ -11,6 +11,7 @@ import {
     Loader2,
     ChevronRight,
     Trash2,
+    Smartphone,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useReceiptPrinter } from "@/app/hooks/useReceiptPrinter"
@@ -27,6 +28,7 @@ export function PrinterSettings() {
         setPrinterProfile,
         alwaysUseBT,
         setAlwaysUseBT,
+        isBluetoothAppAvailable,
     } = useReceiptPrinter()
 
     const [isConnecting, setIsConnecting] = useState(false)
@@ -180,6 +182,31 @@ export function PrinterSettings() {
                                 checked={alwaysUseBT}
                                 onCheckedChange={setAlwaysUseBT}
                             />
+                        </div>
+                    </GlassCard>
+                </section>
+            )}
+
+            {/* Bluetooth Print App (Android) */}
+            {isBluetoothAppAvailable && (
+                <section className="space-y-4">
+                    <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Bluetooth Print App</h2>
+                    <GlassCard className="p-6 space-y-3">
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
+                                <Smartphone className="w-5 h-5 text-purple-500" />
+                            </div>
+                            <div className="space-y-1">
+                                <span className="font-medium text-brand-deep dark:text-brand-cream">
+                                    Print via Android App
+                                </span>
+                                <p className="text-xs text-brand-accent/60 dark:text-white/40 leading-relaxed">
+                                    Your browser doesn't support direct Bluetooth printing. Install the{" "}
+                                    <strong>Bluetooth Print</strong> app from the Play Store to print receipts
+                                    on your thermal printer. When printing from Orders, select "Bluetooth Print App"
+                                    from the print method picker.
+                                </p>
+                            </div>
                         </div>
                     </GlassCard>
                 </section>
