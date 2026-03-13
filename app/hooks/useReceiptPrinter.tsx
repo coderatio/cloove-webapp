@@ -249,6 +249,11 @@ function isAndroidMobile(): boolean {
     return /android/i.test(navigator.userAgent) && /mobile/i.test(navigator.userAgent)
 }
 
+function isMobileDevice(): boolean {
+    if (typeof navigator === "undefined") return false
+    return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)
+}
+
 function hasWebBluetooth(): boolean {
     return typeof navigator !== "undefined" && !!navigator.bluetooth
 }
@@ -295,8 +300,10 @@ interface ReceiptPrinterContextValue {
     alwaysUseBT: boolean
     /** Toggle the "always use BT" preference */
     setAlwaysUseBT: (value: boolean) => void
-    /** Whether the Bluetooth Print App option is available (Android mobile, no Web Bluetooth) */
+    /** Whether the Bluetooth Print App option is available (Android mobile) */
     isBluetoothAppAvailable: boolean
+    /** Whether the user is on a mobile device */
+    isMobile: boolean
 }
 
 const ReceiptPrinterContext = React.createContext<ReceiptPrinterContextValue | null>(null)
@@ -558,24 +565,19 @@ pre {
                 setPendingSaleId(saleId || null)
                 setShowPrintPicker(true)
             }
-        } else if (hasPairedPrinter()) {
-            // Previously paired but disconnected — show choice
+        } else if ((!isMobileDevice() && hasWebBluetooth()) || (isMobileDevice() && saleId)) {
+            // Show picker when: desktop with Web Bluetooth, or mobile with BT app
             setPendingPrintData(data)
             setPendingSaleId(saleId || null)
             setShowPrintPicker(true)
-        } else if (isAndroidMobile() && saleId) {
-            // Android mobile with a persisted sale — show picker with BT app option
-            // (Web Bluetooth may technically exist on Android Chrome but is unreliable)
-            setPendingPrintData(data)
-            setPendingSaleId(saleId)
-            setShowPrintPicker(true)
         } else {
-            // No printer ever paired — browser print
+            // No Bluetooth options at all — browser print directly
             await printViaBrowser(data)
         }
     }, [printViaBluetooth, printViaBrowser, alwaysUseBT, attachDisconnectListener])
 
-    const bluetoothAppAvailable = React.useMemo(() => isAndroidMobile(), [])
+    const bluetoothAppAvailable = React.useMemo(() => isMobileDevice(), [])
+    const mobile = React.useMemo(() => isMobileDevice(), [])
 
     const value = React.useMemo<ReceiptPrinterContextValue>(() => ({
         isConnected,
@@ -590,7 +592,8 @@ pre {
         alwaysUseBT,
         setAlwaysUseBT: setAlwaysUseBTValue,
         isBluetoothAppAvailable: bluetoothAppAvailable,
-    }), [isConnected, pairedPrinterName, connectPrinter, forgetPrinter, printReceipt, printViaBluetooth, printerProfileId, setPrinterProfile, alwaysUseBT, setAlwaysUseBTValue, bluetoothAppAvailable])
+        isMobile: mobile,
+    }), [isConnected, pairedPrinterName, connectPrinter, forgetPrinter, printReceipt, printViaBluetooth, printerProfileId, setPrinterProfile, alwaysUseBT, setAlwaysUseBTValue, bluetoothAppAvailable, mobile])
 
     return (
         <ReceiptPrinterContext.Provider value={value}>
@@ -599,8 +602,8 @@ pre {
                 <PrintMethodPicker
                     printerName={pairedPrinterName}
                     onChoice={handlePickerChoice}
-                    showBluetoothApp={!!pendingSaleId && isAndroidMobile()}
-                    showWebBluetooth={hasPairedPrinter()}
+                    showBluetoothApp={!!pendingSaleId && isMobileDevice()}
+                    showWebBluetooth={!isMobileDevice() && (hasPairedPrinter() || hasWebBluetooth())}
                 />
             )}
         </ReceiptPrinterContext.Provider>
@@ -623,8 +626,8 @@ function PrintMethodPicker({
     showBluetoothApp?: boolean
     showWebBluetooth?: boolean
 }) {
-    const description = showWebBluetooth
-        ? `Your printer${printerName ? ` (${printerName})` : ""} is not connected. How would you like to proceed?`
+    const description = printerName
+        ? `Your printer (${printerName}) is not connected. How would you like to proceed?`
         : "Choose how you'd like to print this receipt."
 
     return (
@@ -652,10 +655,13 @@ function PrintMethodPicker({
                                     </div>
                                     <div className="space-y-1.5">
                                         <h4 className="font-sans font-semibold text-lg text-brand-deep dark:text-brand-cream">
-                                            Reconnect Printer
+                                            {printerName ? "Reconnect Printer" : "Bluetooth Printer"}
                                         </h4>
                                         <p className="text-xs text-brand-accent/60 dark:text-white/40 leading-relaxed max-w-[180px]">
-                                            Wait for {printerName || "your device"} to connect via Bluetooth
+                                            {printerName
+                                                ? `Reconnect to ${printerName} via Bluetooth`
+                                                : "Connect a thermal printer via Bluetooth"
+                                            }
                                         </p>
                                     </div>
                                 </div>

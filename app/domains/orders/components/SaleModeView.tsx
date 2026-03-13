@@ -405,8 +405,8 @@ export function SaleModeView() {
                 businessAddress: (activeBusiness as any)?.address,
                 businessPhone: (activeBusiness as any)?.phone,
                 businessLogo: activeBusiness?.logo,
-                orderId: result?.id || `SALE-${Date.now()}`,
-                shortCode: result?.shortCode || `S${Math.floor(Math.random() * 9000) + 1000}`,
+                orderId: (result as any)?.saleId || `SALE-${Date.now()}`,
+                shortCode: (result as any)?.shortCode || `S${Math.floor(Math.random() * 9000) + 1000}`,
                 date: format(new Date(), 'dd MMM yyyy, HH:mm'),
                 customerName: saleCustomer?.name || 'Walk-in Customer',
                 items: saleCart.map(item => ({
@@ -429,12 +429,12 @@ export function SaleModeView() {
                 duration: 8000,
                 action: {
                     label: 'Print Receipt',
-                    onClick: () => printReceipt(buildReceiptData()),
+                    onClick: () => printReceipt(buildReceiptData(), (result as any)?.saleId),
                 }
             })
 
             if (autoPrint) {
-                printReceipt(buildReceiptData())
+                printReceipt(buildReceiptData(), (result as any)?.saleId)
             }
 
             // Reset state
