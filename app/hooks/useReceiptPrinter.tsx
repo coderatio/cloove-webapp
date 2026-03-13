@@ -543,7 +543,6 @@ pre {
             if (url) {
                 launchBluetoothPrintApp(url)
             } else {
-                // Token generation failed — fall back to browser
                 await printViaBrowser(data)
             }
         } else {
