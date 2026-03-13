@@ -237,8 +237,8 @@ export function SaleModeView() {
 
         const receiptData = {
             businessName: activeBusiness.name,
-            businessAddress: (activeBusiness as any).address,
-            businessPhone: (activeBusiness as any).phone,
+            businessAddress: undefined,
+            businessPhone: undefined,
             businessLogo: activeBusiness.logo,
             orderId: `SALE-${Date.now()}`,
             shortCode: `S${Math.floor(Math.random() * 9000) + 1000}`,
@@ -402,11 +402,11 @@ export function SaleModeView() {
 
             const buildReceiptData = () => ({
                 businessName: activeBusiness?.name || '',
-                businessAddress: (activeBusiness as any)?.address,
-                businessPhone: (activeBusiness as any)?.phone,
+                businessAddress: undefined,
+                businessPhone: undefined,
                 businessLogo: activeBusiness?.logo,
-                orderId: (result as any)?.saleId || `SALE-${Date.now()}`,
-                shortCode: (result as any)?.shortCode || `S${Math.floor(Math.random() * 9000) + 1000}`,
+                orderId: result?.saleId || `SALE-${Date.now()}`,
+                shortCode: result?.shortCode || `S${Math.floor(Math.random() * 9000) + 1000}`,
                 date: format(new Date(), 'dd MMM yyyy, HH:mm'),
                 customerName: saleCustomer?.name || 'Walk-in Customer',
                 items: saleCart.map(item => ({
@@ -429,12 +429,12 @@ export function SaleModeView() {
                 duration: 8000,
                 action: {
                     label: 'Print Receipt',
-                    onClick: () => printReceipt(buildReceiptData(), (result as any)?.saleId),
+                    onClick: () => printReceipt(buildReceiptData(), result?.saleId),
                 }
             })
 
             if (autoPrint) {
-                printReceipt(buildReceiptData(), (result as any)?.saleId)
+                printReceipt(buildReceiptData(), result?.saleId)
             }
 
             // Reset state

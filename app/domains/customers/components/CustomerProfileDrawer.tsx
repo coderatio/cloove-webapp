@@ -372,8 +372,8 @@ export function CustomerProfileDrawer({
                     if (!activeBusiness) return
                     const receiptData = {
                         businessName: activeBusiness.name,
-                        businessAddress: (activeBusiness as any).address,
-                        businessPhone: (activeBusiness as any).phone,
+                        businessAddress: undefined,
+                        businessPhone: undefined,
                         businessLogo: activeBusiness.logo,
                         orderId: order.id,
                         shortCode: order.shortCode,

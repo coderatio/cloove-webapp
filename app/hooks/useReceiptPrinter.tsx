@@ -244,11 +244,6 @@ async function requestAndConnect(): Promise<boolean> {
 
 // ── Platform detection ────────────────────────────────────────────────────
 
-function isAndroidMobile(): boolean {
-    if (typeof navigator === "undefined") return false
-    return /android/i.test(navigator.userAgent) && /mobile/i.test(navigator.userAgent)
-}
-
 function isMobileDevice(): boolean {
     if (typeof navigator === "undefined") return false
     return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)
@@ -259,8 +254,6 @@ function hasWebBluetooth(): boolean {
 }
 
 // ── Bluetooth Print App helpers ──────────────────────────────────────────
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
 async function getPrintTokenUrl(saleId: string): Promise<string | null> {
     try {
@@ -576,7 +569,6 @@ pre {
         }
     }, [printViaBluetooth, printViaBrowser, alwaysUseBT, attachDisconnectListener])
 
-    const bluetoothAppAvailable = React.useMemo(() => isMobileDevice(), [])
     const mobile = React.useMemo(() => isMobileDevice(), [])
 
     const value = React.useMemo<ReceiptPrinterContextValue>(() => ({
@@ -591,9 +583,9 @@ pre {
         setPrinterProfile,
         alwaysUseBT,
         setAlwaysUseBT: setAlwaysUseBTValue,
-        isBluetoothAppAvailable: bluetoothAppAvailable,
+        isBluetoothAppAvailable: mobile,
         isMobile: mobile,
-    }), [isConnected, pairedPrinterName, connectPrinter, forgetPrinter, printReceipt, printViaBluetooth, printerProfileId, setPrinterProfile, alwaysUseBT, setAlwaysUseBTValue, bluetoothAppAvailable, mobile])
+    }), [isConnected, pairedPrinterName, connectPrinter, forgetPrinter, printReceipt, printViaBluetooth, printerProfileId, setPrinterProfile, alwaysUseBT, setAlwaysUseBTValue, mobile])
 
     return (
         <ReceiptPrinterContext.Provider value={value}>

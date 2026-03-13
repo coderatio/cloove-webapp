@@ -23,7 +23,7 @@ export interface RecordSalePayload {
 }
 
 export interface RecordedSale {
-    id: string
+    saleId: string
     shortCode: string
     totalAmount: number
     amountPaid: number
