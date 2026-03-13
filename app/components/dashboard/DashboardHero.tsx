@@ -143,65 +143,74 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                 />
 
                 <div className="relative z-10 flex flex-col md:flex-row md:items-stretch gap-8 md:gap-10 md:min-h-[200px]">
-                    {/* Wallet block */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration }}
-                        className="flex-1 flex flex-col items-center md:items-start justify-center text-center md:text-left"
-                    >
-                        <span className="text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase text-brand-accent/40 dark:text-brand-cream/40 mb-3 flex items-center gap-2">
-                            <Wallet className="w-3 h-3" />
-                            {walletData.label}
-                        </span>
-                        {walletData.isVerified ? (
-                            <>
-                                <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-4 select-all">
-                                    {walletData.balance}
-                                </h2>
-                                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 md:gap-3 justify-center md:justify-start">
-                                    <Button
-                                        onClick={() => setIsAddMoneyOpen(true)}
-                                        className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-9 md:h-10 px-5 md:px-8 shadow-lg font-bold text-xs md:text-sm transition-transform hover:scale-[1.02] active:scale-95"
-                                    >
-                                        <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Money
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setIsWithdrawOpen(true)}
-                                        className="rounded-full border-brand-deep/10 dark:border-white/10 text-brand-deep/70 dark:text-brand-cream/70 h-9 md:h-10 px-5 md:px-8 backdrop-blur-md font-bold text-xs md:text-sm transition-transform hover:scale-[1.02] active:scale-95"
-                                    >
-                                        <Send className="w-3.5 h-3.5 mr-1.5" /> Send
-                                    </Button>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex flex-col items-center md:items-start max-w-xs">
-                                <h2 className="font-serif text-2xl md:text-4xl font-medium text-brand-deep/10 dark:text-brand-cream/10 tracking-tighter mb-4 select-none blur-[6px]">
-                                    ₦***,***
-                                </h2>
-                                <Button
-                                    onClick={() => router.push("/settings?tab=verification")}
-                                    className="bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep font-bold px-6 h-11 rounded-2xl shadow-lg flex items-center gap-2 text-sm"
-                                >
-                                    <Sparkles className="w-4 h-4" /> Verify Identity
-                                </Button>
-                                <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                    Unlock your secure virtual account
-                                </p>
-                            </div>
-                        )}
-                    </motion.div>
+                    {/* Wallet block — only shown when wallet data is provided */}
+                    {wallet && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration }}
+                                className="flex-1 flex flex-col items-center md:items-start justify-center text-center md:text-left"
+                            >
+                                <span className="text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase text-brand-accent/40 dark:text-brand-cream/40 mb-3 flex items-center gap-2">
+                                    <Wallet className="w-3 h-3" />
+                                    {walletData.label}
+                                </span>
+                                {walletData.isVerified ? (
+                                    <>
+                                        <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-4 select-all">
+                                            {walletData.balance}
+                                        </h2>
+                                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 md:gap-3 justify-center md:justify-start">
+                                            <Button
+                                                onClick={() => setIsAddMoneyOpen(true)}
+                                                className="rounded-full bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep h-9 md:h-10 px-5 md:px-8 shadow-lg font-bold text-xs md:text-sm transition-transform hover:scale-[1.02] active:scale-95"
+                                            >
+                                                <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Money
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setIsWithdrawOpen(true)}
+                                                className="rounded-full border-brand-deep/10 dark:border-white/10 text-brand-deep/70 dark:text-brand-cream/70 h-9 md:h-10 px-5 md:px-8 backdrop-blur-md font-bold text-xs md:text-sm transition-transform hover:scale-[1.02] active:scale-95"
+                                            >
+                                                <Send className="w-3.5 h-3.5 mr-1.5" /> Send
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center md:items-start max-w-xs">
+                                        <h2 className="font-serif text-2xl md:text-4xl font-medium text-brand-deep/10 dark:text-brand-cream/10 tracking-tighter mb-4 select-none blur-[6px]">
+                                            ₦***,***
+                                        </h2>
+                                        <Button
+                                            onClick={() => router.push("/settings?tab=verification")}
+                                            className="bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep font-bold px-6 h-11 rounded-2xl shadow-lg flex items-center gap-2 text-sm"
+                                        >
+                                            <Sparkles className="w-4 h-4" /> Verify Identity
+                                        </Button>
+                                        <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                                            Unlock your secure virtual account
+                                        </p>
+                                    </div>
+                                )}
+                            </motion.div>
 
-                    {/* Divider - visible on desktop */}
-                    <div className="hidden md:block w-px bg-brand-deep/10 dark:bg-white/10 shrink-0" aria-hidden />
+                            {/* Divider - visible on desktop */}
+                            <div className="hidden md:block w-px bg-brand-deep/10 dark:bg-white/10 shrink-0" aria-hidden />
+                        </>
+                    )}
 
                     {/* Sales block */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration, delay: reducedMotion ? 0 : 0.05 }}
-                        className="flex-1 flex flex-col items-center md:items-end justify-center text-center md:text-right relative"
+                        className={cn(
+                            "flex-1 flex flex-col justify-center relative",
+                            wallet
+                                ? "items-center md:items-end text-center md:text-right"
+                                : "items-center text-center"
+                        )}
                     >
                         {sparklineData.length > 0 && (
                             <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden rounded-lg">
@@ -266,16 +275,20 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                     </motion.div>
                 </div>
 
-                <AddFundsDrawer
-                    isOpen={isAddMoneyOpen}
-                    onOpenChange={setIsAddMoneyOpen}
-                    currencyCode={currencyCode}
-                />
-                <WithdrawDrawer
-                    isOpen={isWithdrawOpen}
-                    onOpenChange={setIsWithdrawOpen}
-                    currencyCode={currencyCode}
-                />
+                {wallet && (
+                    <>
+                        <AddFundsDrawer
+                            isOpen={isAddMoneyOpen}
+                            onOpenChange={setIsAddMoneyOpen}
+                            currencyCode={currencyCode}
+                        />
+                        <WithdrawDrawer
+                            isOpen={isWithdrawOpen}
+                            onOpenChange={setIsWithdrawOpen}
+                            currencyCode={currencyCode}
+                        />
+                    </>
+                )}
             </GlassCard>
         </div>
     )

@@ -5,6 +5,7 @@ import { useMemo } from "react"
 import { format, isSameDay } from "date-fns"
 import { Clock, Package, AlertCircle } from "lucide-react"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { usePermission } from "@/app/hooks/usePermission"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { useFinanceSummary, useFinancePeriodSummary, useWalletBalance, useDepositAccounts, useFinanceTransactions } from "@/app/domains/finance/hooks/useFinance"
 import { useInventory } from "@/app/domains/inventory/hooks/useInventory"
@@ -53,6 +54,8 @@ export interface UseDashboardDataParams {
 
 export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams) {
     const { activeBusiness } = useBusiness()
+    const { can } = usePermission()
+    const canViewFinancials = can("VIEW_FINANCIALS")
     const { stores } = useStores()
     const from = dateRange.from
     const to = dateRange.to ?? from
@@ -81,8 +84,8 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
     const financeLoading = usePeriod ? periodLoading : dailyLoading
     const financeError = usePeriod ? periodError : dailyError
 
-    const { wallet, isLoading: walletLoading } = useWalletBalance()
-    const { depositData } = useDepositAccounts()
+    const { wallet, isLoading: walletLoading } = useWalletBalance(canViewFinancials)
+    const { depositData } = useDepositAccounts(canViewFinancials)
     const { summary: inventorySummary, isLoading: inventoryLoading } = useInventory(
         effectiveStoreId,
         1,
@@ -105,7 +108,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         })),
     })
 
-    const { transactions: transactionsList, isLoading: transactionsLoading } = useFinanceTransactions(undefined, 1, DASHBOARD_TRANSACTIONS_LIMIT)
+    const { transactions: transactionsList, isLoading: transactionsLoading } = useFinanceTransactions(undefined, 1, DASHBOARD_TRANSACTIONS_LIMIT, undefined, canViewFinancials)
     const transactions = transactionsList ?? []
     const currency = summary?.currency ?? wallet?.currency ?? "NGN"
 

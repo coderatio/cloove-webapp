@@ -25,6 +25,8 @@ import { useTransaction, useRequeryTransaction } from "@/app/domains/finance/hoo
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { TransactionDetailsDrawer } from "@/app/components/shared/TransactionDetailsDrawer"
 import { useQueryClient } from "@tanstack/react-query"
+import { Can } from "@/app/components/shared/Can"
+import { usePermission } from "@/app/hooks/usePermission"
 
 function getTimeBasedGreeting(): string {
     const h = new Date().getHours()
@@ -37,6 +39,7 @@ export function DashboardView() {
     const { ownerName, activeBusiness } = useBusiness()
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const queryClient = useQueryClient()
+    const { can } = usePermission()
     const { stores } = useStores()
     const [date, setDate] = useState<DateRange | undefined>({
         from: subDays(new Date(), 30),
@@ -98,7 +101,7 @@ export function DashboardView() {
                 </header>
 
                 <section>
-                    <DashboardHero sales={sales} wallet={wallet} />
+                    <DashboardHero sales={sales} wallet={can("VIEW_FINANCIALS") ? wallet : undefined} />
                 </section>
 
                 <section>
@@ -109,26 +112,41 @@ export function DashboardView() {
                     />
                 </section>
 
-                <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <SalesVelocity
-                        data={velocityData}
-                        total={sales.value}
-                        currencyCode={currency}
-                    />
-                    <InventoryPulse
-                        totalItems={inventorySummary.totalItems}
-                        lowStockItems={inventorySummary.lowStockItems}
-                    />
+                <section className={`grid grid-cols-1 ${can("VIEW_SALES") && can("VIEW_PRODUCTS") ? "md:grid-cols-2" : ""} gap-6`}>
+                    <Can permission="VIEW_SALES">
+                        <SalesVelocity
+                            data={velocityData}
+                            total={sales.value}
+                            currencyCode={currency}
+                        />
+                    </Can>
+                    <Can permission="VIEW_PRODUCTS">
+                        <InventoryPulse
+                            totalItems={inventorySummary.totalItems}
+                            lowStockItems={inventorySummary.lowStockItems}
+                        />
+                    </Can>
                 </section>
 
-                {actions.length > 0 && (
-                    <section>
-                        <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream mb-4 px-2">
-                            Needs Attention
-                        </h3>
-                        <ActionRow items={actions} />
-                    </section>
-                )}
+                {(() => {
+                    const permissionMap: Record<string, string> = {
+                        "Pending Orders": "VIEW_SALES",
+                        "Low Stock": "VIEW_PRODUCTS",
+                        "Overdue Debts": "VIEW_FINANCIALS",
+                    }
+                    const filtered = actions.filter((a) => {
+                        const perm = permissionMap[a.label]
+                        return !perm || can(perm)
+                    })
+                    return filtered.length > 0 ? (
+                        <section>
+                            <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream mb-4 px-2">
+                                Needs Attention
+                            </h3>
+                            <ActionRow items={filtered} />
+                        </section>
+                    ) : null
+                })()}
 
                 <section>
                     <ActivityStream

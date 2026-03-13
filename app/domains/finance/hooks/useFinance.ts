@@ -141,7 +141,8 @@ export function useFinanceTransactions(
     storeId: string | undefined,
     page: number = 1,
     limit: number = FINANCE_PAGE_SIZE,
-    filters?: TransactionFilterParams
+    filters?: TransactionFilterParams,
+    enabled = true
 ) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
@@ -159,7 +160,7 @@ export function useFinanceTransactions(
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<FinanceTransactionRow[]>>({
         queryKey: ['finance', 'transactions', businessId, storeId, page, limit, filters?.search, filters?.status, filters?.type, filters?.category],
         queryFn: () => apiClient.get<ApiResponse<FinanceTransactionRow[]>>('/finance/transactions', params, { fullResponse: true }),
-        enabled: !!businessId,
+        enabled: !!businessId && enabled,
     })
 
     const meta = response?.meta
@@ -192,14 +193,14 @@ export function useTransaction(id: string | null) {
     }
 }
 
-export function useWalletBalance() {
+export function useWalletBalance(enabled = true) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<WalletBalanceData>>({
         queryKey: ['finance', 'wallet', businessId],
         queryFn: () => apiClient.get<ApiResponse<WalletBalanceData>>('/finance/wallet', {}, { fullResponse: true }),
-        enabled: !!businessId,
+        enabled: !!businessId && enabled,
     })
 
     return {
@@ -282,14 +283,14 @@ export interface DepositAccountsData {
     requiredAction: string | null
 }
 
-export function useDepositAccounts() {
+export function useDepositAccounts(enabled = true) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
     const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<DepositAccountsData>>({
         queryKey: ['finance', 'deposit-accounts', businessId],
         queryFn: () => apiClient.get<ApiResponse<DepositAccountsData>>('/finance/deposit-accounts', {}, { fullResponse: true }),
-        enabled: !!businessId,
+        enabled: !!businessId && enabled,
         staleTime: 1000 * 60 * 5, // 5 min cache
     })
 
