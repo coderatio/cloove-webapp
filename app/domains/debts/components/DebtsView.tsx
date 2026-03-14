@@ -347,7 +347,7 @@ export function DebtsView() {
                     onAddClick={() => setIsAddOpen(true)}
                 />
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <GlassCard className={cn(
                         "p-5 flex items-center gap-4 relative overflow-hidden group transition-all rounded-3xl before:rounded-3xl",
                         (stats?.totalOutstanding ?? 0) > 0
@@ -487,6 +487,31 @@ export function DebtsView() {
                             <Skeleton key={i} className="h-20 w-full rounded-2xl" />
                         ))}
                     </div>
+                ) : debts.length === 0 ? (
+                    <GlassCard className="p-12 text-center">
+                        <div className="flex flex-col items-center space-y-4">
+                            <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+                                <AlertCircle className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
+                            </div>
+                            <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                No Debt Records
+                            </h3>
+                            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 max-w-[300px]">
+                                {deferredSearch || selectedFilters.length > 0
+                                    ? "No debts match your search or filters."
+                                    : "Record a debt to track amounts owed by customers."}
+                            </p>
+                            {!deferredSearch && selectedFilters.length === 0 && (
+                                <Button
+                                    onClick={() => setIsAddOpen(true)}
+                                    className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold"
+                                >
+                                    <AlertCircle className="w-4 h-4 mr-2" />
+                                    Record Debt
+                                </Button>
+                            )}
+                        </div>
+                    </GlassCard>
                 ) : isMobile ? (
                     <div className="space-y-3">
                         {debts.map((debt, index) => {

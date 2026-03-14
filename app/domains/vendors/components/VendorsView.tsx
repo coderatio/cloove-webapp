@@ -349,15 +349,28 @@ export function VendorsView() {
                 ) : isMobile ? (
                     <div className="space-y-3">
                         {vendors.length === 0 ? (
-                            <GlassCard className="p-12 text-center border-dashed border-brand-deep/20 dark:border-white/10 bg-transparent rounded-3xl before:rounded-3xl">
-                                <div className="flex flex-col items-center gap-3">
-                                    <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
-                                        <Truck className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                            <GlassCard className="p-12 text-center">
+                                <div className="flex flex-col items-center space-y-4">
+                                    <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+                                        <Truck className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
                                     </div>
-                                    <h3 className="text-brand-deep dark:text-brand-cream font-medium">No vendors found</h3>
-                                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
-                                        Try adding a new vendor or adjusting your search terms to see your supplier directory.
+                                    <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                        No Vendors Found
+                                    </h3>
+                                    <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 max-w-[300px]">
+                                        {deferredSearch
+                                            ? "No vendors match your search term."
+                                            : "Add a vendor to start tracking your supplier directory and payables."}
                                     </p>
+                                    {!deferredSearch && (
+                                        <Button
+                                            onClick={() => setIsAddOpen(true)}
+                                            className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold"
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" />
+                                            Add Vendor
+                                        </Button>
+                                    )}
                                 </div>
                             </GlassCard>
                         ) : (

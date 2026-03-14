@@ -204,7 +204,7 @@ export function ExpensesView() {
                     onAddClick={() => setIsAddOpen(true)}
                 />
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Banknote className="w-24 h-24" />
@@ -320,6 +320,31 @@ export function ExpensesView() {
                             <Skeleton key={i} className="h-20 w-full rounded-2xl" />
                         ))}
                     </div>
+                ) : expenses.length === 0 ? (
+                    <GlassCard className="p-12 text-center">
+                        <div className="flex flex-col items-center space-y-4">
+                            <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
+                                <Banknote className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
+                            </div>
+                            <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                No Expense Records
+                            </h3>
+                            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 max-w-[300px]">
+                                {deferredSearch || selectedFilters.length > 0
+                                    ? "No expenses match your search or filters."
+                                    : "Record an expense to track your business spending."}
+                            </p>
+                            {!deferredSearch && selectedFilters.length === 0 && (
+                                <Button
+                                    onClick={() => setIsAddOpen(true)}
+                                    className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold"
+                                >
+                                    <Banknote className="w-4 h-4 mr-2" />
+                                    Record Expense
+                                </Button>
+                            )}
+                        </div>
+                    </GlassCard>
                 ) : isMobile ? (
                     <div className="space-y-3">
                         {expenses.map((expense, index) => {

@@ -39,7 +39,7 @@ function Calendar({
                 week: "flex w-full justify-center mt-0",
                 day: cn(
                     "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
-                    "h-9 w-9 flex items-center justify-center shrink-0"
+                    "h-9 w-9 flex items-center justify-center shrink-0 group"
                 ),
                 day_button: cn(
                     buttonVariants({ variant: "ghost" }),
@@ -47,11 +47,12 @@ function Calendar({
                     "text-brand-deep dark:text-brand-cream",
                     "hover:bg-brand-green/20 dark:hover:bg-brand-gold/20 hover:text-brand-deep dark:hover:text-brand-gold",
                     "aria-selected:bg-brand-deep aria-selected:text-brand-cream dark:aria-selected:bg-brand-gold dark:aria-selected:text-brand-deep",
+                    "group-aria-selected:bg-brand-deep group-aria-selected:text-brand-cream dark:group-aria-selected:bg-brand-gold dark:group-aria-selected:text-brand-deep",
                     "aria-selected:opacity-100"
                 ),
-                range_start: "bg-brand-green/10 dark:bg-brand-gold/20 rounded-l-xl",
-                range_end: "bg-brand-green/10 dark:bg-brand-gold/20 rounded-r-xl",
-                range_middle: "bg-brand-green/10 dark:bg-brand-gold/20 !rounded-none",
+                range_start: "bg-brand-gold/30 dark:bg-brand-green rounded-l-xl [&_button]:bg-brand-deep dark:[&_button]:bg-brand-gold [&_button]:text-brand-cream dark:[&_button]:text-brand-deep [&_button]:rounded-l-xl [&_button]:rounded-r-none",
+                range_end: "bg-brand-gold/30 dark:bg-brand-green rounded-r-xl [&_button]:bg-brand-deep dark:[&_button]:bg-brand-gold [&_button]:text-brand-cream dark:[&_button]:text-brand-deep [&_button]:rounded-r-xl [&_button]:rounded-l-none",
+                range_middle: "bg-brand-gold/30 dark:bg-brand-green !rounded-none [&_button]:bg-transparent [&_button]:text-brand-cream dark:[&_button]:text-brand-deep [&_button]:!rounded-none",
                 selected: "!opacity-100",
                 today: cn(
                     "relative font-bold text-brand-deep dark:text-brand-gold",

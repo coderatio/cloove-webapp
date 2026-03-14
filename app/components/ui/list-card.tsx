@@ -10,7 +10,7 @@ interface ListCardProps {
     subtitle?: string
     status?: string
     statusColor?: "success" | "warning" | "danger" | "neutral"
-    meta?: string
+    meta?: React.ReactNode
     value?: string
     valueLabel?: string
     image?: string

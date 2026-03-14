@@ -12,9 +12,14 @@ interface PaymentLinkResponse {
   status: string
   targetType: string
   isReusable: boolean
-  isStatic: boolean,
-  title: string | null,
-  slug: string | null,
+  isStatic: boolean
+  title: string | null
+  slug: string | null
+  description?: string | null
+  customerName?: string | null
+  customerEmail?: string | null
+  createdAt: string
+  expiresAt?: string | null
   [key: string]: unknown
 }
 
@@ -126,6 +131,21 @@ export function useCancelPaymentLink() {
     },
     onError: (err: Error) => {
       toast.error(err.message || 'Failed to cancel payment link')
+    },
+  })
+}
+export function useUpdatePaymentLink() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { title?: string; description?: string; amount?: number; expiresAt?: string } }) =>
+      apiClient.patch<PaymentLinkResponse>(`/payment-links/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payment-links'] })
+      queryClient.invalidateQueries({ queryKey: ['payment-links-stats'] })
+      toast.success('Payment link updated')
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || 'Failed to update payment link')
     },
   })
 }
