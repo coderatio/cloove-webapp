@@ -22,7 +22,7 @@ export function useCreatePaymentLink() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: { targetType: 'SALE' | 'DEBT'; targetId: string; description?: string; recordAsSale?: boolean }) =>
+    mutationFn: (data: { targetType: 'SALE' | 'DEBT'; targetId: string; description?: string; recordAsSale?: boolean; expiresAt?: string }) =>
       apiClient.post<PaymentLinkResponse>('/payment-links', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-links'] })
@@ -102,7 +102,7 @@ export function useCreateDynamicWalletLink() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: { title: string; description?: string; amount: number }) =>
+    mutationFn: (data: { title: string; description?: string; amount: number; expiresAt?: string }) =>
       apiClient.post<PaymentLinkResponse>('/payment-links/wallet/dynamic', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment-links'] })
