@@ -8,6 +8,7 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerClose,
+    DrawerBody,
 } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -110,8 +111,8 @@ export function OrderDetailsDrawer({
                     </DrawerDescription>
                 </DrawerStickyHeader>
 
-                <div className="p-8 pb-12 overflow-y-auto">
-                    <div className="max-w-lg mx-auto space-y-8">
+                <DrawerBody>
+                    <div className="space-y-8">
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Itemized List</h3>
                             <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 border-brand-deep/5 rounded-3xl before:rounded-3xl">
@@ -306,7 +307,7 @@ export function OrderDetailsDrawer({
                             )}
                         </div>
                     </div>
-                </div>
+                </DrawerBody>
             </DrawerContent>
         </Drawer>
     )

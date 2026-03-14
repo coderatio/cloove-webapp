@@ -288,8 +288,9 @@ export function OrdersView() {
         }
     ]
 
-    const intelligenceWhisper = orders.some(o => o.status === 'PENDING')
-        ? `You have **${orders.filter(o => o.status === 'PENDING').length} pending orders** awaiting fulfillment. Ensuring prompt delivery builds customer trust.`
+    const pendingCount = summary?.pendingOrdersCount ?? 0
+    const intelligenceWhisper = pendingCount > 0
+        ? `You have **${pendingCount} pending orders** awaiting fulfillment. Ensuring prompt delivery builds customer trust.`
         : `All orders have been successfully fulfilled. Your operations are running smoothly today.`
 
     const stats = [
@@ -305,21 +306,21 @@ export function OrdersView() {
             value: summary?.totalOrders ?? meta?.total ?? '—',
             icon: ShoppingBag,
             color: "brand-green",
-            description: "Count of filtered orders"
+            description: "Total orders for this business"
         },
         {
             label: "Avg. Order Value",
             value: formatCurrency(summary?.averageOrderValue ?? 0, { currency: activeBusiness?.currency || 'NGN' }),
             icon: Receipt,
             color: "brand-gold",
-            description: "Average revenue per order"
+            description: "Average for selected filters"
         },
         {
             label: "Pending Fulfillment",
             value: summary?.pendingOrdersCount ?? '—',
             icon: Clock,
             color: "brand-gold",
-            description: "Awaiting fulfillment"
+            description: "Global awaiting fulfillment"
         }
     ]
 

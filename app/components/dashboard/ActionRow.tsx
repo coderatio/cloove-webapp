@@ -34,7 +34,7 @@ export function ActionRow({ items, className }: ActionRowProps) {
                             "rounded-[32px] p-4 md:p-5 h-full transition-all group",
                             item.type === 'urgent' && "border-danger/20 hover:border-danger/40 dark:bg-red-500/5",
                             item.type === 'warning' && "border-warning/20 hover:border-warning/40 dark:bg-amber-500/5",
-                            item.type === 'info' && "border-brand-border/50 hover:border-brand-green/30",
+                            item.type === 'info' && "border-brand-deep/10 hover:border-brand-green/15",
                             className
                         )} hoverEffect>
                             <div className="flex items-start justify-between mb-3">
