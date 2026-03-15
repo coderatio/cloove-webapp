@@ -1,11 +1,32 @@
-"use client"
+import { useState, useCallback, type ReactElement } from "react"
 
-import type { ReactElement } from "react"
 import { motion } from "framer-motion"
-import { File, FileSpreadsheet, FileText, Image } from "lucide-react"
+import {
+    File,
+    FileSpreadsheet,
+    FileText,
+    Image,
+    Copy,
+    RotateCcw,
+    ThumbsUp,
+    ThumbsDown,
+    Download,
+    MoreHorizontal,
+    Check,
+    FileCode,
+    FileType,
+} from "lucide-react"
+import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { Markdown } from "@/app/components/ui/markdown"
 import { ToolRenderer } from "./ToolRenderer"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu"
+import { Button } from "@/app/components/ui/button"
 import type {
     AssistantMessage as MessageType,
     AddToolResultFn,
@@ -16,6 +37,9 @@ interface ChatMessageProps {
     message: MessageType
     addToolResult: AddToolResultFn
     isLoading?: boolean
+    isLast?: boolean
+    onRegenerate?: () => void
+    onAction?: (action: string, messageId: string) => void
 }
 
 function formatFileSize(size: number): string {
@@ -38,18 +62,55 @@ function getFileIcon(file: FileAttachment): ReactElement {
     return <File className="h-4 w-4" />
 }
 
-export function ChatMessage({ message, addToolResult, isLoading }: ChatMessageProps): ReactElement {
+export function ChatMessage({
+    message,
+    addToolResult,
+    isLoading,
+    isLast,
+    onRegenerate,
+    onAction,
+}: ChatMessageProps): ReactElement {
     const isUser = message.role === "user"
+    const [copied, setCopied] = useState(false)
+    const [feedback, setFeedback] = useState<"up" | "down" | null>(null)
+
     const hasContent = message.parts.some(
         (p) => (p.type === "text" && p.text.trim().length > 0) || p.type === "file" || p.type.startsWith("tool-")
     )
+
+    const textContent = message.parts
+        .filter((p) => p.type === "text")
+        .map((p) => (p as any).text)
+        .join("\n")
+
+    const handleCopy = useCallback(() => {
+        navigator.clipboard.writeText(textContent)
+        setCopied(true)
+        toast.success("Copied to clipboard")
+        setTimeout(() => setCopied(false), 2000)
+    }, [textContent])
+
+    const handleExport = (type: "pdf" | "md") => {
+        if (type === "md") {
+            const blob = new Blob([textContent], { type: "text/markdown" })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `message-${message.id}.md`
+            a.click()
+            URL.revokeObjectURL(url)
+            toast.success("Exported as Markdown")
+        } else {
+            toast.info("PDF export coming soon!")
+        }
+    }
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className={cn("flex w-full flex-col", isUser ? "items-end" : "items-start")}
+            className={cn("flex w-full flex-col group", isUser ? "items-end" : "items-start")}
         >
             <div
                 className={cn(
@@ -61,7 +122,7 @@ export function ChatMessage({ message, addToolResult, isLoading }: ChatMessagePr
             >
                 {/* Assistant label */}
                 {!isUser && (
-                    <div className="mb-2">
+                    <div className="mb-2 flex items-center justify-between">
                         <span className="block text-xs font-bold uppercase tracking-wider bg-linear-to-r from-brand-deep to-brand-green dark:from-brand-green dark:to-brand-cream bg-clip-text text-transparent w-fit">
                             Cloove AI
                         </span>
@@ -138,7 +199,101 @@ export function ChatMessage({ message, addToolResult, isLoading }: ChatMessagePr
                         return null
                     })}
                 </div>
+
+                {/* Action Toolbar (Assistant only) */}
+                {!isUser && hasContent && !isLoading && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center gap-1 mt-3 px-1"
+                    >
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleCopy}
+                            className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
+                            title="Copy"
+                        >
+                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        </Button>
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setFeedback(feedback === "up" ? null : "up")}
+                            className={cn(
+                                "h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors",
+                                feedback === "up" && "text-emerald-500 bg-emerald-500/5 select-none"
+                            )}
+                            title="Helpful"
+                        >
+                            <ThumbsUp className="w-3.5 h-3.5" />
+                        </Button>
+
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setFeedback(feedback === "down" ? null : "down")}
+                            className={cn(
+                                "h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors",
+                                feedback === "down" && "text-rose-500 bg-rose-500/5 select-none"
+                            )}
+                            title="Not helpful"
+                        >
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                        </Button>
+
+                        {isLast && onRegenerate && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={onRegenerate}
+                                className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
+                                title="Regenerate"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                            </Button>
+                        )}
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
+                                    title="More actions"
+                                >
+                                    <MoreHorizontal className="w-3.5 h-3.5" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-48 rounded-xl bg-white/80 dark:bg-black/80 backdrop-blur-xl border-brand-deep/5">
+                                <DropdownMenuItem onClick={() => handleExport("md")} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
+                                    <FileCode className="w-4 h-4" />
+                                    <span>Export as Markdown</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleExport("pdf")} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
+                                    <FileType className="w-4 h-4" />
+                                    <span>Export as PDF</span>
+                                </DropdownMenuItem>
+                                {onAction && (
+                                    <>
+                                        <div className="h-px bg-brand-deep/5 dark:bg-white/5 my-1" />
+                                        <DropdownMenuItem onClick={() => onAction("create-proposal", message.id)} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
+                                            <FileText className="w-4 h-4 text-brand-green" />
+                                            <span>Create Proposal</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onAction("create-invoice", message.id)} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
+                                            <span className="font-bold text-xs text-brand-gold w-4 text-center">₦</span>
+                                            <span>Create Invoice</span>
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </motion.div>
+                )}
             </div>
         </motion.div>
     )
 }
+

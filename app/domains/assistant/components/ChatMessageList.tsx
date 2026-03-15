@@ -12,6 +12,8 @@ interface ChatMessageListProps {
     isWaitingForResponse: boolean
     addToolResult: AddToolResultFn
     onSuggestionSelect: (prompt: string) => void
+    onRegenerate: () => void
+    onAction: (action: string, messageId: string) => void
     className?: string
 }
 
@@ -21,6 +23,8 @@ export function ChatMessageList({
     isWaitingForResponse,
     addToolResult,
     onSuggestionSelect,
+    onRegenerate,
+    onAction,
     className,
 }: ChatMessageListProps): ReactElement {
     const chatEndRef = useRef<HTMLDivElement>(null)
@@ -46,6 +50,9 @@ export function ChatMessageList({
                             message={msg}
                             addToolResult={addToolResult}
                             isLoading={isLastAssistant && isStreaming}
+                            isLast={isLast}
+                            onRegenerate={onRegenerate}
+                            onAction={onAction}
                         />
                     )
                 })}
@@ -55,3 +62,4 @@ export function ChatMessageList({
         </div>
     )
 }
+

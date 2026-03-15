@@ -68,8 +68,41 @@ export function AssistantView(): ReactElement {
         catch { toast.error("Failed to delete conversation") }
     }
 
+    const handleRegenerate = async () => {
+
+        const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
+        if (!lastUserMessage) return
+
+        // Extract text content from the last user message
+        const lastPrompt = lastUserMessage.parts
+            .filter(p => p.type === 'text')
+            .map(p => (p as any).text)
+            .join('\n')
+
+        if (lastPrompt) {
+            sendMessage(lastPrompt)
+        }
+    }
+
+    const handleAction = (action: string, messageId: string) => {
+        const msg = messages.find(m => m.id === messageId)
+        if (!msg) return
+
+        const textContent = msg.parts
+            .filter(p => p.type === 'text')
+            .map(p => (p as any).text)
+            .join('\n')
+
+        if (action === 'create-proposal') {
+            sendMessage(`Based on the information above, create a formal business proposal:\n\n${textContent.slice(0, 500)}...`)
+        } else if (action === 'create-invoice') {
+            sendMessage(`Can you help me create an invoice based on these details?\n\n${textContent.slice(0, 500)}...`)
+        }
+    }
+
 
     // Write activeChatId to URL (one-way: state → URL)
+
     useEffect(() => {
         if (lastPushedId.current === activeChatId) return
         lastPushedId.current = activeChatId
@@ -155,8 +188,11 @@ export function AssistantView(): ReactElement {
                             isWaitingForResponse={isWaitingForResponse}
                             addToolResult={addToolResult}
                             onSuggestionSelect={handleSuggestionSelect}
-                            className="flex-1 overflow-y-auto space-y-6 pb-44 md:pb-32 scrollbar-hide px-1 pt-14 md:pt-0"
+                            onRegenerate={handleRegenerate}
+                            onAction={handleAction}
+                            className="flex-1 overflow-y-auto space-y-6 pb-44 md:pb-0 scrollbar-hide px-1 pt-14 md:pt-0"
                         />
+
                     ) : (
                         <ChatWelcome onSuggestionSelect={handleSuggestionSelect} />
                     )}
