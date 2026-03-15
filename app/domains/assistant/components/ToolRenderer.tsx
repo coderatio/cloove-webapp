@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/app/lib/utils"
-import { Loader2, Sparkles, Wrench } from "lucide-react"
+import { Loader2, Sparkles } from "lucide-react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import type {
@@ -181,38 +181,23 @@ export function ToolRenderer({ part, addToolResult }: ToolRendererProps) {
     // ─── Generic Tool Fallback ──────────────────────────────────────────
     if (part.type.startsWith("tool-")) {
         const toolPart = part as { type: string; toolCallId: string; state: string; input?: any; output?: any }
-        const toolName = part.type.replace("tool-", "")
         const isLoading = toolPart.state === "loading" || toolPart.state === "pending"
 
-        return (
-            <GlassCard className="mt-4 p-4 overflow-hidden">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="h-8 w-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent dark:text-brand-cream/60">
-                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wrench className="w-4 h-4" />}
-                    </div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-deep/40 dark:text-brand-cream/40">
-                        {toolName}
-                    </h4>
+        // Only show a subtle loading indicator while tools are running
+        // Don't show tool names or raw output — the AI's text response handles presentation
+        if (isLoading) {
+            return (
+                <div className="flex items-center gap-2 py-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-gold" />
+                    <span className="text-xs text-brand-deep/40 dark:text-brand-cream/40">
+                        Looking up your data…
+                    </span>
                 </div>
-                {isLoading && (
-                    <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">
-                        Running...
-                    </p>
-                )}
-                {toolPart.state === "output-available" && toolPart.output != null && (
-                    <pre className="text-xs text-brand-deep/70 dark:text-brand-cream/70 whitespace-pre-wrap break-words max-h-48 overflow-auto">
-                        {typeof toolPart.output === "string"
-                            ? toolPart.output
-                            : JSON.stringify(toolPart.output, null, 2)}
-                    </pre>
-                )}
-                {toolPart.state === "output-error" && (
-                    <p className="text-xs text-red-500">
-                        Tool execution failed.
-                    </p>
-                )}
-            </GlassCard>
-        )
+            )
+        }
+
+        // Once complete, render nothing — the AI's text response contains the formatted result
+        return null
     }
 
     return null

@@ -155,7 +155,7 @@ export function AssistantView(): ReactElement {
                             isWaitingForResponse={isWaitingForResponse}
                             addToolResult={addToolResult}
                             onSuggestionSelect={handleSuggestionSelect}
-                            className="flex-1 overflow-y-auto space-y-6 pb-44 md:pb-32 scrollbar-hide px-1 pt-16 md:pt-0"
+                            className="flex-1 overflow-y-auto space-y-6 pb-44 md:pb-32 scrollbar-hide px-1 pt-14 md:pt-0"
                         />
                     ) : (
                         <ChatWelcome onSuggestionSelect={handleSuggestionSelect} />

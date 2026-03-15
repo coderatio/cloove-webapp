@@ -11,7 +11,7 @@ interface MarkdownProps {
 
 export function Markdown({ content, className }: MarkdownProps) {
     return (
-        <div className={cn("prose prose-sm dark:prose-invert max-w-none transition-all", className)}>
+        <div className={cn("prose prose-sm dark:prose-invert max-w-none transition-colors", className)}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{

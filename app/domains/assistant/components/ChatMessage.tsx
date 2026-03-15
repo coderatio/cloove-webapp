@@ -53,9 +53,9 @@ export function ChatMessage({ message, addToolResult, isLoading }: ChatMessagePr
         >
             <div
                 className={cn(
-                    "text-sm md:text-base leading-relaxed relative overflow-hidden transition-all duration-300",
+                    "text-sm md:text-base leading-relaxed relative transition-colors duration-300",
                     isUser
-                        ? "bg-brand-deep text-brand-cream rounded-2xl rounded-br-sm dark:bg-brand-gold dark:text-brand-deep shadow-sm max-w-[85%] md:max-w-[70%] p-5"
+                        ? "overflow-hidden bg-brand-deep text-brand-cream rounded-2xl rounded-br-sm dark:bg-brand-gold dark:text-brand-deep shadow-sm max-w-[85%] md:max-w-[70%] p-5"
                         : "w-full bg-transparent text-brand-deep dark:text-brand-cream px-1"
                 )}
             >

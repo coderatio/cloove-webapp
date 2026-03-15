@@ -11,6 +11,7 @@ import type {
 } from "../types"
 import { apiClient } from "@/app/lib/api-client"
 import { AssistantChatTransport } from "../lib/assistant-chat-transport"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import { toast } from "sonner"
 
 interface AssistantMessageMetadata {
@@ -170,6 +171,10 @@ function mapSdkToAssistantMessages(sdkMessages: MappedUIMessage[]): AssistantMes
 const INITIAL_CHAT_ID = `chat-${Date.now()}`
 
 export function useAssistantChat(): UseAssistantChatReturn {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id ?? null
+    const prevBusinessIdRef = useRef(businessId)
+
     const [conversations, setConversations] = useState<Conversation[]>([])
     const [activeChatId, setActiveChatIdRaw] = useState(() => {
         if (typeof window !== "undefined") {
@@ -208,8 +213,27 @@ export function useAssistantChat(): UseAssistantChatReturn {
         transport,
     })
 
+
     const isStreaming = status === "streaming" || status === "submitted"
     const isWaitingForResponse = status === "submitted"
+
+    // ── Reset all state when business changes ───────────────────────────
+    useEffect(() => {
+        if (prevBusinessIdRef.current === businessId) return
+        prevBusinessIdRef.current = businessId
+
+        // Clear all conversation state for the new business
+        setConversations([])
+        setLoadedMessagesMap({})
+        const newChatId = `chat-${Date.now()}`
+        localChatIds.current = new Set([newChatId])
+        fetchedConversations.current = new Set()
+        syncedConversationRef.current = null
+        pendingBackendIdRef.current = null
+        conversationsLoaded.current = false
+        setMessages([])
+        setActiveChatIdRaw(newChatId)
+    }, [businessId, setMessages])
 
     // ── Load conversation list on mount ─────────────────────────────────
     useEffect(() => {
@@ -245,10 +269,12 @@ export function useAssistantChat(): UseAssistantChatReturn {
                 // Silently fail
             }
         })()
-    }, [])
+    }, [businessId])
 
     // ── Sync backend conversationId from assistant_start metadata ───────
+    // Only run when streaming ends to avoid cascading re-renders during streaming
     useEffect(() => {
+        if (isStreaming) return
         if (sdkMessages.length === 0) return
 
         const lastAssistant = [...sdkMessages].reverse().find((m) => m.role === "assistant")
@@ -273,7 +299,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
         syncedConversationRef.current = backendId
         pendingBackendIdRef.current = backendId
-    }, [sdkMessages, activeChatId])
+    }, [sdkMessages, activeChatId, isStreaming])
 
     // ── Combine SDK messages (live) with loaded messages (historical) ───
     const sdkMapped = useMemo(() => mapSdkToAssistantMessages(sdkMessages), [sdkMessages])
@@ -290,6 +316,12 @@ export function useAssistantChat(): UseAssistantChatReturn {
         return [...loadedMessages, ...newFromSdk]
     }, [sdkMapped, loadedMessages])
 
+    // Keep a ref to the latest messages so the effect below doesn't depend on `messages`
+    const messagesRef = useRef(messages)
+    useEffect(() => {
+        messagesRef.current = messages
+    }, [messages])
+
     // ── Apply pending backend conversationId after streaming ends ───────
     useEffect(() => {
         if (isStreaming) return
@@ -302,20 +334,22 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
         setLoadedMessagesMap((prev) => {
             if (prev[pendingId]) return prev
-            return { ...prev, [pendingId]: messages }
+            return { ...prev, [pendingId]: messagesRef.current }
         })
         fetchedConversations.current.add(pendingId)
         localChatIds.current.add(pendingId)
         pendingBackendIdRef.current = null
         setActiveChatIdRaw(pendingId)
-    }, [activeChatId, isStreaming, messages])
+    }, [activeChatId, isStreaming])
 
     // ── Update sidebar: add new chats, update title & preview ──────────
+    // Only runs when streaming state changes or activeChatId changes (NOT on every chunk)
     useEffect(() => {
-        if (messages.length === 0) return
+        const msgs = messagesRef.current
+        if (msgs.length === 0) return
 
-        const firstText = getFirstUserText(messages)
-        const lastText = getLastUserText(messages)
+        const firstText = getFirstUserText(msgs)
+        const lastText = getLastUserText(msgs)
         if (!firstText && !lastText) return
 
         setConversations((prev) => {
@@ -343,7 +377,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
             updated[idx] = { ...existing, title: nextTitle, preview: nextPreview, date: "Just now", lastMessageAt: new Date() }
             return updated
         })
-    }, [activeChatId, messages])
+    }, [activeChatId, isStreaming])
 
     // ── Send message ───────────────────────────────────────────────────
     const sendMessage = useCallback(

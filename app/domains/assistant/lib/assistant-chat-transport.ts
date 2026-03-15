@@ -1,4 +1,5 @@
 import { HttpChatTransport, type UIMessage, type UIMessageChunk } from "ai"
+import { EventSourceParserStream, type EventSourceMessage } from "eventsource-parser/stream"
 import { apiClient } from "@/app/lib/api-client"
 import { storage } from "@/app/lib/storage"
 import type { FileAttachment } from "../types"
@@ -98,13 +99,11 @@ export class AssistantChatTransport extends HttpChatTransport<AssistantUIMessage
     protected processResponseStream(
         stream: ReadableStream<Uint8Array<ArrayBufferLike>>
     ): ReadableStream<UIMessageChunk> {
-        const decoder = new TextDecoder()
-        let buffer = ""
         let messageId: string | undefined
         let textPartId: string | undefined
         let hasStartedText = false
 
-        const emitTextStart = (controller: ReadableStreamDefaultController<UIMessageChunk>) => {
+        const emitTextStart = (controller: TransformStreamDefaultController<UIMessageChunk>) => {
             if (hasStartedText) return
             if (!textPartId) {
                 const baseId = messageId || `assistant-${Date.now()}`
@@ -115,26 +114,15 @@ export class AssistantChatTransport extends HttpChatTransport<AssistantUIMessage
         }
 
         const handleEvent = (
-            controller: ReadableStreamDefaultController<UIMessageChunk>,
-            rawEvent: string
+            controller: TransformStreamDefaultController<UIMessageChunk>,
+            eventType: string,
+            data: string
         ) => {
-            const lines = rawEvent.split("\n")
-            let eventType = ""
-            const dataLines: string[] = []
-
-            for (const line of lines) {
-                if (line.startsWith("event:")) {
-                    eventType = line.replace("event:", "").trim()
-                } else if (line.startsWith("data:")) {
-                    dataLines.push(line.replace("data:", "").trim())
-                }
-            }
-
-            if (!dataLines.length) return
+            if (!eventType || !data) return
 
             let payload: any
             try {
-                payload = JSON.parse(dataLines.join("\n"))
+                payload = JSON.parse(data)
             } catch {
                 return
             }
@@ -164,6 +152,33 @@ export class AssistantChatTransport extends HttpChatTransport<AssistantUIMessage
                 return
             }
 
+            if (eventType === "assistant_tool_call") {
+                // Close current text part before tool call
+                if (hasStartedText && textPartId) {
+                    controller.enqueue({ type: "text-end", id: textPartId })
+                    hasStartedText = false
+                }
+                controller.enqueue({
+                    type: "tool-input-available",
+                    toolCallId: payload.toolCallId,
+                    toolName: payload.toolName,
+                    input: {},
+                })
+                return
+            }
+
+            if (eventType === "assistant_tool_result") {
+                controller.enqueue({
+                    type: "tool-output-available",
+                    toolCallId: payload.toolCallId,
+                    output: {},
+                })
+                // Start a new text part after tool result
+                textPartId = `${messageId || "assistant"}-text-${payload.toolCallId}`
+                emitTextStart(controller)
+                return
+            }
+
             if (eventType === "assistant_error") {
                 emitTextStart(controller)
                 const errorText = payload.error || "An unexpected error occurred"
@@ -187,46 +202,18 @@ export class AssistantChatTransport extends HttpChatTransport<AssistantUIMessage
             }
         }
 
-        const processBuffer = (
-            controller: ReadableStreamDefaultController<UIMessageChunk>,
-            flush: boolean
-        ) => {
-            const events = buffer.split("\n\n")
-            const completeEvents = flush ? events : events.slice(0, -1)
-            buffer = flush ? "" : events[events.length - 1] || ""
+        const textStream = stream.pipeThrough(
+            new TextDecoderStream() as unknown as TransformStream<Uint8Array<ArrayBufferLike>, string>
+        )
 
-            for (const event of completeEvents) {
-                const trimmed = event.trim()
-                if (!trimmed) continue
-                handleEvent(controller, trimmed)
-            }
-        }
-
-        return new ReadableStream<UIMessageChunk>({
-            start(controller) {
-                const reader = stream.getReader()
-
-                const readChunk = (): void => {
-                    reader
-                        .read()
-                        .then(({ done, value }) => {
-                            if (done) {
-                                processBuffer(controller, true)
-                                controller.close()
-                                return
-                            }
-
-                            buffer += decoder.decode(value, { stream: true })
-                            processBuffer(controller, false)
-                            readChunk()
-                        })
-                        .catch((error) => {
-                            controller.error(error)
-                        })
-                }
-
-                readChunk()
-            },
-        })
+        return textStream
+            .pipeThrough(new EventSourceParserStream())
+            .pipeThrough(
+                new TransformStream<EventSourceMessage, UIMessageChunk>({
+                    transform({ event, data }, controller) {
+                        handleEvent(controller, event ?? "", data)
+                    },
+                })
+            )
     }
 }
