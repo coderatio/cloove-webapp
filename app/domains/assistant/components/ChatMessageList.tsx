@@ -28,9 +28,15 @@ export function ChatMessageList({
     className,
 }: ChatMessageListProps): ReactElement {
     const chatEndRef = useRef<HTMLDivElement>(null)
+    const scrollTimer = useRef<ReturnType<typeof setTimeout>>(null)
 
     useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        // Throttle scroll during streaming to avoid layout thrashing
+        if (scrollTimer.current) clearTimeout(scrollTimer.current)
+        scrollTimer.current = setTimeout(
+            () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }),
+            isStreaming ? 150 : 0
+        )
     }, [messages, isStreaming])
 
     // Empty state — show welcome screen

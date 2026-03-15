@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useRef, useEffect, type ReactElement } from "react"
-import { MessageSquare, Plus, Search, MoreHorizontal, Pencil, Pin, PinOff, Archive, Trash2 } from "lucide-react"
+import { MessageSquare, Plus, Search, MoreHorizontal, Pencil, Pin, PinOff, Archive, Trash2, Loader2 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -23,6 +23,7 @@ interface ChatHistorySidebarProps {
     onPin: (id: string, pinned: boolean) => Promise<void>
     onArchive: (id: string) => Promise<void>
     onDelete: (id: string) => Promise<void>
+    isLoading?: boolean
 }
 
 function getConversationDate(conversation: Conversation): Date {
@@ -269,6 +270,7 @@ export function ChatHistorySidebar({
     onPin,
     onArchive,
     onDelete,
+    isLoading,
 }: ChatHistorySidebarProps): ReactElement {
     const [query, setQuery] = useState("")
     const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -305,37 +307,44 @@ export function ChatHistorySidebar({
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-6 pr-2 scrollbar-hide">
-                {groupedConversations.length === 0 && (
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12 gap-3 text-brand-accent/40 dark:text-brand-cream/40">
+                        <Loader2 className="h-5 w-5 animate-spin text-brand-gold" />
+                        <span className="text-xs font-medium">Loading history...</span>
+                    </div>
+                ) : groupedConversations.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-brand-deep/10 p-6 text-center text-xs text-brand-accent/50 dark:border-white/10 dark:text-brand-cream/50">
                         No conversations match your search.
                     </div>
+                ) : (
+                    groupedConversations.map((group) => (
+                        <div key={group.label} className="space-y-1">
+                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 mb-2 ml-2">
+                                {group.label}
+                            </h3>
+                            {group.items.map((conv) => (
+                                <ConversationItem
+                                    key={conv.id}
+                                    conv={conv}
+                                    isActive={activeChatId === conv.id}
+                                    isRenaming={renamingId === conv.id}
+                                    onSelect={() => onSelectChat(conv.id)}
+                                    onStartRename={() => setRenamingId(conv.id)}
+                                    onFinishRename={async (title) => {
+                                        setRenamingId(null)
+                                        await onRename(conv.id, title)
+                                    }}
+                                    onCancelRename={() => setRenamingId(null)}
+                                    onPin={() => onPin(conv.id, !conv.isPinned)}
+                                    onArchive={() => onArchive(conv.id)}
+                                    onDelete={() => onDelete(conv.id)}
+                                />
+                            ))}
+                        </div>
+                    ))
                 )}
-                {groupedConversations.map((group) => (
-                    <div key={group.label} className="space-y-1">
-                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 mb-2 ml-2">
-                            {group.label}
-                        </h3>
-                        {group.items.map((conv) => (
-                            <ConversationItem
-                                key={conv.id}
-                                conv={conv}
-                                isActive={activeChatId === conv.id}
-                                isRenaming={renamingId === conv.id}
-                                onSelect={() => onSelectChat(conv.id)}
-                                onStartRename={() => setRenamingId(conv.id)}
-                                onFinishRename={async (title) => {
-                                    setRenamingId(null)
-                                    await onRename(conv.id, title)
-                                }}
-                                onCancelRename={() => setRenamingId(null)}
-                                onPin={() => onPin(conv.id, !conv.isPinned)}
-                                onArchive={() => onArchive(conv.id)}
-                                onDelete={() => onDelete(conv.id)}
-                            />
-                        ))}
-                    </div>
-                ))}
             </div>
         </div>
     )
 }
+

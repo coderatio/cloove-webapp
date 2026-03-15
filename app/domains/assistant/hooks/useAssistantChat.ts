@@ -28,6 +28,7 @@ interface UseAssistantChatReturn {
     isStreaming: boolean
     isWaitingForResponse: boolean
     isLoadingConversation: boolean
+    isLoadingConversations: boolean
     sendMessage: (text: string, options?: SendMessageOptions) => void
     startNewChat: () => void
     setActiveChatId: (id: string) => void
@@ -185,6 +186,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         return `chat-${Date.now()}`
     })
     const [isLoadingConversation, setIsLoadingConversation] = useState(false)
+    const [isLoadingConversations, setIsLoadingConversations] = useState(false)
     // Historical messages loaded from the API — keyed by conversation ID
     const [loadedMessagesMap, setLoadedMessagesMap] = useState<Record<string, AssistantMessage[]>>({})
     const conversationsLoaded = useRef(false)
@@ -241,6 +243,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         conversationsLoaded.current = true
 
         void (async () => {
+            setIsLoadingConversations(true)
             try {
                 const data = await apiClient.get<{
                     conversations: Array<{
@@ -265,8 +268,8 @@ export function useAssistantChat(): UseAssistantChatReturn {
                         messages: [],
                     }))
                 )
-            } catch {
-                // Silently fail
+            } finally {
+                setIsLoadingConversations(false)
             }
         })()
     }, [businessId])
@@ -510,6 +513,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         isStreaming,
         isWaitingForResponse,
         isLoadingConversation,
+        isLoadingConversations,
         sendMessage,
         startNewChat,
         setActiveChatId,

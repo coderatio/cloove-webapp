@@ -1,5 +1,4 @@
-import { HttpChatTransport, type UIMessage, type UIMessageChunk } from "ai"
-import { EventSourceParserStream, type EventSourceMessage } from "eventsource-parser/stream"
+import { DefaultChatTransport, type UIMessage } from "ai"
 import { apiClient } from "@/app/lib/api-client"
 import { storage } from "@/app/lib/storage"
 import type { FileAttachment } from "../types"
@@ -76,7 +75,7 @@ function buildPayloadFromMessage(message?: AssistantUIMessage): {
     }
 }
 
-export class AssistantChatTransport extends HttpChatTransport<AssistantUIMessage> {
+export class AssistantChatTransport extends DefaultChatTransport<AssistantUIMessage> {
     constructor() {
         super({
             api: apiClient.buildUrl("/assistant/messages/stream"),
@@ -94,126 +93,5 @@ export class AssistantChatTransport extends HttpChatTransport<AssistantUIMessage
                 }
             },
         })
-    }
-
-    protected processResponseStream(
-        stream: ReadableStream<Uint8Array<ArrayBufferLike>>
-    ): ReadableStream<UIMessageChunk> {
-        let messageId: string | undefined
-        let textPartId: string | undefined
-        let hasStartedText = false
-
-        const emitTextStart = (controller: TransformStreamDefaultController<UIMessageChunk>) => {
-            if (hasStartedText) return
-            if (!textPartId) {
-                const baseId = messageId || `assistant-${Date.now()}`
-                textPartId = `${baseId}-text`
-            }
-            controller.enqueue({ type: "text-start", id: textPartId })
-            hasStartedText = true
-        }
-
-        const handleEvent = (
-            controller: TransformStreamDefaultController<UIMessageChunk>,
-            eventType: string,
-            data: string
-        ) => {
-            if (!eventType || !data) return
-
-            let payload: any
-            try {
-                payload = JSON.parse(data)
-            } catch {
-                return
-            }
-
-            if (eventType === "assistant_start") {
-                messageId = payload.messageId || messageId
-                textPartId = messageId ? `${messageId}-text` : textPartId
-                controller.enqueue({
-                    type: "start",
-                    messageId,
-                    messageMetadata: {
-                        conversationId: payload.conversationId,
-                        title: payload.title,
-                    },
-                })
-                emitTextStart(controller)
-                return
-            }
-
-            if (eventType === "assistant_delta") {
-                emitTextStart(controller)
-                controller.enqueue({
-                    type: "text-delta",
-                    id: textPartId || "assistant-text",
-                    delta: payload.delta || "",
-                })
-                return
-            }
-
-            if (eventType === "assistant_tool_call") {
-                // Close current text part before tool call
-                if (hasStartedText && textPartId) {
-                    controller.enqueue({ type: "text-end", id: textPartId })
-                    hasStartedText = false
-                }
-                controller.enqueue({
-                    type: "tool-input-available",
-                    toolCallId: payload.toolCallId,
-                    toolName: payload.toolName,
-                    input: {},
-                })
-                return
-            }
-
-            if (eventType === "assistant_tool_result") {
-                controller.enqueue({
-                    type: "tool-output-available",
-                    toolCallId: payload.toolCallId,
-                    output: {},
-                })
-                // Start a new text part after tool result
-                textPartId = `${messageId || "assistant"}-text-${payload.toolCallId}`
-                emitTextStart(controller)
-                return
-            }
-
-            if (eventType === "assistant_error") {
-                emitTextStart(controller)
-                const errorText = payload.error || "An unexpected error occurred"
-                controller.enqueue({
-                    type: "text-delta",
-                    id: textPartId || "assistant-text",
-                    delta: `\n\n**Error:** ${errorText}`,
-                })
-                if (hasStartedText && textPartId) {
-                    controller.enqueue({ type: "text-end", id: textPartId })
-                }
-                controller.enqueue({ type: "finish" })
-                return
-            }
-
-            if (eventType === "assistant_done") {
-                if (hasStartedText && textPartId) {
-                    controller.enqueue({ type: "text-end", id: textPartId })
-                }
-                controller.enqueue({ type: "finish" })
-            }
-        }
-
-        const textStream = stream.pipeThrough(
-            new TextDecoderStream() as unknown as TransformStream<Uint8Array<ArrayBufferLike>, string>
-        )
-
-        return textStream
-            .pipeThrough(new EventSourceParserStream())
-            .pipeThrough(
-                new TransformStream<EventSourceMessage, UIMessageChunk>({
-                    transform({ event, data }, controller) {
-                        handleEvent(controller, event ?? "", data)
-                    },
-                })
-            )
     }
 }

@@ -24,6 +24,7 @@ export function AssistantView(): ReactElement {
         isStreaming,
         isWaitingForResponse,
         isLoadingConversation,
+        isLoadingConversations,
         sendMessage,
         startNewChat,
         setActiveChatId,
@@ -121,6 +122,7 @@ export function AssistantView(): ReactElement {
                 <ChatHistorySidebar
                     conversations={conversations}
                     activeChatId={activeChatId}
+                    isLoading={isLoadingConversations}
                     onSelectChat={setActiveChatId}
                     onNewChat={startNewChat}
                     onRename={handleRename}
@@ -166,6 +168,7 @@ export function AssistantView(): ReactElement {
                     <ChatHistoryDrawer
                         conversations={conversations}
                         activeChatId={activeChatId}
+                        isLoading={isLoadingConversations}
                         open={isHistoryOpen}
                         onOpenChange={setIsHistoryOpen}
                         onSelectChat={setActiveChatId}

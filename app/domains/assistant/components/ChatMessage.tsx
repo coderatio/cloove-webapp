@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactElement } from "react"
+import { useState, useCallback, memo, type ReactElement } from "react"
 
 import { motion } from "framer-motion"
 import {
@@ -62,7 +62,7 @@ function getFileIcon(file: FileAttachment): ReactElement {
     return <File className="h-4 w-4" />
 }
 
-export function ChatMessage({
+export const ChatMessage = memo(function ChatMessage({
     message,
     addToolResult,
     isLoading,
@@ -160,6 +160,7 @@ export function ChatMessage({
                                     key={partIndex}
                                     content={part.text}
                                     className={isUser ? "text-brand-cream dark:text-brand-deep prose-invert" : ""}
+                                    streaming={!!isLoading}
                                 />
                             )
                         }
@@ -295,5 +296,21 @@ export function ChatMessage({
             </div>
         </motion.div>
     )
-}
+}, (prev, next) => {
+    if (prev.isLoading !== next.isLoading) return false
+    if (prev.isLast !== next.isLast) return false
+    if (prev.message.id !== next.message.id) return false
+    if (prev.message.parts.length !== next.message.parts.length) return false
+    // For the streaming message, compare the last part's text
+    const lp = prev.message.parts[prev.message.parts.length - 1]
+    const ln = next.message.parts[next.message.parts.length - 1]
+    if (lp?.type !== ln?.type) return false
+    if (lp?.type === "text" && ln?.type === "text") {
+        return (lp as any).text === (ln as any).text
+    }
+    if (lp?.type?.startsWith("tool-") && ln?.type?.startsWith("tool-")) {
+        return (lp as any).state === (ln as any).state
+    }
+    return true
+})
 
