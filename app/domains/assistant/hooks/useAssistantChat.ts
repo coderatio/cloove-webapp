@@ -1,0 +1,489 @@
+"use client"
+
+import { useState, useCallback, useEffect, useMemo, useRef } from "react"
+import { useChat } from "@ai-sdk/react"
+import type { FileUIPart, UIMessage } from "ai"
+import type {
+    Conversation,
+    AssistantMessage,
+    AssistantMessagePart,
+    FileAttachment,
+} from "../types"
+import { apiClient } from "@/app/lib/api-client"
+import { AssistantChatTransport } from "../lib/assistant-chat-transport"
+import { toast } from "sonner"
+
+interface AssistantMessageMetadata {
+    attachments?: FileAttachment[]
+    analysis?: boolean
+    conversationId?: string
+    title?: string
+}
+
+interface UseAssistantChatReturn {
+    conversations: Conversation[]
+    activeChatId: string
+    messages: AssistantMessage[]
+    isStreaming: boolean
+    isWaitingForResponse: boolean
+    isLoadingConversation: boolean
+    sendMessage: (text: string, options?: SendMessageOptions) => void
+    startNewChat: () => void
+    setActiveChatId: (id: string) => void
+    addToolResult: (args: { toolCallId: string; tool: string; output: unknown }) => void
+    stop: () => void
+    renameConversation: (id: string, title: string) => Promise<void>
+    pinConversation: (id: string, pinned: boolean) => Promise<void>
+    archiveConversation: (id: string) => Promise<void>
+    deleteConversation: (id: string) => Promise<void>
+}
+
+interface SendMessageOptions {
+    attachments?: FileAttachment[]
+    analysis?: boolean
+}
+
+type MappedUIMessage = UIMessage<AssistantMessageMetadata>
+
+function getFirstUserText(msgs: AssistantMessage[]): string {
+    const first = msgs.find((m) => m.role === "user")
+    if (!first) return ""
+    return first.parts
+        .filter((p) => p.type === "text")
+        .map((p) => (p as { text: string }).text)
+        .join("")
+        .slice(0, 50)
+}
+
+function getLastUserText(msgs: AssistantMessage[]): string {
+    const last = [...msgs].reverse().find((m) => m.role === "user")
+    if (!last) return ""
+    return last.parts
+        .filter((p) => p.type === "text")
+        .map((p) => (p as { text: string }).text)
+        .join("")
+        .slice(0, 120)
+}
+
+/** Map raw API messages → domain AssistantMessage[] (for historical display) */
+function mapApiToAssistantMessages(
+    raw: Array<{ id: string; role: string; content: any }>
+): AssistantMessage[] {
+    return raw
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((message) => {
+            const parts: AssistantMessagePart[] = []
+            const content = message.content
+
+            if (content?.type === "text" && typeof content.text === "string") {
+                parts.push({ type: "text", text: content.text })
+            } else if (content?.type === "parts" && Array.isArray(content.parts)) {
+                content.parts.forEach((part: any) => {
+                    if (part.type === "text") {
+                        parts.push({ type: "text", text: part.text })
+                    }
+                    if (part.type === "file") {
+                        parts.push({
+                            type: "file",
+                            file: {
+                                id: `${message.id}-file-${parts.length}`,
+                                name: part.name || "Attachment",
+                                size: part.size || 0,
+                                fileType: part.mediaType || "application/octet-stream",
+                                url: part.data || part.url,
+                            },
+                        })
+                    }
+                    if (part.type === "image") {
+                        parts.push({
+                            type: "file",
+                            file: {
+                                id: `${message.id}-img-${parts.length}`,
+                                name: "Image",
+                                size: 0,
+                                fileType: part.mimeType || "image/*",
+                                url: part.image || part.url,
+                            },
+                        })
+                    }
+                })
+            } else if (typeof content === "string") {
+                parts.push({ type: "text", text: content })
+            }
+
+            return {
+                id: message.id,
+                role: message.role as "user" | "assistant",
+                parts,
+            }
+        })
+}
+
+/** Map SDK UIMessage[] → domain AssistantMessage[] (for live chat) */
+function mapSdkToAssistantMessages(sdkMessages: MappedUIMessage[]): AssistantMessage[] {
+    return sdkMessages.map((message) => {
+        const parts: AssistantMessagePart[] = []
+
+        message.parts.forEach((part, index) => {
+            if (part.type === "text") {
+                parts.push({ type: "text", text: part.text })
+                return
+            }
+            if (part.type === "file") {
+                const att = message.metadata?.attachments?.find((a) => a.url === part.url)
+                parts.push({
+                    type: "file",
+                    file: {
+                        id: `${message.id}-file-${index}`,
+                        name: part.filename || att?.name || "Attachment",
+                        size: att?.size || 0,
+                        fileType: part.mediaType || att?.fileType || "application/octet-stream",
+                        url: part.url,
+                    },
+                })
+                return
+            }
+            if (part.type === "tool-invocation") {
+                const tp = part as any
+                parts.push({
+                    type: `tool-${tp.toolName}`,
+                    toolCallId: tp.toolCallId,
+                    state:
+                        tp.state === "result" ? "output-available"
+                            : tp.state === "call" ? "loading"
+                                : tp.state === "partial-call" ? "pending"
+                                    : tp.state || "loading",
+                    input: tp.args || {},
+                    output: tp.result,
+                } as AssistantMessagePart)
+            }
+        })
+
+        return {
+            id: message.id,
+            role: message.role === "assistant" ? "assistant" : "user",
+            parts,
+        }
+    })
+}
+
+const INITIAL_CHAT_ID = `chat-${Date.now()}`
+
+export function useAssistantChat(): UseAssistantChatReturn {
+    const [conversations, setConversations] = useState<Conversation[]>([])
+    const [activeChatId, setActiveChatIdRaw] = useState(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search)
+            const urlId = params.get("conversationId")
+            if (urlId) return urlId
+        }
+        return `chat-${Date.now()}`
+    })
+    const [isLoadingConversation, setIsLoadingConversation] = useState(false)
+    // Historical messages loaded from the API — keyed by conversation ID
+    const [loadedMessagesMap, setLoadedMessagesMap] = useState<Record<string, AssistantMessage[]>>({})
+    const conversationsLoaded = useRef(false)
+    const syncedConversationRef = useRef<string | null>(null)
+    const activeChatIdRef = useRef(activeChatId)
+    const fetchedConversations = useRef(new Set<string>())
+    // Track IDs created locally in this session (via startNewChat or initial)
+    const localChatIds = useRef(new Set<string>([INITIAL_CHAT_ID]))
+    const pendingBackendIdRef = useRef<string | null>(null)
+
+    useEffect(() => {
+        activeChatIdRef.current = activeChatId
+    }, [activeChatId])
+
+    const transport = useMemo(() => new AssistantChatTransport(), [])
+
+    const {
+        messages: sdkMessages,
+        setMessages,
+        sendMessage: sendChatMessage,
+        addToolOutput,
+        status,
+        stop: stopStreaming,
+    } = useChat<MappedUIMessage>({
+        id: activeChatId,
+        transport,
+    })
+
+    const isStreaming = status === "streaming" || status === "submitted"
+    const isWaitingForResponse = status === "submitted"
+
+    // ── Load conversation list on mount ─────────────────────────────────
+    useEffect(() => {
+        if (conversationsLoaded.current) return
+        conversationsLoaded.current = true
+
+        void (async () => {
+            try {
+                const data = await apiClient.get<{
+                    conversations: Array<{
+                        id: string
+                        conversationId: string
+                        title: string | null
+                        updatedAt: string
+                        preview: string | null
+                    }>
+                    meta: { page: number; limit: number; total: number }
+                }>("/assistant/conversations")
+
+                setConversations(
+                    data.conversations.map((c: any) => ({
+                        id: c.conversationId,
+                        title: c.title || "Untitled",
+                        date: new Date(c.updatedAt).toLocaleDateString(),
+                        preview: c.preview || undefined,
+                        isPinned: c.isPinned ?? false,
+                        isArchived: c.isArchived ?? false,
+                        lastMessageAt: new Date(c.updatedAt),
+                        messages: [],
+                    }))
+                )
+            } catch {
+                // Silently fail
+            }
+        })()
+    }, [])
+
+    // ── Sync backend conversationId from assistant_start metadata ───────
+    useEffect(() => {
+        if (sdkMessages.length === 0) return
+
+        const lastAssistant = [...sdkMessages].reverse().find((m) => m.role === "assistant")
+        const backendId = lastAssistant?.metadata?.conversationId
+        const backendTitle = lastAssistant?.metadata?.title
+
+        if (!backendId) return
+
+        if (backendTitle) {
+            setConversations((prev) => {
+                const idx = prev.findIndex((c) => c.id === activeChatId || c.id === backendId)
+                if (idx === -1) return prev
+                if (prev[idx].title === backendTitle) return prev
+                const updated = [...prev]
+                updated[idx] = { ...prev[idx], title: backendTitle }
+                return updated
+            })
+        }
+
+        if (syncedConversationRef.current === backendId) return
+        if (backendId === activeChatId) return
+
+        syncedConversationRef.current = backendId
+        pendingBackendIdRef.current = backendId
+    }, [sdkMessages, activeChatId])
+
+    // ── Combine SDK messages (live) with loaded messages (historical) ───
+    const sdkMapped = useMemo(() => mapSdkToAssistantMessages(sdkMessages), [sdkMessages])
+    const loadedMessages = loadedMessagesMap[activeChatId] ?? []
+
+    // Combine: historical messages first, then any new SDK messages appended in this session
+    const messages = useMemo(() => {
+        if (sdkMapped.length === 0) return loadedMessages
+        if (loadedMessages.length === 0) return sdkMapped
+
+        // Merge: loadedMessages (history) + sdkMapped (new from this session), deduped by id
+        const loadedIds = new Set(loadedMessages.map((m) => m.id))
+        const newFromSdk = sdkMapped.filter((m) => !loadedIds.has(m.id))
+        return [...loadedMessages, ...newFromSdk]
+    }, [sdkMapped, loadedMessages])
+
+    // ── Apply pending backend conversationId after streaming ends ───────
+    useEffect(() => {
+        if (isStreaming) return
+        const pendingId = pendingBackendIdRef.current
+        if (!pendingId) return
+        if (pendingId === activeChatId) {
+            pendingBackendIdRef.current = null
+            return
+        }
+
+        setLoadedMessagesMap((prev) => {
+            if (prev[pendingId]) return prev
+            return { ...prev, [pendingId]: messages }
+        })
+        fetchedConversations.current.add(pendingId)
+        localChatIds.current.add(pendingId)
+        pendingBackendIdRef.current = null
+        setActiveChatIdRaw(pendingId)
+    }, [activeChatId, isStreaming, messages])
+
+    // ── Update sidebar: add new chats, update title & preview ──────────
+    useEffect(() => {
+        if (messages.length === 0) return
+
+        const firstText = getFirstUserText(messages)
+        const lastText = getLastUserText(messages)
+        if (!firstText && !lastText) return
+
+        setConversations((prev) => {
+            const idx = prev.findIndex((c) => c.id === activeChatId)
+
+            if (idx === -1) {
+                return [{
+                    id: activeChatId,
+                    title: firstText || "New Conversation",
+                    date: "Just now",
+                    preview: lastText || undefined,
+                    lastMessageAt: new Date(),
+                    messages: [],
+                }, ...prev]
+            }
+
+            const existing = prev[idx]
+            const isDefault = !existing.title || existing.title === "New Conversation" || existing.title === "Untitled"
+            const nextTitle = isDefault && firstText ? firstText : existing.title
+            const nextPreview = lastText || existing.preview
+
+            if (nextTitle === existing.title && nextPreview === existing.preview) return prev
+
+            const updated = [...prev]
+            updated[idx] = { ...existing, title: nextTitle, preview: nextPreview, date: "Just now", lastMessageAt: new Date() }
+            return updated
+        })
+    }, [activeChatId, messages])
+
+    // ── Send message ───────────────────────────────────────────────────
+    const sendMessage = useCallback(
+        (text: string, options?: SendMessageOptions) => {
+            if (isStreaming) return
+            const trimmed = text.trim()
+            const attachments = options?.attachments ?? []
+
+            const fileParts: FileUIPart[] = attachments.map((a) => ({
+                type: "file", url: a.url, filename: a.name, mediaType: a.fileType,
+            }))
+
+            if (!trimmed && fileParts.length === 0) return
+
+            const metadata = { attachments, analysis: options?.analysis }
+            sendChatMessage(trimmed
+                ? { text: trimmed, files: fileParts.length ? fileParts : undefined, metadata }
+                : { files: fileParts, metadata }
+            )
+        },
+        [isStreaming, sendChatMessage]
+    )
+
+    // ── New chat ───────────────────────────────────────────────────────
+    const startNewChat = useCallback(() => {
+        syncedConversationRef.current = null
+        const newId = `chat-${Date.now()}`
+        localChatIds.current.add(newId)
+        setActiveChatIdRaw(newId)
+    }, [])
+
+    // ── Fetch conversation messages from API ─────────────────────────────
+    const fetchMessages = useCallback((id: string) => {
+        if (fetchedConversations.current.has(id)) return
+        fetchedConversations.current.add(id)
+        setIsLoadingConversation(true)
+
+        apiClient
+            .get<{
+                conversationId: string
+                messages: Array<{ id: string; role: string; content: any }>
+            }>(`/assistant/conversations/${id}`)
+            .then((data) => {
+                if (activeChatIdRef.current !== id) return
+                const mapped = mapApiToAssistantMessages(data.messages)
+                setLoadedMessagesMap((prev) => ({ ...prev, [id]: mapped }))
+            })
+            .catch(() => {
+                fetchedConversations.current.delete(id)
+            })
+            .finally(() => {
+                setIsLoadingConversation(false)
+            })
+    }, [])
+
+    // ── Switch conversation ────────────────────────────────────────────
+    const setActiveChatId = useCallback((id: string) => {
+        syncedConversationRef.current = null
+        setActiveChatIdRaw(id)
+
+        // If it's a locally-created chat or already fetched, nothing to do
+        if (localChatIds.current.has(id) || fetchedConversations.current.has(id)) {
+            return
+        }
+
+        // Otherwise fetch messages from the API
+        fetchMessages(id)
+    }, [fetchMessages])
+
+    // ── On mount: if activeChatId from URL is not local, fetch its messages ─
+    // This handles page refresh with a conversationId in the URL
+    useEffect(() => {
+        const id = activeChatIdRef.current
+        if (!localChatIds.current.has(id) && !fetchedConversations.current.has(id)) {
+            fetchMessages(id)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // ── Conversation management ────────────────────────────────────────
+    const renameConversation = useCallback(async (id: string, title: string) => {
+        await apiClient.patch(`/assistant/conversations/${id}`, { title })
+        setConversations((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, title } : c))
+        )
+    }, [])
+
+    const pinConversation = useCallback(async (id: string, pinned: boolean) => {
+        await apiClient.patch(`/assistant/conversations/${id}`, { isPinned: pinned })
+        setConversations((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, isPinned: pinned } : c))
+        )
+    }, [])
+
+    const archiveConversation = useCallback(async (id: string) => {
+        await apiClient.patch(`/assistant/conversations/${id}`, { isArchived: true })
+        setConversations((prev) => prev.filter((c) => c.id !== id))
+        if (activeChatIdRef.current === id) {
+            const newId = `chat-${Date.now()}`
+            localChatIds.current.add(newId)
+            setActiveChatIdRaw(newId)
+        }
+    }, [])
+
+    const deleteConversation = useCallback(async (id: string) => {
+        await apiClient.delete(`/assistant/conversations/${id}`)
+        setConversations((prev) => prev.filter((c) => c.id !== id))
+        if (activeChatIdRef.current === id) {
+            const newId = `chat-${Date.now()}`
+            localChatIds.current.add(newId)
+            setActiveChatIdRaw(newId)
+        }
+    }, [])
+
+    // ── Add tool result ────────────────────────────────────────────────
+    const addToolResult = useCallback(
+        ({ toolCallId, tool, output }: { toolCallId: string; tool: string; output: unknown }) => {
+            addToolOutput({ tool: tool as any, toolCallId, output, state: "output-available" })
+            void apiClient.post("/assistant/tool-results", {
+                conversationId: activeChatId, toolCallId, toolName: tool, output,
+            }).catch(() => toast.error("Failed to save your response."))
+        },
+        [activeChatId, addToolOutput]
+    )
+
+    return {
+        conversations,
+        activeChatId,
+        messages,
+        isStreaming,
+        isWaitingForResponse,
+        isLoadingConversation,
+        sendMessage,
+        startNewChat,
+        setActiveChatId,
+        addToolResult,
+        stop: stopStreaming,
+        renameConversation,
+        pinConversation,
+        archiveConversation,
+        deleteConversation,
+    }
+}

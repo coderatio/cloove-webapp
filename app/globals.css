@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -201,6 +202,10 @@
   --background: var(--color-cloove-cream);
   --background-dark: #0f241c;
   --foreground: var(--color-cloove-deep);
+}
+
+body {
+  font-family: var(--font-sans);
 }
 
 .dark {

@@ -13,6 +13,7 @@ import {
     DrawerTitle,
 } from "../ui/drawer"
 import { usePermission } from "@/app/hooks/usePermission"
+import { useMobileNav } from "../providers/mobile-nav-provider"
 import { Button } from "../ui/button"
 
 interface MobileNavItem {
@@ -53,7 +54,7 @@ export function MobileNav() {
     const pathname = usePathname()
     const router = useRouter()
     const isAssistantPage = pathname === "/assistant"
-    const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const { isMenuOpen, setIsMenuOpen } = useMobileNav()
     const [isMoreOpen, setIsMoreOpen] = useState(false)
     const [submenuParent, setSubmenuParent] = useState<MobileNavItem | null>(null)
     const { can } = usePermission()
@@ -69,13 +70,13 @@ export function MobileNav() {
             <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="fixed top-6 left-6 z-50 md:hidden"
+                className="fixed top-3 right-4 z-50 md:hidden"
             >
                 <button
                     onClick={() => setIsMenuOpen(true)}
-                    className="h-12 w-12 rounded-full bg-brand-deep/80 backdrop-blur-xl border border-brand-gold/20 shadow-xl flex items-center justify-center text-brand-gold active:scale-95"
+                    className="size-9 rounded-full bg-brand-deep/80 backdrop-blur-xl border border-brand-gold/20 shadow-xl flex items-center justify-center text-brand-gold active:scale-95"
                 >
-                    <Menu className="h-6 w-6" />
+                    <LayoutGrid className="size-4" />
                 </button>
             </motion.div>
         )

@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./components/providers/theme-provider";
 import QueryProvider from "./components/providers/query-provider";
@@ -11,18 +10,6 @@ import { AuthProvider } from "./components/providers/auth-provider";
 import { AuthGuard } from "./components/shared/AuthGuard";
 import { RootSessionManager } from "./components/auth/RootSessionManager";
 import { ReceiptPrinterProvider } from "./hooks/useReceiptPrinter";
-
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
 
 export const metadata: Metadata = {
   title: "Cloove | Business Dashboard",
@@ -64,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
-      <body className={`${jakarta.variable} ${playfair.variable} antialiased`} suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
             __html: `
