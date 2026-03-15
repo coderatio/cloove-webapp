@@ -83,7 +83,7 @@ export function AssistantView(): ReactElement {
 
     return (
         <PageTransition>
-            <div className="flex flex-col md:flex-row h-dvh md:h-[calc(100vh-100px)] relative md:pt-0 max-w-7xl mx-auto md:px-4">
+            <div className="flex flex-col lg:flex-row h-dvh md:h-[calc(100vh-100px)] relative md:pt-0 max-w-7xl mx-auto md:px-4">
                 {/* Desktop Sidebar */}
                 <ChatHistorySidebar
                     conversations={conversations}
@@ -97,9 +97,9 @@ export function AssistantView(): ReactElement {
                 />
 
                 {/* Main Chat Container */}
-                <div className="flex-1 flex flex-col h-full min-w-0 md:pl-8">
+                <div className="flex-1 flex flex-col h-full min-w-0 lg:pl-8">
                     {/* Mobile Header */}
-                    <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center gap-3 px-4 py-3 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-b border-brand-deep/10 dark:border-white/10">
+                    <div className="lg:hidden fixed top-0 left-0 right-0 z-30 md:sticky md:top-0 md:z-20 flex items-center gap-3 px-4 py-3 md:px-0 bg-white/90 dark:bg-black/90 md:bg-transparent md:dark:bg-transparent md:backdrop-blur-none backdrop-blur-xl border-b border-brand-deep/10 dark:border-white/10 md:border-b-0">
                         <button
                             type="button"
                             onClick={() => setIsHistoryOpen(true)}
@@ -114,7 +114,7 @@ export function AssistantView(): ReactElement {
                     </div>
 
                     {/* Desktop Header */}
-                    <div className="hidden md:flex shrink-0 items-center justify-between py-6 md:py-0 md:mb-6 mt-8 md:mt-8">
+                    <div className="hidden lg:flex shrink-0 items-center justify-between py-6 lg:py-0 lg:mb-6 mt-8 lg:mt-8">
                         <div className="flex-1 min-w-0">
                             <motion.h1
                                 initial={{ opacity: 0, y: 6 }}

@@ -285,7 +285,7 @@ export function ChatHistorySidebar({
     const groupedConversations = useMemo(() => groupConversations(filtered), [filtered])
 
     return (
-        <div className="hidden md:flex flex-col w-80 shrink-0 pr-8 border-r border-brand-accent/5 dark:border-white/10 mt-8 h-full">
+        <div className="hidden lg:flex flex-col w-80 shrink-0 pr-8 border-r border-brand-accent/5 dark:border-white/10 mt-8 h-full">
             <Button
                 onClick={onNewChat}
                 className="w-full rounded-2xl bg-brand-deep text-brand-cream hover:bg-brand-deep/90 border border-brand-deep/20 h-12 mb-4 transition-all duration-300 shadow-sm dark:bg-white/10 dark:text-brand-cream dark:hover:bg-white/15 dark:border-white/10"
