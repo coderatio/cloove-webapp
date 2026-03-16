@@ -116,10 +116,13 @@ export const ChatMessage = memo(function ChatMessage({
                 className={cn(
                     "text-sm md:text-base leading-relaxed relative transition-colors duration-300",
                     isUser
-                        ? "overflow-hidden bg-brand-deep text-brand-cream rounded-2xl rounded-br-sm dark:bg-brand-gold dark:text-brand-deep shadow-sm max-w-[85%] md:max-w-[70%] p-5"
+                        ? "overflow-hidden bg-linear-to-br from-brand-deep to-brand-accent/90 text-brand-cream rounded-[22px] rounded-br-[4px] border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.08)] max-w-[85%] md:max-w-[75%] px-5 py-4"
                         : "w-full bg-transparent text-brand-deep dark:text-brand-cream px-1"
                 )}
             >
+                {isUser && (
+                    <div className="absolute inset-0 bg-linear-to-tr from-white/5 to-transparent pointer-events-none" />
+                )}
                 {/* Assistant label */}
                 {!isUser && (
                     <div className="mb-2 flex items-center justify-between">
@@ -159,7 +162,7 @@ export const ChatMessage = memo(function ChatMessage({
                                 <Markdown
                                     key={partIndex}
                                     content={part.text}
-                                    className={isUser ? "text-brand-cream dark:text-brand-deep prose-invert" : ""}
+                                    className={isUser ? "text-brand-cream prose-invert font-bold prose-strong:text-white prose-a:text-brand-gold prose-table:border-white/15 prose-th:bg-white/10 prose-td:border-white/[0.08]" : ""}
                                     streaming={!!isLoading}
                                 />
                             )

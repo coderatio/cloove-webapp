@@ -3,19 +3,28 @@
 import { useEffect, useRef, useState, type ReactElement } from "react"
 import {
     ArrowUp,
+    Camera,
     File,
     FileSpreadsheet,
     FileText,
     Image,
     Loader2,
-    Paperclip,
+    Plus,
     Sparkles,
     Square,
+    Upload,
     X,
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu"
+import { CameraDialog } from "./CameraDialog"
 import { uploadService } from "@/app/lib/upload/upload-service"
 import { toast } from "sonner"
 import type { FileAttachment } from "../types"
@@ -78,8 +87,10 @@ function getAnalysisLabel(isAllowed: boolean, isEnabled: boolean): string {
 export function ChatInput({ onSend, disabled = false, isStreaming = false, onStop, className, focusTrigger }: ChatInputProps): ReactElement {
     const [input, setInput] = useState("")
     const [files, setFiles] = useState<File[]>([])
+    const [previews, setPreviews] = useState<Record<string, string>>({})
     const [analysisEnabled, setAnalysisEnabled] = useState(true)
     const [isUploading, setIsUploading] = useState(false)
+    const [cameraOpen, setCameraOpen] = useState(false)
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -174,12 +185,50 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
     }
 
     function removeFile(index: number): void {
+        const fileToRemove = files[index]
         setFiles((prev) => prev.filter((_, i) => i !== index))
+        
+        // Cleanup preview URL if it exists
+        const previewUrl = previews[fileToRemove.name]
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl)
+            setPreviews(prev => {
+                const next = { ...prev }
+                delete next[fileToRemove.name]
+                return next
+            })
+        }
     }
+
+    useEffect(() => {
+        // Generate previews for images
+        files.forEach(file => {
+            if (file.type.startsWith("image/") && !previews[file.name]) {
+                const url = URL.createObjectURL(file)
+                setPreviews(prev => ({ ...prev, [file.name]: url }))
+            }
+        })
+
+        return () => {
+            // No need to cleanup here as we cleanup on removal
+        }
+    }, [files, previews])
+
+    // Final cleanup on unmount
+    useEffect(() => {
+        return () => {
+            Object.values(previews).forEach(URL.revokeObjectURL)
+        }
+    }, [])
 
     function triggerFilePicker(): void {
         if (disabled || isUploading) return
         fileInputRef.current?.click()
+    }
+
+    function triggerCamera(): void {
+        if (disabled || isUploading) return
+        setCameraOpen(true)
     }
 
     useEffect(() => {
@@ -203,46 +252,101 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
             <GlassCard className="rounded-[28px] border border-brand-deep/10 dark:border-white/10 bg-white/90 dark:bg-black/40 shadow-[0_12px_30px_rgba(16,24,40,0.08)] backdrop-blur-xl">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-3 sm:p-4">
                     {files.length > 0 && (
-                        <div className="flex flex-wrap gap-2 px-1">
-                            {files.map((file, index) => (
-                                <div
-                                    key={`${file.name}-${file.size}`}
-                                    className="inline-flex items-center gap-2 rounded-full border border-brand-deep/10 bg-brand-deep/5 px-3 py-1.5 text-xs font-medium text-brand-deep dark:border-white/10 dark:bg-white/5 dark:text-brand-cream"
-                                >
-                                    <span className="text-brand-deep/70 dark:text-brand-cream/70">
-                                        {getFileIcon(file)}
-                                    </span>
-                                    <span className="max-w-[160px] truncate">{file.name}</span>
-                                    <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40">
-                                        {formatFileSize(file.size)}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeFile(index)}
-                                        className="rounded-full p-1 text-brand-accent/40 hover:text-brand-deep dark:text-brand-cream/40 dark:hover:text-brand-cream"
-                                        aria-label={`Remove ${file.name}`}
+                        <div className="flex flex-nowrap gap-2 px-1 overflow-x-auto scrollbar-hide pb-0.5">
+                            {files.map((file, index) => {
+                                const isImage = file.type.startsWith("image/")
+                                const preview = previews[file.name]
+
+                                return (
+                                    <div
+                                        key={`${file.name}-${file.size}`}
+                                        className="group relative flex items-center shrink-0 h-14 pl-2 pr-4 gap-2.5 rounded-full border border-brand-deep/10 bg-white/50 dark:bg-black/20 dark:border-white/10 backdrop-blur-md transition-all hover:border-brand-gold/40 hover:bg-white/80 dark:hover:bg-black/40 shadow-sm"
                                     >
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                </div>
-                            ))}
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden bg-brand-deep/5 dark:bg-white/15 text-brand-deep/60 dark:text-brand-cream/60 shadow-inner shrink-0 border border-black/5 dark:border-white/5">
+                                            {isImage && preview ? (
+                                                <img src={preview} alt="" className="h-full w-full object-cover" />
+                                            ) : (
+                                                getFileIcon(file)
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col min-w-0 max-w-[90px] sm:max-w-[110px]">
+                                            <span className="truncate text-[11px] font-bold text-brand-deep dark:text-brand-cream leading-tight">
+                                                {file.name}
+                                            </span>
+                                            <span className="text-[9px] font-medium text-brand-accent/50 dark:text-brand-cream/40 px-1 py-0.5 rounded bg-brand-deep/5 dark:bg-white/5 w-fit">
+                                                {formatFileSize(file.size)}
+                                            </span>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            type="button"
+                                            onClick={() => removeFile(index)}
+                                            className="h-5 w-5 rounded-full text-brand-accent/40 hover:text-red-500 hover:bg-red-50 dark:text-brand-cream/30 dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-colors"
+                                            aria-label={`Remove ${file.name}`}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
 
                     <div className="flex items-end gap-2 rounded-full border border-transparent bg-white/80 px-2.5 py-1.5 shadow-[0_4px_12px_rgba(15,23,42,0.06)] dark:bg-white/5">
-                        <button
-                            type="button"
-                            onClick={triggerFilePicker}
-                            className={cn(
-                                "h-10 w-10 rounded-full border transition-all duration-200 flex items-center justify-center",
-                                disabled || isUploading
-                                    ? "border-brand-deep/10 bg-brand-deep/5 text-brand-deep/30 dark:border-white/10 dark:bg-white/5 dark:text-brand-cream/30"
-                                    : "border-brand-deep/15 bg-brand-deep/5 text-brand-deep hover:bg-brand-deep/10 hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/5 dark:text-brand-cream dark:hover:bg-white/10"
-                            )}
-                            aria-label="Attach files"
-                        >
-                            <Paperclip className="h-4 w-4" />
-                        </button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    asChild
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn(
+                                        "h-10 w-10 rounded-full border transition-all duration-200 flex items-center justify-center shrink-0 p-0",
+                                        disabled || isUploading || files.length >= MAX_ATTACHMENTS
+                                            ? "border-brand-deep/5 bg-brand-deep/2 text-brand-deep/20 cursor-not-allowed dark:border-white/5 dark:bg-white/2 dark:text-brand-cream/20"
+                                            : "border-brand-deep/15 bg-brand-deep/5 text-brand-deep hover:bg-brand-deep/10 hover:border-brand-gold/40 dark:border-white/10 dark:bg-white/5 dark:text-brand-cream dark:hover:bg-white/10"
+                                    )}
+                                    disabled={disabled || isUploading || files.length >= MAX_ATTACHMENTS}
+                                >
+                                    <button type="button" aria-label="Attach files">
+                                        <Plus className="h-4 w-4" />
+                                    </button>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-56 p-2 rounded-2xl shadow-xl backdrop-blur-xl border-brand-green/10 dark:border-brand-gold/10">
+                                <div className="p-1 space-y-1">
+                                    <DropdownMenuItem className="p-0 bg-transparent focus:bg-transparent" onSelect={triggerCamera}>
+                                        <Button 
+                                            variant="ghost" 
+                                            className="w-full justify-start gap-4 h-auto py-3 px-4 rounded-xl hover:bg-brand-green/5 dark:hover:bg-brand-gold/5"
+                                        >
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold shrink-0">
+                                                <Camera className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex flex-col items-start overflow-hidden">
+                                                <span className="font-medium text-[15px]">Open Camera</span>
+                                                <span className="text-[11px] text-brand-accent/40 dark:text-brand-cream/40 truncate">Take a photo of a document</span>
+                                            </div>
+                                        </Button>
+                                    </DropdownMenuItem>
+                                    
+                                    <DropdownMenuItem className="p-0 bg-transparent focus:bg-transparent" onSelect={triggerFilePicker}>
+                                        <Button 
+                                            variant="ghost" 
+                                            className="w-full justify-start gap-4 h-auto py-3 px-4 rounded-xl hover:bg-brand-green/5 dark:hover:bg-brand-gold/5"
+                                        >
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-deep/5 text-brand-deep dark:bg-white/5 dark:text-brand-cream shrink-0">
+                                                <Upload className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex flex-col items-start overflow-hidden">
+                                                <span className="font-medium text-[15px]">Upload File</span>
+                                                <span className="text-[11px] text-brand-accent/40 dark:text-brand-cream/40 truncate">PDF, Excel, CSV, or Image</span>
+                                            </div>
+                                        </Button>
+                                    </DropdownMenuItem>
+                                </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
                         <textarea
                             ref={inputRef}
@@ -294,21 +398,24 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                 : "Attach up to 3 files (PDF, CSV, Excel, images)"}
                         </span>
                         {files.length > 0 && (
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => analysisAllowed && setAnalysisEnabled((prev) => !prev)}
                                 className={cn(
-                                    "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold transition-all",
+                                    "inline-flex items-center gap-2 rounded-full border h-7 px-3 text-[11px] font-semibold transition-all hover:bg-transparent",
                                     analysisAllowed && analysisEnabled
-                                        ? "border-brand-gold/40 bg-brand-gold/10 text-brand-deep"
-                                        : "border-brand-deep/10 bg-brand-deep/5 text-brand-accent/50 dark:border-white/10 dark:bg-white/5 dark:text-brand-cream/50",
-                                    !analysisAllowed && "cursor-not-allowed"
+                                        ? "border-brand-gold/40 bg-brand-gold/10 text-brand-deep dark:text-brand-gold hover:bg-brand-gold/20"
+                                        : "border-brand-deep/10 bg-brand-deep/5 text-brand-accent/50 dark:border-white/10 dark:bg-white/5 dark:text-brand-cream/50 hover:bg-brand-deep/10",
+                                    !analysisAllowed && "cursor-not-allowed opacity-50"
                                 )}
                                 aria-pressed={analysisAllowed && analysisEnabled}
+                                disabled={!analysisAllowed}
                             >
                                 <Sparkles className="h-3 w-3" />
                                 {getAnalysisLabel(analysisAllowed, analysisEnabled)}
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </form>
@@ -320,6 +427,12 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                     accept="image/*,.pdf,.csv,.xlsx,.xls"
                     onChange={handleFileInput}
                     disabled={disabled || isUploading}
+                />
+ 
+                <CameraDialog 
+                    open={cameraOpen}
+                    onOpenChange={setCameraOpen}
+                    onCapture={(file) => addFiles([file])}
                 />
             </GlassCard>
         </div>

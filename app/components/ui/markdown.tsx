@@ -17,35 +17,35 @@ const THROTTLE_MS = 80
 const mdComponents = {
     p: ({ children }: any) => <p className="mb-2 last:mb-0">{children}</p>,
     strong: ({ children }: any) => (
-        <span className="text-brand-green dark:text-brand-gold font-bold">
+        <span className="text-inherit font-bold">
             {children}
         </span>
     ),
     h1: ({ children }: any) => (
-        <h1 className="text-lg font-serif font-bold mb-3 mt-4 first:mt-0 text-brand-deep dark:text-brand-cream">{children}</h1>
+        <h1 className="text-lg font-serif font-bold mb-3 mt-4 first:mt-0">{children}</h1>
     ),
     h2: ({ children }: any) => (
-        <h2 className="text-base font-serif font-bold mb-2 mt-3 first:mt-0 text-brand-deep dark:text-brand-cream">{children}</h2>
+        <h2 className="text-base font-serif font-bold mb-2 mt-3 first:mt-0">{children}</h2>
     ),
     h3: ({ children }: any) => (
-        <h3 className="text-sm font-serif font-bold mb-2 mt-3 first:mt-0 text-brand-deep dark:text-brand-cream">{children}</h3>
+        <h3 className="text-sm font-serif font-bold mb-2 mt-3 first:mt-0">{children}</h3>
     ),
     ul: ({ children }: any) => <ul className="list-disc pl-5 mb-2 space-y-1">{children}</ul>,
     ol: ({ children }: any) => <ol className="list-decimal pl-5 mb-2 space-y-1">{children}</ol>,
     li: ({ children }: any) => <li className="text-sm leading-relaxed">{children}</li>,
     table: ({ children }: any) => (
-        <div className="mt-2 mb-3 overflow-x-auto rounded-xl border border-brand-accent/10 dark:border-white/10">
+        <div className="mt-2 mb-3 overflow-x-auto rounded-xl border border-current/6">
             <table className="w-full text-left text-xs">{children}</table>
         </div>
     ),
     thead: ({ children }: any) => (
-        <thead className="bg-brand-accent/5 dark:bg-white/5">{children}</thead>
+        <thead className="bg-current/5">{children}</thead>
     ),
     th: ({ children }: any) => (
-        <th className="p-2.5 text-brand-deep/50 dark:text-brand-cream/50 font-bold uppercase tracking-wider text-[11px]">{children}</th>
+        <th className="p-2.5 opacity-60 font-bold uppercase tracking-wider text-[11px]">{children}</th>
     ),
     td: ({ children }: any) => (
-        <td className="p-2.5 text-brand-deep dark:text-brand-cream border-t border-brand-accent/5 dark:border-white/5">{children}</td>
+        <td className="p-2.5 border-t border-current/6">{children}</td>
     ),
     code: ({ children, className: codeClassName }: any) => {
         const isBlock = codeClassName?.startsWith("language-")
@@ -70,7 +70,7 @@ const mdComponents = {
     ),
     hr: () => <hr className="border-brand-accent/10 dark:border-white/10 my-3" />,
     a: ({ children, href }: any) => (
-        <a href={href} target="_blank" rel="noreferrer" className="text-brand-green dark:text-brand-gold underline underline-offset-2">
+        <a href={href} target="_blank" rel="noreferrer" className="text-inherit underline underline-offset-2 opacity-80 hover:opacity-100 transition-opacity">
             {children}
         </a>
     ),
