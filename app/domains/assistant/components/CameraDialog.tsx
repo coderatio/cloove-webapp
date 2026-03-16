@@ -43,7 +43,7 @@ export function CameraDialog({ open, onOpenChange, onCapture }: CameraDialogProp
 
     const startStream = useCallback(async (index: number) => {
         if (!open) return
-        
+
         setIsStarting(true)
         stopStream()
 
@@ -69,7 +69,7 @@ export function CameraDialog({ open, onOpenChange, onCapture }: CameraDialogProp
 
             const newStream = await navigator.mediaDevices.getUserMedia(constraints)
             streamRef.current = newStream
-            
+
             if (videoRef.current) {
                 videoRef.current.srcObject = newStream
                 void videoRef.current.play().catch(e => console.error("Video play error:", e))
@@ -91,7 +91,7 @@ export function CameraDialog({ open, onOpenChange, onCapture }: CameraDialogProp
             setActive(false)
             stopStream()
         }
-        
+
         return () => {
             stopStream()
         }
@@ -130,7 +130,7 @@ export function CameraDialog({ open, onOpenChange, onCapture }: CameraDialogProp
                 <DialogHeader className="absolute top-0 left-0 right-0 z-50 p-6 bg-linear-to-b from-black/60 to-transparent pointer-events-none">
                     <DialogTitle className="text-white font-medium flex items-center gap-2">
                         <Camera className="h-5 w-5" />
-                        Capture Image
+                        Capture
                     </DialogTitle>
                 </DialogHeader>
 
@@ -145,13 +145,13 @@ export function CameraDialog({ open, onOpenChange, onCapture }: CameraDialogProp
                             isStarting ? "opacity-0" : "opacity-100"
                         )}
                     />
-                    
+
                     {isStarting && (
                         <div className="absolute inset-0 flex items-center justify-center">
                             <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-white" />
                         </div>
                     )}
-                    
+
                     <canvas ref={canvasRef} className="hidden" />
                 </div>
 

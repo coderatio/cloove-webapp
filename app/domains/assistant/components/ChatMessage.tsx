@@ -27,6 +27,11 @@ import {
     DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu"
 import { Button } from "@/app/components/ui/button"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/app/components/ui/base-tooltip"
 import type {
     AssistantMessage as MessageType,
     AddToolResultFn,
@@ -211,65 +216,85 @@ export const ChatMessage = memo(function ChatMessage({
                         animate={{ opacity: 1 }}
                         className="flex items-center gap-1 mt-3 px-1"
                     >
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleCopy}
-                            className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
-                            title="Copy"
-                        >
-                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                        </Button>
-
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setFeedback(feedback === "up" ? null : "up")}
-                            className={cn(
-                                "h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors",
-                                feedback === "up" && "text-emerald-500 bg-emerald-500/5 select-none"
-                            )}
-                            title="Helpful"
-                        >
-                            <ThumbsUp className="w-3.5 h-3.5" />
-                        </Button>
-
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setFeedback(feedback === "down" ? null : "down")}
-                            className={cn(
-                                "h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors",
-                                feedback === "down" && "text-rose-500 bg-rose-500/5 select-none"
-                            )}
-                            title="Not helpful"
-                        >
-                            <ThumbsDown className="w-3.5 h-3.5" />
-                        </Button>
-
-                        {isLast && onRegenerate && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={onRegenerate}
-                                className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
-                                title="Regenerate"
-                            >
-                                <RotateCcw className="w-3.5 h-3.5" />
-                            </Button>
-                        )}
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                        <Tooltip>
+                            <TooltipTrigger>
                                 <Button
                                     variant="ghost"
                                     size="icon"
+                                    onClick={handleCopy}
                                     className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
-                                    title="More actions"
                                 >
-                                    <MoreHorizontal className="w-3.5 h-3.5" />
+                                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                                 </Button>
-                            </DropdownMenuTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Copy message</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setFeedback(feedback === "up" ? null : "up")}
+                                    className={cn(
+                                        "h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors",
+                                        feedback === "up" && "text-emerald-500 bg-emerald-500/5 select-none"
+                                    )}
+                                >
+                                    <ThumbsUp className="w-3.5 h-3.5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Helpful</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setFeedback(feedback === "down" ? null : "down")}
+                                    className={cn(
+                                        "h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors",
+                                        feedback === "down" && "text-rose-500 bg-rose-500/5 select-none"
+                                    )}
+                                >
+                                    <ThumbsDown className="w-3.5 h-3.5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Not helpful</TooltipContent>
+                        </Tooltip>
+
+                        {isLast && onRegenerate && (
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={onRegenerate}
+                                        className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
+                                    >
+                                        <RotateCcw className="w-3.5 h-3.5" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Regenerate</TooltipContent>
+                            </Tooltip>
+                        )}
+
+                        <DropdownMenu>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
+                                        >
+                                            <MoreHorizontal className="w-3.5 h-3.5" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                </TooltipTrigger>
+                                <TooltipContent>More actions</TooltipContent>
+                            </Tooltip>
                             <DropdownMenuContent align="start" className="w-48 rounded-xl bg-white/80 dark:bg-black/80 backdrop-blur-xl border-brand-deep/5">
                                 <DropdownMenuItem onClick={() => handleExport("md")} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
                                     <FileCode className="w-4 h-4" />
