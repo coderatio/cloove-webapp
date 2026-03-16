@@ -118,7 +118,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                 <main
                     className={cn(
-                        "relative z-10 min-h-screen transition-all duration-300 md:pr-8 md:pt-6 md:pb-8",
+                        "relative z-10 min-h-screen transition-all duration-300",
+                        !isAssistantPage && "md:pr-8 md:pt-6 md:pb-8",
                         isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
                     )}
                 >
@@ -206,7 +207,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         </div>
                     )}
 
-                    <div className={cn("px-4 pt-4 md:p-0", isAssistantPage ? "pb-0" : "pb-24")}>
+                    <div className={cn(isAssistantPage ? "p-0" : "px-4 pt-4 md:p-0 pb-24")}>
                         <BusinessGuard>
                             <StoreProvider>
                                 {children}

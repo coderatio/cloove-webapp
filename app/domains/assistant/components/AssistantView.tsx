@@ -33,12 +33,15 @@ export function AssistantView(): ReactElement {
         renameConversation,
         pinConversation,
         archiveConversation,
+        unarchiveConversation,
         deleteConversation,
+        fetchConversations,
     } = useAssistantChat()
 
     const { isMenuOpen } = useMobileNav()
 
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+    const [isViewingArchived, setIsViewingArchived] = useState(false)
     const initializedFromUrl = useRef(false)
     const lastPushedId = useRef<string | null>(null)
 
@@ -50,23 +53,64 @@ export function AssistantView(): ReactElement {
     }
 
     const handleRename = async (id: string, title: string) => {
-        try { await renameConversation(id, title) }
-        catch { toast.error("Failed to rename conversation") }
+        const tid = toast.loading("Renaming conversation...")
+        try {
+            await renameConversation(id, title)
+            toast.success("Conversation renamed", { id: tid })
+        } catch (error) {
+            console.error("Rename error:", error)
+            toast.error("Failed to rename conversation", { id: tid })
+        }
     }
 
     const handlePin = async (id: string, pinned: boolean) => {
-        try { await pinConversation(id, pinned) }
-        catch { toast.error("Failed to update pin") }
+        const tid = toast.loading(pinned ? "Pinning conversation..." : "Unpinning conversation...")
+        try {
+            await pinConversation(id, pinned)
+            toast.success(pinned ? "Conversation pinned" : "Conversation unpinned", { id: tid })
+        } catch (error) {
+            console.error("Pin error:", error)
+            toast.error("Failed to update pin", { id: tid })
+        }
     }
 
     const handleArchive = async (id: string) => {
-        try { await archiveConversation(id) }
-        catch { toast.error("Failed to archive conversation") }
+        const tid = toast.loading("Archiving conversation...")
+        try {
+            await archiveConversation(id)
+            toast.success("Conversation archived", { id: tid })
+        } catch (error) {
+            console.error("Archive error:", error)
+            toast.error("Failed to archive conversation", { id: tid })
+        }
+    }
+
+    const handleUnarchive = async (id: string) => {
+        const tid = toast.loading("Restoring conversation...")
+        try {
+            await unarchiveConversation(id)
+            toast.success("Conversation restored", { id: tid })
+        } catch (error) {
+            console.error("Unarchive error:", error)
+            toast.error("Failed to restore conversation", { id: tid })
+        }
+    }
+
+    const handleToggleArchived = async () => {
+        const next = !isViewingArchived
+        setIsViewingArchived(next)
+        await fetchConversations(next ? 'archived' : 'active')
     }
 
     const handleDelete = async (id: string) => {
-        try { await deleteConversation(id) }
-        catch { toast.error("Failed to delete conversation") }
+        const tid = toast.loading("Deleting conversation...")
+        try {
+            await deleteConversation(id)
+            toast.success("Conversation deleted", { id: tid })
+        } catch (error) {
+            console.error("Delete error:", error)
+            toast.error("Failed to delete conversation", { id: tid })
+        }
     }
 
     const handleRegenerate = async () => {
@@ -117,7 +161,7 @@ export function AssistantView(): ReactElement {
 
     return (
         <PageTransition>
-            <div className="flex flex-col lg:flex-row h-dvh md:h-[calc(100vh-100px)] relative md:pt-0 max-w-7xl mx-auto md:px-4">
+            <div className="flex flex-col lg:flex-row h-dvh relative md:pt-0">
                 {/* Desktop Sidebar */}
                 <ChatHistorySidebar
                     conversations={conversations}
@@ -128,11 +172,14 @@ export function AssistantView(): ReactElement {
                     onRename={handleRename}
                     onPin={handlePin}
                     onArchive={handleArchive}
+                    onUnarchive={handleUnarchive}
                     onDelete={handleDelete}
+                    isArchivedView={isViewingArchived}
+                    onToggleArchived={handleToggleArchived}
                 />
 
                 {/* Main Chat Container */}
-                <div className="flex-1 flex flex-col h-full min-w-0 lg:pl-8">
+                <div className="flex-1 flex flex-col h-full min-w-0 lg:pb-0 overflow-hidden">
                     {/* Mobile Header */}
                     <div className="lg:hidden fixed top-0 left-0 right-0 z-30 md:sticky md:top-0 md:z-20 flex items-center gap-3 px-4 py-3 md:px-0 bg-white/90 dark:bg-black/90 md:bg-transparent md:dark:bg-transparent md:backdrop-blur-none backdrop-blur-xl border-b border-brand-deep/10 dark:border-white/10 md:border-b-0">
                         <button
@@ -149,7 +196,7 @@ export function AssistantView(): ReactElement {
                     </div>
 
                     {/* Desktop Header */}
-                    <div className="hidden lg:flex shrink-0 items-center justify-between py-6 lg:py-0 lg:mb-6 mt-8 lg:mt-8">
+                    <div className="hidden lg:flex shrink-0 items-center justify-between py-6 lg:py-0 lg:mb-6 mt-3 px-4 md:pl-0 lg:px-6">
                         <div className="flex-1 min-w-0">
                             <motion.h1
                                 initial={{ opacity: 0, y: 6 }}
@@ -176,7 +223,10 @@ export function AssistantView(): ReactElement {
                         onRename={handleRename}
                         onPin={handlePin}
                         onArchive={handleArchive}
+                        onUnarchive={handleUnarchive}
                         onDelete={handleDelete}
+                        isArchivedView={isViewingArchived}
+                        onToggleArchived={handleToggleArchived}
                     />
 
                     {/* Chat Area */}
@@ -193,16 +243,18 @@ export function AssistantView(): ReactElement {
                             onSuggestionSelect={handleSuggestionSelect}
                             onRegenerate={handleRegenerate}
                             onAction={handleAction}
-                            className="flex-1 overflow-y-auto space-y-6 pb-44 md:pb-0 scrollbar-hide px-1 pt-14 md:pt-0"
+                            className="flex-1 overflow-y-auto space-y-6 pb-40 md:pb-6 scrollbar-hide px-4 md:pl-0 lg:px-6 pt-16 md:pt-0"
                         />
 
                     ) : (
-                        <ChatWelcome onSuggestionSelect={handleSuggestionSelect} />
+                        <div className="px-8 lg:px-12 flex-1 flex flex-col">
+                            <ChatWelcome onSuggestionSelect={handleSuggestionSelect} />
+                        </div>
                     )}
 
                     {/* Input Area */}
                     {!isMenuOpen && (
-                        <div className="fixed bottom-6 left-4 right-4 z-20 md:sticky md:bottom-8 border-t-0 md:w-full">
+                        <div className="fixed bottom-6 lg:bottom-4 left-4 right-4 z-20 md:sticky md:pr-8 lg:relative lg:w-full lg:pr-10">
                             <ChatInput
                                 onSend={sendMessage}
                                 disabled={isStreaming}

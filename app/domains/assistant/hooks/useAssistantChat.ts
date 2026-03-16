@@ -37,7 +37,9 @@ interface UseAssistantChatReturn {
     renameConversation: (id: string, title: string) => Promise<void>
     pinConversation: (id: string, pinned: boolean) => Promise<void>
     archiveConversation: (id: string) => Promise<void>
+    unarchiveConversation: (id: string) => Promise<void>
     deleteConversation: (id: string) => Promise<void>
+    fetchConversations: (filter?: 'active' | 'archived') => Promise<void>
 }
 
 interface SendMessageOptions {
@@ -237,42 +239,45 @@ export function useAssistantChat(): UseAssistantChatReturn {
         setActiveChatIdRaw(newChatId)
     }, [businessId, setMessages])
 
+    const fetchConversations = useCallback(async (filter: 'active' | 'archived' = 'active') => {
+        setIsLoadingConversations(true)
+        try {
+            const data = await apiClient.get<{
+                conversations: Array<{
+                    id: string
+                    conversationId: string
+                    title: string | null
+                    updatedAt: string
+                    preview: string | null
+                    isPinned?: boolean
+                    isArchived?: boolean
+                }>
+                meta: { page: number; limit: number; total: number }
+            }>(`/assistant/conversations?filter=${filter}`)
+
+            setConversations(
+                data.conversations.map((c: any) => ({
+                    id: c.conversationId,
+                    title: c.title || "Untitled",
+                    date: new Date(c.updatedAt).toLocaleDateString(),
+                    preview: c.preview || undefined,
+                    isPinned: c.isPinned ?? false,
+                    isArchived: c.isArchived ?? false,
+                    lastMessageAt: new Date(c.updatedAt),
+                    messages: [],
+                }))
+            )
+        } finally {
+            setIsLoadingConversations(false)
+        }
+    }, [])
+
     // ── Load conversation list on mount ─────────────────────────────────
     useEffect(() => {
         if (conversationsLoaded.current) return
         conversationsLoaded.current = true
-
-        void (async () => {
-            setIsLoadingConversations(true)
-            try {
-                const data = await apiClient.get<{
-                    conversations: Array<{
-                        id: string
-                        conversationId: string
-                        title: string | null
-                        updatedAt: string
-                        preview: string | null
-                    }>
-                    meta: { page: number; limit: number; total: number }
-                }>("/assistant/conversations")
-
-                setConversations(
-                    data.conversations.map((c: any) => ({
-                        id: c.conversationId,
-                        title: c.title || "Untitled",
-                        date: new Date(c.updatedAt).toLocaleDateString(),
-                        preview: c.preview || undefined,
-                        isPinned: c.isPinned ?? false,
-                        isArchived: c.isArchived ?? false,
-                        lastMessageAt: new Date(c.updatedAt),
-                        messages: [],
-                    }))
-                )
-            } finally {
-                setIsLoadingConversations(false)
-            }
-        })()
-    }, [businessId])
+        fetchConversations('active')
+    }, [businessId, fetchConversations])
 
     // ── Sync backend conversationId from assistant_start metadata ───────
     // Only run when streaming ends to avoid cascading re-renders during streaming
@@ -485,6 +490,15 @@ export function useAssistantChat(): UseAssistantChatReturn {
         }
     }, [])
 
+    const unarchiveConversation = useCallback(async (id: string) => {
+        await apiClient.patch(`/assistant/conversations/${id}`, { isArchived: false })
+        // After unarchiving, we usually want it to reappear in the active list
+        // but since we've filtered the active list, we might want to refetch or
+        // manually add it back if we had its data.
+        // For simplicity, let's just remove it from the 'archived' view if that's where we are
+        setConversations((prev) => prev.filter((c) => c.id !== id))
+    }, [])
+
     const deleteConversation = useCallback(async (id: string) => {
         await apiClient.delete(`/assistant/conversations/${id}`)
         setConversations((prev) => prev.filter((c) => c.id !== id))
@@ -522,6 +536,8 @@ export function useAssistantChat(): UseAssistantChatReturn {
         renameConversation,
         pinConversation,
         archiveConversation,
+        unarchiveConversation,
         deleteConversation,
+        fetchConversations,
     }
 }
