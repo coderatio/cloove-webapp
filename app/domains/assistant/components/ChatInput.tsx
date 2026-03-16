@@ -37,6 +37,7 @@ interface ChatInputProps {
     isStreaming?: boolean
     onStop?: () => void
     className?: string
+    focusTrigger?: string | null
 }
 
 function formatFileSize(size: number): string {
@@ -74,7 +75,7 @@ function getAnalysisLabel(isAllowed: boolean, isEnabled: boolean): string {
     return "Analyze off"
 }
 
-export function ChatInput({ onSend, disabled = false, isStreaming = false, onStop, className }: ChatInputProps): ReactElement {
+export function ChatInput({ onSend, disabled = false, isStreaming = false, onStop, className, focusTrigger }: ChatInputProps): ReactElement {
     const [input, setInput] = useState("")
     const [files, setFiles] = useState<File[]>([])
     const [analysisEnabled, setAnalysisEnabled] = useState(true)
@@ -190,6 +191,12 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
     useEffect(() => {
         if (files.length === 0) setAnalysisEnabled(true)
     }, [files.length])
+    
+    useEffect(() => {
+        if (!disabled && !isStreaming) {
+            inputRef.current?.focus()
+        }
+    }, [focusTrigger, disabled, isStreaming])
 
     return (
         <div className={cn("w-full", className)}>

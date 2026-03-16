@@ -260,6 +260,7 @@ export function AssistantView(): ReactElement {
                                 disabled={isStreaming}
                                 isStreaming={isStreaming}
                                 onStop={stop}
+                                focusTrigger={activeChatId}
                             />
                         </div>
                     )}
