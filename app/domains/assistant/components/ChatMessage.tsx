@@ -9,17 +9,18 @@ import {
     Copy,
     RotateCcw,
     ThumbsUp,
-    ThumbsDown,
-    Download,
     MoreHorizontal,
     Check,
     FileCode,
     FileType,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { Markdown } from "@/app/components/ui/markdown"
 import { ToolRenderer } from "./ToolRenderer"
+import { FeedbackPopover } from "./FeedbackPopover"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -45,6 +46,9 @@ interface ChatMessageProps {
     isLast?: boolean
     onRegenerate?: () => void
     onAction?: (action: string, messageId: string) => void
+    onFeedback?: (messageId: string, rating: "like" | "dislike", reason?: string) => void
+    versionInfo?: { versions: string[]; currentIndex: number }
+    onNavigateVersion?: (dir: "prev" | "next") => void
 }
 
 function formatFileSize(size: number): string {
@@ -74,10 +78,17 @@ export const ChatMessage = memo(function ChatMessage({
     isLast,
     onRegenerate,
     onAction,
+    onFeedback,
+    versionInfo,
+    onNavigateVersion,
 }: ChatMessageProps): ReactElement {
     const isUser = message.role === "user"
     const [copied, setCopied] = useState(false)
-    const [feedback, setFeedback] = useState<"up" | "down" | null>(null)
+    const [feedback, setFeedback] = useState<"up" | "down" | null>(
+        message.feedback?.rating === "like" ? "up"
+        : message.feedback?.rating === "dislike" ? "down"
+        : null
+    )
 
     const hasContent = message.parts.some(
         (p) => (p.type === "text" && p.text.trim().length > 0) || p.type === "file" || p.type.startsWith("tool-")
@@ -88,16 +99,22 @@ export const ChatMessage = memo(function ChatMessage({
         .map((p) => (p as any).text)
         .join("\n")
 
+    // When viewing a historical version, override the displayed text
+    const isViewingHistoricalVersion = versionInfo && versionInfo.currentIndex < versionInfo.versions.length - 1
+    const displayText = isViewingHistoricalVersion
+        ? versionInfo.versions[versionInfo.currentIndex]
+        : textContent
+
     const handleCopy = useCallback(() => {
-        navigator.clipboard.writeText(textContent)
+        navigator.clipboard.writeText(displayText)
         setCopied(true)
         toast.success("Copied to clipboard")
         setTimeout(() => setCopied(false), 2000)
-    }, [textContent])
+    }, [displayText])
 
     const handleExport = (type: "pdf" | "md") => {
         if (type === "md") {
-            const blob = new Blob([textContent], { type: "text/markdown" })
+            const blob = new Blob([displayText], { type: "text/markdown" })
             const url = URL.createObjectURL(blob)
             const a = document.createElement("a")
             a.href = url
@@ -107,6 +124,21 @@ export const ChatMessage = memo(function ChatMessage({
             toast.success("Exported as Markdown")
         } else {
             toast.info("PDF export coming soon!")
+        }
+    }
+
+    const handleThumbsUp = () => {
+        const next = feedback === "up" ? null : "up"
+        setFeedback(next)
+        if (next === "up" && onFeedback) {
+            onFeedback(message.id, "like")
+        }
+    }
+
+    const handleFeedbackSubmit = (msgId: string, rating: "dislike" | null, reason?: string) => {
+        setFeedback(rating ? "down" : null)
+        if (rating && onFeedback) {
+            onFeedback(msgId, "dislike", reason)
         }
     }
 
@@ -161,52 +193,60 @@ export const ChatMessage = memo(function ChatMessage({
 
                 {/* Message parts */}
                 <div className={cn("relative z-10", isUser ? "pr-2" : "")}>
-                    {message.parts.map((part, partIndex) => {
-                        if (part.type === "text") {
-                            return (
-                                <Markdown
-                                    key={partIndex}
-                                    content={part.text}
-                                    className={isUser ? "text-brand-cream prose-invert font-bold prose-strong:text-white prose-a:text-brand-gold prose-table:border-white/15 prose-th:bg-white/10 prose-td:border-white/[0.08]" : ""}
-                                    streaming={!!isLoading}
-                                />
-                            )
-                        }
-                        if (part.type === "file") {
-                            return (
-                                <a
-                                    key={part.file.id}
-                                    href={part.file.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className={cn(
-                                        "mt-2 inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-medium transition-colors",
-                                        isUser
-                                            ? "border-white/20 bg-white/10 text-brand-cream hover:bg-white/15"
-                                            : "border-brand-deep/10 bg-brand-deep/5 text-brand-deep hover:bg-brand-deep/10 dark:border-white/10 dark:bg-white/5 dark:text-brand-cream dark:hover:bg-white/10"
-                                    )}
-                                >
-                                    <span className="text-brand-cream/80 dark:text-brand-cream/70">
-                                        {getFileIcon(part.file)}
-                                    </span>
-                                    <span className="max-w-[200px] truncate">{part.file.name}</span>
-                                    <span className={cn("text-[10px]", isUser ? "text-brand-cream/60" : "text-brand-accent/50 dark:text-brand-cream/50")}>
-                                        {formatFileSize(part.file.size)}
-                                    </span>
-                                </a>
-                            )
-                        }
-                        if (part.type.startsWith("tool-")) {
-                            return (
-                                <ToolRenderer
-                                    key={partIndex}
-                                    part={part}
-                                    addToolResult={addToolResult}
-                                />
-                            )
-                        }
-                        return null
-                    })}
+                    {isViewingHistoricalVersion ? (
+                        <Markdown
+                            content={versionInfo.versions[versionInfo.currentIndex]}
+                            className=""
+                            streaming={false}
+                        />
+                    ) : (
+                        message.parts.map((part, partIndex) => {
+                            if (part.type === "text") {
+                                return (
+                                    <Markdown
+                                        key={partIndex}
+                                        content={part.text}
+                                        className={isUser ? "text-brand-cream prose-invert font-bold prose-strong:text-white prose-a:text-brand-gold prose-table:border-white/15 prose-th:bg-white/10 prose-td:border-white/[0.08]" : ""}
+                                        streaming={!!isLoading}
+                                    />
+                                )
+                            }
+                            if (part.type === "file") {
+                                return (
+                                    <a
+                                        key={part.file.id}
+                                        href={part.file.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className={cn(
+                                            "mt-2 inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-medium transition-colors",
+                                            isUser
+                                                ? "border-white/20 bg-white/10 text-brand-cream hover:bg-white/15"
+                                                : "border-brand-deep/10 bg-brand-deep/5 text-brand-deep hover:bg-brand-deep/10 dark:border-white/10 dark:bg-white/5 dark:text-brand-cream dark:hover:bg-white/10"
+                                        )}
+                                    >
+                                        <span className="text-brand-cream/80 dark:text-brand-cream/70">
+                                            {getFileIcon(part.file)}
+                                        </span>
+                                        <span className="max-w-[200px] truncate">{part.file.name}</span>
+                                        <span className={cn("text-[10px]", isUser ? "text-brand-cream/60" : "text-brand-accent/50 dark:text-brand-cream/50")}>
+                                            {formatFileSize(part.file.size)}
+                                        </span>
+                                    </a>
+                                )
+                            }
+                            if (part.type.startsWith("tool-")) {
+                                return (
+                                    <ToolRenderer
+                                        key={partIndex}
+                                        part={part}
+                                        addToolResult={addToolResult}
+                                    />
+                                )
+                            }
+                            return null
+                        })
+                    )}
                 </div>
 
                 {/* Action Toolbar (Assistant only) */}
@@ -217,7 +257,7 @@ export const ChatMessage = memo(function ChatMessage({
                         className="flex items-center gap-1 mt-3 px-1"
                     >
                         <Tooltip>
-                            <TooltipTrigger>
+                            <TooltipTrigger render={<span />}>
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -231,11 +271,11 @@ export const ChatMessage = memo(function ChatMessage({
                         </Tooltip>
 
                         <Tooltip>
-                            <TooltipTrigger>
+                            <TooltipTrigger render={<span />}>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => setFeedback(feedback === "up" ? null : "up")}
+                                    onClick={handleThumbsUp}
                                     className={cn(
                                         "h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors",
                                         feedback === "up" && "text-emerald-500 bg-emerald-500/5 select-none"
@@ -248,25 +288,19 @@ export const ChatMessage = memo(function ChatMessage({
                         </Tooltip>
 
                         <Tooltip>
-                            <TooltipTrigger>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setFeedback(feedback === "down" ? null : "down")}
-                                    className={cn(
-                                        "h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors",
-                                        feedback === "down" && "text-rose-500 bg-rose-500/5 select-none"
-                                    )}
-                                >
-                                    <ThumbsDown className="w-3.5 h-3.5" />
-                                </Button>
+                            <TooltipTrigger render={<span />}>
+                                <FeedbackPopover
+                                    messageId={message.id}
+                                    isActive={feedback === "down"}
+                                    onSubmit={handleFeedbackSubmit}
+                                />
                             </TooltipTrigger>
                             <TooltipContent>Not helpful</TooltipContent>
                         </Tooltip>
 
                         {isLast && onRegenerate && (
                             <Tooltip>
-                                <TooltipTrigger>
+                                <TooltipTrigger render={<span />}>
                                     <Button
                                         variant="ghost"
                                         size="icon"
@@ -280,14 +314,41 @@ export const ChatMessage = memo(function ChatMessage({
                             </Tooltip>
                         )}
 
+                        {/* Version navigation */}
+                        {versionInfo && versionInfo.versions.length > 1 && onNavigateVersion && (
+                            <div className="flex items-center gap-0.5 ml-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onNavigateVersion("prev")}
+                                    disabled={versionInfo.currentIndex === 0}
+                                    className="h-6 w-6 rounded-md hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 disabled:opacity-30 transition-colors"
+                                >
+                                    <ChevronLeft className="w-3 h-3" />
+                                </Button>
+                                <span className="text-xs text-brand-deep/40 dark:text-brand-cream/40 tabular-nums px-0.5">
+                                    {versionInfo.currentIndex + 1}/{versionInfo.versions.length}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onNavigateVersion("next")}
+                                    disabled={versionInfo.currentIndex === versionInfo.versions.length - 1}
+                                    className="h-6 w-6 rounded-md hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 disabled:opacity-30 transition-colors"
+                                >
+                                    <ChevronRight className="w-3 h-3" />
+                                </Button>
+                            </div>
+                        )}
+
                         <DropdownMenu>
                             <Tooltip>
-                                <TooltipTrigger>
+                                <TooltipTrigger render={<span />}>
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
+                                            className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors focus-visible:ring-0 focus-visible:ring-offset-0"
                                         >
                                             <MoreHorizontal className="w-3.5 h-3.5" />
                                         </Button>
@@ -329,6 +390,8 @@ export const ChatMessage = memo(function ChatMessage({
     if (prev.isLast !== next.isLast) return false
     if (prev.message.id !== next.message.id) return false
     if (prev.message.parts.length !== next.message.parts.length) return false
+    if (prev.versionInfo?.currentIndex !== next.versionInfo?.currentIndex) return false
+    if (prev.versionInfo?.versions.length !== next.versionInfo?.versions.length) return false
     // For the streaming message, compare the last part's text
     const lp = prev.message.parts[prev.message.parts.length - 1]
     const ln = next.message.parts[next.message.parts.length - 1]
@@ -341,4 +404,3 @@ export const ChatMessage = memo(function ChatMessage({
     }
     return true
 })
-

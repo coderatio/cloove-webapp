@@ -36,6 +36,11 @@ export function AssistantView(): ReactElement {
         unarchiveConversation,
         deleteConversation,
         fetchConversations,
+        submitFeedback,
+        regenerate,
+        responseVersions,
+        versionCursorMap,
+        navigateVersion,
     } = useAssistantChat()
 
     const { isMenuOpen } = useMobileNav()
@@ -110,22 +115,6 @@ export function AssistantView(): ReactElement {
         } catch (error) {
             console.error("Delete error:", error)
             toast.error("Failed to delete conversation", { id: tid })
-        }
-    }
-
-    const handleRegenerate = async () => {
-
-        const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
-        if (!lastUserMessage) return
-
-        // Extract text content from the last user message
-        const lastPrompt = lastUserMessage.parts
-            .filter(p => p.type === 'text')
-            .map(p => (p as any).text)
-            .join('\n')
-
-        if (lastPrompt) {
-            sendMessage(lastPrompt)
         }
     }
 
@@ -241,8 +230,12 @@ export function AssistantView(): ReactElement {
                             isWaitingForResponse={isWaitingForResponse}
                             addToolResult={addToolResult}
                             onSuggestionSelect={handleSuggestionSelect}
-                            onRegenerate={handleRegenerate}
+                            onRegenerate={regenerate}
                             onAction={handleAction}
+                            onFeedback={submitFeedback}
+                            responseVersions={responseVersions}
+                            versionCursorMap={versionCursorMap}
+                            onNavigateVersion={navigateVersion}
                             className="flex-1 overflow-y-auto space-y-6 pb-40 md:pb-6 scrollbar-hide px-4 md:pl-0 lg:px-6 pt-16 md:pt-0"
                         />
 

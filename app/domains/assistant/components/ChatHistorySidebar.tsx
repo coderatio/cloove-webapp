@@ -169,7 +169,7 @@ function ConversationItem({
                                 <Input
                                     autoFocus
                                     defaultValue={conv.title}
-                                    className="h-9 py-0 px-2 text-sm font-medium w-full bg-white dark:bg-white/5 border-brand-green/30 outline-none text-brand-deep dark:text-brand-cream focus:ring-1 focus:ring-brand-green/40 shadow-sm"
+                                    className="h-9 py-0 px-2 text-sm font-medium w-full bg-white dark:bg-white/5 border-brand-green/30 outline-none text-brand-deep dark:text-brand-cream focus:ring-0 shadow-sm"
                                     maxLength={100}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") onFinishRename(e.currentTarget.value.trim())
@@ -222,7 +222,7 @@ function ConversationItem({
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-9 w-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400"
+                                    className="h-9 w-9 rounded-xl hover:bg-green-50 dark:hover:bg-green-900/20 text-green-600 dark:text-green-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                                     onClick={() => {
                                         const input = document.getElementById(`rename-input-${conv.id}`) as HTMLInputElement
                                         if (input) onFinishRename(input.value.trim())
@@ -233,7 +233,7 @@ function ConversationItem({
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                                    className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                                     onClick={onCancelRename}
                                 >
                                     <X className="h-4 w-4" />
@@ -245,7 +245,7 @@ function ConversationItem({
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-8 w-8 rounded-xl opacity-40 hover:opacity-100 group-hover:opacity-40 transition-all duration-300 hover:bg-white dark:hover:bg-white/10"
+                                        className="h-8 w-8 rounded-xl opacity-40 hover:opacity-100 group-hover:opacity-40 transition-all duration-300 hover:bg-white dark:hover:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
                                     >
                                         <MoreHorizontal className="h-4 w-4" />
                                     </Button>
@@ -348,7 +348,7 @@ export function ChatHistorySidebar({
             >
                 <Button
                     onClick={onNewChat}
-                    className="w-full rounded-2xl bg-brand-deep text-brand-cream hover:bg-brand-deep/90 border border-brand-deep/20 h-12 mb-4 transition-all duration-300 shadow-lg dark:bg-white/10 dark:text-brand-cream dark:hover:bg-white/15 dark:border-white/10"
+                    className="w-full rounded-2xl bg-brand-deep text-brand-cream hover:bg-brand-deep/90 border border-brand-deep/20 h-12 mb-4 transition-all duration-300 shadow-lg dark:bg-white/10 dark:text-brand-cream dark:hover:bg-white/15 dark:border-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
                 >
                     <Plus className="w-5 h-5 mr-2" />
                     New Conversation
@@ -372,7 +372,7 @@ export function ChatHistorySidebar({
                         size="sm"
                         onClick={() => isArchivedView && onToggleArchived?.()}
                         className={cn(
-                            "h-auto py-1 text-xs font-bold tracking-widest uppercase transition-all duration-300 hover:bg-transparent",
+                            "h-auto py-1 text-xs font-bold tracking-widest uppercase transition-all duration-300 hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
                             !isArchivedView ? "text-brand-deep dark:text-brand-cream" : "text-brand-accent/30 dark:text-brand-cream/30 hover:text-brand-accent/60"
                         )}
                     >
@@ -384,7 +384,7 @@ export function ChatHistorySidebar({
                         size="sm"
                         onClick={() => !isArchivedView && onToggleArchived?.()}
                         className={cn(
-                            "h-auto py-1 text-xs font-bold tracking-widest uppercase transition-all duration-300 hover:bg-transparent",
+                            "h-auto py-1 text-xs font-bold tracking-widest uppercase transition-all duration-300 hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
                             isArchivedView ? "text-brand-deep dark:text-brand-cream" : "text-brand-accent/30 dark:text-brand-cream/30 hover:text-brand-accent/60"
                         )}
                     >
@@ -458,14 +458,14 @@ export function ChatHistorySidebar({
                         <Button
                             variant="ghost"
                             onClick={() => setDeleteConfirmId(null)}
-                            className="rounded-xl"
+                            className="rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0"
                         >
                             Keep it
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={handleDeleteConfirm}
-                            className="rounded-xl bg-red-600 hover:bg-red-700 text-white"
+                            className="rounded-xl bg-red-600 hover:bg-red-700 text-white focus-visible:ring-0 focus-visible:ring-offset-0"
                         >
                             Delete Permanently
                         </Button>

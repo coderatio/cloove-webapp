@@ -31,6 +31,7 @@ export interface AssistantMessage {
     role: "user" | "assistant"
     createdAt?: Date
     parts: AssistantMessagePart[]
+    feedback?: { rating: "like" | "dislike"; reason?: string | null } | null
 }
 
 /** Discriminated union for message part types */

@@ -14,6 +14,10 @@ interface ChatMessageListProps {
     onSuggestionSelect: (prompt: string) => void
     onRegenerate: () => void
     onAction: (action: string, messageId: string) => void
+    onFeedback: (messageId: string, rating: "like" | "dislike", reason?: string) => void
+    responseVersions: Map<string, string[]>
+    versionCursorMap: Map<string, number>
+    onNavigateVersion: (slotKey: string, dir: "prev" | "next") => void
     className?: string
 }
 
@@ -25,6 +29,10 @@ export function ChatMessageList({
     onSuggestionSelect,
     onRegenerate,
     onAction,
+    onFeedback,
+    responseVersions,
+    versionCursorMap,
+    onNavigateVersion,
     className,
 }: ChatMessageListProps): ReactElement {
     const chatEndRef = useRef<HTMLDivElement>(null)
@@ -50,6 +58,23 @@ export function ChatMessageList({
                 {messages.map((msg, index) => {
                     const isLast = index === messages.length - 1
                     const isLastAssistant = isLast && msg.role === "assistant"
+
+                    // Compute version info for assistant messages
+                    let versionInfo: { versions: string[]; currentIndex: number } | undefined
+                    let slotKey: string | undefined
+                    if (msg.role === "assistant") {
+                        // Find the preceding user message
+                        const precedingUserMsg = [...messages].slice(0, index).reverse().find(m => m.role === 'user')
+                        if (precedingUserMsg) {
+                            slotKey = precedingUserMsg.id
+                            const versions = responseVersions.get(slotKey) ?? []
+                            if (versions.length > 0) {
+                                const currentIndex = versionCursorMap.get(slotKey) ?? (versions.length - 1)
+                                versionInfo = { versions, currentIndex }
+                            }
+                        }
+                    }
+
                     return (
                         <ChatMessage
                             key={msg.id}
@@ -59,6 +84,9 @@ export function ChatMessageList({
                             isLast={isLast}
                             onRegenerate={onRegenerate}
                             onAction={onAction}
+                            onFeedback={onFeedback}
+                            versionInfo={versionInfo}
+                            onNavigateVersion={slotKey ? (dir) => onNavigateVersion(slotKey!, dir) : undefined}
                         />
                     )
                 })}
@@ -68,4 +96,3 @@ export function ChatMessageList({
         </div>
     )
 }
-

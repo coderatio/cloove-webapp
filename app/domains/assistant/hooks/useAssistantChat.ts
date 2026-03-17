@@ -40,6 +40,11 @@ interface UseAssistantChatReturn {
     unarchiveConversation: (id: string) => Promise<void>
     deleteConversation: (id: string) => Promise<void>
     fetchConversations: (filter?: 'active' | 'archived') => Promise<void>
+    submitFeedback: (messageId: string, rating: "like" | "dislike", reason?: string) => Promise<void>
+    regenerate: () => void
+    responseVersions: Map<string, string[]>
+    versionCursorMap: Map<string, number>
+    navigateVersion: (slotKey: string, dir: "prev" | "next") => void
 }
 
 interface SendMessageOptions {
@@ -71,7 +76,7 @@ function getLastUserText(msgs: AssistantMessage[]): string {
 
 /** Map raw API messages → domain AssistantMessage[] (for historical display) */
 function mapApiToAssistantMessages(
-    raw: Array<{ id: string; role: string; content: any }>
+    raw: Array<{ id: string; role: string; content: any; feedback?: any }>
 ): AssistantMessage[] {
     return raw
         .filter((m) => m.role === "user" || m.role === "assistant")
@@ -119,6 +124,7 @@ function mapApiToAssistantMessages(
                 id: message.id,
                 role: message.role as "user" | "assistant",
                 parts,
+                feedback: message.feedback ?? null,
             }
         })
 }
@@ -209,6 +215,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         messages: sdkMessages,
         setMessages,
         sendMessage: sendChatMessage,
+        regenerate: sdkRegenerate,
         addToolOutput,
         status,
         stop: stopStreaming,
@@ -216,6 +223,11 @@ export function useAssistantChat(): UseAssistantChatReturn {
         id: activeChatId,
         transport,
     })
+
+    const [responseVersions, setResponseVersions] = useState<Map<string, string[]>>(new Map())
+    const [versionCursorMap, setVersionCursorMap] = useState<Map<string, number>>(new Map())
+    const regeneratingSlotRef = useRef<string | null>(null)
+    const wasStreamingRef = useRef(false)
 
 
     const isStreaming = status === "streaming" || status === "submitted"
@@ -321,6 +333,16 @@ export function useAssistantChat(): UseAssistantChatReturn {
         // Merge: loadedMessages (history) + sdkMapped (new from this session), deduped by id
         const loadedIds = new Set(loadedMessages.map((m) => m.id))
         const newFromSdk = sdkMapped.filter((m) => !loadedIds.has(m.id))
+
+        if (newFromSdk.length === 0) return loadedMessages
+
+        // Regeneration case: if the new SDK content starts with an assistant message
+        // it means the last loaded assistant was regenerated — replace it instead of appending
+        const lastLoaded = loadedMessages[loadedMessages.length - 1]
+        if (lastLoaded?.role === 'assistant' && newFromSdk[0]?.role === 'assistant') {
+            return [...loadedMessages.slice(0, -1), ...newFromSdk]
+        }
+
         return [...loadedMessages, ...newFromSdk]
     }, [sdkMapped, loadedMessages])
 
@@ -387,10 +409,17 @@ export function useAssistantChat(): UseAssistantChatReturn {
         })
     }, [activeChatId, isStreaming])
 
+    // ── Version state helpers ──────────────────────────────────────────
+    const resetVersions = useCallback(() => {
+        setResponseVersions(new Map())
+        setVersionCursorMap(new Map())
+    }, [])
+
     // ── Send message ───────────────────────────────────────────────────
     const sendMessage = useCallback(
         (text: string, options?: SendMessageOptions) => {
             if (isStreaming) return
+            resetVersions()
             const trimmed = text.trim()
             const attachments = options?.attachments ?? []
 
@@ -406,8 +435,111 @@ export function useAssistantChat(): UseAssistantChatReturn {
                 : { files: fileParts, metadata }
             )
         },
-        [isStreaming, sendChatMessage]
+        [isStreaming, sendChatMessage, resetVersions]
     )
+
+    // ── Submit feedback ────────────────────────────────────────────────
+    const submitFeedback = useCallback(
+        async (messageId: string, rating: "like" | "dislike", reason?: string): Promise<void> => {
+            await apiClient.patch(`/assistant/messages/${messageId}/feedback`, { rating, reason })
+        },
+        []
+    )
+
+    // ── Regenerate ────────────────────────────────────────────────────
+    const regenerate = useCallback(() => {
+        if (isStreaming) return
+
+        const msgs = messagesRef.current
+        const reversedMsgs = [...msgs].reverse()
+        const lastAssistantMsg = reversedMsgs.find(m => m.role === 'assistant')
+        const lastUserMsg = reversedMsgs.find(m => m.role === 'user')
+        if (!lastAssistantMsg || !lastUserMsg) return
+
+        const slotKey = lastUserMsg.id
+
+        if (!responseVersions.has(slotKey)) {
+            const currentText = lastAssistantMsg.parts
+                .filter(p => p.type === 'text')
+                .map(p => (p as any).text)
+                .join('\n')
+            setResponseVersions(prev => {
+                const newMap = new Map(prev)
+                newMap.set(slotKey, [currentText])
+                return newMap
+            })
+            setVersionCursorMap(prev => {
+                const newMap = new Map(prev)
+                newMap.set(slotKey, 0)
+                return newMap
+            })
+        }
+
+        regeneratingSlotRef.current = slotKey
+
+        // Always seed the SDK with the full current history so sdkRegenerate has
+        // the right messages regardless of whether this is a fresh or loaded session.
+        // sdkRegenerate will then drop the last assistant and re-submit.
+        const uiMessages = msgs
+            .filter(m => m.role === 'user' || m.role === 'assistant')
+            .map(m => ({
+                id: m.id,
+                role: m.role as 'user' | 'assistant',
+                parts: m.parts
+                    .filter(p => p.type === 'text')
+                    .map(p => ({ type: 'text' as const, text: (p as any).text })),
+                metadata: undefined as AssistantMessageMetadata | undefined,
+            }))
+        setMessages(uiMessages)
+        sdkRegenerate()
+    }, [isStreaming, responseVersions, sdkRegenerate, setMessages])
+
+    // ── Capture new version after streaming ends ───────────────────────
+    useEffect(() => {
+        if (isStreaming) { wasStreamingRef.current = true; return }
+        if (!wasStreamingRef.current) return
+        wasStreamingRef.current = false
+
+        const slotKey = regeneratingSlotRef.current
+        if (!slotKey) return
+        regeneratingSlotRef.current = null
+
+        const newLastAssistant = [...messagesRef.current].reverse().find(m => m.role === 'assistant')
+        if (!newLastAssistant) return
+
+        const newText = newLastAssistant.parts
+            .filter(p => p.type === 'text')
+            .map(p => (p as any).text)
+            .join('\n')
+
+        const existingVersions = responseVersions.get(slotKey) ?? []
+        const newVersionIndex = existingVersions.length
+
+        setResponseVersions(prev => {
+            const existing = prev.get(slotKey) ?? []
+            const newMap = new Map(prev)
+            newMap.set(slotKey, [...existing, newText])
+            return newMap
+        })
+        setVersionCursorMap(prev => {
+            const newMap = new Map(prev)
+            newMap.set(slotKey, newVersionIndex)
+            return newMap
+        })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isStreaming])
+
+    // ── Navigate version ───────────────────────────────────────────────
+    const navigateVersion = useCallback((slotKey: string, dir: "prev" | "next") => {
+        setVersionCursorMap(prev => {
+            const versions = responseVersions.get(slotKey) ?? []
+            const current = prev.get(slotKey) ?? (versions.length - 1)
+            const next = dir === 'prev' ? Math.max(0, current - 1) : Math.min(versions.length - 1, current + 1)
+            const newMap = new Map(prev)
+            newMap.set(slotKey, next)
+            return newMap
+        })
+    }, [responseVersions])
 
     // ── New chat ───────────────────────────────────────────────────────
     const startNewChat = useCallback(() => {
@@ -539,5 +671,10 @@ export function useAssistantChat(): UseAssistantChatReturn {
         unarchiveConversation,
         deleteConversation,
         fetchConversations,
+        submitFeedback,
+        regenerate,
+        responseVersions,
+        versionCursorMap,
+        navigateVersion,
     }
 }
