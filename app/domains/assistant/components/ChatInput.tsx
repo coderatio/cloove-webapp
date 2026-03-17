@@ -47,6 +47,8 @@ interface ChatInputProps {
     onStop?: () => void
     className?: string
     focusTrigger?: string | null
+    /** When true, suppress auto-focus on streaming completion (regeneration in progress) */
+    isRegenerating?: boolean
 }
 
 function formatFileSize(size: number): string {
@@ -84,7 +86,7 @@ function getAnalysisLabel(isAllowed: boolean, isEnabled: boolean): string {
     return "Analyze off"
 }
 
-export function ChatInput({ onSend, disabled = false, isStreaming = false, onStop, className, focusTrigger }: ChatInputProps): ReactElement {
+export function ChatInput({ onSend, disabled = false, isStreaming = false, onStop, className, focusTrigger, isRegenerating = false }: ChatInputProps): ReactElement {
     const [input, setInput] = useState("")
     const [files, setFiles] = useState<File[]>([])
     const [previews, setPreviews] = useState<Record<string, string>>({})
@@ -241,8 +243,16 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
         if (files.length === 0) setAnalysisEnabled(true)
     }, [files.length])
     
+    // Use a ref so that the isRegenerating true→false transition (which happens
+    // after the capture effect clears it) does NOT itself re-trigger the focus.
+    // Only focusTrigger / disabled / isStreaming changes should re-evaluate focus.
+    const isRegeneratingRef = useRef(isRegenerating)
     useEffect(() => {
-        if (!disabled && !isStreaming) {
+        isRegeneratingRef.current = isRegenerating
+    }, [isRegenerating])
+
+    useEffect(() => {
+        if (!disabled && !isStreaming && !isRegeneratingRef.current) {
             inputRef.current?.focus()
         }
     }, [focusTrigger, disabled, isStreaming])

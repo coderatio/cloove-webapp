@@ -41,6 +41,7 @@ export function AssistantView(): ReactElement {
         responseVersions,
         versionCursorMap,
         navigateVersion,
+        isRegenerating,
         isRegeneratingMiddle,
         pendingRegenMap,
     } = useAssistantChat()
@@ -258,6 +259,7 @@ export function AssistantView(): ReactElement {
                                 isStreaming={isStreaming}
                                 onStop={stop}
                                 focusTrigger={activeChatId}
+                                isRegenerating={isRegenerating}
                             />
                         </div>
                     )}

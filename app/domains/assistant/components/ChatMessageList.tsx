@@ -41,18 +41,24 @@ export function ChatMessageList({
 }: ChatMessageListProps): ReactElement {
     const chatEndRef = useRef<HTMLDivElement>(null)
     const scrollTimer = useRef<ReturnType<typeof setTimeout>>(null)
+    // Use a ref so that the scroll effect is NOT triggered by the isRegeneratingMiddle
+    // true→false transition itself (which would scroll right after middle-regen completes).
+    const isRegeneratingMiddleRef = useRef(isRegeneratingMiddle)
+    useEffect(() => {
+        isRegeneratingMiddleRef.current = isRegeneratingMiddle
+    }, [isRegeneratingMiddle])
 
     useEffect(() => {
         // Don't scroll to bottom when regenerating a middle message — the user is
         // watching the inline streaming at that message's position, not the bottom.
-        if (isRegeneratingMiddle) return
+        if (isRegeneratingMiddleRef.current) return
         // Throttle scroll during streaming to avoid layout thrashing
         if (scrollTimer.current) clearTimeout(scrollTimer.current)
         scrollTimer.current = setTimeout(
             () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }),
             isStreaming ? 150 : 0
         )
-    }, [messages, isStreaming, isRegeneratingMiddle])
+    }, [messages, isStreaming])
 
     // Empty state — show welcome screen
     if (messages.length === 0) {

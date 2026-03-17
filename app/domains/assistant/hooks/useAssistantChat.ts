@@ -45,6 +45,7 @@ interface UseAssistantChatReturn {
     responseVersions: Map<string, string[]>
     versionCursorMap: Map<string, number>
     navigateVersion: (slotKey: string, dir: "prev" | "next") => void
+    isRegenerating: boolean
     isRegeneratingMiddle: boolean
     pendingRegenMap: Map<string, string>
 }
@@ -798,6 +799,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         responseVersions,
         versionCursorMap,
         navigateVersion,
+        isRegenerating: currentRegeneratingSlot !== null,
         isRegeneratingMiddle,
         pendingRegenMap,
     }
