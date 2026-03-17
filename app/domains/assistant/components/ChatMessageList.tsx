@@ -18,6 +18,8 @@ interface ChatMessageListProps {
     responseVersions: Map<string, string[]>
     versionCursorMap: Map<string, number>
     onNavigateVersion: (slotKey: string, dir: "prev" | "next") => void
+    isRegeneratingMiddle: boolean
+    pendingRegenMap: Map<string, string>
     className?: string
 }
 
@@ -33,19 +35,24 @@ export function ChatMessageList({
     responseVersions,
     versionCursorMap,
     onNavigateVersion,
+    isRegeneratingMiddle,
+    pendingRegenMap,
     className,
 }: ChatMessageListProps): ReactElement {
     const chatEndRef = useRef<HTMLDivElement>(null)
     const scrollTimer = useRef<ReturnType<typeof setTimeout>>(null)
 
     useEffect(() => {
+        // Don't scroll to bottom when regenerating a middle message — the user is
+        // watching the inline streaming at that message's position, not the bottom.
+        if (isRegeneratingMiddle) return
         // Throttle scroll during streaming to avoid layout thrashing
         if (scrollTimer.current) clearTimeout(scrollTimer.current)
         scrollTimer.current = setTimeout(
             () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }),
             isStreaming ? 150 : 0
         )
-    }, [messages, isStreaming])
+    }, [messages, isStreaming, isRegeneratingMiddle])
 
     // Empty state — show welcome screen
     if (messages.length === 0) {
@@ -87,6 +94,7 @@ export function ChatMessageList({
                             onFeedback={onFeedback}
                             versionInfo={versionInfo}
                             onNavigateVersion={slotKey ? (dir) => onNavigateVersion(slotKey!, dir) : undefined}
+                            pendingRegenText={slotKey ? pendingRegenMap.get(slotKey) : undefined}
                         />
                     )
                 })}

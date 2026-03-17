@@ -45,6 +45,8 @@ interface UseAssistantChatReturn {
     responseVersions: Map<string, string[]>
     versionCursorMap: Map<string, number>
     navigateVersion: (slotKey: string, dir: "prev" | "next") => void
+    isRegeneratingMiddle: boolean
+    pendingRegenMap: Map<string, string>
 }
 
 interface SendMessageOptions {
@@ -277,10 +279,26 @@ export function useAssistantChat(): UseAssistantChatReturn {
     const [responseVersions, setResponseVersions] = useState<Map<string, string[]>>(new Map())
     const [versionCursorMap, setVersionCursorMap] = useState<Map<string, number>>(new Map())
     const [isRegeneratingMiddle, setIsRegeneratingMiddle] = useState(false)
+    const [currentRegeneratingSlot, setCurrentRegeneratingSlot] = useState<string | null>(null)
     const regeneratingSlotRef = useRef<string | null>(null)
     const wasStreamingRef = useRef(false)
     const sdkMessagesRef = useRef<MappedUIMessage[]>([])
     const wasMiddleRegenRef = useRef(false)
+
+    // Live streaming text for the message currently being regenerated (middle messages only).
+    // This drives the inline "Regenerating..." view within the original message bubble.
+    const pendingRegenMap = useMemo(() => {
+        const map = new Map<string, string>()
+        if (!currentRegeneratingSlot || !isRegeneratingMiddle) return map
+        const lastSdk = [...sdkMessages].reverse().find((m) => m.role === "assistant")
+        if (!lastSdk) return map
+        const text = lastSdk.parts
+            .filter((p: any) => p.type === "text")
+            .map((p: any) => p.text)
+            .join("\n")
+        map.set(currentRegeneratingSlot, text)
+        return map
+    }, [currentRegeneratingSlot, isRegeneratingMiddle, sdkMessages])
 
     useEffect(() => {
         sdkMessagesRef.current = sdkMessages
@@ -547,6 +565,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         }
 
         regeneratingSlotRef.current = slotKey
+        setCurrentRegeneratingSlot(slotKey)
         if (!isLastAssistant) {
             setIsRegeneratingMiddle(true)
             wasMiddleRegenRef.current = true
@@ -585,6 +604,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         if (!lastSdkAssistant) {
             wasMiddleRegenRef.current = false
             setIsRegeneratingMiddle(false)
+            setCurrentRegeneratingSlot(null)
             return
         }
 
@@ -614,6 +634,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         wasMiddleRegenRef.current = false
         if (wasMiddle) setMessages([])
         setIsRegeneratingMiddle(false)
+        setCurrentRegeneratingSlot(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isStreaming])
 
@@ -777,5 +798,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         responseVersions,
         versionCursorMap,
         navigateVersion,
+        isRegeneratingMiddle,
+        pendingRegenMap,
     }
 }

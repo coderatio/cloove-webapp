@@ -41,6 +41,8 @@ export function AssistantView(): ReactElement {
         responseVersions,
         versionCursorMap,
         navigateVersion,
+        isRegeneratingMiddle,
+        pendingRegenMap,
     } = useAssistantChat()
 
     const { isMenuOpen } = useMobileNav()
@@ -236,6 +238,8 @@ export function AssistantView(): ReactElement {
                             responseVersions={responseVersions}
                             versionCursorMap={versionCursorMap}
                             onNavigateVersion={navigateVersion}
+                            isRegeneratingMiddle={isRegeneratingMiddle}
+                            pendingRegenMap={pendingRegenMap}
                             className="flex-1 overflow-y-auto space-y-6 pb-40 md:pb-6 scrollbar-hide px-4 md:pl-0 lg:px-6 pt-16 md:pt-0"
                         />
 

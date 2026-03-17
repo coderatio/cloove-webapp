@@ -15,6 +15,7 @@ import {
     FileType,
     ChevronLeft,
     ChevronRight,
+    Sparkles,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
@@ -49,6 +50,8 @@ interface ChatMessageProps {
     onFeedback?: (messageId: string, rating: "like" | "dislike", reason?: string) => void
     versionInfo?: { versions: string[]; currentIndex: number }
     onNavigateVersion?: (dir: "prev" | "next") => void
+    /** Live streaming text for an in-progress middle-message regeneration */
+    pendingRegenText?: string
 }
 
 function formatFileSize(size: number): string {
@@ -81,6 +84,7 @@ export const ChatMessage = memo(function ChatMessage({
     onFeedback,
     versionInfo,
     onNavigateVersion,
+    pendingRegenText,
 }: ChatMessageProps): ReactElement {
     const isUser = message.role === "user"
     const [copied, setCopied] = useState(false)
@@ -197,7 +201,29 @@ export const ChatMessage = memo(function ChatMessage({
 
                 {/* Message parts */}
                 <div className={cn("relative z-10", isUser ? "pr-2" : "")}>
-                    {showVersionOverride ? (
+                    {pendingRegenText !== undefined ? (
+                        // ── Inline regeneration streaming view ──────────────────────────
+                        <>
+                            <div className="flex items-center gap-1.5 mb-2 text-xs text-brand-deep/40 dark:text-brand-cream/40">
+                                <Sparkles className="w-3 h-3 animate-pulse text-brand-green/70" />
+                                <span>Generating new version...</span>
+                            </div>
+                            {pendingRegenText === "" ? (
+                                <div className="flex items-center gap-1.5 py-1">
+                                    {[0, 1, 2].map((i) => (
+                                        <motion.div
+                                            key={i}
+                                            className="h-1.5 w-1.5 rounded-full bg-brand-green/60"
+                                            animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                                            transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <Markdown content={pendingRegenText} streaming className="" />
+                            )}
+                        </>
+                    ) : showVersionOverride ? (
                         <Markdown
                             content={versionInfo!.versions[versionInfo!.currentIndex]}
                             className=""
@@ -253,8 +279,8 @@ export const ChatMessage = memo(function ChatMessage({
                     )}
                 </div>
 
-                {/* Action Toolbar (Assistant only) */}
-                {!isUser && hasContent && !isLoading && (
+                {/* Action Toolbar (Assistant only — hidden while inline regeneration is streaming) */}
+                {!isUser && hasContent && !isLoading && pendingRegenText === undefined && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -396,6 +422,7 @@ export const ChatMessage = memo(function ChatMessage({
     if (prev.message.parts.length !== next.message.parts.length) return false
     if (prev.versionInfo?.currentIndex !== next.versionInfo?.currentIndex) return false
     if (prev.versionInfo?.versions.length !== next.versionInfo?.versions.length) return false
+    if (prev.pendingRegenText !== next.pendingRegenText) return false
     // For the streaming message, compare the last part's text
     const lp = prev.message.parts[prev.message.parts.length - 1]
     const ln = next.message.parts[next.message.parts.length - 1]
