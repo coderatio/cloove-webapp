@@ -78,6 +78,8 @@ function buildPayloadFromMessage(message?: AssistantUIMessage): {
 export class AssistantChatTransport extends DefaultChatTransport<AssistantUIMessage> {
     /** Set to true before calling sdkRegenerate() to skip duplicate user interaction save */
     isNextRegeneration = false
+    /** The preceding user message ID — set alongside isNextRegeneration for positional tracking */
+    regenerationSlotKey: string | null = null
 
     constructor() {
         super({
@@ -87,7 +89,9 @@ export class AssistantChatTransport extends DefaultChatTransport<AssistantUIMess
                 const lastUserMessage = getLastUserMessage(messages)
                 const payload = buildPayloadFromMessage(lastUserMessage)
                 const isRegeneration = this.isNextRegeneration
+                const slotKey = this.regenerationSlotKey
                 this.isNextRegeneration = false
+                this.regenerationSlotKey = null
                 return {
                     body: {
                         conversationId: id,
@@ -95,6 +99,7 @@ export class AssistantChatTransport extends DefaultChatTransport<AssistantUIMess
                         attachments: payload.attachments,
                         analysis: payload.analysis,
                         isRegeneration,
+                        ...(slotKey ? { slotKey } : {}),
                     },
                 }
             },

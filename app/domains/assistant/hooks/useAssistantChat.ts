@@ -134,37 +134,60 @@ function mapApiToAssistantMessages(
 
 /**
  * Process raw API messages into display messages + version state.
- * Consecutive assistant messages for the same user turn are grouped as versions:
- * only the last (most recent) assistant is shown; all versions populate responseVersions.
+ *
+ * Two grouping strategies are combined:
+ *  1. slotKey-based: regenerated assistants carry `slotKey = precedingUserMessageId`
+ *     in their metadata. These are pulled out first and attached to their original slot,
+ *     regardless of where they appear in the createdAt-ordered list.
+ *  2. Consecutive fallback: assistants that appear back-to-back with no user in between
+ *     (old data before slotKey was introduced) are also grouped as versions.
  */
-function processLoadedMessages(raw: Array<{ id: string; role: string; content: any; feedback?: any }>): {
+function processLoadedMessages(raw: Array<{ id: string; role: string; content: any; feedback?: any; slotKey?: string | null }>): {
     messages: AssistantMessage[]
     responseVersions: Map<string, string[]>
     versionCursorMap: Map<string, number>
 } {
-    const allMapped = mapApiToAssistantMessages(raw)
+    // ── Step 1: separate regenerations (have slotKey) from base messages ──────
+    const baseRaw = raw.filter((m) => !(m.role === "assistant" && m.slotKey))
+    const regenRaw = raw.filter((m) => m.role === "assistant" && m.slotKey)
+
+    // Group regenerations by slotKey, preserving createdAt order (already ordered by API)
+    const regensBySlot = new Map<string, typeof raw>()
+    for (const msg of regenRaw) {
+        const key = msg.slotKey as string
+        if (!regensBySlot.has(key)) regensBySlot.set(key, [])
+        regensBySlot.get(key)!.push(msg)
+    }
+
+    // ── Step 2: walk base messages, attaching regenerations at each user's slot ─
+    const allBase = mapApiToAssistantMessages(baseRaw)
     const messages: AssistantMessage[] = []
     const responseVersions = new Map<string, string[]>()
     const versionCursorMap = new Map<string, number>()
 
     let i = 0
-    while (i < allMapped.length) {
-        const msg = allMapped[i]
+    while (i < allBase.length) {
+        const msg = allBase[i]
         if (msg.role === "user") {
             messages.push(msg)
             const slotKey = msg.id
-            // Collect all immediately following assistant messages
-            const assistantVersions: AssistantMessage[] = []
+
+            // Collect immediately following assistants (consecutive fallback for old data)
+            const baseAssistants: AssistantMessage[] = []
             let j = i + 1
-            while (j < allMapped.length && allMapped[j].role === "assistant") {
-                assistantVersions.push(allMapped[j])
+            while (j < allBase.length && allBase[j].role === "assistant") {
+                baseAssistants.push(allBase[j])
                 j++
             }
-            if (assistantVersions.length > 0) {
-                // Show only the latest assistant version
-                messages.push(assistantVersions[assistantVersions.length - 1])
-                if (assistantVersions.length > 1) {
-                    const texts = assistantVersions.map((a) =>
+
+            // Add slotKey-based regenerations for this slot
+            const regenMapped = mapApiToAssistantMessages(regensBySlot.get(slotKey) ?? [])
+            const allVersions = [...baseAssistants, ...regenMapped]
+
+            if (allVersions.length > 0) {
+                messages.push(allVersions[allVersions.length - 1])
+                if (allVersions.length > 1) {
+                    const texts = allVersions.map((a) =>
                         a.parts.filter((p) => p.type === "text").map((p) => (p as any).text).join("\n")
                     )
                     responseVersions.set(slotKey, texts)
@@ -587,6 +610,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
             }))
         setMessages(uiMessages)
         transport.isNextRegeneration = true
+        transport.regenerationSlotKey = slotKey
         sdkRegenerate()
     }, [isStreaming, responseVersions, sdkRegenerate, setMessages, transport])
 
@@ -668,7 +692,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         apiClient
             .get<{
                 conversationId: string
-                messages: Array<{ id: string; role: string; content: any; feedback?: any }>
+                messages: Array<{ id: string; role: string; content: any; feedback?: any; slotKey?: string | null }>
             }>(`/assistant/conversations/${id}`)
             .then((data) => {
                 if (activeChatIdRef.current !== id) return
