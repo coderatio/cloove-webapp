@@ -99,10 +99,14 @@ export const ChatMessage = memo(function ChatMessage({
         .map((p) => (p as any).text)
         .join("\n")
 
-    // When viewing a historical version, override the displayed text
-    const isViewingHistoricalVersion = versionInfo && versionInfo.currentIndex < versionInfo.versions.length - 1
-    const displayText = isViewingHistoricalVersion
-        ? versionInfo.versions[versionInfo.currentIndex]
+    // Show the captured version text when:
+    //   - capture has fired (2+ versions exist) and not live-streaming
+    // Only 1 version = original seeded at click, pre-capture. Don't override during that
+    // brief window between streaming end and capture to avoid a flash back to original text.
+    const hasVersions = versionInfo && versionInfo.versions.length > 0
+    const showVersionOverride = hasVersions && !isLoading && versionInfo!.versions.length > 1
+    const displayText = showVersionOverride
+        ? versionInfo!.versions[versionInfo!.currentIndex]
         : textContent
 
     const handleCopy = useCallback(() => {
@@ -193,9 +197,9 @@ export const ChatMessage = memo(function ChatMessage({
 
                 {/* Message parts */}
                 <div className={cn("relative z-10", isUser ? "pr-2" : "")}>
-                    {isViewingHistoricalVersion ? (
+                    {showVersionOverride ? (
                         <Markdown
-                            content={versionInfo.versions[versionInfo.currentIndex]}
+                            content={versionInfo!.versions[versionInfo!.currentIndex]}
                             className=""
                             streaming={false}
                         />
@@ -298,7 +302,7 @@ export const ChatMessage = memo(function ChatMessage({
                             <TooltipContent>Not helpful</TooltipContent>
                         </Tooltip>
 
-                        {isLast && onRegenerate && (
+                        {onRegenerate && (
                             <Tooltip>
                                 <TooltipTrigger render={<span />}>
                                     <Button

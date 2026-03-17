@@ -76,6 +76,9 @@ function buildPayloadFromMessage(message?: AssistantUIMessage): {
 }
 
 export class AssistantChatTransport extends DefaultChatTransport<AssistantUIMessage> {
+    /** Set to true before calling sdkRegenerate() to skip duplicate user interaction save */
+    isNextRegeneration = false
+
     constructor() {
         super({
             api: apiClient.buildUrl("/assistant/messages/stream"),
@@ -83,12 +86,15 @@ export class AssistantChatTransport extends DefaultChatTransport<AssistantUIMess
             prepareSendMessagesRequest: ({ id, messages }) => {
                 const lastUserMessage = getLastUserMessage(messages)
                 const payload = buildPayloadFromMessage(lastUserMessage)
+                const isRegeneration = this.isNextRegeneration
+                this.isNextRegeneration = false
                 return {
                     body: {
                         conversationId: id,
                         message: payload.message,
                         attachments: payload.attachments,
                         analysis: payload.analysis,
+                        isRegeneration,
                     },
                 }
             },

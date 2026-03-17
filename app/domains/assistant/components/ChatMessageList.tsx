@@ -12,7 +12,7 @@ interface ChatMessageListProps {
     isWaitingForResponse: boolean
     addToolResult: AddToolResultFn
     onSuggestionSelect: (prompt: string) => void
-    onRegenerate: () => void
+    onRegenerate: (slotKey: string) => void
     onAction: (action: string, messageId: string) => void
     onFeedback: (messageId: string, rating: "like" | "dislike", reason?: string) => void
     responseVersions: Map<string, string[]>
@@ -82,7 +82,7 @@ export function ChatMessageList({
                             addToolResult={addToolResult}
                             isLoading={isLastAssistant && isStreaming}
                             isLast={isLast}
-                            onRegenerate={onRegenerate}
+                            onRegenerate={slotKey ? () => onRegenerate(slotKey) : undefined}
                             onAction={onAction}
                             onFeedback={onFeedback}
                             versionInfo={versionInfo}

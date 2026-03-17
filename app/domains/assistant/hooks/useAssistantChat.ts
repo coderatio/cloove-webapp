@@ -41,7 +41,7 @@ interface UseAssistantChatReturn {
     deleteConversation: (id: string) => Promise<void>
     fetchConversations: (filter?: 'active' | 'archived') => Promise<void>
     submitFeedback: (messageId: string, rating: "like" | "dislike", reason?: string) => Promise<void>
-    regenerate: () => void
+    regenerate: (slotKey: string) => void
     responseVersions: Map<string, string[]>
     versionCursorMap: Map<string, number>
     navigateVersion: (slotKey: string, dir: "prev" | "next") => void
@@ -127,6 +127,56 @@ function mapApiToAssistantMessages(
                 feedback: message.feedback ?? null,
             }
         })
+}
+
+/**
+ * Process raw API messages into display messages + version state.
+ * Consecutive assistant messages for the same user turn are grouped as versions:
+ * only the last (most recent) assistant is shown; all versions populate responseVersions.
+ */
+function processLoadedMessages(raw: Array<{ id: string; role: string; content: any; feedback?: any }>): {
+    messages: AssistantMessage[]
+    responseVersions: Map<string, string[]>
+    versionCursorMap: Map<string, number>
+} {
+    const allMapped = mapApiToAssistantMessages(raw)
+    const messages: AssistantMessage[] = []
+    const responseVersions = new Map<string, string[]>()
+    const versionCursorMap = new Map<string, number>()
+
+    let i = 0
+    while (i < allMapped.length) {
+        const msg = allMapped[i]
+        if (msg.role === "user") {
+            messages.push(msg)
+            const slotKey = msg.id
+            // Collect all immediately following assistant messages
+            const assistantVersions: AssistantMessage[] = []
+            let j = i + 1
+            while (j < allMapped.length && allMapped[j].role === "assistant") {
+                assistantVersions.push(allMapped[j])
+                j++
+            }
+            if (assistantVersions.length > 0) {
+                // Show only the latest assistant version
+                messages.push(assistantVersions[assistantVersions.length - 1])
+                if (assistantVersions.length > 1) {
+                    const texts = assistantVersions.map((a) =>
+                        a.parts.filter((p) => p.type === "text").map((p) => (p as any).text).join("\n")
+                    )
+                    responseVersions.set(slotKey, texts)
+                    versionCursorMap.set(slotKey, texts.length - 1)
+                }
+            }
+            i = j
+        } else {
+            // Lone assistant at start (shouldn't normally happen)
+            messages.push(msg)
+            i++
+        }
+    }
+
+    return { messages, responseVersions, versionCursorMap }
 }
 
 /** Map SDK UIMessage[] → domain AssistantMessage[] (for live chat) */
@@ -226,9 +276,15 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
     const [responseVersions, setResponseVersions] = useState<Map<string, string[]>>(new Map())
     const [versionCursorMap, setVersionCursorMap] = useState<Map<string, number>>(new Map())
+    const [isRegeneratingMiddle, setIsRegeneratingMiddle] = useState(false)
     const regeneratingSlotRef = useRef<string | null>(null)
     const wasStreamingRef = useRef(false)
+    const sdkMessagesRef = useRef<MappedUIMessage[]>([])
+    const wasMiddleRegenRef = useRef(false)
 
+    useEffect(() => {
+        sdkMessagesRef.current = sdkMessages
+    }, [sdkMessages])
 
     const isStreaming = status === "streaming" || status === "submitted"
     const isWaitingForResponse = status === "submitted"
@@ -336,15 +392,21 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
         if (newFromSdk.length === 0) return loadedMessages
 
-        // Regeneration case: if the new SDK content starts with an assistant message
-        // it means the last loaded assistant was regenerated — replace it instead of appending
+        // Middle-message regeneration: hide the transient SDK response from the list.
+        // The captured text will be displayed via the versionInfo override in ChatMessage.
+        if (isRegeneratingMiddle && newFromSdk[0]?.role === 'assistant') {
+            return loadedMessages
+        }
+
+        // Last-assistant regeneration: the SDK produced a new assistant response —
+        // replace the last loaded assistant instead of appending.
         const lastLoaded = loadedMessages[loadedMessages.length - 1]
-        if (lastLoaded?.role === 'assistant' && newFromSdk[0]?.role === 'assistant') {
+        if (!isRegeneratingMiddle && lastLoaded?.role === 'assistant' && newFromSdk[0]?.role === 'assistant') {
             return [...loadedMessages.slice(0, -1), ...newFromSdk]
         }
 
         return [...loadedMessages, ...newFromSdk]
-    }, [sdkMapped, loadedMessages])
+    }, [sdkMapped, loadedMessages, isRegeneratingMiddle])
 
     // Keep a ref to the latest messages so the effect below doesn't depend on `messages`
     const messagesRef = useRef(messages)
@@ -447,19 +509,28 @@ export function useAssistantChat(): UseAssistantChatReturn {
     )
 
     // ── Regenerate ────────────────────────────────────────────────────
-    const regenerate = useCallback(() => {
+    const regenerate = useCallback((slotKey: string) => {
         if (isStreaming) return
 
         const msgs = messagesRef.current
-        const reversedMsgs = [...msgs].reverse()
-        const lastAssistantMsg = reversedMsgs.find(m => m.role === 'assistant')
-        const lastUserMsg = reversedMsgs.find(m => m.role === 'user')
-        if (!lastAssistantMsg || !lastUserMsg) return
 
-        const slotKey = lastUserMsg.id
+        // Find the target assistant message for this slotKey
+        let targetAssistantIdx = -1
+        for (let i = 0; i < msgs.length; i++) {
+            if (msgs[i].role !== 'assistant') continue
+            const precedingUser = [...msgs].slice(0, i).reverse().find(m => m.role === 'user')
+            if (precedingUser?.id === slotKey) { targetAssistantIdx = i; break }
+        }
+        if (targetAssistantIdx === -1) return
+        const targetAssistant = msgs[targetAssistantIdx]
 
+        // Determine if this is the last assistant message in the conversation
+        const lastAssistantIdx = [...msgs.entries()].reverse().find(([, m]) => m.role === 'assistant')?.[0] ?? -1
+        const isLastAssistant = targetAssistantIdx === lastAssistantIdx
+
+        // Capture current text as version 0 if not yet tracked
         if (!responseVersions.has(slotKey)) {
-            const currentText = lastAssistantMsg.parts
+            const currentText = targetAssistant.parts
                 .filter(p => p.type === 'text')
                 .map(p => (p as any).text)
                 .join('\n')
@@ -476,11 +547,15 @@ export function useAssistantChat(): UseAssistantChatReturn {
         }
 
         regeneratingSlotRef.current = slotKey
+        if (!isLastAssistant) {
+            setIsRegeneratingMiddle(true)
+            wasMiddleRegenRef.current = true
+        }
 
-        // Always seed the SDK with the full current history so sdkRegenerate has
-        // the right messages regardless of whether this is a fresh or loaded session.
-        // sdkRegenerate will then drop the last assistant and re-submit.
+        // Seed SDK with history up to and including the target assistant,
+        // then sdkRegenerate removes it and re-submits.
         const uiMessages = msgs
+            .slice(0, targetAssistantIdx + 1)
             .filter(m => m.role === 'user' || m.role === 'assistant')
             .map(m => ({
                 id: m.id,
@@ -491,8 +566,9 @@ export function useAssistantChat(): UseAssistantChatReturn {
                 metadata: undefined as AssistantMessageMetadata | undefined,
             }))
         setMessages(uiMessages)
+        transport.isNextRegeneration = true
         sdkRegenerate()
-    }, [isStreaming, responseVersions, sdkRegenerate, setMessages])
+    }, [isStreaming, responseVersions, sdkRegenerate, setMessages, transport])
 
     // ── Capture new version after streaming ends ───────────────────────
     useEffect(() => {
@@ -504,12 +580,17 @@ export function useAssistantChat(): UseAssistantChatReturn {
         if (!slotKey) return
         regeneratingSlotRef.current = null
 
-        const newLastAssistant = [...messagesRef.current].reverse().find(m => m.role === 'assistant')
-        if (!newLastAssistant) return
+        // Read directly from SDK messages (not merged) to get the new assistant text
+        const lastSdkAssistant = [...sdkMessagesRef.current].reverse().find(m => m.role === 'assistant')
+        if (!lastSdkAssistant) {
+            wasMiddleRegenRef.current = false
+            setIsRegeneratingMiddle(false)
+            return
+        }
 
-        const newText = newLastAssistant.parts
-            .filter(p => p.type === 'text')
-            .map(p => (p as any).text)
+        const newText = lastSdkAssistant.parts
+            .filter((p: any) => p.type === 'text')
+            .map((p: any) => p.text)
             .join('\n')
 
         const existingVersions = responseVersions.get(slotKey) ?? []
@@ -526,6 +607,13 @@ export function useAssistantChat(): UseAssistantChatReturn {
             newMap.set(slotKey, newVersionIndex)
             return newMap
         })
+
+        // For middle-message regeneration, clear the transient SDK messages
+        // so they don't bleed into the merged view after isRegeneratingMiddle is cleared
+        const wasMiddle = wasMiddleRegenRef.current
+        wasMiddleRegenRef.current = false
+        if (wasMiddle) setMessages([])
+        setIsRegeneratingMiddle(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isStreaming])
 
@@ -558,12 +646,25 @@ export function useAssistantChat(): UseAssistantChatReturn {
         apiClient
             .get<{
                 conversationId: string
-                messages: Array<{ id: string; role: string; content: any }>
+                messages: Array<{ id: string; role: string; content: any; feedback?: any }>
             }>(`/assistant/conversations/${id}`)
             .then((data) => {
                 if (activeChatIdRef.current !== id) return
-                const mapped = mapApiToAssistantMessages(data.messages)
+                const { messages: mapped, responseVersions: loadedVersions, versionCursorMap: loadedCursors } =
+                    processLoadedMessages(data.messages)
                 setLoadedMessagesMap((prev) => ({ ...prev, [id]: mapped }))
+                if (loadedVersions.size > 0) {
+                    setResponseVersions((prev) => {
+                        const newMap = new Map(prev)
+                        loadedVersions.forEach((v, k) => newMap.set(k, v))
+                        return newMap
+                    })
+                    setVersionCursorMap((prev) => {
+                        const newMap = new Map(prev)
+                        loadedCursors.forEach((c, k) => newMap.set(k, c))
+                        return newMap
+                    })
+                }
             })
             .catch(() => {
                 fetchedConversations.current.delete(id)
