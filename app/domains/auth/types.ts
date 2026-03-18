@@ -53,6 +53,5 @@ export interface LoginResponseUser {
 }
 
 export interface LoginResponse {
-    token: string
     user?: LoginResponseUser
 }

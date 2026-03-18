@@ -38,8 +38,9 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.clooveai.com";
-    // Handle both cases: base URL with and without /api suffix
+    // Use server-only var for the proxy destination (no NEXT_PUBLIC_ needed for rewrites).
+    // Falls back to production API when not set.
+    const baseUrl = process.env.API_BASE_URL || "https://api.clooveai.com";
     const destinationBase = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 
     return [

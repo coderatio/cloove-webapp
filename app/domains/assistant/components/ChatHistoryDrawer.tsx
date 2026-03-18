@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect, type ReactElement } from "react"
-import { Check, X, Plus, MessageSquare, Pin, MoreHorizontal, Pencil, PinOff, Archive, Trash2, Loader2, Search, AlertCircle } from "lucide-react"
+import { Check, X, Plus, MessageSquare, Pin, MoreHorizontal, Pencil, PinOff, Archive, Trash2, Loader2, Search, AlertCircle, FileText, Receipt } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -207,6 +207,10 @@ export function ChatHistoryDrawer({
                                                     >
                                                         {conv.isPinned ? (
                                                             <Pin className="w-4 h-4 text-brand-gold fill-brand-gold/10" />
+                                                        ) : conv.agentType === "proposal" ? (
+                                                            <FileText className="w-4 h-4 text-emerald-500" />
+                                                        ) : conv.agentType === "invoice" ? (
+                                                            <Receipt className="w-4 h-4 text-amber-500" />
                                                         ) : (
                                                             <MessageSquare className="w-4 h-4" />
                                                         )}

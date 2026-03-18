@@ -39,28 +39,11 @@ export interface ApiResponse<T = any> {
  * Core API Client for making HTTP requests
  */
 export const apiClient = {
-    /**
-     * Token management
-     */
-    getToken() {
-        return storage.getToken()
-    },
-
-    setToken(token: string) {
-        storage.setToken(token)
-    },
-
-    clearToken() {
-        storage.clear()
-    },
-
     async refresh() {
         try {
-            const data = await this.post<{ token: string }>("/security/refresh", {}, { skipAuthRedirect: true })
-            this.setToken(data.token)
+            const data = await this.post<{ expiresAt: string }>("/security/refresh", {}, { skipAuthRedirect: true })
             return data
         } catch (error) {
-            //console.error("[API Client] Token refresh failed:", error)
             throw error
         }
     },
@@ -69,7 +52,7 @@ export const apiClient = {
         try {
             await this.post("/security/logout", {})
         } finally {
-            this.clearToken()
+            storage.clear()
             if (typeof window !== 'undefined') {
                 window.location.href = '/login'
             }
@@ -122,13 +105,11 @@ export const apiClient = {
         const { params, headers, businessIdOverride, ...customConfig } = options
 
         const url = this.buildUrl(endpoint, params)
-        const token = this.getToken()
         const businessId = businessIdOverride !== undefined && businessIdOverride !== null
             ? businessIdOverride
             : storage.getActiveBusinessId()
 
         const requestHeaders: Record<string, string> = {
-            ...(token ? { "Authorization": `Bearer ${token}` } : {}),
             ...(businessId ? { "x-business-id": businessId } : {}),
         }
 
@@ -151,6 +132,7 @@ export const apiClient = {
         const config: RequestInit = {
             ...customConfig,
             headers: requestHeaders,
+            credentials: 'include',
         }
 
         try {
@@ -178,8 +160,6 @@ export const apiClient = {
             if (!response.ok) {
                 // Handle specific status codes
                 if (response.status === HttpStatus.UNAUTHORIZED && !options.skipAuthRedirect) {
-                    this.clearToken()
-
                     // Redirect to login on authentication failure
                     if (typeof window !== 'undefined') {
                         const currentPath = window.location.pathname

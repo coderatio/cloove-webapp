@@ -3,9 +3,16 @@ import { apiClient } from "@/app/lib/api-client"
 import { storage } from "@/app/lib/storage"
 import type { FileAttachment } from "../types"
 
+// Credentials for cross-origin cookie auth
+const credentialFetch: typeof fetch = (url, options) =>
+    fetch(url, { ...options, credentials: 'include' })
+
 interface AssistantMessageMetadata {
     attachments?: FileAttachment[]
     analysis?: boolean
+    agentType?: string | null
+    conversationId?: string
+    title?: string
 }
 
 type AssistantUIMessage = UIMessage<AssistantMessageMetadata>
@@ -18,10 +25,8 @@ interface AssistantAttachmentPayload {
 }
 
 function buildAuthHeaders(): Record<string, string> {
-    const token = storage.getToken()
     const businessId = storage.getActiveBusinessId()
     return {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(businessId ? { "x-business-id": businessId } : {}),
     }
 }
@@ -80,18 +85,23 @@ export class AssistantChatTransport extends DefaultChatTransport<AssistantUIMess
     isNextRegeneration = false
     /** The preceding user message ID — set alongside isNextRegeneration for positional tracking */
     regenerationSlotKey: string | null = null
+    /** Set before sending first message in an agent chat */
+    agentType: string | null = null
 
     constructor() {
         super({
             api: apiClient.buildUrl("/assistant/messages/stream"),
             headers: buildAuthHeaders,
+            fetch: credentialFetch,
             prepareSendMessagesRequest: ({ id, messages }) => {
                 const lastUserMessage = getLastUserMessage(messages)
                 const payload = buildPayloadFromMessage(lastUserMessage)
                 const isRegeneration = this.isNextRegeneration
                 const slotKey = this.regenerationSlotKey
+                const agentType = this.agentType
                 this.isNextRegeneration = false
                 this.regenerationSlotKey = null
+                this.agentType = null
                 return {
                     body: {
                         conversationId: id,
@@ -100,6 +110,7 @@ export class AssistantChatTransport extends DefaultChatTransport<AssistantUIMess
                         analysis: payload.analysis,
                         isRegeneration,
                         ...(slotKey ? { slotKey } : {}),
+                        ...(agentType ? { agentType } : {}),
                     },
                 }
             },

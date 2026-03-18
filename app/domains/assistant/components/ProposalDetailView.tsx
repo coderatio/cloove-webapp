@@ -1,9 +1,10 @@
 "use client"
 
-import { type ReactElement } from "react"
-import { FileText, Download } from "lucide-react"
+import { useState, useEffect, useRef, type ReactElement } from "react"
+import { FileText, Download, Loader2, Sparkles } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { Markdown } from "@/app/components/ui/markdown"
+import { DocumentEditor } from "@/app/components/ui/document-editor"
 import {
     Drawer,
     DrawerContent,
@@ -14,81 +15,141 @@ import {
     DrawerDescription,
 } from "@/app/components/ui/drawer"
 import { VisuallyHidden } from "@/app/components/ui/visually-hidden"
-import type { ProposalPart } from "../types"
+import { useDocumentDraft } from "../hooks/useDocumentDraft"
 
 interface ProposalDetailViewProps {
-    proposal: ProposalPart
+    draftId: string
+    clientName: string
+    projectName: string
+    streamingContent: string
+    isStreaming: boolean
+    onClose?: () => void
     open: boolean
     onOpenChange: (open: boolean) => void
-    onGeneratePdf?: () => void
 }
 
-export function ProposalDetailView({ proposal, open, onOpenChange, onGeneratePdf }: ProposalDetailViewProps): ReactElement {
+/** Convert markdown to basic HTML for tiptap initial content */
+function markdownToHtml(markdown: string): string {
+    return markdown
+        .split('\n\n')
+        .map((block) => {
+            if (block.startsWith('# ')) {
+                return `<h1>${block.slice(2).trim()}</h1>`
+            }
+            if (block.startsWith('## ')) {
+                return `<h2>${block.slice(3).trim()}</h2>`
+            }
+            if (block.startsWith('### ')) {
+                return `<h3>${block.slice(4).trim()}</h3>`
+            }
+            if (block.startsWith('- ') || block.startsWith('* ')) {
+                const items = block.split('\n').map((l) => `<li>${l.replace(/^[-*]\s+/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>')}</li>`)
+                return `<ul>${items.join('')}</ul>`
+            }
+            if (/^\d+\.\s/.test(block)) {
+                const items = block.split('\n').map((l) => `<li>${l.replace(/^\d+\.\s+/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>')}</li>`)
+                return `<ol>${items.join('')}</ol>`
+            }
+            const text = block.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/\n/g, '<br />')
+            return `<p>${text}</p>`
+        })
+        .join('')
+}
+
+export function ProposalDetailView({
+    draftId,
+    clientName,
+    projectName,
+    streamingContent,
+    isStreaming,
+    open,
+    onOpenChange,
+}: ProposalDetailViewProps): ReactElement {
+    const { isSaving, isGeneratingPdf, updateContent, generatePdf } = useDocumentDraft(draftId)
+    const [editorContent, setEditorContent] = useState("")
+    const hasTransitioned = useRef(false)
+
+    // When streaming ends for the first time, convert markdown to HTML for tiptap
+    useEffect(() => {
+        if (!isStreaming && streamingContent && !hasTransitioned.current) {
+            hasTransitioned.current = true
+            setEditorContent(markdownToHtml(streamingContent))
+        }
+    }, [isStreaming, streamingContent])
+
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
             <DrawerContent>
                 <VisuallyHidden>
-                    <DrawerTitle>{proposal.title || "Business Proposal"}</DrawerTitle>
-                    <DrawerDescription>Proposal details for {proposal.clientName}</DrawerDescription>
+                    <DrawerTitle>{projectName || "Business Proposal"}</DrawerTitle>
+                    <DrawerDescription>Proposal for {clientName}</DrawerDescription>
                 </VisuallyHidden>
                 <DrawerStickyHeader>
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-brand-green/20 flex items-center justify-center text-brand-green shrink-0">
-                            <FileText className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0">
-                            <h2 className="text-lg font-serif font-semibold text-brand-deep dark:text-brand-cream truncate">
-                                {proposal.title || "Business Proposal"}
-                            </h2>
-                            <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] uppercase tracking-widest text-brand-green font-bold">
-                                    {proposal.status}
-                                </span>
-                                {proposal.totalValue != null && (
-                                    <span className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 font-bold">
-                                        • ₦{proposal.totalValue.toLocaleString()}
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-10 w-10 rounded-xl bg-brand-green/20 flex items-center justify-center text-brand-green shrink-0">
+                                <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0">
+                                <h2 className="text-lg font-serif font-semibold text-brand-deep dark:text-brand-cream truncate">
+                                    {projectName || "Business Proposal"}
+                                </h2>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] uppercase tracking-widest text-brand-green font-bold">
+                                        Draft
                                     </span>
-                                )}
+                                    <span className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40">
+                                        • {clientName}
+                                    </span>
+                                </div>
                             </div>
                         </div>
+                        {isSaving && (
+                            <span className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 shrink-0">
+                                Saving…
+                            </span>
+                        )}
                     </div>
                 </DrawerStickyHeader>
 
                 <DrawerBody>
-                    <div className="space-y-2 mb-6">
-                        <div className="flex justify-between items-center text-xs text-brand-deep/50 dark:text-brand-cream/50">
-                            <span className="font-bold uppercase tracking-wider">Client</span>
-                            <span className="font-medium text-brand-deep dark:text-brand-cream">{proposal.clientName}</span>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        {proposal.sections.map((section, i) => (
-                            <div key={i} className="space-y-2">
-                                <h3 className="text-sm font-bold text-brand-green uppercase tracking-wider">
-                                    {section.title}
-                                </h3>
-                                <div className="text-sm text-brand-deep/80 dark:text-brand-cream/80 leading-relaxed">
-                                    <Markdown content={section.content} />
-                                </div>
+                    {isStreaming ? (
+                        // Live streaming preview
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-1.5 text-xs text-brand-green/70">
+                                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                                <span>Writing proposal…</span>
                             </div>
-                        ))}
-                    </div>
+                            <div className="text-sm text-brand-deep/80 dark:text-brand-cream/80 leading-relaxed">
+                                <Markdown content={streamingContent} streaming />
+                            </div>
+                        </div>
+                    ) : (
+                        // Tiptap editor once streaming ends
+                        <DocumentEditor
+                            content={editorContent}
+                            onChange={updateContent}
+                            placeholder="Proposal content will appear here…"
+                        />
+                    )}
                 </DrawerBody>
 
                 <DrawerFooter>
-                    <div className="flex gap-3">
-                        {onGeneratePdf && (
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={onGeneratePdf}
-                                className="border border-brand-green/20 text-brand-green hover:bg-brand-green/5"
-                            >
+                    <div className="flex items-center gap-3">
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={generatePdf}
+                            disabled={isStreaming || isGeneratingPdf}
+                            className="border border-brand-green/20 text-brand-green hover:bg-brand-green/5"
+                        >
+                            {isGeneratingPdf ? (
+                                <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                            ) : (
                                 <Download className="w-3.5 h-3.5 mr-2" />
-                                Export PDF
-                            </Button>
-                        )}
+                            )}
+                            Generate PDF
+                        </Button>
                     </div>
                 </DrawerFooter>
             </DrawerContent>

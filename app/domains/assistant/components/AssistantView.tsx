@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, type ReactElement } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo, type ReactElement } from "react"
 import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2, Menu } from "lucide-react"
@@ -13,6 +13,8 @@ import { ChatHistorySidebar } from "./ChatHistorySidebar"
 import { ChatHistoryDrawer } from "./ChatHistoryDrawer"
 import { ChatWelcome } from "./ChatWelcome"
 import { useMobileNav } from "@/app/components/providers/mobile-nav-provider"
+import { getAgentById } from "../lib/agent-config"
+import { useIsMobile } from "@/app/hooks/useMediaQuery"
 
 export function AssistantView(): ReactElement {
     const router = useRouter()
@@ -20,6 +22,7 @@ export function AssistantView(): ReactElement {
     const {
         conversations,
         activeChatId,
+        activeAgentType,
         messages,
         isStreaming,
         isWaitingForResponse,
@@ -47,18 +50,31 @@ export function AssistantView(): ReactElement {
     } = useAssistantChat()
 
     const { isMenuOpen } = useMobileNav()
+    const isMobile = useIsMobile()
 
     const [isHistoryOpen, setIsHistoryOpen] = useState(false)
     const [isViewingArchived, setIsViewingArchived] = useState(false)
+    const [inputHeight, setInputHeight] = useState(0)
     const initializedFromUrl = useRef(false)
     const lastPushedId = useRef<string | null>(null)
 
     const activeChat = conversations.find((c) => c.id === activeChatId)
+    const activeAgent = activeAgentType ? getAgentById(activeAgentType) : null
     const hasMessages = messages.length > 0
 
-    const handleSuggestionSelect = (prompt: string) => {
-        sendMessage(prompt)
-    }
+    // Stabilize callbacks using refs so ChatMessageList memo isn't broken
+    const sendMessageRef = useRef(sendMessage)
+    sendMessageRef.current = sendMessage
+    const messagesRef = useRef(messages)
+    messagesRef.current = messages
+
+    const handleSuggestionSelect = useCallback((prompt: string) => {
+        sendMessageRef.current(prompt)
+    }, [])
+
+    const handleHeightChange = useCallback((height: number) => {
+        setInputHeight(height)
+    }, [])
 
     const handleRename = async (id: string, title: string) => {
         const tid = toast.loading("Renaming conversation...")
@@ -121,8 +137,8 @@ export function AssistantView(): ReactElement {
         }
     }
 
-    const handleAction = (action: string, messageId: string) => {
-        const msg = messages.find(m => m.id === messageId)
+    const handleAction = useCallback((action: string, messageId: string) => {
+        const msg = messagesRef.current.find(m => m.id === messageId)
         if (!msg) return
 
         const textContent = msg.parts
@@ -131,11 +147,11 @@ export function AssistantView(): ReactElement {
             .join('\n')
 
         if (action === 'create-proposal') {
-            sendMessage(`Based on the information above, create a formal business proposal:\n\n${textContent.slice(0, 500)}...`)
+            sendMessageRef.current(textContent.slice(0, 2000), { agentType: 'proposal' })
         } else if (action === 'create-invoice') {
-            sendMessage(`Can you help me create an invoice based on these details?\n\n${textContent.slice(0, 500)}...`)
+            sendMessageRef.current(textContent.slice(0, 2000), { agentType: 'invoice' })
         }
-    }
+    }, [])
 
 
     // Write activeChatId to URL (one-way: state → URL)
@@ -183,7 +199,7 @@ export function AssistantView(): ReactElement {
                             <Menu className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
                         </button>
                         <h1 className="flex-1 min-w-0 text-sm font-serif font-medium text-brand-deep dark:text-brand-cream truncate">
-                            {activeChat?.title || "New Conversation"}
+                            {activeAgent ? `${activeAgent.name} — ${activeChat?.title || "New"}` : activeChat?.title || "New Conversation"}
                         </h1>
                     </div>
 
@@ -197,7 +213,7 @@ export function AssistantView(): ReactElement {
                                 className="font-serif text-[clamp(1.5rem,1.25rem+1vw,2.1rem)] font-medium text-brand-deep dark:text-brand-cream truncate"
                             >
                                 <span className="bg-linear-to-r from-brand-deep via-brand-green to-brand-gold bg-clip-text text-transparent dark:from-brand-cream dark:via-brand-gold dark:to-brand-green">
-                                    {activeChat?.title || "New Conversation"}
+                                    {activeAgent ? activeAgent.name : activeChat?.title || "New Conversation"}
                                 </span>
                             </motion.h1>
                         </div>
@@ -226,7 +242,7 @@ export function AssistantView(): ReactElement {
                         <div className="flex-1 flex items-center justify-center">
                             <Loader2 className="h-6 w-6 animate-spin text-brand-gold" />
                         </div>
-                    ) : hasMessages ? (
+                    ) : (hasMessages || isWaitingForResponse) ? (
                         <ChatMessageList
                             messages={messages}
                             isStreaming={isStreaming}
@@ -241,7 +257,9 @@ export function AssistantView(): ReactElement {
                             onNavigateVersion={navigateVersion}
                             isRegeneratingMiddle={isRegeneratingMiddle}
                             pendingRegenMap={pendingRegenMap}
-                            className="flex-1 overflow-y-auto space-y-6 pb-40 md:pb-6 scrollbar-hide px-4 md:pl-0 lg:px-6 pt-16 md:pt-0"
+                            agentType={activeAgentType}
+                            className="flex-1 overflow-y-auto space-y-6 md:pb-6 scrollbar-hide px-4 md:pl-0 lg:px-6 pt-16 md:pt-0"
+                            bottomPadding={isMobile && inputHeight > 0 ? inputHeight + 40 : undefined}
                         />
 
                     ) : (
@@ -260,6 +278,8 @@ export function AssistantView(): ReactElement {
                                 onStop={stop}
                                 focusTrigger={activeChatId}
                                 isRegenerating={isRegenerating}
+                                activeAgentType={activeAgentType}
+                                onHeightChange={handleHeightChange}
                             />
                         </div>
                     )}

@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { apiClient } from "@/app/lib/api-client"
-import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { SessionManager } from "../auth/SessionManager"
 
 export interface UserCountryDetail {
@@ -37,7 +36,7 @@ interface AuthContextType {
     isLoading: boolean
     logout: () => void
     refreshUser: () => Promise<void>
-    updateUserMetadata: (token: string) => void
+    updateUserMetadata: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -48,19 +47,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fetchUser = async (silent = false) => {
         if (!silent) setIsLoading(true)
-        const token = storage.get(STORAGE_KEYS.AUTH_TOKEN)
-        if (!token) {
-            setUser(null)
-            setIsLoading(false)
-            return
-        }
-
         try {
-            const userData = await apiClient.get<User>("/security/me")
+            const userData = await apiClient.get<User>("/security/me", undefined, { skipAuthRedirect: true })
             setUser(userData)
         } catch (error) {
-            console.error("Failed to fetch user:", error)
-            // If it's a 401, the apiClient will handle the redirect
+            // 401 means no valid session — just clear user state
+            setUser(null)
         } finally {
             if (!silent) setIsLoading(false)
         }
@@ -77,17 +69,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null)
             await apiClient.logout()
         } catch (error) {
-            console.error("Logout failed:", error)
-            storage.clear()
             window.location.href = "/login"
         }
     }
 
-    const updateUserMetadata = (token: string) => {
-        // This is called when the session manager refreshes the token
-        // We don't necessarily need to update the user object if nothing changed,
-        // but it's a good place if we want to update expiresAt in the future.
-        // For now, apiClient.refresh() already saves the token to storage.
+    const updateUserMetadata = () => {
+        // Called when the session manager refreshes the token (cookie rotated server-side).
+        // No client-side action needed — the cookie is updated via the Set-Cookie header.
     }
 
     return (

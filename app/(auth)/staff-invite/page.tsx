@@ -8,6 +8,7 @@ import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { apiClient } from "@/app/lib/api-client"
 import { storage } from "@/app/lib/storage"
+import { useAuth } from "@/app/components/providers/auth-provider"
 import { toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -49,11 +50,12 @@ const strengthLabels = {
 export default function StaffInvitePage() {
     const searchParams = useSearchParams()
     const router = useRouter()
+    const { user } = useAuth()
     const token = searchParams.get('token')
     const [status, setStatus] = useState<InviteStatus>('loading')
     const [inviteData, setInviteData] = useState<InviteData | null>(null)
     const [isAccepting, setIsAccepting] = useState(false)
-    const isLoggedIn = typeof window !== 'undefined' && !!storage.getToken()
+    const isLoggedIn = !!user
 
     // Password setup state
     const [password, setPassword] = useState('')
@@ -147,12 +149,7 @@ export default function StaffInvitePage() {
                 password,
             })
 
-            // Auto-login: store the auth token
-            if (res?.token) {
-                storage.setToken(res.token)
-            }
-
-            // Set the active business if available
+            // Auth cookie is set server-side; just set the active business if available
             if (res?.membership?.businessId) {
                 storage.setActiveBusinessId(res.membership.businessId)
             }

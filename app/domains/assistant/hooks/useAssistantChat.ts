@@ -19,11 +19,13 @@ interface AssistantMessageMetadata {
     analysis?: boolean
     conversationId?: string
     title?: string
+    agentType?: string | null
 }
 
 interface UseAssistantChatReturn {
     conversations: Conversation[]
     activeChatId: string
+    activeAgentType: string | null
     messages: AssistantMessage[]
     isStreaming: boolean
     isWaitingForResponse: boolean
@@ -53,6 +55,7 @@ interface UseAssistantChatReturn {
 interface SendMessageOptions {
     attachments?: FileAttachment[]
     analysis?: boolean
+    agentType?: string | null
 }
 
 type MappedUIMessage = UIMessage<AssistantMessageMetadata>
@@ -255,6 +258,10 @@ function mapSdkToAssistantMessages(sdkMessages: MappedUIMessage[]): AssistantMes
 
 const INITIAL_CHAT_ID = `chat-${Date.now()}`
 
+// Stable empty map reused whenever no regeneration is in progress, so
+// pendingRegenMap never produces a new reference on every streaming chunk.
+const EMPTY_REGEN_MAP = new Map<string, string>()
+
 export function useAssistantChat(): UseAssistantChatReturn {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id ?? null
@@ -300,7 +307,24 @@ export function useAssistantChat(): UseAssistantChatReturn {
         transport,
     })
 
+    // ── Stable refs for ALL useChat functions ────────────────────────────
+    // useChat recreates these on every render (they close over current state).
+    // Wrapping in refs prevents every downstream useCallback from being
+    // recreated on every streaming token, which is what was breaking memo().
+    const setMessagesRef = useRef(setMessages)
+    const sendChatMessageRef = useRef(sendChatMessage)
+    const sdkRegenerateRef = useRef(sdkRegenerate)
+    const addToolOutputRef = useRef(addToolOutput)
+    const stopStreamingRef = useRef(stopStreaming)
+    setMessagesRef.current = setMessages
+    sendChatMessageRef.current = sendChatMessage
+    sdkRegenerateRef.current = sdkRegenerate
+    addToolOutputRef.current = addToolOutput
+    stopStreamingRef.current = stopStreaming
+
     const [responseVersions, setResponseVersions] = useState<Map<string, string[]>>(new Map())
+    const responseVersionsRef = useRef(responseVersions)
+    responseVersionsRef.current = responseVersions
     const [versionCursorMap, setVersionCursorMap] = useState<Map<string, number>>(new Map())
     const [isRegeneratingMiddle, setIsRegeneratingMiddle] = useState(false)
     const [currentRegeneratingSlot, setCurrentRegeneratingSlot] = useState<string | null>(null)
@@ -308,14 +332,17 @@ export function useAssistantChat(): UseAssistantChatReturn {
     const wasStreamingRef = useRef(false)
     const sdkMessagesRef = useRef<MappedUIMessage[]>([])
     const wasMiddleRegenRef = useRef(false)
+    const isStreamingRef = useRef(false)
 
     // Live streaming text for the message currently being regenerated (middle messages only).
     // This drives the inline "Regenerating..." view within the original message bubble.
+    // Return EMPTY_REGEN_MAP (stable reference) when not regenerating to avoid creating
+    // a new Map object on every streaming chunk.
     const pendingRegenMap = useMemo(() => {
-        const map = new Map<string, string>()
-        if (!currentRegeneratingSlot || !isRegeneratingMiddle) return map
+        if (!currentRegeneratingSlot || !isRegeneratingMiddle) return EMPTY_REGEN_MAP
         const lastSdk = [...sdkMessages].reverse().find((m) => m.role === "assistant")
-        if (!lastSdk) return map
+        if (!lastSdk) return EMPTY_REGEN_MAP
+        const map = new Map<string, string>()
         const text = lastSdk.parts
             .filter((p: any) => p.type === "text")
             .map((p: any) => p.text)
@@ -329,6 +356,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
     }, [sdkMessages])
 
     const isStreaming = status === "streaming" || status === "submitted"
+    isStreamingRef.current = isStreaming
     const isWaitingForResponse = status === "submitted"
 
     // ── Reset all state when business changes ───────────────────────────
@@ -345,9 +373,9 @@ export function useAssistantChat(): UseAssistantChatReturn {
         syncedConversationRef.current = null
         pendingBackendIdRef.current = null
         conversationsLoaded.current = false
-        setMessages([])
+        setMessagesRef.current([])
         setActiveChatIdRaw(newChatId)
-    }, [businessId, setMessages])
+    }, [businessId])
 
     const fetchConversations = useCallback(async (filter: 'active' | 'archived' = 'active') => {
         setIsLoadingConversations(true)
@@ -373,6 +401,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
                     preview: c.preview || undefined,
                     isPinned: c.isPinned ?? false,
                     isArchived: c.isArchived ?? false,
+                    agentType: c.agentType ?? null,
                     lastMessageAt: new Date(c.updatedAt),
                     messages: [],
                 }))
@@ -419,6 +448,15 @@ export function useAssistantChat(): UseAssistantChatReturn {
         pendingBackendIdRef.current = backendId
     }, [sdkMessages, activeChatId, isStreaming])
 
+    // ── Track agent type per conversation ────────────────────────────────
+    const [agentTypeMap, setAgentTypeMap] = useState<Record<string, string | null>>({})
+
+    const activeAgentType = useMemo(() => {
+        const conv = conversations.find((c) => c.id === activeChatId)
+        if (conv?.agentType) return conv.agentType
+        return agentTypeMap[activeChatId] ?? null
+    }, [activeChatId, conversations, agentTypeMap])
+
     // ── Combine SDK messages (live) with loaded messages (historical) ───
     const sdkMapped = useMemo(() => mapSdkToAssistantMessages(sdkMessages), [sdkMessages])
     const loadedMessages = loadedMessagesMap[activeChatId] ?? []
@@ -449,6 +487,28 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
         return [...loadedMessages, ...newFromSdk]
     }, [sdkMapped, loadedMessages, isRegeneratingMiddle])
+
+    // ── Throttle messages during streaming to limit React re-renders ─────────
+    // useChat fires a setState on every streaming token, re-rendering AssistantView
+    // hundreds of times per second. We expose a throttled version that updates at
+    // ~10fps so ChatMessageList (when memo'd) can skip most of those re-renders.
+    const latestMessagesRef = useRef<typeof messages>(messages)
+    latestMessagesRef.current = messages // always current, used by the drawer's getContent()
+
+    const [displayMessages, setDisplayMessages] = useState<typeof messages>(messages)
+
+    useEffect(() => {
+        if (!isStreaming) {
+            // Immediately propagate final state when streaming ends
+            setDisplayMessages(latestMessagesRef.current)
+            return
+        }
+        setDisplayMessages(latestMessagesRef.current) // immediate first update
+        const id = setInterval(() => {
+            setDisplayMessages(latestMessagesRef.current)
+        }, 100) // 10fps during streaming
+        return () => clearInterval(id)
+    }, [isStreaming])
 
     // Keep a ref to the latest messages so the effect below doesn't depend on `messages`
     const messagesRef = useRef(messages)
@@ -519,10 +579,27 @@ export function useAssistantChat(): UseAssistantChatReturn {
         setVersionCursorMap(new Map())
     }, [])
 
+    // ── Queued agent message (sent after React re-renders with new chat ID) ─
+    const pendingAgentMessageRef = useRef<{
+        text: string
+        files: FileUIPart[]
+        metadata: { attachments: FileAttachment[]; analysis?: boolean }
+    } | null>(null)
+
+    useEffect(() => {
+        const pending = pendingAgentMessageRef.current
+        if (!pending) return
+        pendingAgentMessageRef.current = null
+        sendChatMessageRef.current(pending.text
+            ? { text: pending.text, files: pending.files.length ? pending.files : undefined, metadata: pending.metadata }
+            : { files: pending.files, metadata: pending.metadata }
+        )
+    }, [activeChatId])
+
     // ── Send message ───────────────────────────────────────────────────
     const sendMessage = useCallback(
         (text: string, options?: SendMessageOptions) => {
-            if (isStreaming) return
+            if (isStreamingRef.current) return
             resetVersions()
             const trimmed = text.trim()
             const attachments = options?.attachments ?? []
@@ -534,12 +611,25 @@ export function useAssistantChat(): UseAssistantChatReturn {
             if (!trimmed && fileParts.length === 0) return
 
             const metadata = { attachments, analysis: options?.analysis }
-            sendChatMessage(trimmed
+
+            // When sending with an agent, create a new conversation for it
+            // Queue the message to send after React re-renders with the new ID
+            if (options?.agentType) {
+                const agentChatId = `chat-${Date.now()}`
+                localChatIds.current.add(agentChatId)
+                transport.agentType = options.agentType
+                setAgentTypeMap((prev) => ({ ...prev, [agentChatId]: options.agentType! }))
+                pendingAgentMessageRef.current = { text: trimmed, files: fileParts, metadata }
+                setActiveChatIdRaw(agentChatId)
+                return
+            }
+
+            sendChatMessageRef.current(trimmed
                 ? { text: trimmed, files: fileParts.length ? fileParts : undefined, metadata }
                 : { files: fileParts, metadata }
             )
         },
-        [isStreaming, sendChatMessage, resetVersions]
+        [resetVersions, transport]
     )
 
     // ── Submit feedback ────────────────────────────────────────────────
@@ -552,7 +642,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
     // ── Regenerate ────────────────────────────────────────────────────
     const regenerate = useCallback((slotKey: string) => {
-        if (isStreaming) return
+        if (isStreamingRef.current) return
 
         const msgs = messagesRef.current
 
@@ -571,7 +661,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         const isLastAssistant = targetAssistantIdx === lastAssistantIdx
 
         // Capture current text as version 0 if not yet tracked
-        if (!responseVersions.has(slotKey)) {
+        if (!responseVersionsRef.current.has(slotKey)) {
             const currentText = targetAssistant.parts
                 .filter(p => p.type === 'text')
                 .map(p => (p as any).text)
@@ -608,11 +698,11 @@ export function useAssistantChat(): UseAssistantChatReturn {
                     .map(p => ({ type: 'text' as const, text: (p as any).text })),
                 metadata: undefined as AssistantMessageMetadata | undefined,
             }))
-        setMessages(uiMessages)
+        setMessagesRef.current(uiMessages)
         transport.isNextRegeneration = true
         transport.regenerationSlotKey = slotKey
-        sdkRegenerate()
-    }, [isStreaming, responseVersions, sdkRegenerate, setMessages, transport])
+        sdkRegenerateRef.current()
+    }, [transport])
 
     // ── Capture new version after streaming ends ───────────────────────
     useEffect(() => {
@@ -638,7 +728,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
             .map((p: any) => p.text)
             .join('\n')
 
-        const existingVersions = responseVersions.get(slotKey) ?? []
+        const existingVersions = responseVersionsRef.current.get(slotKey) ?? []
         const newVersionIndex = existingVersions.length
 
         setResponseVersions(prev => {
@@ -657,7 +747,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         // so they don't bleed into the merged view after isRegeneratingMiddle is cleared
         const wasMiddle = wasMiddleRegenRef.current
         wasMiddleRegenRef.current = false
-        if (wasMiddle) setMessages([])
+        if (wasMiddle) setMessagesRef.current([])
         setIsRegeneratingMiddle(false)
         setCurrentRegeneratingSlot(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -666,14 +756,14 @@ export function useAssistantChat(): UseAssistantChatReturn {
     // ── Navigate version ───────────────────────────────────────────────
     const navigateVersion = useCallback((slotKey: string, dir: "prev" | "next") => {
         setVersionCursorMap(prev => {
-            const versions = responseVersions.get(slotKey) ?? []
+            const versions = responseVersionsRef.current.get(slotKey) ?? []
             const current = prev.get(slotKey) ?? (versions.length - 1)
             const next = dir === 'prev' ? Math.max(0, current - 1) : Math.min(versions.length - 1, current + 1)
             const newMap = new Map(prev)
             newMap.set(slotKey, next)
             return newMap
         })
-    }, [responseVersions])
+    }, [])
 
     // ── New chat ───────────────────────────────────────────────────────
     const startNewChat = useCallback(() => {
@@ -692,10 +782,14 @@ export function useAssistantChat(): UseAssistantChatReturn {
         apiClient
             .get<{
                 conversationId: string
+                agentType?: string | null
                 messages: Array<{ id: string; role: string; content: any; feedback?: any; slotKey?: string | null }>
             }>(`/assistant/conversations/${id}`)
             .then((data) => {
                 if (activeChatIdRef.current !== id) return
+                if (data.agentType) {
+                    setAgentTypeMap((prev) => ({ ...prev, [id]: data.agentType ?? null }))
+                }
                 const { messages: mapped, responseVersions: loadedVersions, versionCursorMap: loadedCursors } =
                     processLoadedMessages(data.messages)
                 setLoadedMessagesMap((prev) => ({ ...prev, [id]: mapped }))
@@ -791,18 +885,22 @@ export function useAssistantChat(): UseAssistantChatReturn {
     // ── Add tool result ────────────────────────────────────────────────
     const addToolResult = useCallback(
         ({ toolCallId, tool, output }: { toolCallId: string; tool: string; output: unknown }) => {
-            addToolOutput({ tool: tool as any, toolCallId, output, state: "output-available" })
+            addToolOutputRef.current({ tool: tool as any, toolCallId, output, state: "output-available" })
             void apiClient.post("/assistant/tool-results", {
-                conversationId: activeChatId, toolCallId, toolName: tool, output,
+                conversationId: activeChatIdRef.current, toolCallId, toolName: tool, output,
             }).catch(() => toast.error("Failed to save your response."))
         },
-        [activeChatId, addToolOutput]
+        []
     )
 
     return {
         conversations,
         activeChatId,
-        messages,
+        activeAgentType,
+        // Use throttled displayMessages during streaming (limits React re-renders to ~10fps).
+        // Use the live messages directly when not streaming so historical conversations
+        // and post-stream state propagate immediately without waiting for the interval.
+        messages: isStreaming ? displayMessages : messages,
         isStreaming,
         isWaitingForResponse,
         isLoadingConversation,
@@ -811,7 +909,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         startNewChat,
         setActiveChatId,
         addToolResult,
-        stop: stopStreaming,
+        stop: useCallback(() => { stopStreamingRef.current() }, []),
         renameConversation,
         pinConversation,
         archiveConversation,

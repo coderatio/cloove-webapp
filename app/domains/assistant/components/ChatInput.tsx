@@ -25,9 +25,11 @@ import {
     DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu"
 import { CameraDialog } from "./CameraDialog"
+import { AgentSelector } from "./AgentSelector"
 import { uploadService } from "@/app/lib/upload/upload-service"
 import { toast } from "sonner"
 import type { FileAttachment } from "../types"
+import type { AgentDefinition } from "../lib/agent-config"
 
 const MAX_ATTACHMENTS = 3
 const MAX_FILE_SIZE_MB = 10
@@ -38,6 +40,7 @@ const ACCEPTED_EXTENSIONS = ["pdf", "csv", "xlsx", "xls", "png", "jpg", "jpeg", 
 interface SendOptions {
     attachments?: FileAttachment[]
     analysis?: boolean
+    agentType?: string | null
 }
 
 interface ChatInputProps {
@@ -49,6 +52,10 @@ interface ChatInputProps {
     focusTrigger?: string | null
     /** When true, suppress auto-focus on streaming completion (regeneration in progress) */
     isRegenerating?: boolean
+    /** When set, the input is in agent mode and should not show the agent selector */
+    activeAgentType?: string | null
+    /** Callback when the input container height changes */
+    onHeightChange?: (height: number) => void
 }
 
 function formatFileSize(size: number): string {
@@ -86,18 +93,34 @@ function getAnalysisLabel(isAllowed: boolean, isEnabled: boolean): string {
     return "Analyze off"
 }
 
-export function ChatInput({ onSend, disabled = false, isStreaming = false, onStop, className, focusTrigger, isRegenerating = false }: ChatInputProps): ReactElement {
+export function ChatInput({ onSend, disabled = false, isStreaming = false, onStop, className, focusTrigger, isRegenerating = false, activeAgentType, onHeightChange }: ChatInputProps): ReactElement {
     const [input, setInput] = useState("")
     const [files, setFiles] = useState<File[]>([])
     const [previews, setPreviews] = useState<Record<string, string>>({})
     const [analysisEnabled, setAnalysisEnabled] = useState(true)
     const [isUploading, setIsUploading] = useState(false)
     const [cameraOpen, setCameraOpen] = useState(false)
+    const [selectedAgent, setSelectedAgent] = useState<AgentDefinition | null>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const canSend = (input.trim().length > 0 || files.length > 0) && !disabled && !isUploading
     const analysisAllowed = files.length > 0 && !disabled && !isUploading
+
+    // Report height changes to parent
+    useEffect(() => {
+        if (!containerRef.current || !onHeightChange) return
+
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                onHeightChange(entry.contentRect.height)
+            }
+        })
+
+        observer.observe(containerRef.current)
+        return () => observer.disconnect()
+    }, [onHeightChange])
 
     function handleSubmit(e: React.FormEvent): void {
         e.preventDefault()
@@ -125,10 +148,12 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
             onSend(messageText, {
                 attachments: attachments.length > 0 ? attachments : undefined,
                 analysis: attachments.length > 0 ? analysisEnabled : undefined,
+                agentType: selectedAgent?.id ?? undefined,
             })
             setInput("")
             setFiles([])
             setAnalysisEnabled(true)
+            setSelectedAgent(null)
             if (fileInputRef.current) fileInputRef.current.value = ""
         } catch (error) {
             toast.error("Failed to upload files. Please try again.")
@@ -257,10 +282,38 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
         }
     }, [focusTrigger, disabled, isStreaming])
 
+    // Determine effective agent: either from parent (existing agent chat) or local selection
+    const effectiveAgent = activeAgentType ? null : selectedAgent
+    const showAgentSelector = !activeAgentType
+
     return (
-        <div className={cn("w-full", className)}>
-            <GlassCard className="rounded-[28px] border border-brand-deep/10 dark:border-white/10 bg-white/90 dark:bg-black/40 shadow-[0_12px_30px_rgba(16,24,40,0.08)] backdrop-blur-xl">
+        <div className={cn("w-full", className)} ref={containerRef}>
+            <GlassCard className={cn(
+                "rounded-[28px] border bg-white/90 dark:bg-black/40 shadow-[0_12px_30px_rgba(16,24,40,0.08)] backdrop-blur-xl transition-all duration-500",
+                effectiveAgent
+                    ? cn(effectiveAgent.colors.border, effectiveAgent.colors.glow, "shadow-lg")
+                    : "border-brand-deep/10 dark:border-white/10"
+            )}>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-3 sm:p-4">
+                    {/* Agent Selector — only shown in regular chat mode */}
+                    {showAgentSelector && (
+                        <AgentSelector
+                            selectedAgent={selectedAgent}
+                            onSelect={setSelectedAgent}
+                            disabled={disabled || isUploading}
+                        />
+                    )}
+
+                    {/* Active agent badge — shown when in agent mode */}
+                    {activeAgentType && (
+                        <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60 border border-brand-deep/10 dark:border-white/10">
+                                <Sparkles className="w-3 h-3" />
+                                Agent mode — refine your document
+                            </span>
+                        </div>
+                    )}
+
                     {files.length > 0 && (
                         <div className="flex flex-nowrap gap-2 px-1 overflow-x-auto scrollbar-hide pb-0.5">
                             {files.map((file, index) => {
@@ -363,7 +416,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Ask anything"
+                            placeholder={effectiveAgent?.placeholder ?? "Ask anything"}
                             rows={1}
                             className={cn(
                                 "flex-1 bg-transparent border-none outline-none focus:ring-0 resize-none",

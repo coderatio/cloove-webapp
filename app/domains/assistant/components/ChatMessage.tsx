@@ -22,6 +22,7 @@ import { cn } from "@/app/lib/utils"
 import { Markdown } from "@/app/components/ui/markdown"
 import { ToolRenderer } from "./ToolRenderer"
 import { FeedbackPopover } from "./FeedbackPopover"
+import { AgentDocumentCard } from "./AgentDocumentCard"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -39,6 +40,7 @@ import type {
     AddToolResultFn,
     FileAttachment,
 } from "../types"
+import { getAgentById } from "../lib/agent-config"
 
 interface ChatMessageProps {
     message: MessageType
@@ -52,6 +54,8 @@ interface ChatMessageProps {
     onNavigateVersion?: (dir: "prev" | "next") => void
     /** Live streaming text for an in-progress middle-message regeneration */
     pendingRegenText?: string
+    agentType?: string | null
+    onOpenAgentDrawer?: () => void
 }
 
 function formatFileSize(size: number): string {
@@ -85,6 +89,8 @@ export const ChatMessage = memo(function ChatMessage({
     versionInfo,
     onNavigateVersion,
     pendingRegenText,
+    agentType,
+    onOpenAgentDrawer,
 }: ChatMessageProps): ReactElement {
     const isUser = message.role === "user"
     const [copied, setCopied] = useState(false)
@@ -201,7 +207,29 @@ export const ChatMessage = memo(function ChatMessage({
 
                 {/* Message parts */}
                 <div className={cn("relative z-10", isUser ? "pr-2" : "")}>
-                    {pendingRegenText !== undefined ? (
+                    {/* Agent document card — shown for document-like agent responses (long text with headers).
+                        Short conversational replies (e.g. clarifying questions) render inline. */}
+                    {(() => {
+                        if (isUser || !agentType) return null
+                        const agentDef = getAgentById(agentType)
+                        if (!agentDef) return null
+                        const isDocument = /^#{1,2}\s/m.test(textContent)
+                        if (!isDocument) return null
+                        return (
+                            <AgentDocumentCard
+                                agent={agentDef}
+                                isStreaming={!!isLoading}
+                                onOpen={onOpenAgentDrawer ?? (() => {})}
+                            />
+                        )
+                    })()}
+                    {/* Regular message rendering — shown for user messages, non-agent messages,
+                        and short agent replies (clarifying questions). Hidden for agent documents. */}
+                    {(() => {
+                        if (isUser || !agentType) return true
+                        const isDocument = /^#{1,2}\s/m.test(textContent)
+                        return !isDocument
+                    })() && (pendingRegenText !== undefined ? (
                         // ── Inline regeneration streaming view ──────────────────────────
                         <>
                             <div className="flex items-center gap-1.5 mb-2 text-xs text-brand-deep/40 dark:text-brand-cream/40">
@@ -276,11 +304,11 @@ export const ChatMessage = memo(function ChatMessage({
                             }
                             return null
                         })
-                    )}
+                    ))}
                 </div>
 
-                {/* Action Toolbar (Assistant only — hidden while inline regeneration is streaming) */}
-                {!isUser && hasContent && !isLoading && pendingRegenText === undefined && (
+                {/* Action Toolbar (Assistant only — hidden for agent messages and while inline regeneration is streaming) */}
+                {!isUser && !agentType && hasContent && !isLoading && pendingRegenText === undefined && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -419,6 +447,18 @@ export const ChatMessage = memo(function ChatMessage({
     if (prev.isLoading !== next.isLoading) return false
     if (prev.isLast !== next.isLast) return false
     if (prev.message.id !== next.message.id) return false
+    if (prev.agentType !== next.agentType) return false
+    // Agent assistant messages showing a document card: only depends on isLoading, skip text comparison
+    if (prev.agentType && next.agentType && prev.message.role !== 'user' && next.message.role !== 'user') {
+        const prevText = prev.message.parts.filter(p => p.type === 'text').map(p => (p as any).text).join('\n')
+        const nextText = next.message.parts.filter(p => p.type === 'text').map(p => (p as any).text).join('\n')
+        const prevIsDoc = /^#{1,2}\s/m.test(prevText)
+        const nextIsDoc = /^#{1,2}\s/m.test(nextText)
+        // If both are documents, card view — only check isLoading
+        if (prevIsDoc && nextIsDoc) return prev.isLoading === next.isLoading
+        // If document status changed, re-render
+        if (prevIsDoc !== nextIsDoc) return false
+    }
     if (prev.message.parts.length !== next.message.parts.length) return false
     if (prev.versionInfo?.currentIndex !== next.versionInfo?.currentIndex) return false
     if (prev.versionInfo?.versions.length !== next.versionInfo?.versions.length) return false

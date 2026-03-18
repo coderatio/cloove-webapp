@@ -21,6 +21,7 @@ export interface Conversation {
     preview?: string
     isPinned?: boolean
     isArchived?: boolean
+    agentType?: string | null
     lastMessageAt?: Date
     messages: AssistantMessage[]
 }
@@ -99,6 +100,12 @@ export interface ToolSalesChartPart {
         data: SalesDataPoint[]
         currency: string
     }
+}
+
+export interface LineItem {
+    description: string
+    quantity: number
+    unitPrice: number
 }
 
 export interface ToolGenericPart {

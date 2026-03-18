@@ -1,9 +1,11 @@
 "use client"
 
-import { useRef, useEffect, type ReactElement } from "react"
+import { useRef, useEffect, useState, useCallback, memo, type ReactElement } from "react"
 import { AnimatePresence } from "framer-motion"
 import { ChatMessage } from "./ChatMessage"
 import { ChatWelcome } from "./ChatWelcome"
+import { AgentDocumentDrawer } from "./AgentDocumentDrawer"
+import { getAgentById } from "../lib/agent-config"
 import type { AssistantMessage, AddToolResultFn } from "../types"
 
 interface ChatMessageListProps {
@@ -20,10 +22,12 @@ interface ChatMessageListProps {
     onNavigateVersion: (slotKey: string, dir: "prev" | "next") => void
     isRegeneratingMiddle: boolean
     pendingRegenMap: Map<string, string>
+    agentType?: string | null
     className?: string
+    bottomPadding?: number
 }
 
-export function ChatMessageList({
+export const ChatMessageList = memo(function ChatMessageList({
     messages,
     isStreaming,
     isWaitingForResponse,
@@ -37,22 +41,19 @@ export function ChatMessageList({
     onNavigateVersion,
     isRegeneratingMiddle,
     pendingRegenMap,
+    agentType,
     className,
+    bottomPadding,
 }: ChatMessageListProps): ReactElement {
     const chatEndRef = useRef<HTMLDivElement>(null)
     const scrollTimer = useRef<ReturnType<typeof setTimeout>>(null)
-    // Use a ref so that the scroll effect is NOT triggered by the isRegeneratingMiddle
-    // true→false transition itself (which would scroll right after middle-regen completes).
     const isRegeneratingMiddleRef = useRef(isRegeneratingMiddle)
     useEffect(() => {
         isRegeneratingMiddleRef.current = isRegeneratingMiddle
     }, [isRegeneratingMiddle])
 
     useEffect(() => {
-        // Don't scroll to bottom when regenerating a middle message — the user is
-        // watching the inline streaming at that message's position, not the bottom.
         if (isRegeneratingMiddleRef.current) return
-        // Throttle scroll during streaming to avoid layout thrashing
         if (scrollTimer.current) clearTimeout(scrollTimer.current)
         scrollTimer.current = setTimeout(
             () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }),
@@ -60,13 +61,78 @@ export function ChatMessageList({
         )
     }, [messages, isStreaming])
 
+    // ── Agent drawer state ───────────────────────────────────────────────
+    const [agentDrawerOpen, setAgentDrawerOpen] = useState(false)
+    const [agentDrawerMessageId, setAgentDrawerMessageId] = useState<string | null>(null)
+
+    // Keep refs so the stable getAgentContent callback can read latest values.
+    // Updated during render (not in useEffect) so that when the drawer's effect fires
+    // and calls getContent(), the refs already hold the current values.
+    const messagesRef = useRef(messages)
+    messagesRef.current = messages
+
+    const agentDrawerMessageIdRef = useRef<string | null>(agentDrawerMessageId)
+    agentDrawerMessageIdRef.current = agentDrawerMessageId
+
+    // Stable callback — no deps means it never changes reference, so AgentDocumentDrawer
+    // memo comparator always sees the same function and skips re-rendering from the parent.
+    const getAgentContent = useCallback(() => {
+        const id = agentDrawerMessageIdRef.current
+        if (!id) return ""
+        const msg = messagesRef.current.find((m) => m.id === id)
+        if (!msg) return ""
+        return msg.parts
+            .filter((p) => p.type === "text")
+            .map((p) => (p as any).text)
+            .join("\n")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // Auto-open drawer when streaming ends and the content is a document.
+    // We wait until streaming finishes so we can reliably detect document vs question.
+    // Short replies (clarifying questions) never trigger the drawer.
+    const prevStreamingRef = useRef(false)
+    useEffect(() => {
+        const wasStreaming = prevStreamingRef.current
+        prevStreamingRef.current = isStreaming
+
+        if (!agentType) return
+        // Only trigger on streaming end (was streaming → not streaming)
+        if (!wasStreaming || isStreaming) return
+
+        const lastMsg = messages[messages.length - 1]
+        if (lastMsg?.role !== "assistant") return
+        const text = lastMsg.parts
+            .filter((p) => p.type === "text")
+            .map((p) => (p as any).text)
+            .join("\n")
+        const isDocument = /^#{1,2}\s/m.test(text)
+        if (isDocument) {
+            setAgentDrawerMessageId(lastMsg.id)
+            setAgentDrawerOpen(true)
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [agentType, isStreaming, messages])
+
+    // isStreaming is stable per-chunk (only changes state: false→streaming→false),
+    // so this doesn't cause AgentDocumentDrawer to re-render on every chunk.
+    const lastMsgId = messages[messages.length - 1]?.id
+    const isStreamingDrawer = isStreaming && agentDrawerMessageId === lastMsgId
+
+    const agentDef = agentType ? getAgentById(agentType) : null
+
     // Empty state — show welcome screen
     if (messages.length === 0) {
         return <ChatWelcome onSuggestionSelect={onSuggestionSelect} />
     }
 
     return (
-        <div className={className}>
+        <div 
+            className={className}
+            style={{ 
+                paddingBottom: bottomPadding ? `${bottomPadding}px` : undefined 
+            }}
+        >
             <AnimatePresence initial={false}>
                 {messages.map((msg, index) => {
                     const isLast = index === messages.length - 1
@@ -76,7 +142,6 @@ export function ChatMessageList({
                     let versionInfo: { versions: string[]; currentIndex: number } | undefined
                     let slotKey: string | undefined
                     if (msg.role === "assistant") {
-                        // Find the preceding user message
                         const precedingUserMsg = [...messages].slice(0, index).reverse().find(m => m.role === 'user')
                         if (precedingUserMsg) {
                             slotKey = precedingUserMsg.id
@@ -101,12 +166,28 @@ export function ChatMessageList({
                             versionInfo={versionInfo}
                             onNavigateVersion={slotKey ? (dir) => onNavigateVersion(slotKey!, dir) : undefined}
                             pendingRegenText={slotKey ? pendingRegenMap.get(slotKey) : undefined}
+                            agentType={agentType}
+                            onOpenAgentDrawer={() => {
+                                setAgentDrawerMessageId(msg.id)
+                                setAgentDrawerOpen(true)
+                            }}
                         />
                     )
                 })}
             </AnimatePresence>
 
             <div ref={chatEndRef} />
+
+            {/* Agent document drawer — rendered once, memo'd to skip re-renders on every chunk */}
+            {agentDef && (
+                <AgentDocumentDrawer
+                    agent={agentDef}
+                    getContent={getAgentContent}
+                    isStreaming={isStreamingDrawer}
+                    open={agentDrawerOpen}
+                    onOpenChange={setAgentDrawerOpen}
+                />
+            )}
         </div>
     )
-}
+})

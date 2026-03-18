@@ -10,7 +10,7 @@ interface SessionManagerProps {
         expiresAt?: string
         refreshInterval?: string
     }
-    onSessionRefresh?: (token: string) => void
+    onSessionRefresh?: () => void
 }
 
 /**
@@ -43,12 +43,12 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
 
     const handleRefresh = useCallback(async () => {
         try {
-            const data = await apiClient.refresh()
+            await apiClient.refresh()
             lastRefreshTime.current = Date.now()
             warningStartedAtRef.current = null
             setShowWarning(false)
             if (onSessionRefresh) {
-                onSessionRefresh(data.token)
+                onSessionRefresh()
             }
         } catch (error: any) {
             // If it's a 401, we might have already expired on backend

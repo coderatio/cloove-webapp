@@ -76,11 +76,6 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
     const [selectedCountry, setSelectedCountry] = useState<CountryDetail | null>(null)
 
     useEffect(() => {
-        const token = apiClient.getToken()
-        if (token && router) {
-            router.replace(callbackUrl)
-            return
-        }
         if (countries.length === 0) return
         const savedId = storage.getLoginCountry()
         const saved = savedId ? countries.find((c) => c.id === savedId) : null
@@ -96,8 +91,6 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
 
     // ── Shared post-login handler ─────────────────────────────────────────────
     const handleAuthSuccess = useCallback((response: LoginResponse) => {
-        apiClient.setToken(response.token)
-
         if (response.user?.setupRequired) {
             setStep('setup-password')
             return
@@ -209,7 +202,6 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
                 setupToken,   // ← proves ownership; API must validate this
                 country: selectedCountry?.id
             })
-            apiClient.setToken(response.token)
             setStep('success')
             onSuccess?.()
 

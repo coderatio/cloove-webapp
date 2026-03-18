@@ -25,6 +25,11 @@ export function BusinessGuard({ children }: { children: React.ReactNode }) {
             } else {
                 router.replace(`/select-business?callbackUrl=${encodeURIComponent(pathname)}`)
             }
+            return
+        }
+
+        if (!isPublicPath && activeBusiness && activeBusiness.businessType === null && pathname !== '/select-business-type') {
+            router.replace(`/select-business-type?callbackUrl=${encodeURIComponent(pathname)}`)
         }
     }, [activeBusiness, isBusinessLoading, isAuthLoading, user, pathname, router, businesses.length])
 

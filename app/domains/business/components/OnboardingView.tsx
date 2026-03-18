@@ -24,6 +24,7 @@ import { useAuth } from "@/app/components/providers/auth-provider"
 import { useCountries } from "@/app/hooks/useCountries"
 import { usePermission } from "@/app/hooks/usePermission"
 import { useCurrentSubscription, useUsageStats } from "@/app/domains/business/hooks/useBilling"
+import { BusinessTypeSelector, type BusinessType } from "@/app/domains/business/components/BusinessTypeSelector"
 import Image from "next/image"
 
 interface Category {
@@ -71,6 +72,7 @@ export function OnboardingView() {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+    const [businessType, setBusinessType] = useState<BusinessType | null>(null)
     const [businessName, setBusinessName] = useState("")
     const [selectedCountry, setSelectedCountry] = useState<CountryDetail | null>(null)
     const [fullName, setFullName] = useState("")
@@ -130,6 +132,10 @@ export function OnboardingView() {
             toast.error("Please select a business category")
             return
         }
+        if (step === 2 && !businessType) {
+            toast.error("Please select your business type")
+            return
+        }
         setStep(prev => prev + 1)
     }
 
@@ -157,7 +163,8 @@ export function OnboardingView() {
                 businessName,
                 categoryId: selectedCategory,
                 country: countryCode,
-                fullName
+                fullName,
+                businessType,
             })
 
             const list = (await refreshBusinesses()) as Business[] | undefined
@@ -259,17 +266,34 @@ export function OnboardingView() {
                     </motion.div>
 
                     <h1 className="font-serif text-3xl sm:text-4xl text-brand-deep dark:text-brand-cream tracking-tight">
-                        {step === 1 ? "What's your business industry?" : "Let's name your business"}
+                        {step === 1
+                            ? "What's your business industry?"
+                            : step === 2
+                            ? "What type of business is this?"
+                            : "Let's name your business"}
                     </h1>
                     <p className="text-brand-accent/60 dark:text-brand-cream/60 text-lg max-w-md mx-auto">
                         {step === 1
                             ? "Help us tailor your experience by selecting a category."
+                            : step === 2
+                            ? "This determines your verification requirements."
                             : "Give your business a name to get started."}
                     </p>
                 </div>
 
                 <AnimatePresence mode="wait">
-                    {step === 1 ? (
+                    {step === 2 ? (
+                        <motion.div
+                            key="step2-type"
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                            className="flex justify-center"
+                        >
+                            <BusinessTypeSelector value={businessType} onChange={setBusinessType} />
+                        </motion.div>
+                    ) : step === 1 ? (
                         <motion.div
                             key="step1"
                             variants={containerVariants}
@@ -318,7 +342,7 @@ export function OnboardingView() {
                         </motion.div>
                     ) : (
                         <motion.div
-                            key="step2"
+                            key="step3"
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"
@@ -420,12 +444,12 @@ export function OnboardingView() {
                     aria-label="Onboarding steps"
                 >
                     <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
-                        {step === 2 ? (
+                        {step > 1 ? (
                             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    onClick={() => setStep(1)}
+                                    onClick={() => setStep(prev => prev - 1)}
                                     className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-deep dark:text-brand-cream hover:bg-white/10 transition-colors duration-200 uppercase tracking-wider"
                                 >
                                     <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
@@ -451,9 +475,10 @@ export function OnboardingView() {
                     <div className="flex shrink-0 gap-2" aria-hidden>
                         <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 1 ? "bg-brand-gold" : "bg-white/10")} />
                         <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 2 ? "bg-brand-gold" : "bg-white/10")} />
+                        <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 3 ? "bg-brand-gold" : "bg-white/10")} />
                     </div>
                     <div className="flex min-w-0 shrink-0 justify-end w-24 sm:w-28">
-                        {step === 1 ? (
+                        {step < 3 ? (
                             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
                                 <Button
                                     onClick={handleNext}

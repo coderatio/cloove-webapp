@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useRef, useEffect, type ReactElement } from "react"
-import { MessageSquare, Plus, Search, MoreHorizontal, Pencil, Pin, PinOff, Archive, Trash2, Loader2, AlertCircle, Check, X } from "lucide-react"
+import { MessageSquare, Plus, Search, MoreHorizontal, Pencil, Pin, PinOff, Archive, Trash2, Loader2, AlertCircle, Check, X, FileText, Receipt } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -158,6 +158,10 @@ function ConversationItem({
                         >
                             {conv.isPinned ? (
                                 <Pin className="w-4 h-4 text-brand-gold" />
+                            ) : conv.agentType === "proposal" ? (
+                                <FileText className="w-4 h-4 text-emerald-500" />
+                            ) : conv.agentType === "invoice" ? (
+                                <Receipt className="w-4 h-4 text-amber-500" />
                             ) : (
                                 <MessageSquare className="w-4 h-4" />
                             )}

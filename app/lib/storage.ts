@@ -2,7 +2,6 @@
  * Centralized keys for localStorage to avoid magic strings
  */
 export const STORAGE_KEYS = {
-    AUTH_TOKEN: 'cloove_auth_token',
     ACTIVE_BUSINESS_ID: 'active_business_id',
     THEME: 'theme',
     LAST_ACTIVITY: 'last_activity',
@@ -57,16 +56,8 @@ export const storage = {
      */
     clear(): void {
         if (typeof window === 'undefined') return
-        this.remove(STORAGE_KEYS.AUTH_TOKEN)
         this.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
         this.remove(STORAGE_KEYS.LAST_ACTIVITY)
-    },
-
-    /**
-     * Get token
-     */
-    getToken(): string | null {
-        return this.get(STORAGE_KEYS.AUTH_TOKEN)
     },
 
     /**
@@ -84,13 +75,6 @@ export const storage = {
     },
 
     /**
-     * Set token
-     */
-    setToken(token: string): void {
-        this.set(STORAGE_KEYS.AUTH_TOKEN, token)
-    },
-
-    /**
      * Set active business id
      */
     setActiveBusinessId(id: string): void {
@@ -102,13 +86,6 @@ export const storage = {
      */
     setTheme(theme: string): void {
         this.set(STORAGE_KEYS.THEME, theme)
-    },
-
-    /**
-     * Remove token and active business id
-     */
-    removeToken(): void {
-        this.remove(STORAGE_KEYS.AUTH_TOKEN)
     },
 
     /**

@@ -7,6 +7,8 @@ import { storage, STORAGE_KEYS } from '@/app/lib/storage'
 import { toast } from 'sonner'
 import { useAuth } from './providers/auth-provider'
 
+export type BusinessType = 'INDIVIDUAL' | 'REGISTERED'
+
 export interface Business {
     id: string
     name: string
@@ -14,6 +16,7 @@ export interface Business {
     currency: string
     logo?: string
     role: string
+    businessType: BusinessType | null
     permissions: Record<string, boolean> | null
     features: Record<string, boolean> | null
 }
@@ -64,13 +67,6 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }, [queryClient])
 
     const refreshBusinesses = useCallback(async (): Promise<Business[] | undefined> => {
-        if (!apiClient.getToken()) {
-            setIsLoading(false)
-            setBusinesses([])
-            setActiveBusinessState(null)
-            return undefined
-        }
-
         try {
             const data = await apiClient.get<Business[]>('/businesses')
             setBusinesses(data)
