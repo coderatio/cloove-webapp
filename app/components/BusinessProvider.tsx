@@ -28,6 +28,7 @@ interface BusinessContextType {
     activeBusiness: Business | null
     setActiveBusiness: (business: Business | null, options?: { quiet?: boolean }) => void
     isLoading: boolean
+    isRefreshing: boolean
     refreshBusinesses: () => Promise<Business[] | undefined>
 
     businessName: string
@@ -56,6 +57,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     const { user, isLoading: isAuthLoading } = useAuth()
     const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [isRefreshing, setIsRefreshing] = useState(false)
     const router = useRouter()
     const pathname = usePathname()
 
@@ -78,6 +80,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }, [queryClient])
 
     const refreshBusinesses = useCallback(async (): Promise<Business[] | undefined> => {
+        setIsRefreshing(true)
         try {
             const data = await apiClient.get<Business[]>('/businesses')
             setBusinesses(data)
@@ -97,6 +100,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             return undefined
         } finally {
             setIsLoading(false)
+            setIsRefreshing(false)
         }
     }, [setActiveBusiness])
 
@@ -113,13 +117,13 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     // Redirect to business type selection if active business has no type set
     useEffect(() => {
-        if (isLoading || isAuthLoading || !user || !activeBusiness) return
+        if (isLoading || isRefreshing || isAuthLoading || !user || !activeBusiness) return
         if (activeBusiness.businessType != null) return
         const isExempt = BUSINESS_TYPE_EXEMPT_PATHS.some(p => pathname.startsWith(p))
         if (isExempt) return
         const callbackUrl = encodeURIComponent(pathname)
         router.replace(`/select-business-type?callbackUrl=${callbackUrl}`)
-    }, [activeBusiness, isLoading, isAuthLoading, user, pathname, router])
+    }, [activeBusiness, isLoading, isRefreshing, isAuthLoading, user, pathname, router])
 
     const getBusinessCurrency = useCallback(() => {
         const currencyCode = activeBusiness?.currency!
@@ -141,6 +145,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             activeBusiness,
             setActiveBusiness,
             isLoading,
+            isRefreshing,
             refreshBusinesses,
             businessName: activeBusiness?.name || "",
             ownerName: user?.firstName || "",

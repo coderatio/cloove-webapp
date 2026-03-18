@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
@@ -14,10 +14,17 @@ import { useBusiness } from "@/app/components/BusinessProvider"
 function SelectBusinessTypeContent() {
     const [businessType, setBusinessType] = useState<BusinessType | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const { refreshBusinesses } = useBusiness()
+    const { activeBusiness, isLoading, refreshBusinesses } = useBusiness()
     const router = useRouter()
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get('callbackUrl') || '/'
+
+    useEffect(() => {
+        if (isLoading) return
+        if (activeBusiness?.businessType != null) {
+            router.replace(callbackUrl)
+        }
+    }, [activeBusiness?.businessType, isLoading, callbackUrl, router])
 
     const handleSubmit = async () => {
         if (!businessType) return
