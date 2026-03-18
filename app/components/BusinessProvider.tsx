@@ -44,7 +44,7 @@ const BusinessContext = createContext<BusinessContextType | undefined>(undefined
 export function BusinessProvider({ children }: { children: ReactNode }) {
     const queryClient = useQueryClient()
     const [businesses, setBusinesses] = useState<Business[]>([])
-    const { user } = useAuth()
+    const { user, isLoading: isAuthLoading } = useAuth()
     const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
@@ -90,8 +90,15 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }, [setActiveBusiness])
 
     useEffect(() => {
+        if (isAuthLoading) return // Wait for auth check to finish
+        if (!user) {
+            setIsLoading(false)  // Not authenticated — no businesses to load
+            setBusinesses([])
+            setActiveBusinessState(null)
+            return
+        }
         refreshBusinesses()
-    }, [refreshBusinesses, user?.id])
+    }, [refreshBusinesses, user?.id, isAuthLoading])
 
     const getBusinessCurrency = useCallback(() => {
         const currencyCode = activeBusiness?.currency!

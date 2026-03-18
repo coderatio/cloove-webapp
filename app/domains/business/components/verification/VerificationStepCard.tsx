@@ -10,6 +10,12 @@ import { VerificationAuditTrail } from "./VerificationAuditTrail"
 import { VerificationLevelForm } from "./VerificationLevelForm"
 import { VerificationTypeEnum } from "../../data/type"
 
+interface RegDocs {
+    cac: File | null
+    mermat: File | null
+    statusReport: File | null
+}
+
 interface VerificationStepCardProps {
     step: VerificationLevelConfig
     status: "pending" | "verified" | "rejected" | "unverified"
@@ -24,6 +30,8 @@ interface VerificationStepCardProps {
     address: string
     onAddressChange: (val: string) => void
     onFileSelect: (file: File | null) => void
+    regDocs: RegDocs
+    onRegDocChange: (key: keyof RegDocs, file: File | null) => void
     isPending: boolean
     showHistory: boolean
     onToggleHistory: () => void
@@ -45,6 +53,8 @@ export function VerificationStepCard({
     address,
     onAddressChange,
     onFileSelect,
+    regDocs,
+    onRegDocChange,
     isPending,
     showHistory,
     onToggleHistory,
@@ -131,6 +141,8 @@ export function VerificationStepCard({
                                             address={address}
                                             onAddressChange={onAddressChange}
                                             onFileSelect={onFileSelect}
+                                            regDocs={regDocs}
+                                            onRegDocChange={onRegDocChange}
                                             onSubmit={() => onSubmit(step.level, step.type)}
                                             onCancel={onCancel}
                                             isPending={isPending}

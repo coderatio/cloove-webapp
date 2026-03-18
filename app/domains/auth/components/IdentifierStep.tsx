@@ -69,10 +69,10 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
 
                     <Button
                         type="submit"
-                        disabled={state.isLoading || !state.identifier || (!state.isEmail && !state.isPhone)}
+                        disabled={state.isLoading || state.isLoadingCountries || state.countries.length === 0 || !state.identifier || (!state.isEmail && !state.isPhone)}
                         className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base hover:bg-brand-gold/90 transition-all shadow-xl shadow-brand-gold/10 group"
                     >
-                        {state.isLoading ? "Checking..." : "Continue"}
+                        {state.isLoading ? "Checking..." : state.isLoadingCountries || state.countries.length === 0 ? "Loading..." : "Continue"}
                         <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
                 </form>

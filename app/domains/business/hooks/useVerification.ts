@@ -1,15 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
-import { VerificationTypeEnum } from "../data/type"
+import { VerificationTypeEnum, VerificationGroupEnum } from "../data/type"
 
 export type VerificationLevel = number
 export type VerificationStatus = "pending" | "verified" | "rejected" | "unverified"
-export type VerificationType = "BVN" | "GOVT_ID" | "ADDRESS"
+export type VerificationType = "BVN" | "GOVT_ID" | "ADDRESS" | "REGISTRATION_DOCS" | "OWNER_ADDRESS"
+
+export interface RegistrationDocsData {
+    cacCertificateUrl: string
+    mermatUrl: string
+    statusReportUrl: string
+}
 
 export interface VerificationData {
     bvn?: string
     address?: string
+    latitude?: number
+    longitude?: number
     idType?: "passport" | "drivers_license" | "nin" | "voters_card"
     idNumber?: string
     idImage?: File | string | null
@@ -17,6 +25,9 @@ export interface VerificationData {
     fileType?: string
     fileSize?: number
     document_uri?: string
+    cacCertificateUrl?: string
+    mermatUrl?: string
+    statusReportUrl?: string
 }
 
 export interface VerificationResponse {
@@ -49,7 +60,10 @@ export interface VerificationLevelConfig {
     description: string
     type: VerificationTypeEnum
     icon: string
-    requirements: string[] // Assuming backend sends array of strings
+    requirements: string[]
+    isRequired: boolean
+    businessType: string | null
+    group: VerificationGroupEnum | null
 }
 
 export const useVerifications = () => {
