@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MapPin, Loader2, ShieldCheck, Briefcase, Home, CheckCircle2, AlertTriangle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { MapPin, Loader2, ShieldCheck, Briefcase, Home, CheckCircle2, AlertTriangle, Fingerprint } from "lucide-react"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
 import { DocumentUpload } from "./DocumentUpload"
@@ -62,37 +63,77 @@ function LocationPicker({ onCoordinatesChange }: { onCoordinatesChange: (coords:
     }, [])
 
     return (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border transition-colors">
-            {locating && (
-                <>
-                    <Loader2 className="w-4 h-4 animate-spin text-brand-gold shrink-0" />
-                    <p className="text-[11px] text-brand-deep/60 dark:text-brand-cream/60">
-                        Requesting location access — please allow when prompted…
-                    </p>
-                </>
-            )}
-            {!locating && coords && (
-                <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    <p className="text-[11px] font-mono text-brand-deep/70 dark:text-brand-cream/70">
-                        {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
-                    </p>
-                </>
-            )}
-            {!locating && denied && (
-                <>
-                    <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
-                    <p className="text-[11px] text-red-500">
-                        Location access denied. Enable it in your browser settings and reopen this form.
-                    </p>
-                </>
-            )}
+        <div className={cn(
+            "flex items-center gap-4 px-5 py-4 rounded-2xl border transition-all duration-500 bg-white/40 dark:bg-white/[0.02] backdrop-blur-sm",
+            locating ? "border-brand-gold/20 animate-pulse" : 
+            coords ? "border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.05)]" : 
+            "border-red-500/20 bg-red-500/[0.02]"
+        )}>
+            <AnimatePresence mode="wait">
+                {locating && (
+                    <motion.div 
+                        key="locating"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="flex items-center gap-3"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-brand-gold/10 flex items-center justify-center shrink-0">
+                            <Loader2 className="w-4 h-4 animate-spin text-brand-gold" />
+                        </div>
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-brand-gold">
+                            Acquiring Satellite Lock...
+                        </p>
+                    </motion.div>
+                )}
+                {!locating && coords && (
+                    <motion.div 
+                        key="coords"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-3"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                            <MapPin className="w-4 h-4 text-emerald-500" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600/60 leading-none mb-1">Authenticated Position</span>
+                            <p className="text-xs font-mono text-brand-deep/80 dark:text-brand-cream/80">
+                                {coords.lat.toFixed(6)}° N, {coords.lng.toFixed(6)}° E
+                            </p>
+                        </div>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />
+                    </motion.div>
+                )}
+                {!locating && denied && (
+                    <motion.div 
+                        key="denied"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-3 w-full"
+                    >
+                        <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                            <AlertTriangle className="w-4 h-4 text-red-500" />
+                        </div>
+                        <p className="text-[11px] font-medium text-red-500 uppercase tracking-tight">
+                            Geospatial Authorization Denied
+                        </p>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => window.location.reload()}
+                            className="ml-auto h-8 text-[10px] uppercase font-bold text-red-500/60 hover:text-red-500 hover:bg-red-500/10"
+                        >
+                            Retry
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
 
 export function VerificationLevelForm({
-    level,
     type,
     bvn,
     onBvnChange,
@@ -107,33 +148,43 @@ export function VerificationLevelForm({
     isPending
 }: VerificationLevelFormProps) {
     return (
-        <div className="w-full space-y-6">
+        <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {type === "BVN" && (
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-brand-gold">
-                        <ShieldCheck className="w-5 h-5" />
-                        <span className="text-sm font-serif">Identity Authentication</span>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                            <Fingerprint className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-serif text-brand-deep dark:text-brand-cream">Biometric Node Check</h4>
+                            <p className="text-[10px] font-medium text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-widest">Bank Verification Number</p>
+                        </div>
                     </div>
-                    <Input
-                        inputMode="numeric"
-                        value={bvn}
-                        onChange={(e) => onBvnChange(e.target.value)}
-                        placeholder="00000000000"
-                        autoFocus
-                        maxLength={11}
-                        className="h-16 md:h-20 bg-white/50 dark:bg-white/5 border-brand-gold/20 rounded-[24px] font-mono text-center tracking-[0.4em] text-xl md:text-2xl focus:ring-brand-gold/10 focus:border-brand-gold/40 transition-all"
-                    />
-                    <p className="text-[10px] text-center text-brand-deep/40 dark:text-brand-cream/40 px-4 uppercase tracking-widest font-bold">
-                        Secure 11-digit Bank Verification Number
+                    
+                    <div className="relative group">
+                        <Input
+                            inputMode="numeric"
+                            value={bvn}
+                            onChange={(e) => onBvnChange(e.target.value)}
+                            placeholder="000 000 000 00"
+                            autoFocus
+                            maxLength={11}
+                            className="h-20 bg-brand-deep/[0.02] dark:bg-white/[0.04] border-brand-gold/10 hover:border-brand-gold/30 rounded-[28px] font-mono text-center tracking-[0.5em] text-2xl md:text-3xl focus:ring-brand-gold/5 focus:border-brand-gold/60 transition-all duration-500 placeholder:opacity-20 shadow-inner"
+                        />
+                        <div className="absolute inset-0 pointer-events-none rounded-[28px] ring-1 ring-inset ring-brand-gold/5 group-focus-within:ring-brand-gold/20 transition-all" />
+                    </div>
+                    
+                    <p className="text-[10px] text-center text-brand-deep/30 dark:text-brand-cream/30 px-4 leading-relaxed font-sans italic">
+                        By submitting, you authorize Cloove to perform a one-time validation through the Central Bank regulatory switch.
                     </p>
                 </div>
             )}
 
             {type === "GOVT_ID" && (
-                <div className="space-y-4">
+                <div className="space-y-2">
                     <DocumentUpload
-                        label="Government Issued ID"
-                        description="Upload a clear photo of your National ID, Driver's License or International Passport"
+                        label="Sovereign Identification"
+                        description="National Passport, Driver's License, or NIMC Card. High resolution scan required."
                         onFileSelect={onFileSelect}
                         isPending={isPending}
                     />
@@ -141,105 +192,121 @@ export function VerificationLevelForm({
             )}
 
             {type === "ADDRESS" && (
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-brand-gold">
-                        <MapPin className="w-5 h-5" />
-                        <span className="text-sm font-serif">Business Residency</span>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                            <MapPin className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-serif text-brand-deep dark:text-brand-cream">Corporate Residency</h4>
+                            <p className="text-[10px] font-medium text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-widest">Physical Operational Node</p>
+                        </div>
                     </div>
+                    
                     <LocationPicker onCoordinatesChange={onCoordinatesChange} />
+                    
                     <div className="relative group">
                         <Input
                             value={address}
                             onChange={(e) => onAddressChange(e.target.value)}
-                            placeholder="Physical Business Address"
-                            className="h-16 md:h-20 pl-6 bg-white/50 dark:bg-white/5 border-brand-gold/20 rounded-[24px] focus:ring-brand-gold/10 focus:border-brand-gold/40 transition-all text-base"
+                            placeholder="Full Operational Address"
+                            className="h-16 pl-6 bg-brand-deep/[0.02] dark:bg-white/[0.04] border-brand-gold/10 rounded-[20px] focus:ring-brand-gold/5 focus:border-brand-gold/60 transition-all duration-500 font-sans text-base shadow-inner"
                         />
                     </div>
-                    <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 px-4 uppercase tracking-widest font-bold">
-                        Ensure this matches your utility bill or registration
-                    </p>
                 </div>
             )}
 
             {type === "OWNER_ADDRESS" && (
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-brand-gold">
-                        <Home className="w-5 h-5" />
-                        <span className="text-sm font-serif">Personal Residence</span>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                            <Home className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-serif text-brand-deep dark:text-brand-cream">Director Residency</h4>
+                            <p className="text-[10px] font-medium text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-widest">Personal Permanent Hub</p>
+                        </div>
                     </div>
+
                     <LocationPicker onCoordinatesChange={onCoordinatesChange} />
-                    <div className="relative group">
+                    
+                    <div className="relative">
                         <Input
                             value={address}
                             onChange={(e) => onAddressChange(e.target.value)}
                             placeholder="Home Address"
-                            className="h-16 md:h-20 pl-6 bg-white/50 dark:bg-white/5 border-brand-gold/20 rounded-[24px] focus:ring-brand-gold/10 focus:border-brand-gold/40 transition-all text-base"
+                            className="h-16 pl-6 bg-brand-deep/[0.02] dark:bg-white/[0.04] border-brand-gold/10 rounded-[20px] focus:ring-brand-gold/5 focus:border-brand-gold/60 transition-all font-sans text-base shadow-inner"
                         />
                     </div>
-                    <DocumentUpload
-                        label="Proof of Residence"
-                        description="Upload a utility bill, bank statement, or tenancy agreement showing your home address"
-                        onFileSelect={onFileSelect}
-                        isPending={isPending}
-                    />
-                    <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 px-1 uppercase tracking-widest font-bold">
-                        Document must not be older than 3 months
-                    </p>
+
+                    <div className="pt-2">
+                        <DocumentUpload
+                            label="Residential Oracle"
+                            description="Utility bill, bank statement, or tenancy agreement (< 3 months old)"
+                            onFileSelect={onFileSelect}
+                            isPending={isPending}
+                        />
+                    </div>
                 </div>
             )}
 
             {type === "REGISTRATION_DOCS" && (
-                <div className="space-y-6">
-                    <div className="flex items-center gap-3 text-brand-gold">
-                        <Briefcase className="w-5 h-5" />
-                        <span className="text-sm font-serif">Business Registration Documents</span>
+                <div className="space-y-8">
+                    <div className="flex items-center gap-4 border-b border-brand-deep/5 dark:border-white/5 pb-4">
+                        <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                            <Briefcase className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-serif text-brand-deep dark:text-brand-cream">Institutional Artifacts</h4>
+                            <p className="text-[10px] font-medium text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-widest">Regulatory Incorporation Docs</p>
+                        </div>
                     </div>
-                    <DocumentUpload
-                        label="CAC Certificate"
-                        description="Upload your Corporate Affairs Commission certificate of incorporation"
-                        onFileSelect={(f) => onRegDocChange('cac', f)}
-                        isPending={isPending}
-                    />
-                    <DocumentUpload
-                        label="MEMART"
-                        description="Upload the Memorandum and Articles of Association"
-                        onFileSelect={(f) => onRegDocChange('mermat', f)}
-                        isPending={isPending}
-                    />
-                    <DocumentUpload
-                        label="Status Report"
-                        description="Upload a current status report from CAC (not older than 3 months)"
-                        onFileSelect={(f) => onRegDocChange('statusReport', f)}
-                        isPending={isPending}
-                    />
-                    <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 px-1 uppercase tracking-widest font-bold">
-                        All three documents are required. JPG, PNG or PDF • Max 5MB each
-                    </p>
+
+                    <div className="grid grid-cols-1 gap-6">
+                        <DocumentUpload
+                            label="Certificate of Incorporation"
+                            description="Corporate Affairs Commission official certificate"
+                            onFileSelect={(f) => onRegDocChange('cac', f)}
+                            isPending={isPending}
+                        />
+                        <DocumentUpload
+                            label="MEMART"
+                            description="Memorandum and Articles of Association"
+                            onFileSelect={(f) => onRegDocChange('mermat', f)}
+                            isPending={isPending}
+                        />
+                        <DocumentUpload
+                            label="Entity Status Report"
+                            description="Current CAC status validation report"
+                            onFileSelect={(f) => onRegDocChange('statusReport', f)}
+                            isPending={isPending}
+                        />
+                    </div>
                 </div>
             )}
 
-            <div className="flex flex-col md:flex-row items-center gap-3 pt-2">
+            <div className="flex flex-col md:flex-row items-center gap-4 pt-6">
                 <Button
                     onClick={onSubmit}
                     disabled={isPending}
-                    className="w-full md:flex-1 h-14 md:h-16 rounded-[20px] bg-brand-gold px-8 hover:bg-brand-gold/90 text-brand-deep font-bold uppercase tracking-widest hover:shadow-[0_12px_32px_rgba(212,175,55,0.2)] active:scale-[0.98] transition-all"
+                    className="w-full md:flex-1 h-14 rounded-2xl bg-brand-gold px-8 hover:bg-brand-gold/90 text-brand-deep font-bold uppercase tracking-[0.2em] text-[11px] shadow-[0_8px_32px_rgba(212,175,55,0.15)] hover:shadow-[0_12px_48px_rgba(212,175,55,0.3)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-500"
                 >
                     {isPending ? (
-                        <div className="flex items-center justify-center gap-2">
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            <span>Processing...</span>
+                        <div className="flex items-center justify-center gap-3">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Validating Credentials...</span>
                         </div>
                     ) : (
-                        "Confirm & Submit"
+                        "Submit Verification"
                     )}
                 </Button>
                 <Button
                     variant="ghost"
                     onClick={onCancel}
                     disabled={isPending}
-                    className="w-full md:w-auto h-14 md:h-16 px-6 md:px-8 rounded-[20px] text-brand-deep/40 dark:text-brand-cream/40 hover:bg-brand-deep/5 dark:hover:bg-white/5 font-bold uppercase tracking-widest text-xs"
+                    className="w-full md:w-auto h-14 px-8 rounded-2xl text-brand-deep/30 dark:text-brand-cream/30 hover:bg-brand-deep/5 dark:hover:bg-white/5 font-bold uppercase tracking-widest text-[10px] transition-all duration-300"
                 >
-                    Cancel
+                    Return
                 </Button>
             </div>
         </div>

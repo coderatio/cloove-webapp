@@ -64,6 +64,12 @@ export interface VerificationLevelConfig {
     isRequired: boolean
     businessType: string | null
     group: VerificationGroupEnum | null
+    limits: {
+        dailyWithdrawalAmount: number
+        weeklyWithdrawalAmount: number
+        monthlyWithdrawalAmount: number
+        annualWithdrawalAmount: number
+    }
 }
 
 export const useVerifications = () => {

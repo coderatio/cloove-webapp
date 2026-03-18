@@ -1,15 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     ShieldCheck, FileText, MapPin, Briefcase, Home, Loader2, AlertCircle,
-    ChevronDown, User, Building2, Lock,
+    ChevronDown, User, Building2, Lock, Sparkles, CheckCircle2,
 } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
 import { ErrorDisplay } from "@/app/components/shared/ErrorDisplay"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
 import {
     useVerifications,
     useVerificationLevels,
@@ -20,6 +22,8 @@ import {
 import { VerificationLevelForm, Coordinates } from "./verification/VerificationLevelForm"
 import { VerificationAuditTrail } from "./verification/VerificationAuditTrail"
 import { VerificationTypeEnum, VerificationGroupEnum } from "../data/type"
+import { useSettings } from "../hooks/useBusinessSettings"
+import { formatCurrency } from "@/app/lib/formatters"
 
 const ICON_MAP: Record<string, any> = {
     ShieldCheck, FileText, MapPin, Briefcase, Home,
@@ -27,29 +31,36 @@ const ICON_MAP: Record<string, any> = {
 
 const GROUP_META: Record<VerificationGroupEnum, { label: string; Icon: any; description: string }> = {
     [VerificationGroupEnum.OWNER]: {
-        label: "Owner",
+        label: "Master Identity",
         Icon: User,
-        description: "Verify the identity of the business owner or director",
+        description: "Authentication of the ultimate beneficial owner or director",
     },
     [VerificationGroupEnum.BUSINESS]: {
-        label: "Business",
+        label: "Corporate Standing",
         Icon: Building2,
-        description: "Verify your business entity and legal standing",
+        description: "Legal entity validation and operational proof",
     },
 }
 
 type VerifStatus = "pending" | "verified" | "rejected" | "unverified"
 
 function StatusBadge({ status, isLocked }: { status: VerifStatus; isLocked?: boolean }) {
-    const map: Record<VerifStatus, { label: string; className: string }> = {
-        verified: { label: "Verified", className: "bg-emerald-500/10 border-emerald-500/20 text-emerald-600" },
-        pending: { label: "Reviewing", className: "bg-brand-gold/10 border-brand-gold/30 text-brand-gold animate-pulse" },
-        rejected: { label: "Rejected", className: "bg-red-500/10 border-red-500/20 text-red-500" },
-        unverified: { label: isLocked ? "Locked" : "Ready", className: isLocked ? "bg-brand-deep/5 border-transparent text-brand-deep/20 dark:text-white/20" : "bg-brand-gold/5 border-brand-gold/20 text-brand-gold" },
+    const map: Record<VerifStatus, { label: string; className: string; Icon: any }> = {
+        verified: { label: "Verified", className: "bg-emerald-500/10 border-emerald-500/20 text-emerald-600", Icon: CheckCircle2 },
+        pending: { label: "Reviewing", className: "bg-brand-gold/10 border-brand-gold/30 text-brand-gold animate-pulse", Icon: Loader2 },
+        rejected: { label: "Declined", className: "bg-red-500/10 border-red-500/20 text-red-500", Icon: AlertCircle },
+        unverified: {
+            label: isLocked ? "Locked" : "Required",
+            className: isLocked
+                ? "bg-brand-deep/5 border-transparent text-brand-deep/20 dark:text-white/10"
+                : "bg-brand-gold/5 border-brand-gold/20 text-brand-gold",
+            Icon: isLocked ? Lock : Sparkles
+        },
     }
-    const { label, className } = map[status]
+    const { label, className, Icon } = map[status]
     return (
-        <span className={cn("px-3 py-1 rounded-xl text-[9px] font-bold uppercase tracking-widest border shrink-0", className)}>
+        <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all duration-300", className)}>
+            <Icon className={cn("w-3 h-3", status === "pending" && "animate-spin")} />
             {label}
         </span>
     )
@@ -63,7 +74,6 @@ interface AccordionItemProps {
     isLocked: boolean
     isOpen: boolean
     onToggle: () => void
-    // form state passed down
     bvn: string
     onBvnChange: (v: string) => void
     address: string
@@ -89,62 +99,58 @@ function AccordionItem({
     const [showHistory, setShowHistory] = useState(false)
 
     return (
-        <div className={cn(
-            "rounded-2xl border transition-colors duration-300",
-            isVerified
-                ? "border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/5"
-                : isOpen
-                    ? "border-brand-gold/30 bg-white dark:bg-brand-deep/80"
-                    : "border-brand-deep/10 dark:border-white/10 bg-white/60 dark:bg-brand-deep/40",
-            isLocked && "opacity-60"
-        )}>
-            {/* Header */}
+        <GlassCard
+            className={cn(
+                "p-0 border transition-all duration-500 group overflow-visible",
+                isVerified
+                    ? "border-emerald-500/20 bg-emerald-500/2 dark:bg-emerald-500/[0.02]"
+                    : isOpen
+                        ? "border-brand-gold/40 bg-white dark:bg-brand-deep shadow-xl"
+                        : "border-brand-deep/5 dark:border-white/5 bg-white/40 dark:bg-white/[0.02]",
+                isLocked && "opacity-40 grayscale pointer-events-none"
+            )}
+        >
             <button
                 onClick={onToggle}
                 disabled={isLocked}
-                className="w-full flex items-center gap-4 p-4 md:p-5 text-left"
+                className="w-full flex items-center gap-5 p-5 md:p-6 text-left"
             >
-                {/* Icon bubble */}
                 <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                    isVerified ? "bg-emerald-500/15 text-emerald-600" : "bg-brand-gold/10 text-brand-gold"
+                    "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-110",
+                    isVerified ? "bg-emerald-500/10 text-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.1)]" : "bg-brand-gold/10 text-brand-gold shadow-[0_0_20px_rgba(212,175,55,0.1)]"
                 )}>
-                    {isLocked ? <Lock className="w-4 h-4 text-brand-deep/30 dark:text-white/20" /> : <Icon className="w-4 h-4" />}
+                    {isLocked ? <Lock className="w-5 h-5 opacity-40" /> : <Icon className="w-5 h-5 shadow-sm" />}
                 </div>
 
-                {/* Name + required tag */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream truncate">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-base font-serif text-brand-deep dark:text-brand-cream transition-colors group-hover:text-brand-gold">
                             {step.name}
                         </span>
-                        <span className={cn(
-                            "text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0",
-                            step.isRequired
-                                ? "bg-brand-deep/10 dark:bg-white/10 text-brand-deep/60 dark:text-white/50"
-                                : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/30 dark:text-white/30"
-                        )}>
-                            {step.isRequired ? "Required" : "Optional"}
-                        </span>
+                        {step.isRequired && (
+                            <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-white/40 border border-brand-deep/5 dark:border-white/5">
+                                Required
+                            </span>
+                        )}
                     </div>
-                    <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50 mt-0.5 line-clamp-1">
+                    <p className="text-xs text-brand-deep/40 dark:text-brand-cream/40 mt-1 line-clamp-1 font-sans">
                         {step.description}
                     </p>
                 </div>
 
-                {/* Status + chevron */}
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-4 shrink-0">
                     <StatusBadge status={status} isLocked={isLocked} />
                     {!isLocked && (
-                        <ChevronDown className={cn(
-                            "w-4 h-4 text-brand-deep/30 dark:text-white/30 transition-transform duration-300",
-                            isOpen && "rotate-180"
-                        )} />
+                        <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center bg-brand-deep/5 dark:bg-white/5 transition-all duration-300",
+                            isOpen && "bg-brand-gold/10 text-brand-gold rotate-180"
+                        )}>
+                            <ChevronDown className="w-4 h-4" />
+                        </div>
                     )}
                 </div>
             </button>
 
-            {/* Body */}
             <AnimatePresence initial={false}>
                 {isOpen && !isLocked && (
                     <motion.div
@@ -152,21 +158,19 @@ function AccordionItem({
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                         className="overflow-hidden"
                     >
-                        <div className="px-4 md:px-5 pb-5 space-y-5 border-t border-brand-deep/5 dark:border-white/5 pt-4">
-                            {/* Requirements */}
+                        <div className="px-5 md:px-6 pb-6 space-y-6 border-t border-brand-deep/5 dark:border-white/5 pt-6">
                             <div className="flex flex-wrap gap-2">
                                 {step.requirements.map((req, i) => (
-                                    <span key={i} className="flex items-center gap-1.5 text-[11px] text-brand-deep/50 dark:text-brand-cream/50 bg-brand-deep/5 dark:bg-white/5 px-3 py-1 rounded-full">
-                                        <span className="w-1 h-1 rounded-full bg-brand-gold/60 shrink-0" />
+                                    <span key={i} className="flex items-center gap-2 text-[11px] font-medium text-brand-deep/60 dark:text-brand-cream/60 bg-brand-deep/5 dark:bg-white/5 px-3 py-1.5 rounded-lg border border-transparent hover:border-brand-gold/10 transition-colors">
+                                        <div className="w-1 h-1 rounded-full bg-brand-gold" />
                                         {req}
                                     </span>
                                 ))}
                             </div>
 
-                            {/* Rejection notice + audit trail */}
                             {isRejected && (
                                 <VerificationAuditTrail
                                     logs={logs}
@@ -176,42 +180,51 @@ function AccordionItem({
                                 />
                             )}
 
-                            {/* Form */}
                             {canAct && (
-                                <VerificationLevelForm
-                                    level={step.level}
-                                    type={step.type}
-                                    bvn={bvn}
-                                    onBvnChange={onBvnChange}
-                                    address={address}
-                                    onAddressChange={onAddressChange}
-                                    onFileSelect={onFileSelect}
-                                    regDocs={regDocs}
-                                    onRegDocChange={onRegDocChange}
-                                    onCoordinatesChange={onCoordinatesChange}
-                                    onSubmit={() => onSubmit(step.level, step.type)}
-                                    onCancel={onToggle}
-                                    isPending={isPending}
-                                />
+                                <div className="bg-white/50 dark:bg-white/[0.02] p-5 rounded-[24px] border border-brand-deep/5 dark:border-white/5">
+                                    <VerificationLevelForm
+                                        level={step.level}
+                                        type={step.type}
+                                        bvn={bvn}
+                                        onBvnChange={onBvnChange}
+                                        address={address}
+                                        onAddressChange={onAddressChange}
+                                        onFileSelect={onFileSelect}
+                                        regDocs={regDocs}
+                                        onRegDocChange={onRegDocChange}
+                                        onCoordinatesChange={onCoordinatesChange}
+                                        onSubmit={() => onSubmit(step.level, step.type)}
+                                        onCancel={onToggle}
+                                        isPending={isPending}
+                                    />
+                                </div>
                             )}
 
-                            {/* Pending info */}
                             {status === "pending" && (
-                                <p className="text-xs text-brand-gold/80 bg-brand-gold/5 border border-brand-gold/15 rounded-xl px-4 py-3 leading-relaxed">
-                                    Your submission is under review. We'll notify you once it's processed.
-                                </p>
+                                <div className="flex items-start gap-4 p-5 rounded-2xl bg-brand-gold/5 border border-brand-gold/20 shadow-inner">
+                                    <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center shrink-0">
+                                        <Loader2 className="w-5 h-5 text-brand-gold animate-spin" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-serif text-brand-gold mb-1">Under Review</h4>
+                                        <p className="text-xs text-brand-deep/60 dark:text-brand-cream/60 leading-relaxed">
+                                            Our compliance team is currently validating your submission. This typically takes 24-48 hours.
+                                        </p>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </GlassCard>
     )
 }
 
 export function VerificationSettings() {
     const { data: verificationData, error, isLoading: isFetching, refetch } = useVerifications()
     const { data: levels, isLoading: isLoadingLevels } = useVerificationLevels()
+    const { data: settings } = useSettings()
     const submitVerification = useSubmitVerification()
 
     const [openItem, setOpenItem] = useState<string | null>(null)
@@ -285,23 +298,6 @@ export function VerificationSettings() {
         }
     }
 
-    if (error) return (
-        <ErrorDisplay
-            title="Unable to load verification status"
-            description="We encountered an issue while fetching your verification details. Please check your connection and try again."
-            onRetry={() => refetch()}
-        />
-    )
-
-    if (isFetching || isLoadingLevels) return (
-        <div className="flex flex-col items-center justify-center p-24 space-y-4">
-            <Loader2 className="w-10 h-10 animate-spin text-brand-gold" />
-            <p className="text-sm font-medium text-brand-deep/40 dark:text-brand-cream/40 animate-pulse">
-                Synchronizing Security Status...
-            </p>
-        </div>
-    )
-
     const verifications = verificationData?.verifications ?? []
     const sortedLevels = levels ? [...levels].sort((a, b) => a.level - b.level) : []
 
@@ -314,193 +310,266 @@ export function VerificationSettings() {
         return v.status.toLowerCase() as VerifStatus
     }
 
-    // Group levels: OWNER first, then BUSINESS, then ungrouped fallback
+    const stats = useMemo(() => {
+        if (!sortedLevels.length) return { percent: 0, completed: 0, total: 0 }
+        const completed = sortedLevels.filter(l => getStatus(l) === "verified").length
+        return {
+            percent: Math.round((completed / sortedLevels.length) * 100),
+            completed,
+            total: sortedLevels.length
+        }
+    }, [sortedLevels, verifications])
+
+    const insightData = useMemo(() => {
+        const currency = settings?.business?.currency || 'USD'
+        const verifiedLevels = sortedLevels.filter(l => getStatus(l) === 'verified')
+        const nextLevel = sortedLevels.find(l => getStatus(l) !== 'verified')
+
+        const currentLimit = verifiedLevels.length > 0
+            ? verifiedLevels[verifiedLevels.length - 1].limits.monthlyWithdrawalAmount
+            : 0
+
+        if (!nextLevel) {
+            return {
+                insight: `**Institutional Grade Reached.** Your account has reached the maximum verification tier with a monthly limit of **${formatCurrency(currentLimit, { currency })}**.`
+            }
+        }
+
+        const nextLimit = nextLevel.limits.monthlyWithdrawalAmount
+        return {
+            insight: `Your account is currently at a **${formatCurrency(currentLimit, { currency })} monthly limit**. Verifying your **${nextLevel.name}** will upgrade you to a **${formatCurrency(nextLimit, { currency })}** monthly capacity.`
+        }
+    }, [sortedLevels, verifications, settings])
+
+    if (error) return (
+        <ErrorDisplay
+            title="Unable to load verification status"
+            description="We encountered an issue while fetching your verification details. Please check your connection and try again."
+            onRetry={() => refetch()}
+        />
+    )
+
+    if (isFetching || isLoadingLevels) return (
+        <div className="flex flex-col items-center justify-center p-24 space-y-6">
+            <div className="relative w-16 h-16">
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 rounded-full border-t-2 border-brand-gold border-r-2 border-r-transparent"
+                />
+                <ShieldCheck className="absolute inset-0 m-auto w-6 h-6 text-brand-gold/40" />
+            </div>
+            <p className="text-sm font-bold uppercase tracking-widest text-brand-gold/60 animate-pulse">
+                Establishing Secure Session...
+            </p>
+        </div>
+    )
+
     const groupOrder = [VerificationGroupEnum.OWNER, VerificationGroupEnum.BUSINESS]
     const grouped = groupOrder.reduce<Record<VerificationGroupEnum, VerificationLevelConfig[]>>((acc, g) => {
         acc[g] = sortedLevels.filter((l) => l.group === g)
         return acc
     }, {} as Record<VerificationGroupEnum, VerificationLevelConfig[]>)
-    // Include any levels with unexpected/null group under a fallback so nothing is lost
     const ungrouped = sortedLevels.filter((l) => !l.group || !groupOrder.includes(l.group))
 
     const allGroups = groupOrder.filter((g) => grouped[g]?.length > 0)
 
     if (allGroups.length === 0 && ungrouped.length === 0) {
         return (
-            <div className="space-y-10 pb-20">
-                <div>
-                    <h2 className="text-2xl font-serif text-brand-deep dark:text-brand-cream">Verification</h2>
-                    <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 mt-1">
-                        Complete the steps below to unlock higher transaction limits and full platform access.
+            <div className="flex flex-col items-center justify-center min-h-[500px] text-center max-w-lg mx-auto px-6">
+                <GlassCard className="p-12 w-full">
+                    <div className="w-20 h-20 rounded-3xl bg-brand-gold/10 flex items-center justify-center mx-auto mb-8 relative">
+                        <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full" />
+                        <ShieldCheck className="w-10 h-10 text-brand-gold relative z-10" />
+                    </div>
+                    <h2 className="text-3xl font-serif text-brand-deep dark:text-brand-cream mb-4">Secure Configuration</h2>
+                    <p className="text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed mb-8 font-sans">
+                        Our compliance algorithms are currently tailoring your verification journey based on your corporate profile. This usually concludes in a few moments.
                     </p>
-                </div>
-
-                <div className="relative rounded-3xl border border-brand-deep/10 dark:border-white/10 bg-white/60 dark:bg-brand-deep/40 overflow-hidden">
-                    {/* Decorative background */}
-                    <div className="absolute inset-0 pointer-events-none">
-                        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-brand-gold/5 blur-3xl" />
-                        <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-brand-gold/5 blur-3xl" />
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-gold/5 border border-brand-gold/10">
+                        <Loader2 className="w-3 h-3 text-brand-gold animate-spin" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-brand-gold">Optimizing Protocol</span>
                     </div>
-
-                    <div className="relative flex flex-col items-center text-center px-8 py-20 gap-6">
-                        {/* Icon stack */}
-                        <div className="relative w-20 h-20">
-                            <div className="absolute inset-0 rounded-2xl bg-brand-gold/10 rotate-6" />
-                            <div className="absolute inset-0 rounded-2xl bg-brand-gold/10 -rotate-3" />
-                            <div className="relative w-full h-full rounded-2xl bg-brand-deep dark:bg-brand-gold/20 flex items-center justify-center">
-                                <ShieldCheck className="w-9 h-9 text-brand-gold" />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 max-w-sm">
-                            <h3 className="text-xl font-serif text-brand-deep dark:text-brand-cream">
-                                No Verification Steps Yet
-                            </h3>
-                            <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed">
-                                Verification requirements for your account are being configured. Check back shortly — this usually takes just a moment.
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-brand-gold/10 border border-brand-gold/20">
-                            <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
-                            <span className="text-[11px] font-bold uppercase tracking-widest text-brand-gold">
-                                Configuration in progress
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                </GlassCard>
             </div>
         )
     }
 
     return (
-        <div className="space-y-10 pb-20">
-            {/* Page header */}
-            <div>
-                <h2 className="text-2xl font-serif text-brand-deep dark:text-brand-cream">Verification</h2>
-                <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 mt-1">
-                    Complete the steps below to unlock higher transaction limits and full platform access.
-                </p>
+        <div className="max-w-4xl space-y-16 pb-24">
+            {/* Editorial Header Section */}
+            <section className="relative pt-10">
+                <div className="absolute -top-10 -right-20 w-80 h-80 bg-brand-gold/5 blur-[120px] rounded-full pointer-events-none" />
+                <div className="absolute -top-10 -left-20 w-80 h-80 bg-brand-deep/5 blur-[120px] rounded-full pointer-events-none" />
+
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12 items-end">
+                    <div className="space-y-4 relative">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-8 h-1 bg-brand-gold rounded-full" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-gold">Institutional Trust</span>
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-serif text-brand-deep dark:text-brand-cream tracking-tight leading-tight">
+                            Identity & <span className="text-brand-gold italic">Compliance</span>
+                        </h2>
+                        <p className="text-base md:text-lg text-brand-deep/50 dark:text-brand-cream/50 max-w-xl font-sans leading-relaxed">
+                            Navigate the verification milestones required to unlock institutional-grade liquidity and premium platform orchestration.
+                        </p>
+                    </div>
+
+                    <GlassCard className="p-8 border-brand-gold/20 bg-brand-gold/[0.03] flex items-center gap-6 relative group overflow-hidden">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(212,175,55,0.1),transparent_70%)]" />
+                        <div className="relative shrink-0">
+                            <svg className="w-16 h-16 transform -rotate-90">
+                                <circle
+                                    cx="32" cy="32" r="28"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                    fill="transparent"
+                                    className="text-brand-deep/10 dark:text-white/5"
+                                />
+                                <motion.circle
+                                    cx="32" cy="32" r="28"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                    strokeDasharray={175.9}
+                                    initial={{ strokeDashoffset: 175.9 }}
+                                    animate={{ strokeDashoffset: 175.9 - (175.9 * stats.percent) / 100 }}
+                                    transition={{ duration: 1.5, ease: "easeOut" }}
+                                    fill="transparent"
+                                    className="text-brand-gold"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-brand-gold">
+                                {stats.percent}%
+                            </span>
+                        </div>
+                        <div className="relative">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold mb-1">Status Report</p>
+                            <h4 className="text-lg font-serif text-brand-deep dark:text-brand-cream leading-none">
+                                {stats.completed}/{stats.total} <span className="text-xs font-sans text-brand-deep/40 dark:text-brand-cream/40 ml-1">Verified</span>
+                            </h4>
+                        </div>
+                    </GlassCard>
+                </div>
+            </section>
+
+            {/* AI Insight Overlay */}
+            <InsightWhisper
+                insight={insightData.insight}
+                className="my-10"
+            />
+
+            {/* Verification Journey */}
+            <div className="space-y-16">
+                {allGroups.map((groupKey, groupIdx) => {
+                    const meta = GROUP_META[groupKey]
+                    const groupLevels = grouped[groupKey]
+                    const GroupIcon = meta.Icon
+                    const allVerified = groupLevels.every((l) => getStatus(l) === "verified")
+
+                    return (
+                        <motion.section
+                            key={groupKey}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: groupIdx * 0.2 }}
+                            className="space-y-6"
+                        >
+                            <div className="flex items-end justify-between border-b border-brand-deep/5 dark:border-white/5 pb-6">
+                                <div className="flex items-center gap-5">
+                                    <div className={cn(
+                                        "w-14 h-14 rounded-2xl flex items-center justify-center relative",
+                                        allVerified ? "bg-emerald-500/10 text-emerald-600" : "bg-brand-gold/10 text-brand-gold"
+                                    )}>
+                                        <div className="absolute inset-0 bg-current opacity-5 blur-xl rounded-full" />
+                                        <GroupIcon className="w-6 h-6 relative z-10" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-serif text-brand-deep dark:text-brand-cream leading-tight">
+                                            {meta.label}
+                                        </h3>
+                                        <p className="text-sm text-brand-deep/40 dark:text-brand-cream/40 font-sans mt-0.5">{meta.description}</p>
+                                    </div>
+                                </div>
+                                {allVerified && (
+                                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[10px] font-bold uppercase tracking-widest">
+                                        <CheckCircle2 className="w-3 h-3" />
+                                        Complete
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-4">
+                                {groupLevels.map((step, index) => {
+                                    const status = getStatus(step)
+                                    const prevStep = groupLevels[index - 1] ?? sortedLevels.find((l) => l.level === step.level - 1)
+                                    const prevStatus = prevStep ? getStatus(prevStep) : "verified"
+                                    const isLocked = prevStatus !== "verified" && index > 0
+
+                                    return (
+                                        <AccordionItem
+                                            key={step.id}
+                                            step={step}
+                                            status={status}
+                                            isLocked={isLocked}
+                                            isOpen={openItem === step.id}
+                                            onToggle={() => setOpenItem(openItem === step.id ? null : step.id)}
+                                            bvn={bvn}
+                                            onBvnChange={setBvn}
+                                            address={address}
+                                            onAddressChange={setAddress}
+                                            onFileSelect={setFile}
+                                            regDocs={regDocs}
+                                            onRegDocChange={(key, f) => setRegDocs((prev) => ({ ...prev, [key]: f }))}
+                                            onCoordinatesChange={setCoordinates}
+                                            onSubmit={handleVerification}
+                                            isPending={submitVerification.isPending}
+                                            logs={getVerification(step)?.logs}
+                                        />
+                                    )
+                                })}
+                            </div>
+                        </motion.section>
+                    )
+                })}
             </div>
 
-            {/* Groups */}
-            {allGroups.map((groupKey) => {
-                const meta = GROUP_META[groupKey]
-                const groupLevels = grouped[groupKey]
-                const GroupIcon = meta.Icon
-
-                // Determine overall group completion for the header badge
-                const allVerified = groupLevels.every((l) => getStatus(l) === "verified")
-                const someVerified = groupLevels.some((l) => getStatus(l) === "verified")
-
-                return (
-                    <section key={groupKey} className="space-y-3">
-                        {/* Group header */}
-                        <div className="flex items-center gap-3 pb-1">
-                            <div className={cn(
-                                "w-8 h-8 rounded-xl flex items-center justify-center",
-                                allVerified ? "bg-emerald-500/15 text-emerald-600" : "bg-brand-gold/10 text-brand-gold"
-                            )}>
-                                <GroupIcon className="w-4 h-4" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold uppercase tracking-widest text-brand-deep dark:text-brand-cream">
-                                    {meta.label}
-                                </h3>
-                                <p className="text-xs text-brand-deep/40 dark:text-brand-cream/40">{meta.description}</p>
-                            </div>
-                            {allVerified && (
-                                <span className="ml-auto text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600">
-                                    Complete
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Accordion items */}
-                        <div className="space-y-2">
-                            {groupLevels.map((step, index) => {
-                                const status = getStatus(step)
-                                const prevStep = groupLevels[index - 1] ?? sortedLevels.find((l) => l.level === step.level - 1)
-                                const prevStatus = prevStep ? getStatus(prevStep) : "verified"
-                                const isLocked = prevStatus !== "verified" && index > 0
-
-                                return (
-                                    <AccordionItem
-                                        key={step.id}
-                                        step={step}
-                                        status={status}
-                                        isLocked={isLocked}
-                                        isOpen={openItem === step.id}
-                                        onToggle={() => setOpenItem(openItem === step.id ? null : step.id)}
-                                        bvn={bvn}
-                                        onBvnChange={setBvn}
-                                        address={address}
-                                        onAddressChange={setAddress}
-                                        onFileSelect={setFile}
-                                        regDocs={regDocs}
-                                        onRegDocChange={(key, f) => setRegDocs((prev) => ({ ...prev, [key]: f }))}
-                                        onCoordinatesChange={setCoordinates}
-                                        onSubmit={handleVerification}
-                                        isPending={submitVerification.isPending}
-                                        logs={getVerification(step)?.logs}
-                                    />
-                                )
-                            })}
-                        </div>
-                    </section>
-                )
-            })}
-
-            {/* Ungrouped fallback */}
-            {ungrouped.length > 0 && (
-                <section className="space-y-2">
-                    {ungrouped.map((step) => {
-                        const status = getStatus(step)
-                        return (
-                            <AccordionItem
-                                key={step.id}
-                                step={step}
-                                status={status}
-                                isLocked={false}
-                                isOpen={openItem === step.id}
-                                onToggle={() => setOpenItem(openItem === step.id ? null : step.id)}
-                                bvn={bvn}
-                                onBvnChange={setBvn}
-                                address={address}
-                                onAddressChange={setAddress}
-                                onFileSelect={setFile}
-                                regDocs={regDocs}
-                                onRegDocChange={(key, f) => setRegDocs((prev) => ({ ...prev, [key]: f }))}
-                                onCoordinatesChange={setCoordinates}
-                                onSubmit={handleVerification}
-                                isPending={submitVerification.isPending}
-                                logs={getVerification(step)?.logs}
-                            />
-                        )
-                    })}
-                </section>
-            )}
-
-            {/* Footer */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-6 rounded-2xl bg-brand-deep text-brand-cream relative overflow-hidden border border-transparent dark:bg-brand-deep-600 dark:border-brand-gold/20">
-                    <div className="absolute top-0 right-0 w-28 h-28 bg-brand-gold/10 blur-3xl rounded-full -mr-12 -mt-12" />
-                    <ShieldCheck className="w-6 h-6 text-brand-gold mb-3" />
-                    <h4 className="text-sm font-serif mb-1">Maximum Compliance</h4>
-                    <p className="text-xs text-brand-cream/60 leading-relaxed">
-                        Our verification protocols adhere to the highest international standards ensuring your business remains trusted and compliant.
+            {/* Enhanced Footer */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10">
+                <GlassCard className="p-8 group">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-deep text-brand-gold flex items-center justify-center mb-6 transition-transform duration-500 group-hover:rotate-12">
+                        <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-xl font-serif text-brand-deep dark:text-brand-cream mb-2">Uncompromising Security</h4>
+                    <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed font-sans mb-6">
+                        Your corporate data is encrypted via AES-256 at the hardware level. Our verification protocols meet SOC2 Type II and GDPR global standards.
                     </p>
-                </div>
-                <div className="p-6 rounded-2xl bg-white/50 dark:bg-brand-deep/40 border border-brand-green/10 dark:border-brand-gold/20 backdrop-blur-sm">
-                    <AlertCircle className="w-6 h-6 text-brand-gold mb-3" />
-                    <h4 className="text-sm font-serif mb-1 text-brand-deep dark:text-brand-cream">Need Assistance?</h4>
-                    <p className="text-xs text-brand-deep/60 dark:text-brand-cream/60 leading-relaxed mb-4">
-                        Having trouble with your documents? Our compliance specialists are available 24/7.
+                    <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-white/20">
+                        <span>Encrypted</span>
+                        <div className="w-1 h-1 rounded-full bg-brand-gold" />
+                        <span>Audited</span>
+                        <div className="w-1 h-1 rounded-full bg-brand-gold" />
+                        <span>Compliant</span>
+                    </div>
+                </GlassCard>
+
+                <GlassCard className="p-8 border-brand-green/10 bg-brand-green/5 relative group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 blur-3xl -mr-16 -mt-16 rounded-full" />
+                    <div className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-white/5 border border-brand-gold/20 flex items-center justify-center mb-6 text-brand-gold">
+                        <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <h4 className="text-xl font-serif text-brand-deep dark:text-brand-cream mb-2">Concierge Support</h4>
+                    <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed font-sans mb-8">
+                        If you encounter systemic friction during your identity transition, our compliance specialists are ready to orchestrate a manual review.
                     </p>
-                    <Button variant="outline" className="rounded-xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold/5 h-9 text-xs">
-                        Speak with Support
+                    <Button
+                        variant="outline"
+                        className="w-full rounded-2xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold hover:text-brand-deep h-12 font-bold uppercase tracking-widest text-[10px] transition-all"
+                    >
+                        Initiate Private Consultation
                     </Button>
-                </div>
+                </GlassCard>
             </div>
         </div>
     )

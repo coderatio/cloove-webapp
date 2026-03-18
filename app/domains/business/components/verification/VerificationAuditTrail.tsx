@@ -1,9 +1,10 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { AlertCircle, ChevronRight } from "lucide-react"
+import { AlertCircle, ChevronRight, History } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { formatDateTime } from "@/app/lib/date-utils"
+import { GlassCard } from "@/app/components/ui/glass-card"
 
 interface LogEntry {
     id: string
@@ -26,24 +27,36 @@ export function VerificationAuditTrail({
     rejectionReason
 }: VerificationAuditTrailProps) {
     return (
-        <div className="mt-4 p-5 rounded-[24px] bg-red-500/5 border border-red-500/10 flex flex-col gap-4">
-            <div className="flex items-start gap-3">
-                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest leading-none">Identity Rejection</p>
-                    <p className="text-sm text-brand-deep dark:text-brand-cream/90 leading-relaxed font-medium">
-                        {rejectionReason || "Please verify your information and try again."}
-                    </p>
+        <div className="space-y-4">
+            <GlassCard className={cn(
+                "p-6 border-red-500/10 bg-red-500/2 shadow-sm overflow-visible relative",
+                "after:absolute after:inset-y-0 after:left-0 after:w-1 after:bg-red-500 after:rounded-full after:opacity-40"
+            )}>
+                <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                        <AlertCircle className="w-5 h-5 text-red-500" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <h4 className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em] leading-none">Security Exception</h4>
+                        <p className="text-brand-deep dark:text-brand-cream/90 leading-relaxed font-serif italic text-lg opacity-80">
+                            "{rejectionReason || "Identity verification could not be completed at this time. Please refine your submission artifacts."}"
+                        </p>
+                    </div>
                 </div>
-            </div>
 
-            <button
-                onClick={onToggleHistory}
-                className="text-[10px] font-bold text-brand-deep/40 dark:text-brand-cream/40 hover:text-brand-gold uppercase tracking-widest transition-colors flex items-center gap-2 self-start"
-            >
-                {showHistory ? "Hide Audit Trail" : "View Audit Trail"}
-                <ChevronRight className={cn("w-3 h-3 transition-transform", showHistory && "rotate-90")} />
-            </button>
+                <div className="mt-8 flex items-center justify-between border-t border-red-500/5 pt-4">
+                    <button
+                        onClick={onToggleHistory}
+                        className="text-[10px] font-bold text-brand-deep/30 dark:text-brand-cream/30 hover:text-brand-gold uppercase tracking-[0.2em] transition-all flex items-center gap-2 group"
+                    >
+                        <History className="w-3.5 h-3.5 transition-transform group-hover:-rotate-45" />
+                        {showHistory ? "Collapse Lifecycle" : "Examine Lifecycle"}
+                        <ChevronRight className={cn("w-3 h-3 transition-all duration-300", showHistory && "rotate-90 translate-x-1")} />
+                    </button>
+                    
+                    <span className="text-[9px] font-mono text-brand-deep/20 dark:text-white/10 uppercase">Ref ID: {logs[0]?.id?.slice(0, 8) || "N/A"}</span>
+                </div>
+            </GlassCard>
 
             <AnimatePresence>
                 {showHistory && (
@@ -51,32 +64,47 @@ export function VerificationAuditTrail({
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden border-t border-red-500/5 pt-4 space-y-4"
+                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                        className="overflow-hidden"
                     >
-                        {logs.map((log, i) => (
-                            <div key={log.id} className="flex gap-4 relative">
-                                {i !== logs.length - 1 && (
-                                    <div className="absolute left-1.5 top-3 bottom-0 w-px bg-brand-deep/5 dark:bg-white/5" />
-                                )}
-                                <div className={cn(
-                                    "w-3 h-3 rounded-full mt-1.5 shrink-0 border-2",
-                                    log.status === "VERIFIED" ? "bg-emerald-500 border-emerald-500/20" :
-                                        log.status === "PENDING" ? "bg-brand-gold border-brand-gold/20" :
-                                            "bg-red-500 border-red-500/20"
-                                )} />
-                                <div className="space-y-1.5 pb-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-brand-deep/80 dark:text-brand-cream/80">{log.status}</span>
-                                        <span className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40">{formatDateTime(log.createdAt)}</span>
+                        <div className="space-y-3 pl-4 border-l border-brand-deep/5 dark:border-white/5 ml-5 py-2">
+                            {logs.map((log, i) => (
+                                <motion.div 
+                                    key={log.id} 
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.1 }}
+                                    className="flex gap-4 relative py-2"
+                                >
+                                    <div className={cn(
+                                        "w-2 h-2 rounded-full mt-1.5 shrink-0 z-10",
+                                        log.status === "VERIFIED" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" :
+                                            log.status === "PENDING" ? "bg-brand-gold shadow-[0_0_8px_rgba(212,175,55,0.5)]" :
+                                                "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+                                    )} />
+                                    
+                                    <div className="space-y-1 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <span className={cn(
+                                                "text-[9px] font-bold uppercase tracking-widest",
+                                                log.status === "VERIFIED" ? "text-emerald-600" :
+                                                log.status === "PENDING" ? "text-brand-gold" : "text-red-500"
+                                            )}>
+                                                {log.status}
+                                            </span>
+                                            <span className="text-[9px] font-mono text-brand-deep/30 dark:text-brand-cream/30">
+                                                {formatDateTime(log.createdAt)}
+                                            </span>
+                                        </div>
+                                        {log.rejectionReason && (
+                                            <p className="text-[11px] text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed font-sans mt-1 bg-brand-deep/2 dark:bg-white/2 p-2 rounded-lg border border-brand-deep/5 dark:border-white/5">
+                                                {log.rejectionReason}
+                                            </p>
+                                        )}
                                     </div>
-                                    {log.rejectionReason && (
-                                        <p className="text-xs text-brand-deep/60 dark:text-brand-cream/60 leading-relaxed italic pr-4">
-                                            "{log.rejectionReason}"
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
+                                </motion.div>
+                            ))}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

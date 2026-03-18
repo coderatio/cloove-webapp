@@ -7,7 +7,7 @@ import { cn } from "@/app/lib/utils"
 import { VerificationLevelConfig } from "@/app/domains/business/hooks/useVerification"
 import { VerificationStatusBadge } from "./VerificationStatusBadge"
 import { VerificationAuditTrail } from "./VerificationAuditTrail"
-import { VerificationLevelForm } from "./VerificationLevelForm"
+import { VerificationLevelForm, Coordinates } from "./VerificationLevelForm"
 import { VerificationTypeEnum } from "../../data/type"
 
 interface RegDocs {
@@ -32,6 +32,7 @@ interface VerificationStepCardProps {
     onFileSelect: (file: File | null) => void
     regDocs: RegDocs
     onRegDocChange: (key: keyof RegDocs, file: File | null) => void
+    onCoordinatesChange: (coords: Coordinates | null) => void
     isPending: boolean
     showHistory: boolean
     onToggleHistory: () => void
@@ -55,6 +56,7 @@ export function VerificationStepCard({
     onFileSelect,
     regDocs,
     onRegDocChange,
+    onCoordinatesChange,
     isPending,
     showHistory,
     onToggleHistory,
@@ -143,6 +145,7 @@ export function VerificationStepCard({
                                             onFileSelect={onFileSelect}
                                             regDocs={regDocs}
                                             onRegDocChange={onRegDocChange}
+                                            onCoordinatesChange={onCoordinatesChange}
                                             onSubmit={() => onSubmit(step.level, step.type)}
                                             onCancel={onCancel}
                                             isPending={isPending}
