@@ -28,9 +28,6 @@ export function BusinessGuard({ children }: { children: React.ReactNode }) {
             return
         }
 
-        if (!isPublicPath && activeBusiness && activeBusiness.businessType === null && pathname !== '/select-business-type') {
-            router.replace(`/select-business-type?callbackUrl=${encodeURIComponent(pathname)}`)
-        }
     }, [activeBusiness, isBusinessLoading, isAuthLoading, user, pathname, router, businesses.length])
 
     // While loading, we might want to show a splash screen or just null

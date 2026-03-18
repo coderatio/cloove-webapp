@@ -448,6 +448,13 @@ export const ChatMessage = memo(function ChatMessage({
     if (prev.isLast !== next.isLast) return false
     if (prev.message.id !== next.message.id) return false
     if (prev.agentType !== next.agentType) return false
+    // Non-last, non-loading messages don't change during streaming — bail early
+    if (!prev.isLast && !next.isLast && !prev.isLoading && !next.isLoading
+        && prev.pendingRegenText === next.pendingRegenText
+        && prev.versionInfo?.currentIndex === next.versionInfo?.currentIndex
+        && prev.versionInfo?.versions.length === next.versionInfo?.versions.length) {
+        return true
+    }
     // Agent assistant messages showing a document card: only depends on isLoading, skip text comparison
     if (prev.agentType && next.agentType && prev.message.role !== 'user' && next.message.role !== 'user') {
         const prevText = prev.message.parts.filter(p => p.type === 'text').map(p => (p as any).text).join('\n')

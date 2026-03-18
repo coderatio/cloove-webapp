@@ -49,13 +49,13 @@ export const AgentDocumentDrawer = memo(function AgentDocumentDrawer({
             return
         }
 
-        // Streaming active: poll at 150ms intervals and show as plain pre-formatted text.
+        // Streaming active: poll at 250ms intervals and show as plain pre-formatted text.
         // Avoids ReactMarkdown's AST parse (50-100ms for 16K chars) that would block the
         // main thread. The throttled messages from useAssistantChat already batch updates
-        // to 100ms intervals, so polling at 150ms matches that cadence.
+        // to 150ms intervals, so polling at 250ms keeps updates smooth without doubling work.
         const update = () => setStreamingText(getContent())
         update()
-        const id = setInterval(update, 150)
+        const id = setInterval(update, 250)
         return () => clearInterval(id)
     }, [open, isStreaming, getContent])
 

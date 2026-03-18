@@ -34,7 +34,7 @@ function SelectBusinessTypeContent() {
             await apiClient.patch('/settings/business-type', { businessType })
             await refreshBusinesses()
             toast.success('Business type saved')
-            router.replace(callbackUrl)
+            // Redirect is handled by the useEffect watching activeBusiness.businessType
         } catch {
             toast.error('Failed to save business type. Please try again.')
         } finally {

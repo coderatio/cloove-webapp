@@ -12,7 +12,7 @@ interface MarkdownProps {
     streaming?: boolean
 }
 
-const THROTTLE_MS = 80
+const THROTTLE_MS = 150
 
 const mdComponents = {
     p: ({ children }: any) => <p className="mb-2 last:mb-0">{children}</p>,
@@ -87,8 +87,20 @@ export function Markdown({ content, className, streaming = false }: MarkdownProp
 
     useEffect(() => {
         if (!streaming) return
-        const id = setInterval(() => setThrottled(latest.current), THROTTLE_MS)
-        return () => clearInterval(id)
+        // Use rAF with a minimum gap to align updates with the browser's paint
+        // cycle instead of setInterval which can fire mid-frame.
+        let lastUpdate = performance.now()
+        let rafId: number
+        const tick = () => {
+            const now = performance.now()
+            if (now - lastUpdate >= THROTTLE_MS) {
+                setThrottled(latest.current)
+                lastUpdate = now
+            }
+            rafId = requestAnimationFrame(tick)
+        }
+        rafId = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(rafId)
     }, [streaming])
 
     // When not streaming, always show the real content immediately

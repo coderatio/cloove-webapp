@@ -334,13 +334,49 @@ export function useAssistantChat(): UseAssistantChatReturn {
     const wasMiddleRegenRef = useRef(false)
     const isStreamingRef = useRef(false)
 
+    // ── Throttle sdkMessages BEFORE the useMemo chain ──────────────────
+    // useChat fires setState on every SSE text-delta chunk (hundreds/sec).
+    // This causes the entire hook body to re-render, re-running all useMemos.
+    // By throttling here, mapSdkToAssistantMessages only runs ~6 times/sec.
+    const latestSdkRef = useRef(sdkMessages)
+    latestSdkRef.current = sdkMessages
+    const [throttledSdk, setThrottledSdk] = useState(sdkMessages)
+
+    useEffect(() => {
+        // Always keep the raw ref up to date for post-streaming operations
+        sdkMessagesRef.current = sdkMessages
+    }, [sdkMessages])
+
+    useEffect(() => {
+        const streaming = status === "streaming" || status === "submitted"
+        if (!streaming) {
+            // Immediately flush final state when not streaming
+            setThrottledSdk(latestSdkRef.current)
+            return
+        }
+        // During streaming: use rAF with 150ms minimum gap
+        setThrottledSdk(latestSdkRef.current) // immediate first update
+        let lastUpdate = performance.now()
+        let rafId: number
+        const tick = () => {
+            const now = performance.now()
+            if (now - lastUpdate >= 150) {
+                setThrottledSdk(latestSdkRef.current)
+                lastUpdate = now
+            }
+            rafId = requestAnimationFrame(tick)
+        }
+        rafId = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(rafId)
+    }, [status])
+
     // Live streaming text for the message currently being regenerated (middle messages only).
     // This drives the inline "Regenerating..." view within the original message bubble.
     // Return EMPTY_REGEN_MAP (stable reference) when not regenerating to avoid creating
     // a new Map object on every streaming chunk.
     const pendingRegenMap = useMemo(() => {
         if (!currentRegeneratingSlot || !isRegeneratingMiddle) return EMPTY_REGEN_MAP
-        const lastSdk = [...sdkMessages].reverse().find((m) => m.role === "assistant")
+        const lastSdk = [...throttledSdk].reverse().find((m) => m.role === "assistant")
         if (!lastSdk) return EMPTY_REGEN_MAP
         const map = new Map<string, string>()
         const text = lastSdk.parts
@@ -349,11 +385,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
             .join("\n")
         map.set(currentRegeneratingSlot, text)
         return map
-    }, [currentRegeneratingSlot, isRegeneratingMiddle, sdkMessages])
-
-    useEffect(() => {
-        sdkMessagesRef.current = sdkMessages
-    }, [sdkMessages])
+    }, [currentRegeneratingSlot, isRegeneratingMiddle, throttledSdk])
 
     const isStreaming = status === "streaming" || status === "submitted"
     isStreamingRef.current = isStreaming
@@ -419,12 +451,13 @@ export function useAssistantChat(): UseAssistantChatReturn {
     }, [businessId, fetchConversations])
 
     // ── Sync backend conversationId from assistant_start metadata ───────
-    // Only run when streaming ends to avoid cascading re-renders during streaming
+    // Only run when streaming ends to avoid cascading re-renders during streaming.
+    // Uses throttledSdk (not raw sdkMessages) to avoid running on every chunk.
     useEffect(() => {
         if (isStreaming) return
-        if (sdkMessages.length === 0) return
+        if (throttledSdk.length === 0) return
 
-        const lastAssistant = [...sdkMessages].reverse().find((m) => m.role === "assistant")
+        const lastAssistant = [...throttledSdk].reverse().find((m) => m.role === "assistant")
         const backendId = lastAssistant?.metadata?.conversationId
         const backendTitle = lastAssistant?.metadata?.title
 
@@ -446,7 +479,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
         syncedConversationRef.current = backendId
         pendingBackendIdRef.current = backendId
-    }, [sdkMessages, activeChatId, isStreaming])
+    }, [throttledSdk, activeChatId, isStreaming])
 
     // ── Track agent type per conversation ────────────────────────────────
     const [agentTypeMap, setAgentTypeMap] = useState<Record<string, string | null>>({})
@@ -458,7 +491,9 @@ export function useAssistantChat(): UseAssistantChatReturn {
     }, [activeChatId, conversations, agentTypeMap])
 
     // ── Combine SDK messages (live) with loaded messages (historical) ───
-    const sdkMapped = useMemo(() => mapSdkToAssistantMessages(sdkMessages), [sdkMessages])
+    // Uses throttledSdk so this expensive mapping only runs ~6 times/sec during
+    // streaming instead of on every SSE text-delta chunk (hundreds/sec).
+    const sdkMapped = useMemo(() => mapSdkToAssistantMessages(throttledSdk), [throttledSdk])
     const loadedMessages = loadedMessagesMap[activeChatId] ?? []
 
     // Combine: historical messages first, then any new SDK messages appended in this session
@@ -488,29 +523,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         return [...loadedMessages, ...newFromSdk]
     }, [sdkMapped, loadedMessages, isRegeneratingMiddle])
 
-    // ── Throttle messages during streaming to limit React re-renders ─────────
-    // useChat fires a setState on every streaming token, re-rendering AssistantView
-    // hundreds of times per second. We expose a throttled version that updates at
-    // ~10fps so ChatMessageList (when memo'd) can skip most of those re-renders.
-    const latestMessagesRef = useRef<typeof messages>(messages)
-    latestMessagesRef.current = messages // always current, used by the drawer's getContent()
-
-    const [displayMessages, setDisplayMessages] = useState<typeof messages>(messages)
-
-    useEffect(() => {
-        if (!isStreaming) {
-            // Immediately propagate final state when streaming ends
-            setDisplayMessages(latestMessagesRef.current)
-            return
-        }
-        setDisplayMessages(latestMessagesRef.current) // immediate first update
-        const id = setInterval(() => {
-            setDisplayMessages(latestMessagesRef.current)
-        }, 100) // 10fps during streaming
-        return () => clearInterval(id)
-    }, [isStreaming])
-
-    // Keep a ref to the latest messages so the effect below doesn't depend on `messages`
+    // Keep a ref to the latest messages so post-streaming effects don't depend on `messages`
     const messagesRef = useRef(messages)
     useEffect(() => {
         messagesRef.current = messages
@@ -897,10 +910,9 @@ export function useAssistantChat(): UseAssistantChatReturn {
         conversations,
         activeChatId,
         activeAgentType,
-        // Use throttled displayMessages during streaming (limits React re-renders to ~10fps).
-        // Use the live messages directly when not streaming so historical conversations
-        // and post-stream state propagate immediately without waiting for the interval.
-        messages: isStreaming ? displayMessages : messages,
+        // messages is already throttled via throttledSdk upstream —
+        // no need for a separate displayMessages layer.
+        messages,
         isStreaming,
         isWaitingForResponse,
         isLoadingConversation,
