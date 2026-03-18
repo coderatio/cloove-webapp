@@ -1,33 +1,39 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Upload, FileText, X, CheckCircle2, Loader2 } from "lucide-react"
+import { Upload, FileText, X, CheckCircle2, Loader2, AlertTriangle } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
+import { uploadService } from "@/app/lib/upload/upload-service"
 
 interface DocumentUploadProps {
-    onFileSelect: (file: File | null) => void
+    onUrlChange: (url: string | null) => void
     label: string
     description?: string
     accept?: string
-    isPending?: boolean
+    disabled?: boolean
 }
 
 export function DocumentUpload({
-    onFileSelect,
+    onUrlChange,
     label,
     description,
     accept = "image/*,application/pdf",
-    isPending = false
+    disabled = false,
 }: DocumentUploadProps) {
     const [file, setFile] = useState<File | null>(null)
     const [preview, setPreview] = useState<string | null>(null)
     const [isDragging, setIsDragging] = useState(false)
+    const [isUploading, setIsUploading] = useState(false)
+    const [uploadError, setUploadError] = useState<string | null>(null)
+    const [uploadedUrl, setUploadedUrl] = useState<string | null>(null)
     const inputRef = useRef<HTMLInputElement>(null)
 
-    const handleFile = (selectedFile: File) => {
+    const handleFile = async (selectedFile: File) => {
         setFile(selectedFile)
-        onFileSelect(selectedFile)
+        setUploadError(null)
+        setUploadedUrl(null)
+        onUrlChange(null)
 
         if (selectedFile.type.startsWith("image/")) {
             const reader = new FileReader()
@@ -36,29 +42,43 @@ export function DocumentUpload({
         } else {
             setPreview(null)
         }
+
+        setIsUploading(true)
+        try {
+            const url = await uploadService.uploadFile(selectedFile)
+            setUploadedUrl(url)
+            onUrlChange(url)
+        } catch {
+            setUploadError("Upload failed. Please try again.")
+            onUrlChange(null)
+        } finally {
+            setIsUploading(false)
+        }
     }
 
     const onDrop = (e: React.DragEvent) => {
         e.preventDefault()
         setIsDragging(false)
-        if (e.dataTransfer.files?.[0]) {
-            handleFile(e.dataTransfer.files[0])
-        }
+        if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0])
     }
 
     const removeFile = (e: React.MouseEvent) => {
         e.stopPropagation()
         setFile(null)
         setPreview(null)
-        onFileSelect(null)
+        setUploadedUrl(null)
+        setUploadError(null)
+        onUrlChange(null)
         if (inputRef.current) inputRef.current.value = ""
     }
+
+    const isInteractive = !disabled && !isUploading
 
     return (
         <div className="space-y-4">
             <div
-                onClick={() => !isPending && inputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                onClick={() => isInteractive && inputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); if (isInteractive) setIsDragging(true) }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={onDrop}
                 className={cn(
@@ -66,8 +86,9 @@ export function DocumentUpload({
                     isDragging
                         ? "border-brand-gold bg-brand-gold/5 scale-[0.99]"
                         : "border-brand-gold/20 hover:border-brand-gold/40 bg-white/50 dark:bg-white/5",
-                    file && "border-solid border-emerald-500/30 bg-emerald-500/5",
-                    isPending && "pointer-events-none opacity-60"
+                    uploadedUrl && "border-solid border-emerald-500/30 bg-emerald-500/5",
+                    uploadError && "border-solid border-red-500/30 bg-red-500/5",
+                    !isInteractive && "pointer-events-none opacity-60"
                 )}
             >
                 <input
@@ -93,12 +114,14 @@ export function DocumentUpload({
                                         <FileText className="w-10 h-10 text-brand-gold" />
                                     </div>
                                 )}
-                                <button
-                                    onClick={removeFile}
-                                    className="absolute -top-2 -right-2 p-1.5 bg-rose-500 text-white rounded-full shadow-lg hover:bg-rose-600 transition-colors"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
+                                {!isUploading && (
+                                    <button
+                                        onClick={removeFile}
+                                        className="absolute -top-2 -right-2 p-1.5 bg-rose-500 text-white rounded-full shadow-lg hover:bg-rose-600 transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
                             <div className="space-y-1">
                                 <p className="text-sm font-medium text-brand-deep dark:text-brand-cream truncate max-w-xs mx-auto">
@@ -108,10 +131,24 @@ export function DocumentUpload({
                                     {(file.size / (1024 * 1024)).toFixed(2)} MB • {file.type.split('/')[1]}
                                 </p>
                             </div>
-                            <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-medium text-xs">
-                                <CheckCircle2 className="w-4 h-4" />
-                                Document Ready
-                            </div>
+                            {isUploading && (
+                                <div className="flex items-center justify-center gap-2 text-brand-gold font-medium text-xs">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Uploading...
+                                </div>
+                            )}
+                            {uploadedUrl && (
+                                <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-medium text-xs">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Uploaded Successfully
+                                </div>
+                            )}
+                            {uploadError && (
+                                <div className="flex items-center justify-center gap-2 text-red-500 font-medium text-xs">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    {uploadError}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <>
@@ -132,15 +169,6 @@ export function DocumentUpload({
                         </>
                     )}
                 </div>
-
-                {isPending && (
-                    <div className="absolute inset-0 bg-brand-cream/80 dark:bg-brand-deep/80 backdrop-blur-[2px] flex items-center justify-center z-10 transition-all duration-500">
-                        <div className="flex flex-col items-center gap-3">
-                            <Loader2 className="w-10 h-10 animate-spin text-brand-gold" />
-                            <span className="text-xs font-bold uppercase tracking-widest text-brand-gold animate-pulse">Encrypting & Uploading...</span>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     )

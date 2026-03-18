@@ -7,14 +7,8 @@ import { cn } from "@/app/lib/utils"
 import { VerificationLevelConfig } from "@/app/domains/business/hooks/useVerification"
 import { VerificationStatusBadge } from "./VerificationStatusBadge"
 import { VerificationAuditTrail } from "./VerificationAuditTrail"
-import { VerificationLevelForm, Coordinates } from "./VerificationLevelForm"
+import { VerificationLevelForm, Coordinates, RegDocs } from "./VerificationLevelForm"
 import { VerificationTypeEnum } from "../../data/type"
-
-interface RegDocs {
-    cac: File | null
-    mermat: File | null
-    statusReport: File | null
-}
 
 interface VerificationStepCardProps {
     step: VerificationLevelConfig
@@ -29,9 +23,9 @@ interface VerificationStepCardProps {
     onBvnChange: (val: string) => void
     address: string
     onAddressChange: (val: string) => void
-    onFileSelect: (file: File | null) => void
+    onFileUrlChange: (url: string | null) => void
     regDocs: RegDocs
-    onRegDocChange: (key: keyof RegDocs, file: File | null) => void
+    onRegDocChange: (key: keyof RegDocs, url: string | null) => void
     onCoordinatesChange: (coords: Coordinates | null) => void
     isPending: boolean
     showHistory: boolean
@@ -53,7 +47,7 @@ export function VerificationStepCard({
     onBvnChange,
     address,
     onAddressChange,
-    onFileSelect,
+    onFileUrlChange,
     regDocs,
     onRegDocChange,
     onCoordinatesChange,
@@ -142,7 +136,7 @@ export function VerificationStepCard({
                                             onBvnChange={onBvnChange}
                                             address={address}
                                             onAddressChange={onAddressChange}
-                                            onFileSelect={onFileSelect}
+                                            onFileUrlChange={onFileUrlChange}
                                             regDocs={regDocs}
                                             onRegDocChange={onRegDocChange}
                                             onCoordinatesChange={onCoordinatesChange}

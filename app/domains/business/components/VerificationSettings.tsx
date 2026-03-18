@@ -19,7 +19,7 @@ import {
     VerificationData,
     VerificationLevelConfig,
 } from "@/app/domains/business/hooks/useVerification"
-import { VerificationLevelForm, Coordinates } from "./verification/VerificationLevelForm"
+import { VerificationLevelForm, Coordinates, RegDocs } from "./verification/VerificationLevelForm"
 import { VerificationAuditTrail } from "./verification/VerificationAuditTrail"
 import { VerificationTypeEnum, VerificationGroupEnum } from "../data/type"
 import { useSettings } from "../hooks/useBusinessSettings"
@@ -66,7 +66,7 @@ function StatusBadge({ status, isLocked }: { status: VerifStatus; isLocked?: boo
     )
 }
 
-interface RegDocs { cac: File | null; mermat: File | null; statusReport: File | null }
+// RegDocs is imported from VerificationLevelForm (string URLs after upload)
 
 interface AccordionItemProps {
     step: VerificationLevelConfig
@@ -78,9 +78,9 @@ interface AccordionItemProps {
     onBvnChange: (v: string) => void
     address: string
     onAddressChange: (v: string) => void
-    onFileSelect: (f: File | null) => void
+    onFileUrlChange: (url: string | null) => void
     regDocs: RegDocs
-    onRegDocChange: (key: keyof RegDocs, f: File | null) => void
+    onRegDocChange: (key: keyof RegDocs, url: string | null) => void
     onCoordinatesChange: (coords: Coordinates | null) => void
     onSubmit: (levelId: number, type: VerificationTypeEnum) => void
     isPending: boolean
@@ -89,7 +89,7 @@ interface AccordionItemProps {
 
 function AccordionItem({
     step, status, isLocked, isOpen, onToggle,
-    bvn, onBvnChange, address, onAddressChange, onFileSelect,
+    bvn, onBvnChange, address, onAddressChange, onFileUrlChange,
     regDocs, onRegDocChange, onCoordinatesChange, onSubmit, isPending, logs = [],
 }: AccordionItemProps) {
     const Icon = ICON_MAP[step.icon] ?? ShieldCheck
@@ -189,7 +189,7 @@ function AccordionItem({
                                         onBvnChange={onBvnChange}
                                         address={address}
                                         onAddressChange={onAddressChange}
-                                        onFileSelect={onFileSelect}
+                                        onFileUrlChange={onFileUrlChange}
                                         regDocs={regDocs}
                                         onRegDocChange={onRegDocChange}
                                         onCoordinatesChange={onCoordinatesChange}
@@ -230,7 +230,7 @@ export function VerificationSettings() {
     const [openItem, setOpenItem] = useState<string | null>(null)
     const [bvn, setBvn] = useState("")
     const [address, setAddress] = useState("")
-    const [file, setFile] = useState<File | null>(null)
+    const [fileUrl, setFileUrl] = useState<string | null>(null)
     const [regDocs, setRegDocs] = useState<RegDocs>({ cac: null, mermat: null, statusReport: null })
     const [coordinates, setCoordinates] = useState<Coordinates | null>(null)
 
@@ -244,11 +244,11 @@ export function VerificationSettings() {
             }
             payload = { bvn }
         } else if (type === VerificationTypeEnum.GOVT_ID) {
-            if (!file) {
+            if (!fileUrl) {
                 toast.error("Identification Required", { description: "Please upload a clear image of your Government ID to proceed." })
                 return
             }
-            payload = { fileName: file.name, fileType: file.type, fileSize: file.size, document_uri: URL.createObjectURL(file) }
+            payload = { document_uri: fileUrl }
         } else if (type === VerificationTypeEnum.ADDRESS) {
             if (address.length < 10) {
                 toast.error("Address too short", { description: "Please provide a more detailed business address." })
@@ -268,21 +268,17 @@ export function VerificationSettings() {
                 toast.error("Location Required", { description: "Please allow location access so we can capture your coordinates." })
                 return
             }
-            if (!file) {
+            if (!fileUrl) {
                 toast.error("Proof of Residence Required", { description: "Please upload a utility bill, bank statement, or tenancy agreement." })
                 return
             }
-            payload = { address, latitude: coordinates.lat, longitude: coordinates.lng, document_uri: URL.createObjectURL(file) }
+            payload = { address, latitude: coordinates.lat, longitude: coordinates.lng, document_uri: fileUrl }
         } else if (type === VerificationTypeEnum.REGISTRATION_DOCS) {
             if (!regDocs.cac || !regDocs.mermat || !regDocs.statusReport) {
                 toast.error("All Documents Required", { description: "Please upload your CAC Certificate, MEMART, and Status Report." })
                 return
             }
-            payload = {
-                cacCertificateUrl: URL.createObjectURL(regDocs.cac),
-                mermatUrl: URL.createObjectURL(regDocs.mermat),
-                statusReportUrl: URL.createObjectURL(regDocs.statusReport),
-            }
+            payload = { cacCertificateUrl: regDocs.cac, mermatUrl: regDocs.mermat, statusReportUrl: regDocs.statusReport }
         }
 
         try {
@@ -290,7 +286,7 @@ export function VerificationSettings() {
             setOpenItem(null)
             setBvn("")
             setAddress("")
-            setFile(null)
+            setFileUrl(null)
             setRegDocs({ cac: null, mermat: null, statusReport: null })
             setCoordinates(null)
         } catch {
@@ -519,9 +515,9 @@ export function VerificationSettings() {
                                             onBvnChange={setBvn}
                                             address={address}
                                             onAddressChange={setAddress}
-                                            onFileSelect={setFile}
+                                            onFileUrlChange={setFileUrl}
                                             regDocs={regDocs}
-                                            onRegDocChange={(key, f) => setRegDocs((prev) => ({ ...prev, [key]: f }))}
+                                            onRegDocChange={(key, url) => setRegDocs((prev) => ({ ...prev, [key]: url }))}
                                             onCoordinatesChange={setCoordinates}
                                             onSubmit={handleVerification}
                                             isPending={submitVerification.isPending}

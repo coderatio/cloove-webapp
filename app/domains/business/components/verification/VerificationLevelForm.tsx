@@ -9,10 +9,10 @@ import { DocumentUpload } from "./DocumentUpload"
 import { VerificationTypeEnum } from "../../data/type"
 import { cn } from "@/app/lib/utils"
 
-interface RegDocs {
-    cac: File | null
-    mermat: File | null
-    statusReport: File | null
+export interface RegDocs {
+    cac: string | null
+    mermat: string | null
+    statusReport: string | null
 }
 
 export interface Coordinates {
@@ -27,9 +27,9 @@ interface VerificationLevelFormProps {
     onBvnChange: (value: string) => void
     address: string
     onAddressChange: (value: string) => void
-    onFileSelect: (file: File | null) => void
+    onFileUrlChange: (url: string | null) => void
     regDocs: RegDocs
-    onRegDocChange: (key: keyof RegDocs, file: File | null) => void
+    onRegDocChange: (key: keyof RegDocs, url: string | null) => void
     onCoordinatesChange: (coords: Coordinates | null) => void
     onSubmit: () => void
     onCancel: () => void
@@ -139,7 +139,7 @@ export function VerificationLevelForm({
     onBvnChange,
     address,
     onAddressChange,
-    onFileSelect,
+    onFileUrlChange,
     regDocs,
     onRegDocChange,
     onCoordinatesChange,
@@ -185,8 +185,8 @@ export function VerificationLevelForm({
                     <DocumentUpload
                         label="Sovereign Identification"
                         description="National Passport, Driver's License, or NIMC Card. High resolution scan required."
-                        onFileSelect={onFileSelect}
-                        isPending={isPending}
+                        onUrlChange={onFileUrlChange}
+                        disabled={isPending}
                     />
                 </div>
             )}
@@ -243,8 +243,8 @@ export function VerificationLevelForm({
                         <DocumentUpload
                             label="Residential Oracle"
                             description="Utility bill, bank statement, or tenancy agreement (< 3 months old)"
-                            onFileSelect={onFileSelect}
-                            isPending={isPending}
+                            onUrlChange={onFileUrlChange}
+                            disabled={isPending}
                         />
                     </div>
                 </div>
@@ -266,20 +266,20 @@ export function VerificationLevelForm({
                         <DocumentUpload
                             label="Certificate of Incorporation"
                             description="Corporate Affairs Commission official certificate"
-                            onFileSelect={(f) => onRegDocChange('cac', f)}
-                            isPending={isPending}
+                            onUrlChange={(url) => onRegDocChange('cac', url)}
+                            disabled={isPending}
                         />
                         <DocumentUpload
                             label="MEMART"
                             description="Memorandum and Articles of Association"
-                            onFileSelect={(f) => onRegDocChange('mermat', f)}
-                            isPending={isPending}
+                            onUrlChange={(url) => onRegDocChange('mermat', url)}
+                            disabled={isPending}
                         />
                         <DocumentUpload
                             label="Entity Status Report"
                             description="Current CAC status validation report"
-                            onFileSelect={(f) => onRegDocChange('statusReport', f)}
-                            isPending={isPending}
+                            onUrlChange={(url) => onRegDocChange('statusReport', url)}
+                            disabled={isPending}
                         />
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
 import { apiClient } from '@/app/lib/api-client'
@@ -60,6 +60,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     const [isRefreshing, setIsRefreshing] = useState(false)
     const router = useRouter()
     const pathname = usePathname()
+    // Tracks which user's businesses have been fetched to prevent Strict Mode double-calls
+    const fetchedForUserRef = useRef<string | null>(null)
 
     const setActiveBusiness = useCallback((business: Business | null, options?: { quiet?: boolean }) => {
         setActiveBusinessState(business)
@@ -110,10 +112,16 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             setIsLoading(false)  // Not authenticated — no businesses to load
             setBusinesses([])
             setActiveBusinessState(null)
+            fetchedForUserRef.current = null
             return
         }
+        // Deduplicate: skip if already fetched for this user (guards against Strict Mode double-invoke)
+        if (fetchedForUserRef.current === user.id) return
+        fetchedForUserRef.current = user.id
         refreshBusinesses()
-    }, [refreshBusinesses, user?.id, isAuthLoading])
+    // refreshBusinesses is a stable useCallback — safe to omit from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.id, isAuthLoading])
 
     // Redirect to business type selection if active business has no type set
     useEffect(() => {
