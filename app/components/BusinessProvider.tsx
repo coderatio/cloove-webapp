@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useRouter, usePathname } from 'next/navigation'
 import { apiClient } from '@/app/lib/api-client'
 import { storage, STORAGE_KEYS } from '@/app/lib/storage'
 import { toast } from 'sonner'
@@ -41,12 +42,22 @@ interface BusinessContextType {
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined)
 
+const BUSINESS_TYPE_EXEMPT_PATHS = [
+    '/select-business-type',
+    '/select-business',
+    '/onboarding',
+    '/login',
+    '/register',
+]
+
 export function BusinessProvider({ children }: { children: ReactNode }) {
     const queryClient = useQueryClient()
     const [businesses, setBusinesses] = useState<Business[]>([])
     const { user, isLoading: isAuthLoading } = useAuth()
     const [activeBusiness, setActiveBusinessState] = useState<Business | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const router = useRouter()
+    const pathname = usePathname()
 
     const setActiveBusiness = useCallback((business: Business | null, options?: { quiet?: boolean }) => {
         setActiveBusinessState(business)
@@ -99,6 +110,16 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         }
         refreshBusinesses()
     }, [refreshBusinesses, user?.id, isAuthLoading])
+
+    // Redirect to business type selection if active business has no type set
+    useEffect(() => {
+        if (isLoading || isAuthLoading || !user || !activeBusiness) return
+        if (activeBusiness.businessType != null) return
+        const isExempt = BUSINESS_TYPE_EXEMPT_PATHS.some(p => pathname.startsWith(p))
+        if (isExempt) return
+        const callbackUrl = encodeURIComponent(pathname)
+        router.replace(`/select-business-type?callbackUrl=${callbackUrl}`)
+    }, [activeBusiness, isLoading, isAuthLoading, user, pathname, router])
 
     const getBusinessCurrency = useCallback(() => {
         const currencyCode = activeBusiness?.currency!

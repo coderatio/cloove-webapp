@@ -36,72 +36,121 @@ function SelectBusinessTypeContent() {
     }
 
     return (
-        <div className="min-h-screen bg-brand-cream dark:bg-background flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
-                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-brand-green/20 blur-3xl filter animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-brand-gold/20 blur-3xl filter animate-pulse" />
+        <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
+            {/* Academic Luxury Background */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                {/* Texture Overlay */}
+                <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[url('/images/noise.png')] mix-blend-overlay" />
+
+                {/* Subtle Grid */}
+                <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.1]"
+                    style={{ backgroundImage: 'radial-gradient(var(--brand-gold) 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }} />
+
+                {/* Ambient Intelligence Blobs */}
+                <motion.div
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        x: [0, 50, 0],
+                        y: [0, -30, 0]
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] rounded-full bg-brand-green/20 blur-[120px] filter"
+                />
+                <motion.div
+                    animate={{
+                        scale: [1, 1.1, 1],
+                        x: [0, -40, 0],
+                        y: [0, 60, 0]
+                    }}
+                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                    className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-brand-gold/15 blur-[100px] filter"
+                />
             </div>
 
-            <div className="relative z-10 w-full max-w-2xl space-y-10">
-                <div className="text-center space-y-4">
+            <div className="relative z-10 w-full max-w-2xl flex flex-col items-center space-y-12">
+                <div className="text-center space-y-8 max-w-lg">
+                    {/* Perspective Logo */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="relative h-20 w-20 bg-brand-green rounded-[2.5rem] p-4 mx-auto shadow-2xl shadow-brand-green/20 mb-8 overflow-hidden"
+                        initial={{ opacity: 0, y: -20, rotateX: 30 }}
+                        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="relative group cursor-default"
                     >
-                        <Image
-                            src="/images/logo-white.png"
-                            alt="Cloove"
-                            fill
-                            className="object-contain p-4"
-                        />
+                        <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full scale-50 group-hover:scale-100 transition-transform duration-700" />
+                        <div className="relative h-16 w-16 bg-brand-green rounded-2xl p-3 mx-auto shadow-2xl shadow-brand-green/30 overflow-hidden ring-1 ring-white/10">
+                            <Image
+                                src="/images/logo-white.png"
+                                alt="Cloove"
+                                fill
+                                className="object-contain p-3"
+                            />
+                        </div>
                     </motion.div>
 
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="font-serif text-4xl sm:text-5xl text-brand-deep dark:text-brand-cream tracking-tight"
-                    >
-                        One quick step
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-brand-accent/60 dark:text-brand-cream/60 text-lg max-w-md mx-auto"
-                    >
-                        Tell us what kind of business this is. This helps us show the right verification requirements.
-                    </motion.p>
+                    <div className="space-y-4">
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="font-serif text-5xl sm:text-6xl text-brand-deep dark:text-brand-cream tracking-tight leading-tight"
+                        >
+                            Business <span className="text-brand-deep/40 dark:text-brand-cream/30">Identity</span>
+                        </motion.h1>
+
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="text-brand-accent/70 dark:text-brand-cream/60 text-lg leading-relaxed font-sans"
+                        >
+                            To provide an experience tailored to your unique journey, we first need to understand the scale of your operation.
+                        </motion.p>
+                    </div>
                 </div>
 
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
+                    transition={{ delay: 0.5, duration: 0.6 }}
+                    className="w-full"
                 >
-                    <BusinessTypeSelector value={businessType} onChange={setBusinessType} />
+                    <div className="bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-brand-deep/5">
+                        <BusinessTypeSelector value={businessType} onChange={setBusinessType} />
+                    </div>
                 </motion.div>
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="flex justify-center"
+                    transition={{ delay: 0.7 }}
+                    className="flex flex-col items-center gap-6"
                 >
                     <Button
                         onClick={handleSubmit}
                         disabled={!businessType || isSubmitting}
-                        className="h-14 rounded-2xl px-12 bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 font-bold text-base shadow-xl disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="h-16 rounded-[2rem] px-16 bg-brand-deep text-brand-gold hover:bg-brand-deep/95 hover:scale-[1.02] active:scale-[0.98] dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 font-bold text-base shadow-2xl shadow-brand-deep/20 dark:shadow-brand-gold/10 transition-all duration-300 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed group"
                     >
                         {isSubmitting ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Saving...
-                            </>
+                            <div className="flex items-center gap-3">
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span className="tracking-wide">Saving...</span>
+                            </div>
                         ) : (
-                            'Continue'
+                            <div className="flex items-center gap-2">
+                                <span className="tracking-wide text-lg">Continue</span>
+                                <motion.span
+                                    animate={{ x: [0, 5, 0] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                >
+                                    →
+                                </motion.span>
+                            </div>
                         )}
                     </Button>
+
+                    {/* <p className="text-[10px] uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/30 font-bold">
+                        Secure Encryption Active
+                    </p> */}
                 </motion.div>
             </div>
         </div>
