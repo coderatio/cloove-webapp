@@ -10,6 +10,7 @@ import { AuthProvider } from "./components/providers/auth-provider";
 import { AuthGuard } from "./components/shared/AuthGuard";
 import { RootSessionManager } from "./components/auth/RootSessionManager";
 import { ReceiptPrinterProvider } from "./hooks/useReceiptPrinter";
+import { InstallBanner } from "./components/shared/pwa/InstallBanner";
 
 export const metadata: Metadata = {
   title: "Cloove | Business Dashboard",
@@ -21,18 +22,49 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Cloove",
+    startupImage: [
+      {
+        url: "/icons/icon-512.png",
+        media: "(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/icons/icon-512.png",
+        media: "(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/icons/icon-512.png",
+        media: "(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)",
+      },
+      {
+        url: "/icons/icon-512.png",
+        media: "(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)",
+      },
+      {
+        url: "/icons/icon-512.png",
+        media: "(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)",
+      },
+      {
+        url: "/icons/icon-512.png",
+        media: "(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)",
+      },
+    ],
   },
   formatDetection: {
     telephone: false,
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+  }
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#062c21" },
-    { media: "(prefers-color-scheme: dark)", color: "#070e0b" },
+    { media: "(prefers-color-scheme: light)", color: "#fdfcf8" },
+    { media: "(prefers-color-scheme: dark)", color: "#062c21" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -41,8 +73,6 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-
-// ... existing imports
 
 export default function RootLayout({
   children,
@@ -79,6 +109,7 @@ export default function RootLayout({
                 <TooltipProvider>
                   <BusinessProvider>
                     <ReceiptPrinterProvider>
+                      <InstallBanner />
                       {children}
                     </ReceiptPrinterProvider>
                   </BusinessProvider>
