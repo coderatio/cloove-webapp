@@ -116,7 +116,7 @@ export function OnboardingView() {
         const unlimited = max === undefined || max === null || max === Infinity
 
         const allowed =
-            role === "OWNER" &&
+            (role === "OWNER" || role === null) &&
             !isLoadingUsage &&
             (unlimited || (usage != null && usage.businesses < Number(max)))
 
@@ -420,7 +420,7 @@ export function OnboardingView() {
                                 <div className="pt-4">
                                     <Button
                                         onClick={handleSubmit}
-                                        disabled={isSubmitting || !selectedCountry || isCountriesError}
+                                        disabled={isSubmitting || !selectedCountry || isCountriesError || !canAddBusiness}
                                         className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 transition-all text-lg shadow-xl shadow-brand-gold/10"
                                     >
                                         {isSubmitting ? (

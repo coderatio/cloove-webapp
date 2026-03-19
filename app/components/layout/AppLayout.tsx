@@ -65,7 +65,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
 
     const pathname = usePathname()
-    const isAssistantPage = pathname === "/assistant"
+    const isAssistantPage = pathname?.startsWith("/assistant")
 
     const { theme, setTheme } = useTheme()
     const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false)
@@ -123,9 +123,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
                     )}
                 >
-                    <div className="px-4 md:px-0 pt-3 sm:pt-0 max-w-5xl md:mx-auto">
-                        <VerificationAlert />
-                    </div>
+                    {!isAssistantPage && (
+                        <div className="px-4 md:px-0 pt-3 sm:pt-0 max-w-5xl md:mx-auto">
+                            <VerificationAlert />
+                        </div>
+                    )}
                     {/* Mobile Header - Hide on Assistant Page */}
                     {!isAssistantPage && (
                         <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-white/10 dark:border-white/5">

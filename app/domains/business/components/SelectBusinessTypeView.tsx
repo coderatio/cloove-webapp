@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
 import Image from "next/image"
-import { Loader2 } from "lucide-react"
+import { Loader2, AlertCircle } from "lucide-react"
 import { BusinessTypeSelector, type BusinessType } from "./BusinessTypeSelector"
 import { Button } from "@/app/components/ui/button"
 import { apiClient } from "@/app/lib/api-client"
@@ -14,7 +14,7 @@ import { useBusiness } from "@/app/components/BusinessProvider"
 function SelectBusinessTypeContent() {
     const [businessType, setBusinessType] = useState<BusinessType | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const { activeBusiness, isLoading, refreshBusinesses } = useBusiness()
+    const { activeBusiness, isLoading, refreshBusinesses, role } = useBusiness()
     const router = useRouter()
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get('callbackUrl') || '/'
@@ -40,6 +40,30 @@ function SelectBusinessTypeContent() {
         } finally {
             setIsSubmitting(false)
         }
+    }
+
+    if (!isLoading && role !== 'OWNER') {
+        return (
+            <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden text-center">
+                <div className="relative z-10 w-full max-w-md">
+                    <div className="bg-white/40 dark:bg-white/3 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-brand-deep/5 space-y-6">
+                        <div className="h-16 w-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <AlertCircle className="h-8 w-8 text-red-500" />
+                        </div>
+                        <h2 className="font-serif text-2xl text-brand-deep dark:text-brand-cream">Setup Incomplete</h2>
+                        <p className="text-brand-accent/60 dark:text-brand-cream/60">
+                            This business setup hasn't been completed yet. Please contact the business owner to finalize the configuration.
+                        </p>
+                        <Button
+                            onClick={() => router.push('/')}
+                            className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            Back to Dashboard
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -121,7 +145,7 @@ function SelectBusinessTypeContent() {
                     transition={{ delay: 0.5, duration: 0.6 }}
                     className="w-full"
                 >
-                    <div className="bg-white/40 dark:bg-white/[0.03] backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-brand-deep/5">
+                    <div className="bg-white/40 dark:bg-white/3 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-brand-deep/5">
                         <BusinessTypeSelector value={businessType} onChange={setBusinessType} />
                     </div>
                 </motion.div>
@@ -135,7 +159,7 @@ function SelectBusinessTypeContent() {
                     <Button
                         onClick={handleSubmit}
                         disabled={!businessType || isSubmitting}
-                        className="h-16 rounded-[2rem] px-16 bg-brand-deep text-brand-gold hover:bg-brand-deep/95 hover:scale-[1.02] active:scale-[0.98] dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 font-bold text-base shadow-2xl shadow-brand-deep/20 dark:shadow-brand-gold/10 transition-all duration-300 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed group"
+                        className="h-16 rounded-4xl px-16 bg-brand-deep text-brand-gold hover:bg-brand-deep/95 hover:scale-[1.02] active:scale-[0.98] dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 font-bold text-base shadow-2xl shadow-brand-deep/20 dark:shadow-brand-gold/10 transition-all duration-300 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed group"
                     >
                         {isSubmitting ? (
                             <div className="flex items-center gap-3">

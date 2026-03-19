@@ -123,14 +123,39 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id, isAuthLoading])
 
-    // Redirect to business type selection if active business has no type set
+    // Handle all business-related redirects (Selection -> Type Selection -> Dashboard)
     useEffect(() => {
-        if (isLoading || isRefreshing || isAuthLoading || !user || !activeBusiness) return
-        if (activeBusiness.businessType != null) return
-        const isExempt = BUSINESS_TYPE_EXEMPT_PATHS.some(p => pathname.startsWith(p))
-        if (isExempt) return
-        const callbackUrl = encodeURIComponent(pathname)
-        router.replace(`/select-business-type?callbackUrl=${callbackUrl}`)
+        if (isLoading || isRefreshing || isAuthLoading || !user) return
+
+        // 1. No business selected? Must go select one (unless on an onboarding/auth page)
+        if (!activeBusiness) {
+            const isBusinessSelectionPage = ['/select-business', '/onboarding', '/login', '/register'].some(p => pathname === p || pathname.startsWith(p + '/'))
+            if (!isBusinessSelectionPage) {
+                const callbackUrl = encodeURIComponent(pathname)
+                router.replace(`/select-business?callbackUrl=${callbackUrl}`)
+            }
+            return
+        }
+
+        // 2. Business selected but no type? Must go select type (Only for Owners)
+        // Non-owners should NEVER be redirected to setup pages
+        if (activeBusiness.businessType == null) {
+            if (activeBusiness.role === 'OWNER') {
+                const isExemptFromTypeSelection = BUSINESS_TYPE_EXEMPT_PATHS.some(p => pathname.startsWith(p))
+                if (!isExemptFromTypeSelection) {
+                    const callbackUrl = encodeURIComponent(pathname)
+                    router.replace(`/select-business-type?callbackUrl=${callbackUrl}`)
+                }
+            }
+            return
+        }
+
+        // 3. Prevent non-owners from accessing setup pages directly
+        const isSetupPage = ['/onboarding', '/select-business-type'].some(p => pathname === p)
+        if (isSetupPage && activeBusiness.role !== 'OWNER' && activeBusiness.role !== null) {
+            router.replace('/')
+            return
+        }
     }, [activeBusiness, isLoading, isRefreshing, isAuthLoading, user, pathname, router])
 
     const getBusinessCurrency = useCallback(() => {

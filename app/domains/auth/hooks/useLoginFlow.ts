@@ -26,9 +26,10 @@ function resolveRedirectUrl(
     // Explicitly check if they were in the middle of adding a business
     const isAddingBusiness = lowerPath.includes('from=switcher')
 
-    // 1. If no businesses, they MUST go to onboarding
+    // 1. If no businesses, send to selection (unless they have a specific deep link)
     if (businesses.length === 0) {
-        return `/onboarding?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        const isAuthPath = lowerPath === '/login' || lowerPath === '/register' || callbackUrl === '/'
+        return isAuthPath ? '/select-business' : callbackUrl
     }
 
     // 2. Identify "Auth/Onboarding landing" paths that should be bypassed if they already have businesses.
