@@ -12,6 +12,7 @@ const WHATSAPP_BOT_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER?.replace
 function buildWhatsAppUrl(): string {
     if (!WHATSAPP_BOT_NUMBER) return ""
     const text = encodeURIComponent("Hi")
+
     return `https://wa.me/${WHATSAPP_BOT_NUMBER}${text ? `?text=${text}` : ""}`
 }
 
