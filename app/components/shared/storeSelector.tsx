@@ -4,6 +4,7 @@ import * as React from 'react'
 import { ChevronsUpDown, Store as StoreIcon } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { useStores } from '@/app/domains/stores/providers/StoreProvider'
+import { useBusiness } from '@/app/components/BusinessProvider'
 import { MultiSelect, MultiSelectOption } from '@/app/components/ui/multi-select'
 
 interface StoreSelectorProps {

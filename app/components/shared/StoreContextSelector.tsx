@@ -15,27 +15,33 @@ interface StoreContextSelectorProps {
 export function StoreContextSelector({ value, onChange, className }: StoreContextSelectorProps) {
     const { stores, isLoading } = useStores()
 
-    const options: SearchableSelectOption[] = [
-        {
-            label: 'All Stores',
-            value: 'all-stores',
-            icon: <LayoutGrid className="h-4 w-4" />
-        },
-        ...stores.map(store => ({
+    const options: SearchableSelectOption[] = React.useMemo(() => {
+        const storeOptions = stores.map(store => ({
             label: store.name,
             value: store.id,
             icon: <StoreIcon className="h-4 w-4" />
         }))
-    ]
 
-    const selectedOption = options.find(opt => opt.value === value) || options[0]
+        if (stores.length <= 1) return storeOptions
+
+        return [
+            {
+                label: 'All Stores',
+                value: 'all-stores',
+                icon: <LayoutGrid className="h-4 w-4" />
+            },
+            ...storeOptions
+        ]
+    }, [stores])
+
+    const selectedOption = options.find(opt => opt.value === value) || options[0] || { label: 'Select Store', value: '' }
 
     return (
         <SearchableSelect
             options={options}
             value={value}
             onChange={onChange}
-            disabled={isLoading}
+            disabled={isLoading || options.length === 0}
             placeholder="Select store..."
             searchPlaceholder="Search branches..."
             className={className}

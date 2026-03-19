@@ -19,6 +19,7 @@ export interface Business {
     role: string
     businessType: BusinessType | null
     permissions: Record<string, boolean> | null
+    stores: Array<{ id: string; name: string }>
     features: Record<string, boolean> | null
 }
 

@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from 'react'
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -58,7 +59,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const queryClient = useQueryClient()
     const [currentStore, setCurrentStore] = useState<Store | null>(null)
 
-    const stores: Store[] = response?.data || []
+    const stores: Store[] = React.useMemo(() => {
+        const allStores = response?.data || []
+        if (activeBusiness?.role === 'OWNER') return allStores
+        
+        const assignedStores = activeBusiness?.stores || []
+        if (assignedStores.length === 0) return allStores
+
+        const assignedIds = new Set(assignedStores.map(s => s.id))
+        return allStores.filter(s => assignedIds.has(s.id))
+    }, [response?.data, activeBusiness])
 
     // Set default store on load if none selected
     useEffect(() => {

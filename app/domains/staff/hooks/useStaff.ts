@@ -19,6 +19,7 @@ export interface StaffMember {
         phoneNumber: string
         email: string | null
     }
+    stores?: Array<{ id: string; name: string }>
 }
 
 export function useStaff() {
@@ -33,7 +34,7 @@ export function useStaff() {
     })
 
     const inviteStaffMutation = useMutation({
-        mutationFn: (data: { fullName: string; email?: string; phoneNumber: string; role: Role; permissions?: Record<string, boolean> }) =>
+        mutationFn: (data: { fullName: string; email?: string; phoneNumber: string; role: Role; permissions?: Record<string, boolean>; storeIds?: string[] }) =>
             apiClient.post('/staff', data),
         onSuccess: () => {
             toast.success("Staff invitation sent successfully")
@@ -45,7 +46,7 @@ export function useStaff() {
     })
 
     const updateStaffMutation = useMutation({
-        mutationFn: ({ userId, data }: { userId: string; data: { role: Role; permissions?: Record<string, boolean> } }) =>
+        mutationFn: ({ userId, data }: { userId: string; data: { role: Role; permissions?: Record<string, boolean>; storeIds?: string[] } }) =>
             apiClient.patch(`/staff/${userId}`, data),
         onSuccess: () => {
             toast.success("Staff member updated successfully")

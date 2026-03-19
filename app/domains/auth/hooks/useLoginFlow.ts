@@ -11,7 +11,7 @@ import { useCountries } from "@/app/hooks/useCountries"
 interface UseLoginFlowProps {
     callbackUrl?: string
     router?: AppRouterInstance
-    onSuccess?: () => void
+    onSuccess?: () => void | Promise<void>
 }
 
 // ─── Shared post-auth routing helper ─────────────────────────────────────────
@@ -34,7 +34,8 @@ function resolveRedirectUrl(
 
     // 2. Identify "Auth/Onboarding landing" paths that should be bypassed if they already have businesses.
     // However, if they were intentionally adding a business (isAddingBusiness), we let them stay.
-    const isAuthPath = lowerPath === '/login' || lowerPath === '/register' || callbackUrl === '/'
+    // NOTE: We also include '/select-business' here to prevent redirect loops back to selection twice.
+    const isAuthPath = lowerPath === '/login' || lowerPath === '/register' || lowerPath.includes('/select-business') || callbackUrl === '/'
     const isGenericOnboarding = lowerPath.startsWith('/onboarding') && !isAddingBusiness
 
     if (businesses.length === 1) {
@@ -91,14 +92,14 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
     }, [countries, callbackUrl, router])
 
     // ── Shared post-login handler ─────────────────────────────────────────────
-    const handleAuthSuccess = useCallback((response: LoginResponse) => {
+    const handleAuthSuccess = useCallback(async (response: LoginResponse) => {
         if (response.user?.setupRequired) {
             setStep('setup-password')
             return
         }
 
         setStep('success')
-        onSuccess?.()
+        await onSuccess?.()
 
         const businesses = response.user?.businesses ?? []
         if (businesses.length === 1) {
@@ -204,14 +205,15 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
                 country: selectedCountry?.id
             })
             setStep('success')
-            onSuccess?.()
+            await onSuccess?.()
 
             const businesses = response.user?.businesses ?? []
             if (businesses.length === 1) {
                 storage.setActiveBusinessId(businesses[0].id)
             }
             if (router) {
-                setTimeout(() => router.replace(resolveRedirectUrl(response, callbackUrl)), 500)
+                // Navigate immediately — the success step animation provides visual feedback
+                router.replace(resolveRedirectUrl(response, callbackUrl))
             }
         } catch (error: unknown) {
             toast.error(error instanceof Error ? error.message : 'Failed to set up password')

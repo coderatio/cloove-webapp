@@ -31,6 +31,7 @@ import {
 } from "@/app/components/ui/drawer"
 import { PERMISSIONS, Role } from "../data/staffMocks"
 import { useStaff, type StaffMember } from "../hooks/useStaff"
+import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 
 export function StaffView() {
     const { staff, isLoading, inviteStaff, updateStaff, removeStaff, resendInvite } = useStaff()
@@ -45,7 +46,10 @@ export function StaffView() {
     const [phoneNumber, setPhoneNumber] = useState("")
     const [role, setRole] = useState<Role>('STAFF')
     const [permissions, setPermissions] = useState<Record<string, boolean>>({})
+    const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([])
     const [isSaving, setIsSaving] = useState(false)
+
+    const { stores } = useStores()
 
     useEffect(() => {
         if (!isDrawerOpen) return
@@ -56,12 +60,14 @@ export function StaffView() {
             setPhoneNumber(editingStaff.user.phoneNumber)
             setRole(editingStaff.role)
             setPermissions(editingStaff.permissions || {})
+            setSelectedStoreIds(editingStaff.stores?.map(s => s.id) || [])
         } else {
             setFullName("")
             setEmail("")
             setPhoneNumber("")
             setRole('STAFF')
             setPermissions({})
+            setSelectedStoreIds([])
         }
     }, [isDrawerOpen, editingStaff])
 
@@ -84,9 +90,9 @@ export function StaffView() {
         setIsSaving(true)
         try {
             if (editingStaff) {
-                await updateStaff(editingStaff.userId, { role, permissions })
+                await updateStaff(editingStaff.userId, { role, permissions, storeIds: selectedStoreIds })
             } else {
-                await inviteStaff({ fullName, email, phoneNumber, role, permissions })
+                await inviteStaff({ fullName, email, phoneNumber, role, permissions, storeIds: selectedStoreIds })
             }
             setIsDrawerOpen(false)
         } catch (error) {
@@ -127,6 +133,14 @@ export function StaffView() {
             ...prev,
             [permId]: !prev[permId]
         }))
+    }
+
+    const toggleStore = (storeId: string) => {
+        setSelectedStoreIds(prev =>
+            prev.includes(storeId)
+                ? prev.filter(id => id !== storeId)
+                : [...prev, storeId]
+        )
     }
 
     return (
@@ -281,6 +295,34 @@ export function StaffView() {
                                     ))}
                                 </GlassCard>
                             </section>
+
+                            {/* Store Access Selection */}
+                            {stores.length > 1 && (
+                                <section className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Store Access</h3>
+                                        <span className="text-[10px] font-bold text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Multi-Store</span>
+                                    </div>
+
+                                    <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 p-0 overflow-hidden">
+                                        {stores.map((store) => (
+                                            <div key={store.id} className="p-4 flex items-center justify-between hover:bg-brand-cream/20 dark:hover:bg-white/5 transition-colors">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="font-medium text-brand-deep dark:text-brand-cream">{store.name}</span>
+                                                    <span className="text-[10px] text-brand-accent/40 dark:text-white/40 font-bold uppercase tracking-wider">{store.location || 'No location set'}</span>
+                                                </div>
+                                                <Switch
+                                                    checked={selectedStoreIds.includes(store.id)}
+                                                    onCheckedChange={() => toggleStore(store.id)}
+                                                />
+                                            </div>
+                                        ))}
+                                    </GlassCard>
+                                    <p className="text-[10px] text-brand-accent/60 dark:text-white/40 italic">
+                                        Note: If no stores are selected, the staff member will have access to all stores by default.
+                                    </p>
+                                </section>
+                            )}
                         </div>
 
                         <DrawerFooter className="p-8 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/40 dark:bg-black/20 backdrop-blur-md">
