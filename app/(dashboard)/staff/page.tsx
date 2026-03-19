@@ -5,7 +5,7 @@ import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
 
 export default function StaffManagementPage() {
     return (
-        <PermissionGuard permission="VIEW_STAFF">
+        <PermissionGuard permission="MANAGE_STAFF">
             <StaffView />
         </PermissionGuard>
     )

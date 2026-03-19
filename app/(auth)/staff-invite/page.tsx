@@ -50,7 +50,7 @@ const strengthLabels = {
 export default function StaffInvitePage() {
     const searchParams = useSearchParams()
     const router = useRouter()
-    const { user } = useAuth()
+    const { user, refreshUser } = useAuth()
     const token = searchParams.get('token')
     const [status, setStatus] = useState<InviteStatus>('loading')
     const [inviteData, setInviteData] = useState<InviteData | null>(null)
@@ -121,6 +121,7 @@ export default function StaffInvitePage() {
         setIsAccepting(true)
         try {
             await apiClient.post('/staff/invitation/accept', { token })
+            await refreshUser()
             setStatus('active')
             toast.success("Invitation accepted successfully")
         } catch (err: any) {
@@ -154,6 +155,7 @@ export default function StaffInvitePage() {
                 storage.setActiveBusinessId(res.membership.businessId)
             }
 
+            await refreshUser()
             setStatus('active')
             toast.success("Welcome! Your account is ready.")
         } catch (err: any) {
