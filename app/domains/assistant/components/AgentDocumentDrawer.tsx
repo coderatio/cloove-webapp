@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
-import { Markdown } from "@/app/components/ui/markdown"
+import { Streamdown } from "streamdown"
 import {
     Drawer,
     DrawerContent,
@@ -31,32 +31,17 @@ export const AgentDocumentDrawer = memo(function AgentDocumentDrawer({
     open,
     onOpenChange,
 }: AgentDocumentDrawerProps) {
-    // streamingText: plain pre-formatted text shown while streaming (no markdown parsing).
-    // finalContent: rendered with full ReactMarkdown after streaming ends.
-    const [streamingText, setStreamingText] = useState("")
+    // Agent documents are never streamed anymore — they arrive complete.
+    // finalContent is set once when the drawer opens or streaming ends.
     const [finalContent, setFinalContent] = useState("")
     const [copied, setCopied] = useState(false)
     const Icon = agent.iconType === "proposal" ? FileText : Receipt
 
     useEffect(() => {
         if (!open) return
-
         if (!isStreaming) {
-            // Streaming ended (or historical doc): render full Markdown once.
-            // ReactMarkdown does a single expensive parse here, which is fine.
             setFinalContent(getContent())
-            setStreamingText("")
-            return
         }
-
-        // Streaming active: poll at 250ms intervals and show as plain pre-formatted text.
-        // Avoids ReactMarkdown's AST parse (50-100ms for 16K chars) that would block the
-        // main thread. The throttled messages from useAssistantChat already batch updates
-        // to 150ms intervals, so polling at 250ms keeps updates smooth without doubling work.
-        const update = () => setStreamingText(getContent())
-        update()
-        const id = setInterval(update, 250)
-        return () => clearInterval(id)
     }, [open, isStreaming, getContent])
 
     const handleCopy = useCallback(() => {
@@ -112,28 +97,20 @@ export const AgentDocumentDrawer = memo(function AgentDocumentDrawer({
 
                 <DrawerBody>
                     {isStreaming ? (
-                        // Pre-formatted plain text during streaming.
-                        // This is a single text-node update — no AST parsing, no React
-                        // child reconciliation. Fast even for 16K+ character documents.
-                        streamingText ? (
-                            <pre className="text-sm text-brand-deep/80 dark:text-brand-cream/80 whitespace-pre-wrap font-sans leading-relaxed break-words">
-                                {streamingText}
-                            </pre>
-                        ) : (
-                            <div className="flex items-center gap-2 py-4 text-brand-deep/40 dark:text-brand-cream/40">
-                                {[0, 1, 2].map((i) => (
-                                    <motion.div
-                                        key={i}
-                                        className="h-1.5 w-1.5 rounded-full bg-current"
-                                        animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
-                                        transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
-                                    />
-                                ))}
-                            </div>
-                        )
+                        <div className="flex items-center gap-2 py-4 text-brand-deep/40 dark:text-brand-cream/40">
+                            {[0, 1, 2].map((i) => (
+                                <motion.div
+                                    key={i}
+                                    className="h-1.5 w-1.5 rounded-full bg-current"
+                                    animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }}
+                                    transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15 }}
+                                />
+                            ))}
+                        </div>
                     ) : finalContent ? (
-                        // Full Markdown rendered once after streaming completes.
-                        <Markdown content={finalContent} />
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                            <Streamdown mode="static">{finalContent}</Streamdown>
+                        </div>
                     ) : (
                         <p className="text-sm text-brand-deep/40 dark:text-brand-cream/40">No content available.</p>
                     )}
@@ -144,7 +121,7 @@ export const AgentDocumentDrawer = memo(function AgentDocumentDrawer({
                         variant="outline"
                         size="sm"
                         onClick={handleCopy}
-                        disabled={isStreaming || (!streamingText && !finalContent)}
+                        disabled={isStreaming || !finalContent}
                         className="gap-1.5 rounded-xl"
                     >
                         {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
@@ -154,7 +131,7 @@ export const AgentDocumentDrawer = memo(function AgentDocumentDrawer({
                         variant="outline"
                         size="sm"
                         onClick={handleExportMarkdown}
-                        disabled={isStreaming || (!streamingText && !finalContent)}
+                        disabled={isStreaming || !finalContent}
                         className="gap-1.5 rounded-xl"
                     >
                         <Download className="h-3.5 w-3.5" />

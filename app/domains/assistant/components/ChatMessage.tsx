@@ -48,7 +48,6 @@ interface ChatMessageProps {
     isLoading?: boolean
     isLast?: boolean
     onRegenerate?: () => void
-    onAction?: (action: string, messageId: string) => void
     onFeedback?: (messageId: string, rating: "like" | "dislike", reason?: string) => void
     versionInfo?: { versions: string[]; currentIndex: number }
     onNavigateVersion?: (dir: "prev" | "next") => void
@@ -84,7 +83,6 @@ export const ChatMessage = memo(function ChatMessage({
     isLoading,
     isLast,
     onRegenerate,
-    onAction,
     onFeedback,
     versionInfo,
     onNavigateVersion,
@@ -213,7 +211,8 @@ export const ChatMessage = memo(function ChatMessage({
                         if (isUser || !agentType) return null
                         const agentDef = getAgentById(agentType)
                         if (!agentDef) return null
-                        const isDocument = /^#{1,2}\s/m.test(textContent)
+                        const hasDocTool = message.parts.some((p) => p.type === "tool-saveDocument")
+                        const isDocument = hasDocTool || /^#{1,2}\s/m.test(textContent)
                         if (!isDocument) return null
                         return (
                             <AgentDocumentCard
@@ -227,7 +226,8 @@ export const ChatMessage = memo(function ChatMessage({
                         and short agent replies (clarifying questions). Hidden for agent documents. */}
                     {(() => {
                         if (isUser || !agentType) return true
-                        const isDocument = /^#{1,2}\s/m.test(textContent)
+                        const hasDocTool = message.parts.some((p) => p.type === "tool-saveDocument")
+                        const isDocument = hasDocTool || /^#{1,2}\s/m.test(textContent)
                         return !isDocument
                     })() && (pendingRegenText !== undefined ? (
                         // ── Inline regeneration streaming view ──────────────────────────
@@ -293,6 +293,7 @@ export const ChatMessage = memo(function ChatMessage({
                                     </a>
                                 )
                             }
+                            if (part.type === "tool-saveDocument") return null
                             if (part.type.startsWith("tool-")) {
                                 return (
                                     <ToolRenderer
@@ -423,19 +424,6 @@ export const ChatMessage = memo(function ChatMessage({
                                     <FileType className="w-4 h-4" />
                                     <span>Export as PDF</span>
                                 </DropdownMenuItem>
-                                {onAction && (
-                                    <>
-                                        <div className="h-px bg-brand-deep/5 dark:bg-white/5 my-1" />
-                                        <DropdownMenuItem onClick={() => onAction("create-proposal", message.id)} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
-                                            <FileText className="w-4 h-4 text-brand-green" />
-                                            <span>Create Proposal</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => onAction("create-invoice", message.id)} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
-                                            <span className="font-bold text-xs text-brand-gold w-4 text-center">₦</span>
-                                            <span>Create Invoice</span>
-                                        </DropdownMenuItem>
-                                    </>
-                                )}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </motion.div>
@@ -459,12 +447,12 @@ export const ChatMessage = memo(function ChatMessage({
     if (prev.agentType && next.agentType && prev.message.role !== 'user' && next.message.role !== 'user') {
         const prevText = prev.message.parts.filter(p => p.type === 'text').map(p => (p as any).text).join('\n')
         const nextText = next.message.parts.filter(p => p.type === 'text').map(p => (p as any).text).join('\n')
-        const prevIsDoc = /^#{1,2}\s/m.test(prevText)
-        const nextIsDoc = /^#{1,2}\s/m.test(nextText)
+        const prevHasDoc = prev.message.parts.some(p => p.type === 'tool-saveDocument') || /^#{1,2}\s/m.test(prevText)
+        const nextHasDoc = next.message.parts.some(p => p.type === 'tool-saveDocument') || /^#{1,2}\s/m.test(nextText)
         // If both are documents, card view — only check isLoading
-        if (prevIsDoc && nextIsDoc) return prev.isLoading === next.isLoading
+        if (prevHasDoc && nextHasDoc) return prev.isLoading === next.isLoading
         // If document status changed, re-render
-        if (prevIsDoc !== nextIsDoc) return false
+        if (prevHasDoc !== nextHasDoc) return false
     }
     if (prev.message.parts.length !== next.message.parts.length) return false
     if (prev.versionInfo?.currentIndex !== next.versionInfo?.currentIndex) return false

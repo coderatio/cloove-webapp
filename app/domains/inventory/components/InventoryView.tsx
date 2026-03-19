@@ -8,7 +8,7 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight, Barcode } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import {
     Select,
@@ -47,6 +47,7 @@ import { useInventory, type ProductFilterParams } from '../hooks/useInventory'
 import { useProductCategories } from '../hooks/useProductCategories'
 import { Product, InventoryItem, InventoryStats } from '../types'
 import { Badge } from '@/app/components/ui/badge'
+import { useBarcodeGenerator, type BarcodeFormat } from '../hooks/useBarcodeGenerator'
 import { MoneyInput } from '@/app/components/ui/money-input'
 import { formatCurrency } from '@/app/lib/formatters'
 import { ImageUpload } from '@/app/components/ui/image-upload'
@@ -56,6 +57,7 @@ import { BulkUploadDrawer } from './BulkUploadDrawer'
 import { ManageCategoriesDrawer } from './ManageCategoriesDrawer'
 import { ConfirmDialog } from '@/app/components/shared/ConfirmDialog'
 import { ProductViewDrawer } from './ProductViewDrawer'
+import { LabelPreviewDrawer } from './LabelPreviewDrawer'
 
 const PER_PAGE = 10
 
@@ -141,6 +143,10 @@ export function InventoryView() {
         () => stores.map((s) => ({ label: s.name, value: s.id })),
         [stores]
     )
+    const [isLabelDrawerOpen, setIsLabelDrawerOpen] = React.useState(false)
+    const [labelDrawerProducts, setLabelDrawerProducts] = React.useState<InventoryItem[]>([])
+    const { autoGenerateBarcode } = useBarcodeGenerator()
+    const [barcodeFormat, setBarcodeFormat] = React.useState<BarcodeFormat>('CODE128')
 
     const serverFilters = React.useMemo<ProductFilterParams>(() => {
         const status = selectedFilters.filter((f) =>
@@ -342,13 +348,14 @@ export function InventoryView() {
                 id: v.id,
                 name: v.name || 'Standard',
                 sku: v.sku || '',
+                barcode: v.barcode || '',
                 price: v.price != null ? v.price.toString() : item.numericPrice.toString(),
                 stockQuantity: v.inventories?.reduce((sum: number, inv: any) => sum + (Number(inv.stockQuantity) || 0), 0) || 0,
                 storeInventory: v.inventories?.map((inv: any) => ({
                     storeId: inv.storeId,
                     stockQuantity: inv.stockQuantity
                 })) || []
-            })) || [{ name: 'Standard', sku: '', price: item.numericPrice.toString(), stockQuantity: 0, storeInventory: [] }]
+            })) || [{ name: 'Standard', sku: '', barcode: '', price: item.numericPrice.toString(), stockQuantity: 0, storeInventory: [] }]
         }
     }
 
@@ -578,12 +585,22 @@ export function InventoryView() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => {
+                                    setLabelDrawerProducts([item])
+                                    setIsLabelDrawerOpen(true)
+                                }}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
+                            >
+                                <Barcode className="w-4 h-4" />
+                                Print Labels
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => {
                                     const data = prepareFormData(item)
                                     // Strip IDs and SKUs for duplication to prevent collisions
                                     const duplicated = {
                                         ...data,
                                         product: `${data.product} (Copy)`,
-                                        variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '' }))
+                                        variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '', barcode: '' }))
                                     }
                                     setFormData(duplicated)
                                     setIsAddDrawerOpen(true)
@@ -616,7 +633,6 @@ export function InventoryView() {
         : `Your inventory levels are looking healthy. No urgent restocks required today.`
 
     const isAllStores = selectedStoreId === 'all-stores'
-
     return (
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
@@ -792,12 +808,23 @@ export function InventoryView() {
                                                     <DropdownMenuItem
                                                         onClick={(e) => {
                                                             e.stopPropagation()
+                                                            setLabelDrawerProducts([item])
+                                                            setIsLabelDrawerOpen(true)
+                                                        }}
+                                                        className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl focus:bg-brand-green/10 dark:focus:bg-brand-gold/10 transition-colors"
+                                                    >
+                                                        <Barcode className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                        Print Labels
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
                                                             const data = prepareFormData(item)
                                                             // Strip IDs and SKUs for duplication to prevent collisions
                                                             const duplicated = {
                                                                 ...data,
                                                                 product: `${data.product} (Copy)`,
-                                                                variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '' }))
+                                                                variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '', barcode: '' }))
                                                             }
                                                             setFormData(duplicated)
                                                             setIsAddDrawerOpen(true)
@@ -934,6 +961,25 @@ export function InventoryView() {
                                             Basic Information
                                         </h3>
                                         <div className="grid gap-5">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between ml-1">
+                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Product Barcode</label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, barcode: autoGenerateBarcode(editingItem?.id || Math.random().toString(36).substring(7), barcodeFormat) })}
+                                                        className="text-[9px] font-bold text-brand-gold hover:text-brand-gold/80 transition-colors flex items-center gap-1"
+                                                    >
+                                                        <Sparkles className="w-3 h-3" />
+                                                        Auto-Generate
+                                                    </button>
+                                                </div>
+                                                <input
+                                                    placeholder="Product Barcode"
+                                                    value={formData.barcode}
+                                                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                                                    className="w-full h-12 px-4 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/20 text-xs font-mono transition-all"
+                                                />
+                                            </div>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Product Name</label>
                                                 <input
@@ -1104,7 +1150,7 @@ export function InventoryView() {
                                                 type="button"
                                                 onClick={() => setFormData({
                                                     ...formData,
-                                                    variants: [...formData.variants, { name: '', sku: '', price: formData.price, stockQuantity: 0, storeInventory: [] }]
+                                                    variants: [...formData.variants, { name: '', sku: '', barcode: '', price: formData.price, stockQuantity: 0, storeInventory: [] }]
                                                 })}
                                                 variant="ghost"
                                                 className="text-[10px] h-8 font-bold uppercase tracking-widest text-brand-gold hover:bg-brand-gold/5 px-4 rounded-full transition-all"
@@ -1163,6 +1209,36 @@ export function InventoryView() {
                                                                             onChange={(e) => {
                                                                                 const v = [...formData.variants]
                                                                                 v[index].sku = e.target.value
+                                                                                setFormData({ ...formData, variants: v })
+                                                                            }}
+                                                                            className="text-xs w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 font-mono transition-all"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="grid grid-cols-1 gap-4">
+                                                                    <div className="space-y-2">
+                                                                        <div className="flex items-center justify-between ml-1">
+                                                                            <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30">Barcode (Optional)</label>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const v = [...formData.variants]
+                                                                                    v[index].barcode = autoGenerateBarcode(v[index].id || Math.random().toString(36).substring(7), barcodeFormat)
+                                                                                    setFormData({ ...formData, variants: v })
+                                                                                }}
+                                                                                className="text-[9px] font-bold text-brand-gold hover:text-brand-gold/80 transition-colors flex items-center gap-1"
+                                                                            >
+                                                                                <Sparkles className="w-3 h-3" />
+                                                                                Auto-Generate
+                                                                            </button>
+                                                                        </div>
+                                                                        <input
+                                                                            placeholder="Variant Barcode"
+                                                                            value={variant.barcode || ''}
+                                                                            onChange={(e) => {
+                                                                                const v = [...formData.variants]
+                                                                                v[index].barcode = e.target.value
                                                                                 setFormData({ ...formData, variants: v })
                                                                             }}
                                                                             className="text-xs w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 font-mono transition-all"
@@ -1337,6 +1413,12 @@ export function InventoryView() {
                             setItemToDelete(item)
                             setConfirmDeleteOpen(true)
                         }}
+                    />
+                    <LabelPreviewDrawer
+                        isOpen={isLabelDrawerOpen}
+                        onOpenChange={setIsLabelDrawerOpen}
+                        products={labelDrawerProducts}
+                        mode={labelDrawerProducts.length > 1 ? 'bulk' : 'single'}
                     />
                 </div>
             </div>

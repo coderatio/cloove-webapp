@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, useMemo, type ReactElement } from "react"
+import { useState, useEffect, useRef, useCallback, type ReactElement } from "react"
 import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2, Menu } from "lucide-react"
@@ -137,23 +137,6 @@ export function AssistantView(): ReactElement {
         }
     }
 
-    const handleAction = useCallback((action: string, messageId: string) => {
-        const msg = messagesRef.current.find(m => m.id === messageId)
-        if (!msg) return
-
-        const textContent = msg.parts
-            .filter(p => p.type === 'text')
-            .map(p => (p as any).text)
-            .join('\n')
-
-        if (action === 'create-proposal') {
-            sendMessageRef.current(textContent.slice(0, 2000), { agentType: 'proposal' })
-        } else if (action === 'create-invoice') {
-            sendMessageRef.current(textContent.slice(0, 2000), { agentType: 'invoice' })
-        }
-    }, [])
-
-
     // Write activeChatId to URL (one-way: state → URL)
 
     useEffect(() => {
@@ -250,14 +233,12 @@ export function AssistantView(): ReactElement {
                             addToolResult={addToolResult}
                             onSuggestionSelect={handleSuggestionSelect}
                             onRegenerate={regenerate}
-                            onAction={handleAction}
                             onFeedback={submitFeedback}
                             responseVersions={responseVersions}
                             versionCursorMap={versionCursorMap}
                             onNavigateVersion={navigateVersion}
                             isRegeneratingMiddle={isRegeneratingMiddle}
                             pendingRegenMap={pendingRegenMap}
-                            agentType={activeAgentType}
                             className="flex-1 overflow-y-auto space-y-6 md:pb-6 scrollbar-hide px-4 md:pl-0 lg:px-6 pt-16 md:pt-0"
                             bottomPadding={isMobile && inputHeight > 0 ? inputHeight + 40 : undefined}
                         />

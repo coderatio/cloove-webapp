@@ -14,7 +14,8 @@ import {
     Boxes,
     X,
     Pencil,
-    Trash2
+    Trash2,
+    Barcode
 } from "lucide-react"
 import {
     Drawer,
@@ -35,6 +36,7 @@ import { formatCurrency } from "@/app/lib/formatters"
 import { Badge } from "@/app/components/ui/badge"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { InventoryItem, ProductImage, ProductVariant } from "../types"
+import { LabelPreviewDrawer } from "./LabelPreviewDrawer"
 
 interface ProductViewDrawerProps {
     isOpen: boolean
@@ -46,6 +48,7 @@ interface ProductViewDrawerProps {
 
 export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete }: ProductViewDrawerProps) {
     const [activeImageIndex, setActiveImageIndex] = React.useState(0)
+    const [isLabelDrawerOpen, setIsLabelDrawerOpen] = React.useState(false)
     const { activeBusiness } = useBusiness()
     const currencyCode = activeBusiness?.currency || 'NGN'
 
@@ -199,10 +202,17 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
 
                                     return (
                                         <div key={i} className="group p-6 rounded-3xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-6 transition-all hover:border-brand-gold/30">
-                                            <div className="space-y-1.5">
-                                                <span className="text-xs font-bold text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-widest leading-none">
-                                                    {v.sku || 'No SKU'}
-                                                </span>
+                                            <div className="space-y-1.5 min-w-0 flex-1">
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                    <span className="text-[10px] font-bold text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-widest leading-none">
+                                                        {v.sku || 'No SKU'}
+                                                    </span>
+                                                    {(v as any).barcode && (
+                                                        <span className="text-[10px] font-mono text-brand-gold/60 uppercase tracking-tight font-medium">
+                                                            {v.barcode}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-lg font-serif text-brand-deep dark:text-brand-cream">
                                                     {v.name || 'Standard'}
                                                 </p>
@@ -228,17 +238,24 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                 <DrawerFooter className="flex flex-row gap-3 pt-4">
                     <Button
                         variant="ghost"
-                        className="flex-1 h-12 rounded-2xl border border-brand-deep/5 text-rose-500 hover:bg-rose-500/5 hover:text-rose-600 transition-colors uppercase tracking-widest text-[10px] font-bold"
+                        className="w-12 h-12 rounded-2xl border border-brand-deep/5 text-rose-500 hover:bg-rose-500/5 hover:text-rose-600 transition-colors flex items-center justify-center shrink-0"
                         onClick={() => {
                             onDelete?.(item)
                             onOpenChange(false)
                         }}
                     >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
+                        <Trash2 className="w-4 h-4" />
                     </Button>
                     <Button
-                        className="flex-2 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep shadow-lg hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px] font-bold"
+                        variant="outline"
+                        className="flex-1 h-12 rounded-2xl border-brand-deep/5 dark:border-white/10 text-brand-deep/60 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-all uppercase tracking-widest text-[10px] font-bold"
+                        onClick={() => setIsLabelDrawerOpen(true)}
+                    >
+                        <Barcode className="w-4 h-4 mr-2" />
+                        Print Label
+                    </Button>
+                    <Button
+                        className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep shadow-lg hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px] font-bold"
                         onClick={() => {
                             onEdit?.(item)
                             onOpenChange(false)
@@ -248,6 +265,12 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                         Edit Product
                     </Button>
                 </DrawerFooter>
+                <LabelPreviewDrawer
+                    isOpen={isLabelDrawerOpen}
+                    onOpenChange={setIsLabelDrawerOpen}
+                    products={[item]}
+                    mode="single"
+                />
             </DrawerContent>
         </Drawer>
     )

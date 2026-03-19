@@ -3,6 +3,7 @@
 import { type ReactElement } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { FileText, Receipt, X } from "lucide-react"
+import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { AGENTS, type AgentDefinition } from "../lib/agent-config"
 
@@ -37,7 +38,7 @@ export function AgentSelector({ selectedAgent, onSelect, disabled }: AgentSelect
                             exit={{ opacity: 0, scale: 0.9 }}
                             transition={{ duration: 0.2 }}
                             disabled={disabled}
-                            onClick={() => onSelect(isSelected ? null : agent)}
+                            onClick={() => toast.info("Coming soon", { description: `${agent.name} is not available yet. Check back soon!` })}
                             className={cn(
                                 "inline-flex cursor-pointer items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-300 border",
                                 "disabled:opacity-40 disabled:cursor-not-allowed",

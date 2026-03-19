@@ -1,6 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/* Streamdown: allow Tailwind to detect utility classes used inside the package */
+@source "../node_modules/streamdown/dist/*.js";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -948,6 +951,120 @@ h6 {
 .dark [data-sonner-toast] [data-cancel-button]:hover {
   background: rgba(255, 255, 255, 0.1) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   STREAMDOWN — Table overrides to match Cloove design system
+   ─────────────────────────────────────────────────────────────────────────────
+   Streamdown renders this DOM structure:
+     div[table-wrapper]  ← my-4 flex flex-col gap-2 rounded-lg border border-border bg-sidebar p-2
+       div               ← controls (copy/download/fullscreen buttons) — conditional
+       div               ← scroll container: border-collapse overflow-x-auto overflow-y-auto
+                                             rounded-md border border-border bg-background
+         table[data-streamdown="table"]  ← w-full divide-y divide-border
+
+   Root cause of corner cut-off: the INNER div has its own `border border-border
+   rounded-md bg-background`. That inner rounded border with a smaller radius
+   (rounded-md = 0.375rem) sits inside the outer wrapper, creating a "notch" at
+   the bottom corners. Fix: strip the inner div's border/radius/background and
+   let the outer wrapper provide all the visual chrome.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Outer wrapper — visual border via box-shadow so overflow:hidden never clips it */
+[data-streamdown="table-wrapper"] {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0 !important;
+  gap: 0 !important;
+  border-radius: 0.75rem;
+  border: none !important;
+  box-shadow: 0 0 0 1px rgba(10, 61, 49, 0.06);
+  background: transparent !important;
+  overflow: hidden;
+}
+
+.dark [data-streamdown="table-wrapper"] {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* Controls bar — keep compact, transparent */
+[data-streamdown="table-wrapper"] > div:first-child:has(button) {
+  padding: 0.375rem 0.5rem 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Inner scroll container — strip the inner border/radius/background that cause
+   the corner cut-off; let the outer wrapper clip cleanly via overflow:hidden */
+[data-streamdown="table-wrapper"] > div:last-child {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Table */
+[data-streamdown="table"] {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  text-align: left;
+}
+
+/* thead */
+[data-streamdown="table-header"] {
+  background: rgba(10, 61, 49, 0.05);
+}
+
+.dark [data-streamdown="table-header"] {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* th */
+[data-streamdown="table-header-cell"] {
+  padding: 0.625rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  white-space: nowrap;
+  border: none !important;
+}
+
+/* tbody */
+[data-streamdown="table-body"] {
+  border: none;
+}
+
+/* Row separators */
+[data-streamdown="table-body"] [data-streamdown="table-cell"] {
+  border-top: 1px solid rgba(10, 61, 49, 0.06) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+}
+
+.dark [data-streamdown="table-body"] [data-streamdown="table-cell"] {
+  border-top-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* tr */
+[data-streamdown="table-row"] {
+  border: none;
+}
+
+/* td */
+[data-streamdown="table-cell"] {
+  padding: 0.625rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   STOREFRONT MARQUEE
+   ───────────────────────────────────────────────────────────────────────────── */
 
 /* Storefront welcome message marquee */
 @keyframes storefront-marquee {

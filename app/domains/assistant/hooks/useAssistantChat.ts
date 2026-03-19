@@ -52,6 +52,7 @@ interface UseAssistantChatReturn {
     pendingRegenMap: Map<string, string>
 }
 
+
 interface SendMessageOptions {
     attachments?: FileAttachment[]
     analysis?: boolean
@@ -276,7 +277,8 @@ export function useAssistantChat(): UseAssistantChatReturn {
         }
         return `chat-${Date.now()}`
     })
-    const [isLoadingConversation, setIsLoadingConversation] = useState(false)
+    const [loadingConversationId, setLoadingConversationId] = useState<string | null>(null)
+    const isLoadingConversation = loadingConversationId === activeChatId
     const [isLoadingConversations, setIsLoadingConversations] = useState(false)
     // Historical messages loaded from the API — keyed by conversation ID
     const [loadedMessagesMap, setLoadedMessagesMap] = useState<Record<string, AssistantMessage[]>>({})
@@ -341,26 +343,39 @@ export function useAssistantChat(): UseAssistantChatReturn {
     const latestSdkRef = useRef(sdkMessages)
     latestSdkRef.current = sdkMessages
     const [throttledSdk, setThrottledSdk] = useState(sdkMessages)
+    const throttledSdkChatIdRef = useRef(activeChatId)
 
     useEffect(() => {
         // Always keep the raw ref up to date for post-streaming operations
         sdkMessagesRef.current = sdkMessages
     }, [sdkMessages])
 
+    // Flush throttledSdk whenever the active chat changes so sdkMapped never shows
+    // a previous chat's messages while the new chat's loadedMessages are still loading.
+    // The throttle effect below only fires on status changes, not activeChatId changes.
+    useEffect(() => {
+        throttledSdkChatIdRef.current = activeChatId
+        setThrottledSdk(latestSdkRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeChatId])
+
     useEffect(() => {
         const streaming = status === "streaming" || status === "submitted"
         if (!streaming) {
             // Immediately flush final state when not streaming
+            throttledSdkChatIdRef.current = activeChatIdRef.current
             setThrottledSdk(latestSdkRef.current)
             return
         }
         // During streaming: use rAF with 150ms minimum gap
+        throttledSdkChatIdRef.current = activeChatIdRef.current
         setThrottledSdk(latestSdkRef.current) // immediate first update
         let lastUpdate = performance.now()
         let rafId: number
         const tick = () => {
             const now = performance.now()
             if (now - lastUpdate >= 150) {
+                throttledSdkChatIdRef.current = activeChatIdRef.current
                 setThrottledSdk(latestSdkRef.current)
                 lastUpdate = now
             }
@@ -368,7 +383,8 @@ export function useAssistantChat(): UseAssistantChatReturn {
         }
         rafId = requestAnimationFrame(tick)
         return () => cancelAnimationFrame(rafId)
-    }, [status])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [status, activeChatId])
 
     // Live streaming text for the message currently being regenerated (middle messages only).
     // This drives the inline "Regenerating..." view within the original message bubble.
@@ -457,9 +473,15 @@ export function useAssistantChat(): UseAssistantChatReturn {
         if (isStreaming) return
         if (throttledSdk.length === 0) return
 
+        // Skip when on a sidebar-clicked (already-fetched) chat.
+        // throttledSdk may hold stale messages from a prior local chat, and
+        // processing their metadata here would incorrectly switch activeChatId back.
+        if (fetchedConversations.current.has(activeChatId)) return
+
         const lastAssistant = [...throttledSdk].reverse().find((m) => m.role === "assistant")
         const backendId = lastAssistant?.metadata?.conversationId
         const backendTitle = lastAssistant?.metadata?.title
+        const backendAgentType = lastAssistant?.metadata?.agentType
 
         if (!backendId) return
 
@@ -474,12 +496,23 @@ export function useAssistantChat(): UseAssistantChatReturn {
             })
         }
 
+        // Capture agentType so the drawer auto-open works before the page is reloaded.
+        // The sync effect runs after streaming ends; activeChatId is still the local ID here.
+        if (backendAgentType) {
+            setAgentTypeMap((prev) => ({
+                ...prev,
+                [activeChatId]: backendAgentType,
+                [backendId]: backendAgentType,
+            }))
+        }
+
         if (syncedConversationRef.current === backendId) return
         if (backendId === activeChatId) return
 
         syncedConversationRef.current = backendId
         pendingBackendIdRef.current = backendId
     }, [throttledSdk, activeChatId, isStreaming])
+
 
     // ── Track agent type per conversation ────────────────────────────────
     const [agentTypeMap, setAgentTypeMap] = useState<Record<string, string | null>>({})
@@ -493,7 +526,10 @@ export function useAssistantChat(): UseAssistantChatReturn {
     // ── Combine SDK messages (live) with loaded messages (historical) ───
     // Uses throttledSdk so this expensive mapping only runs ~6 times/sec during
     // streaming instead of on every SSE text-delta chunk (hundreds/sec).
-    const sdkMapped = useMemo(() => mapSdkToAssistantMessages(throttledSdk), [throttledSdk])
+    const sdkMapped = useMemo(() => {
+        if (throttledSdkChatIdRef.current !== activeChatId) return []
+        return mapSdkToAssistantMessages(throttledSdk)
+    }, [throttledSdk, activeChatId])
     const loadedMessages = loadedMessagesMap[activeChatId] ?? []
 
     // Combine: historical messages first, then any new SDK messages appended in this session
@@ -541,7 +577,10 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
         setLoadedMessagesMap((prev) => {
             if (prev[pendingId]) return prev
-            return { ...prev, [pendingId]: messagesRef.current }
+            // Use latestSdkRef (always current) rather than messagesRef which derives
+            // from throttledSdk — the throttle flush is queued as a state update and
+            // hasn't committed yet when this effect runs, so messagesRef would be stale.
+            return { ...prev, [pendingId]: mapSdkToAssistantMessages(latestSdkRef.current) }
         })
         fetchedConversations.current.add(pendingId)
         localChatIds.current.add(pendingId)
@@ -549,9 +588,56 @@ export function useAssistantChat(): UseAssistantChatReturn {
         setActiveChatIdRaw(pendingId)
     }, [activeChatId, isStreaming])
 
-    // ── Update sidebar: add new chats, update title & preview ──────────
-    // Only runs when streaming state changes or activeChatId changes (NOT on every chunk)
+    // ── Persist streamed messages into loadedMessagesMap ────────────────
+    // loadedMessagesMap is only written once per chat (initial fetch or apply-pending).
+    // New messages from streaming live in the useChat internal store, which may not
+    // survive switching away and back. Writing to loadedMessagesMap here ensures the
+    // full history is available after any navigation without re-fetching from the API.
+    const prevIsStreamingRef = useRef(false)
     useEffect(() => {
+        const was = prevIsStreamingRef.current
+        prevIsStreamingRef.current = isStreaming
+        if (!was || isStreaming) return  // Only when streaming just ended
+
+        const chatId = activeChatIdRef.current
+        // Skip local-only new chats that haven't received a backend ID yet —
+        // the apply-pending effect handles those (stores under the server ID).
+        if (localChatIds.current.has(chatId) && !fetchedConversations.current.has(chatId)) return
+
+        const latest = latestSdkRef.current
+        if (latest.length === 0) return
+
+        const incoming = mapSdkToAssistantMessages(latest)
+        setLoadedMessagesMap((prev) => {
+            const existing = prev[chatId] ?? []
+            const existingIds = new Set(existing.map((m) => m.id))
+            const newMessages = incoming.filter((m) => !existingIds.has(m.id))
+            if (newMessages.length === 0) return prev
+
+            // If the last stored message and first incoming are both assistant messages,
+            // this is an end-of-conversation regeneration — replace rather than append.
+            const lastExisting = existing[existing.length - 1]
+            if (lastExisting?.role === 'assistant' && newMessages[0]?.role === 'assistant') {
+                return { ...prev, [chatId]: [...existing.slice(0, -1), ...newMessages] }
+            }
+
+            return { ...prev, [chatId]: [...existing, ...newMessages] }
+        })
+    }, [isStreaming])
+
+    // ── Update sidebar: add new chats, update title & preview ──────────
+    // Only runs when streaming just ended (not on every activeChatId change).
+    // Tracking the streaming transition prevents this from firing when the user
+    // clicks a different chat — which would wrongly update the clicked chat with
+    // the current chat's messages and reset its lastMessageAt to now (→ "Today").
+    const prevStreamingForSidebarRef = useRef(false)
+    useEffect(() => {
+        const wasStreaming = prevStreamingForSidebarRef.current
+        prevStreamingForSidebarRef.current = isStreaming
+
+        // Only proceed when streaming just ended
+        if (!wasStreaming || isStreaming) return
+
         const msgs = messagesRef.current
         if (msgs.length === 0) return
 
@@ -581,7 +667,8 @@ export function useAssistantChat(): UseAssistantChatReturn {
             if (nextTitle === existing.title && nextPreview === existing.preview) return prev
 
             const updated = [...prev]
-            updated[idx] = { ...existing, title: nextTitle, preview: nextPreview, date: "Just now", lastMessageAt: new Date() }
+            // Don't touch lastMessageAt/date for existing chats — the API timestamp is correct
+            updated[idx] = { ...existing, title: nextTitle, preview: nextPreview }
             return updated
         })
     }, [activeChatId, isStreaming])
@@ -790,7 +877,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
     const fetchMessages = useCallback((id: string) => {
         if (fetchedConversations.current.has(id)) return
         fetchedConversations.current.add(id)
-        setIsLoadingConversation(true)
+        setLoadingConversationId(id)
 
         apiClient
             .get<{
@@ -799,7 +886,9 @@ export function useAssistantChat(): UseAssistantChatReturn {
                 messages: Array<{ id: string; role: string; content: any; feedback?: any; slotKey?: string | null }>
             }>(`/assistant/conversations/${id}`)
             .then((data) => {
-                if (activeChatIdRef.current !== id) return
+                // Always store the fetched data — no navigation guard here.
+                // The spinner is gated by loadingConversationId === activeChatId,
+                // so showing data for a "wrong" chat is impossible.
                 if (data.agentType) {
                     setAgentTypeMap((prev) => ({ ...prev, [id]: data.agentType ?? null }))
                 }
@@ -823,13 +912,16 @@ export function useAssistantChat(): UseAssistantChatReturn {
                 fetchedConversations.current.delete(id)
             })
             .finally(() => {
-                setIsLoadingConversation(false)
+                // Use functional update so we only clear the loading ID for *this* fetch,
+                // not for a different chat's in-flight request.
+                setLoadingConversationId((prev) => (prev === id ? null : prev))
             })
     }, [])
 
     // ── Switch conversation ────────────────────────────────────────────
     const setActiveChatId = useCallback((id: string) => {
         syncedConversationRef.current = null
+        pendingBackendIdRef.current = null
         setActiveChatIdRaw(id)
 
         // If it's a locally-created chat or already fetched, nothing to do

@@ -22,6 +22,7 @@ export interface ProductVariant {
     productId: string
     name: string | null
     sku: string | null
+    barcode: string | null
     price: number | null
     inventories: StoreInventory[]
 }
