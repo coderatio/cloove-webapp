@@ -12,15 +12,25 @@ export function InstallBanner() {
     const [isVisible, setIsVisible] = useState(false)
 
     useEffect(() => {
+        // Check if already in standalone mode (installed and running as PWA)
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+        if (isStandalone) {
+            setIsVisible(false);
+            return;
+        }
+
         const handler = (e: any) => {
             // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault()
             // Stash the event so it can be triggered later.
             setDeferredPrompt(e)
 
-            // Check if user has already dismissed it
-            const isDismissed = localStorage.getItem("pwa-banner-dismissed")
-            if (!isDismissed) {
+            // Check if user has dismissed it recently (within the last 2 days)
+            const dismissedAt = localStorage.getItem("pwa-banner-dismissed-at")
+            const twoDaysInMs = 2 * 24 * 60 * 60 * 1000
+            const isDismissedRecently = dismissedAt && (Date.now() - parseInt(dismissedAt) < twoDaysInMs)
+
+            if (!isDismissedRecently) {
                 setIsVisible(true)
             }
         }
@@ -31,6 +41,8 @@ export function InstallBanner() {
         window.addEventListener("appinstalled", () => {
             setIsVisible(false)
             setDeferredPrompt(null)
+            // Clear dismissal so it doesn't haunt them if they ever uninstall and come back
+            localStorage.removeItem("pwa-banner-dismissed-at")
         })
 
         return () => window.removeEventListener("beforeinstallprompt", handler)
@@ -47,6 +59,7 @@ export function InstallBanner() {
 
         if (outcome === "accepted") {
             setIsVisible(false)
+            localStorage.removeItem("pwa-banner-dismissed-at")
         }
 
         setDeferredPrompt(null)
@@ -54,7 +67,7 @@ export function InstallBanner() {
 
     const handleDismiss = () => {
         setIsVisible(false)
-        localStorage.setItem("pwa-banner-dismissed", "true")
+        localStorage.setItem("pwa-banner-dismissed-at", Date.now().toString())
     }
 
     return (

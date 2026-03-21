@@ -8,13 +8,17 @@ import { useAuth } from "../providers/auth-provider"
 const PUBLIC_PATHS = ["/login", "/register", "/select-business", "/onboarding"]
 
 export function BusinessGuard({ children }: { children: React.ReactNode }) {
-    const { activeBusiness, isLoading: isBusinessLoading, businesses } = useBusiness()
+    const { activeBusiness, isLoading: isBusinessLoading, isRefreshing, businesses } = useBusiness()
     const { user, isLoading: isAuthLoading } = useAuth()
     const pathname = usePathname()
     const router = useRouter()
 
     useEffect(() => {
+        // Wait for auth and initial business load
         if (isBusinessLoading || isAuthLoading) return
+
+        // If we don't have an active business yet, wait if we're still refreshing (e.g. initial fetch after login)
+        if (!activeBusiness && isRefreshing) return
         if (!user) return // Let AuthGuard handle login redirection
 
         const isPublicPath = PUBLIC_PATHS.some(path => pathname.startsWith(path))

@@ -119,6 +119,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         // Deduplicate: skip if already fetched for this user (guards against Strict Mode double-invoke)
         if (fetchedForUserRef.current === user.id) return
         fetchedForUserRef.current = user.id
+        setIsLoading(true) // Ensure guard waits during the initial fetch for a new user
         refreshBusinesses()
     // refreshBusinesses is a stable useCallback — safe to omit from deps
     // eslint-disable-next-line react-hooks/exhaustive-deps

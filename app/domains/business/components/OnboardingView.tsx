@@ -209,6 +209,7 @@ export function OnboardingView() {
         usage.businesses >= Number(maxBusinesses)
 
     if (isAddBusinessFlow && (role !== "OWNER" || reachedBusinessLimit || !canAddBusiness)) {
+        if (isLoadingUsage) return null // Wait for usage stats to confirm if limit is actually reached
         const currentCount = usage?.businesses ?? businesses?.length ?? 0
         return (
             <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12">
