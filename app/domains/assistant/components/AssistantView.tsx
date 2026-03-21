@@ -19,6 +19,10 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 export function AssistantView(): ReactElement {
     const router = useRouter()
     const searchParams = useSearchParams()
+
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+    const [isViewingArchived, setIsViewingArchived] = useState(false)
+
     const {
         conversations,
         activeChatId,
@@ -47,13 +51,11 @@ export function AssistantView(): ReactElement {
         isRegenerating,
         isRegeneratingMiddle,
         pendingRegenMap,
-    } = useAssistantChat()
+    } = useAssistantChat({ sidebarListFilter: isViewingArchived ? "archived" : "active" })
 
     const { isMenuOpen } = useMobileNav()
     const isMobile = useIsMobile()
 
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-    const [isViewingArchived, setIsViewingArchived] = useState(false)
     const [inputHeight, setInputHeight] = useState(0)
     const initializedFromUrl = useRef(false)
     const lastPushedId = useRef<string | null>(null)

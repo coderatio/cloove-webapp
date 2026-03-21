@@ -8,6 +8,7 @@ import type {
     AssistantMessage,
     AssistantMessagePart,
     FileAttachment,
+    FilePart,
 } from "../types"
 import { apiClient } from "@/app/lib/api-client"
 import { AssistantChatTransport } from "../lib/assistant-chat-transport"
@@ -41,7 +42,10 @@ interface UseAssistantChatReturn {
     archiveConversation: (id: string) => Promise<void>
     unarchiveConversation: (id: string) => Promise<void>
     deleteConversation: (id: string) => Promise<void>
-    fetchConversations: (filter?: 'active' | 'archived') => Promise<void>
+    fetchConversations: (
+        filter?: 'active' | 'archived',
+        options?: { silent?: boolean }
+    ) => Promise<void>
     submitFeedback: (messageId: string, rating: "like" | "dislike", reason?: string) => Promise<void>
     regenerate: (slotKey: string) => void
     responseVersions: Map<string, string[]>
@@ -60,6 +64,11 @@ interface SendMessageOptions {
 }
 
 type MappedUIMessage = UIMessage<AssistantMessageMetadata>
+
+export interface UseAssistantChatOptions {
+    /** Which list the sidebar is showing — used to silently refetch after a stream completes */
+    sidebarListFilter?: 'active' | 'archived'
+}
 
 function getFirstUserText(msgs: AssistantMessage[]): string {
     const first = msgs.find((m) => m.role === "user")
@@ -257,14 +266,78 @@ function mapSdkToAssistantMessages(sdkMessages: MappedUIMessage[]): AssistantMes
     })
 }
 
-const INITIAL_CHAT_ID = `chat-${Date.now()}`
+/** Hydrate useChat from API-shaped assistant messages (inverse of mapSdkToAssistantMessages). */
+function assistantMessagesToMappedUiMessages(messages: AssistantMessage[]): MappedUIMessage[] {
+    return messages.map((message) => {
+        const parts: MappedUIMessage["parts"] = []
+
+        for (const part of message.parts) {
+            if (part.type === "text") {
+                parts.push({ type: "text", text: part.text })
+                continue
+            }
+            if (part.type === "file") {
+                parts.push({
+                    type: "file",
+                    url: part.file.url,
+                    filename: part.file.name,
+                    mediaType: part.file.fileType,
+                })
+                continue
+            }
+            if (part.type.startsWith("tool-")) {
+                const toolName = part.type.slice("tool-".length)
+                const st = part.state
+                const sdkState =
+                    st === "output-available" || st === "output-error"
+                        ? "result"
+                        : st === "loading"
+                          ? "call"
+                          : st === "pending"
+                            ? "partial-call"
+                            : "call"
+                parts.push({
+                    type: "tool-invocation",
+                    toolCallId: part.toolCallId,
+                    toolName,
+                    state: sdkState,
+                    args: part.input,
+                    result: part.output,
+                } as unknown as MappedUIMessage["parts"][number])
+            }
+        }
+
+        const fileParts = message.parts.filter((p): p is FilePart => p.type === "file")
+        const metadata: AssistantMessageMetadata | undefined =
+            message.role === "user" && fileParts.length > 0
+                ? {
+                      attachments: fileParts.map((p, i) => ({
+                          id: `${message.id}-att-${i}`,
+                          name: p.file.name,
+                          size: p.file.size,
+                          fileType: p.file.fileType,
+                          url: p.file.url,
+                      })),
+                  }
+                : undefined
+
+        return {
+            id: message.id,
+            role: message.role,
+            parts,
+            metadata,
+        }
+    })
+}
 
 // Stable empty map reused whenever no regeneration is in progress, so
 // pendingRegenMap never produces a new reference on every streaming chunk.
 const EMPTY_REGEN_MAP = new Map<string, string>()
 
-export function useAssistantChat(): UseAssistantChatReturn {
+export function useAssistantChat(options?: UseAssistantChatOptions): UseAssistantChatReturn {
     const { activeBusiness } = useBusiness()
+    const sidebarListFilterRef = useRef<'active' | 'archived'>('active')
+    sidebarListFilterRef.current = options?.sidebarListFilter ?? 'active'
     const businessId = activeBusiness?.id ?? null
     const prevBusinessIdRef = useRef(businessId)
 
@@ -278,21 +351,41 @@ export function useAssistantChat(): UseAssistantChatReturn {
         return `chat-${Date.now()}`
     })
     const [loadingConversationId, setLoadingConversationId] = useState<string | null>(null)
+    const loadingConversationIdRef = useRef<string | null>(null)
+    useEffect(() => {
+        loadingConversationIdRef.current = loadingConversationId
+    }, [loadingConversationId])
     const isLoadingConversation = loadingConversationId === activeChatId
     const [isLoadingConversations, setIsLoadingConversations] = useState(false)
-    // Historical messages loaded from the API — keyed by conversation ID
-    const [loadedMessagesMap, setLoadedMessagesMap] = useState<Record<string, AssistantMessage[]>>({})
     const conversationsLoaded = useRef(false)
     const syncedConversationRef = useRef<string | null>(null)
     const activeChatIdRef = useRef(activeChatId)
+    activeChatIdRef.current = activeChatId
+
+    const patchActiveChatId = useCallback((id: string) => {
+        activeChatIdRef.current = id
+        setActiveChatIdRaw(id)
+    }, [])
+
     const fetchedConversations = useRef(new Set<string>())
-    // Track IDs created locally in this session (via startNewChat or initial)
-    const localChatIds = useRef(new Set<string>([INITIAL_CHAT_ID]))
+    // Track local drafts only (new chats not yet confirmed persisted by backend).
+    const localChatIds = useRef<Set<string>>(new Set())
     const pendingBackendIdRef = useRef<string | null>(null)
+    /** During middle regeneration, list shows this snapshot so transient SDK output stays hidden. */
+    const middleRegenSnapshotRef = useRef<AssistantMessage[] | null>(null)
 
     useEffect(() => {
-        activeChatIdRef.current = activeChatId
+        middleRegenSnapshotRef.current = null
     }, [activeChatId])
+
+    // Seed only true draft chat IDs (no conversationId in URL on first load).
+    useEffect(() => {
+        if (typeof window === "undefined") return
+        const params = new URLSearchParams(window.location.search)
+        const urlId = params.get("conversationId")
+        if (!urlId) localChatIds.current.add(activeChatIdRef.current)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const transport = useMemo(() => new AssistantChatTransport(), [])
 
@@ -386,6 +479,15 @@ export function useAssistantChat(): UseAssistantChatReturn {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status, activeChatId])
 
+    // When not streaming, sdkMessages can change without status/activeChatId changing (e.g. GET
+    // hydrates useChat via setMessages). The effect above would never run → throttledSdk stays
+    // stale and the UI shows an empty welcome view.
+    useEffect(() => {
+        if (status === "streaming" || status === "submitted") return
+        throttledSdkChatIdRef.current = activeChatId
+        setThrottledSdk(sdkMessages)
+    }, [sdkMessages, activeChatId, status])
+
     // Live streaming text for the message currently being regenerated (middle messages only).
     // This drives the inline "Regenerating..." view within the original message bubble.
     // Return EMPTY_REGEN_MAP (stable reference) when not regenerating to avoid creating
@@ -414,7 +516,6 @@ export function useAssistantChat(): UseAssistantChatReturn {
 
         // Clear all conversation state for the new business
         setConversations([])
-        setLoadedMessagesMap({})
         const newChatId = `chat-${Date.now()}`
         localChatIds.current = new Set([newChatId])
         fetchedConversations.current = new Set()
@@ -422,42 +523,45 @@ export function useAssistantChat(): UseAssistantChatReturn {
         pendingBackendIdRef.current = null
         conversationsLoaded.current = false
         setMessagesRef.current([])
-        setActiveChatIdRaw(newChatId)
-    }, [businessId])
+        patchActiveChatId(newChatId)
+    }, [businessId, patchActiveChatId])
 
-    const fetchConversations = useCallback(async (filter: 'active' | 'archived' = 'active') => {
-        setIsLoadingConversations(true)
-        try {
-            const data = await apiClient.get<{
-                conversations: Array<{
-                    id: string
-                    conversationId: string
-                    title: string | null
-                    updatedAt: string
-                    preview: string | null
-                    isPinned?: boolean
-                    isArchived?: boolean
-                }>
-                meta: { page: number; limit: number; total: number }
-            }>(`/assistant/conversations?filter=${filter}`)
+    const fetchConversations = useCallback(
+        async (filter: 'active' | 'archived' = 'active', opts?: { silent?: boolean }) => {
+            if (!opts?.silent) setIsLoadingConversations(true)
+            try {
+                const data = await apiClient.get<{
+                    conversations: Array<{
+                        id: string
+                        conversationId: string
+                        title: string | null
+                        updatedAt: string
+                        preview: string | null
+                        isPinned?: boolean
+                        isArchived?: boolean
+                    }>
+                    meta: { page: number; limit: number; total: number }
+                }>(`/assistant/conversations?filter=${filter}`)
 
-            setConversations(
-                data.conversations.map((c: any) => ({
-                    id: c.conversationId,
-                    title: c.title || "Untitled",
-                    date: new Date(c.updatedAt).toLocaleDateString(),
-                    preview: c.preview || undefined,
-                    isPinned: c.isPinned ?? false,
-                    isArchived: c.isArchived ?? false,
-                    agentType: c.agentType ?? null,
-                    lastMessageAt: new Date(c.updatedAt),
-                    messages: [],
-                }))
-            )
-        } finally {
-            setIsLoadingConversations(false)
-        }
-    }, [])
+                setConversations(
+                    data.conversations.map((c: any) => ({
+                        id: c.conversationId,
+                        title: c.title || "Untitled",
+                        date: new Date(c.updatedAt).toLocaleDateString(),
+                        preview: c.preview || undefined,
+                        isPinned: c.isPinned ?? false,
+                        isArchived: c.isArchived ?? false,
+                        agentType: c.agentType ?? null,
+                        lastMessageAt: new Date(c.updatedAt),
+                        messages: [],
+                    }))
+                )
+            } finally {
+                if (!opts?.silent) setIsLoadingConversations(false)
+            }
+        },
+        []
+    )
 
     // ── Load conversation list on mount ─────────────────────────────────
     useEffect(() => {
@@ -530,34 +634,14 @@ export function useAssistantChat(): UseAssistantChatReturn {
         if (throttledSdkChatIdRef.current !== activeChatId) return []
         return mapSdkToAssistantMessages(throttledSdk)
     }, [throttledSdk, activeChatId])
-    const loadedMessages = loadedMessagesMap[activeChatId] ?? []
 
-    // Combine: historical messages first, then any new SDK messages appended in this session
+    // Single source: useChat store, hydrated from GET /conversations/:id when opening a thread.
     const messages = useMemo(() => {
-        if (sdkMapped.length === 0) return loadedMessages
-        if (loadedMessages.length === 0) return sdkMapped
-
-        // Merge: loadedMessages (history) + sdkMapped (new from this session), deduped by id
-        const loadedIds = new Set(loadedMessages.map((m) => m.id))
-        const newFromSdk = sdkMapped.filter((m) => !loadedIds.has(m.id))
-
-        if (newFromSdk.length === 0) return loadedMessages
-
-        // Middle-message regeneration: hide the transient SDK response from the list.
-        // The captured text will be displayed via the versionInfo override in ChatMessage.
-        if (isRegeneratingMiddle && newFromSdk[0]?.role === 'assistant') {
-            return loadedMessages
+        if (isRegeneratingMiddle && middleRegenSnapshotRef.current?.length) {
+            return middleRegenSnapshotRef.current
         }
-
-        // Last-assistant regeneration: the SDK produced a new assistant response —
-        // replace the last loaded assistant instead of appending.
-        const lastLoaded = loadedMessages[loadedMessages.length - 1]
-        if (!isRegeneratingMiddle && lastLoaded?.role === 'assistant' && newFromSdk[0]?.role === 'assistant') {
-            return [...loadedMessages.slice(0, -1), ...newFromSdk]
-        }
-
-        return [...loadedMessages, ...newFromSdk]
-    }, [sdkMapped, loadedMessages, isRegeneratingMiddle])
+        return sdkMapped
+    }, [sdkMapped, activeChatId, isRegeneratingMiddle])
 
     // Keep a ref to the latest messages so post-streaming effects don't depend on `messages`
     const messagesRef = useRef(messages)
@@ -565,65 +649,84 @@ export function useAssistantChat(): UseAssistantChatReturn {
         messagesRef.current = messages
     }, [messages])
 
-    // ── Apply pending backend conversationId after streaming ends ───────
+    const fetchMessages = useCallback((id: string) => {
+        if (loadingConversationIdRef.current === id) return
+
+        setLoadingConversationId(id)
+
+        apiClient
+            .get<{
+                conversationId: string
+                agentType?: string | null
+                messages: Array<{ id: string; role: string; content: any; feedback?: any; slotKey?: string | null }>
+            }>(`/assistant/conversations/${id}`)
+            .then((data) => {
+                if (activeChatIdRef.current !== id) return
+
+                fetchedConversations.current.add(id)
+
+                if (data.agentType) {
+                    setAgentTypeMap((prev) => ({ ...prev, [id]: data.agentType ?? null }))
+                }
+                const { messages: mapped, responseVersions: loadedVersions, versionCursorMap: loadedCursors } =
+                    processLoadedMessages(data.messages)
+
+                setResponseVersions(new Map(loadedVersions))
+                setVersionCursorMap(new Map(loadedCursors))
+
+                setMessagesRef.current(assistantMessagesToMappedUiMessages(mapped))
+                middleRegenSnapshotRef.current = null
+            })
+            .catch(() => {
+                fetchedConversations.current.delete(id)
+            })
+            .finally(() => {
+                setLoadingConversationId((prev) => (prev === id ? null : prev))
+            })
+    }, [])
+
+    const setActiveChatId = useCallback(
+        (id: string) => {
+            syncedConversationRef.current = null
+            pendingBackendIdRef.current = null
+            patchActiveChatId(id)
+            fetchMessages(id)
+        },
+        [fetchMessages, patchActiveChatId]
+    )
+
+    // ── On mount: if conversationId exists in URL, fetch its messages ─
+    useEffect(() => {
+        if (typeof window === "undefined") return
+        const params = new URLSearchParams(window.location.search)
+        const urlId = params.get("conversationId")
+        if (urlId) fetchMessages(urlId)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // ── After first reply: switch to server conversation id and load messages from API ─
     useEffect(() => {
         if (isStreaming) return
         const pendingId = pendingBackendIdRef.current
         if (!pendingId) return
         if (pendingId === activeChatId) {
+            localChatIds.current.delete(activeChatId)
             pendingBackendIdRef.current = null
             return
         }
 
-        setLoadedMessagesMap((prev) => {
-            if (prev[pendingId]) return prev
-            // Use latestSdkRef (always current) rather than messagesRef which derives
-            // from throttledSdk — the throttle flush is queued as a state update and
-            // hasn't committed yet when this effect runs, so messagesRef would be stale.
-            return { ...prev, [pendingId]: mapSdkToAssistantMessages(latestSdkRef.current) }
-        })
-        fetchedConversations.current.add(pendingId)
-        localChatIds.current.add(pendingId)
+        const localId = activeChatId
+        localChatIds.current.delete(localId)
         pendingBackendIdRef.current = null
-        setActiveChatIdRaw(pendingId)
-    }, [activeChatId, isStreaming])
-
-    // ── Persist streamed messages into loadedMessagesMap ────────────────
-    // loadedMessagesMap is only written once per chat (initial fetch or apply-pending).
-    // New messages from streaming live in the useChat internal store, which may not
-    // survive switching away and back. Writing to loadedMessagesMap here ensures the
-    // full history is available after any navigation without re-fetching from the API.
-    const prevIsStreamingRef = useRef(false)
-    useEffect(() => {
-        const was = prevIsStreamingRef.current
-        prevIsStreamingRef.current = isStreaming
-        if (!was || isStreaming) return  // Only when streaming just ended
-
-        const chatId = activeChatIdRef.current
-        // Skip local-only new chats that haven't received a backend ID yet —
-        // the apply-pending effect handles those (stores under the server ID).
-        if (localChatIds.current.has(chatId) && !fetchedConversations.current.has(chatId)) return
-
-        const latest = latestSdkRef.current
-        if (latest.length === 0) return
-
-        const incoming = mapSdkToAssistantMessages(latest)
-        setLoadedMessagesMap((prev) => {
-            const existing = prev[chatId] ?? []
-            const existingIds = new Set(existing.map((m) => m.id))
-            const newMessages = incoming.filter((m) => !existingIds.has(m.id))
-            if (newMessages.length === 0) return prev
-
-            // If the last stored message and first incoming are both assistant messages,
-            // this is an end-of-conversation regeneration — replace rather than append.
-            const lastExisting = existing[existing.length - 1]
-            if (lastExisting?.role === 'assistant' && newMessages[0]?.role === 'assistant') {
-                return { ...prev, [chatId]: [...existing.slice(0, -1), ...newMessages] }
-            }
-
-            return { ...prev, [chatId]: [...existing, ...newMessages] }
-        })
-    }, [isStreaming])
+        patchActiveChatId(pendingId)
+        // useChat resets per id; hydrate from the just-finished stream so we never flash empty
+        // if GET /conversations/:id briefly lags behind persistence.
+        const fromSdk = mapSdkToAssistantMessages(latestSdkRef.current)
+        if (fromSdk.length > 0) {
+            setMessagesRef.current(assistantMessagesToMappedUiMessages(fromSdk))
+        }
+        fetchMessages(pendingId)
+    }, [activeChatId, isStreaming, fetchMessages, patchActiveChatId])
 
     // ── Update sidebar: add new chats, update title & preview ──────────
     // Only runs when streaming just ended (not on every activeChatId change).
@@ -673,6 +776,18 @@ export function useAssistantChat(): UseAssistantChatReturn {
         })
     }, [activeChatId, isStreaming])
 
+    // ── Refetch sidebar list when a stream completes (canonical titles/previews from API) ─
+    const prevStreamingForListRefetchRef = useRef(false)
+    useEffect(() => {
+        const wasStreaming = prevStreamingForListRefetchRef.current
+        prevStreamingForListRefetchRef.current = isStreaming
+
+        if (!wasStreaming || isStreaming) return
+
+        const filter = sidebarListFilterRef.current
+        void fetchConversations(filter, { silent: true }).catch(() => {})
+    }, [isStreaming, fetchConversations])
+
     // ── Version state helpers ──────────────────────────────────────────
     const resetVersions = useCallback(() => {
         setResponseVersions(new Map())
@@ -720,7 +835,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
                 transport.agentType = options.agentType
                 setAgentTypeMap((prev) => ({ ...prev, [agentChatId]: options.agentType! }))
                 pendingAgentMessageRef.current = { text: trimmed, files: fileParts, metadata }
-                setActiveChatIdRaw(agentChatId)
+                patchActiveChatId(agentChatId)
                 return
             }
 
@@ -729,7 +844,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
                 : { files: fileParts, metadata }
             )
         },
-        [resetVersions, transport]
+        [resetVersions, transport, patchActiveChatId]
     )
 
     // ── Submit feedback ────────────────────────────────────────────────
@@ -781,8 +896,11 @@ export function useAssistantChat(): UseAssistantChatReturn {
         regeneratingSlotRef.current = slotKey
         setCurrentRegeneratingSlot(slotKey)
         if (!isLastAssistant) {
+            middleRegenSnapshotRef.current = msgs.map((m) => ({ ...m, parts: [...m.parts] }))
             setIsRegeneratingMiddle(true)
             wasMiddleRegenRef.current = true
+        } else {
+            middleRegenSnapshotRef.current = null
         }
 
         // Seed SDK with history up to and including the target assistant,
@@ -818,6 +936,7 @@ export function useAssistantChat(): UseAssistantChatReturn {
         const lastSdkAssistant = [...sdkMessagesRef.current].reverse().find(m => m.role === 'assistant')
         if (!lastSdkAssistant) {
             wasMiddleRegenRef.current = false
+            middleRegenSnapshotRef.current = null
             setIsRegeneratingMiddle(false)
             setCurrentRegeneratingSlot(null)
             return
@@ -843,11 +962,9 @@ export function useAssistantChat(): UseAssistantChatReturn {
             return newMap
         })
 
-        // For middle-message regeneration, clear the transient SDK messages
-        // so they don't bleed into the merged view after isRegeneratingMiddle is cleared
         const wasMiddle = wasMiddleRegenRef.current
         wasMiddleRegenRef.current = false
-        if (wasMiddle) setMessagesRef.current([])
+        if (wasMiddle) middleRegenSnapshotRef.current = null
         setIsRegeneratingMiddle(false)
         setCurrentRegeneratingSlot(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -870,78 +987,8 @@ export function useAssistantChat(): UseAssistantChatReturn {
         syncedConversationRef.current = null
         const newId = `chat-${Date.now()}`
         localChatIds.current.add(newId)
-        setActiveChatIdRaw(newId)
-    }, [])
-
-    // ── Fetch conversation messages from API ─────────────────────────────
-    const fetchMessages = useCallback((id: string) => {
-        if (fetchedConversations.current.has(id)) return
-        fetchedConversations.current.add(id)
-        setLoadingConversationId(id)
-
-        apiClient
-            .get<{
-                conversationId: string
-                agentType?: string | null
-                messages: Array<{ id: string; role: string; content: any; feedback?: any; slotKey?: string | null }>
-            }>(`/assistant/conversations/${id}`)
-            .then((data) => {
-                // Always store the fetched data — no navigation guard here.
-                // The spinner is gated by loadingConversationId === activeChatId,
-                // so showing data for a "wrong" chat is impossible.
-                if (data.agentType) {
-                    setAgentTypeMap((prev) => ({ ...prev, [id]: data.agentType ?? null }))
-                }
-                const { messages: mapped, responseVersions: loadedVersions, versionCursorMap: loadedCursors } =
-                    processLoadedMessages(data.messages)
-                setLoadedMessagesMap((prev) => ({ ...prev, [id]: mapped }))
-                if (loadedVersions.size > 0) {
-                    setResponseVersions((prev) => {
-                        const newMap = new Map(prev)
-                        loadedVersions.forEach((v, k) => newMap.set(k, v))
-                        return newMap
-                    })
-                    setVersionCursorMap((prev) => {
-                        const newMap = new Map(prev)
-                        loadedCursors.forEach((c, k) => newMap.set(k, c))
-                        return newMap
-                    })
-                }
-            })
-            .catch(() => {
-                fetchedConversations.current.delete(id)
-            })
-            .finally(() => {
-                // Use functional update so we only clear the loading ID for *this* fetch,
-                // not for a different chat's in-flight request.
-                setLoadingConversationId((prev) => (prev === id ? null : prev))
-            })
-    }, [])
-
-    // ── Switch conversation ────────────────────────────────────────────
-    const setActiveChatId = useCallback((id: string) => {
-        syncedConversationRef.current = null
-        pendingBackendIdRef.current = null
-        setActiveChatIdRaw(id)
-
-        // If it's a locally-created chat or already fetched, nothing to do
-        if (localChatIds.current.has(id) || fetchedConversations.current.has(id)) {
-            return
-        }
-
-        // Otherwise fetch messages from the API
-        fetchMessages(id)
-    }, [fetchMessages])
-
-    // ── On mount: if activeChatId from URL is not local, fetch its messages ─
-    // This handles page refresh with a conversationId in the URL
-    useEffect(() => {
-        const id = activeChatIdRef.current
-        if (!localChatIds.current.has(id) && !fetchedConversations.current.has(id)) {
-            fetchMessages(id)
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+        patchActiveChatId(newId)
+    }, [patchActiveChatId])
 
     // ── Conversation management ────────────────────────────────────────
     const renameConversation = useCallback(async (id: string, title: string) => {
@@ -964,9 +1011,9 @@ export function useAssistantChat(): UseAssistantChatReturn {
         if (activeChatIdRef.current === id) {
             const newId = `chat-${Date.now()}`
             localChatIds.current.add(newId)
-            setActiveChatIdRaw(newId)
+            patchActiveChatId(newId)
         }
-    }, [])
+    }, [patchActiveChatId])
 
     const unarchiveConversation = useCallback(async (id: string) => {
         await apiClient.patch(`/assistant/conversations/${id}`, { isArchived: false })
@@ -983,9 +1030,9 @@ export function useAssistantChat(): UseAssistantChatReturn {
         if (activeChatIdRef.current === id) {
             const newId = `chat-${Date.now()}`
             localChatIds.current.add(newId)
-            setActiveChatIdRaw(newId)
+            patchActiveChatId(newId)
         }
-    }, [])
+    }, [patchActiveChatId])
 
     // ── Add tool result ────────────────────────────────────────────────
     const addToolResult = useCallback(
