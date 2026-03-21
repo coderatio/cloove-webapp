@@ -85,10 +85,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     const handleLogout = () => {
         toast.promise(
-            apiClient.post('/settings/logout', {})
-                .then(() => {
-                    window.location.href = '/';
-                }),
+            authLogout(),
             {
                 loading: 'Logging out...',
                 success: 'Logged out successfully',

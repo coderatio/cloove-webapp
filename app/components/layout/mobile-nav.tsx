@@ -14,7 +14,9 @@ import {
 } from "../ui/drawer"
 import { usePermission } from "@/app/hooks/usePermission"
 import { useMobileNav } from "../providers/mobile-nav-provider"
+import { useAuth } from "../providers/auth-provider"
 import { Button } from "../ui/button"
+import { toast } from "sonner"
 
 interface MobileNavItem {
     href: string
@@ -53,9 +55,21 @@ const moreItems: MobileNavItem[] = [
 export function MobileNav() {
     const pathname = usePathname()
     const router = useRouter()
+    const { logout } = useAuth()
     const isAssistantPage = pathname === "/assistant"
     const { isMenuOpen, setIsMenuOpen } = useMobileNav()
     const [isMoreOpen, setIsMoreOpen] = useState(false)
+
+    const handleLogout = () => {
+        toast.promise(
+            logout(),
+            {
+                loading: 'Logging out...',
+                success: 'Logged out successfully',
+                error: 'Failed to logout. Please try again.'
+            }
+        )
+    }
     const [submenuParent, setSubmenuParent] = useState<MobileNavItem | null>(null)
     const { can } = usePermission()
 
@@ -324,6 +338,10 @@ export function MobileNav() {
                                             )
                                         })}
                                         <button
+                                            onClick={() => {
+                                                handleMoreOpenChange(false)
+                                                handleLogout()
+                                            }}
                                             className="flex items-center gap-4 rounded-2xl p-4 bg-red-50 dark:bg-red-500/10 text-red-600 border border-red-200/50 dark:border-red-500/10 active:scale-95 transition-all"
                                         >
                                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-white/10 shadow-sm">

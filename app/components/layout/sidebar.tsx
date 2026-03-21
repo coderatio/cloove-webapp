@@ -143,7 +143,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     }, [isCollapsed])
 
     const { can, role } = usePermission()
-    const { user } = useAuth()
+    const { user, logout } = useAuth()
 
     React.useEffect(() => {
         setExpandedItems(getExpandedForPath(pathname))
@@ -171,14 +171,11 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
     const handleLogout = () => {
         toast.promise(
-            apiClient.post('/settings/logout', {})
-                .then(() => {
-                    window.location.href = '/';
-                }),
+            logout(),
             {
                 loading: 'Logging out...',
                 success: 'Logged out successfully',
-                error: 'Failed to logout'
+                error: 'Failed to logout. Please try again.'
             }
         )
     }

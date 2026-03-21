@@ -35,7 +35,7 @@ interface User {
 interface AuthContextType {
     user: User | null
     isLoading: boolean
-    logout: () => void
+    logout: () => Promise<void>
     refreshUser: () => Promise<void>
     updateUserMetadata: () => void
 }
