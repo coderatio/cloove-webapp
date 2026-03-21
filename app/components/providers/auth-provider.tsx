@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { apiClient } from "@/app/lib/api-client"
+import { storage } from "@/app/lib/storage"
 import { SessionManager } from "../auth/SessionManager"
 
 export interface UserCountryDetail {
@@ -63,6 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         fetchUser(false) // Initial load should show loading state
     }, [])
+
+    // Reset activity timer when user state transitions from null to non-null
+    // (e.g. on successful login or initial session load)
+    useEffect(() => {
+        if (user) {
+            storage.setLastActivity(Date.now())
+        }
+    }, [!!user])
 
     const refreshUser = () => fetchUser(true) // Subsequent refreshes should be silent
 

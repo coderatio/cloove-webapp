@@ -99,6 +99,7 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
         }
 
         setStep('success')
+        storage.setLastActivity(Date.now())
         await onSuccess?.()
 
         const businesses = response.user?.businesses ?? []
@@ -205,6 +206,7 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
                 country: selectedCountry?.id
             })
             setStep('success')
+            storage.setLastActivity(Date.now())
             await onSuccess?.()
 
             const businesses = response.user?.businesses ?? []

@@ -17,7 +17,7 @@ interface SessionManagerProps {
  * Manages the session lifecycle, inactivity tracking, and token rotation
  */
 export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionManagerProps) {
-    const { lastActivity } = useIdleTracker()
+    const { lastActivity, resetActivity } = useIdleTracker()
     const [showWarning, setShowWarning] = useState(false)
     const [remainingSeconds, setRemainingSeconds] = useState(60) // 1 minute warning
 
@@ -47,6 +47,7 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
             lastRefreshTime.current = Date.now()
             warningStartedAtRef.current = null
             setShowWarning(false)
+            resetActivity()
             if (onSessionRefresh) {
                 onSessionRefresh()
             }
