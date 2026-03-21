@@ -32,8 +32,10 @@ export function ProductSearchOverlay({
     const { activeBusiness } = useBusiness()
     const [search, setSearch] = React.useState("")
     const [activeIndex, setActiveIndex] = React.useState(0)
+    const [isKeyboardNavigating, setIsKeyboardNavigating] = React.useState(false)
     const listRef = React.useRef<HTMLDivElement>(null)
     const inputRef = React.useRef<HTMLInputElement>(null)
+    const lastMouseMoveRef = React.useRef(0)
 
     // Report search changes to parent if not in local mode
     React.useEffect(() => {
@@ -57,7 +59,21 @@ export function ProductSearchOverlay({
     // Reset active index when search changes
     React.useEffect(() => {
         setActiveIndex(0)
+        setIsKeyboardNavigating(false)
     }, [search])
+
+    // Detect mouse movement to re-enable mouse-based active index
+    React.useEffect(() => {
+        const handleMouseMove = () => {
+            const now = Date.now()
+            if (now - lastMouseMoveRef.current > 100) {
+                setIsKeyboardNavigating(false)
+                lastMouseMoveRef.current = now
+            }
+        }
+        window.addEventListener("mousemove", handleMouseMove)
+        return () => window.removeEventListener("mousemove", handleMouseMove)
+    }, [])
 
     // Barcode auto-add: exact match on barcode clears search and re-focuses
     React.useEffect(() => {
@@ -91,9 +107,11 @@ export function ProductSearchOverlay({
 
             if (e.key === "ArrowDown") {
                 e.preventDefault()
+                setIsKeyboardNavigating(true)
                 setActiveIndex((prev) => (prev + 1) % filteredProducts.length)
             } else if (e.key === "ArrowUp") {
                 e.preventDefault()
+                setIsKeyboardNavigating(true)
                 setActiveIndex((prev) => (prev - 1 + filteredProducts.length) % filteredProducts.length)
             } else if (e.key === "Enter") {
                 e.preventDefault()
@@ -118,7 +136,7 @@ export function ProductSearchOverlay({
 
         const activeItem = listElement.querySelector(`[data-item-index="${activeIndex}"]`) as HTMLElement
         if (activeItem) {
-            const stickyOffset = 80
+            const stickyOffset = 88 // Header height + some padding
             const itemTop = activeItem.offsetTop
             const itemBottom = itemTop + activeItem.offsetHeight
             const containerScrollTop = listElement.scrollTop
@@ -127,22 +145,22 @@ export function ProductSearchOverlay({
             if (itemTop < containerScrollTop + stickyOffset) {
                 listElement.scrollTo({
                     top: itemTop - stickyOffset - 16,
-                    behavior: 'smooth'
+                    behavior: isKeyboardNavigating ? 'auto' : 'smooth'
                 })
             }
             else if (itemBottom > containerScrollTop + containerHeight) {
                 listElement.scrollTo({
                     top: itemBottom - containerHeight + 16,
-                    behavior: 'smooth'
+                    behavior: isKeyboardNavigating ? 'auto' : 'smooth'
                 })
             }
         }
-    }, [activeIndex])
+    }, [activeIndex, isKeyboardNavigating])
 
     // Auto-focus input
     React.useEffect(() => {
         if (isOpen) {
-            setTimeout(() => inputRef.current?.focus(), 100)
+            requestAnimationFrame(() => inputRef.current?.focus())
         } else {
             setSearch("")
         }
@@ -152,6 +170,7 @@ export function ProductSearchOverlay({
         <AnimatePresence>
             {isOpen && (
                 <div className="absolute inset-0 w-full h-full z-40 flex overflow-hidden">
+                    <PerformanceStyles />
                     {/* Local Backdrop - only covers parent */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -179,6 +198,12 @@ export function ProductSearchOverlay({
                                     placeholder="Find products by name, category or scan..."
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
+                                    role="combobox"
+                                    aria-autocomplete="list"
+                                    aria-expanded={isOpen}
+                                    aria-haspopup="listbox"
+                                    aria-controls="product-search-results"
+                                    aria-activedescendant={`product-option-${activeIndex}`}
                                     className="w-full pl-10 pr-4 h-16 text-lg sm:text-2xl font-serif text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 bg-transparent border-none focus:outline-none focus:ring-0"
                                 />
                             </div>
@@ -197,7 +222,10 @@ export function ProductSearchOverlay({
                         </div>
 
                         {/* Results List */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10" ref={listRef}>
+                        <div 
+                            className="flex-1 overflow-y-auto custom-scrollbar relative z-10 [scrollbar-gutter:stable] overscroll-contain isolation-auto" 
+                            ref={listRef}
+                        >
                             <div className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-accent/40 dark:text-brand-cream/40 px-10 sticky top-0 bg-white dark:bg-brand-deep py-6 z-20 border-b border-brand-accent/5 dark:border-white/5 flex items-center justify-between">
                                 <span>
                                     {isLocalMode ? 'Local Catalog' : 'Cloud Search'} • {(isLocalMode ? filteredProducts : products).length} Results
@@ -210,11 +238,18 @@ export function ProductSearchOverlay({
                                 )}
                             </div>
 
-                            <div className="p-6 px-10 space-y-2">
+                            <div 
+                                id="product-search-results"
+                                role="listbox"
+                                className="p-6 px-10 space-y-2 will-change-scroll"
+                            >
                                 {(isLocalMode ? filteredProducts : products).length > 0 ? (
                                     (isLocalMode ? filteredProducts : products).map((product, index) => (
                                         <div
                                             key={product.id}
+                                            id={`product-option-${index}`}
+                                            role="option"
+                                            aria-selected={activeIndex === index}
                                             data-item-index={index}
                                             onClick={() => {
                                                 onSelect(product)
@@ -222,11 +257,15 @@ export function ProductSearchOverlay({
                                                     toast.success(`Added ${product.product} to cart`)
                                                 }
                                             }}
-                                            onMouseEnter={() => setActiveIndex(index)}
+                                            onMouseEnter={() => {
+                                                if (!isKeyboardNavigating) {
+                                                    setActiveIndex(index)
+                                                }
+                                            }}
                                             className={cn(
-                                                "relative flex items-center justify-between p-5 rounded-[24px] cursor-pointer transition-all duration-200 border group",
+                                                "relative flex items-center justify-between p-5 rounded-[24px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-200 border group will-change-transform",
                                                 activeIndex === index
-                                                    ? "bg-brand-gold/10 dark:bg-white/10 border-brand-gold/30 shadow-sm"
+                                                    ? "bg-brand-gold/10 dark:bg-white/10 border-brand-gold/30 shadow-sm ring-1 ring-brand-gold/20"
                                                     : "bg-transparent border-transparent hover:bg-brand-accent/2 dark:hover:bg-white/2"
                                             )}
                                         >
@@ -316,3 +355,30 @@ export function ProductSearchOverlay({
         </AnimatePresence>
     )
 }
+
+// Global styles for performance
+const PerformanceStyles = () => (
+    <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            border: 2px solid transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(212, 175, 55, 0.4);
+        }
+        .will-change-scroll {
+            will-change: scroll-position;
+        }
+        .will-change-transform {
+            will-change: transform;
+        }
+    `}</style>
+)
+

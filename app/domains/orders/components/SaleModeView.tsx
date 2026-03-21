@@ -42,7 +42,7 @@ import { Textarea } from '@/app/components/ui/textarea'
 import { MoneyInput } from '@/app/components/ui/money-input'
 import { Switch } from '@/app/components/ui/switch'
 import { cn } from '@/app/lib/utils'
-import { mockCustomers, Customer } from '../data/customerMocks'
+import { Customer } from '../data/customerMocks'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -76,9 +76,9 @@ const itemVariants: Variants = {
         opacity: 1,
         y: 0,
         transition: {
-            type: "spring",
-            stiffness: 400,
-            damping: 28
+            type: "tween",
+            duration: 0.2,
+            ease: "easeOut"
         }
     }
 }
@@ -93,67 +93,6 @@ function useDebounce<T>(value: T, delay?: number): T {
     }, [value, delay])
 
     return debouncedValue
-}
-
-function CreativeLoader() {
-    return (
-        <div className="col-span-full py-32 flex flex-col items-center justify-center">
-            <div className="relative h-24 w-24 mb-10">
-                {/* Pulsing Core */}
-                <motion.div
-                    animate={{ 
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.6, 0.3]
-                    }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute inset-0 rounded-full bg-brand-gold/20 blur-xl"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-12 w-12 rounded-2xl bg-brand-deep dark:bg-brand-gold flex items-center justify-center shadow-2xl relative z-10">
-                        <Layers className="h-6 w-6 text-brand-gold dark:text-brand-deep animate-pulse" />
-                    </div>
-                </div>
-
-                {/* Orbiting Icons */}
-                {[Tag, ShoppingCart, Box, History].map((Icon, i) => (
-                    <motion.div
-                        key={i}
-                        animate={{ 
-                            rotate: 360,
-                        }}
-                        transition={{ 
-                            duration: 8, 
-                            repeat: Infinity, 
-                            ease: "linear",
-                            delay: i * 0.5
-                        }}
-                        className="absolute inset-x-0 h-full w-full pointer-events-none"
-                    >
-                        <motion.div
-                            animate={{ 
-                                scale: [0.8, 1.1, 0.8],
-                                opacity: [0.4, 0.8, 0.4]
-                            }}
-                            transition={{ duration: 3, repeat: Infinity, delay: i * 0.7 }}
-                            style={{ 
-                                position: 'absolute',
-                                left: '50%',
-                                top: '-10%',
-                                transform: 'translateX(-50%)'
-                            }}
-                            className="bg-white/40 dark:bg-white/5 p-2 rounded-xl backdrop-blur-md border border-brand-accent/10"
-                        >
-                            <Icon className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
-                        </motion.div>
-                    </motion.div>
-                ))}
-            </div>
-            <div className="space-y-2 text-center">
-                <h3 className="text-2xl font-serif text-brand-deep dark:text-brand-cream/80 tracking-tight">Curating your catalog</h3>
-                <p className="text-xs uppercase tracking-[0.3em] font-black text-brand-accent/40 dark:text-brand-cream/30">Just a moment...</p>
-            </div>
-        </div>
-    )
 }
 
 function Box(props: any) {
@@ -177,11 +116,252 @@ function Box(props: any) {
     )
 }
 
+function CreativeLoader() {
+    return (
+        <div className="col-span-full py-32 flex flex-col items-center justify-center">
+            <div className="relative h-24 w-24 mb-10">
+                <motion.div
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute inset-0 rounded-full bg-brand-gold/20 blur-xl"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-12 w-12 rounded-2xl bg-brand-deep dark:bg-brand-gold flex items-center justify-center shadow-2xl relative z-10">
+                        <Layers className="h-6 w-6 text-brand-gold dark:text-brand-deep animate-pulse" />
+                    </div>
+                </div>
+
+                {[Tag, ShoppingCart, Box, History].map((Icon, i) => (
+                    <motion.div
+                        key={i}
+                        animate={{
+                            rotate: 360,
+                        }}
+                        transition={{
+                            duration: 8,
+                            repeat: Infinity,
+                            ease: "linear",
+                            delay: i * 0.5
+                        }}
+                        className="absolute inset-x-0 h-full w-full pointer-events-none"
+                    >
+                        <motion.div
+                            animate={{
+                                scale: [0.8, 1.1, 0.8],
+                                opacity: [0.4, 0.8, 0.4]
+                            }}
+                            transition={{ duration: 3, repeat: Infinity, delay: i * 0.7 }}
+                            style={{
+                                position: 'absolute',
+                                left: '50%',
+                                top: '-10%',
+                                transform: 'translateX(-50%)'
+                            }}
+                            className="bg-white/40 dark:bg-white/5 p-2 rounded-xl backdrop-blur-md border border-brand-accent/10"
+                        >
+                            <Icon className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
+                        </motion.div>
+                    </motion.div>
+                ))}
+            </div>
+            <div className="space-y-2 text-center">
+                <h3 className="text-2xl font-serif text-brand-deep dark:text-brand-cream/80 tracking-tight">Curating your catalog</h3>
+                <p className="text-xs uppercase tracking-[0.3em] font-black text-brand-accent/40 dark:text-brand-cream/30">Just a moment...</p>
+            </div>
+        </div>
+    )
+}
+
+interface ProductGridProps {
+    products: Product[]
+    isLoading: boolean
+    activeBusiness: any | null
+    addToCart: (product: Product) => void
+    currentPage: number
+    itemsPerPage: number
+    search: string
+    selectedCategory: string | null
+    isLocalMode: boolean
+}
+
+const ProductGrid = React.memo(({
+    products,
+    isLoading,
+    activeBusiness,
+    addToCart,
+    currentPage,
+    itemsPerPage,
+    search,
+    selectedCategory,
+    isLocalMode
+}: ProductGridProps) => {
+    const filteredProducts = React.useMemo(() => {
+        return products.filter((p: Product) => {
+            const matchesSearch = p.product?.toLowerCase().includes(search.toLowerCase()) ||
+                (p.barcode && p.barcode.includes(search))
+            const matchesCategory = !selectedCategory || p.category === selectedCategory
+            return isLocalMode ? (matchesSearch && matchesCategory) : matchesCategory
+        })
+    }, [products, search, selectedCategory, isLocalMode])
+
+    const paginatedProducts = React.useMemo(() => {
+        return filteredProducts.slice(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage
+        )
+    }, [filteredProducts, currentPage, itemsPerPage])
+
+    return (
+        <motion.div
+            key={String(`${selectedCategory}-${search}-${currentPage}-${products.length}`)}
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="flex-1 overflow-y-auto custom-scrollbar pr-1 lg:pr-2 -mr-1 lg:-mr-2 min-h-0 [scrollbar-gutter:stable] overscroll-contain isolation-auto"
+        >
+            <div className={cn(
+                "grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 pb-6 will-change-scroll"
+            )}>
+                <AnimatePresence mode="popLayout">
+                    {isLoading || !activeBusiness ? (
+                        <motion.div
+                            key="loader"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="col-span-full h-full flex items-center justify-center p-12"
+                        >
+                            <CreativeLoader />
+                        </motion.div>
+                    ) : filteredProducts.length === 0 ? (
+                        <motion.div
+                            key="empty"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="col-span-full py-24 flex flex-col items-center justify-center text-brand-accent/40 dark:text-brand-cream/30"
+                        >
+                            <Layers className="h-20 w-20 mb-6 opacity-20" />
+                            <p className="text-2xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">No items found</p>
+                            <p className="text-sm mt-2">{search ? `No results for "${search}"` : 'Your catalog is empty'}</p>
+                        </motion.div>
+                    ) : (
+                        paginatedProducts.map((product: Product) => (
+                            <motion.div key={product.id} variants={itemVariants}>
+                                <GlassCard
+                                    onClick={() => addToCart(product)}
+                                    hoverEffect
+                                    className={cn(
+                                        "group cursor-pointer flex flex-col h-[220px] relative overflow-hidden p-0 rounded-[32px] transition-none!",
+                                        product.image
+                                            ? "bg-brand-deep! border-none!"
+                                            : "bg-white! dark:bg-brand-deep-800! border! border-brand-gold/25! dark:border-white/10!"
+                                    )}
+                                >
+                                    {product.image ? (
+                                        <div className="absolute inset-0 z-0">
+                                            <img
+                                                src={product.image}
+                                                alt={product.product}
+                                                loading="lazy"
+                                                className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                            />
+                                            <div className="absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-brand-deep-1000/80 to-transparent z-10 pointer-events-none" />
+                                            <div className="absolute inset-0 bg-brand-deep-1000/20 z-10" />
+                                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-brand-deep-1000/90 to-transparent z-10 pointer-events-none" />
+                                        </div>
+                                    ) : (
+                                        <div className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none overflow-hidden">
+                                            <div className="absolute -right-8 -bottom-8 scale-[2] rotate-[-15deg]">
+                                                <h4 className="font-serif text-8xl font-black select-none tracking-tighter">CLOOVE</h4>
+                                            </div>
+                                            <div className="absolute -left-4 top-1/4 scale-[1.5] rotate-10 opacity-50">
+                                                <h4 className="font-serif text-6xl font-black select-none tracking-tighter">EST 2024</h4>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="relative z-20 flex flex-col h-full p-5 lg:p-6">
+                                        <div className="absolute top-4 right-4 lg:top-5 lg:right-5">
+                                            <div className={cn(
+                                                "w-2 h-2 rounded-full border-2 border-white/20 shadow-xl",
+                                                product.status === 'In Stock' ? "bg-emerald-500 shadow-emerald-500/40" : "bg-rose-500 shadow-rose-500/40"
+                                            )} />
+                                        </div>
+
+                                        <div className="space-y-4 flex flex-col h-full">
+                                            <div className="space-y-1">
+                                                <h3 className={cn(
+                                                    "font-serif text-xl lg:text-2xl leading-[1.15] transition-colors duration-500 line-clamp-2 min-h-[2.3em]",
+                                                    product.image
+                                                        ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+                                                        : "text-brand-deep dark:text-brand-cream"
+                                                )}>
+                                                    {product.product}
+                                                </h3>
+                                                <p className={cn(
+                                                    "text-[9px] font-bold uppercase tracking-[0.2em]",
+                                                    product.image
+                                                        ? "text-brand-cream opacity-80 drop-shadow-sm"
+                                                        : "text-brand-accent dark:text-brand-cream opacity-40"
+                                                )}>
+                                                    {product.status} • {product.stock} units
+                                                </p>
+                                            </div>
+
+                                            <div className={cn(
+                                                "flex items-center justify-between pt-4 border-t transition-colors duration-500 mt-auto",
+                                                product.image ? "border-white/20" : "border-brand-accent/5 dark:border-white/10"
+                                            )}>
+                                                <p className={cn(
+                                                    "font-serif font-black text-xl lg:text-2xl tracking-tight",
+                                                    product.image
+                                                        ? "text-brand-gold drop-shadow-md"
+                                                        : "text-brand-deep dark:text-brand-gold"
+                                                )}>
+                                                    {formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}
+                                                </p>
+                                                <div className={cn(
+                                                    "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 shadow-2xl",
+                                                    product.image
+                                                        ? "bg-brand-gold text-brand-deep shadow-brand-gold/20"
+                                                        : "bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep shadow-xl"
+                                                )}>
+                                                    <Plus className="h-5 w-5" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {product.image && (
+                                        <div className="absolute bottom-0 inset-x-0 h-2/5 bg-linear-to-t from-brand-deep-1000/80 to-transparent z-10 pointer-events-none" />
+                                    )}
+                                </GlassCard>
+                            </motion.div>
+                        ))
+                    )}
+                </AnimatePresence>
+            </div>
+        </motion.div>
+    )
+})
+
+ProductGrid.displayName = 'ProductGrid'
+
 export function SaleModeView() {
     const router = useRouter()
     const [cart, setCart] = React.useState<CartItem[]>([])
     const [search, setSearch] = React.useState('')
-    const debouncedSearch = useDebounce(search, 300)
+    const [localSearch, setLocalSearch] = React.useState('')
+    const debouncedSearch = useDebounce(localSearch, 300)
+
+    // Sync debounced local search back to the main search state
+    React.useEffect(() => {
+        setSearch(debouncedSearch)
+    }, [debouncedSearch])
+
     const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
     const [paymentMethod, setPaymentMethod] = React.useState<'Cash' | 'Transfer' | 'POS'>('Cash')
     const [currentPage, setCurrentPage] = React.useState(1)
@@ -220,6 +400,33 @@ export function SaleModeView() {
     const { customers, createCustomer } = useCustomers(customerSearch)
     const { data: promotions } = usePromotions()
 
+    // Handlers
+    const addToCart = React.useCallback((product: any) => {
+        // OOS Guard: block adding out-of-stock items
+        if (product.status === 'Out of Stock') {
+            toast.error(`${product.product} is out of stock`)
+            return
+        }
+        // price is already numeric from useInventory
+        const price = typeof product.price === 'number'
+            ? product.price
+            : parseInt(String(product.price).replace(/[^0-9]/g, ''), 10) || 0
+        setCart(prev => {
+            const existing = prev.find(item => item.id === product.id)
+            if (existing) {
+                return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
+            }
+            return [...prev, {
+                id: product.id,
+                product: product.product,
+                price,
+                category: product.category,
+                quantity: 1,
+                image: product.image
+            }]
+        })
+    }, [])
+
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
     const totalAfterDiscount = Math.max(0, subtotal - discount)
     const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0)
@@ -228,6 +435,10 @@ export function SaleModeView() {
     const changeDue = paymentMethod === 'Cash' && amountPaidNum > 0
         ? Math.max(0, amountPaidNum - totalAfterDiscount)
         : 0
+
+    const categories = React.useMemo(() => {
+        return Array.from(new Set(products.map((item: Product) => item.category))) as string[]
+    }, [products])
 
     const handlePrintReceipt = React.useCallback(async () => {
         if (!activeBusiness || cart.length === 0) {
@@ -262,34 +473,34 @@ export function SaleModeView() {
         await printReceipt(receiptData)
     }, [activeBusiness, cart, subtotal, selectedCustomer, paymentMethod, printReceipt])
 
-    // Derived State
-    const categories = Array.from(new Set(products.map((item: Product) => item.category))) as string[]
+    const totalProductsCount = isLocalMode ? products.length : totalProducts
 
-    const filteredProducts = products.filter((p: Product) => {
-        // If not in local mode and there's a search term, the backend already verified matches
-        // We still filter locally to avoid weird UI flashes before backend returns, 
-        // but if isLocalMode is false and isLoadingProducts is true, we will just show what we have.
-        const matchesSearch = p.product?.toLowerCase().includes(search.toLowerCase()) ||
-            (p.barcode && p.barcode.includes(search))
-        const matchesCategory = !selectedCategory || p.category === selectedCategory
+    const handleSearchChange = (val: string) => {
+        setLocalSearch(val)
+    }
 
-        // In complete server mode, we just trust the backend. For hybrid, we local filter what we can see.
-        return isLocalMode ? (matchesSearch && matchesCategory) : matchesCategory
-    })
+    // Derived total pages using filtered products from within ProductGrid would be cleaner, 
+    // but we need it here for pagination controls. 
+    // Let's replicate the filter logic or pass it back.
+    const filteredProductsCount = React.useMemo(() => {
+        return products.filter((p: Product) => {
+            const matchesSearch = p.product?.toLowerCase().includes(search.toLowerCase()) ||
+                (p.barcode && p.barcode.includes(search))
+            const matchesCategory = !selectedCategory || p.category === selectedCategory
+            return isLocalMode ? (matchesSearch && matchesCategory) : matchesCategory
+        }).length
+    }, [products, search, selectedCategory, isLocalMode])
 
-    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
-    const paginatedProducts = filteredProducts.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    )
+    const totalPages = Math.ceil(filteredProductsCount / itemsPerPage)
 
     // Barcode Auto-Add Logic
     const mobileInputRef = React.useRef<HTMLInputElement>(null)
     React.useEffect(() => {
-        if (search.length >= 8) { // Typical minimum barcode length
-            const exactMatch = products.find((p: Product) => p.barcode === search)
+        if (localSearch.length >= 8) { // Typical minimum barcode length
+            const exactMatch = products.find((p: Product) => p.barcode === localSearch)
             if (exactMatch) {
                 addToCart(exactMatch)
+                setLocalSearch("")
                 setSearch("")
                 // Re-focus the mobile input so consecutive scans work seamlessly
                 requestAnimationFrame(() => mobileInputRef.current?.focus())
@@ -299,12 +510,12 @@ export function SaleModeView() {
                 })
             }
         }
-    }, [search, products])
+    }, [search, products, addToCart])
 
     // Reset to page 1 when search or category changes
     React.useEffect(() => {
         setCurrentPage(1)
-    }, [search, selectedCategory])
+    }, [localSearch, selectedCategory])
 
     // Keyboard shortcut for search
     React.useEffect(() => {
@@ -333,33 +544,6 @@ export function SaleModeView() {
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
-
-    // Handlers
-    const addToCart = (product: any) => {
-        // OOS Guard: block adding out-of-stock items
-        if (product.status === 'Out of Stock') {
-            toast.error(`${product.product} is out of stock`)
-            return
-        }
-        // price is already numeric from useInventory
-        const price = typeof product.price === 'number'
-            ? product.price
-            : parseInt(String(product.price).replace(/[^0-9]/g, ''), 10) || 0
-        setCart(prev => {
-            const existing = prev.find(item => item.id === product.id)
-            if (existing) {
-                return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
-            }
-            return [...prev, {
-                id: product.id,
-                product: product.product,
-                price,
-                category: product.category,
-                quantity: 1,
-                image: product.image
-            }]
-        })
-    }
 
     const updateQuantity = (id: string, delta: number) => {
         setCart(prev => prev.map(item => {
@@ -529,7 +713,7 @@ export function SaleModeView() {
                     onSelect={addToCart}
                     isLoading={isLoadingProducts}
                     isLocalMode={isLocalMode}
-                    onSearchChange={setSearch}
+                    onSearchChange={setLocalSearch}
                 />
                 <div className="flex-1 flex flex-col p-4 lg:pt-2 lg:px-8 lg:pb-8 space-y-4 lg:space-y-6 min-h-0">
                     <header className="flex items-center justify-between shrink-0">
@@ -600,8 +784,8 @@ export function SaleModeView() {
                                     ref={mobileInputRef}
                                     type="text"
                                     placeholder="Search catalog or scan..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
+                                    value={localSearch}
+                                    onChange={(e) => handleSearchChange(e.target.value)}
                                     className="w-full pl-12 pr-6 h-14 bg-white/40 dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-2xl text-brand-deep dark:text-brand-cream text-sm placeholder:text-brand-accent/40 dark:placeholder:text-brand-cream/40 focus:outline-none focus:border-brand-gold/30 focus:ring-1 focus:ring-brand-gold/30 transition-all"
                                 />
                             </div>
@@ -631,148 +815,20 @@ export function SaleModeView() {
                                 </Button>
                             ))}
                         </div>
-                    </div>
-
-                    {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
+                    </div>                    {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
                     <div className="flex-1 min-h-0 flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-0">
-                        <motion.div
-                            key={String(`${selectedCategory}-${search}-${currentPage}-${products.length}`)}
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="show"
-                            className="flex-1 overflow-y-auto custom-scrollbar pr-1 lg:pr-2 -mr-1 lg:-mr-2 min-h-0"
-                        >
-                            <div className={cn(
-                                "grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 pb-6",
-                                cart.length > 0 && "pb-40 lg:pb-6"
-                            )}>
-                                <AnimatePresence mode="popLayout">
-                                    {isLoadingProducts || !activeBusiness ? (
-                                        <motion.div
-                                            key="loader"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="col-span-full h-full flex items-center justify-center p-12"
-                                        >
-                                            <CreativeLoader />
-                                        </motion.div>
-                                    ) : filteredProducts.length === 0 ? (
-                                        <motion.div 
-                                            key="empty"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="col-span-full py-24 flex flex-col items-center justify-center text-brand-accent/40 dark:text-brand-cream/30"
-                                        >
-                                            <Layers className="h-20 w-20 mb-6 opacity-20" />
-                                            <p className="text-2xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">No items found</p>
-                                            <p className="text-sm mt-2">{search ? `No results for "${search}"` : 'Your catalog is empty'}</p>
-                                        </motion.div>
-                                    ) : (
-                                        paginatedProducts.map((product: Product) => (
-                                            <motion.div key={product.id} variants={itemVariants}>
-                                                <GlassCard
-                                                    onClick={() => addToCart(product)}
-                                                    hoverEffect
-                                                    className={cn(
-                                                        "group cursor-pointer flex flex-col h-[220px] relative overflow-hidden p-0 rounded-[32px] transition-none!",
-                                                        product.image
-                                                            ? "bg-brand-deep! border-none!"
-                                                            : "bg-white! dark:bg-brand-deep-900! border! border-brand-gold/25! dark:border-white/10!"
-                                                    )}
-                                                >
-                                                    {/* Immersive Background Image or Editorial Watermark */}
-                                                    {product.image ? (
-                                                        <div className="absolute inset-0 z-0">
-                                                            <img
-                                                                src={product.image}
-                                                                alt={product.product}
-                                                                className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                                                            />
-                                                            {/* Top Protection Gradient */}
-                                                            <div className="absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-brand-deep-900/80 via-brand-deep-800/40 to-transparent z-10 pointer-events-none" />
-
-                                                            {/* Base Image Overlay */}
-                                                            <div className="absolute inset-0 bg-brand-deep-900/20 z-10" />
-
-                                                            {/* Bottom Protection Gradient */}
-                                                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-brand-deep-900/90 via-brand-deep-900/50 to-transparent z-10 pointer-events-none backdrop-blur-[1px]" />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none overflow-hidden">
-                                                            <div className="absolute -right-8 -bottom-8 scale-[2] rotate-[-15deg]">
-                                                                <h4 className="font-serif text-8xl font-black select-none tracking-tighter">CLOOVE</h4>
-                                                            </div>
-                                                            <div className="absolute -left-4 top-1/4 scale-[1.5] rotate-10 opacity-50">
-                                                                <h4 className="font-serif text-6xl font-black select-none tracking-tighter">EST 2024</h4>
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Content Layer */}
-                                                    <div className="relative z-20 flex flex-col h-full p-5 lg:p-6">
-                                                        <div className="absolute top-4 right-4 lg:top-5 lg:right-5">
-                                                            <div className={cn(
-                                                                "w-2 h-2 rounded-full border-2 border-white/20 shadow-xl",
-                                                                product.status === 'In Stock' ? "bg-emerald-500 shadow-emerald-500/40" : "bg-rose-500 shadow-rose-500/40"
-                                                            )} />
-                                                        </div>
-
-                                                        <div className="space-y-4 flex flex-col h-full">
-                                                            <div className="space-y-1">
-                                                                <h3 className={cn(
-                                                                    "font-serif text-xl lg:text-2xl leading-[1.15] transition-colors duration-500 line-clamp-2 min-h-[2.3em]",
-                                                                    product.image
-                                                                        ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                                                                        : "text-brand-deep dark:text-brand-cream"
-                                                                )}>
-                                                                    {product.product}
-                                                                </h3>
-                                                                <p className={cn(
-                                                                    "text-[9px] font-bold uppercase tracking-[0.2em]",
-                                                                    product.image
-                                                                        ? "text-brand-cream opacity-80 drop-shadow-sm"
-                                                                        : "text-brand-accent dark:text-brand-cream opacity-40"
-                                                                )}>
-                                                                    {product.status} • {product.stock} units
-                                                                </p>
-                                                            </div>
-
-                                                            <div className={cn(
-                                                                "flex items-center justify-between pt-4 border-t transition-colors duration-500 mt-auto",
-                                                                product.image ? "border-white/20" : "border-brand-accent/5 dark:border-white/10"
-                                                            )}>
-                                                                <p className={cn(
-                                                                    "font-serif font-black text-xl lg:text-2xl tracking-tight",
-                                                                    product.image
-                                                                        ? "text-brand-gold drop-shadow-md"
-                                                                        : "text-brand-deep dark:text-brand-gold"
-                                                                )}>
-                                                                    {formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}
-                                                                </p>
-                                                                <div className={cn(
-                                                                    "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 shadow-2xl",
-                                                                    product.image
-                                                                        ? "bg-brand-gold text-brand-deep shadow-brand-gold/20"
-                                                                        : "bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep shadow-xl"
-                                                                )}>
-                                                                    <Plus className="h-5 w-5" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Glass Overlay on Bottom for depth (only for images) */}
-                                                    {product.image && (
-                                                        <div className="absolute bottom-0 inset-x-0 h-2/5 bg-linear-to-t from-brand-deep via-brand-deep/40 to-transparent backdrop-blur-[1px] z-10 pointer-events-none" />
-                                                    )}
-                                                </GlassCard>
-                                            </motion.div>
-                                        ))
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        </motion.div>
+                        <ProductGrid 
+                            products={products}
+                            isLoading={isLoadingProducts}
+                            activeBusiness={activeBusiness}
+                            addToCart={addToCart}
+                            currentPage={currentPage}
+                            itemsPerPage={itemsPerPage}
+                            search={search}
+                            selectedCategory={selectedCategory}
+                            isLocalMode={isLocalMode}
+                        />
+                    </div>
 
                         {/* Pagination Controls - Fixed Bottom */}
                         {totalPages > 1 && (
@@ -839,7 +895,6 @@ export function SaleModeView() {
                             </div>
                         )}
                     </div>
-                </div>
 
                 {/* Mobile Floating Action Button */}
                 {mobileView === 'catalog' && cart.length > 0 && (
@@ -907,7 +962,7 @@ export function SaleModeView() {
                                 >
                                     <div className="text-left">
                                         <p className="text-[10px] font-bold uppercase tracking-widest leading-none opacity-40 dark:opacity-60">Client</p>
-                                        <p className="text-xs font-black leading-tight">{selectedCustomer.name.split(' ')[0]}</p>
+                                        <p className="text-xs font-black leading-tight">{selectedCustomer?.name?.split(' ')[0] || 'Client'}</p>
                                     </div>
                                     <User className="h-4 w-4" />
                                 </Button>
@@ -1261,7 +1316,7 @@ export function SaleModeView() {
                                                                 setDiscount(0)
                                                             } else {
                                                                 setShowExtras(true)
-                                                                const promo = promotions.find((p: any) => p.id === val)
+                                                                const promo = promotions?.find((p: any) => p.id === val)
                                                                 if (promo) {
                                                                     let calcDiscount = 0
                                                                     if (promo.type === 'PERCENTAGE') {
@@ -1418,6 +1473,12 @@ export function SaleModeView() {
                 }
                 .theme-transition {
                     transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+                }
+                .will-change-scroll {
+                    will-change: scroll-position;
+                }
+                .will-change-transform {
+                    will-change: transform;
                 }
             `}</style>
         </div>
