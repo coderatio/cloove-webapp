@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 import { apiClient } from "@/app/lib/api-client"
 import { SessionManager } from "../auth/SessionManager"
 
@@ -44,6 +45,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const pathname = usePathname()
 
     const fetchUser = async (silent = false) => {
         if (!silent) setIsLoading(true)
@@ -65,11 +67,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const refreshUser = () => fetchUser(true) // Subsequent refreshes should be silent
 
     const logout = async () => {
+        const callbackUrl = encodeURIComponent(pathname)
         try {
             setUser(null)
             await apiClient.logout()
+            window.location.href = `/login?callbackUrl=${callbackUrl}`
         } catch (error) {
-            window.location.href = "/login"
+            window.location.href = `/login?callbackUrl=${callbackUrl}`
         }
     }
 

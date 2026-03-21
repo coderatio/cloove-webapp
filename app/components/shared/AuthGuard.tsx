@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "../providers/auth-provider"
 
 const PUBLIC_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/pay", "/verify"]
+const GUEST_ONLY_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"]
 
 /**
  * Global authentication guard to protect dashboard routes
@@ -18,11 +19,20 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         if (isLoading) return
 
         const isPublicPath = PUBLIC_PATHS.some(path => pathname.startsWith(path))
+        const isGuestOnlyPath = GUEST_ONLY_PATHS.some(path => pathname.startsWith(path))
 
+        // If not authenticated and trying to access a protected route
         if (!user && !isPublicPath) {
             // Store the path they were trying to access
             const callbackUrl = encodeURIComponent(pathname)
             router.replace(`/login?callbackUrl=${callbackUrl}`)
+            return
+        }
+
+        // If authenticated and trying to access a guest-only route (like login)
+        if (user && isGuestOnlyPath) {
+            router.replace("/")
+            return
         }
     }, [user, isLoading, pathname, router])
 
