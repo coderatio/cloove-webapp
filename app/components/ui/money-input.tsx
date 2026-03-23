@@ -33,6 +33,21 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
             }
         }, [value])
 
+        const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+            const allowed = new Set([
+                'Backspace', 'Delete', 'Tab', 'Enter',
+                'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                'Home', 'End',
+            ])
+            if (
+                allowed.has(e.key) ||
+                (e.key === '.' && !e.currentTarget.value.includes('.')) ||
+                ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(e.key.toLowerCase())) ||
+                /^\d$/.test(e.key)
+            ) return
+            e.preventDefault()
+        }
+
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const rawValue = e.target.value
 

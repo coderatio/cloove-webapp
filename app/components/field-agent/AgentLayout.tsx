@@ -1,0 +1,161 @@
+"use client"
+
+import React, { useState } from "react"
+import { AgentSidebar } from "@/app/components/field-agent/AgentSidebar"
+import { FieldAgentProvider } from "@/app/domains/field-agent/providers/FieldAgentProvider"
+import { motion, AnimatePresence } from "framer-motion"
+import { usePathname } from "next/navigation"
+import { 
+    Bell, 
+    Search, 
+    User, 
+    Settings, 
+    ShieldCheck, 
+    LogOut,
+    ChevronDown
+} from "lucide-react"
+import Link from "next/link"
+import { cn } from "@/app/lib/utils"
+
+export default function AgentLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname()
+    const segments = pathname.split("/").filter(Boolean)
+    const lastSegment = segments[segments.length - 1]
+    const pageTitle = lastSegment === "field" ? "Dashboard" : (lastSegment || "Dashboard")
+
+    const [showProfileMenu, setShowProfileMenu] = useState(false)
+
+    return (
+        <FieldAgentProvider>
+            <div className="min-h-screen bg-brand-cream dark:bg-brand-deep/20 text-brand-deep dark:text-brand-cream selection:bg-brand-gold/20">
+                <AgentSidebar />
+                
+                <main className="md:pl-64 min-h-screen flex flex-col pb-24 md:pb-0">
+                    {/* Header */}
+                    <header className="sticky top-0 z-40 h-20 bg-brand-cream/80 dark:bg-brand-deep/80 backdrop-blur-xl border-b border-brand-deep/5 dark:border-white/5 flex items-center justify-between px-4 md:px-8">
+                        {/* Mobile Logo / Desktop Title */}
+                        <div className="flex items-center gap-4">
+                            {/* Logo for mobile */}
+                            <div className="md:hidden flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-brand-gold flex items-center justify-center shadow-lg shadow-brand-gold/20">
+                                    <span className="text-brand-deep font-bold text-lg">C</span>
+                                </div>
+                                <span className="font-serif text-lg tracking-tight text-brand-gold">Cloove <span className="text-brand-deep/40 dark:text-brand-cream/40 text-xs font-sans font-normal ml-0.5 whitespace-nowrap">Agents</span></span>
+                            </div>
+
+                            {/* Title for desktop */}
+                            <div className="hidden md:block">
+                                <h1 className="text-lg md:text-xl font-serif font-medium capitalize tracking-tight">
+                                    {pageTitle.replace("-", " ")}
+                                </h1>
+                                <p className="text-[10px] md:text-xs text-brand-deep/50 dark:text-brand-cream/50 font-sans mt-0.5">
+                                    Welcome back, Field Agent
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 md:gap-6">
+                            {/* Search removed as requested */}
+                            
+                            {/* Notifications commented out for now */}
+                            {/* 
+                            <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/10 dark:border-white/5 hover:border-brand-gold/50 transition-all group">
+                                <Bell className="w-5 h-5 text-brand-deep/60 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
+                                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-gold rounded-full border-2 border-brand-cream dark:border-brand-deep" />
+                            </button> 
+                            */}
+
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                                    className="flex items-center gap-3 pl-4 md:pl-6 border-l border-brand-deep/10 dark:border-white/10 group active:scale-95 transition-transform"
+                                >
+                                    <div className="text-right hidden sm:block">
+                                        <p className="text-sm font-bold group-hover:text-brand-gold transition-colors">Josiah Yahaya</p>
+                                        <p className="text-[9px] uppercase tracking-widest text-brand-gold/60 font-black">Gold Agent</p>
+                                    </div>
+                                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 border-2 border-brand-cream dark:border-brand-deep shadow-lg flex items-center justify-center font-bold text-brand-deep relative overflow-hidden">
+                                        JY
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                                    </div>
+                                    <ChevronDown className={cn("w-4 h-4 text-brand-deep/30 transition-transform", showProfileMenu && "rotate-180")} />
+                                </button>
+
+                                <AnimatePresence>
+                                    {showProfileMenu && (
+                                        <>
+                                            <div 
+                                                className="fixed inset-0 z-40" 
+                                                onClick={() => setShowProfileMenu(false)}
+                                            />
+                                            <motion.div 
+                                                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                                className="absolute right-0 mt-4 w-64 bg-brand-cream dark:bg-brand-deep border border-brand-deep/10 dark:border-white/10 rounded-[32px] shadow-2xl shadow-black/20 p-3 z-50 backdrop-blur-xl"
+                                            >
+                                                <div className="p-4 mb-2 border-b border-brand-deep/5 dark:border-white/5">
+                                                    <p className="text-sm font-bold">Josiah Yahaya</p>
+                                                    <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">josiah@cloove.ai</p>
+                                                </div>
+
+                                                <div className="space-y-1">
+                                                    <Link 
+                                                        href="/field/profile" 
+                                                        className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
+                                                        onClick={() => setShowProfileMenu(false)}
+                                                    >
+                                                        <User className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                        <span className="text-sm font-medium">My Profile</span>
+                                                    </Link>
+                                                    <Link 
+                                                        href="/field/settings" 
+                                                        className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
+                                                        onClick={() => setShowProfileMenu(false)}
+                                                    >
+                                                        <Settings className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                        <span className="text-sm font-medium">Settings</span>
+                                                    </Link>
+                                                    <Link 
+                                                        href="/field/security" 
+                                                        className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
+                                                        onClick={() => setShowProfileMenu(false)}
+                                                    >
+                                                        <ShieldCheck className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                        <span className="text-sm font-medium">Security</span>
+                                                    </Link>
+                                                </div>
+
+                                                <div className="mt-2 pt-2 border-t border-brand-deep/5 dark:border-white/5">
+                                                    <button className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-red-500 hover:bg-red-500/5 transition-colors group">
+                                                        <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                                        <span className="text-sm font-bold">Sign Out</span>
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Content Section */}
+                    <div className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={pathname}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2, ease: "linear" }}
+                            >
+                                {children}
+                            </motion.div>
+                        </AnimatePresence>
+                    </div>
+                </main>
+            </div>
+        </FieldAgentProvider>
+    )
+}
