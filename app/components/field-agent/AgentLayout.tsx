@@ -6,15 +6,18 @@ import { AgentSidebar } from "@/app/components/field-agent/AgentSidebar"
 import { FieldAgentProvider } from "@/app/domains/field-agent/providers/FieldAgentProvider"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
-import { 
-    Bell, 
-    Search, 
-    User, 
-    Settings, 
-    ShieldCheck, 
+import {
+    Bell,
+    Search,
+    User,
+    Settings,
+    ShieldCheck,
     LogOut,
-    ChevronDown
+    ChevronDown,
+    Sun,
+    Moon,
 } from "lucide-react"
+import { useTheme } from "next-themes"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
 
@@ -25,19 +28,20 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
     const pageTitle = lastSegment === "field" ? "Dashboard" : (lastSegment || "Dashboard")
 
     const [showProfileMenu, setShowProfileMenu] = useState(false)
+    const { theme, setTheme } = useTheme()
 
     return (
         <FieldAgentProvider>
             <div className="min-h-screen bg-brand-cream dark:bg-brand-deep/20 text-brand-deep dark:text-brand-cream selection:bg-brand-gold/20">
                 <AgentSidebar />
                 
-                <main className="md:pl-64 min-h-screen flex flex-col pb-24 md:pb-0">
+                <main className="lg:pl-64 min-h-screen flex flex-col pb-24 lg:pb-0">
                     {/* Header */}
-                    <header className="sticky top-0 z-40 h-20 bg-brand-cream/80 dark:bg-brand-deep/80 backdrop-blur-xl border-b border-brand-deep/5 dark:border-white/5 flex items-center justify-between px-4 md:px-8">
+                    <header className="sticky top-0 z-40 h-20 bg-brand-cream/80 dark:bg-brand-deep/80 backdrop-blur-xl border-b border-brand-deep/5 dark:border-white/5 flex items-center justify-between px-4 lg:px-8">
                         {/* Mobile Logo / Desktop Title */}
                         <div className="flex items-center gap-4">
-                            {/* Logo for mobile */}
-                            <div className="md:hidden flex items-center gap-2.5">
+                            {/* Logo for mobile + tablet */}
+                            <div className="lg:hidden flex items-center gap-2.5">
                                 <Image
                                     src="/images/logo-green.png"
                                     alt="Cloove"
@@ -58,7 +62,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                             </div>
 
                             {/* Title for desktop */}
-                            <div className="hidden md:block">
+                            <div className="hidden lg:block">
                                 <h1 className="text-lg md:text-xl font-serif font-medium capitalize tracking-tight">
                                     {pageTitle.replace("-", " ")}
                                 </h1>
@@ -140,7 +144,20 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                     </Link>
                                                 </div>
 
-                                                <div className="mt-2 pt-2 border-t border-brand-deep/5 dark:border-white/5">
+                                                <div className="mt-2 pt-2 border-t border-brand-deep/5 dark:border-white/5 space-y-1">
+                                                    <button
+                                                        onClick={() => {
+                                                            setTheme(theme === "dark" ? "light" : "dark")
+                                                            setShowProfileMenu(false)
+                                                        }}
+                                                        className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
+                                                    >
+                                                        {theme === "dark"
+                                                            ? <Sun className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                            : <Moon className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                        }
+                                                        <span className="text-sm font-medium">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                                                    </button>
                                                     <button className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-red-500 hover:bg-red-500/5 transition-colors group">
                                                         <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                                                         <span className="text-sm font-bold">Sign Out</span>

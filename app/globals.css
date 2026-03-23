@@ -1080,3 +1080,11 @@ h6 {
 .animate-storefront-marquee {
   animation: storefront-marquee 25s linear infinite;
 }
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

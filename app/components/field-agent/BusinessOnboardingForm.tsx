@@ -152,7 +152,7 @@ export function BusinessOnboardingForm() {
                                         placeholder="e.g. Lagos Luxury Stitches"
                                         value={formData.businessName}
                                         onChange={(e) => setFormData(p => ({ ...p, businessName: e.target.value }))}
-                                        className="h-14 sm:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20"
+                                        className="h-14 sm:h-14 lg:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20"
                                     />
                                 </div>
 
@@ -163,7 +163,7 @@ export function BusinessOnboardingForm() {
                                             value={formData.category}
                                             onValueChange={(v) => setFormData(p => ({ ...p, category: v }))}
                                         >
-                                            <SelectTrigger className="h-14 sm:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold font-bold">
+                                            <SelectTrigger className="h-14 sm:h-14 lg:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold font-bold">
                                                 <SelectValue placeholder="Select Sector" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-2xl border-brand-deep/5 shadow-2xl">
@@ -180,7 +180,7 @@ export function BusinessOnboardingForm() {
                                             value={formData.country}
                                             onValueChange={(v) => setFormData(p => ({ ...p, country: v }))}
                                         >
-                                            <SelectTrigger className="h-14 sm:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold font-bold">
+                                            <SelectTrigger className="h-14 sm:h-14 lg:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold font-bold">
                                                 <SelectValue placeholder="Select Country" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-2xl border-brand-deep/5 shadow-2xl">

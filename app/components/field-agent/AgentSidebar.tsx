@@ -28,9 +28,9 @@ export function AgentSidebar() {
     return (
         <>
             {/* Desktop Sidebar */}
-            <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 bg-brand-deep text-brand-cream z-50 transition-all duration-300 hidden md:flex flex-col items-center md:items-stretch py-8 border-r border-white/5">
+            <aside className="fixed left-0 top-0 h-screen w-64 bg-brand-deep text-brand-cream z-50 transition-all duration-300 hidden lg:flex flex-col items-stretch py-8 border-r border-white/5">
                 {/* Logo */}
-                <div className="px-6 mb-12 flex items-center gap-3 justify-center md:justify-start">
+                <div className="px-6 mb-12 flex items-center gap-3 justify-start">
                     <Image
                         src="/images/logo-white.png"
                         alt="Cloove"
@@ -39,7 +39,7 @@ export function AgentSidebar() {
                         className="h-8 w-8 object-contain shrink-0"
                         priority
                     />
-                    <span className="hidden md:block font-serif text-xl tracking-tight text-white">Cloove <span className="text-white/60 text-sm font-sans font-normal ml-1">Agents</span></span>
+                    <span className="font-serif text-xl tracking-tight text-white">Cloove <span className="text-white/60 text-sm font-sans font-normal ml-1">Agents</span></span>
                 </div>
 
                 {/* Nav Items */}
@@ -62,7 +62,7 @@ export function AgentSidebar() {
                                 )}
                             >
                                 <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "text-brand-deep")} />
-                                <span className="hidden md:block font-medium text-sm">{item.label}</span>
+                                <span className="font-medium text-sm">{item.label}</span>
                             </Link>
                         )
                     })}
@@ -75,19 +75,19 @@ export function AgentSidebar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-cream/60 hover:text-white hover:bg-white/5 transition-all group"
                     >
                         <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
-                        <span className="hidden md:block font-medium text-sm">Settings</span>
+                        <span className="font-medium text-sm">Settings</span>
                     </Link>
                     <button
                         className="flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full group"
                     >
                         <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span className="hidden md:block font-medium text-sm">Log Out</span>
+                        <span className="font-medium text-sm">Log Out</span>
                     </button>
                 </div>
             </aside>
 
             {/* Mobile Bottom Navigation */}
-            <nav className="fixed bottom-6 left-4 right-4 h-16 bg-brand-deep/90 backdrop-blur-2xl border border-white/10 md:hidden z-50 flex items-center justify-around px-2 rounded-3xl shadow-2xl shadow-black/40">
+            <nav className="fixed bottom-6 left-4 right-4 h-16 md:h-20 bg-brand-deep/90 backdrop-blur-2xl border border-white/10 lg:hidden z-50 flex items-center justify-around px-2 rounded-full shadow-2xl shadow-black/40">
                 {navItems.map((item) => {
                     const fullHref = `/field${item.href}`
                     const isActive = item.href === "" 

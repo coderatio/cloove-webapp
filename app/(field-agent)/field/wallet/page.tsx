@@ -122,29 +122,35 @@ export default function WalletPage() {
                 </Button>
             </div>
 
-            {/* Financial Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-                <AgentStatCard
-                    title="Lifetime Earnings"
-                    value={formatCurrency(stats.totalEarned)}
-                    subtext="Consolidated commission growth"
-                    icon={Banknote}
-                    trend={{ value: 12, isPositive: true }}
-                />
-                <AgentStatCard
-                    title="Available Balance"
-                    value={formatCurrency(stats.pendingPayout)}
-                    subtext="Ready for immediate extraction"
-                    icon={Wallet}
-                    trend={{ value: 8, isPositive: true }}
-                />
-                <AgentStatCard
-                    title="Pending Payouts"
-                    value="₦0"
-                    subtext="Awaiting system confirmation"
-                    icon={CreditCard}
-                    trend={{ value: 0, isPositive: true }}
-                />
+            {/* Financial Stats — horizontal scroll on mobile/tablet, grid on desktop */}
+            <div className="flex gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 scrollbar-none">
+                <div className="min-w-[260px] lg:min-w-0 shrink-0 lg:shrink">
+                    <AgentStatCard
+                        title="Lifetime Earnings"
+                        value={formatCurrency(stats.totalEarned)}
+                        subtext="Consolidated commission growth"
+                        icon={Banknote}
+                        trend={{ value: 12, isPositive: true }}
+                    />
+                </div>
+                <div className="min-w-[260px] lg:min-w-0 shrink-0 lg:shrink">
+                    <AgentStatCard
+                        title="Available Balance"
+                        value={formatCurrency(stats.pendingPayout)}
+                        subtext="Ready for immediate extraction"
+                        icon={Wallet}
+                        trend={{ value: 8, isPositive: true }}
+                    />
+                </div>
+                <div className="min-w-[260px] lg:min-w-0 shrink-0 lg:shrink">
+                    <AgentStatCard
+                        title="Pending Payouts"
+                        value="₦0"
+                        subtext="Awaiting system confirmation"
+                        icon={CreditCard}
+                        trend={{ value: 0, isPositive: true }}
+                    />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
