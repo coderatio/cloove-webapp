@@ -72,8 +72,10 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     {...props}
                     ref={ref}
                     type="text"
+                    inputMode="decimal"
                     value={displayValue}
                     onChange={handleChange}
+                    onKeyDown={handleKeyDown}
                     className={cn("font-medium tabular-nums", className)}
                 />
             )
@@ -100,8 +102,10 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     {...props}
                     ref={ref}
                     type="text"
+                    inputMode="decimal"
                     value={displayValue}
                     onChange={handleChange}
+                    onKeyDown={handleKeyDown}
                     className={cn(
                         "flex-1 border-0 rounded-none bg-transparent! focus-visible:ring-0 font-medium tabular-nums placeholder:text-brand-accent/40 dark:placeholder:text-white/30 h-full",
                         isSmall ? "pl-2 pr-3 text-sm" : "pl-3 pr-4 text-base"

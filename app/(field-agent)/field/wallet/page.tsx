@@ -301,7 +301,7 @@ export default function WalletPage() {
             <Drawer open={activeDrawer === 'add-account'} onOpenChange={(o) => !o && setActiveDrawer(null)}>
                 <DrawerContent>
                     <DrawerStickyHeader>
-                        <DrawerTitle className="text-4xl">Integrate Channel</DrawerTitle>
+                        <DrawerTitle className="text-4xl">Add New Account</DrawerTitle>
                         <DrawerDescription className="text-base mt-2">Link a new bank account for automated commission payouts.</DrawerDescription>
                     </DrawerStickyHeader>
                     <DrawerBody className="space-y-8 px-8 py-10">
@@ -309,7 +309,7 @@ export default function WalletPage() {
                             <div className="space-y-3">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 ml-1">Select Institution</Label>
                                 <Select onValueChange={(v) => setAccountData(p => ({ ...p, bank: v }))}>
-                                    <SelectTrigger className="h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-bold text-lg">
+                                    <SelectTrigger className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-bold text-lg">
                                         <SelectValue placeholder="Identify Bank" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl">
@@ -328,7 +328,7 @@ export default function WalletPage() {
                                     maxLength={10}
                                     value={accountData.accountNumber}
                                     onChange={(e) => setAccountData(p => ({ ...p, accountNumber: e.target.value }))}
-                                    className="h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-mono text-xl tracking-[0.2em] font-bold"
+                                    className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-mono text-xl tracking-[0.2em] font-bold"
                                 />
                             </div>
 
@@ -338,7 +338,7 @@ export default function WalletPage() {
                                     placeholder="Entity Name"
                                     value={accountData.accountName}
                                     onChange={(e) => setAccountData(p => ({ ...p, accountName: e.target.value }))}
-                                    className="h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-bold text-lg"
+                                    className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-bold text-lg"
                                 />
                                 <p className="text-[10px] text-brand-deep/30 font-bold italic ml-1">System will attempt automatic identity verification.</p>
                             </div>
@@ -350,7 +350,7 @@ export default function WalletPage() {
                             disabled={isSubmitting}
                             className="h-16 w-full bg-brand-gold text-brand-deep rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-brand-gold/20 transition-all hover:scale-[1.02] active:scale-95"
                         >
-                            {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Link Payout Channel"}
+                            {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Add Account"}
                         </Button>
                     </DrawerFooter>
                 </DrawerContent>

@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { 
@@ -30,10 +31,15 @@ export function AgentSidebar() {
             <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 bg-brand-deep text-brand-cream z-50 transition-all duration-300 hidden md:flex flex-col items-center md:items-stretch py-8 border-r border-white/5">
                 {/* Logo */}
                 <div className="px-6 mb-12 flex items-center gap-3 justify-center md:justify-start">
-                    <div className="w-10 h-10 rounded-xl bg-brand-gold flex items-center justify-center shadow-lg shadow-brand-gold/20">
-                        <span className="text-brand-deep font-bold text-xl">C</span>
-                    </div>
-                    <span className="hidden md:block font-serif text-xl tracking-tight text-brand-gold">Cloove <span className="text-white/60 text-sm font-sans font-normal ml-1">Agents</span></span>
+                    <Image
+                        src="/images/logo-white.png"
+                        alt="Cloove"
+                        width={32}
+                        height={32}
+                        className="h-8 w-8 object-contain shrink-0"
+                        priority
+                    />
+                    <span className="hidden md:block font-serif text-xl tracking-tight text-white">Cloove <span className="text-white/60 text-sm font-sans font-normal ml-1">Agents</span></span>
                 </div>
 
                 {/* Nav Items */}

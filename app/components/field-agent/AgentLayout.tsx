@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import Image from "next/image"
 import { AgentSidebar } from "@/app/components/field-agent/AgentSidebar"
 import { FieldAgentProvider } from "@/app/domains/field-agent/providers/FieldAgentProvider"
 import { motion, AnimatePresence } from "framer-motion"
@@ -36,11 +37,24 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                         {/* Mobile Logo / Desktop Title */}
                         <div className="flex items-center gap-4">
                             {/* Logo for mobile */}
-                            <div className="md:hidden flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-xl bg-brand-gold flex items-center justify-center shadow-lg shadow-brand-gold/20">
-                                    <span className="text-brand-deep font-bold text-lg">C</span>
-                                </div>
-                                <span className="font-serif text-lg tracking-tight text-brand-gold">Cloove <span className="text-brand-deep/40 dark:text-brand-cream/40 text-xs font-sans font-normal ml-0.5 whitespace-nowrap">Agents</span></span>
+                            <div className="md:hidden flex items-center gap-2.5">
+                                <Image
+                                    src="/images/logo-green.png"
+                                    alt="Cloove"
+                                    width={28}
+                                    height={28}
+                                    className="h-7 w-7 object-contain dark:hidden"
+                                    priority
+                                />
+                                <Image
+                                    src="/images/logo-white.png"
+                                    alt="Cloove"
+                                    width={28}
+                                    height={28}
+                                    className="h-7 w-7 object-contain hidden dark:block"
+                                    priority
+                                />
+                                <span className="font-serif text-lg tracking-tight text-brand-deep-950">Cloove <span className="text-brand-deep/40 dark:text-brand-cream/40 text-xs font-sans font-normal ml-0.5 whitespace-nowrap">Agents</span></span>
                             </div>
 
                             {/* Title for desktop */}
