@@ -13,7 +13,8 @@ import {
     Settings,
     User,
     ShieldCheck,
-    ChevronRight
+    ChevronRight,
+    MoreVerticalIcon
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { motion } from "framer-motion"
@@ -118,7 +119,7 @@ export function AgentSidebar() {
                             )}
                         >
                             <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive && "scale-110 -translate-y-0.5")} />
-                            <span className="text-[9px] font-bold uppercase tracking-widest">{item.label}</span>
+                            <span className="text-[9px] font-bold">{item.label}</span>
 
                             {isActive && (
                                 <motion.div
@@ -131,15 +132,15 @@ export function AgentSidebar() {
                     )
                 })}
 
-                {/* Mobile Profile Toggle */}
+                {/* Mobile More Toggle */}
                 <button
                     onClick={() => setIsMobileMenuOpen(true)}
                     className={cn(
                         "flex flex-col items-center justify-center gap-1 w-16 h-12 rounded-2xl transition-all duration-300 relative text-brand-cream/40"
                     )}
                 >
-                    <User className="w-5 h-5 transition-transform duration-300" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest">Profile</span>
+                    <MoreVerticalIcon className="w-5 h-5 transition-transform duration-300" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest">More</span>
                 </button>
             </nav>
 

@@ -130,11 +130,11 @@ export function DashboardView() {
                                 <TrendingUp className="w-5 h-5 text-brand-gold" />
                                 <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">Earnings Performance</h3>
                             </div>
-                            <p className="text-sm text-brand-deep/40 dark:text-brand-cream/40 font-medium italic">Your monthly commission earnings and growth.</p>
+                            <p className="text-sm text-brand-deep/40 dark:text-brand-cream/40 font-medium">Your monthly commission earnings and growth.</p>
                         </div>
                         <div className="w-full sm:w-48">
                             <Select defaultValue="6months">
-                                <SelectTrigger className="h-12 sm:h-12 bg-brand-deep/3 border-brand-deep/5 rounded-2xl text-[11px] font-black uppercase tracking-widest">
+                                <SelectTrigger className="h-12 sm:h-12 bg-brand-deep/3 dark:bg-white/5 border-brand-deep/5 dark:border-white/5 rounded-2xl text-[11px] font-black uppercase tracking-widest">
                                     <SelectValue placeholder="Timeframe" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-2xl border-brand-deep/5 shadow-2xl">
@@ -225,38 +225,56 @@ export function DashboardView() {
                         </div>
                     </div>
 
-                    <div className="space-y-4 flex-1">
-                        {businesses.slice(0, 4).map((biz) => (
-                            <div key={biz.id} className="group relative flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-brand-deep/5 hover:bg-brand-deep/2 hover:shadow-lg transition-all active:scale-[0.98]">
-                                <div className={cn(
-                                    "w-12 h-12 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 shadow-lg shadow-black/5",
-                                    biz.status === 'active' ? "bg-green-500/10 text-green-600" : "bg-brand-gold/10 text-brand-gold"
-                                )}>
-                                    {biz.status === 'active' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-gold transition-colors">{biz.name}</p>
-                                    <p className="text-[10px] text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-widest font-black mt-0.5 whitespace-nowrap">
-                                        {formatDate(biz.onboardedAt, 'd MMM, h:mm a')}
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-serif font-medium text-brand-deep dark:text-brand-cream">{fmt(biz.earnings)}</p>
-                                    <div className="flex items-center justify-end gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div className="w-1 h-1 rounded-full bg-brand-gold" />
-                                        <span className="text-[9px] font-black uppercase text-brand-gold">Yield</span>
+                    <div className="space-y-4 flex-1 relative min-h-[300px]">
+                        {businesses.length === 0 ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-brand-deep/2 dark:bg-white/2 rounded-[32px] border border-dashed border-brand-deep/10 dark:border-white/10">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="w-14 h-14 bg-brand-gold/10 rounded-full flex items-center justify-center mb-6"
+                                >
+                                    <Building2 className="w-7 h-7 text-brand-gold/40" />
+                                </motion.div>
+                                <h4 className="text-xl font-serif font-medium text-brand-deep/60 dark:text-brand-cream/60 mb-2">Awaiting Your First Merchant</h4>
+                                <p className="text-[11px] text-brand-deep/30 dark:text-brand-cream/30 max-w-[200px] mx-auto font-medium leading-relaxed">
+                                    Your portfolio's activity will be tracked here once you onboard your first business.
+                                </p>
+                            </div>
+                        ) : (
+                            businesses.slice(0, 4).map((biz) => (
+                                <div key={biz.id} className="group relative flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-brand-deep/5 hover:bg-brand-deep/2 hover:shadow-lg transition-all active:scale-[0.98]">
+                                    <div className={cn(
+                                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 shadow-lg shadow-black/5",
+                                        biz.status === 'active' ? "bg-green-500/10 text-green-600" : "bg-brand-gold/10 text-brand-gold"
+                                    )}>
+                                        {biz.status === 'active' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-gold transition-colors">{biz.name}</p>
+                                        <p className="text-[10px] text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-widest font-black mt-0.5 whitespace-nowrap">
+                                            {formatDate(biz.onboardedAt, 'd MMM, h:mm a')}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-serif font-medium text-brand-deep dark:text-brand-cream">{fmt(biz.earnings)}</p>
+                                        <div className="flex items-center justify-end gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="w-1 h-1 rounded-full bg-brand-gold" />
+                                            <span className="text-[9px] font-black uppercase text-brand-gold">Yield</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
 
-                    <Button variant="outline" className="w-full mt-10 rounded-2xl h-14 border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-all font-bold text-brand-deep/60 dark:text-brand-cream/60 group shadow-sm active:translate-y-1" asChild>
-                        <Link href="/field/businesses">
-                            {businesses.length < 4 ? "View Portfolio Details" : "Review All Merchants"}
-                            <ArrowUpRight className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                        </Link>
-                    </Button>
+                    {businesses.length > 0 && (
+                        <Button variant="outline" className="w-full mt-10 rounded-2xl h-14 border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-all font-bold text-brand-deep/60 dark:text-brand-cream/60 group shadow-sm active:translate-y-1" asChild>
+                            <Link href="/field/businesses">
+                                {businesses.length < 4 ? "View Portfolio Details" : "Review All Merchants"}
+                                <ArrowUpRight className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                            </Link>
+                        </Button>
+                    )}
                 </GlassCard>
             </div>
 
@@ -272,7 +290,7 @@ export function DashboardView() {
                             <span className="text-[10px] font-black uppercase text-brand-gold tracking-[0.2em]">Daily Goal</span>
                         </div>
                         <h2 className="text-3xl md:text-5xl font-serif font-medium text-white mb-6 leading-tight">Onboard a New <span className="text-brand-gold">Merchant</span></h2>
-                        <p className="text-brand-cream/40 text-lg font-medium leading-relaxed italic max-w-xl mx-auto lg:mx-0">
+                        <p className="text-brand-cream/40 text-lg font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
                             Grow the Cloove ecosystem by adding high-quality merchants. Earn commissions for every successful activation.
                         </p>
                     </div>
