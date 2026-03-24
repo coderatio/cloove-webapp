@@ -17,11 +17,17 @@ interface BankSelectorProps {
     selectedBankName?: string
     provider?: string
     className?: string
+    /** Override banks and loading state — skips the internal useBanks hook when provided */
+    banks?: Bank[]
+    isLoading?: boolean
 }
 
-export function BankSelector({ onSelect, selectedBankName, provider, className }: BankSelectorProps) {
+export function BankSelector({ onSelect, selectedBankName, provider, className, banks: banksProp, isLoading: isLoadingProp }: BankSelectorProps) {
     const [searchQuery, setSearchQuery] = useState("")
-    const { banks, isLoading } = useBanks(provider)
+    // Always call the hook (rules of hooks) — results are overridden when external banks are provided
+    const hookResult = useBanks(provider)
+    const banks = banksProp ?? hookResult.banks
+    const isLoading = isLoadingProp !== undefined ? isLoadingProp : hookResult.isLoading
 
     const filteredBanks = banks.filter(bank =>
         bank.name.toLowerCase().includes(searchQuery.toLowerCase())

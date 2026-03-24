@@ -129,6 +129,20 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (isLoading || isRefreshing || isAuthLoading || !user) return
 
+        // Skip all business redirects when on field agent pages
+        if (pathname.startsWith('/field')) return
+
+        // Field-agent-only users (no businesses) trying to access dashboard pages → redirect to agent portal
+        if (user.fieldAgent && businesses.length === 0) {
+            const isExemptPath = ['/field', '/login', '/register', '/select-business'].some(
+                (p) => pathname.startsWith(p)
+            )
+            if (!isExemptPath) {
+                router.replace('/field')
+                return
+            }
+        }
+
         // 1. No business selected? Must go select one (unless on an onboarding/auth page)
         if (!activeBusiness) {
             const isBusinessSelectionPage = ['/select-business', '/onboarding', '/login', '/register'].some(p => pathname === p || pathname.startsWith(p + '/'))

@@ -34,6 +34,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             router.replace("/")
             return
         }
+
+        // Non-field-agents cannot access field agent pages
+        if (user && pathname.startsWith('/field') && !user.fieldAgent) {
+            router.replace('/')
+            return
+        }
     }, [user, isLoading, pathname, router])
 
     // While checking auth, show nothing or a full-page loader to prevent content flicker
@@ -44,6 +50,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // If no user and not a public path, don't render anything while redirecting
     const isPublicPath = PUBLIC_PATHS.some(path => pathname.startsWith(path))
     if (!user && !isPublicPath) {
+        return null
+    }
+
+    // Don't render field agent pages for non-agents while redirecting
+    if (user && pathname.startsWith('/field') && !user.fieldAgent) {
         return null
     }
 

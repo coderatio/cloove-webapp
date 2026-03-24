@@ -1,7 +1,9 @@
 "use client"
 
 import React, { useState } from "react"
-import { useFieldAgent, OnboardedBusiness } from "@/app/domains/field-agent/providers/FieldAgentProvider"
+import { useFieldAgentBusinesses, OnboardedBusiness } from "@/app/domains/field-agent/hooks/useFieldAgentBusinesses"
+import { useFieldAgentWallet } from "@/app/domains/field-agent/hooks/useFieldAgentWallet"
+import { formatCurrency, formatDate } from "@/app/lib/formatters"
 import DataTable, { Column } from "@/app/components/DataTable"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Badge } from "@/app/components/ui/badge"
@@ -23,7 +25,10 @@ import { MerchantDetailsDrawer } from "@/app/components/field-agent/MerchantDeta
 const ITEMS_PER_PAGE = 5
 
 export default function BusinessesPage() {
-    const { businesses, isLoading } = useFieldAgent()
+    const { data: businesses = [], isLoading } = useFieldAgentBusinesses()
+    const { data: wallet } = useFieldAgentWallet()
+    const currency = wallet?.currency ?? 'NGN'
+    const fmt = (val: number) => formatCurrency(val, { currency })
     const [searchQuery, setSearchQuery] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
     
@@ -73,7 +78,11 @@ export default function BusinessesPage() {
         {
             key: "onboardedAt",
             header: "Date Added",
-            render: (val) => <span className="text-xs">{String(val)}</span>
+            render: (val) => (
+                <span className="text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60">
+                    {formatDate(String(val), 'MMM d, yyyy')}
+                </span>
+            )
         },
         {
             key: "status",
@@ -100,7 +109,7 @@ export default function BusinessesPage() {
             header: "Commission",
             render: (val) => (
                 <span className="font-serif font-medium text-brand-green dark:text-brand-gold">
-                    ₦{new Intl.NumberFormat().format(Number(val))}
+                    {fmt(Number(val))}
                 </span>
             )
         }
@@ -178,25 +187,15 @@ export default function BusinessesPage() {
                         <div className="flex items-end justify-between pt-4 border-t border-brand-deep/5">
                             <div className="space-y-1">
                                 <p className="text-[8px] font-black text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-[0.2em]">Onboarded On</p>
-                                <p className="text-xs font-bold text-brand-deep/60 dark:text-brand-cream/60 flex items-center gap-1.5 leading-none">
+                                <p className="text-[10px] font-bold text-brand-deep/60 dark:text-brand-cream/60 flex items-center gap-1.5 leading-none whitespace-nowrap">
                                     <Calendar className="shrink-0 w-3 h-3 text-brand-deep/20" />
-                                    {new Date(biz.onboardedAt).toLocaleDateString('en-GB', { 
-                                        day: '2-digit', 
-                                        month: 'short', 
-                                        year: 'numeric' 
-                                    })}
-                                    <span className="w-1 h-1 rounded-full bg-brand-deep/20 mx-0.5" />
-                                    {new Date(biz.onboardedAt).toLocaleTimeString('en-US', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit',
-                                        hour12: true 
-                                    })}
+                                    {formatDate(biz.onboardedAt, 'd MMM yyyy • h:mm a')}
                                 </p>
                             </div>
                             <div className="text-right">
                                 <p className="text-[8px] font-black text-brand-deep/30 uppercase tracking-[0.2em] mb-1">Total Earned</p>
                                 <p className="text-xl font-serif font-medium text-brand-gold leading-none">
-                                    ₦{new Intl.NumberFormat().format(biz.earnings)}
+                                    {fmt(biz.earnings)}
                                 </p>
                             </div>
                         </div>

@@ -1,7 +1,11 @@
 "use client"
 
 import React from "react"
-import { useFieldAgent } from "@/app/domains/field-agent/providers/FieldAgentProvider"
+import { motion } from "framer-motion"
+import { useFieldAgentStats } from "@/app/domains/field-agent/hooks/useFieldAgentStats"
+import { useFieldAgentBusinesses } from "@/app/domains/field-agent/hooks/useFieldAgentBusinesses"
+import { useFieldAgentWallet } from "@/app/domains/field-agent/hooks/useFieldAgentWallet"
+import { formatCurrency, formatDate } from "@/app/lib/formatters"
 import { AgentStatCard } from "./AgentStatCard"
 import { cn } from "@/app/lib/utils"
 import {
@@ -38,7 +42,11 @@ import {
 import { useTheme } from "next-themes"
 
 export function DashboardView() {
-    const { stats, businesses, isLoading } = useFieldAgent()
+    const { data: stats, isLoading: isLoadingStats } = useFieldAgentStats()
+    const { data: businesses = [], isLoading: isLoadingBusinesses } = useFieldAgentBusinesses()
+    const { data: wallet } = useFieldAgentWallet()
+    const isLoading = isLoadingStats || isLoadingBusinesses
+    const currency = wallet?.currency ?? 'NGN'
     const { resolvedTheme } = useTheme()
     const isDark = resolvedTheme === "dark"
     const axisTickColor = isDark ? "rgba(255,255,255,0.3)" : "rgba(10,61,49,0.3)"
@@ -53,13 +61,7 @@ export function DashboardView() {
         </div>
     }
 
-    const formatCurrency = (val: number) => {
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-            maximumFractionDigits: 0
-        }).format(val)
-    }
+    const fmt = (val: number) => formatCurrency(val, { currency })
 
     return (
         <div className="space-y-10 pb-20">
@@ -85,27 +87,24 @@ export function DashboardView() {
                 <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
                     <AgentStatCard
                         title="Gross Commissions"
-                        value={formatCurrency(stats.totalEarned)}
+                        value={fmt(stats?.totalEarned ?? 0)}
                         icon={TrendingUp}
                         trend={{ value: 12.4, isPositive: true }}
-                        subtext="Consolidated lifetime growth"
                     />
                 </div>
                 <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
                     <AgentStatCard
                         title="Activated Portfolio"
-                        value={stats.activeMerchants}
+                        value={stats?.activeMerchants ?? 0}
                         icon={Building2}
                         trend={{ value: 8.1, isPositive: true }}
-                        subtext="Merchants with live transactions"
                     />
                 </div>
                 <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
                     <AgentStatCard
                         title="Liquidity Reserve"
-                        value={formatCurrency(stats.pendingPayout)}
+                        value={fmt(stats?.pendingPayout ?? 0)}
                         icon={Wallet}
-                        subtext="Available for immediate dispatch"
                     />
                 </div>
             </div>
@@ -137,57 +136,73 @@ export function DashboardView() {
                     </div>
 
                     <div className="h-[350px] w-full relative">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.monthlyEarnings} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#d4af37" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="#d4af37" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="8 8" vertical={false} stroke={gridColor} />
-                                <XAxis
-                                    dataKey="month"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fill: axisTickColor, fontWeight: 900 }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 11, fill: axisTickColor, fontWeight: 700, fontFamily: "serif" }}
-                                    tickFormatter={(val) => `₦${val / 1000}k`}
-                                />
-                                <Tooltip
-                                    cursor={{ stroke: '#d4af37', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                    content={({ active, payload }) => {
-                                        if (active && payload && payload.length) {
-                                            return (
-                                                <div className="bg-brand-deep text-white p-4 rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl">
-                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">{payload[0].payload.month}</p>
-                                                    <p className="text-xl font-serif text-brand-gold">{formatCurrency(payload[0].value as number)}</p>
-                                                    <div className="mt-2 flex items-center gap-2">
-                                                        <Sparkles className="w-3 h-3 text-brand-gold animate-pulse" />
-                                                        <span className="text-[10px] font-bold uppercase text-white/30 tracking-wider">Acquisition Peak</span>
+                        {(!stats?.monthlyEarnings || stats.monthlyEarnings.length === 0 || stats.monthlyEarnings.every(e => e.amount === 0)) ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-brand-deep/2 dark:bg-white/2 rounded-[32px] border border-dashed border-brand-deep/10 dark:border-white/10">
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="w-16 h-16 bg-brand-gold/10 rounded-full flex items-center justify-center mb-6"
+                                >
+                                    <TrendingUp className="w-8 h-8 text-brand-gold/40" />
+                                </motion.div>
+                                <h4 className="text-xl font-serif font-medium text-brand-deep/60 dark:text-brand-cream/60 mb-2">Awaiting Performance Data</h4>
+                                <p className="text-sm text-brand-deep/30 dark:text-brand-cream/30 max-w-sm mx-auto font-medium leading-relaxed">
+                                    Your monthly yield metrics will appear here once your merchants begin processing transactions.
+                                </p>
+                            </div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={stats?.monthlyEarnings ?? []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#d4af37" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#d4af37" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="8 8" vertical={false} stroke={gridColor} />
+                                    <XAxis
+                                        dataKey="month"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 10, fill: axisTickColor, fontWeight: 900 }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 11, fill: axisTickColor, fontWeight: 700, fontFamily: "serif" }}
+                                        tickFormatter={(val) => formatCurrency(val, { currency, notation: 'compact' })}
+                                    />
+                                    <Tooltip
+                                        cursor={{ stroke: '#d4af37', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                        content={({ active, payload }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div className="bg-brand-deep text-white p-4 rounded-2xl shadow-2xl border border-white/10 backdrop-blur-xl">
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">{payload[0].payload.month}</p>
+                                                        <p className="text-xl font-serif text-brand-gold">{fmt(payload[0].value as number)}</p>
+                                                        <div className="mt-2 flex items-center gap-2">
+                                                            <Sparkles className="w-3 h-3 text-brand-gold animate-pulse" />
+                                                            <span className="text-[10px] font-bold uppercase text-white/30 tracking-wider">Acquisition Peak</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )
-                                        }
-                                        return null
-                                    }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="amount"
-                                    stroke="#d4af37"
-                                    strokeWidth={4}
-                                    fillOpacity={1}
-                                    fill="url(#colorEarnings)"
-                                    animationDuration={2000}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                                                )
+                                            }
+                                            return null
+                                        }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="amount"
+                                        stroke="#d4af37"
+                                        strokeWidth={4}
+                                        fillOpacity={1}
+                                        fill="url(#colorEarnings)"
+                                        animationDuration={2000}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </GlassCard>
 
@@ -211,12 +226,12 @@ export function DashboardView() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-bold text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-gold transition-colors">{biz.name}</p>
-                                    <p className="text-[10px] text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-widest font-black mt-0.5">
-                                        {biz.onboardedAt}
+                                    <p className="text-[10px] text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-widest font-black mt-0.5 whitespace-nowrap">
+                                        {formatDate(biz.onboardedAt, 'd MMM, h:mm a')}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm font-serif font-medium text-brand-deep dark:text-brand-cream">{formatCurrency(biz.earnings)}</p>
+                                    <p className="text-sm font-serif font-medium text-brand-deep dark:text-brand-cream">{fmt(biz.earnings)}</p>
                                     <div className="flex items-center justify-end gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <div className="w-1 h-1 rounded-full bg-brand-gold" />
                                         <span className="text-[9px] font-black uppercase text-brand-gold">Yield</span>
@@ -228,7 +243,7 @@ export function DashboardView() {
 
                     <Button variant="outline" className="w-full mt-10 rounded-2xl h-14 border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-all font-bold text-brand-deep/60 dark:text-brand-cream/60 group shadow-sm active:translate-y-1" asChild>
                         <Link href="/field/businesses">
-                            Review All Merchants
+                            {businesses.length < 4 ? "View Portfolio Details" : "Review All Merchants"}
                             <ArrowUpRight className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                         </Link>
                     </Button>

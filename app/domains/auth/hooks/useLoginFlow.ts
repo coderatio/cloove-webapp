@@ -21,7 +21,19 @@ function resolveRedirectUrl(
     callbackUrl: string
 ): string {
     const businesses = response.user?.businesses ?? []
+    const isFieldAgent = !!response.user?.fieldAgent?.isFieldAgent
     const lowerPath = callbackUrl.toLowerCase();
+
+    // Field agent routing — evaluated before business logic
+    if (isFieldAgent) {
+        // If callback explicitly targets /field/* honor it
+        if (lowerPath.startsWith('/field')) return callbackUrl
+        // Field agent with no businesses → agent dashboard
+        if (businesses.length === 0) return '/field'
+        // Dual-role (agent + business owner) → default to agent dashboard for generic paths
+        const isGenericPath = lowerPath === '/' || lowerPath === '/login' || lowerPath === '/register' || lowerPath.includes('/select-business')
+        if (isGenericPath) return '/field'
+    }
 
     // Explicitly check if they were in the middle of adding a business
     const isAddingBusiness = lowerPath.includes('from=switcher')
@@ -94,6 +106,10 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
     // ── Shared post-login handler ─────────────────────────────────────────────
     const handleAuthSuccess = useCallback(async (response: LoginResponse) => {
         if (response.user?.setupRequired) {
+            // Capture any setupToken issued by the login endpoint (e.g. PIN login with no password)
+            if (response.user.setupToken) {
+                setSetupToken(response.user.setupToken)
+            }
             setStep('setup-password')
             return
         }

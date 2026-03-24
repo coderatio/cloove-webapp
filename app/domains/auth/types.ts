@@ -46,10 +46,17 @@ export interface LoginResponseUser {
     phoneNumber: string | null
     /** True when user has not yet set a dashboard password */
     setupRequired: boolean
+    /** Short-lived token issued on login when setupRequired=true (e.g. PIN login with no password) */
+    setupToken?: string | null
     emailVerified?: boolean
     phoneVerified?: boolean
     signupChannel?: string
     businesses?: LoginUserBusiness[]
+    fieldAgent?: {
+        isFieldAgent: boolean
+        agentCode: string
+        agentId: string
+    } | null
 }
 
 export interface LoginResponse {

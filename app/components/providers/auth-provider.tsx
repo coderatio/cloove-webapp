@@ -32,6 +32,11 @@ interface User {
         refreshInterval?: string
     }
     hasTransactionPin: boolean
+    fieldAgent: {
+        isFieldAgent: boolean
+        agentCode: string
+        agentId: string
+    } | null
 }
 
 interface AuthContextType {

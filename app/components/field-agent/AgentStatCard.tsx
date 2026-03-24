@@ -7,7 +7,6 @@ import { LucideIcon } from "lucide-react"
 interface AgentStatCardProps {
     title: string
     value: string | number
-    subtext?: string
     icon: LucideIcon
     trend?: {
         value: number
@@ -16,7 +15,7 @@ interface AgentStatCardProps {
     className?: string
 }
 
-export function AgentStatCard({ title, value, subtext, icon: Icon, trend, className }: AgentStatCardProps) {
+export function AgentStatCard({ title, value, icon: Icon, trend, className }: AgentStatCardProps) {
     return (
         <GlassCard hoverEffect className={cn("p-6 md:p-8 relative overflow-hidden group", className)}>
             {/* Optimized Depth Layers */}
@@ -43,14 +42,6 @@ export function AgentStatCard({ title, value, subtext, icon: Icon, trend, classN
                 <h3 className="text-4xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                     {value}
                 </h3>
-                {subtext && (
-                    <div className="flex items-center gap-2 pt-2">
-                        <div className="w-1 h-1 rounded-full bg-brand-gold/40 animate-pulse" />
-                        <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 font-bold uppercase tracking-wider">
-                            {subtext}
-                        </p>
-                    </div>
-                )}
             </div>
         </GlassCard>
     )

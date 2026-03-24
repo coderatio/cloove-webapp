@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
@@ -23,10 +23,16 @@ import {
     Loader2,
     Shield,
     Sparkles,
-    ArrowRight
+    ArrowRight,
+    Store,
+    BadgeCheck,
+    Check,
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
-import { useFieldAgent } from "@/app/domains/field-agent/providers/FieldAgentProvider"
+import { useOnboardBusiness } from "@/app/domains/field-agent/hooks/useOnboardBusiness"
+import { useCountries } from "@/app/hooks/useCountries"
+import { apiClient } from "@/app/lib/api-client"
+import { SearchableSelect } from "@/app/components/ui/searchable-select"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -36,20 +42,66 @@ const STEPS = [
     { id: 3, title: "Verify", icon: Shield }
 ]
 
+interface Category {
+    id: string
+    name: string
+}
+
 export function BusinessOnboardingForm() {
     const [step, setStep] = useState(1)
-    const [isSubmitting, setIsSubmitting] = useState(false)
     const router = useRouter()
     const [formData, setFormData] = useState({
         businessName: "",
         category: "",
         country: "Nigeria",
         merchantName: "",
-        phone: ""
+        phone: "",
+        businessType: "" as "INDIVIDUAL" | "REGISTERED" | "",
     })
-    const { onboardBusiness } = useFieldAgent()
 
-    const handleNext = () => setStep(s => Math.min(s + 1, 3))
+    const { data: countriesData, isLoading: isLoadingCountries } = useCountries()
+    const [categories, setCategories] = useState<Category[]>([])
+    const [isLoadingCategories, setIsLoadingCategories] = useState(true)
+
+    const countries = countriesData ?? []
+
+    const { mutateAsync: onboardBusiness, isPending: isSubmitting } = useOnboardBusiness()
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const data = await apiClient.get<Category[]>("/onboarding/categories")
+                setCategories(data)
+            } catch (error) {
+                console.error("Failed to load categories", error)
+            } finally {
+                setIsLoadingCategories(false)
+            }
+        }
+        fetchCategories()
+    }, [])
+
+    const isStep1Valid = !!formData.businessName && !!formData.country && !!formData.businessType
+    const isStep2Valid = !!formData.merchantName && !!formData.phone
+
+    const categoryOptions = categories.map(c => ({
+        label: c.name,
+        value: c.id,
+        icon: <Building2 className="w-4 h-4 opacity-40" />
+    }))
+
+    const handleNext = () => {
+        if (step === 1 && !isStep1Valid) {
+            toast.error("Please fill in all business details")
+            return
+        }
+        if (step === 2 && !isStep2Valid) {
+            toast.error("Please fill in all owner details")
+            return
+        }
+        setStep(s => Math.min(s + 1, 3))
+    }
+
     const handleBack = () => {
         if (step === 1) {
             router.back()
@@ -59,16 +111,20 @@ export function BusinessOnboardingForm() {
     }
 
     const handleSubmit = async () => {
-        setIsSubmitting(true)
         try {
-            await onboardBusiness(formData)
+            await onboardBusiness({
+                businessName: formData.businessName,
+                merchantName: formData.merchantName,
+                phoneNumber: formData.phone,
+                country: formData.country.toUpperCase().replace(/ /g, '_'),
+                categoryId: formData.category || undefined,
+                businessType: formData.businessType || undefined,
+            })
             toast.success("Merchant onboarded successfully!")
             setStep(1)
-            setFormData({ businessName: "", category: "", country: "Nigeria", merchantName: "", phone: "" })
-        } catch (error) {
-            toast.error("Failed to onboard merchant.")
-        } finally {
-            setIsSubmitting(false)
+            setFormData({ businessName: "", category: "", country: "Nigeria", merchantName: "", phone: "", businessType: "" })
+        } catch {
+            // error handling is done inside useOnboardBusiness
         }
     }
 
@@ -146,8 +202,80 @@ export function BusinessOnboardingForm() {
                             </div>
 
                             <div className="space-y-6">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between px-1">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-deep/30 dark:text-brand-cream/30">Business Type</label>
+                                        <motion.span 
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: formData.businessType ? 1 : 0 }}
+                                            className="text-[10px] text-brand-gold font-bold uppercase tracking-widest flex items-center gap-1"
+                                        >
+                                            <CheckCircle2 className="w-3 h-3" />
+                                            Selected
+                                        </motion.span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {([
+                                            { value: "INDIVIDUAL", label: "Individual", sub: "Unregistered / Sole Trader", icon: Store },
+                                            { value: "REGISTERED", label: "Registered", sub: "CAC or Officially Registered", icon: BadgeCheck },
+                                        ] as const).map(({ value, label, sub, icon: Icon }, i) => (
+                                            <motion.button
+                                                key={value}
+                                                type="button"
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.1 + 0.2 }}
+                                                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => setFormData(p => ({ ...p, businessType: value }))}
+                                                className={cn(
+                                                    "group relative flex flex-col items-start gap-4 p-5 rounded-3xl border-2 text-left transition-all duration-500 overflow-hidden",
+                                                    formData.businessType === value
+                                                        ? "border-brand-gold bg-brand-gold/5 shadow-2xl shadow-brand-gold/10"
+                                                        : "border-brand-deep/5 bg-brand-deep/2 hover:border-brand-deep/10 dark:bg-white/3 dark:border-white/5 dark:hover:border-white/10"
+                                                )}
+                                            >
+                                                {/* Background Glow for selected state */}
+                                                {formData.businessType === value && (
+                                                    <motion.div 
+                                                        layoutId="bg-glow"
+                                                        className="absolute inset-0 bg-linear-to-br from-brand-gold/10 to-transparent"
+                                                    />
+                                                )}
+
+                                                <div className={cn(
+                                                    "w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 relative z-10",
+                                                    formData.businessType === value
+                                                        ? "bg-brand-gold text-white shadow-lg shadow-brand-gold/20"
+                                                        : "bg-brand-deep/5 text-brand-deep/30 dark:bg-white/5 dark:text-brand-cream/20 group-hover:scale-110"
+                                                )}>
+                                                    <Icon className="w-5 h-5" />
+                                                </div>
+
+                                                <div className="relative z-10">
+                                                    <p className={cn(
+                                                        "text-base md:text-lg font-serif transition-colors duration-500",
+                                                        formData.businessType === value ? "text-brand-deep dark:text-brand-cream" : "text-brand-deep/40 dark:text-brand-cream/40"
+                                                    )}>{label}</p>
+                                                    <p className="text-[10px] text-brand-deep/30 dark:text-brand-cream/30 font-medium mt-1 leading-snug uppercase tracking-wider">{sub}</p>
+                                                </div>
+
+                                                {/* Selection Checkmark */}
+                                                {formData.businessType === value && (
+                                                    <motion.div 
+                                                        layoutId="check-bubble"
+                                                        className="absolute top-4 right-4 w-6 h-6 bg-brand-gold rounded-full flex items-center justify-center"
+                                                    >
+                                                        <Check className="w-3.5 h-3.5 text-white stroke-3" />
+                                                    </motion.div>
+                                                )}
+                                            </motion.button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1">Business Registered Name</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1">Business Name</label>
                                     <Input
                                         placeholder="e.g. Lagos Luxury Stitches"
                                         value={formData.businessName}
@@ -159,34 +287,32 @@ export function BusinessOnboardingForm() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1">Industry Category</label>
-                                        <Select
+                                        <SearchableSelect
+                                            options={categoryOptions}
                                             value={formData.category}
-                                            onValueChange={(v) => setFormData(p => ({ ...p, category: v }))}
-                                        >
-                                            <SelectTrigger className="h-14 sm:h-14 lg:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold font-bold">
-                                                <SelectValue placeholder="Select Sector" />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-2xl border-brand-deep/5 shadow-2xl">
-                                                <SelectItem value="fashion" className="rounded-xl my-1 focus:bg-brand-gold/10 focus:text-brand-gold">Fashion & Apparel</SelectItem>
-                                                <SelectItem value="food" className="rounded-xl my-1 focus:bg-brand-gold/10 focus:text-brand-gold">Food & Beverage</SelectItem>
-                                                <SelectItem value="tech" className="rounded-xl my-1 focus:bg-brand-gold/10 focus:text-brand-gold">Electronics & Tech</SelectItem>
-                                                <SelectItem value="beauty" className="rounded-xl my-1 focus:bg-brand-gold/10 focus:text-brand-gold">Beauty & Wellness</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                            onChange={(v) => setFormData(p => ({ ...p, category: v }))}
+                                            disabled={isLoadingCategories}
+                                            placeholder={isLoadingCategories ? "Loading..." : "Select Sector"}
+                                            searchPlaceholder="Search industries..."
+                                            triggerClassName="h-14 sm:h-14 lg:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold font-bold transition-all hover:bg-brand-deep/5 dark:bg-brand-deep/20 dark:hover:bg-brand-deep/30 dark:border-white/5"
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1">Business Location</label>
                                         <Select
                                             value={formData.country}
                                             onValueChange={(v) => setFormData(p => ({ ...p, country: v }))}
+                                            disabled={isLoadingCountries}
                                         >
                                             <SelectTrigger className="h-14 sm:h-14 lg:h-12 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold font-bold">
-                                                <SelectValue placeholder="Select Country" />
+                                                <SelectValue placeholder={isLoadingCountries ? "Loading..." : "Select Country"} />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-2xl border-brand-deep/5 shadow-2xl">
-                                                <SelectItem value="Nigeria" className="rounded-xl my-1 focus:bg-brand-gold/10 focus:text-brand-gold">Nigeria</SelectItem>
-                                                <SelectItem value="Ghana" className="rounded-xl my-1 focus:bg-brand-gold/10 focus:text-brand-gold">Ghana</SelectItem>
-                                                <SelectItem value="Kenya" className="rounded-xl my-1 focus:bg-brand-gold/10 focus:text-brand-gold">Kenya</SelectItem>
+                                                {countries.map((c) => (
+                                                    <SelectItem key={c.id} value={c.name} className="rounded-xl my-1 focus:bg-brand-gold/10 focus:text-brand-gold">
+                                                        {c.name}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -261,7 +387,8 @@ export function BusinessOnboardingForm() {
                             <div className="flex flex-col gap-3 p-2 bg-brand-deep/3 rounded-[32px] border border-brand-deep/5 shadow-inner">
                                 {[
                                     { label: "Entity Name", value: formData.businessName, icon: Building2 },
-                                    { label: "Category", value: formData.category, icon: Globe },
+                                    { label: "Type", value: formData.businessType === "INDIVIDUAL" ? "Individual (Unregistered)" : "Registered Business", icon: BadgeCheck },
+                                    { label: "Category", value: formData.category ? (categories.find(c => c.id === formData.category)?.name ?? formData.category) : "—", icon: Globe },
                                     { label: "Jurisdiction", value: formData.country, icon: Sparkles },
                                     { label: "Merchant", value: formData.merchantName, icon: User },
                                     { label: "Contact", value: formData.phone, icon: Phone }
@@ -299,8 +426,8 @@ export function BusinessOnboardingForm() {
                     {step < 3 ? (
                         <Button
                             onClick={handleNext}
-                            disabled={!formData.businessName && step === 1}
-                            className="bg-brand-deep text-white rounded-2xl h-14 px-10 font-bold hover:shadow-2xl hover:shadow-brand-deep/20 transition-all hover:-translate-y-1 active:translate-y-0"
+                            disabled={step === 1 ? !isStep1Valid : !isStep2Valid}
+                            className="bg-brand-deep text-white rounded-2xl h-14 px-10 font-bold hover:shadow-2xl hover:shadow-brand-deep/20 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
                         >
                             Continue
                             <ChevronRight className="w-5 h-5 ml-2" />
@@ -328,17 +455,18 @@ export function BusinessOnboardingForm() {
                     <Button
                         variant="outline"
                         onClick={handleBack}
-                        disabled={step === 1 || isSubmitting}
+                        disabled={isSubmitting}
                         className="flex-1 rounded-[24px] h-16 border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 active:scale-95 transition-transform font-bold"
                     >
                         <ChevronLeft className="w-5 h-5 mr-1" />
-                        Back
+                        {step === 1 ? "Cancel" : "Back"}
                     </Button>
 
                     {step < 3 ? (
                         <Button
                             onClick={handleNext}
-                            className="flex-2 bg-brand-deep text-white rounded-[24px] h-16 font-bold shadow-2xl shadow-brand-deep/30 active:scale-95 transition-all text-lg"
+                            disabled={step === 1 ? !isStep1Valid : !isStep2Valid}
+                            className="flex-2 bg-brand-deep text-white rounded-[24px] h-16 font-bold shadow-2xl shadow-brand-deep/30 active:scale-95 transition-all text-lg disabled:opacity-50"
                         >
                             Continue
                             <ArrowRight className="w-6 h-6 ml-2" />

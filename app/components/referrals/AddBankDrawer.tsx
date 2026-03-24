@@ -5,7 +5,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } f
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Building2, Loader2, CheckCircle2, AlertCircle, ChevronsUpDown, ArrowLeft } from "lucide-react"
-import { BankSelector } from "@/app/components/shared/BankSelector"
+import { BankSelector, type Bank } from "@/app/components/shared/BankSelector"
 
 export interface AddBankDetails {
     bankName: string
@@ -19,6 +19,9 @@ interface AddBankDrawerProps {
     onOpenChange: (open: boolean) => void
     onContinue: (details: AddBankDetails) => void
     onResolveAccount?: (accountNumber: string, bankCode: string) => Promise<{ accountName: string }>
+    /** External bank list — when provided, bypasses the internal useBanks hook */
+    banks?: Bank[]
+    isLoadingBanks?: boolean
 }
 
 type DrawerView = "form" | "selection"
@@ -28,6 +31,8 @@ export function AddBankDrawer({
     onOpenChange,
     onContinue,
     onResolveAccount,
+    banks,
+    isLoadingBanks,
 }: AddBankDrawerProps) {
     const [view, setView] = useState<DrawerView>("form")
     const [details, setDetails] = useState<AddBankDetails>({ bankName: "", accountNumber: "", accountName: "", bankCode: "" })
@@ -179,6 +184,8 @@ export function AddBankDrawer({
                                     setDetails((prev) => ({ ...prev, bankName: bank.name, bankCode: bank.code }))
                                     setView("form")
                                 }}
+                                banks={banks}
+                                isLoading={isLoadingBanks}
                             />
                         )}
                     </div>

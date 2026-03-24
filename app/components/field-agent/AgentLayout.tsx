@@ -20,6 +20,7 @@ import {
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
+import { useAuth } from "@/app/components/providers/auth-provider"
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
@@ -29,6 +30,16 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
 
     const [showProfileMenu, setShowProfileMenu] = useState(false)
     const { theme, setTheme } = useTheme()
+    const { user, logout } = useAuth()
+
+    const displayName = user?.fullName ?? user?.firstName ?? "Agent"
+    const agentCode = user?.fieldAgent?.agentCode ?? ""
+    const initials = displayName
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
 
     return (
         <FieldAgentProvider>
@@ -67,7 +78,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                     {pageTitle.replace("-", " ")}
                                 </h1>
                                 <p className="text-[10px] md:text-xs text-brand-deep/50 dark:text-brand-cream/50 font-sans mt-0.5">
-                                    Welcome back, Field Agent
+                                    Welcome back, {displayName.split(" ")[0]}
                                 </p>
                             </div>
                         </div>
@@ -89,11 +100,11 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                     className="flex items-center gap-3 pl-4 md:pl-6 border-l border-brand-deep/10 dark:border-white/10 group active:scale-95 transition-transform"
                                 >
                                     <div className="text-right hidden sm:block">
-                                        <p className="text-sm font-bold group-hover:text-brand-gold transition-colors">Josiah Yahaya</p>
-                                        <p className="text-[9px] uppercase tracking-widest text-brand-gold/60 font-black">Gold Agent</p>
+                                        <p className="text-sm font-bold group-hover:text-brand-gold transition-colors">{displayName}</p>
+                                        <p className="text-[9px] uppercase tracking-widest text-brand-gold/60 font-black">{agentCode}</p>
                                     </div>
                                     <div className="w-10 h-10 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 border-2 border-brand-cream dark:border-brand-deep shadow-lg flex items-center justify-center font-bold text-brand-deep relative overflow-hidden">
-                                        JY
+                                        {initials}
                                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                                     </div>
                                     <ChevronDown className={cn("w-4 h-4 text-brand-deep/30 transition-transform", showProfileMenu && "rotate-180")} />
@@ -113,8 +124,8 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                 className="absolute right-0 mt-4 w-64 bg-brand-cream dark:bg-brand-deep border border-brand-deep/10 dark:border-white/10 rounded-[32px] shadow-2xl shadow-black/20 p-3 z-50 backdrop-blur-xl"
                                             >
                                                 <div className="p-4 mb-2 border-b border-brand-deep/5 dark:border-white/5">
-                                                    <p className="text-sm font-bold">Josiah Yahaya</p>
-                                                    <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">josiah@cloove.ai</p>
+                                                    <p className="text-sm font-bold">{displayName}</p>
+                                                    <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">{user?.email ?? user?.phoneNumber ?? ""}</p>
                                                 </div>
 
                                                 <div className="space-y-1">
@@ -158,7 +169,10 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                         }
                                                         <span className="text-sm font-medium">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
                                                     </button>
-                                                    <button className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-red-500 hover:bg-red-500/5 transition-colors group">
+                                                    <button
+                                                        onClick={() => logout()}
+                                                        className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-red-500 hover:bg-red-500/5 transition-colors group"
+                                                    >
                                                         <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                                                         <span className="text-sm font-bold">Sign Out</span>
                                                     </button>
