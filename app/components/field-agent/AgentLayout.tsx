@@ -101,7 +101,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                 >
                                     <div className="text-right hidden sm:block">
                                         <p className="text-sm font-bold group-hover:text-brand-gold transition-colors">{displayName}</p>
-                                        <p className="text-[9px] uppercase tracking-widest text-brand-gold/60 font-black">{agentCode}</p>
+                                        <p className="text-[9px] uppercase tracking-widest text-brand-deep/60 font-black">{agentCode}</p>
                                     </div>
                                     <div className="w-10 h-10 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 border-2 border-brand-cream dark:border-brand-deep shadow-lg flex items-center justify-center font-bold text-brand-deep relative overflow-hidden">
                                         {initials}
@@ -136,22 +136,6 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                     >
                                                         <User className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
                                                         <span className="text-sm font-medium">My Profile</span>
-                                                    </Link>
-                                                    <Link
-                                                        href="/field/settings"
-                                                        className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
-                                                        onClick={() => setShowProfileMenu(false)}
-                                                    >
-                                                        <Settings className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
-                                                        <span className="text-sm font-medium">Settings</span>
-                                                    </Link>
-                                                    <Link
-                                                        href="/field/security"
-                                                        className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
-                                                        onClick={() => setShowProfileMenu(false)}
-                                                    >
-                                                        <ShieldCheck className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
-                                                        <span className="text-sm font-medium">Security</span>
                                                     </Link>
                                                 </div>
 

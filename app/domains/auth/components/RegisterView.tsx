@@ -14,6 +14,8 @@ import { useCountries } from "@/app/hooks/useCountries"
 import type { CountryDetail } from "@/app/components/ui/country-selector"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
+import { Briefcase, Users, ShieldCheck, Zap, Globe, Sparkle } from "lucide-react"
 
 const NOISE_BG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
 
@@ -29,22 +31,32 @@ function RegisterBackdrop() {
                     className="absolute inset-0 opacity-[0.45]"
                     style={{
                         background:
-                            "radial-gradient(ellipse 120% 80% at 100% 0%, rgba(212, 175, 55, 0.12) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 0% 100%, rgba(11, 61, 46, 0.35) 0%, transparent 50%), linear-gradient(165deg, var(--color-brand-deep-950) 0%, #031510 45%, var(--color-brand-deep-900) 100%)",
+                            "radial-gradient(ellipse 120% 80% at 100% 0%, rgba(212, 175, 55, 0.15) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 0% 100%, rgba(11, 61, 46, 0.4) 0%, transparent 50%), linear-gradient(165deg, var(--color-brand-deep-primary) 0%, #031510 45%, var(--color-brand-deep-secondary) 100%)",
                     }}
                 />
-                <div className="absolute -top-1/4 -right-1/4 w-[85%] h-[85%] rounded-full bg-brand-gold/10 blur-[120px] animate-float-slow" />
-                <div className="absolute -bottom-1/4 -left-1/4 w-[75%] h-[75%] rounded-full bg-brand-accent/25 blur-[110px] animate-float-slower" />
-                <div
-                    className="absolute top-[18%] left-[8%] w-px h-32 bg-linear-to-b from-brand-gold/50 to-transparent opacity-60 hidden lg:block"
-                    aria-hidden
+                <motion.div 
+                    animate={{ 
+                        scale: [1, 1.1, 1],
+                        opacity: [0.08, 0.12, 0.08]
+                    }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute -top-1/4 -right-1/4 w-[85%] h-[85%] rounded-full bg-brand-gold blur-[120px]" 
+                />
+                <motion.div 
+                    animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.2, 0.3, 0.2]
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute -bottom-1/4 -left-1/4 w-[75%] h-[75%] rounded-full bg-brand-accent/30 blur-[110px]" 
                 />
                 <div
-                    className="lg:hidden absolute top-[22%] right-[-12%] w-40 h-40 rounded-full border border-brand-gold/12 pointer-events-none"
+                    className="absolute top-[18%] left-[8%] w-px h-32 bg-linear-to-b from-brand-gold/40 to-transparent opacity-40 hidden lg:block"
                     aria-hidden
                 />
             </div>
             <div
-                className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-overlay z-1"
+                className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-1"
                 style={{ backgroundImage: NOISE_BG }}
             />
         </>
@@ -65,6 +77,8 @@ export function RegisterView() {
     const [showPassword, setShowPassword] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [success, setSuccess] = useState<{ channel: "email" | "phone"; message: string } | null>(null)
+    const [step, setStep] = useState<0 | 1>(0)
+    const [intendedRole, setIntendedRole] = useState<"business_owner" | "field_agent" | null>(null)
 
     useEffect(() => {
         apiClient
@@ -101,6 +115,7 @@ export function RegisterView() {
                 firstName: firstName.trim(),
                 middleName: middleName.trim() || undefined,
                 lastName: lastName.trim() || undefined,
+                intendedRole: intendedRole!,
             }
             if (identifierType === "email") {
                 payload.email = email.trim().toLowerCase()
@@ -177,333 +192,435 @@ export function RegisterView() {
     if (success) {
         const isEmail = success.channel === "email"
         return (
-            <div className="min-h-dvh w-full flex flex-col items-center justify-center p-6 relative overflow-hidden bg-brand-deep-950">
+            <div className="min-h-dvh w-full flex flex-col items-center justify-center p-6 bg-brand-deep-950 relative overflow-hidden">
                 <RegisterBackdrop />
-                <GlassCard className="relative z-10 p-10 sm:p-12 max-w-md text-center border-white/10 bg-white/5 shadow-2xl shadow-black/25 animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-500">
-                    <div
-                        className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-brand-gold/25 bg-brand-gold/10 text-brand-gold"
-                        aria-hidden
-                    >
-                        {isEmail ? <Mail className="h-8 w-8" /> : <CheckCircle2 className="h-8 w-8" />}
-                    </div>
-                    <h1 className="font-serif text-2xl sm:text-3xl text-brand-cream font-medium tracking-tight mb-3">
-                        {isEmail ? "Almost there" : "One more step"}
-                    </h1>
-                    <p className="text-brand-cream/75 text-sm sm:text-base mb-10 max-w-sm mx-auto leading-relaxed">
-                        {success.message}
-                    </p>
-                    <Link href="/login" className="flex justify-center w-full">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="relative z-10 w-full max-w-lg"
+                >
+                    <GlassCard className="p-10 sm:p-14 border-brand-gold/20 shadow-[0_32px_80px_rgba(0,0,0,0.6)] backdrop-blur-3xl text-center bg-white/[0.03]">
+                        <div className="flex justify-center mb-10">
+                            <div className="relative">
+                                <motion.div 
+                                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                                    transition={{ duration: 3, repeat: Infinity }}
+                                    className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full"
+                                />
+                                <div className="relative size-24 rounded-[2rem] bg-brand-gold/10 border border-brand-gold/25 flex items-center justify-center overflow-hidden">
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={isEmail ? "mail" : "check"}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                        >
+                                            {isEmail ? 
+                                                <Mail className="size-10 text-brand-gold" /> : 
+                                                <CheckCircle2 className="size-10 text-brand-gold" />
+                                            }
+                                        </motion.div>
+                                    </AnimatePresence>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 mb-12">
+                            <motion.p 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="text-[10px] font-bold uppercase tracking-[0.5em] text-brand-gold"
+                            >
+                                {isEmail ? "Transmission Sent" : "Account Identity Prepared"}
+                            </motion.p>
+                            <h2 className="font-serif text-[2.5rem] leading-[1.1] text-brand-cream tracking-tight">
+                                {isEmail ? <>Check your <span className="italic font-normal text-brand-gold/90">inbox.</span></> : "Ready for focus."}
+                            </h2>
+                            <p className="text-brand-cream/60 leading-relaxed max-w-sm mx-auto font-sans">
+                                {success.message}
+                            </p>
+                        </div>
+
                         <Button
-                            size="lg"
-                            className="w-full min-h-12 rounded-xl bg-brand-gold text-brand-deep font-semibold hover:bg-brand-gold/90 shadow-lg shadow-brand-gold/15 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                            asChild
+                            className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 transition-all duration-300 shadow-2xl shadow-brand-gold/20"
                         >
-                            Go to login
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            <Link href="/login" className="flex items-center gap-2">
+                                Enter Workspace
+                                <ArrowRight className="size-4" />
+                            </Link>
                         </Button>
-                    </Link>
-                </GlassCard>
+                    </GlassCard>
+                </motion.div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-dvh w-full relative overflow-hidden bg-brand-deep-950 flex flex-col">
+        <div className="min-h-dvh w-full relative overflow-hidden bg-brand-deep-950 flex flex-col selection:bg-brand-gold/30">
             <RegisterBackdrop />
 
             <div className="relative z-10 flex-1 flex flex-col justify-center px-4 pt-10 pb-14 sm:px-8 lg:px-14 lg:py-12">
-                <div className="mx-auto w-full max-w-6xl grid gap-8 lg:gap-16 lg:grid-cols-[1fr_minmax(300px,420px)] lg:items-center">
-                    <header className="animate-in fade-in slide-in-from-left-4 duration-700 max-w-xl lg:pr-4 space-y-6 lg:space-y-8">
-                        <div className="flex items-center gap-4">
-                            <div className="relative h-14 w-14 shrink-0 ring-1 ring-brand-gold/20 ring-offset-2 ring-offset-brand-deep-950 rounded-2xl">
-                                <Image
-                                    src="/images/logo-white.png"
-                                    alt="Cloove"
-                                    fill
-                                    className="object-contain p-1"
-                                    priority
-                                />
-                            </div>
-                            <div className="h-px flex-1 max-w-[120px] bg-linear-to-r from-brand-gold/50 to-transparent hidden sm:block" />
-                        </div>
-
-                        <div className="relative max-lg:pl-1">
-                            <div
-                                className="pointer-events-none absolute -left-1 top-1 bottom-0 w-[3px] rounded-full bg-linear-to-b from-brand-gold via-brand-gold/50 to-transparent opacity-90 lg:hidden"
-                                aria-hidden
-                            />
-                            <div className="max-lg:pl-5 space-y-4 lg:space-y-4">
-                                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.45em] text-brand-gold">
-                                    Calm intelligence
-                                </p>
-                                <h1 className="font-serif text-[2.65rem] leading-[0.98] sm:text-5xl lg:text-[3.25rem] lg:leading-[1.08] text-brand-cream font-medium tracking-tight">
-                                    Claim your
-                                    <span className="block mt-2 italic font-normal text-[2.2rem] sm:text-[2.6rem] text-brand-gold/90 lg:mt-1 lg:text-[3.25rem] lg:text-brand-cream/95">
-                                        workspace.
-                                    </span>
-                                </h1>
-                                <p className="hidden lg:block text-brand-cream/60 text-base sm:text-lg leading-relaxed font-sans max-w-md">
-                                    Join teams who run operations with quiet confidence—verification stays lightweight,
-                                    your data stays yours.
-                                </p>
-                                <p className="lg:hidden text-brand-cream/55 text-sm leading-relaxed">
-                                    Quietly powerful ops—verify by email or WhatsApp, then step into your dashboard.
-                                </p>
-                                <ul className="hidden lg:block space-y-4 text-sm text-brand-cream/55 border-l border-white/10 pl-5">
-                                    <li className="leading-relaxed">
-                                        <span className="text-brand-gold font-medium">Email</span> or{" "}
-                                        <span className="text-brand-gold font-medium">WhatsApp</span>
-                                        —choose what fits your day.
-                                    </li>
-                                    <li className="leading-relaxed">
-                                        Optional password now; finish credentials after you verify.
-                                    </li>
-                                    <li className="leading-relaxed">Built for serious businesses, without the noise.</li>
-                                </ul>
-                                <div className="flex lg:hidden flex-wrap gap-2 pt-1">
-                                    {[
-                                        "Email or WhatsApp",
-                                        "Lightweight verify",
-                                        "Serious businesses",
-                                    ].map((label) => (
-                                        <span
-                                            key={label}
-                                            className="inline-flex items-center rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-brand-cream/70"
-                                        >
-                                            {label}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </header>
-
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 max-lg:-mt-4 relative">
-                        <span
-                            className="pointer-events-none absolute -top-3 right-6 font-serif text-5xl text-brand-gold/12 select-none lg:hidden"
-                            aria-hidden
-                        >
-                            01
-                        </span>
-                        <GlassCard
-                            allowOverflow
-                            className="p-7 sm:p-9 border-white/10 shadow-2xl bg-white/6 backdrop-blur-2xl relative overflow-visible max-lg:ring-1 max-lg:ring-brand-gold/15 max-lg:shadow-[0_-20px_60px_rgba(0,0,0,0.45)]"
-                        >
-                            <div
-                                className="absolute -top-px left-8 right-8 h-px bg-linear-to-r from-transparent via-brand-gold/35 to-transparent pointer-events-none"
-                                aria-hidden
-                            />
-                            <div className="mb-8">
-                                <h2 className="font-serif text-2xl text-brand-cream tracking-tight">Create account</h2>
-                                <p className="text-brand-cream/50 text-xs mt-2 uppercase tracking-[0.2em] font-semibold">
-                                    Identity & access
-                                </p>
-                            </div>
-
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                <div
-                                    className="flex rounded-2xl bg-brand-deep-900/80 border border-white/10 p-1 gap-1"
-                                    role="tablist"
-                                    aria-label="Sign up method"
-                                >
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={() => setIdentifierType("email")}
-                                        className={cn(
-                                            "flex-1 gap-2 py-3 rounded-xl h-auto font-medium transition-all duration-300",
-                                            identifierType === "email"
-                                                ? "bg-brand-gold/15 text-brand-gold border border-brand-gold/25 shadow-[0_0_28px_rgba(212,175,55,0.08)] hover:bg-brand-gold/20 hover:text-brand-gold"
-                                                : "text-brand-cream/55 hover:text-brand-cream border border-transparent"
-                                        )}
-                                        aria-selected={identifierType === "email"}
-                                        role="tab"
-                                    >
-                                        <Mail className="size-4 shrink-0" aria-hidden />
-                                        Email
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={() => setIdentifierType("phone")}
-                                        className={cn(
-                                            "flex-1 gap-2 py-3 rounded-xl h-auto font-medium transition-all duration-300",
-                                            identifierType === "phone"
-                                                ? "bg-brand-gold/15 text-brand-gold border border-brand-gold/25 shadow-[0_0_28px_rgba(212,175,55,0.08)] hover:bg-brand-gold/20 hover:text-brand-gold"
-                                                : "text-brand-cream/55 hover:text-brand-cream border border-transparent"
-                                        )}
-                                        aria-selected={identifierType === "phone"}
-                                        role="tab"
-                                    >
-                                        <Phone className="size-4 shrink-0" aria-hidden />
-                                        Phone
-                                    </Button>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/70">
-                                            First name
-                                        </Label>
-                                        <Input
-                                            type="text"
-                                            required
-                                            value={firstName}
-                                            onChange={(e) => setFirstName(e.target.value)}
-                                            className="h-11 min-h-11 box-border bg-white/8 border-white/15 text-brand-cream placeholder:text-white/35 focus-visible:ring-brand-gold/35 transition-all duration-300"
-                                            placeholder="First name"
-                                            autoComplete="given-name"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/70">
-                                            Middle
-                                        </Label>
-                                        <Input
-                                            type="text"
-                                            value={middleName}
-                                            onChange={(e) => setMiddleName(e.target.value)}
-                                            className="h-11 min-h-11 box-border bg-white/8 border-white/15 text-brand-cream placeholder:text-white/35 focus-visible:ring-brand-gold/35 transition-all duration-300"
-                                            placeholder="Optional"
-                                            autoComplete="additional-name"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/70">
-                                            Last name
-                                        </Label>
-                                        <Input
-                                            type="text"
-                                            value={lastName}
-                                            onChange={(e) => setLastName(e.target.value)}
-                                            className="h-11 min-h-11 box-border bg-white/8 border-white/15 text-brand-cream placeholder:text-white/35 focus-visible:ring-brand-gold/35 transition-all duration-300"
-                                            placeholder="Last name"
-                                            autoComplete="family-name"
-                                        />
-                                    </div>
-                                </div>
-
-                                {identifierType === "email" ? (
-                                    <>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/70">
-                                                Email
-                                            </Label>
-                                            <Input
-                                                type="email"
-                                                required
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                className="h-11 min-h-11 box-border bg-white/8 border-white/15 text-brand-cream placeholder:text-white/35 focus-visible:ring-brand-gold/35 transition-all duration-300"
-                                                placeholder="you@example.com"
-                                                autoComplete="email"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/70">
-                                                Country
-                                            </Label>
-                                            <CountrySelector
-                                                countries={countries}
-                                                selectedCountry={country}
-                                                onSelect={setCountry}
-                                                disabled={isSubmitting}
-                                                showName={true}
-                                                triggerClassName="h-11 min-h-11 w-full rounded-xl border-white/15 px-3 py-0 bg-white/8 text-brand-cream hover:bg-white/10 transition-all duration-300"
-                                            />
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/70">
-                                            Phone number
-                                        </Label>
-                                        <p className="text-xs text-brand-cream/50 -mt-0.5 leading-relaxed">
-                                            Use a number with WhatsApp. You&apos;ll verify by messaging our bot.
-                                        </p>
-                                        <div className="flex min-h-11 items-stretch rounded-xl border border-white/15 bg-white/8 focus-within:border-brand-gold/35 focus-within:ring-1 focus-within:ring-brand-gold/25 transition-all duration-300">
-                                            <CountrySelector
-                                                countries={countries}
-                                                selectedCountry={country}
-                                                onSelect={setCountry}
-                                                disabled={isSubmitting}
-                                                triggerClassName="h-11 min-h-11 rounded-none rounded-l-xl border-0 bg-transparent hover:bg-white/10 shrink-0 min-w-0 w-auto px-3 py-0 transition-all duration-300"
-                                            />
-                                            <span className="w-px bg-white/15 self-stretch shrink-0 my-2" aria-hidden />
-                                            <Input
-                                                type="tel"
-                                                required
-                                                value={phone}
-                                                onChange={(e) => setPhone(e.target.value)}
-                                                className="h-11 min-h-11 rounded-none rounded-r-xl border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-brand-cream placeholder:text-white/35 min-w-0 flex-1 box-border"
-                                                placeholder={country ? `${country.phoneCode} …` : "Phone"}
-                                                autoComplete="tel"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="space-y-1.5">
-                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/70">
-                                        Password{" "}
-                                        <span className="font-normal normal-case tracking-normal text-brand-cream/45">
-                                            (optional — set on verify)
-                                        </span>
-                                    </Label>
-                                    <div className="relative">
-                                        <Input
-                                            type={showPassword ? "text" : "password"}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            minLength={6}
-                                            className="h-11 min-h-11 box-border pr-11 bg-white/8 border-white/15 text-brand-cream placeholder:text-white/35 focus-visible:ring-brand-gold/35 transition-all duration-300"
-                                            placeholder="Min 6 characters"
-                                            autoComplete="new-password"
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => setShowPassword((p) => !p)}
-                                            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg text-brand-cream/50 hover:text-brand-cream hover:bg-white/5 transition-all duration-300"
-                                            aria-label={showPassword ? "Hide password" : "Show password"}
-                                        >
-                                            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="w-full min-h-12 rounded-xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 shadow-xl shadow-brand-gold/10 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:hover:scale-100"
-                                >
-                                    {isSubmitting ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" aria-label="Submitting" />
-                                    ) : (
-                                        <>
-                                            Create account
-                                            <ArrowRight className="w-4 h-4 ml-2" />
-                                        </>
-                                    )}
-                                </Button>
-                            </form>
-                        </GlassCard>
-
-                        <p className="mt-8 text-center text-brand-cream/50 text-sm">
-                            Already have an account?{" "}
-                            <Link
-                                href="/login"
-                                className="text-brand-gold hover:text-brand-gold-bright underline-offset-4 hover:underline transition-colors duration-300"
+                <div className="mx-auto w-full max-w-6xl">
+                    <AnimatePresence mode="wait">
+                        {step === 0 ? (
+                            <motion.div
+                                key="role-selection"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                className="grid gap-12 lg:grid-cols-[1fr_minmax(400px,680px)] lg:items-center"
                             >
-                                Log in
-                            </Link>
-                        </p>
-                        <p className="mt-6 text-center text-[10px] text-brand-cream/30 uppercase tracking-[0.3em] font-medium">
-                            Cloove AI &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span>
-                        </p>
-                    </div>
+                                <header className="space-y-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative h-14 w-14 ring-1 ring-brand-gold/30 ring-offset-4 ring-offset-brand-deep-950 rounded-2xl bg-brand-deep-900 overflow-hidden group">
+                                            <Image
+                                                src="/images/logo-white.png"
+                                                alt="Cloove"
+                                                fill
+                                                className="object-contain p-2 transition-transform duration-700 group-hover:scale-110"
+                                                priority
+                                            />
+                                        </div>
+                                        <div className="h-px w-24 bg-linear-to-r from-brand-gold/50 to-transparent" />
+                                    </div>
+
+                                    <div className="space-y-5">
+                                        <motion.p 
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.2 }}
+                                            className="text-[11px] font-bold uppercase tracking-[0.5em] text-brand-gold"
+                                        >
+                                            Intelligent Operations
+                                        </motion.p>
+                                        <h1 className="font-serif text-[3.25rem] leading-[1.05] md:text-6xl lg:text-7xl text-brand-cream font-medium tracking-tight">
+                                            Choose your <br />
+                                            <span className="italic font-normal text-brand-gold/90">vanguard.</span>
+                                        </h1>
+                                        <p className="text-brand-cream/60 text-lg leading-relaxed max-w-md font-sans">
+                                            Select the role that fits your mission. Whether running a business or scaling 
+                                            the field, Cloove provides the intelligent edge.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-3">
+                                        {[
+                                            { icon: Globe, text: "Global Reach" },
+                                            { icon: ShieldCheck, text: "Enterprise Security" },
+                                            { icon: Zap, text: "Real-time Intelligence" }
+                                        ].map((feat, i) => (
+                                            <motion.div 
+                                                key={feat.text}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.4 + i * 0.1 }}
+                                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] text-brand-cream/70 uppercase tracking-widest font-semibold"
+                                            >
+                                                <feat.icon className="size-3 text-brand-gold" />
+                                                {feat.text}
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </header>
+
+                                <div className="grid sm:grid-cols-2 gap-6">
+                                    <RoleCard
+                                        title="Business Owner"
+                                        description="Run your commerce with quiet confidence. Manage inventory, sales, and analytics from one premium dashboard."
+                                        icon={Briefcase}
+                                        onClick={() => {
+                                            setIntendedRole("business_owner")
+                                            setStep(1)
+                                        }}
+                                        badge="Preferred"
+                                    />
+                                    <RoleCard
+                                        title="Field Agent"
+                                        description="The engine of the ecosystem. Onboard businesses, earn commissions, and drive operations on the ground."
+                                        icon={Users}
+                                        onClick={() => {
+                                            setIntendedRole("field_agent")
+                                            setStep(1)
+                                        }}
+                                    />
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="registration-form"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="grid gap-8 lg:gap-16 lg:grid-cols-[1fr_minmax(300px,440px)] lg:items-center"
+                            >
+                                <header className="max-w-xl space-y-8">
+                                    <button 
+                                        onClick={() => setStep(0)}
+                                        className="text-brand-gold/65 hover:text-brand-gold flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-bold transition-colors group"
+                                    >
+                                        <ArrowRight className="size-3 rotate-180 transition-transform group-hover:-translate-x-1" />
+                                        Back to selection
+                                    </button>
+                                    
+                                    <div className="space-y-4">
+                                        <p className="text-[11px] font-bold uppercase tracking-[0.45em] text-brand-gold">
+                                            {intendedRole === "field_agent" ? "Agent Onboarding" : "Merchant Entry"}
+                                        </p>
+                                        <h1 className="font-serif text-[3rem] leading-[1] sm:text-5xl lg:text-6xl text-brand-cream font-medium tracking-tight">
+                                            {intendedRole === "field_agent" ? (
+                                                <>Become a <span className="italic font-normal text-brand-gold/90 text-[2.8rem] sm:text-[3.2rem] lg:text-[4rem]">partner.</span></>
+                                            ) : (
+                                                <>Claim your <span className="italic font-normal text-brand-gold/90 text-[2.8rem] sm:text-[3.2rem] lg:text-[4rem]">workspace.</span></>
+                                            )}
+                                        </h1>
+                                        <p className="text-brand-cream/60 text-lg leading-relaxed max-w-sm">
+                                            {intendedRole === "field_agent" 
+                                                ? "Join the force driving commerce across the continent. Verify once, earn forever." 
+                                                : "Join teams who run operations with quiet confidence—verification stays lightweight."}
+                                        </p>
+                                    </div>
+
+                                    <div className="hidden lg:flex items-center gap-6 p-6 rounded-3xl bg-brand-gold/5 border border-brand-gold/15 backdrop-blur-sm">
+                                        <div className="size-12 rounded-2xl bg-brand-gold/20 flex items-center justify-center shrink-0">
+                                            <Sparkle className="size-6 text-brand-gold animate-pulse" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-semibold text-brand-cream">Elite Access</p>
+                                            <p className="text-xs text-brand-cream/50 leading-relaxed">
+                                                You're registering as a <span className="text-brand-gold">{intendedRole?.replace('_', ' ')}</span>.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </header>
+
+                                <div className="relative">
+                                    <GlassCard
+                                        allowOverflow
+                                        className="p-8 sm:p-10 border-white/10 shadow-2xl bg-white/5 backdrop-blur-3xl relative overflow-visible ring-1 ring-white/5"
+                                    >
+                                        <div className="mb-8">
+                                            <h2 className="font-serif text-2xl text-brand-cream tracking-tight">Create account</h2>
+                                            <p className="text-brand-cream/50 text-[10px] mt-2 uppercase tracking-[0.25em] font-bold">
+                                                Secure Identity Gateway
+                                            </p>
+                                        </div>
+
+                                        <form onSubmit={handleSubmit} className="space-y-6">
+                                            <div
+                                                className="flex rounded-2xl bg-black/20 border border-white/5 p-1 gap-1"
+                                                role="tablist"
+                                            >
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    onClick={() => setIdentifierType("email")}
+                                                    className={cn(
+                                                        "flex-1 gap-2 py-3 rounded-xl h-auto font-medium transition-all duration-300",
+                                                        identifierType === "email"
+                                                            ? "bg-brand-gold/15 text-brand-gold border border-brand-gold/25 shadow-2xl shadow-brand-gold/10"
+                                                            : "text-brand-cream/45 hover:text-brand-cream hover:bg-white/5"
+                                                    )}
+                                                >
+                                                    <Mail className="size-3.5" />
+                                                    Email
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    onClick={() => setIdentifierType("phone")}
+                                                    className={cn(
+                                                        "flex-1 gap-2 py-3 rounded-xl h-auto font-medium transition-all duration-300",
+                                                        identifierType === "phone"
+                                                            ? "bg-brand-gold/15 text-brand-gold border border-brand-gold/25 shadow-2xl shadow-brand-gold/10"
+                                                            : "text-brand-cream/45 hover:text-brand-cream hover:bg-white/5"
+                                                    )}
+                                                >
+                                                    <Phone className="size-3.5" />
+                                                    Phone
+                                                </Button>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                        First name
+                                                    </Label>
+                                                    <Input
+                                                        required
+                                                        value={firstName}
+                                                        onChange={(e) => setFirstName(e.target.value)}
+                                                        className="bg-white/5 border-white/10 text-brand-cream focus:border-brand-gold/50 h-12 md:h-13"
+                                                        placeholder="Jane"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                        Last name
+                                                    </Label>
+                                                    <Input
+                                                        required
+                                                        value={lastName}
+                                                        onChange={(e) => setLastName(e.target.value)}
+                                                        className="bg-white/5 border-white/10 text-brand-cream focus:border-brand-gold/50 h-12 md:h-13"
+                                                        placeholder="Doe"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {identifierType === "email" ? (
+                                                <div className="space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                            Email Address
+                                                        </Label>
+                                                        <Input
+                                                            type="email"
+                                                            required
+                                                            value={email}
+                                                            onChange={(e) => setEmail(e.target.value)}
+                                                            className="bg-white/5 border-white/10 text-brand-cream focus:border-brand-gold/50 h-12 md:h-13"
+                                                            placeholder="jane@company.com"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                            Country
+                                                        </Label>
+                                                        <CountrySelector
+                                                            countries={countries}
+                                                            selectedCountry={country}
+                                                            onSelect={setCountry}
+                                                            disabled={isSubmitting}
+                                                            showName
+                                                            triggerClassName="h-12 md:h-13 w-full rounded-xl border-white/10 bg-white/5 text-brand-cream hover:bg-white/10"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                        Phone number
+                                                    </Label>
+                                                    <div className="flex h-12 md:h-13 rounded-xl border border-white/10 bg-white/5 focus-within:ring-1 focus-within:ring-brand-gold/50 overflow-hidden">
+                                                        <CountrySelector
+                                                            countries={countries}
+                                                            selectedCountry={country}
+                                                            onSelect={setCountry}
+                                                            disabled={isSubmitting}
+                                                            triggerClassName="h-full border-0 bg-transparent px-3 shrink-0"
+                                                        />
+                                                        <span className="w-px bg-white/10 my-2" />
+                                                        <Input
+                                                            type="tel"
+                                                            required
+                                                            value={phone}
+                                                            onChange={(e) => setPhone(e.target.value)}
+                                                            className="border-0 bg-transparent focus-visible:ring-0 flex-1"
+                                                            placeholder={country ? `${country.phoneCode} …` : "Phone"}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="space-y-2">
+                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                    Security Password
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        type={showPassword ? "text" : "password"}
+                                                        value={password}
+                                                        onChange={(e) => setPassword(e.target.value)}
+                                                        className="bg-white/5 border-white/10 text-brand-cream focus:border-brand-gold/50 h-12 md:h-13 pr-10"
+                                                        placeholder="••••••••"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-cream/30 hover:text-brand-gold transition-colors"
+                                                    >
+                                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                type="submit"
+                                                disabled={isSubmitting}
+                                                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 shadow-2xl shadow-brand-gold/10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                                            >
+                                                {isSubmitting ? (
+                                                    <Loader2 className="animate-spin size-5" />
+                                                ) : (
+                                                    <span className="flex items-center gap-2">
+                                                        Initiate Access
+                                                        <ArrowRight className="size-4" />
+                                                    </span>
+                                                )}
+                                            </Button>
+                                        </form>
+                                    </GlassCard>
+                                    
+                                    <p className="mt-8 text-center text-brand-cream/40 text-sm">
+                                        Already a member?{" "}
+                                        <Link href="/login" className="text-brand-gold/80 hover:text-brand-gold font-medium transition-colors">
+                                            Log in
+                                        </Link>
+                                    </p>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </div>
+    )
+}
+
+interface RoleCardProps {
+    title: string
+    description: string
+    icon: any
+    onClick: () => void
+    badge?: string
+}
+
+function RoleCard({ title, description, icon: Icon, onClick, badge }: RoleCardProps) {
+    return (
+        <button
+            onClick={onClick}
+            className="group relative flex flex-col items-start text-left p-8 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-3xl transition-all duration-500 hover:bg-brand-gold/[0.03] hover:border-brand-gold/30 hover:scale-[1.03] hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden"
+        >
+            <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <ArrowRight className="size-6 text-brand-gold -rotate-45" />
+            </div>
+
+            {badge && (
+                <div className="absolute top-6 right-6 px-3 py-1 rounded-full bg-brand-gold/15 border border-brand-gold/25 text-[9px] font-bold text-brand-gold uppercase tracking-widest">
+                    {badge}
+                </div>
+            )}
+
+            <div className="mb-8 size-14 rounded-2xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center group-hover:bg-brand-gold group-hover:scale-110 transition-all duration-500">
+                <Icon className="size-7 text-brand-gold group-hover:text-brand-deep transition-colors duration-500" />
+            </div>
+
+            <h3 className="font-serif text-2xl text-brand-cream mb-3 group-hover:text-brand-gold transition-colors duration-500">
+                {title}
+            </h3>
+            <p className="text-brand-cream/50 text-sm leading-relaxed font-sans group-hover:text-brand-cream/70 transition-colors duration-500">
+                {description}
+            </p>
+
+            <div className="mt-8 pt-6 border-t border-white/5 w-full">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold/60 group-hover:text-brand-gold transition-colors">
+                    Get started
+                </span>
+            </div>
+        </button>
     )
 }

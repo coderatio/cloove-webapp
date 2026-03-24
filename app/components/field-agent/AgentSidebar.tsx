@@ -2,28 +2,34 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
 import { usePathname } from "next/navigation"
 import {
     LayoutDashboard,
     UserPlus,
     Building2,
     Wallet,
-    History,
     LogOut,
-    Settings
+    Settings,
+    User,
+    ShieldCheck,
+    ChevronRight
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { motion } from "framer-motion"
+import { useAuth } from "@/app/components/providers/auth-provider"
 
 const navItems = [
     { href: "", icon: LayoutDashboard, label: "Overview" },
     { href: "/onboard", icon: UserPlus, label: "Onboard" },
-    { href: "/businesses", icon: Building2, label: "Merchants" },
+    { href: "/businesses", icon: Building2, label: "Businesses" },
     { href: "/wallet", icon: Wallet, label: "Wallet" },
 ]
 
 export function AgentSidebar() {
     const pathname = usePathname()
+    const { logout, user } = useAuth()
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
     return (
         <>
@@ -77,7 +83,15 @@ export function AgentSidebar() {
                         <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
                         <span className="font-medium text-sm">Settings</span>
                     </Link>
+                    <Link
+                        href="/field/security"
+                        className="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-cream/60 hover:text-white hover:bg-white/5 transition-all group"
+                    >
+                        <ShieldCheck className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        <span className="font-medium text-sm">Security</span>
+                    </Link>
                     <button
+                        onClick={logout}
                         className="flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full group"
                     >
                         <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -116,7 +130,98 @@ export function AgentSidebar() {
                         </Link>
                     )
                 })}
+
+                {/* Mobile Profile Toggle */}
+                <button
+                    onClick={() => setIsMobileMenuOpen(true)}
+                    className={cn(
+                        "flex flex-col items-center justify-center gap-1 w-16 h-12 rounded-2xl transition-all duration-300 relative text-brand-cream/40"
+                    )}
+                >
+                    <User className="w-5 h-5 transition-transform duration-300" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest">Profile</span>
+                </button>
             </nav>
+
+            {/* Mobile Profile Drawer/Menu */}
+            {isMobileMenuOpen && (
+                <div className="fixed inset-0 z-60 lg:hidden">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                    />
+                    <motion.div
+                        initial={{ y: "100%" }}
+                        animate={{ y: 0 }}
+                        exit={{ y: "100%" }}
+                        className="absolute bottom-0 left-0 right-0 bg-brand-deep rounded-t-[32px] pt-8 pb-12 border-t border-white/10"
+                    >
+                        <div className="flex items-center gap-4 mb-8 pb-8 px-8 border-b border-white/5">
+                            <div className="w-16 h-16 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold font-serif text-2xl">
+                                {user?.firstName?.charAt(0) || user?.fullName?.charAt(0) || "A"}
+                            </div>
+                            <div>
+                                <h4 className="text-xl font-serif font-medium text-white">{user?.fullName}</h4>
+                                <p className="text-white/40 text-sm">Field Agent</p>
+                            </div>
+                        </div>
+
+                        <div className="divide-y divide-white/5 mt-4">
+                            <Link
+                                href="/field/settings"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center justify-between p-5 text-white font-serif font-medium active:bg-white/10 transition-colors"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                                        <Settings className="w-5 h-5" />
+                                    </div>
+                                    <span>Settings</span>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-white/20" />
+                            </Link>
+                            <Link
+                                href="/field/security"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="flex items-center justify-between p-5 text-white font-serif font-medium active:bg-white/10 transition-colors"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                                        <ShieldCheck className="w-5 h-5" />
+                                    </div>
+                                    <span>Security</span>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-white/20" />
+                            </Link>
+                            <button
+                                onClick={() => {
+                                    setIsMobileMenuOpen(false)
+                                    logout()
+                                }}
+                                className="flex items-center justify-between w-full p-5 text-red-400 font-serif font-medium active:bg-red-500/10 transition-colors"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
+                                        <LogOut className="w-5 h-5" />
+                                    </div>
+                                    <span>Log Out</span>
+                                </div>
+                                <ChevronRight className="w-5 h-5 text-red-400/20" />
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="w-full mt-8 p-4 text-white/40 font-bold uppercase tracking-widest text-xs"
+                        >
+                            Close
+                        </button>
+                    </motion.div>
+                </div>
+            )}
         </>
     )
 }

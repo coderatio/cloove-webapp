@@ -373,7 +373,7 @@ export default function WalletPage() {
                                                         key={account.id}
                                                         onClick={() => { setSelectedAccount(account); setShowAccountPicker(false) }}
                                                         className={cn(
-                                                            "w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left",
+                                                            "w-full flex items-center gap-4 p-4 rounded-[20px] border transition-all text-left",
                                                             selectedAccount?.id === account.id
                                                                 ? "bg-brand-gold/10 border-brand-gold/40"
                                                                 : "bg-brand-deep/3 dark:bg-white/3 border-brand-deep/5 hover:border-brand-gold/20 hover:bg-brand-gold/5"
@@ -401,7 +401,7 @@ export default function WalletPage() {
                                         ) : selectedAccount ? (
                                             <button
                                                 onClick={() => setShowAccountPicker(true)}
-                                                className="w-full flex items-center gap-4 p-5 rounded-2xl bg-brand-gold/5 border border-brand-gold/20 hover:bg-brand-gold/10 transition-all text-left"
+                                                className="w-full flex items-center gap-4 p-5 rounded-3xl bg-brand-gold/5 border border-brand-gold/20 hover:bg-brand-gold/10 transition-all text-left"
                                             >
                                                 <div className="w-12 h-12 rounded-2xl bg-brand-deep flex items-center justify-center text-brand-gold shrink-0">
                                                     <Building2 className="w-6 h-6" />

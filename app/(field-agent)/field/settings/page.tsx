@@ -8,11 +8,14 @@ import {
     Mail, 
     MessageSquare, 
     Smartphone,
-    CreditCard
+    CreditCard,
+    LogOut
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import { useAuth } from "@/app/components/providers/auth-provider"
 
 export default function SettingsPage() {
+    const { logout } = useAuth()
     const [notifications, setNotifications] = useState({
         email: true,
         whatsapp: true,
@@ -92,8 +95,19 @@ export default function SettingsPage() {
                 </GlassCard>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4">
-                <Button className="rounded-2xl px-12 h-12 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep font-bold">Save Changes</Button>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-12 border-t border-brand-deep/5 dark:border-white/5">
+                <button
+                    onClick={logout}
+                    className="flex items-center gap-3 px-6 py-3 rounded-2xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all font-bold group"
+                >
+                    <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                    <span>Sign Out of Account</span>
+                </button>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <Button className="w-full sm:w-auto rounded-2xl px-12 h-12 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep font-bold shadow-lg shadow-brand-gold/10">
+                        Save Changes
+                    </Button>
+                </div>
             </div>
         </div>
     )

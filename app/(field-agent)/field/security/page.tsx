@@ -82,7 +82,7 @@ export default function SecurityPage() {
                 </div>
 
                 <div className="mt-8 flex justify-end">
-                    <Button className="w-full md:w-auto rounded-2xl px-12 h-12 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep font-bold">Update Password</Button>
+                    <Button className="w-full md:w-auto rounded-2xl px-12 h-16 md:h-14 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep font-bold">Update Password</Button>
                 </div>
             </GlassCard>
 
@@ -160,7 +160,7 @@ export default function SecurityPage() {
                     <Button
                         onClick={handleUpdatePin}
                         disabled={isSubmittingPin || !pinData.newPin || (user?.hasTransactionPin && !pinData.currentPin)}
-                        className="w-full md:w-auto rounded-2xl px-12 h-14 bg-brand-gold text-brand-deep font-black uppercase tracking-widest shadow-xl shadow-brand-gold/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                        className="w-full md:w-auto rounded-2xl px-12 h-16 md:h-14 bg-brand-gold text-brand-deep font-black uppercase tracking-widest shadow-xl shadow-brand-gold/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
                         {isSubmittingPin ? <Loader2 className="w-5 h-5 animate-spin" /> : (user?.hasTransactionPin ? "Change PIN" : "Set Transaction PIN")}
                     </Button>
