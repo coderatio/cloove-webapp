@@ -217,7 +217,7 @@ export function BusinessOnboardingForm() {
                                         <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
                                         <Input
                                             placeholder="e.g. Sarah Johnson"
-                                            className="h-14 pl-14 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20"
+                                            className="h-14 sm:h-14 lg:h-12 pl-14 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20"
                                             value={formData.merchantName}
                                             onChange={(e) => setFormData(p => ({ ...p, merchantName: e.target.value }))}
                                         />
@@ -229,7 +229,7 @@ export function BusinessOnboardingForm() {
                                         <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
                                         <Input
                                             placeholder="e.g. +234 801 234 5678"
-                                            className="h-14 pl-14 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20 font-mono"
+                                            className="h-14 sm:h-14 lg:h-12 pl-14 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20 font-mono"
                                             value={formData.phone}
                                             onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
                                         />
@@ -293,7 +293,7 @@ export function BusinessOnboardingForm() {
                         className="rounded-2xl h-14 px-8 border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-all font-bold text-brand-deep/60 dark:text-brand-cream/60 disabled:opacity-20 translate-y-0 active:translate-y-1"
                     >
                         <ChevronLeft className="w-5 h-5 mr-2" />
-                        {step === 1 ? "Cancel" : "Previous Step"}
+                        {step === 1 ? "Cancel" : "Back"}
                     </Button>
 
                     {step < 3 ? (
@@ -314,7 +314,7 @@ export function BusinessOnboardingForm() {
                             {isSubmitting ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />
                             ) : (
-                                "Complete Onboarding"
+                                "Submit"
                             )}
                         </Button>
                     )}

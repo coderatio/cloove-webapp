@@ -31,6 +31,7 @@ interface User {
         expiresAt?: string
         refreshInterval?: string
     }
+    hasTransactionPin: boolean
 }
 
 interface AuthContextType {

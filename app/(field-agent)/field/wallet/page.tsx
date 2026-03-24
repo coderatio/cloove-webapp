@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { useFieldAgent } from "@/app/domains/field-agent/providers/FieldAgentProvider"
+import { useAuth } from "@/app/components/providers/auth-provider"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -16,11 +17,14 @@ import {
     ArrowUpRight,
     CreditCard,
     Plus,
-    Banknote
+    Banknote,
+    ShieldAlert
 } from "lucide-react"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 import { AgentStatCard } from "@/app/components/field-agent/AgentStatCard"
+import { PinVerificationDrawer } from "@/app/components/shared/PinVerificationDrawer"
 import {
     Drawer,
     DrawerContent,
@@ -52,7 +56,11 @@ const PAYOUT_HISTORY: PayoutRecord[] = [
 
 export default function WalletPage() {
     const { stats } = useFieldAgent()
+    const { user } = useAuth()
+    const router = useRouter()
     const [activeDrawer, setActiveDrawer] = useState<'payout' | 'add-account' | 'detail' | null>(null)
+    const [showPinDrawer, setShowPinDrawer] = useState(false)
+    const [pinAction, setPinAction] = useState<{ type: string; metadata: any } | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [payoutAmount, setPayoutAmount] = useState(0)
     const [selectedPayout, setSelectedPayout] = useState<PayoutRecord | null>(null)
@@ -81,8 +89,24 @@ export default function WalletPage() {
             return
         }
 
+        if (!user?.hasTransactionPin) {
+            toast.error("Transaction PIN required. Please set it in Security settings.")
+            router.push("/field/security")
+            return
+        }
+
+        setPinAction({
+            type: 'REQUEST_WALLET_WITHDRAWAL',
+            metadata: { amount: payoutAmount, channel: "Access Bank (**** 4567)" }
+        })
+        setShowPinDrawer(true)
+    }
+
+    const onPayoutVerified = async (data: any) => {
         setIsSubmitting(true)
-        await new Promise(r => setTimeout(r, 2000))
+        // In a real app, the verification already executed the action on the server.
+        // For this demo, we'll simulate the remaining UI logic.
+        await new Promise(r => setTimeout(r, 1000))
         toast.success(`Payout of ${formatCurrency(payoutAmount)} requested successfully!`)
         setIsSubmitting(false)
         setActiveDrawer(null)
@@ -95,8 +119,22 @@ export default function WalletPage() {
             return
         }
 
+        if (!user?.hasTransactionPin) {
+            toast.error("Transaction PIN required. Please set it in Security settings.")
+            router.push("/field/security")
+            return
+        }
+
+        setPinAction({
+            type: 'ADD_PAYOUT_ACCOUNT',
+            metadata: { ...accountData }
+        })
+        setShowPinDrawer(true)
+    }
+
+    const onAccountVerified = async (data: any) => {
         setIsSubmitting(true)
-        await new Promise(r => setTimeout(r, 1500))
+        await new Promise(r => setTimeout(r, 1000))
         toast.success("Payout channel integrated successfully!")
         setIsSubmitting(false)
         setActiveDrawer(null)
@@ -113,7 +151,7 @@ export default function WalletPage() {
                 </div>
                 <Button
                     onClick={() => setActiveDrawer('payout')}
-                    className="w-full md:w-auto bg-brand-deep text-white rounded-[24px] px-8 md:px-12 h-14 md:h-20 font-bold shadow-2xl shadow-brand-deep/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 md:gap-4"
+                    className="w-full md:w-auto bg-brand-deep text-white rounded-[24px] px-8 md:px-12 h-16 md:h-20 font-bold shadow-2xl shadow-brand-deep/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 md:gap-4"
                 >
                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-brand-gold/10 flex items-center justify-center">
                         <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-brand-gold" />
@@ -123,7 +161,7 @@ export default function WalletPage() {
             </div>
 
             {/* Financial Stats — horizontal scroll on mobile/tablet, grid on desktop */}
-            <div className="flex gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 scrollbar-none">
+            <div className="flex gap-4 overflow-x-auto py-3 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 scrollbar-none">
                 <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
                     <AgentStatCard
                         title="Lifetime Earnings"
@@ -201,7 +239,7 @@ export default function WalletPage() {
                         {/* Integration Card */}
                         <div
                             onClick={() => setActiveDrawer('add-account')}
-                            className="p-5 md:p-8 rounded-[28px] md:rounded-[40px] border-2 border-dashed border-brand-deep/10 dark:border-white/10 bg-brand-deep/[0.01] dark:bg-white/[0.02] flex items-center gap-4 md:gap-6 group hover:border-brand-gold/40 hover:bg-brand-gold/5 transition-all cursor-pointer min-h-[100px] md:min-h-[140px]"
+                            className="p-5 md:p-8 rounded-[28px] md:rounded-[40px] border-2 border-dashed border-brand-deep/10 dark:border-white/10 bg-brand-deep/1 dark:bg-white/2 flex items-center gap-4 md:gap-6 group hover:border-brand-gold/40 hover:bg-brand-gold/5 transition-all cursor-pointer min-h-[100px] md:min-h-[140px]"
                         >
                             <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl md:rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-deep/10 dark:text-white/40 group-hover:bg-brand-gold group-hover:text-white transition-all duration-500 shadow-sm border border-brand-deep/5">
                                 <Plus className="w-6 h-6 md:w-8 md:h-8" />
@@ -354,7 +392,7 @@ export default function WalletPage() {
                         <Button
                             onClick={handleAddAccount}
                             disabled={isSubmitting}
-                            className="h-16 w-full bg-brand-gold text-brand-deep rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-brand-gold/20 transition-all hover:scale-[1.02] active:scale-95"
+                            className="h-16 w-full bg-brand-gold hover:text-brand-cream text-brand-deep rounded-2xl font-black uppercase tracking-widest shadow-2xl shadow-brand-gold/20 transition-all hover:scale-[1.02] active:scale-95"
                         >
                             {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Add Account"}
                         </Button>
@@ -410,6 +448,16 @@ export default function WalletPage() {
                     </DrawerFooter>
                 </DrawerContent>
             </Drawer>
+
+            <PinVerificationDrawer
+                open={showPinDrawer}
+                onOpenChange={setShowPinDrawer}
+                onSuccess={pinAction?.type === 'REQUEST_WALLET_WITHDRAWAL' ? onPayoutVerified : onAccountVerified}
+                actionType={pinAction?.type || ''}
+                metadata={pinAction?.metadata || {}}
+                title={pinAction?.type === 'REQUEST_WALLET_WITHDRAWAL' ? "Verify Payout" : "Verify Account Attachment"}
+                description={`Please enter your PIN to authorize ${pinAction?.type === 'REQUEST_WALLET_WITHDRAWAL' ? "this extraction" : "this new connection"}.`}
+            />
         </div>
     )
 }
