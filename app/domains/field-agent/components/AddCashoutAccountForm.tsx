@@ -89,7 +89,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
     if (view === "provider-selection") {
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="space-y-2 text-center">
+                <div className="space-y-2 text-left">
                     <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">Select Payment Partner</h3>
                     <p className="text-sm text-brand-deep/40 dark:text-brand-cream/40">Choose your preferred settlement network.</p>
                 </div>
@@ -220,7 +220,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                         <div className={cn(
                             "h-14 flex items-center px-5 rounded-2xl border transition-all duration-500",
                             resolveError ? "bg-rose-500/5 border-rose-500/20" :
-                            details.accountName ? "bg-brand-gold/5 border-brand-gold/20" : "bg-brand-deep/2 dark:bg-white/2 border-transparent"
+                                details.accountName ? "bg-brand-gold/5 border-brand-gold/20" : "bg-brand-deep/2 dark:bg-white/2 border-transparent"
                         )}>
                             {resolveError ? (
                                 <p className="text-xs font-bold text-rose-500 uppercase tracking-tight flex items-center gap-2">
