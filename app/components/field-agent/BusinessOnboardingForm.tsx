@@ -90,7 +90,7 @@ export function BusinessOnboardingForm() {
                                     "w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center transition-all duration-500 border-2",
                                     step >= s.id
                                         ? "bg-brand-deep border-brand-deep text-white shadow-xl shadow-brand-deep/20"
-                                        : "bg-white/50 border-brand-deep/5 text-brand-deep/20 dark:bg-white/5 dark:border-white/5"
+                                        : "bg-white/50 border-brand-deep/5 text-brand-deep/20 dark:bg-white/5 dark:border-white/5 dark:text-brand-cream/20"
                                 )}
                                 animate={step === s.id ? { scale: 1.15 } : { scale: 1 }}
                             >
@@ -100,7 +100,7 @@ export function BusinessOnboardingForm() {
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0 }}
                                         animate={{ opacity: 1, scale: 1 }}
-                                        className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-brand-cream"
+                                        className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-brand-cream dark:border-brand-deep"
                                     >
                                         <CheckCircle2 className="w-3 h-3 text-white" />
                                     </motion.div>
@@ -108,7 +108,7 @@ export function BusinessOnboardingForm() {
                             </motion.div>
                             <span className={cn(
                                 "text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-black transition-colors duration-500",
-                                step === s.id ? "text-brand-deep" : "text-brand-deep/20"
+                                step === s.id ? "text-brand-deep dark:text-brand-cream" : "text-brand-deep/20 dark:text-brand-cream/20"
                             )}>
                                 {s.title}
                             </span>
@@ -141,13 +141,13 @@ export function BusinessOnboardingForm() {
                         >
                             <div className="space-y-2">
                                 <p className="text-[10px] font-black text-brand-gold uppercase tracking-[0.3em] mb-1">Step 01</p>
-                                <h2 className="text-3xl font-serif font-medium text-brand-deep">Business Details</h2>
-                                <p className="text-sm text-brand-deep/50 mt-1 font-medium italic">Enter the basic details of the merchant's business.</p>
+                                <h2 className="text-3xl font-serif font-medium text-brand-deep dark:text-brand-cream">Business Details</h2>
+                                <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 mt-1 font-medium italic">Enter the basic details of the merchant's business.</p>
                             </div>
 
                             <div className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 px-1">Business Registered Name</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1">Business Registered Name</label>
                                     <Input
                                         placeholder="e.g. Lagos Luxury Stitches"
                                         value={formData.businessName}
@@ -158,7 +158,7 @@ export function BusinessOnboardingForm() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 px-1">Industry Category</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1">Industry Category</label>
                                         <Select
                                             value={formData.category}
                                             onValueChange={(v) => setFormData(p => ({ ...p, category: v }))}
@@ -175,7 +175,7 @@ export function BusinessOnboardingForm() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 px-1">Business Location</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1">Business Location</label>
                                         <Select
                                             value={formData.country}
                                             onValueChange={(v) => setFormData(p => ({ ...p, country: v }))}
@@ -206,15 +206,15 @@ export function BusinessOnboardingForm() {
                         >
                             <div className="space-y-2">
                                 <p className="text-[10px] font-black text-brand-gold uppercase tracking-[0.3em] mb-1">Step 02</p>
-                                <h2 className="text-3xl font-serif font-medium text-brand-deep">Owner Profile</h2>
-                                <p className="text-sm text-brand-deep/50 mt-1 font-medium italic">Enter the name and contact details of the business owner.</p>
+                                <h2 className="text-3xl font-serif font-medium text-brand-deep dark:text-brand-cream">Owner Profile</h2>
+                                <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 mt-1 font-medium italic">Enter the name and contact details of the business owner.</p>
                             </div>
 
                             <div className="space-y-6">
                                 <div className="space-y-2 group">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 px-1 group-focus-within:text-brand-gold transition-colors">Legal Full Name</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1 group-focus-within:text-brand-gold transition-colors">Legal Full Name</label>
                                     <div className="relative">
-                                        <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 group-focus-within:text-brand-gold transition-colors" />
+                                        <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
                                         <Input
                                             placeholder="e.g. Sarah Johnson"
                                             className="h-14 pl-14 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20"
@@ -224,9 +224,9 @@ export function BusinessOnboardingForm() {
                                     </div>
                                 </div>
                                 <div className="space-y-2 group">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 px-1 group-focus-within:text-brand-gold transition-colors">Direct Contact Line</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1 group-focus-within:text-brand-gold transition-colors">Direct Contact Line</label>
                                     <div className="relative">
-                                        <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 group-focus-within:text-brand-gold transition-colors" />
+                                        <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
                                         <Input
                                             placeholder="e.g. +234 801 234 5678"
                                             className="h-14 pl-14 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20 font-mono"
@@ -236,7 +236,7 @@ export function BusinessOnboardingForm() {
                                     </div>
                                     <div className="flex items-center gap-2 px-1 mt-2">
                                         <Sparkles className="w-3 h-3 text-brand-gold animate-pulse" />
-                                        <p className="text-[10px] text-brand-deep/40 font-bold uppercase tracking-wider">A secure verification invite will be sent.</p>
+                                        <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 font-bold uppercase tracking-wider">A secure verification invite will be sent.</p>
                                     </div>
                                 </div>
                             </div>
@@ -254,8 +254,8 @@ export function BusinessOnboardingForm() {
                         >
                             <div className="space-y-2">
                                 <p className="text-[10px] font-black text-brand-gold uppercase tracking-[0.3em] mb-1">Step 03</p>
-                                <h2 className="text-3xl font-serif font-medium text-brand-deep">Review Details</h2>
-                                <p className="text-sm text-brand-deep/50 mt-1 font-medium italic">Check the details below before submitting.</p>
+                                <h2 className="text-3xl font-serif font-medium text-brand-deep dark:text-brand-cream">Review Details</h2>
+                                <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 mt-1 font-medium italic">Check the details below before submitting.</p>
                             </div>
 
                             <div className="flex flex-col gap-3 p-2 bg-brand-deep/3 rounded-[32px] border border-brand-deep/5 shadow-inner">
@@ -266,15 +266,15 @@ export function BusinessOnboardingForm() {
                                     { label: "Merchant", value: formData.merchantName, icon: User },
                                     { label: "Contact", value: formData.phone, icon: Phone }
                                 ].map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between p-5 bg-white rounded-3xl border border-brand-deep/5 shadow-sm group hover:scale-[1.02] transition-all">
+                                    <div key={i} className="flex items-center justify-between p-5 bg-white dark:bg-white/5 rounded-3xl border border-brand-deep/5 dark:border-white/5 shadow-sm group hover:scale-[1.02] transition-all">
                                         <div className="flex items-center gap-4">
-                                            <div className="p-2.5 bg-brand-deep/5 rounded-xl text-brand-deep/20 group-hover:bg-brand-gold/10 group-hover:text-brand-gold transition-colors">
+                                            <div className="p-2.5 bg-brand-deep/5 dark:bg-white/5 rounded-xl text-brand-deep/20 dark:text-brand-cream/20 group-hover:bg-brand-gold/10 group-hover:text-brand-gold transition-colors">
                                                 <item.icon className="w-4 h-4" />
                                             </div>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30">{item.label}</span>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30">{item.label}</span>
                                         </div>
                                         <span className={cn(
-                                            "text-sm font-bold text-brand-deep truncate max-w-[150px]",
+                                            "text-sm font-bold text-brand-deep dark:text-brand-cream truncate max-w-[150px]",
                                             item.label === "Contact" && "font-mono"
                                         )}>{item.value || "—"}</span>
                                     </div>
@@ -290,7 +290,7 @@ export function BusinessOnboardingForm() {
                         variant="outline"
                         onClick={handleBack}
                         disabled={isSubmitting}
-                        className="rounded-2xl h-14 px-8 border-brand-deep/5 bg-white hover:bg-brand-deep/5 transition-all font-bold text-brand-deep/60 disabled:opacity-20 translate-y-0 active:translate-y-1"
+                        className="rounded-2xl h-14 px-8 border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-all font-bold text-brand-deep/60 dark:text-brand-cream/60 disabled:opacity-20 translate-y-0 active:translate-y-1"
                     >
                         <ChevronLeft className="w-5 h-5 mr-2" />
                         {step === 1 ? "Cancel" : "Previous Step"}
@@ -323,13 +323,13 @@ export function BusinessOnboardingForm() {
 
             {/* Mobile Native Sticky Controller */}
             <div className="fixed bottom-0 left-0 right-0 p-6 md:hidden z-50">
-                <div className="absolute inset-0 bg-brand-cream/80 backdrop-blur-2xl border-t border-brand-deep/5 mask-gradient-to-t pointer-events-none h-full" />
+                <div className="absolute inset-0 bg-brand-cream/80 dark:bg-brand-deep/80 backdrop-blur-2xl border-t border-brand-deep/5 dark:border-white/5 mask-gradient-to-t pointer-events-none h-full" />
                 <div className="relative flex items-center justify-between gap-4">
                     <Button
                         variant="outline"
                         onClick={handleBack}
                         disabled={step === 1 || isSubmitting}
-                        className="flex-1 rounded-[24px] h-16 border-brand-deep/10 bg-white/50 active:scale-95 transition-transform font-bold"
+                        className="flex-1 rounded-[24px] h-16 border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 active:scale-95 transition-transform font-bold"
                     >
                         <ChevronLeft className="w-5 h-5 mr-1" />
                         Back

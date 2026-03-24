@@ -28,15 +28,15 @@ export default function SecurityPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40">Current Password</label>
+                        <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Current Password</label>
                         <Input type="password" placeholder="••••••••" className="h-12 bg-transparent" />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40">New Password</label>
+                        <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">New Password</label>
                         <Input type="password" placeholder="••••••••" className="h-12 bg-transparent" />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40">Confirm New Password</label>
+                        <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Confirm New Password</label>
                         <Input type="password" placeholder="••••••••" className="h-12 bg-transparent" />
                     </div>
                 </div>
@@ -46,14 +46,14 @@ export default function SecurityPage() {
                 </div>
             </GlassCard>
 
-            <GlassCard className="p-8 border-brand-deep/5 bg-brand-deep/5">
+            <GlassCard className="p-8 border-brand-deep/5 dark:border-white/5 bg-brand-deep/5 dark:bg-white/5">
                 <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 rounded-xl bg-brand-deep/10 flex items-center justify-center text-brand-deep/40">
+                    <div className="w-12 h-12 rounded-xl bg-brand-deep/10 dark:bg-white/10 flex items-center justify-center text-brand-deep/40 dark:text-brand-cream/40">
                         <ShieldAlert className="w-6 h-6" />
                     </div>
                     <div>
                         <h4 className="font-bold text-sm">Security Policy</h4>
-                        <p className="text-xs text-brand-deep/50">Cloove will never ask for your PIN via chat or phone call. Always use secure links for identity verification.</p>
+                        <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">Cloove will never ask for your PIN via chat or phone call. Always use secure links for identity verification.</p>
                     </div>
                 </div>
             </GlassCard>

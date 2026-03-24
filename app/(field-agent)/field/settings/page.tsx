@@ -60,7 +60,7 @@ export default function SettingsPage() {
                                     onClick={() => toggleNotification(item.id as any)}
                                     className={cn(
                                         "w-10 h-5 rounded-full p-1 transition-colors duration-300 shrink-0",
-                                        notifications[item.id as keyof typeof notifications] ? "bg-brand-gold" : "bg-brand-deep/10"
+                                        notifications[item.id as keyof typeof notifications] ? "bg-brand-gold" : "bg-brand-deep/10 dark:bg-white/10"
                                     )}
                                 >
                                     <div className={cn(

@@ -71,9 +71,9 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
                                 ₦{new Intl.NumberFormat().format(business.earnings)}
                             </p>
                         </div>
-                        <div className="p-5 rounded-3xl bg-brand-deep/5 border border-brand-deep/5 space-y-1">
-                            <p className="text-[10px] font-black text-brand-deep/30 uppercase tracking-widest">Total Sales</p>
-                            <p className="text-3xl font-serif font-medium text-brand-deep/80">
+                        <div className="p-5 rounded-3xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 space-y-1">
+                            <p className="text-[10px] font-black text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-widest">Total Sales</p>
+                            <p className="text-3xl font-serif font-medium text-brand-deep/80 dark:text-brand-cream/80">
                                 ₦0.00
                             </p>
                         </div>
@@ -81,24 +81,24 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
 
                     {/* Merchant Profile */}
                     <section className="space-y-4">
-                        <h5 className="text-[10px] font-black text-brand-deep/30 uppercase tracking-[0.2em] px-1">Merchant Profile</h5>
+                        <h5 className="text-[10px] font-black text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-[0.2em] px-1">Merchant Profile</h5>
                         <div className="grid grid-cols-1 gap-3">
                             <div className="flex items-center gap-4 p-4 rounded-2xl border border-brand-deep/5 bg-white/50 dark:bg-white/5">
-                                <div className="p-2 bg-brand-deep/5 rounded-lg text-brand-deep/40">
+                                <div className="p-2 bg-brand-deep/5 dark:bg-white/5 rounded-lg text-brand-deep/40 dark:text-brand-cream/40">
                                     <Shield className="w-4 h-4" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-brand-deep/80">{business.ownerName}</p>
-                                    <p className="text-[10px] text-brand-deep/40 uppercase tracking-wider font-bold">Business Owner</p>
+                                    <p className="text-xs font-bold text-brand-deep/80 dark:text-brand-cream/80">{business.ownerName}</p>
+                                    <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-wider font-bold">Business Owner</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 p-4 rounded-2xl border border-brand-deep/5 bg-white/50 dark:bg-white/5">
-                                <div className="p-2 bg-brand-deep/5 rounded-lg text-brand-deep/40">
+                                <div className="p-2 bg-brand-deep/5 dark:bg-white/5 rounded-lg text-brand-deep/40 dark:text-brand-cream/40">
                                     <Phone className="w-4 h-4" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-brand-deep/80">{business.phone}</p>
-                                    <p className="text-[10px] text-brand-deep/40 uppercase tracking-wider font-bold">Contact Number</p>
+                                    <p className="text-xs font-bold text-brand-deep/80 dark:text-brand-cream/80">{business.phone}</p>
+                                    <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-wider font-bold">Contact Number</p>
                                 </div>
                             </div>
                         </div>
@@ -106,13 +106,13 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
 
                     {/* Timeline */}
                     <section className="space-y-4">
-                        <h5 className="text-[10px] font-black text-brand-deep/30 uppercase tracking-[0.2em] px-1 text-center">Onboarding Timeline</h5>
-                        <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-brand-deep/5">
+                        <h5 className="text-[10px] font-black text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-[0.2em] px-1 text-center">Onboarding Timeline</h5>
+                        <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-brand-deep/5 dark:before:bg-white/10">
                             <div className="relative flex items-center gap-4">
                                 <span className="absolute -left-5 w-2.5 h-2.5 rounded-full bg-green-500 ring-4 ring-green-500/10" />
                                 <div>
-                                    <p className="text-xs font-bold text-brand-deep/80">Approved & Verified</p>
-                                    <p className="text-[10px] text-brand-deep/40 italic">System Auto-Verification Complete</p>
+                                    <p className="text-xs font-bold text-brand-deep/80 dark:text-brand-cream/80">Approved & Verified</p>
+                                    <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 italic">System Auto-Verification Complete</p>
                                 </div>
                             </div>
                             <div className="relative flex items-center gap-4">
@@ -121,8 +121,8 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
                                     business.status === 'active' ? "bg-green-500" : "bg-brand-gold animate-pulse"
                                 )} />
                                 <div>
-                                    <p className="text-xs font-bold text-brand-deep/80">Onboarded by Agent</p>
-                                    <p className="text-[10px] text-brand-deep/40 font-mono flex items-center gap-1 mt-0.5">
+                                    <p className="text-xs font-bold text-brand-deep/80 dark:text-brand-cream/80">Onboarded by Agent</p>
+                                    <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 font-mono flex items-center gap-1 mt-0.5">
                                         <Calendar className="w-3 h-3" />
                                         {new Date(business.onboardedAt).toLocaleDateString()} · {new Date(business.onboardedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
@@ -133,7 +133,7 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
                 </DrawerBody>
 
                 <DrawerFooter className="bg-brand-deep/5 dark:bg-white/5 flex-row gap-3">
-                    <Button variant="outline" className="flex-1 rounded-2xl h-12 bg-white/50 hover:bg-white transition-all font-bold group">
+                    <Button variant="outline" className="flex-1 rounded-2xl h-12 bg-white/50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-all font-bold group">
                         <Mail className="w-4 h-4 mr-2 text-brand-deep/40 group-hover:text-brand-gold" />
                         Send Receipt
                     </Button>

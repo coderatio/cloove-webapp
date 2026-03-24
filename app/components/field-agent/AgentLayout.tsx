@@ -32,12 +32,12 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
 
     return (
         <FieldAgentProvider>
-            <div className="min-h-screen bg-brand-cream dark:bg-brand-deep/20 text-brand-deep dark:text-brand-cream selection:bg-brand-gold/20">
+            <div className="min-h-screen bg-brand-cream dark:bg-brand-deep-950 text-brand-deep dark:text-brand-cream selection:bg-brand-gold/20">
                 <AgentSidebar />
-                
+
                 <main className="lg:pl-64 min-h-screen flex flex-col pb-24 lg:pb-0">
                     {/* Header */}
-                    <header className="sticky top-0 z-40 h-20 bg-brand-cream/80 dark:bg-brand-deep/80 backdrop-blur-xl border-b border-brand-deep/5 dark:border-white/5 flex items-center justify-between px-4 lg:px-8">
+                    <header className="sticky top-0 z-40 h-20 bg-brand-cream/80 dark:bg-brand-deep-900 backdrop-blur-xl border-b border-brand-deep/5 dark:border-white/5 flex items-center justify-between px-4 lg:px-8">
                         {/* Mobile Logo / Desktop Title */}
                         <div className="flex items-center gap-4">
                             {/* Logo for mobile + tablet */}
@@ -58,7 +58,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                     className="h-7 w-7 object-contain hidden dark:block"
                                     priority
                                 />
-                                <span className="font-serif text-lg tracking-tight text-brand-deep-950">Cloove <span className="text-brand-deep/40 dark:text-brand-cream/40 text-xs font-sans font-normal ml-0.5 whitespace-nowrap">Agents</span></span>
+                                <span className="font-serif text-lg tracking-tight text-brand-deep-950 dark:text-white">Cloove <span className="text-brand-deep/40 dark:text-brand-cream/40 text-xs font-sans font-normal ml-0.5 whitespace-nowrap">Agents</span></span>
                             </div>
 
                             {/* Title for desktop */}
@@ -74,7 +74,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
 
                         <div className="flex items-center gap-3 md:gap-6">
                             {/* Search removed as requested */}
-                            
+
                             {/* Notifications commented out for now */}
                             {/* 
                             <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/10 dark:border-white/5 hover:border-brand-gold/50 transition-all group">
@@ -84,7 +84,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                             */}
 
                             <div className="relative">
-                                <button 
+                                <button
                                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                                     className="flex items-center gap-3 pl-4 md:pl-6 border-l border-brand-deep/10 dark:border-white/10 group active:scale-95 transition-transform"
                                 >
@@ -102,11 +102,11 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                 <AnimatePresence>
                                     {showProfileMenu && (
                                         <>
-                                            <div 
-                                                className="fixed inset-0 z-40" 
+                                            <div
+                                                className="fixed inset-0 z-40"
                                                 onClick={() => setShowProfileMenu(false)}
                                             />
-                                            <motion.div 
+                                            <motion.div
                                                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -118,28 +118,28 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    <Link 
-                                                        href="/field/profile" 
+                                                    <Link
+                                                        href="/field/profile"
                                                         className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
                                                         onClick={() => setShowProfileMenu(false)}
                                                     >
-                                                        <User className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                        <User className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
                                                         <span className="text-sm font-medium">My Profile</span>
                                                     </Link>
-                                                    <Link 
-                                                        href="/field/settings" 
+                                                    <Link
+                                                        href="/field/settings"
                                                         className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
                                                         onClick={() => setShowProfileMenu(false)}
                                                     >
-                                                        <Settings className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                        <Settings className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
                                                         <span className="text-sm font-medium">Settings</span>
                                                     </Link>
-                                                    <Link 
-                                                        href="/field/security" 
+                                                    <Link
+                                                        href="/field/security"
                                                         className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
                                                         onClick={() => setShowProfileMenu(false)}
                                                     >
-                                                        <ShieldCheck className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                        <ShieldCheck className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
                                                         <span className="text-sm font-medium">Security</span>
                                                     </Link>
                                                 </div>
@@ -153,8 +153,8 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                         className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
                                                     >
                                                         {theme === "dark"
-                                                            ? <Sun className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
-                                                            : <Moon className="w-4 h-4 text-brand-deep/40 group-hover:text-brand-gold" />
+                                                            ? <Sun className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
+                                                            : <Moon className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
                                                         }
                                                         <span className="text-sm font-medium">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
                                                     </button>

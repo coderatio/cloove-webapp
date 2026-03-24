@@ -4,10 +4,10 @@ import React from "react"
 import { useFieldAgent } from "@/app/domains/field-agent/providers/FieldAgentProvider"
 import { AgentStatCard } from "./AgentStatCard"
 import { cn } from "@/app/lib/utils"
-import { 
-    Users, 
-    TrendingUp, 
-    Wallet, 
+import {
+    Users,
+    TrendingUp,
+    Wallet,
     ArrowUpRight,
     Building2,
     CheckCircle2,
@@ -18,33 +18,38 @@ import {
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import Link from "next/link"
-import { 
-    AreaChart, 
-    Area, 
-    XAxis, 
-    YAxis, 
-    CartesianGrid, 
-    Tooltip, 
-    ResponsiveContainer 
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer
 } from "recharts"
 
-import { 
+import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
 } from "@/app/components/ui/select"
+import { useTheme } from "next-themes"
 
 export function DashboardView() {
     const { stats, businesses, isLoading } = useFieldAgent()
+    const { resolvedTheme } = useTheme()
+    const isDark = resolvedTheme === "dark"
+    const axisTickColor = isDark ? "rgba(255,255,255,0.3)" : "rgba(10,61,49,0.3)"
+    const gridColor = isDark ? "rgba(255,255,255,0.04)" : "rgba(10,61,49,0.03)"
 
     if (isLoading) {
         return <div className="animate-pulse space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-44 bg-brand-deep/5 rounded-[32px] border border-brand-deep/5" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-44 bg-brand-deep/5 dark:bg-white/5 rounded-[32px] border border-brand-deep/5 dark:border-white/5" />)}
             </div>
-            <div className="h-[450px] bg-brand-deep/5 rounded-[40px] border border-brand-deep/5" />
+            <div className="h-[450px] bg-brand-deep/5 dark:bg-white/5 rounded-[40px] border border-brand-deep/5 dark:border-white/5" />
         </div>
     }
 
@@ -62,59 +67,65 @@ export function DashboardView() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
                 <div>
                     <p className="text-[10px] font-black tracking-[0.4em] uppercase text-brand-gold mb-2">Agent Dashboard</p>
-                    <h1 className="text-4xl md:text-5xl font-serif font-medium text-brand-deep leading-tight">Merchant Overview</h1>
+                    <h1 className="text-4xl md:text-5xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-tight">Merchant Overview</h1>
                 </div>
-                <div className="flex items-center gap-3 bg-brand-deep/3 p-1.5 rounded-2xl border border-brand-deep/5 backdrop-blur-xl">
-                    <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-brand-deep/5">
-                        <p className="text-[10px] font-black text-brand-deep/30 uppercase tracking-widest mb-0.5">System Status</p>
+                <div className="flex items-center gap-3 bg-brand-deep/3 dark:bg-white/5 p-1.5 rounded-2xl border border-brand-deep/5 dark:border-white/5 backdrop-blur-xl">
+                    <div className="px-4 py-2 bg-white dark:bg-white/5 rounded-xl shadow-sm border border-brand-deep/5 dark:border-white/5">
+                        <p className="text-[10px] font-black text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-widest mb-0.5">System Status</p>
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-xs font-bold text-brand-deep">Operational</span>
+                            <span className="text-xs font-bold text-brand-deep dark:text-brand-cream">Operational</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Elite Stats Cluster */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <AgentStatCard 
-                    title="Gross Commissions"
-                    value={formatCurrency(stats.totalEarned)}
-                    icon={TrendingUp}
-                    trend={{ value: 12.4, isPositive: true }}
-                    subtext="Consolidated lifetime growth"
-                />
-                <AgentStatCard 
-                    title="Activated Portfolio"
-                    value={stats.activeMerchants}
-                    icon={Building2}
-                    trend={{ value: 8.1, isPositive: true }}
-                    subtext="Merchants with live transactions"
-                />
-                <AgentStatCard 
-                    title="Liquidity Reserve"
-                    value={formatCurrency(stats.pendingPayout)}
-                    icon={Wallet}
-                    subtext="Available for immediate dispatch"
-                />
+            <div className="flex gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 scrollbar-none">
+                <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
+                    <AgentStatCard
+                        title="Gross Commissions"
+                        value={formatCurrency(stats.totalEarned)}
+                        icon={TrendingUp}
+                        trend={{ value: 12.4, isPositive: true }}
+                        subtext="Consolidated lifetime growth"
+                    />
+                </div>
+                <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
+                    <AgentStatCard
+                        title="Activated Portfolio"
+                        value={stats.activeMerchants}
+                        icon={Building2}
+                        trend={{ value: 8.1, isPositive: true }}
+                        subtext="Merchants with live transactions"
+                    />
+                </div>
+                <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
+                    <AgentStatCard
+                        title="Liquidity Reserve"
+                        value={formatCurrency(stats.pendingPayout)}
+                        icon={Wallet}
+                        subtext="Available for immediate dispatch"
+                    />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Performance Intelligence */}
-            <GlassCard className="lg:col-span-2 p-6 md:p-10 border-none shadow-2xl shadow-brand-deep/5 overflow-hidden group content-visibility-auto contain-intrinsic-size-[0_500px]">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 blur-xl -mr-48 -mt-48 transition-opacity opacity-50 group-hover:opacity-100" />
-                
-                <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+                {/* Performance Intelligence */}
+                <GlassCard className="lg:col-span-2 p-6 md:p-10 border-none shadow-2xl shadow-brand-deep/5 overflow-hidden group content-visibility-auto contain-intrinsic-size-[0_500px]">
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 blur-xl -mr-48 -mt-48 transition-opacity opacity-50 group-hover:opacity-100" />
+
+                    <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <TrendingUp className="w-5 h-5 text-brand-gold" />
-                                <h3 className="text-2xl font-serif font-medium text-brand-deep">Earnings Performance</h3>
+                                <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">Earnings Performance</h3>
                             </div>
-                            <p className="text-sm text-brand-deep/40 font-medium italic">Your monthly commission earnings and growth.</p>
+                            <p className="text-sm text-brand-deep/40 dark:text-brand-cream/40 font-medium italic">Your monthly commission earnings and growth.</p>
                         </div>
                         <div className="w-full sm:w-48">
                             <Select defaultValue="6months">
-                                <SelectTrigger className="h-12 bg-brand-deep/3 border-brand-deep/5 rounded-2xl text-[11px] font-black uppercase tracking-widest">
+                                <SelectTrigger className="h-12 sm:h-12 bg-brand-deep/3 border-brand-deep/5 rounded-2xl text-[11px] font-black uppercase tracking-widest">
                                     <SelectValue placeholder="Timeframe" />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-2xl border-brand-deep/5 shadow-2xl">
@@ -130,25 +141,25 @@ export function DashboardView() {
                             <AreaChart data={stats.monthlyEarnings} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#d4af37" stopOpacity={0.4}/>
-                                        <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#d4af37" stopOpacity={0.4} />
+                                        <stop offset="95%" stopColor="#d4af37" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="rgba(10, 61, 49, 0.03)" />
-                                <XAxis 
-                                    dataKey="month" 
-                                    axisLine={false} 
-                                    tickLine={false} 
-                                    tick={{ fontSize: 10, fill: "rgba(10, 61, 49, 0.3)", fontWeight: 900 }}
+                                <CartesianGrid strokeDasharray="8 8" vertical={false} stroke={gridColor} />
+                                <XAxis
+                                    dataKey="month"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fill: axisTickColor, fontWeight: 900 }}
                                     dy={10}
                                 />
-                                <YAxis 
-                                    axisLine={false} 
-                                    tickLine={false} 
-                                    tick={{ fontSize: 11, fill: "rgba(10, 61, 49, 0.3)", fontWeight: 700, fontFamily: "serif" }}
-                                    tickFormatter={(val) => `₦${val/1000}k`}
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 11, fill: axisTickColor, fontWeight: 700, fontFamily: "serif" }}
+                                    tickFormatter={(val) => `₦${val / 1000}k`}
                                 />
-                                <Tooltip 
+                                <Tooltip
                                     cursor={{ stroke: '#d4af37', strokeWidth: 1, strokeDasharray: '4 4' }}
                                     content={({ active, payload }) => {
                                         if (active && payload && payload.length) {
@@ -166,13 +177,13 @@ export function DashboardView() {
                                         return null
                                     }}
                                 />
-                                <Area 
-                                    type="monotone" 
-                                    dataKey="amount" 
-                                    stroke="#d4af37" 
+                                <Area
+                                    type="monotone"
+                                    dataKey="amount"
+                                    stroke="#d4af37"
                                     strokeWidth={4}
-                                    fillOpacity={1} 
-                                    fill="url(#colorEarnings)" 
+                                    fillOpacity={1}
+                                    fill="url(#colorEarnings)"
                                     animationDuration={2000}
                                 />
                             </AreaChart>
@@ -183,12 +194,12 @@ export function DashboardView() {
                 {/* Recent Activity */}
                 <GlassCard className="p-6 md:p-8 border-none shadow-2xl shadow-brand-deep/5 flex flex-col content-visibility-auto contain-intrinsic-size-[0_450px]">
                     <div className="flex items-center justify-between mb-10 px-1">
-                        <h3 className="text-2xl font-serif font-medium text-brand-deep">Recent Activity</h3>
-                        <div className="p-2 bg-brand-deep/5 rounded-xl">
-                            <Clock className="w-4 h-4 text-brand-deep/30" />
+                        <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">Recent Activity</h3>
+                        <div className="p-2 bg-brand-deep/5 dark:bg-white/5 rounded-xl">
+                            <Clock className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30" />
                         </div>
                     </div>
-                    
+
                     <div className="space-y-4 flex-1">
                         {businesses.slice(0, 4).map((biz) => (
                             <div key={biz.id} className="group relative flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-brand-deep/5 hover:bg-brand-deep/2 hover:shadow-lg transition-all active:scale-[0.98]">
@@ -199,13 +210,13 @@ export function DashboardView() {
                                     {biz.status === 'active' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-brand-deep truncate group-hover:text-brand-gold transition-colors">{biz.name}</p>
-                                    <p className="text-[10px] text-brand-deep/30 uppercase tracking-widest font-black mt-0.5">
+                                    <p className="text-sm font-bold text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-gold transition-colors">{biz.name}</p>
+                                    <p className="text-[10px] text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-widest font-black mt-0.5">
                                         {biz.onboardedAt}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm font-serif font-medium text-brand-deep">{formatCurrency(biz.earnings)}</p>
+                                    <p className="text-sm font-serif font-medium text-brand-deep dark:text-brand-cream">{formatCurrency(biz.earnings)}</p>
                                     <div className="flex items-center justify-end gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <div className="w-1 h-1 rounded-full bg-brand-gold" />
                                         <span className="text-[9px] font-black uppercase text-brand-gold">Yield</span>
@@ -214,8 +225,8 @@ export function DashboardView() {
                             </div>
                         ))}
                     </div>
-                    
-                    <Button variant="outline" className="w-full mt-10 rounded-2xl h-14 border-brand-deep/5 bg-white hover:bg-brand-deep/5 transition-all font-bold text-brand-deep/60 group shadow-sm active:translate-y-1" asChild>
+
+                    <Button variant="outline" className="w-full mt-10 rounded-2xl h-14 border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-all font-bold text-brand-deep/60 dark:text-brand-cream/60 group shadow-sm active:translate-y-1" asChild>
                         <Link href="/field/businesses">
                             Review All Merchants
                             <ArrowUpRight className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
@@ -228,7 +239,7 @@ export function DashboardView() {
             <div className="relative group overflow-hidden rounded-[40px] shadow-2xl shadow-brand-deep/10">
                 <div className="absolute inset-0 bg-brand-deep" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(212,175,55,0.15),transparent)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                
+
                 <div className="relative p-8 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-12">
                     <div className="max-w-2xl text-center lg:text-left">
                         <div className="inline-flex items-center gap-3 px-4 py-2 bg-brand-gold/10 rounded-full border border-brand-gold/20 mb-6">
@@ -240,10 +251,10 @@ export function DashboardView() {
                             Grow the Cloove ecosystem by adding high-quality merchants. Earn commissions for every successful activation.
                         </p>
                     </div>
-                    
-                    <Button 
-                        size="lg" 
-                        className="shrink-0 w-full sm:w-auto bg-brand-gold text-brand-deep hover:bg-white hover:scale-105 rounded-[24px] px-8 md:px-14 h-16 md:h-20 text-sm md:text-lg font-black uppercase tracking-[0.2em] shadow-[0_20px_50px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center" 
+
+                    <Button
+                        size="lg"
+                        className="shrink-0 w-full sm:w-auto bg-brand-gold text-brand-deep hover:bg-white hover:scale-105 rounded-[24px] px-8 md:px-14 h-16 md:h-20 text-sm md:text-lg font-black uppercase tracking-[0.2em] shadow-[0_20px_50px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center"
                         asChild
                     >
                         <Link href="/field/onboard">
@@ -252,7 +263,7 @@ export function DashboardView() {
                         </Link>
                     </Button>
                 </div>
-                
+
                 {/* Decorative Elements */}
                 <div className="absolute bottom-0 right-0 w-64 h-64 border-r-4 border-b-4 border-brand-gold/10 rounded-br-[40px] pointer-events-none" />
                 <div className="absolute top-0 left-0 w-32 h-32 border-l-4 border-t-4 border-brand-gold/10 rounded-tl-[40px] pointer-events-none" />

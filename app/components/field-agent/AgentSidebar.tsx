@@ -3,11 +3,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { 
-    LayoutDashboard, 
-    UserPlus, 
-    Building2, 
-    Wallet, 
+import {
+    LayoutDashboard,
+    UserPlus,
+    Building2,
+    Wallet,
     History,
     LogOut,
     Settings
@@ -28,7 +28,7 @@ export function AgentSidebar() {
     return (
         <>
             {/* Desktop Sidebar */}
-            <aside className="fixed left-0 top-0 h-screen w-64 bg-brand-deep text-brand-cream z-50 transition-all duration-300 hidden lg:flex flex-col items-stretch py-8 border-r border-white/5">
+            <aside className="fixed left-0 top-0 h-screen w-64 bg-brand-deep dark:bg-brand-deep-900/60 text-brand-cream z-50 transition-all duration-300 hidden lg:flex flex-col items-stretch py-8 border-r border-white/5">
                 {/* Logo */}
                 <div className="px-6 mb-12 flex items-center gap-3 justify-start">
                     <Image
@@ -46,18 +46,18 @@ export function AgentSidebar() {
                 <nav className="flex-1 w-full px-4 space-y-2">
                     {navItems.map((item) => {
                         const fullHref = `/field${item.href}`
-                        const isActive = item.href === "" 
-                            ? pathname === "/field" || pathname === "/field/" 
+                        const isActive = item.href === ""
+                            ? pathname === "/field" || pathname === "/field/"
                             : pathname.includes(item.href)
-                        
+
                         return (
                             <Link
                                 key={item.href}
                                 href={fullHref}
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group relative",
-                                    isActive 
-                                        ? "bg-brand-gold text-brand-deep" 
+                                    isActive
+                                        ? "bg-brand-gold text-brand-deep"
                                         : "text-brand-cream/60 hover:text-white hover:bg-white/5"
                                 )}
                             >
@@ -90,10 +90,10 @@ export function AgentSidebar() {
             <nav className="fixed bottom-6 left-4 right-4 h-16 md:h-20 bg-brand-deep/90 backdrop-blur-2xl border border-white/10 lg:hidden z-50 flex items-center justify-around px-2 rounded-full shadow-2xl shadow-black/40">
                 {navItems.map((item) => {
                     const fullHref = `/field${item.href}`
-                    const isActive = item.href === "" 
-                        ? pathname === "/field" || pathname === "/field/" 
+                    const isActive = item.href === ""
+                        ? pathname === "/field" || pathname === "/field/"
                         : pathname.includes(item.href)
-                    
+
                     return (
                         <Link
                             key={item.href}
@@ -105,9 +105,9 @@ export function AgentSidebar() {
                         >
                             <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive && "scale-110 -translate-y-0.5")} />
                             <span className="text-[9px] font-bold uppercase tracking-widest">{item.label}</span>
-                            
+
                             {isActive && (
-                                <motion.div 
+                                <motion.div
                                     layoutId="mobile-active-glow"
                                     className="absolute -bottom-1 w-1 h-1 bg-brand-gold rounded-full shadow-[0_0_8px_rgba(234,179,8,0.8)]"
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}

@@ -109,7 +109,7 @@ export default function WalletPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-8">
                 <div className="space-y-2">
                     <p className="text-[10px] font-black tracking-[0.4em] uppercase text-brand-gold">Financial Command</p>
-                    <h1 className="text-3xl md:text-5xl font-serif font-medium text-brand-deep leading-tight">Earnings Hub</h1>
+                    <h1 className="text-3xl md:text-5xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-tight">Earnings Hub</h1>
                 </div>
                 <Button
                     onClick={() => setActiveDrawer('payout')}
@@ -124,7 +124,7 @@ export default function WalletPage() {
 
             {/* Financial Stats — horizontal scroll on mobile/tablet, grid on desktop */}
             <div className="flex gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 scrollbar-none">
-                <div className="min-w-[260px] lg:min-w-0 shrink-0 lg:shrink">
+                <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
                     <AgentStatCard
                         title="Lifetime Earnings"
                         value={formatCurrency(stats.totalEarned)}
@@ -133,7 +133,7 @@ export default function WalletPage() {
                         trend={{ value: 12, isPositive: true }}
                     />
                 </div>
-                <div className="min-w-[260px] lg:min-w-0 shrink-0 lg:shrink">
+                <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
                     <AgentStatCard
                         title="Available Balance"
                         value={formatCurrency(stats.pendingPayout)}
@@ -142,7 +142,7 @@ export default function WalletPage() {
                         trend={{ value: 8, isPositive: true }}
                     />
                 </div>
-                <div className="min-w-[260px] lg:min-w-0 shrink-0 lg:shrink">
+                <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
                     <AgentStatCard
                         title="Pending Payouts"
                         value="₦0"
@@ -155,11 +155,11 @@ export default function WalletPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
                 {/* Payout Channels Section */}
-                <GlassCard className="p-5 md:p-12 border-none shadow-2xl shadow-brand-deep/5 overflow-hidden flex flex-col">
+                <div className="border-none shadow-2xl shadow-brand-deep/5 overflow-hidden flex flex-col">
                     <div className="flex items-center justify-between mb-6 md:mb-10">
                         <div>
-                            <h3 className="text-xl md:text-2xl font-serif font-medium text-brand-deep leading-none">Payout Channels</h3>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/20 mt-2 md:mt-3">Active Extraction Links</p>
+                            <h3 className="text-xl md:text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-none">Payout Channels</h3>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/20 dark:text-brand-cream/60 mt-2 md:mt-3">Active Extraction Links</p>
                         </div>
                         <Button
                             variant="ghost"
@@ -173,7 +173,7 @@ export default function WalletPage() {
 
                     <div className="space-y-4 md:space-y-6 flex-1">
                         {/* Primary Account Card */}
-                        <div className="relative p-5 md:p-7 rounded-[28px] md:rounded-[40px] border border-brand-gold/30 bg-white/40 group hover:bg-white/60 transition-all cursor-pointer shadow-xl shadow-brand-gold/5 overflow-hidden">
+                        <div className="relative p-5 md:p-7 rounded-[28px] md:rounded-[40px] border border-brand-gold/30 bg-white/40 dark:bg-white/5 group hover:bg-white/60 dark:hover:bg-white/10 transition-all cursor-pointer shadow-xl shadow-brand-gold/5 overflow-hidden">
                             <div className="absolute top-0 right-0 w-48 h-48 bg-brand-gold/5 blur-3xl -mr-24 -mt-24 group-hover:bg-brand-gold/10 transition-colors" />
 
                             <div className="relative flex flex-col gap-5 md:gap-8">
@@ -182,14 +182,14 @@ export default function WalletPage() {
                                         <Building2 className="w-6 h-6 md:w-8 md:h-8" />
                                     </div>
                                     <div className="flex flex-col items-end gap-2">
-                                        <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-brand-gold bg-brand-gold/5 px-3 md:px-4 py-1.5 md:py-2 rounded-full border border-brand-gold/10 backdrop-blur-md">Primary Card</span>
+                                        <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-brand-gold bg-brand-gold/5 px-3 md:px-4 py-1.5 md:py-2 rounded-full border border-brand-gold/10 backdrop-blur-md">Default</span>
                                         <div className="w-8 h-1 bg-brand-gold/20 rounded-full group-hover:w-12 transition-all" />
                                     </div>
                                 </div>
 
                                 <div className="space-y-1.5 md:space-y-2">
-                                    <h4 className="text-xl md:text-2xl font-serif font-medium text-brand-deep leading-none">Access Bank</h4>
-                                    <div className="flex items-center gap-2 md:gap-3 text-brand-deep/40 font-medium italic text-sm">
+                                    <h4 className="text-xl md:text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-none">Access Bank</h4>
+                                    <div className="flex items-center gap-2 md:gap-3 text-brand-deep/40 dark:text-brand-cream/40 font-medium italic text-sm">
                                         <span className="font-mono tracking-tighter text-sm md:text-base">**** 4567</span>
                                         <span className="w-1 h-1 rounded-full bg-brand-gold/40" />
                                         <span>Josiah Yahaya</span>
@@ -201,26 +201,26 @@ export default function WalletPage() {
                         {/* Integration Card */}
                         <div
                             onClick={() => setActiveDrawer('add-account')}
-                            className="p-5 md:p-8 rounded-[28px] md:rounded-[40px] border-2 border-dashed border-brand-deep/10 bg-brand-deep/1 flex items-center gap-4 md:gap-6 group hover:border-brand-gold/40 hover:bg-brand-gold/2 transition-all cursor-pointer min-h-[100px] md:min-h-[140px]"
+                            className="p-5 md:p-8 rounded-[28px] md:rounded-[40px] border-2 border-dashed border-brand-deep/10 dark:border-white/10 bg-brand-deep/[0.01] dark:bg-white/[0.02] flex items-center gap-4 md:gap-6 group hover:border-brand-gold/40 hover:bg-brand-gold/5 transition-all cursor-pointer min-h-[100px] md:min-h-[140px]"
                         >
-                            <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl md:rounded-3xl bg-brand-deep/5 flex items-center justify-center text-brand-deep/10 group-hover:bg-brand-gold group-hover:text-white transition-all duration-500 shadow-sm border border-brand-deep/5">
+                            <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl md:rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-deep/10 dark:text-white/40 group-hover:bg-brand-gold group-hover:text-white transition-all duration-500 shadow-sm border border-brand-deep/5">
                                 <Plus className="w-6 h-6 md:w-8 md:h-8" />
                             </div>
                             <div className="flex-1 min-w-0 space-y-1">
-                                <p className="text-base md:text-lg font-bold text-brand-deep/30 group-hover:text-brand-deep transition-colors">Integrate New Channel</p>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/10 line-clamp-1 group-hover:text-brand-gold/60 transition-colors">Bank, Wallet, or Digital Asset</p>
+                                <p className="text-base md:text-lg font-bold text-brand-deep/30 dark:text-brand-cream/30 group-hover:text-brand-deep dark:group-hover:text-brand-cream transition-colors">Integrate New Channel</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/10 dark:text-white/60 line-clamp-1 group-hover:text-brand-gold/60 transition-colors">Bank, Wallet, or Digital Asset</p>
                             </div>
-                            <div className="w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full border border-brand-deep/5 flex items-center justify-center group-hover:border-brand-gold group-hover:bg-brand-gold/10 transition-all">
-                                <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-brand-deep/10 group-hover:text-brand-gold transition-all" />
+                            <div className="w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full border border-brand-deep/5 dark:border-white/5 flex items-center justify-center group-hover:border-brand-gold group-hover:bg-brand-gold/10 transition-all">
+                                <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-brand-deep/10 dark:text-white/40 group-hover:text-brand-gold transition-all" />
                             </div>
                         </div>
                     </div>
-                </GlassCard>
+                </div>
 
                 {/* Audit Trail Section */}
                 <GlassCard className="p-5 md:p-10 border-none shadow-2xl shadow-brand-deep/5 flex flex-col">
                     <div className="mb-6 md:mb-8">
-                        <h3 className="text-xl md:text-2xl font-serif font-medium text-brand-deep leading-none">Audit Trail: Payouts</h3>
+                        <h3 className="text-xl md:text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-none">Audit Trail: Payouts</h3>
                         <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/20 mt-2">Historical Extractions</p>
                     </div>
                     <div className="space-y-4 md:space-y-6 flex-1">
@@ -238,7 +238,7 @@ export default function WalletPage() {
                                         <CheckCircle2 className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <p className="text-lg font-serif font-medium text-brand-deep leading-none">{payout.amount}</p>
+                                        <p className="text-lg font-serif font-medium text-brand-deep dark:text-brand-cream leading-none">{payout.amount}</p>
                                         <div className="flex items-center gap-2 mt-1.5">
                                             <p className="text-[10px] text-brand-deep/30 uppercase tracking-[0.2em] font-black leading-none">{payout.date}</p>
                                             <span className="w-1 h-1 rounded-full bg-brand-gold/40" />
@@ -288,7 +288,7 @@ export default function WalletPage() {
                             </div>
                             <div>
                                 <p className="text-xs font-black uppercase tracking-widest text-brand-deep/40">Destination</p>
-                                <p className="text-sm font-bold text-brand-deep">Access Bank • **** 4567</p>
+                                <p className="text-sm font-bold text-brand-deep dark:text-brand-cream">Access Bank • **** 4567</p>
                             </div>
                         </div>
                     </DrawerBody>
@@ -315,7 +315,7 @@ export default function WalletPage() {
                             <div className="space-y-3">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 ml-1">Select Institution</Label>
                                 <Select onValueChange={(v) => setAccountData(p => ({ ...p, bank: v }))}>
-                                    <SelectTrigger className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-bold text-lg">
+                                    <SelectTrigger className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 font-bold text-lg">
                                         <SelectValue placeholder="Identify Bank" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl">
@@ -334,7 +334,7 @@ export default function WalletPage() {
                                     maxLength={10}
                                     value={accountData.accountNumber}
                                     onChange={(e) => setAccountData(p => ({ ...p, accountNumber: e.target.value }))}
-                                    className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-mono text-xl tracking-[0.2em] font-bold"
+                                    className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 font-mono text-xl tracking-[0.2em] font-bold"
                                 />
                             </div>
 
@@ -344,7 +344,7 @@ export default function WalletPage() {
                                     placeholder="Entity Name"
                                     value={accountData.accountName}
                                     onChange={(e) => setAccountData(p => ({ ...p, accountName: e.target.value }))}
-                                    className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 bg-white/50 font-bold text-lg"
+                                    className="h-16 sm:h-16 rounded-2xl border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 font-bold text-lg"
                                 />
                                 <p className="text-[10px] text-brand-deep/30 font-bold italic ml-1">System will attempt automatic identity verification.</p>
                             </div>
@@ -365,7 +365,7 @@ export default function WalletPage() {
             <Drawer open={activeDrawer === 'detail'} onOpenChange={(o) => !o && setActiveDrawer(null)}>
                 <DrawerContent>
                     <DrawerStickyHeader>
-                        <DrawerTitle className="text-4xl text-brand-deep">Payout Audit</DrawerTitle>
+                        <DrawerTitle className="text-4xl text-brand-deep dark:text-brand-cream">Payout Audit</DrawerTitle>
                         <DrawerDescription className="text-base mt-2">Transaction metadata for your financial records.</DrawerDescription>
                     </DrawerStickyHeader>
                     <DrawerBody className="p-8">
@@ -389,13 +389,13 @@ export default function WalletPage() {
                                         { label: "Timeline", value: `${selectedPayout.date} • ${selectedPayout.time}`, icon: Clock },
                                         { label: "Method", value: "Automated Bank Transfer", icon: ChevronRight }
                                     ].map((item, i) => (
-                                        <div key={i} className="flex items-center gap-4 px-5 py-4 bg-white/70 rounded-2xl border border-brand-deep/5">
+                                        <div key={i} className="flex items-center gap-4 px-5 py-4 bg-white/70 dark:bg-white/5 rounded-2xl border border-brand-deep/5 dark:border-white/5">
                                             <div className="w-10 h-10 shrink-0 rounded-xl bg-brand-deep/5 flex items-center justify-center text-brand-deep/30">
                                                 <item.icon className="w-5 h-5" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-brand-deep/30 leading-none">{item.label}</p>
-                                                <p className="text-sm font-bold text-brand-deep mt-1.5 truncate">{item.value}</p>
+                                                <p className="text-sm font-bold text-brand-deep dark:text-brand-cream mt-1.5 truncate">{item.value}</p>
                                             </div>
                                         </div>
                                     ))}

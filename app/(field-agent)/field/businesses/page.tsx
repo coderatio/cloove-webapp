@@ -110,7 +110,7 @@ export default function BusinessesPage() {
         <div className="space-y-8">
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-serif font-medium tracking-tight">My Merchants</h1>
+                    <h1 className="text-3xl font-serif font-medium tracking-tight text-brand-deep dark:text-brand-cream">My Merchants</h1>
                     <p className="text-brand-deep/50 dark:text-brand-cream/50 text-sm mt-1">
                         You have onboarded <span className="text-brand-deep dark:text-brand-cream font-bold">{businesses.length} businesses</span> to date.
                     </p>
@@ -177,8 +177,8 @@ export default function BusinessesPage() {
 
                         <div className="flex items-end justify-between pt-4 border-t border-brand-deep/5">
                             <div className="space-y-1">
-                                <p className="text-[8px] font-black text-brand-deep/30 uppercase tracking-[0.2em]">Onboarded On</p>
-                                <p className="text-xs font-bold text-brand-deep/60 flex items-center gap-1.5 leading-none">
+                                <p className="text-[8px] font-black text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-[0.2em]">Onboarded On</p>
+                                <p className="text-xs font-bold text-brand-deep/60 dark:text-brand-cream/60 flex items-center gap-1.5 leading-none">
                                     <Calendar className="shrink-0 w-3 h-3 text-brand-deep/20" />
                                     {new Date(biz.onboardedAt).toLocaleDateString('en-GB', { 
                                         day: '2-digit', 
@@ -208,8 +208,8 @@ export default function BusinessesPage() {
                         <div className="w-16 h-16 bg-brand-deep/5 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Plus className="w-8 h-8 text-brand-deep/10" />
                         </div>
-                        <h3 className="text-lg font-serif font-medium text-brand-deep/40 mb-2">No merchants yet</h3>
-                        <p className="text-sm text-brand-deep/30 max-w-[200px] mx-auto">Start onboarding businesses to grow your portfolio.</p>
+                        <h3 className="text-lg font-serif font-medium text-brand-deep/40 dark:text-brand-cream/40 mb-2">No merchants yet</h3>
+                        <p className="text-sm text-brand-deep/30 dark:text-brand-cream/30 max-w-[200px] mx-auto">Start onboarding businesses to grow your portfolio.</p>
                     </div>
                 )}
             </div>
@@ -229,7 +229,7 @@ export default function BusinessesPage() {
             {totalPages > 1 && (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4 pb-8">
                     <p className="text-xs font-bold text-brand-deep/40 uppercase tracking-widest leading-none">
-                        Showing <span className="text-brand-deep">{Math.min(filteredBusinesses.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)}</span> to <span className="text-brand-deep">{Math.min(filteredBusinesses.length, currentPage * ITEMS_PER_PAGE)}</span> of <span className="text-brand-deep">{filteredBusinesses.length}</span> merchants
+                        Showing <span className="text-brand-deep dark:text-brand-cream">{Math.min(filteredBusinesses.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)}</span> to <span className="text-brand-deep dark:text-brand-cream">{Math.min(filteredBusinesses.length, currentPage * ITEMS_PER_PAGE)}</span> of <span className="text-brand-deep dark:text-brand-cream">{filteredBusinesses.length}</span> merchants
                     </p>
                     
                     <div className="flex items-center gap-2">
@@ -238,7 +238,7 @@ export default function BusinessesPage() {
                             size="sm"
                             disabled={currentPage === 1}
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            className="rounded-xl w-10 h-10 p-0 bg-white/50 border-brand-deep/5 hover:bg-brand-gold/10 hover:text-brand-gold hover:border-brand-gold/20 disabled:opacity-30 transition-all"
+                            className="rounded-xl w-10 h-10 p-0 bg-white/50 dark:bg-white/5 border-brand-deep/5 dark:border-white/5 hover:bg-brand-gold/10 hover:text-brand-gold hover:border-brand-gold/20 disabled:opacity-30 transition-all"
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </Button>
@@ -252,7 +252,7 @@ export default function BusinessesPage() {
                                         "w-9 h-9 rounded-xl text-xs font-black transition-all",
                                         currentPage === i + 1 
                                             ? "bg-brand-gold text-white shadow-lg shadow-brand-gold/20 scale-110" 
-                                            : "bg-brand-deep/5 text-brand-deep/40 hover:bg-brand-deep/10"
+                                            : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 hover:bg-brand-deep/10 dark:hover:bg-white/10"
                                     )}
                                 >
                                     {i + 1}
@@ -265,7 +265,7 @@ export default function BusinessesPage() {
                             size="sm"
                             disabled={currentPage === totalPages}
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                            className="rounded-xl w-10 h-10 p-0 bg-white/50 border-brand-deep/5 hover:bg-brand-gold/10 hover:text-brand-gold hover:border-brand-gold/20 disabled:opacity-30 transition-all"
+                            className="rounded-xl w-10 h-10 p-0 bg-white/50 dark:bg-white/5 border-brand-deep/5 dark:border-white/5 hover:bg-brand-gold/10 hover:text-brand-gold hover:border-brand-gold/20 disabled:opacity-30 transition-all"
                         >
                             <ChevronRight className="w-4 h-4" />
                         </Button>
