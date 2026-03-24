@@ -106,8 +106,9 @@ export function PinVerificationDrawer({
             })
 
             if (response.verified) {
-                toast.success("Identity verified. Action authorized.")
-                onSuccess(response.data || response.metadata)
+                const message = response.data?.message || response.message || "Identity verified. Action authorized."
+                toast.success(message)
+                onSuccess({ ...(response.data || response.metadata || {}), pin: finalPin })
                 onOpenChange(false)
             } else {
                 setError("Incorrect security PIN")
@@ -181,13 +182,23 @@ export function PinVerificationDrawer({
                         <AnimatePresence>
                             {error && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0 }}
-                                    className="flex items-center gap-2 text-red-500 text-xs font-bold uppercase tracking-widest bg-red-500/5 px-4 py-2 rounded-full border border-red-500/10"
+                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    animate={{ 
+                                        opacity: 1, 
+                                        y: 0, 
+                                        scale: 1,
+                                        x: [0, -6, 6, -6, 6, 0] 
+                                    }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ 
+                                        x: { duration: 0.4, ease: "easeInOut" },
+                                        opacity: { duration: 0.2 },
+                                        y: { duration: 0.2 }
+                                    }}
+                                    className="flex items-start gap-3 text-red-600 dark:text-red-400 text-[11px] font-semibold tracking-wide bg-red-500/5 dark:bg-red-500/10 px-6 py-4 rounded-[24px] border border-red-500/20 backdrop-blur-xl max-w-[340px] text-left shadow-2xl shadow-red-500/10"
                                 >
-                                    <AlertCircle className="w-3.5 h-3.5" />
-                                    {error}
+                                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 opacity-80" />
+                                    <span className="leading-relaxed">{error}</span>
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -230,18 +241,25 @@ export function PinVerificationDrawer({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 20 }}
                         >
-                            <DrawerFooter className="px-8 pb-12 pt-0 bg-brand-deep/5 dark:bg-white/5 border-t border-brand-deep/5 dark:border-white/5">
-                                <div className="w-full flex items-center justify-end gap-4 py-4">
+                            <DrawerFooter className="px-8 pb-12 pt-0 bg-brand-deep/5 dark:bg-white/5 border-t border-brand-green/10">
+                                <div className="w-full flex items-center justify-center gap-4 py-6">
                                     <div className="flex items-center gap-3">
                                         {isVerifying && (
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 bg-brand-gold/10 px-4 py-2 rounded-full border border-brand-gold/20">
                                                 <div className="w-2 h-2 rounded-full bg-brand-gold animate-pulse" />
-                                                <span className="text-[10px] font-black uppercase tracking-tighter text-brand-gold opacity-60">
+                                                <span className="text-[10px] font-black uppercase tracking-tighter text-brand-gold">
                                                     Cryptographic Verification Active
                                                 </span>
                                             </div>
                                         )}
-                                        {isInitializing && <Loader2 className="w-4 h-4 animate-spin text-brand-gold" />}
+                                        {isInitializing && (
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 className="w-5 h-5 animate-spin text-brand-gold" />
+                                                <span className="text-[10px] font-black uppercase tracking-tighter text-brand-gold opacity-60">
+                                                    Initializing Secure Tunnel
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </DrawerFooter>

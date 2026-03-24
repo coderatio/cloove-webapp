@@ -6,73 +6,71 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import {
     Building2,
     MoreVertical,
-    CheckCircle2,
     Trash2,
     Star,
     Plus,
     Loader2,
-    Lock,
-    X,
     AlertCircle,
     ArrowLeft
 } from "lucide-react"
 import {
-    usePayoutAccounts,
-    useDeletePayoutAccount,
-    useSetDefaultPayoutAccount
-} from "../hooks/useFinance"
-import { AddPayoutAccountForm } from "./AddPayoutAccountForm"
+    useFieldAgentCashoutAccounts,
+    useRemoveCashoutAccount,
+    useSetDefaultCashoutAccount,
+} from "../hooks/useFieldAgentCashoutAccounts"
+import { useQueryClient } from "@tanstack/react-query"
+import { AddCashoutAccountForm } from "./AddCashoutAccountForm"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/app/components/ui/dropdown-menu"
-import { Input } from "@/app/components/ui/input"
+import { PinInputDrawer } from "@/app/components/shared/PinInputDrawer"
 import { cn } from "@/app/lib/utils"
 
-interface PayoutAccountsManagerProps {
+interface CashoutAccountManagerProps {
     onClose?: () => void
     showBackButton?: boolean
 }
 
-export function PayoutAccountsManager({
+type PendingAction = { id: string; type: "delete" | "default" }
+
+export function CashoutAccountManager({
     onClose,
-    showBackButton = true
-}: PayoutAccountsManagerProps) {
-    const { payoutAccounts: accounts, isLoading } = usePayoutAccounts()
-    const deleteAccount = useDeletePayoutAccount()
-    const setDefaultAccount = useSetDefaultPayoutAccount()
+    showBackButton = true,
+}: CashoutAccountManagerProps) {
+    const queryClient = useQueryClient()
+    const { data: accounts = [], isLoading } = useFieldAgentCashoutAccounts()
+    const deleteMutation = useRemoveCashoutAccount()
+    const setDefaultMutation = useSetDefaultCashoutAccount()
 
     const [isAdding, setIsAdding] = useState(false)
-    const [confirmAction, setConfirmAction] = useState<{ id: string, type: 'delete' | 'default' } | null>(null)
-    const [pin, setPin] = useState('')
+    const [pendingAction, setPendingAction] = useState<PendingAction | null>(null)
 
-    const handleAction = async () => {
-        if (!confirmAction || pin.length !== 4) return
+    const handleActionInitiation = (id: string, type: "delete" | "default") => {
+        setPendingAction({ id, type })
+    }
 
-        if (confirmAction.type === 'delete') {
-            deleteAccount.mutate({ id: confirmAction.id, pin }, {
-                onSuccess: () => {
-                    setConfirmAction(null)
-                    setPin('')
-                }
-            })
+    const handlePinSubmit = async (pin: string) => {
+        if (!pendingAction) return
+        if (pendingAction.type === "delete") {
+            await deleteMutation.mutateAsync({ id: pendingAction.id, pin })
         } else {
-            setDefaultAccount.mutate({ id: confirmAction.id, pin }, {
-                onSuccess: () => {
-                    setConfirmAction(null)
-                    setPin('')
-                }
-            })
+            await setDefaultMutation.mutateAsync({ id: pendingAction.id, pin })
         }
+        queryClient.invalidateQueries({ queryKey: ["field-agent", "cashout-accounts"] })
+        setPendingAction(null)
     }
 
     if (isAdding) {
         return (
             <div className="space-y-6">
-                <AddPayoutAccountForm
-                    onSuccess={() => setIsAdding(false)}
+                <AddCashoutAccountForm
+                    onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ["field-agent", "cashout-accounts"] })
+                        setIsAdding(false)
+                    }}
                     onCancel={() => setIsAdding(false)}
                 />
             </div>
@@ -83,7 +81,7 @@ export function PayoutAccountsManager({
 
     return (
         <div className="space-y-6 relative min-h-[400px]">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                     {showBackButton && onClose && (
                         <Button
@@ -96,7 +94,7 @@ export function PayoutAccountsManager({
                         </Button>
                     )}
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 pl-1">
-                        Payout Accounts
+                        Settlement Sources
                     </span>
                 </div>
                 <Button
@@ -139,7 +137,7 @@ export function PayoutAccountsManager({
                     </div>
                     <div className="space-y-1">
                         <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">No payout accounts found</p>
-                        <p className="text-xs text-brand-accent/40 dark:text-white/30 max-w-[200px]">Add a bank account to start receiving your business settlements.</p>
+                        <p className="text-xs text-brand-accent/40 dark:text-white/30 max-w-[200px]">Add a bank account to start receiving your earnings.</p>
                     </div>
                     <Button
                         onClick={() => setIsAdding(true)}
@@ -155,13 +153,13 @@ export function PayoutAccountsManager({
                             key={account.id}
                             className={cn(
                                 "group p-4 flex items-center justify-between border-brand-deep/5 hover:border-brand-gold/30 transition-all duration-500",
-                                account.isDefault && "bg-brand-gold/3 border-brand-gold/20 shadow-[0_8px_30px_rgb(182,143,76,0.05)]"
+                                account.isDefault && "bg-brand-gold/3 border-brand-gold/20 shadow-sm"
                             )}
                         >
                             <div className="flex items-center gap-4">
                                 <div className={cn(
                                     "h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                    account.isDefault ? "bg-brand-gold-200 text-brand-deep" : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40"
+                                    account.isDefault ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40"
                                 )}>
                                     <Building2 className="w-6 h-6" />
                                 </div>
@@ -186,7 +184,7 @@ export function PayoutAccountsManager({
                                 <DropdownMenuContent align="end" className="w-48 bg-white/90 dark:bg-brand-deep/90 backdrop-blur-xl border-brand-accent/10 rounded-2xl p-1 shadow-2xl">
                                     {!account.isDefault && (
                                         <DropdownMenuItem
-                                            onClick={() => setConfirmAction({ id: account.id, type: 'default' })}
+                                            onClick={() => handleActionInitiation(account.id, "default")}
                                             className="gap-2 p-3 focus:bg-brand-gold/10 focus:text-brand-gold rounded-xl cursor-pointer"
                                         >
                                             <Star className="w-4 h-4" />
@@ -194,7 +192,7 @@ export function PayoutAccountsManager({
                                         </DropdownMenuItem>
                                     )}
                                     <DropdownMenuItem
-                                        onClick={() => setConfirmAction({ id: account.id, type: 'delete' })}
+                                        onClick={() => handleActionInitiation(account.id, "delete")}
                                         className="gap-2 p-3 focus:bg-rose-500/10 focus:text-rose-500 rounded-xl cursor-pointer text-rose-500"
                                     >
                                         <Trash2 className="w-4 h-4" />
@@ -207,62 +205,17 @@ export function PayoutAccountsManager({
                 </div>
             )}
 
-            {/* PIN Confirmation Dialog Overlay */}
-            {confirmAction && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-300">
-                    <div className="absolute inset-0 bg-white/60 dark:bg-brand-deep/80 backdrop-blur-md rounded-3xl" onClick={() => setConfirmAction(null)} />
-                    <GlassCard className="relative w-full max-w-xs p-6 shadow-2xl border-brand-deep/10 bg-white dark:bg-brand-deep">
-                        <div className="text-center space-y-4">
-                            <div className={cn(
-                                "mx-auto w-12 h-12 rounded-2xl flex items-center justify-center mb-2",
-                                confirmAction.type === 'delete' ? "bg-rose-500/10 text-rose-500" : "bg-brand-gold/10 text-brand-gold"
-                            )}>
-                                {confirmAction.type === 'delete' ? <Trash2 className="w-6 h-6" /> : <Star className="w-6 h-6" />}
-                            </div>
-                            <div className="space-y-1">
-                                <h4 className="font-bold text-brand-deep dark:text-brand-cream uppercase tracking-wider">
-                                    {confirmAction.type === 'delete' ? 'Remove Account?' : 'Set as Default?'}
-                                </h4>
-                                <p className="text-[10px] text-brand-accent/40 dark:text-white/30 uppercase tracking-widest">
-                                    Enter your 4-digit PIN to confirm this action.
-                                </p>
-                            </div>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/20 dark:text-white/20" />
-                                <Input
-                                    type="password"
-                                    inputMode="numeric"
-                                    maxLength={4}
-                                    autoFocus
-                                    value={pin}
-                                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                                    placeholder="••••"
-                                    className="h-12 bg-brand-deep/5 dark:bg-white/5 border-transparent rounded-xl text-center pl-10 tracking-[1em] font-mono focus:ring-brand-gold/30"
-                                />
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => { setConfirmAction(null); setPin(""); }}
-                                    className="flex-1 rounded-xl h-11 text-brand-deep/40 dark:text-white/40 uppercase text-[10px] font-black tracking-widest"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    disabled={pin.length !== 4 || deleteAccount.isPending || setDefaultAccount.isPending}
-                                    onClick={handleAction}
-                                    className={cn(
-                                        "flex-1 rounded-xl h-11 font-black uppercase text-[10px] tracking-widest",
-                                        confirmAction.type === 'delete' ? "bg-rose-600 text-white" : "bg-brand-gold text-brand-deep shadow-lg"
-                                    )}
-                                >
-                                    {(deleteAccount.isPending || setDefaultAccount.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm'}
-                                </Button>
-                            </div>
-                        </div>
-                    </GlassCard>
-                </div>
-            )}
+            <PinInputDrawer
+                open={!!pendingAction}
+                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
+                onSubmit={handlePinSubmit}
+                title={pendingAction?.type === "delete" ? "Remove Destination" : "Update Default"}
+                description={
+                    pendingAction?.type === "delete"
+                        ? "Enter your PIN to permanently remove this settlement destination."
+                        : "Enter your PIN to set this as your primary earnings destination."
+                }
+            />
         </div>
     )
 }

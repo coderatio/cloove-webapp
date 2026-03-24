@@ -8,7 +8,6 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerBody,
-    DrawerFooter,
 } from "@/app/components/ui/drawer"
 import { AlertCircle, Delete, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -132,20 +131,30 @@ export function PinInputDrawer({
                         <AnimatePresence>
                             {error && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0 }}
-                                    className="flex items-center gap-2 text-red-500 text-xs font-bold uppercase tracking-widest bg-red-500/5 px-4 py-2 rounded-full border border-red-500/10 max-w-[280px] text-center"
+                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    animate={{ 
+                                        opacity: 1, 
+                                        y: 0, 
+                                        scale: 1,
+                                        x: [0, -6, 6, -6, 6, 0] 
+                                    }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ 
+                                        x: { duration: 0.4, ease: "easeInOut" },
+                                        opacity: { duration: 0.2 },
+                                        y: { duration: 0.2 }
+                                    }}
+                                    className="flex items-start gap-3 text-red-600 dark:text-red-400 text-[11px] font-semibold tracking-wide bg-red-500/5 dark:bg-red-500/10 px-6 py-4 rounded-[24px] border border-red-500/20 backdrop-blur-xl max-w-[340px] text-left shadow-2xl shadow-red-500/10"
                                 >
-                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                    <span>{error}</span>
+                                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 opacity-80" />
+                                    <span className="leading-relaxed">{error}</span>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
 
                     {/* Keypad */}
-                    <div className="w-full px-8 pb-12 max-w-sm">
+                    <div className="relative w-full px-8 pb-12 max-w-sm">
                         <div className="grid grid-cols-3 gap-3">
                             {keypadDigits.map((digit) => (
                                 <KeypadButton
@@ -169,27 +178,26 @@ export function PinInputDrawer({
                                 <Delete className="w-6 h-6" />
                             </button>
                         </div>
-                    </div>
-                </DrawerBody>
 
-                <AnimatePresence>
-                    {isSubmitting && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
-                        >
-                            <DrawerFooter className="px-8 pb-12 pt-0 bg-brand-deep/5 dark:bg-white/5 border-t border-brand-deep/5 dark:border-white/5">
-                                <div className="w-full flex items-center justify-center gap-3 py-4">
-                                    <Loader2 className="w-4 h-4 animate-spin text-brand-gold" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold/60">
+                        {/* Loading overlay on keypad */}
+                        <AnimatePresence>
+                            {isSubmitting && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute inset-0 rounded-3xl bg-brand-cream/80 dark:bg-brand-deep/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3"
+                                >
+                                    <Loader2 className="w-8 h-8 animate-spin text-brand-gold" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                         Processing...
                                     </span>
-                                </div>
-                            </DrawerFooter>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </DrawerBody>
             </DrawerContent>
         </Drawer>
     )

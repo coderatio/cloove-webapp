@@ -11,10 +11,12 @@ interface MoneyInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElemen
     currencySymbol?: string
     hideSymbol?: boolean
     size?: 'default' | 'sm'
+    variant?: 'default' | 'headless'
+    align?: 'left' | 'center' | 'right'
 }
 
 export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
-    ({ value, onChange, currencySymbol = '₦', hideSymbol = false, size = 'default', className, ...props }, ref) => {
+    ({ value, onChange, currencySymbol = '₦', hideSymbol = false, size = 'default', variant = 'default', align = 'left', className, ...props }, ref) => {
         const [displayValue, setDisplayValue] = React.useState("")
 
         // Sync display value with incoming numeric value
@@ -78,6 +80,46 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     onKeyDown={handleKeyDown}
                     className={cn("font-medium tabular-nums", className)}
                 />
+            )
+        }
+
+        if (variant === 'headless') {
+            const len = displayValue.length || 1
+            const fontSize =
+                len <= 6  ? '4.5rem'  :
+                len <= 8  ? '3.75rem' :
+                len <= 10 ? '3rem'    :
+                len <= 12 ? '2.25rem' : '1.875rem'
+
+            return (
+                <div
+                    className={cn(
+                        "group flex items-center transition-all",
+                        align === 'center' ? "justify-center" : align === 'right' ? "justify-end" : "justify-start",
+                        className
+                    )}
+                    style={{ fontSize }}
+                >
+                    <span className="text-brand-accent/60 dark:text-brand-cream/60 font-serif tracking-tight transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold mr-3" aria-hidden>
+                        {currencySymbol}
+                    </span>
+                    <input
+                        {...props}
+                        ref={ref}
+                        type="text"
+                        inputMode="decimal"
+                        value={displayValue}
+                        onChange={handleChange}
+                        onKeyDown={handleKeyDown}
+                        className="bg-transparent border-0 outline-none focus:ring-0 p-0 font-serif tabular-nums text-inherit placeholder:text-brand-accent/20 dark:placeholder:text-white/20"
+                        style={{
+                            width: displayValue ? `${displayValue.length}ch` : '4ch',
+                            minWidth: '1ch',
+                            fontSize: 'inherit',
+                            transition: 'font-size 150ms ease',
+                        }}
+                    />
+                </div>
             )
         }
 

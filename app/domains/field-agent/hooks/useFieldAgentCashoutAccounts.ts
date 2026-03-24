@@ -14,6 +14,12 @@ export async function resolveFieldAgentBankAccount(
     return (response as ApiResponse<{ accountName: string }>).data
 }
 
+export interface Bank {
+    id: string | number
+    code: string
+    name: string
+}
+
 export interface CashoutAccount {
     id: string
     bankName: string
@@ -30,7 +36,7 @@ export function useFieldAgentCashoutAccounts() {
         queryKey: ["field-agent", "cashout-accounts"],
         queryFn: () => apiClient.get<CashoutAccount[]>("/field-agent/wallet/cashout-accounts"),
         enabled: !!agentId,
-        staleTime: 5 * 60 * 1000,
+        staleTime: 10 * 1000, // 10 seconds
     })
 }
 
@@ -38,7 +44,7 @@ export function useAddCashoutAccount() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: { bankName: string; accountNumber: string; accountName: string; bankCode?: string; pin?: string }) =>
+        mutationFn: (data: { bankName: string; accountNumber: string; accountName: string; bankCode?: string; pin: string }) =>
             apiClient.post<CashoutAccount>("/field-agent/wallet/cashout-accounts", data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["field-agent", "cashout-accounts"] })
@@ -50,10 +56,35 @@ export function useRemoveCashoutAccount() {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: ({ id, pin }: { id: string; pin?: string }) =>
+        mutationFn: ({ id, pin }: { id: string; pin: string }) =>
             apiClient.delete(`/field-agent/wallet/cashout-accounts/${id}`, { body: JSON.stringify({ pin }) }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["field-agent", "cashout-accounts"] })
         },
+    })
+}
+
+export function useSetDefaultCashoutAccount() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ id, pin }: { id: string; pin: string }) =>
+            apiClient.post(`/field-agent/wallet/cashout-accounts/${id}/default`, { pin }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["field-agent", "cashout-accounts"] })
+        },
+    })
+}
+
+export function useFieldAgentBanks(provider?: string) {
+    const { agentId } = useFieldAgent()
+    const params: Record<string, string> = {}
+    if (provider) params.provider = provider
+
+    return useQuery({
+        queryKey: ["field-agent", "banks", agentId, provider],
+        queryFn: () => apiClient.get<Bank[]>("/field-agent/banks", params),
+        enabled: !!agentId,
+        staleTime: 60 * 60 * 1000,
     })
 }

@@ -29,10 +29,10 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
         pin: ""
     })
 
-    const [resolveError, setResolveError] = useState("")
-
     const addPayoutAccount = useAddPayoutAccount()
     const resolveAccountMutation = useResolveAccount()
+
+    const [resolveError, setResolveError] = useState("")
 
     // Initialize view and provider based on loaded data
     useEffect(() => {
@@ -53,9 +53,12 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
         }
     }, [details.bankCode, details.accountNumber, details.provider])
 
+    const [isResolving, setIsResolving] = useState(false)
+
     const resolveAccount = async () => {
         setResolveError("")
         setDetails(prev => ({ ...prev, accountName: "" }))
+        setIsResolving(true)
 
         resolveAccountMutation.mutate({
             accountNumber: details.accountNumber,
@@ -68,9 +71,11 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                 } else {
                     setResolveError("Could not resolve account name")
                 }
+                setIsResolving(false)
             },
             onError: (err: any) => {
                 setResolveError(err.data?.message || err.message || "Resolution failed")
+                setIsResolving(false)
             }
         })
     }
@@ -92,7 +97,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
         details.accountName !== "" &&
         details.provider !== "" &&
         details.pin.length === 4 &&
-        !resolveAccountMutation.isPending &&
+        !isResolving &&
         !addPayoutAccount.isPending
 
     if (providersLoading) {
@@ -213,12 +218,12 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                         type="button"
                         variant="outline"
                         onClick={() => setView("bank-selection")}
-                        className="w-full justify-between bg-brand-deep/5 dark:bg-white/5 border-transparent h-12 rounded-xl text-brand-deep dark:text-brand-cream hover:bg-brand-deep/10 dark:hover:bg-white/10 transition-all"
+                        className="w-full justify-between bg-brand-deep/5 dark:bg-white/5 border-transparent h-14 rounded-xl text-brand-deep dark:text-brand-cream hover:bg-brand-deep/10 dark:hover:bg-white/10 transition-all font-bold uppercase tracking-tight"
                     >
                         <span className={details.bankName ? "font-medium" : "text-brand-deep/40 dark:text-brand-cream/40"}>
                             {details.bankName || "Select your bank..."}
                         </span>
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        <ArrowLeft className="w-4 h-4 rotate-180 opacity-20" />
                     </Button>
                 </div>
 
@@ -230,14 +235,14 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                         maxLength={10}
                         value={details.accountNumber}
                         onChange={(e) => setDetails({ ...details, accountNumber: e.target.value.replace(/\D/g, '') })}
-                        className="bg-brand-deep/5 dark:bg-white/5 border-transparent h-12 rounded-xl focus:bg-white dark:focus:bg-white/10 transition-all font-mono"
+                        className="bg-brand-deep/5 h-14 dark:bg-white/5 border-transparent rounded-xl focus:bg-white dark:focus:bg-white/10 transition-all font-mono"
                     />
                 </div>
 
                 <div className="space-y-2">
                     <div className="flex items-center justify-between ml-1">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30">Account Name</label>
-                        {resolveAccountMutation.isPending && (
+                        {isResolving && (
                             <span className="text-[10px] font-bold text-brand-gold flex items-center gap-1 uppercase tracking-tighter">
                                 <Loader2 className="w-3 h-3 animate-spin" /> Resolving...
                             </span>
@@ -258,7 +263,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                         value={details.accountName}
                         readOnly
                         className={cn(
-                            "bg-brand-deep/5 dark:bg-white/5 border-transparent h-12 rounded-xl transition-all",
+                            "bg-brand-deep/5 dark:bg-white/5 border-transparent h-14 rounded-xl transition-all",
                             details.accountName ? "text-brand-deep dark:text-brand-cream font-medium bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/10" : "text-brand-deep/40 dark:text-brand-cream/40 italic"
                         )}
                     />
@@ -277,7 +282,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                             maxLength={4}
                             value={details.pin}
                             onChange={(e) => setDetails({ ...details, pin: e.target.value.replace(/\D/g, '') })}
-                            className="bg-brand-deep/5 dark:bg-white/5 border-transparent h-12 rounded-xl pl-10 focus:bg-white dark:focus:bg-white/10 transition-all tracking-[0.5em] font-mono"
+                            className="bg-brand-deep/5 dark:bg-white/5 border-transparent h-14 rounded-xl pl-10 focus:bg-white dark:focus:bg-white/10 transition-all tracking-[0.5em] font-mono"
                         />
                     </div>
                     <p className="text-[9px] text-brand-accent/40 dark:text-white/20 ml-1">Required to securely add a payout account.</p>
@@ -299,7 +304,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                 <Button
                     type="submit"
                     disabled={!isValid}
-                    className="flex-3 h-12 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                    className="flex-3 h-12 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest"
                 >
                     {addPayoutAccount.isPending ? (
                         <div className="flex items-center gap-2">

@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { useFieldAgentStats } from "@/app/domains/field-agent/hooks/useFieldAgentStats"
 import { useFieldAgentWallet } from "@/app/domains/field-agent/hooks/useFieldAgentWallet"
 import { useFieldAgentCashoutAccounts, useAddCashoutAccount } from "@/app/domains/field-agent/hooks/useFieldAgentCashoutAccounts"
-import { AddCashoutAccountDrawer, type CashoutAccountDetails } from "@/app/components/field-agent/AddCashoutAccountDrawer"
 import { useFieldAgentTransactions, useWithdraw } from "@/app/domains/field-agent/hooks/useFieldAgentTransactions"
+import { CashoutAccountManager } from "@/app/domains/field-agent/components/CashoutAccountManager"
 import { formatCurrency } from "@/app/lib/formatters"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
@@ -52,19 +52,40 @@ export default function WalletPage() {
     const { mutateAsync: addAccount } = useAddCashoutAccount()
     const { mutateAsync: withdraw } = useWithdraw()
 
-    const [activeDrawer, setActiveDrawer] = useState<'payout' | 'detail' | null>(null)
-    const [isAddAccountOpen, setIsAddAccountOpen] = useState(false)
+    const [activeDrawer, setActiveDrawer] = useState<'payout' | 'detail' | 'pin' | 'accounts' | null>(null)
     const [isPinDrawerOpen, setIsPinDrawerOpen] = useState(false)
-    const [pinAction, setPinAction] = useState<'add-account' | 'payout' | null>(null)
-    const [pendingBankDetails, setPendingBankDetails] = useState<CashoutAccountDetails | null>(null)
+    const [pinAction, setPinAction] = useState<'payout' | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [payoutAmount, setPayoutAmount] = useState(0)
     const [selectedTxn, setSelectedTxn] = useState<typeof transactions[0] | null>(null)
+    const [restoreDrawer, setRestoreDrawer] = useState<'payout' | 'detail' | null>(null)
+    const [selectedAccount, setSelectedAccount] = useState<typeof accounts[0] | null>(null)
+    const [showAccountPicker, setShowAccountPicker] = useState(false)
+
 
     const availableBalance = wallet?.availableBalance ?? 0
     const MIN_CASHOUT_THRESHOLD = wallet?.withdrawalThreshold ?? 5000
     const canCashout = availableBalance >= MIN_CASHOUT_THRESHOLD
     const progressPercentage = Math.min((availableBalance / MIN_CASHOUT_THRESHOLD) * 100, 100)
+    const amountInputRef = useRef<HTMLInputElement>(null)
+
+    // Auto-focus amount input when payout drawer opens
+    useEffect(() => {
+        if (activeDrawer === 'payout' && canCashout) {
+            const timer = setTimeout(() => amountInputRef.current?.focus(), 250)
+            return () => clearTimeout(timer)
+        }
+        if (activeDrawer !== 'payout') {
+            setShowAccountPicker(false)
+        }
+    }, [activeDrawer, canCashout])
+
+    // Seed selected account from default whenever accounts load or payout drawer opens
+    useEffect(() => {
+        if (activeDrawer === 'payout' && accounts.length > 0 && !selectedAccount) {
+            setSelectedAccount(accounts.find(a => a.isDefault) ?? accounts[0])
+        }
+    }, [activeDrawer, accounts])
 
 
 
@@ -83,9 +104,9 @@ export default function WalletPage() {
             toast.error('Insufficient balance')
             return
         }
-        if (!defaultAccount) {
+        if (!selectedAccount) {
             toast.error('Please add a payout account first')
-            setIsAddAccountOpen(true)
+            setActiveDrawer('accounts')
             return
         }
 
@@ -96,40 +117,19 @@ export default function WalletPage() {
     }
 
     const handlePayoutSubmit = async (pin: string) => {
-        if (!defaultAccount) return
-        await withdraw({ amount: payoutAmount, cashoutAccountId: defaultAccount.id, pin })
+        if (!selectedAccount) return
+        await withdraw({ amount: payoutAmount, cashoutAccountId: selectedAccount.id, pin })
         toast.success(`Payout of ${fmt(payoutAmount)} requested successfully!`)
         setPayoutAmount(0)
+        setSelectedAccount(null)
         setPinAction(null)
+        setIsPinDrawerOpen(false)
     }
 
-    const handleBankDetailsContinue = (details: CashoutAccountDetails) => {
-        setPendingBankDetails(details)
-        setIsAddAccountOpen(false)
-        setPinAction('add-account')
-        setIsPinDrawerOpen(true)
-    }
-
-    const handlePinSubmit = (pin: string) => {
+    const handlePinSubmit = async (pin: string) => {
         if (pinAction === 'payout') {
-            return handlePayoutSubmit(pin)
-        } else {
-            return handleAddAccountPin(pin)
+            await handlePayoutSubmit(pin)
         }
-    }
-
-    const handleAddAccountPin = async (pin: string) => {
-        if (!pendingBankDetails) return
-        await addAccount({
-            bankName: pendingBankDetails.bankName,
-            accountNumber: pendingBankDetails.accountNumber,
-            accountName: pendingBankDetails.accountName,
-            bankCode: pendingBankDetails.bankCode,
-            pin,
-        })
-        toast.success('Payout account added successfully!')
-        setPendingBankDetails(null)
-        setPinAction(null)
     }
 
     return (
@@ -178,86 +178,22 @@ export default function WalletPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
-                {/* Payout Channels Section */}
-                <div className="border-none shadow-2xl shadow-brand-deep/5 overflow-hidden flex flex-col">
+            <div className="w-full">
+                {/* Audit Trail Section */}
+                <GlassCard className="p-5 md:p-10 border-none shadow-2xl shadow-brand-deep/5 flex flex-col">
                     <div className="flex items-center justify-between mb-6 md:mb-10">
                         <div>
-                            <h3 className="text-xl md:text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-none">Payout Channels</h3>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/20 dark:text-brand-cream/60 mt-2 md:mt-3">Active Extraction Links</p>
+                            <h3 className="text-xl md:text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-none">Payouts</h3>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/20 mt-2.5">Historical cashouts</p>
                         </div>
                         <Button
                             variant="ghost"
-                            size="icon"
-                            onClick={() => setIsAddAccountOpen(true)}
-                            className="w-10 h-10 md:w-12 md:h-12 bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 rounded-2xl transition-all border border-brand-gold/20"
+                            onClick={() => setActiveDrawer('accounts')}
+                            className="ml-auto bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 rounded-2xl transition-all border border-brand-gold/20 gap-1.5 h-9 md:h-12 px-3 md:px-6"
                         >
-                            <Plus className="w-5 h-5 md:w-6 md:h-6" />
+                            <Building2 className="w-3.5 h-3.5 md:w-5 md:h-5 text-brand-gold shrink-0" />
+                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em]">Accounts</span>
                         </Button>
-                    </div>
-
-                    <div className="space-y-4 md:space-y-6 flex-1">
-                        {isLoadingAccounts ? (
-                            <div className="h-32 rounded-[28px] bg-brand-deep/5 dark:bg-white/5 animate-pulse" />
-                        ) : accounts.length === 0 ? (
-                            <div className="p-8 rounded-[28px] border-2 border-dashed border-brand-deep/10 dark:border-white/10 flex flex-col items-center gap-3 text-center">
-                                <AlertCircle className="w-8 h-8 text-brand-deep/20" />
-                                <p className="text-sm font-bold text-brand-deep/40 dark:text-brand-cream/40">No payout channels yet</p>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/20">Add a bank account to withdraw</p>
-                            </div>
-                        ) : (
-                            accounts.map((account) => (
-                                <div key={account.id} className="relative p-5 md:p-7 rounded-[28px] md:rounded-[40px] border border-brand-gold/30 bg-white/40 dark:bg-white/5 group hover:bg-white/60 dark:hover:bg-white/10 transition-all shadow-xl shadow-brand-gold/5 overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-48 h-48 bg-brand-gold/5 blur-3xl -mr-24 -mt-24 group-hover:bg-brand-gold/10 transition-colors" />
-                                    <div className="relative flex flex-col gap-5 md:gap-8">
-                                        <div className="flex items-start justify-between">
-                                            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl md:rounded-3xl bg-brand-deep flex items-center justify-center text-brand-gold shadow-2xl shadow-brand-deep/20 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-                                                <Building2 className="w-6 h-6 md:w-8 md:h-8" />
-                                            </div>
-                                            {account.isDefault && (
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-brand-gold bg-brand-gold/5 px-3 md:px-4 py-1.5 md:py-2 rounded-full border border-brand-gold/10 backdrop-blur-md">Default</span>
-                                                    <div className="w-8 h-1 bg-brand-gold/20 rounded-full group-hover:w-12 transition-all" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="space-y-1.5 md:space-y-2">
-                                            <h4 className="text-xl md:text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-none">{account.bankName}</h4>
-                                            <div className="flex items-center gap-2 md:gap-3 text-brand-deep/40 dark:text-brand-cream/40 font-medium italic text-sm">
-                                                <span className="font-mono tracking-tighter text-sm md:text-base">**** {account.accountNumber.slice(-4)}</span>
-                                                <span className="w-1 h-1 rounded-full bg-brand-gold/40" />
-                                                <span>{account.accountName}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-
-                        {/* Add channel CTA */}
-                        <div
-                            onClick={() => setIsAddAccountOpen(true)}
-                            className="p-5 md:p-8 rounded-[28px] md:rounded-[40px] border-2 border-dashed border-brand-deep/10 dark:border-white/10 bg-brand-deep/1 dark:bg-white/2 flex items-center gap-4 md:gap-6 group hover:border-brand-gold/40 hover:bg-brand-gold/5 transition-all cursor-pointer min-h-[100px] md:min-h-[140px]"
-                        >
-                            <div className="w-11 h-11 md:w-14 md:h-14 shrink-0 rounded-2xl md:rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-deep/10 dark:text-white/40 group-hover:bg-brand-gold group-hover:text-white transition-all duration-500 shadow-sm border border-brand-deep/5">
-                                <Plus className="w-6 h-6 md:w-8 md:h-8" />
-                            </div>
-                            <div className="flex-1 min-w-0 space-y-1">
-                                <p className="text-base md:text-lg font-bold text-brand-deep/30 dark:text-brand-cream/30 group-hover:text-brand-deep dark:group-hover:text-brand-cream transition-colors">Integrate New Channel</p>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/10 dark:text-white/60 line-clamp-1 group-hover:text-brand-gold/60 transition-colors">Bank, Wallet, or Digital Asset</p>
-                            </div>
-                            <div className="w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full border border-brand-deep/5 dark:border-white/5 flex items-center justify-center group-hover:border-brand-gold group-hover:bg-brand-gold/10 transition-all">
-                                <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-brand-deep/10 dark:text-white/40 group-hover:text-brand-gold transition-all" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Audit Trail Section */}
-                <GlassCard className="p-5 md:p-10 border-none shadow-2xl shadow-brand-deep/5 flex flex-col">
-                    <div className="mb-6 md:mb-8">
-                        <h3 className="text-xl md:text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-none">Audit Trail: Payouts</h3>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/20 mt-2">Historical Extractions</p>
                     </div>
                     <div className="space-y-4 md:space-y-6 flex-1">
                         {isLoadingTxns ? (
@@ -333,7 +269,7 @@ export default function WalletPage() {
                 <DrawerContent>
                     <DrawerStickyHeader>
                         <DrawerTitle className="text-4xl">Request Payout</DrawerTitle>
-                        <DrawerDescription className="text-base mt-2">Enter the amount you wish to extract to your primary channel.</DrawerDescription>
+                        <DrawerDescription className="text-base mt-2">Enter the amount you wish to cashout to your primary bank account.</DrawerDescription>
                     </DrawerStickyHeader>
                     <DrawerBody className="space-y-8 px-8 py-10">
                         {!canCashout ? (
@@ -357,7 +293,7 @@ export default function WalletPage() {
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                                 <span>Goal Progress</span>
-                                                <span className="text-brand-gold">{Math.round(progressPercentage)}%</span>
+                                                <span className="text-green-800">{Math.round(progressPercentage)}%</span>
                                             </div>
                                             <div className="h-2 w-full bg-brand-deep/5 dark:bg-white/5 rounded-full overflow-hidden">
                                                 <motion.div
@@ -381,16 +317,25 @@ export default function WalletPage() {
                             </div>
                         ) : (
                             <>
-                                <div className="space-y-4">
-                                    <Label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 ml-1">Extraction Amount</Label>
-                                    <MoneyInput
-                                        value={payoutAmount}
-                                        onChange={setPayoutAmount}
-                                        className="h-16 text-2xl font-serif"
-                                        placeholder="0.00"
-                                    />
-                                    <div className="flex items-center justify-between px-1">
-                                        <span className="text-xs font-bold text-brand-deep/40 italic">Available: {fmt(availableBalance)}</span>
+                                <div className="space-y-6 flex flex-col items-start w-full">
+                                    <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-deep dark:text-brand-cream ml-1 opacity-60">Cashout Amount</Label>
+
+                                    <div className="relative group py-2 w-full">
+                                        <div className="absolute inset-x-0 bottom-0 h-0.5 bg-brand-gold/60 origin-left scale-x-0 group-focus-within:scale-x-100 transition-transform duration-500 rounded-full" />
+
+                                        <MoneyInput
+                                            ref={amountInputRef}
+                                            value={payoutAmount}
+                                            onChange={setPayoutAmount}
+                                            variant="headless"
+                                            className="text-7xl md:text-8xl font-serif text-brand-deep dark:text-brand-cream"
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+
+
+                                    <div className="w-full flex items-center justify-between px-1">
+                                        <span className="text-xs font-bold text-brand-deep/40">Available: {fmt(availableBalance)}</span>
                                         <button
                                             onClick={() => setPayoutAmount(availableBalance)}
                                             className="text-[10px] font-black uppercase tracking-widest text-brand-gold hover:underline"
@@ -400,54 +345,129 @@ export default function WalletPage() {
                                     </div>
                                 </div>
 
-                                {defaultAccount ? (
-                                    <div className="p-6 rounded-3xl bg-brand-gold/5 border border-brand-gold/10 flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-brand-deep flex items-center justify-center text-brand-gold">
-                                            <Building2 className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-brand-deep/40">Destination</p>
-                                            <p className="text-sm font-bold text-brand-deep dark:text-brand-cream">
-                                                {defaultAccount.bankName} • **** {defaultAccount.accountNumber.slice(-4)}
-                                            </p>
-                                        </div>
+                                {accounts.length === 0 ? (
+                                    <div
+                                        onClick={() => { setActiveDrawer('accounts'); setRestoreDrawer('payout') }}
+                                        className="p-6 rounded-3xl border-2 border-dashed border-brand-deep/10 dark:border-white/10 flex flex-col items-center gap-3 text-center hover:border-brand-gold/40 hover:bg-brand-gold/5 transition-all cursor-pointer"
+                                    >
+                                        <AlertCircle className="w-6 h-6 text-brand-deep/20" />
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40">No destination set</p>
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-brand-gold">Tap to Add Account</p>
                                     </div>
                                 ) : (
-                                    <div className="p-6 rounded-3xl bg-red-500/5 border border-red-500/10 flex items-center gap-4">
-                                        <AlertCircle className="w-6 h-6 text-red-500/60 shrink-0" />
-                                        <p className="text-sm font-bold text-red-600/60">No payout account configured. Add one first.</p>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between px-1 mb-3">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40">Destination</p>
+                                            <button
+                                                onClick={() => setShowAccountPicker(v => !v)}
+                                                className="text-[10px] font-black uppercase tracking-widest text-brand-gold hover:underline"
+                                            >
+                                                {showAccountPicker ? 'Done' : 'Change'}
+                                            </button>
+                                        </div>
+
+                                        {showAccountPicker ? (
+                                            <div className="space-y-2">
+                                                {accounts.map(account => (
+                                                    <button
+                                                        key={account.id}
+                                                        onClick={() => { setSelectedAccount(account); setShowAccountPicker(false) }}
+                                                        className={cn(
+                                                            "w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left",
+                                                            selectedAccount?.id === account.id
+                                                                ? "bg-brand-gold/10 border-brand-gold/40"
+                                                                : "bg-brand-deep/3 dark:bg-white/3 border-brand-deep/5 hover:border-brand-gold/20 hover:bg-brand-gold/5"
+                                                        )}
+                                                    >
+                                                        <div className={cn(
+                                                            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                                                            selectedAccount?.id === account.id ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/10 dark:bg-white/10 text-brand-deep/40 dark:text-brand-cream/40"
+                                                        )}>
+                                                            <Building2 className="w-5 h-5" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-brand-deep dark:text-brand-cream uppercase tracking-tight text-sm truncate">{account.bankName}</p>
+                                                            <p className="text-[10px] font-mono text-brand-deep/40 dark:text-brand-cream/40">•••• {account.accountNumber.slice(-4)}</p>
+                                                        </div>
+                                                        {account.isDefault && (
+                                                            <span className="text-[9px] font-black bg-brand-gold/10 text-brand-gold px-2 py-1 rounded-full uppercase tracking-wider shrink-0">Default</span>
+                                                        )}
+                                                        {selectedAccount?.id === account.id && (
+                                                            <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0" />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        ) : selectedAccount ? (
+                                            <button
+                                                onClick={() => setShowAccountPicker(true)}
+                                                className="w-full flex items-center gap-4 p-5 rounded-2xl bg-brand-gold/5 border border-brand-gold/20 hover:bg-brand-gold/10 transition-all text-left"
+                                            >
+                                                <div className="w-12 h-12 rounded-2xl bg-brand-deep flex items-center justify-center text-brand-gold shrink-0">
+                                                    <Building2 className="w-6 h-6" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream truncate">{selectedAccount.bankName} • •••• {selectedAccount.accountNumber.slice(-4)}</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 mt-0.5">{selectedAccount.accountName}</p>
+                                                </div>
+                                                <ChevronRight className="w-4 h-4 text-brand-deep/20 shrink-0" />
+                                            </button>
+                                        ) : null}
                                     </div>
                                 )}
                             </>
                         )}
                     </DrawerBody>
                     <DrawerFooter className="px-8 pb-12">
-                        <Button
-                            onClick={handleRequestPayout}
-                            disabled={isSubmitting || !canCashout || payoutAmount <= 0 || !defaultAccount}
-                            className="h-16 w-full bg-brand-deep text-white rounded-2xl font-bold text-lg shadow-2xl shadow-brand-deep/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                        >
-                            {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : (!canCashout ? "Low Balance" : "Confirm Payout")}
-                        </Button>
+                        <div className="w-full h-px bg-brand-deep/5 dark:bg-white/5 my-2" />
+
+                        <div className="flex flex-col gap-3">
+                            <Button
+                                disabled={isSubmitting || payoutAmount <= 0 || payoutAmount > availableBalance}
+                                onClick={handleRequestPayout}
+                                className="w-full h-16 md:h-20 bg-brand-deep text-white rounded-3xl font-bold flex items-center justify-center gap-3 shadow-2xl shadow-brand-deep/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
+                                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowUpRight className="w-5 h-5 text-brand-gold" />}
+                                Request Cashout
+                            </Button>
+                        </div>
                     </DrawerFooter>
                 </DrawerContent>
             </Drawer>
 
-            <AddCashoutAccountDrawer
-                isOpen={isAddAccountOpen}
-                onOpenChange={setIsAddAccountOpen}
-                onContinue={handleBankDetailsContinue}
-            />
+            {/* Manage Accounts Drawer */}
+            <Drawer
+                open={activeDrawer === 'accounts'}
+                onOpenChange={(o) => { if (!o) { setActiveDrawer(restoreDrawer || null) } }}
+            >
+                <DrawerContent>
+                    <DrawerStickyHeader>
+                        <DrawerTitle className="text-4xl">Payout Destinations</DrawerTitle>
+                        <DrawerDescription className="text-base mt-2">Configure where your earnings are settled.</DrawerDescription>
+                    </DrawerStickyHeader>
+                    <DrawerBody className="px-4 sm:px-1">
+                        <div className="max-w-xl mx-auto">
+                            <CashoutAccountManager
+                                onClose={() => setActiveDrawer(restoreDrawer || null)}
+                                showBackButton={false}
+                            />
+                        </div>
+                    </DrawerBody>
+                </DrawerContent>
+            </Drawer>
 
             <PinInputDrawer
                 open={isPinDrawerOpen}
-                onOpenChange={setIsPinDrawerOpen}
+                onOpenChange={(open) => {
+                    setIsPinDrawerOpen(open)
+                    if (!open && pinAction) {
+                        if (pinAction === 'payout') setActiveDrawer('payout')
+                        setPinAction(null)
+                    }
+                }}
                 onSubmit={handlePinSubmit}
-                title={pinAction === 'payout' ? "Confirm Payout" : "Confirm Account"}
-                description={pinAction === 'payout'
-                    ? `Enter your transaction PIN to authorize the cashout of ${fmt(payoutAmount)}.`
-                    : "Enter your transaction PIN to securely save this payout account."
-                }
+                title="Confirm Payout"
+                description={`Enter your transaction PIN to authorize the cashout of ${fmt(payoutAmount)}.`}
             />
 
             {/* Transaction Detail Drawer */}
