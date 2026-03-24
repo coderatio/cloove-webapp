@@ -63,6 +63,17 @@ export function DashboardView() {
 
     const fmt = (val: number) => formatCurrency(val, { currency })
 
+    // Compute month-over-month trend for earnings (current vs previous month)
+    const earningsTrend = (() => {
+        const monthly = stats?.monthlyEarnings ?? []
+        if (monthly.length < 2) return undefined
+        const current = monthly[monthly.length - 1].amount
+        const previous = monthly[monthly.length - 2].amount
+        if (previous === 0) return current > 0 ? { value: 100, isPositive: true } : undefined
+        const pct = Math.abs(((current - previous) / previous) * 100)
+        return { value: Math.round(pct * 10) / 10, isPositive: current >= previous }
+    })()
+
     return (
         <div className="space-y-10 pb-20">
             {/* Command Header */}
@@ -71,7 +82,7 @@ export function DashboardView() {
                     <p className="text-[10px] font-black tracking-[0.4em] uppercase text-brand-gold mb-2">Agent Dashboard</p>
                     <h1 className="text-4xl md:text-5xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-tight">Merchant Overview</h1>
                 </div>
-                <div className="flex items-center gap-3 bg-brand-deep/3 dark:bg-white/5 p-1.5 rounded-2xl border border-brand-deep/5 dark:border-white/5 backdrop-blur-xl">
+                <div className="hidden sm:flex items-center gap-3 bg-brand-deep/3 dark:bg-white/5 p-1.5 rounded-2xl border border-brand-deep/5 dark:border-white/5 backdrop-blur-xl">
                     <div className="px-4 py-2 bg-white dark:bg-white/5 rounded-xl shadow-sm border border-brand-deep/5 dark:border-white/5">
                         <p className="text-[10px] font-black text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-widest mb-0.5">System Status</p>
                         <div className="flex items-center gap-2">
@@ -83,13 +94,13 @@ export function DashboardView() {
             </div>
 
             {/* Elite Stats Cluster */}
-            <div className="flex gap-4 overflow-x-auto pb-1 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 scrollbar-none">
+            <div className="flex gap-4 overflow-x-auto py-3 lg:grid lg:grid-cols-3 lg:overflow-visible lg:pb-0 scrollbar-none">
                 <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
                     <AgentStatCard
                         title="Gross Commissions"
                         value={fmt(stats?.totalEarned ?? 0)}
                         icon={TrendingUp}
-                        trend={{ value: 12.4, isPositive: true }}
+                        trend={earningsTrend}
                     />
                 </div>
                 <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
@@ -97,7 +108,6 @@ export function DashboardView() {
                         title="Activated Portfolio"
                         value={stats?.activeMerchants ?? 0}
                         icon={Building2}
-                        trend={{ value: 8.1, isPositive: true }}
                     />
                 </div>
                 <div className="min-w-[300px] lg:min-w-0 shrink-0 lg:shrink">
@@ -138,7 +148,7 @@ export function DashboardView() {
                     <div className="h-[350px] w-full relative">
                         {(!stats?.monthlyEarnings || stats.monthlyEarnings.length === 0 || stats.monthlyEarnings.every(e => e.amount === 0)) ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-brand-deep/2 dark:bg-white/2 rounded-[32px] border border-dashed border-brand-deep/10 dark:border-white/10">
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="w-16 h-16 bg-brand-gold/10 rounded-full flex items-center justify-center mb-6"

@@ -20,18 +20,20 @@ export function useFieldAgentStats() {
         queryFn: async () => {
             const raw = await apiClient.get<{
                 totalBusinesses: number
+                grossCommissions: number
                 actionCommissions: number
                 subscriptionCommissions: number
                 totalEarnings: number
                 availableBalance: number
                 pendingWithdrawals: number
+                monthlyEarnings: { month: string; amount: number }[]
             }>("/field-agent/stats")
 
             return {
-                totalEarned: raw.totalEarnings,
+                totalEarned: raw.grossCommissions,
                 activeMerchants: raw.totalBusinesses,
                 pendingPayout: raw.pendingWithdrawals,
-                monthlyEarnings: [] as { month: string; amount: number }[],
+                monthlyEarnings: raw.monthlyEarnings ?? [],
                 actionCommissions: raw.actionCommissions,
                 subscriptionCommissions: raw.subscriptionCommissions,
                 availableBalance: raw.availableBalance,
