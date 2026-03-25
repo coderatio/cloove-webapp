@@ -6,6 +6,7 @@ import { AgentSidebar } from "@/app/components/field-agent/AgentSidebar"
 import { FieldAgentProvider } from "@/app/domains/field-agent/providers/FieldAgentProvider"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
+import { PageTransition } from "@/app/components/layout/page-transition"
 import {
     Bell,
     Search,
@@ -173,7 +174,9 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
 
                         {/* Content Section */}
                         <div className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-                            {children}
+                            <PageTransition key={pathname}>
+                                {children}
+                            </PageTransition>
                         </div>
                     </main>
                 </div>
