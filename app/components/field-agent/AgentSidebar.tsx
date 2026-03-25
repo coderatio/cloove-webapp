@@ -77,20 +77,27 @@ export function AgentSidebar() {
 
                 {/* Bottom Section */}
                 <div className="px-4 mt-auto space-y-2 w-full">
-                    <Link
-                        href="/field/settings"
-                        className="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-cream/60 hover:text-white hover:bg-white/5 transition-all group"
-                    >
-                        <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
-                        <span className="font-medium text-sm">Settings</span>
-                    </Link>
-                    <Link
-                        href="/field/security"
-                        className="flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-cream/60 hover:text-white hover:bg-white/5 transition-all group"
-                    >
-                        <ShieldCheck className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        <span className="font-medium text-sm">Security</span>
-                    </Link>
+                    {[
+                        { href: "/field/settings", icon: Settings, label: "Settings", iconClass: "group-hover:rotate-45 transition-transform" },
+                        { href: "/field/security", icon: ShieldCheck, label: "Security", iconClass: "group-hover:scale-110 transition-transform" },
+                    ].map((item) => {
+                        const isActive = pathname === item.href
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group",
+                                    isActive
+                                        ? "bg-brand-gold text-brand-deep"
+                                        : "text-brand-cream/60 hover:text-white hover:bg-white/5"
+                                )}
+                            >
+                                <item.icon className={cn("w-5 h-5", item.iconClass, isActive && "text-brand-deep")} />
+                                <span className="font-medium text-sm">{item.label}</span>
+                            </Link>
+                        )
+                    })}
                     <button
                         onClick={logout}
                         className="flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full group"
@@ -136,7 +143,10 @@ export function AgentSidebar() {
                 <button
                     onClick={() => setIsMobileMenuOpen(true)}
                     className={cn(
-                        "flex flex-col items-center justify-center gap-1 w-16 h-12 rounded-2xl transition-all duration-300 relative text-brand-cream/40"
+                        "flex flex-col items-center justify-center gap-1 w-16 h-12 rounded-2xl transition-all duration-300 relative",
+                        ["/field/settings", "/field/security", "/field/profile"].includes(pathname)
+                            ? "text-brand-gold"
+                            : "text-brand-cream/40"
                     )}
                 >
                     <MoreVerticalIcon className="w-5 h-5 transition-transform duration-300" />
