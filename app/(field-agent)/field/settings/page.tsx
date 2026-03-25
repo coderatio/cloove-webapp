@@ -3,27 +3,58 @@
 import React, { useState } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
-import { 
-    Bell, 
-    Mail, 
-    MessageSquare, 
+import {
+    Bell,
+    Mail,
+    MessageSquare,
     Smartphone,
     CreditCard,
-    LogOut
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
-import { useAuth } from "@/app/components/providers/auth-provider"
+import { apiClient } from "@/app/lib/api-client"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import Link from "next/link"
+
+interface NotificationPrefs {
+    email: boolean
+    whatsapp: boolean
+    push: boolean
+}
 
 export default function SettingsPage() {
-    const { logout } = useAuth()
-    const [notifications, setNotifications] = useState({
-        email: true,
-        whatsapp: true,
-        push: false
+    const queryClient = useQueryClient()
+
+    const { data: savedPrefs, isLoading } = useQuery<NotificationPrefs>({
+        queryKey: ["field-agent-notifications"],
+        queryFn: () => apiClient.get<NotificationPrefs>("/field-agent/notifications"),
     })
 
-    const toggleNotification = (key: keyof typeof notifications) => {
-        setNotifications(p => ({ ...p, [key]: !p[key] }))
+    const [notifications, setNotifications] = useState<NotificationPrefs>({
+        email: true,
+        whatsapp: true,
+        push: false,
+    })
+
+    React.useEffect(() => {
+        if (savedPrefs) setNotifications(savedPrefs)
+    }, [savedPrefs])
+
+    const { mutate: saveNotifications } = useMutation({
+        mutationFn: (prefs: NotificationPrefs) =>
+            apiClient.patch("/field-agent/notifications", prefs),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["field-agent-notifications"] })
+        },
+        onError: (err: any) => {
+            toast.error(err.message || "Failed to save settings")
+        },
+    })
+
+    const toggleNotification = (key: keyof NotificationPrefs) => {
+        const updated = { ...notifications, [key]: !notifications[key] }
+        setNotifications(updated)
+        saveNotifications(updated)
     }
 
     return (
@@ -45,9 +76,9 @@ export default function SettingsPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                         {[
-                            { id: 'email', title: 'Email Notifications', desc: 'Receive performance reports and updates', icon: Mail },
-                            { id: 'whatsapp', title: 'WhatsApp Alerts', desc: 'Get instant alerts for new successful onboards', icon: MessageSquare },
-                            { id: 'push', title: 'Push Notifications', desc: 'Real-time updates in your web browser', icon: Smartphone }
+                            { id: 'email' as const, title: 'Email Notifications', desc: 'Receive performance reports and updates', icon: Mail },
+                            { id: 'whatsapp' as const, title: 'WhatsApp Alerts', desc: 'Get instant alerts for new successful onboards', icon: MessageSquare },
+                            { id: 'push' as const, title: 'Push Notifications', desc: 'Real-time updates in your web browser', icon: Smartphone }
                         ].map((item) => (
                             <div key={item.id} className="flex items-center justify-between group">
                                 <div className="flex gap-4">
@@ -59,16 +90,17 @@ export default function SettingsPage() {
                                         <p className="text-xs text-brand-deep/40 dark:text-brand-cream/40">{item.desc}</p>
                                     </div>
                                 </div>
-                                <button 
-                                    onClick={() => toggleNotification(item.id as any)}
+                                <button
+                                    onClick={() => toggleNotification(item.id)}
+                                    disabled={isLoading}
                                     className={cn(
-                                        "w-10 h-5 rounded-full p-1 transition-colors duration-300 shrink-0",
-                                        notifications[item.id as keyof typeof notifications] ? "bg-brand-gold" : "bg-brand-deep/10 dark:bg-white/10"
+                                        "w-10 h-5 rounded-full p-1 transition-colors duration-300 shrink-0 disabled:opacity-50",
+                                        notifications[item.id] ? "bg-brand-gold" : "bg-brand-deep/10 dark:bg-white/10"
                                     )}
                                 >
                                     <div className={cn(
                                         "w-3 h-3 rounded-full bg-brand-cream shadow-sm transition-transform duration-300",
-                                        notifications[item.id as keyof typeof notifications] ? "translate-x-5" : "translate-x-0"
+                                        notifications[item.id] ? "translate-x-5" : "translate-x-0"
                                     )} />
                                 </button>
                             </div>
@@ -76,7 +108,7 @@ export default function SettingsPage() {
                     </div>
                 </GlassCard>
 
-                {/* Payout Summary (Linked to Wallet but useful here) */}
+                {/* Payout Account */}
                 <GlassCard className="p-8 bg-brand-deep dark:bg-brand-gold/10 border-none">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                         <div className="flex items-center gap-6">
@@ -88,26 +120,11 @@ export default function SettingsPage() {
                                 <p className="text-sm text-brand-cream/60">Manage where your commissions are deposited.</p>
                             </div>
                         </div>
-                        <Button variant="outline" className="rounded-2xl h-14 px-8 border-brand-gold/50 text-brand-gold hover:bg-brand-gold/10 transition-all font-bold">
-                            Open Wallet
+                        <Button variant="outline" className="rounded-2xl h-14 px-8 border-brand-gold/50 text-brand-gold hover:bg-brand-gold/10 transition-all font-bold" asChild>
+                            <Link href="/field/wallet">Open Wallet</Link>
                         </Button>
                     </div>
                 </GlassCard>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-12 border-t border-brand-deep/5 dark:border-white/5">
-                <button
-                    onClick={logout}
-                    className="flex items-center gap-3 px-6 py-3 rounded-2xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all font-bold group"
-                >
-                    <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                    <span>Sign Out of Account</span>
-                </button>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto rounded-2xl px-12 h-12 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep font-bold shadow-lg shadow-brand-gold/10">
-                        Save Changes
-                    </Button>
-                </div>
             </div>
         </div>
     )

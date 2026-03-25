@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -9,15 +9,20 @@ import {
     Mail,
     Phone,
     Camera,
-    Edit2
+    Edit2,
+    Check,
+    X,
+    Loader2
 } from "lucide-react"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { useFieldAgentStats } from "@/app/domains/field-agent/hooks/useFieldAgentStats"
 import { useFieldAgentWallet } from "@/app/domains/field-agent/hooks/useFieldAgentWallet"
 import { formatCurrency } from "@/app/lib/formatters"
+import { apiClient } from "@/app/lib/api-client"
+import { toast } from "sonner"
 
 export default function ProfilePage() {
-    const { user } = useAuth()
+    const { user, refreshUser } = useAuth()
     const { data: stats } = useFieldAgentStats()
     const { data: wallet } = useFieldAgentWallet()
 
@@ -25,6 +30,38 @@ export default function ProfilePage() {
     const initials = displayName.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
     const currency = wallet?.currency ?? 'NGN'
     const totalEarned = stats?.totalEarned ?? 0
+
+    const [isEditing, setIsEditing] = useState(false)
+    const [fullName, setFullName] = useState(displayName)
+    const [isSaving, setIsSaving] = useState(false)
+
+    const handleEdit = () => {
+        setFullName(displayName)
+        setIsEditing(true)
+    }
+
+    const handleCancel = () => {
+        setIsEditing(false)
+        setFullName(displayName)
+    }
+
+    const handleSave = async () => {
+        if (!fullName.trim() || fullName.trim() === displayName) {
+            setIsEditing(false)
+            return
+        }
+        setIsSaving(true)
+        try {
+            await apiClient.patch("/field-agent/profile", { fullName: fullName.trim() })
+            await refreshUser()
+            toast.success("Profile updated")
+            setIsEditing(false)
+        } catch (err: any) {
+            toast.error(err.message || "Failed to update profile")
+        } finally {
+            setIsSaving(false)
+        }
+    }
 
     return (
         <div className="space-y-8 pb-12 overflow-hidden">
@@ -43,18 +80,57 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex-1 text-center md:text-left">
-                        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
-                            <h2 className="text-3xl font-serif font-medium">{displayName}</h2>
-                        </div>
+                        {isEditing ? (
+                            <div className="flex flex-col sm:flex-row items-center gap-3 mb-4">
+                                <Input
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    className="h-12 text-xl font-serif bg-transparent border-brand-deep/20 dark:border-white/20 max-w-xs"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSave()
+                                        if (e.key === 'Escape') handleCancel()
+                                    }}
+                                />
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        onClick={handleSave}
+                                        disabled={isSaving}
+                                        size="sm"
+                                        className="rounded-xl h-10 px-4 bg-brand-gold text-brand-deep font-bold"
+                                    >
+                                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                    </Button>
+                                    <Button
+                                        onClick={handleCancel}
+                                        disabled={isSaving}
+                                        size="sm"
+                                        variant="outline"
+                                        className="rounded-xl h-10 px-4"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-2">
+                                <h2 className="text-3xl font-serif font-medium">{displayName}</h2>
+                            </div>
+                        )}
                         <p className="text-brand-deep/50 dark:text-brand-cream/50 max-w-lg mb-6">
                             Field Agent at Cloove. Helping merchants grow their business through digital financial inclusion.
                         </p>
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                            <Button className="rounded-2xl px-6 h-11 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep">
-                                <Edit2 className="w-4 h-4 mr-2" />
-                                Edit Profile
-                            </Button>
-                        </div>
+                        {!isEditing && (
+                            <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                                <Button
+                                    onClick={handleEdit}
+                                    className="rounded-2xl px-6 h-11 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep"
+                                >
+                                    <Edit2 className="w-4 h-4 mr-2" />
+                                    Edit Profile
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="hidden lg:block">
