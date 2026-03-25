@@ -173,17 +173,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
 
                         {/* Content Section */}
                         <div className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={pathname}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.2, ease: "linear" }}
-                                >
-                                    {children}
-                                </motion.div>
-                            </AnimatePresence>
+                            {children}
                         </div>
                     </main>
                 </div>

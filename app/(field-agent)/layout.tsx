@@ -1,5 +1,3 @@
-"use client"
-
 import AgentLayout from "@/app/components/field-agent/AgentLayout"
 
 export default function FieldAgentLayout({

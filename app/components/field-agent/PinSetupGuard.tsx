@@ -14,8 +14,8 @@ export function PinSetupGuard({ children }: { children: React.ReactNode }) {
     const [pin, setPin] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    if (isLoading || !user) return <>{children}</>
-    if (user.hasTransactionPin) return <>{children}</>
+    if (isLoading) return null
+    if (!user || user.hasTransactionPin) return <>{children}</>
 
     const handleSetPin = async () => {
         if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
