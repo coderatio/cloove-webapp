@@ -107,7 +107,9 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                             <p className="text-[9px] uppercase tracking-widest text-brand-deep/60 dark:text-brand-cream/60 font-black">{agentCode}</p>
                                         </div>
                                         <div className="w-10 h-10 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 border-2 border-brand-cream dark:border-brand-deep shadow-lg flex items-center justify-center font-bold text-brand-deep relative overflow-hidden">
-                                            {initials}
+                                            {user?.avatarUrl ? (
+                                                <Image src={user.avatarUrl} alt={displayName} fill className="object-cover" />
+                                            ) : initials}
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                                         </div>
                                         <ChevronDown className={cn("w-4 h-4 text-brand-deep/30 dark:text-brand-cream/50 transition-transform", showProfileMenu && "rotate-180")} />

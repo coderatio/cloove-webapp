@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -14,6 +14,7 @@ import {
     X,
     Loader2
 } from "lucide-react"
+import Image from "next/image"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { useFieldAgentStats } from "@/app/domains/field-agent/hooks/useFieldAgentStats"
 import { useFieldAgentWallet } from "@/app/domains/field-agent/hooks/useFieldAgentWallet"
@@ -34,6 +35,9 @@ export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false)
     const [fullName, setFullName] = useState(displayName)
     const [isSaving, setIsSaving] = useState(false)
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+    const [isRemovingAvatar, setIsRemovingAvatar] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     const handleEdit = () => {
         setFullName(displayName)
@@ -63,6 +67,43 @@ export default function ProfilePage() {
         }
     }
 
+    const handleRemoveAvatar = async () => {
+        setIsRemovingAvatar(true)
+        try {
+            await apiClient.delete("/user/profile/avatar")
+            await refreshUser()
+            toast.success("Profile picture removed")
+        } catch (err: any) {
+            toast.error(err.message || "Failed to remove picture")
+        } finally {
+            setIsRemovingAvatar(false)
+        }
+    }
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setIsUploadingAvatar(true)
+        try {
+            const formData = new FormData()
+            formData.append("avatar", file)
+            await apiClient.request("/user/profile/avatar", {
+                method: "POST",
+                body: formData,
+                headers: { "Content-Type": undefined } as any,
+            })
+            await refreshUser()
+            toast.success("Profile picture updated")
+        } catch (err: any) {
+            toast.error(err.message || "Failed to upload picture")
+        } finally {
+            setIsUploadingAvatar(false)
+            // Reset so the same file can be selected again
+            e.target.value = ""
+        }
+    }
+
     return (
         <div className="space-y-8 pb-12 overflow-hidden">
             {/* Profile Header */}
@@ -70,13 +111,49 @@ export default function ProfilePage() {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full -translate-y-32 translate-x-32 blur-3xl" />
 
                 <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
+                    {/* Avatar */}
                     <div className="relative group">
-                        <div className="w-32 h-32 rounded-[40px] bg-linear-to-br from-brand-gold to-yellow-600 border-4 border-brand-cream dark:border-brand-deep shadow-2xl flex items-center justify-center text-4xl font-serif font-black text-brand-deep">
-                            {initials}
+                        <div className="w-32 h-32 rounded-[40px] bg-linear-to-br from-brand-gold to-yellow-600 border-4 border-brand-cream dark:border-brand-deep shadow-2xl flex items-center justify-center text-4xl font-serif font-black text-brand-deep overflow-hidden">
+                            {user?.avatarUrl ? (
+                                <Image
+                                    src={user.avatarUrl}
+                                    alt={displayName}
+                                    fill
+                                    className="object-cover"
+                                />
+                            ) : (
+                                initials
+                            )}
                         </div>
-                        <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-deep text-brand-cream rounded-2xl border-4 border-brand-cream dark:border-brand-deep flex items-center justify-center hover:scale-110 transition-transform">
-                            <Camera className="w-5 h-5" />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploadingAvatar || isRemovingAvatar}
+                            className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-deep text-brand-cream rounded-2xl border-4 border-brand-cream dark:border-brand-deep flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-60"
+                        >
+                            {isUploadingAvatar
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : <Camera className="w-5 h-5" />
+                            }
                         </button>
+                        {user?.avatarUrl && (
+                            <button
+                                onClick={handleRemoveAvatar}
+                                disabled={isRemovingAvatar || isUploadingAvatar}
+                                className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full border-2 border-brand-cream dark:border-brand-deep flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-60"
+                            >
+                                {isRemovingAvatar
+                                    ? <Loader2 className="w-3 h-3 animate-spin" />
+                                    : <X className="w-3 h-3" />
+                                }
+                            </button>
+                        )}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="hidden"
+                            onChange={handleAvatarChange}
+                        />
                     </div>
 
                     <div className="flex-1 text-center md:text-left">

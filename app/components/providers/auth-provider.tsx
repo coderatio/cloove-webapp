@@ -32,6 +32,7 @@ interface User {
         refreshInterval?: string
     }
     hasTransactionPin: boolean
+    avatarUrl?: string | null
     fieldAgent: {
         isFieldAgent: boolean
         agentCode: string

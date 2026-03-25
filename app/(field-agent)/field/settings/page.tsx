@@ -120,7 +120,7 @@ export default function SettingsPage() {
                                 <p className="text-sm text-brand-cream/60">Manage where your commissions are deposited.</p>
                             </div>
                         </div>
-                        <Button variant="outline" className="rounded-2xl h-14 px-8 border-brand-gold/50 text-brand-gold hover:bg-brand-gold/10 transition-all font-bold" asChild>
+                        <Button variant="outline" className="rounded-2xl h-14 px-8 border-brand-gold/50 text-brand-gold hover:bg-brand-gold hover:text-brand-deep transition-all font-bold" asChild>
                             <Link href="/field/wallet">Open Wallet</Link>
                         </Button>
                     </div>
