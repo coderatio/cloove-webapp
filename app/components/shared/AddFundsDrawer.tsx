@@ -15,6 +15,10 @@ import {
     ArrowRight,
     ArrowLeft,
     Link2,
+    Mail,
+    MailCheck,
+    Clock,
+    RefreshCw,
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -34,6 +38,8 @@ import { useRetryVirtualAccount } from "@/app/domains/business/hooks/useVerifica
 import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 import { useCreateWalletPaymentLink, useWalletPaymentLink } from "@/app/domains/checkout/hooks/usePaymentLinks"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { useAuth } from "@/app/components/providers/auth-provider"
+import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -56,6 +62,7 @@ export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsD
     const { depositData, isLoading } = useDepositAccounts()
     const { wallet } = useWalletBalance()
     const { activeBusiness } = useBusiness()
+    const { user } = useAuth()
     const router = useRouter()
     const [showQr, setShowQr] = React.useState<string | null>(null)
     const [activeView, setActiveView] = React.useState<DrawerView>('method-select')
@@ -67,6 +74,8 @@ export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsD
         }
     }, [isOpen])
 
+    const hasEmail = !!user?.email
+    const emailVerified = user?.emailVerified ?? false
     const isEligible = depositData?.isEligible ?? false
     const verificationLevel = depositData?.verificationLevel ?? 0
     const accounts = depositData?.accounts ?? []
@@ -74,6 +83,11 @@ export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsD
     const handleStartVerification = () => {
         onOpenChange(false)
         setTimeout(() => router.push("/settings?tab=verification"), 300)
+    }
+
+    const handleGoToProfile = () => {
+        onOpenChange(false)
+        setTimeout(() => router.push("/settings?tab=profile"), 300)
     }
 
     const showBackButton = activeView !== 'method-select' && isEligible && accounts.length > 0
@@ -129,6 +143,10 @@ export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsD
                                 <Skeleton className="h-40 w-full rounded-3xl" />
                                 <Skeleton className="h-40 w-full rounded-3xl" />
                             </motion.div>
+                        ) : !hasEmail ? (
+                            <EmailMissingView onGoToProfile={handleGoToProfile} />
+                        ) : !emailVerified ? (
+                            <EmailUnverifiedView email={user!.email} />
                         ) : !isEligible ? (
                             <VerificationRequiredView
                                 verificationLevel={verificationLevel}
@@ -490,6 +508,163 @@ function QrCodeView({ accounts }: { accounts: DepositAccount[] }) {
                     </motion.div>
                 ))}
             </div>
+        </motion.div>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Email Missing State
+// ─────────────────────────────────────────────────────────────────────────────
+
+function EmailMissingView({ onGoToProfile }: { onGoToProfile: () => void }) {
+    const steps = [
+        { label: "Add email to your profile", active: true },
+        { label: "Verify the link sent to your inbox", active: false },
+        { label: "Fund your wallet", active: false },
+    ]
+
+    return (
+        <motion.div
+            key="email-missing"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="flex flex-col items-center text-center max-w-md mx-auto space-y-8"
+        >
+            <div className="relative">
+                <div className="w-24 h-24 rounded-3xl bg-brand-gold/10 flex items-center justify-center">
+                    <Mail className="w-12 h-12 text-brand-gold" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-brand-deep dark:bg-brand-cream flex items-center justify-center shadow-lg">
+                    <span className="text-brand-gold dark:text-brand-deep font-bold text-lg leading-none">+</span>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                    Email Required
+                </h3>
+                <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed max-w-[300px] mx-auto">
+                    Add an email address to your account to unlock wallet funding and receive important notifications.
+                </p>
+            </div>
+
+            <GlassCard className="w-full p-5 space-y-4 border-brand-gold/10 text-left">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">
+                    Steps to get started
+                </p>
+                <div className="space-y-3">
+                    {steps.map((step, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                            <div className={cn(
+                                "w-7 h-7 rounded-full flex items-center justify-center shrink-0 border text-xs font-bold",
+                                step.active
+                                    ? "bg-brand-gold border-brand-gold text-brand-deep"
+                                    : "bg-transparent border-brand-deep/10 dark:border-white/10 text-brand-accent/30 dark:text-brand-cream/30"
+                            )}>
+                                {i + 1}
+                            </div>
+                            <p className={cn(
+                                "text-sm",
+                                step.active
+                                    ? "font-medium text-brand-deep dark:text-brand-cream"
+                                    : "text-brand-accent/30 dark:text-brand-cream/30"
+                            )}>
+                                {step.label}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </GlassCard>
+
+            <Button
+                onClick={onGoToProfile}
+                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            >
+                Go to Profile Settings
+                <ArrowRight className="w-5 h-5" />
+            </Button>
+        </motion.div>
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Email Unverified State
+// ─────────────────────────────────────────────────────────────────────────────
+
+function EmailUnverifiedView({ email }: { email: string }) {
+    const [resendState, setResendState] = React.useState<'idle' | 'loading' | 'sent'>('idle')
+
+    const handleResend = async () => {
+        if (resendState !== 'idle') return
+        setResendState('loading')
+        try {
+            await apiClient.post("/security/resend-verification-email", {})
+            setResendState('sent')
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to resend. Try again.")
+            setResendState('idle')
+        }
+    }
+
+    return (
+        <motion.div
+            key="email-unverified"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="flex flex-col items-center text-center max-w-md mx-auto space-y-8"
+        >
+            <div className="relative">
+                <div className="w-24 h-24 rounded-3xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+                    <MailCheck className="w-12 h-12 text-blue-500" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-white dark:bg-brand-deep border border-brand-deep/5 dark:border-white/10 flex items-center justify-center shadow-lg">
+                    <Clock className="w-5 h-5 text-amber-500" />
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                    Verify Your Email
+                </h3>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/10">
+                    <Mail className="w-3.5 h-3.5 text-brand-accent/50 dark:text-brand-cream/50" />
+                    <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">{email}</span>
+                </div>
+                <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed max-w-[300px] mx-auto">
+                    We sent a verification link to your email. Click it to verify your address and unlock wallet funding.
+                </p>
+            </div>
+
+            {resendState === 'sent' ? (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-full flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-500/20"
+                >
+                    <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                        Verification email sent! Check your inbox.
+                    </span>
+                </motion.div>
+            ) : (
+                <Button
+                    onClick={handleResend}
+                    disabled={resendState === 'loading'}
+                    className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+                >
+                    {resendState === 'loading' ? (
+                        <><RefreshCw className="w-5 h-5 animate-spin" /> Sending…</>
+                    ) : (
+                        <><RefreshCw className="w-5 h-5" /> Resend Verification Email</>
+                    )}
+                </Button>
+            )}
+
+            <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 leading-relaxed max-w-[260px]">
+                After clicking the link in your email, close and reopen this drawer to continue.
+            </p>
         </motion.div>
     )
 }
