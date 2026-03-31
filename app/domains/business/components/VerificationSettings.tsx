@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     ShieldCheck, FileText, MapPin, Briefcase, Home, Loader2, AlertCircle,
-    ChevronDown, User, Building2, Lock, Sparkles, CheckCircle2,
+    ChevronDown, User, Building2, Lock, Sparkles, CheckCircle2, Mail, ArrowRight,
 } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
@@ -24,6 +24,90 @@ import { VerificationAuditTrail } from "./verification/VerificationAuditTrail"
 import { VerificationTypeEnum, VerificationGroupEnum } from "../data/type"
 import { useSettings } from "../hooks/useBusinessSettings"
 import { formatCurrency } from "@/app/lib/formatters"
+import { useAuth } from "@/app/components/providers/auth-provider"
+import { apiClient } from "@/app/lib/api-client"
+import { useRouter } from "next/navigation"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Email prerequisite card — shown above verification steps when email is
+// missing or unverified. Blocks Level 1 until resolved.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function EmailPrerequisiteCard() {
+    const { user } = useAuth()
+    const router = useRouter()
+    const pendingRef = useRef(false)
+    const [sent, setSent] = useState(false)
+
+    const hasEmail = !!user?.email
+    const isVerified = user?.emailVerified === true
+
+    if (isVerified) return null
+
+    const handleResend = () => {
+        if (pendingRef.current) return
+        pendingRef.current = true
+        toast.promise(
+            apiClient.post("/security/resend-verification-email", {}).then(() => {
+                setSent(true)
+            }).finally(() => { pendingRef.current = false }),
+            {
+                loading: "Sending verification email…",
+                success: "Check your inbox for the verification link.",
+                error: (err) => err?.message || "Failed to send. Try again.",
+                position: "top-center",
+            }
+        )
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl border border-brand-gold/40 bg-brand-gold/5 dark:bg-brand-gold/10 p-6 flex items-start gap-5 shadow-lg shadow-brand-gold/5"
+        >
+            <div className="w-12 h-12 rounded-2xl bg-brand-gold/15 flex items-center justify-center shrink-0">
+                <Mail className="w-5 h-5 text-brand-gold" />
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-brand-deep dark:text-brand-cream mb-1">
+                    {hasEmail ? "Verify your email to continue" : "Add an email address to continue"}
+                </p>
+                <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed">
+                    {hasEmail
+                        ? "A verified email is required before identity verification. We use it to notify you and to set up your deposit account."
+                        : "You need an email address on your account before you can complete identity verification."}
+                </p>
+                <div className="mt-4 flex items-center gap-3 flex-wrap">
+                    {hasEmail ? (
+                        sent ? (
+                            <span className="text-xs font-semibold text-emerald-600">
+                                Verification email sent — check your inbox.
+                            </span>
+                        ) : (
+                            <Button
+                                size="sm"
+                                className="rounded-xl h-9 px-4 text-xs font-bold"
+                                onClick={handleResend}
+                            >
+                                Resend verification email
+                            </Button>
+                        )
+                    ) : (
+                        <Button
+                            size="sm"
+                            className="rounded-xl h-9 px-4 text-xs font-bold"
+                            onClick={() => router.push("/settings?tab=account")}
+                        >
+                            Add email in Settings
+                            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </motion.div>
+    )
+}
 
 const ICON_MAP: Record<string, any> = {
     ShieldCheck, FileText, MapPin, Briefcase, Home,
@@ -222,10 +306,13 @@ function AccordionItem({
 }
 
 export function VerificationSettings() {
+    const { user } = useAuth()
     const { data: verificationData, error, isLoading: isFetching, refetch } = useVerifications()
     const { data: levels, isLoading: isLoadingLevels } = useVerificationLevels()
     const { data: settings } = useSettings()
     const submitVerification = useSubmitVerification()
+
+    const emailVerified = user?.emailVerified === true
 
     const [openItem, setOpenItem] = useState<string | null>(null)
     const [bvn, setBvn] = useState("")
@@ -450,6 +537,9 @@ export function VerificationSettings() {
                 </div>
             </section>
 
+            {/* Email prerequisite — blocks Level 1 until email is verified */}
+            <EmailPrerequisiteCard />
+
             {/* AI Insight Overlay */}
             <InsightWhisper
                 insight={insightData.insight}
@@ -501,7 +591,8 @@ export function VerificationSettings() {
                                     const status = getStatus(step)
                                     const prevStep = groupLevels[index - 1] ?? sortedLevels.find((l) => l.level === step.level - 1)
                                     const prevStatus = prevStep ? getStatus(prevStep) : "verified"
-                                    const isLocked = prevStatus !== "verified" && index > 0
+                                    // Level 1 (the first step in any group) is also locked until email is verified
+                                    const isLocked = (prevStatus !== "verified" && index > 0) || (!emailVerified && step.level === 1)
 
                                     return (
                                         <AccordionItem
