@@ -43,6 +43,12 @@ Available in `globals.css` via CSS variables:
 ### 1. The Glass Panel (`GlassCard`)
 Use for containers. It must have a strong backdrop blur, a barely-there border (`border-white/10`), and an underlying glow or shadow that gives it physical presence.
 
+### 2. Inset Surface Card
+For content cards that need higher readability on light mode, use a two-layer shell:
+- **Outer shell**: subtle tinted background + border, modest rounding (e.g., `rounded-[2rem]`), and a small inset padding (`p-1` to `p-2`).
+- **Inner surface**: solid `bg-white` in light mode and `bg-transparent` in dark mode, with slightly smaller rounding (e.g., `rounded-[1.5rem]`) and comfortable padding.
+- This pattern keeps the premium feel while preventing overly rounded, pill-like cards.
+
 ### 2. Premium DataTable & Grids
 Rows and grid items must lift organically on hover. Use extremely slow, elegant transitions (`duration-700` to `duration-[2000ms]`). Avoid hard borders; separate items using negative space or ultra-thin 1px lines (`bg-brand-deep/10`).
 

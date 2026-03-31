@@ -256,13 +256,14 @@ export function TransactionDetailsDrawer({
                             <div className="px-1">
                                 <div
                                     className={cn(
-                                        "p-1 rounded-4xl border transition-all duration-500",
+                                        "p-1.5 rounded-[2rem] border transition-all duration-500",
                                         status === "Cleared" && "bg-emerald-500/5 border-emerald-500/10",
                                         isPendingOrProcessing && "bg-amber-500/5 border-amber-500/10",
                                         status === "Failed" && "bg-rose-500/5 border-rose-500/10"
                                     )}
                                 >
-                                    <div className="flex items-center justify-between p-4 pr-6">
+                                    <div className="rounded-[1.5rem] bg-white dark:bg-brand-deep/40">
+                                        <div className="flex items-center justify-between p-4 pr-6">
                                         <div className="flex items-center gap-4">
                                             <div
                                                 className={cn(
@@ -329,6 +330,7 @@ export function TransactionDetailsDrawer({
                                                 </p>
                                             </div>
                                         )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -347,13 +349,17 @@ export function TransactionDetailsDrawer({
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-3">
-                                    <div className="p-6 rounded-[2.5rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 space-y-6">
+                                    <div className="rounded-[2rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 p-1.5">
+                                        <div className="p-6 rounded-[1.5rem] bg-white dark:bg-brand-deep/40 space-y-6">
                                         <div className="flex items-center justify-between group">
-                                            <div>
+                                            <div className="min-w-0 flex-1 pr-3">
                                                 <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-1">
                                                     Reference ID
                                                 </p>
-                                                <p className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream truncate">
+                                                <p
+                                                    className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream break-all"
+                                                    title={tx?.reference ?? tx?.id ?? ""}
+                                                >
                                                     {tx?.reference ?? tx?.id ?? "—"}
                                                 </p>
                                             </div>
@@ -416,10 +422,12 @@ export function TransactionDetailsDrawer({
                                                 </div>
                                             </div>
                                         </div>
+                                        </div>
                                     </div>
 
                                     {(tx?.withdrawal ?? tx?.sale) && (
-                                        <div className="p-6 rounded-[2.5rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
+                                        <div className="rounded-[2rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 p-1.5">
+                                            <div className="p-6 rounded-[1.5rem] bg-white dark:bg-brand-deep/40">
                                             {tx?.withdrawal && (
                                                 <div>
                                                     <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-4">
@@ -480,6 +488,74 @@ export function TransactionDetailsDrawer({
                                                     </div>
                                                 </div>
                                             )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {!tx?.sale && !tx?.withdrawal && tx?.metadata && (
+                                        <div className="rounded-[2rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 p-1.5">
+                                            <div className="p-6 rounded-[1.5rem] bg-white dark:bg-brand-deep/40">
+                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-4">
+                                                Deposit Details
+                                            </p>
+                                            {(() => {
+                                                const meta = tx.metadata as any
+                                                const sourceInfo = Array.isArray(meta?.paymentSourceInformation)
+                                                    ? meta.paymentSourceInformation[0]
+                                                    : meta?.paymentSourceInformation
+                                                const depositorName =
+                                                    sourceInfo?.accountName ||
+                                                    sourceInfo?.sourceAccountName ||
+                                                    meta?.payerName ||
+                                                    meta?.senderName ||
+                                                    meta?.customerName ||
+                                                    meta?.customer?.name
+                                                const bankName =
+                                                    sourceInfo?.bankName ||
+                                                    sourceInfo?.sourceBankName ||
+                                                    meta?.bankName
+                                                const accountNumber =
+                                                    sourceInfo?.accountNumber ||
+                                                    meta?.accountNumber
+                                                const paymentRef =
+                                                    meta?.paymentReference ||
+                                                    meta?.transactionReference ||
+                                                    meta?.reference
+                                                const narration =
+                                                    meta?.paymentDescription || meta?.narration
+
+                                                const rows = [
+                                                    depositorName ? { label: "Depositor", value: depositorName } : null,
+                                                    bankName ? { label: "Bank", value: bankName } : null,
+                                                    accountNumber ? { label: "Account", value: accountNumber } : null,
+                                                    paymentRef ? { label: "Payment Ref", value: paymentRef } : null,
+                                                    narration ? { label: "Narration", value: narration } : null,
+                                                ].filter(Boolean) as { label: string; value: string }[]
+
+                                                if (rows.length === 0) {
+                                                    return (
+                                                        <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                                                            No additional deposit details available.
+                                                        </p>
+                                                    )
+                                                }
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        {rows.map((row) => (
+                                                            <div key={row.label} className="flex items-center justify-between gap-4">
+                                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
+                                                                    {row.label}
+                                                                </p>
+                                                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream text-right break-all">
+                                                                    {row.value}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )
+                                            })()}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
