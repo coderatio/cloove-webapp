@@ -4,6 +4,7 @@ export const GOOGLE_FONTS_ALLOWED = [
   'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Playfair Display', 'Montserrat',
   'Source Sans 3', 'Nunito', 'Work Sans', 'Oswald', 'Raleway', 'Merriweather', 'PT Sans',
   'Ubuntu', 'DM Sans', 'Manrope', 'Figtree', 'Outfit', 'Plus Jakarta Sans',
+  'Instrument Serif', 'Syne',
 ] as const
 export const HEADER_STYLES = ['centered', 'left', 'minimal'] as const
 export const PRODUCT_CARD_RADIUS = ['sm', 'md', 'lg', 'xl', 'none'] as const
@@ -31,7 +32,7 @@ export function getDefaultTheme() {
     themeMode: 'auto' as const,
     colors: { ...DEFAULT_COLORS },
     colorsDark: { ...DEFAULT_COLORS_DARK },
-    fonts: { heading: 'Playfair Display', body: 'Inter' },
+    fonts: { heading: 'Instrument Serif', body: 'Syne' },
     components: {
       header: { style: 'centered' as const, showSearch: true },
       productCard: { borderRadius: 'lg' as const, shadow: 'md' as const },
