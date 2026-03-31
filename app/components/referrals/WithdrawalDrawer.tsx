@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Wallet, Building2, ChevronDown, Check } from "lucide-react"
 import { cn } from "@/app/lib/utils"
@@ -58,9 +59,11 @@ export function WithdrawalDrawer({
                     <div className="p-4 space-y-6">
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">Amount (Min ₦{minAmount.toLocaleString()})</label>
+                                <label className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">
+                                    Amount (Min <CurrencyText value={`₦${minAmount.toLocaleString()}`} />)
+                                </label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-deep/40 dark:text-brand-cream/40 font-serif">₦</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-deep/40 dark:text-brand-cream/40 font-sans">₦</span>
                                     <Input
                                         type="text"
                                         inputMode="numeric"
@@ -78,11 +81,11 @@ export function WithdrawalDrawer({
                                     />
                                 </div>
                                 <div className="flex justify-between text-xs text-brand-deep/40 dark:text-brand-cream/40">
-                                    <span>Available: ₦{availableBalance.toLocaleString()}</span>
+                                    <span>Available: <CurrencyText value={`₦${availableBalance.toLocaleString()}`} /></span>
                                     {(() => {
                                         const numAmount = Number(amount.replace(/,/g, ""))
                                         if (numAmount > availableBalance) return <span className="text-red-500">Insufficient balance</span>
-                                        if (amount && numAmount < minAmount) return <span className="text-orange-500">Minimum withdrawal is ₦{minAmount.toLocaleString()}</span>
+                                        if (amount && numAmount < minAmount) return <span className="text-orange-500">Minimum withdrawal is <CurrencyText value={`₦${minAmount.toLocaleString()}`} /></span>
                                         return null
                                     })()}
                                 </div>

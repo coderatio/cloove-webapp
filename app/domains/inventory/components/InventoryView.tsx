@@ -50,6 +50,7 @@ import { Badge } from '@/app/components/ui/badge'
 import { useBarcodeGenerator, type BarcodeFormat } from '../hooks/useBarcodeGenerator'
 import { MoneyInput } from '@/app/components/ui/money-input'
 import { formatCurrency } from '@/app/lib/formatters'
+import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { ImageUpload } from '@/app/components/ui/image-upload'
 import { StoreSelector } from '@/app/components/shared/storeSelector'
 import { StoreContextSelector } from '@/app/components/shared/StoreContextSelector'
@@ -516,7 +517,11 @@ export function InventoryView() {
             key: 'price',
             header: 'Price',
             width: '100px',
-            render: (value: string) => <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">{value}</span>
+            render: (value: string) => (
+                <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">
+                    <CurrencyText value={value} />
+                </span>
+            )
         },
         {
             key: 'availableIn',
@@ -719,7 +724,7 @@ export function InventoryView() {
                         <div>
                             <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">Inventory Value</p>
                             {isFetching ? <Skeleton className="h-8 w-32 mt-1" /> : <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                {formatCurrency(totalInventoryValue, { currency: currencyCode })}
+                                <CurrencyText value={formatCurrency(totalInventoryValue, { currency: currencyCode })} />
                             </p>}
                         </div>
                     </GlassCard>

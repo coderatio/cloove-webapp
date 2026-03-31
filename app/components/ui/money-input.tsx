@@ -100,7 +100,7 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     )}
                     style={{ fontSize }}
                 >
-                    <span className="text-brand-accent/60 dark:text-brand-cream/60 font-serif tracking-tight transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold mr-3" aria-hidden>
+                    <span className="text-brand-accent/60 dark:text-brand-cream/60 font-sans tracking-tight transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold mr-3" aria-hidden>
                         {currencySymbol}
                     </span>
                     <input
@@ -136,7 +136,7 @@ export const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
                     "flex items-center justify-center shrink-0 border-r border-brand-deep/10 dark:border-white/10 bg-brand-deep/2 dark:bg-white/2 self-stretch",
                     isSmall ? "min-w-10 px-3" : "min-w-14 px-4"
                 )}>
-                    <span className="text-brand-accent/50 dark:text-brand-cream/50 font-semibold text-sm tracking-tight transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold" aria-hidden>
+                    <span className="text-brand-accent/50 dark:text-brand-cream/50 font-sans font-semibold text-sm tracking-tight transition-colors group-focus-within:text-brand-deep dark:group-focus-within:text-brand-gold" aria-hidden>
                         {currencySymbol}
                     </span>
                 </div>

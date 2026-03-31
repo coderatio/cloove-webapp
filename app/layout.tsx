@@ -1,18 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Serif, DM_Sans } from "next/font/google";
+import { DM_Serif_Display, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
+const dmSerifDisplay = DM_Serif_Display({
   weight: "400",
   style: ["normal", "italic"],
-  variable: "--font-instrument-serif",
+  variable: "--font-dm-serif-display",
+  preload: false, // load all unicode ranges (currency symbols, etc.)
 });
 
 const dmSans = DM_Sans({
-  subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-dm-sans",
+  preload: false,
+});
+
+const dmMono = DM_Mono({
+  weight: ["300", "400", "500"],
+  variable: "--font-dm-mono",
+  preload: false,
 });
 import { ThemeProvider } from "./components/providers/theme-provider";
 import QueryProvider from "./components/providers/query-provider";
@@ -94,7 +100,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`scroll-smooth ${instrumentSerif.variable} ${dmSans.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`scroll-smooth ${dmSerifDisplay.variable} ${dmSans.variable} ${dmMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{

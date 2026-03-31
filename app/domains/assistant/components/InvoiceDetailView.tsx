@@ -17,6 +17,7 @@ import {
 import { VisuallyHidden } from "@/app/components/ui/visually-hidden"
 import { useDocumentDraft } from "../hooks/useDocumentDraft"
 import type { LineItem } from "../types"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
 interface InvoiceDetailViewProps {
     draftId: string
@@ -157,7 +158,7 @@ export function InvoiceDetailView({
                                             />
                                         </td>
                                         <td className="p-3 text-right font-mono font-medium text-brand-gold text-xs">
-                                            {formatMoney(item.quantity * item.unitPrice, currency)}
+                                            <CurrencyText value={formatMoney(item.quantity * item.unitPrice, currency)} />
                                         </td>
                                         <td className="p-2 text-right">
                                             <button
@@ -187,11 +188,15 @@ export function InvoiceDetailView({
                     <div className="space-y-2 text-sm mb-6">
                         <div className="flex justify-between text-brand-deep/60 dark:text-brand-cream/60">
                             <span>Subtotal</span>
-                            <span className="font-mono">{formatMoney(subtotal, currency)}</span>
+                            <span className="font-mono">
+                                <CurrencyText value={formatMoney(subtotal, currency)} />
+                            </span>
                         </div>
                         <div className="flex justify-between font-bold text-brand-deep dark:text-brand-cream text-base">
                             <span>Total</span>
-                            <span className="font-mono text-brand-gold">{formatMoney(subtotal, currency)}</span>
+                            <span className="font-mono text-brand-gold">
+                                <CurrencyText value={formatMoney(subtotal, currency)} />
+                            </span>
                         </div>
                     </div>
 

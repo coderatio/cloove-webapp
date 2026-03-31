@@ -11,6 +11,7 @@ import { AddFundsDrawer } from "@/app/components/shared/AddFundsDrawer"
 import { WithdrawDrawer } from "@/app/domains/finance/components/WithdrawDrawer"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { Area, AreaChart, ResponsiveContainer } from "recharts"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
 interface DashboardHeroProps {
     sales: {
@@ -159,7 +160,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                 {walletData.isVerified ? (
                                     <>
                                         <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-4 select-all">
-                                            {walletData.balance}
+                                            <CurrencyText value={walletData.balance} />
                                         </h2>
                                         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 md:gap-3 justify-center md:justify-start">
                                             <Button
@@ -180,7 +181,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                                 ) : (
                                     <div className="flex flex-col items-center md:items-start max-w-xs">
                                         <h2 className="font-serif text-2xl md:text-4xl font-medium text-brand-deep/10 dark:text-brand-cream/10 tracking-tighter mb-4 select-none blur-[6px]">
-                                            ₦***,***
+                                            <CurrencyText value="₦***,***" />
                                         </h2>
                                         <Button
                                             onClick={() => router.push("/settings?tab=verification")}
@@ -248,7 +249,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                             </span>
                         )}
                         <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-brand-deep dark:text-brand-cream tracking-tighter mb-2 relative z-10">
-                            {sales.value}
+                            <CurrencyText value={sales.value} />
                         </h2>
                         {sales.periodLabel && (
                             <p className="text-xs text-brand-accent/50 dark:text-brand-cream/50 mb-3 relative z-10">

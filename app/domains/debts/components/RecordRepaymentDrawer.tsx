@@ -16,6 +16,7 @@ import {
 import { MoneyInput } from "@/app/components/ui/money-input"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import type { Debt } from "../hooks/useDebts"
 
 interface RecordRepaymentDrawerProps {
@@ -71,7 +72,7 @@ export function RecordRepaymentDrawer({
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs text-brand-accent/40 dark:text-brand-cream/40">Outstanding Balance</span>
                                     <span className="font-serif font-medium text-rose-500">
-                                        {formatCurrency(debt.remainingAmount, { currency: currencyCode })}
+                                        <CurrencyText value={formatCurrency(debt.remainingAmount, { currency: currencyCode })} />
                                     </span>
                                 </div>
                             </div>
@@ -92,7 +93,7 @@ export function RecordRepaymentDrawer({
                                 required
                             />
                             <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 ml-1">
-                                Maximum: {formatCurrency(maxAmount, { currency: currencyCode })}
+                                Maximum: <CurrencyText value={formatCurrency(maxAmount, { currency: currencyCode })} />
                             </p>
                         </div>
                     </form>

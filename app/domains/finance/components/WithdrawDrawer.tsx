@@ -14,6 +14,7 @@ import {
 } from "@/app/components/ui/drawer"
 import { useWalletBalance, usePayoutAccounts, useWithdraw, useDepositAccounts } from "@/app/domains/finance/hooks/useFinance"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { AddPayoutAccountForm } from './AddPayoutAccountForm'
@@ -86,11 +87,11 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
     const available = wallet?.availableBalance ?? 0
     const minWithdrawal = wallet?.minimumWithdrawalAmount ?? FALLBACK_MIN_WITHDRAWAL
 
-    const amountError =
+    const amountError: { type: "config" | "min" | "max"; text: React.ReactNode } | null =
         !walletLoading && !hasFeeConfig && amountNum > 0
             ? { type: "config" as const, text: "Withdrawal service is currently being updated. Please try again in a moment." }
             : amountNum > 0 && amountNum < minWithdrawal
-                ? { type: "min" as const, text: `Minimum is ${formatCurrency(minWithdrawal, { currency: currencyCode })}.` }
+                ? { type: "min" as const, text: <>Minimum is <CurrencyText value={formatCurrency(minWithdrawal, { currency: currencyCode })} />.</> }
                 : totalDebit > available
                     ? { type: "max" as const, text: "Exceeds available balance (including fee)." }
                     : null
@@ -314,12 +315,12 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 <div className="space-y-6">
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 ml-1">
-                                            Amount (Min {formatCurrency(minWithdrawal, { currency: currencyCode })})
+                                            Amount (Min <CurrencyText value={formatCurrency(minWithdrawal, { currency: currencyCode })} />)
                                         </label>
                                         <div className="relative group">
                                             <div className="absolute -inset-1 bg-brand-gold/0 group-focus-within:bg-brand-gold/10 rounded-4xl transition-all duration-500 blur-md" />
                                             <div className="relative flex items-center rounded-3xl border border-brand-deep/5 bg-brand-deep/3 dark:bg-white/3 overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
-                                                <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/40 font-serif text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
+                                                <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/40 font-sans text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
                                                     {symbol}
                                                 </span>
                                                 <Input
@@ -344,12 +345,12 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                 <div className="flex items-center gap-1.5 h-4 animate-in fade-in">
                                                     <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                                                     <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-white/30">
-                                                        Fee: {walletLoading ? "Calculating…" : formatCurrency(fee, { currency: currencyCode })}
+                                                        Fee: {walletLoading ? "Calculating…" : <CurrencyText value={formatCurrency(fee, { currency: currencyCode })} />}
                                                     </span>
                                                 </div>
                                             ) : (
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-white/20">
-                                                    Available: {walletLoading ? "…" : formatCurrency(available, { currency: currencyCode })}
+                                                    Available: {walletLoading ? "…" : <CurrencyText value={formatCurrency(available, { currency: currencyCode })} />}
                                                 </span>
                                             )}
                                         </div>
@@ -440,7 +441,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                         <h4 className="text-3xl font-serif font-black text-brand-deep dark:text-white tracking-tight">Authorize Withdrawal</h4>
                                         <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase font-black tracking-[0.2em]">Enter your 4-digit pin to authorize debit of</p>
                                         <div className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">
-                                            {formatCurrency(amountNum + fee, { currency: currencyCode })}
+                                            <CurrencyText value={formatCurrency(amountNum + fee, { currency: currencyCode })} />
                                         </div>
                                     </div>
                                 </div>

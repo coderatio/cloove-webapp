@@ -4,6 +4,7 @@ import { cn } from "@/app/lib/utils"
 import { Loader2, Sparkles } from "lucide-react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import type {
     AddToolResultFn,
     AssistantMessagePart,
@@ -61,7 +62,7 @@ export function ToolRenderer({ part, addToolResult }: ToolRendererProps) {
                                     </span>
                                 </td>
                                 <td className="p-3 text-right font-mono text-brand-gold">
-                                    ₦{item.price.toLocaleString()}
+                                    <CurrencyText value={`₦${item.price.toLocaleString()}`} />
                                 </td>
                             </tr>
                         ))}
@@ -158,8 +159,7 @@ export function ToolRenderer({ part, addToolResult }: ToolRendererProps) {
                         return (
                             <div key={d.label} className="flex-1 flex flex-col items-center gap-1.5">
                                 <span className="text-[9px] font-mono text-brand-deep/40 dark:text-brand-cream/40">
-                                    {currency === "NGN" ? "₦" : "$"}
-                                    {(d.value / 1000).toFixed(0)}k
+                                    <CurrencyText value={`${currency === "NGN" ? "₦" : "$"}${(d.value / 1000).toFixed(0)}k`} />
                                 </span>
                                 <div className="w-full relative" style={{ height: "80px" }}>
                                     <div

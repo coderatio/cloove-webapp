@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { formatReceiptDate } from "@/app/lib/receipt-formatter"
 import { cn } from "@/app/lib/utils"
 
@@ -91,12 +92,12 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptTemplateP
                                 <td className="py-2 pr-2">
                                     <div className="font-medium">{item.productName}</div>
                                     <div className="text-[10px] opacity-60">
-                                        {formatCurrency(item.price, { currency: data.currency })} each
+                                        <CurrencyText value={formatCurrency(item.price, { currency: data.currency })} /> each
                                     </div>
                                 </td>
                                 <td className="text-right py-2 px-2 tabular-nums">{item.quantity}</td>
                                 <td className="text-right py-2 font-bold tabular-nums">
-                                    {formatCurrency(item.total, { currency: data.currency })}
+                                    <CurrencyText value={formatCurrency(item.total, { currency: data.currency })} />
                                 </td>
                             </tr>
                         ))}
@@ -107,26 +108,36 @@ export const ReceiptTemplate = React.forwardRef<HTMLDivElement, ReceiptTemplateP
                 <div className="space-y-1.5 mb-4">
                     <div className="flex justify-between items-center text-[11px] opacity-80">
                         <span>Items Subtotal:</span>
-                        <span className="tabular-nums font-medium">{formatCurrency(data.subtotal, { currency: data.currency })}</span>
+                        <span className="tabular-nums font-medium">
+                            <CurrencyText value={formatCurrency(data.subtotal, { currency: data.currency })} />
+                        </span>
                     </div>
                     {data.discountAmount !== undefined && data.discountAmount > 0 && (
                         <div className="flex justify-between items-center text-[11px] text-rose-700 italic">
                             <span>Less: Discount:</span>
-                            <span className="tabular-nums">- {formatCurrency(data.discountAmount, { currency: data.currency })}</span>
+                            <span className="tabular-nums">
+                                - <CurrencyText value={formatCurrency(data.discountAmount, { currency: data.currency })} />
+                            </span>
                         </div>
                     )}
                     <div className="flex justify-between items-center py-2 border-y border-black font-bold text-sm">
                         <span>TOTAL:</span>
-                        <span className="tabular-nums tracking-tighter">{formatCurrency(data.totalAmount, { currency: data.currency })}</span>
+                        <span className="tabular-nums tracking-tighter">
+                            <CurrencyText value={formatCurrency(data.totalAmount, { currency: data.currency })} />
+                        </span>
                     </div>
                     <div className="flex justify-between items-center text-emerald-800 font-medium">
                         <span className="text-xs">Paid:</span>
-                        <span className="tabular-nums">{formatCurrency(data.amountPaid, { currency: data.currency })}</span>
+                        <span className="tabular-nums">
+                            <CurrencyText value={formatCurrency(data.amountPaid, { currency: data.currency })} />
+                        </span>
                     </div>
                     {data.remainingAmount > 0 && (
                         <div className="flex justify-between items-center font-bold text-rose-700 bg-rose-50 px-1 rounded-sm">
                             <span className="text-xs uppercase tracking-tighter">Balance Due:</span>
-                            <span className="tabular-nums">{formatCurrency(data.remainingAmount, { currency: data.currency })}</span>
+                            <span className="tabular-nums">
+                                <CurrencyText value={formatCurrency(data.remainingAmount, { currency: data.currency })} />
+                            </span>
                         </div>
                     )}
                 </div>

@@ -5,6 +5,7 @@ import { CheckCircle2, Clock, XCircle, ArrowDownRight, ArrowUpRight } from "luci
 import { cn } from "@/app/lib/utils"
 import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import type { FinanceTransactionRow } from "@/app/domains/finance/hooks/useFinance"
 
 interface TransactionReceiptProps {
@@ -98,7 +99,7 @@ export const TransactionReceipt = React.forwardRef<HTMLDivElement, TransactionRe
                                 <>
                                     <DetailRow label="Customer" value={tx.sale.customerName || "Walking Customer"} />
                                     <DetailRow label="Sale Reference" value={`#${tx.sale.shortCode}`} isMono />
-                                    <DetailRow label="Sale Total" value={formatCurrency(tx.sale.totalAmount, { currency: currencyCode })} />
+                                    <DetailRow label="Sale Total" value={<CurrencyText value={formatCurrency(tx.sale.totalAmount, { currency: currencyCode })} />} />
                                     <DetailRow label="Business" value={businessName} />
                                 </>
                             ) : (
@@ -123,7 +124,7 @@ export const TransactionReceipt = React.forwardRef<HTMLDivElement, TransactionRe
     }
 )
 
-function DetailRow({ label, value, isMono = false, statusColor }: { label: string; value: string; isMono?: boolean; statusColor?: "emerald" | "rose" | "amber" }) {
+function DetailRow({ label, value, isMono = false, statusColor }: { label: string; value: React.ReactNode; isMono?: boolean; statusColor?: "emerald" | "rose" | "amber" }) {
     return (
         <div className="space-y-1">
             <p className="text-[10px] font-bold text-brand-accent/40 uppercase tracking-widest">

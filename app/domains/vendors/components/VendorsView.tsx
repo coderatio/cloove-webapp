@@ -11,6 +11,7 @@ import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
 import { TableSearch } from "@/app/components/shared/TableSearch"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
@@ -317,7 +318,7 @@ export function VendorsView() {
                                 <Skeleton className="h-8 w-20 mt-1" />
                             ) : (
                                 <p className="text-2xl font-serif font-medium text-rose-500">
-                                    {formatCurrency(stats?.outstandingPayables ?? 0, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(stats?.outstandingPayables ?? 0, { currency: currencyCode })} />
                                 </p>
                             )}
                         </div>
@@ -384,7 +385,9 @@ export function VendorsView() {
                                     iconClassName="text-brand-deep/40 dark:text-brand-cream/40"
                                     status={vendor.outstanding > 0 ? "Outstanding" : undefined}
                                     statusColor={vendor.outstanding > 0 ? "danger" : undefined}
-                                    value={vendor.outstanding > 0 ? formatCurrency(vendor.outstanding, { currency: currencyCode }) : undefined}
+                                    value={vendor.outstanding > 0
+                                        ? <CurrencyText value={formatCurrency(vendor.outstanding, { currency: currencyCode })} />
+                                        : undefined}
                                     valueLabel={vendor.outstanding > 0 ? "Owed" : undefined}
                                     delay={index * 0.05}
                                     actions={renderActions(vendor)}

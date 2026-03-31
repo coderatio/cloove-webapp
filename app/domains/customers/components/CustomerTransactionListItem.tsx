@@ -6,6 +6,7 @@ import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { type Order } from "../../orders/types"
 
 interface CustomerTransactionListItemProps {
@@ -60,7 +61,7 @@ export function CustomerTransactionListItem({
                         {transaction.summary || 'Purchase'}
                     </p>
                     <p className="text-xs font-serif font-bold text-brand-deep dark:text-brand-cream">
-                        {formatCurrency(transaction.totalAmount, { currency: currencyCode })}
+                        <CurrencyText value={formatCurrency(transaction.totalAmount, { currency: currencyCode })} />
                     </p>
                 </div>
                 <div className="flex items-center justify-between">

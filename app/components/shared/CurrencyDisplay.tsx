@@ -36,7 +36,7 @@ export function CurrencyDisplay({
                         <span
                             key={index}
                             className={cn(
-                                "text-[0.6em] font-medium opacity-60 self-center mb-[0.1em]",
+                                "text-[0.6em] font-medium opacity-60 self-center mb-[0.1em] font-sans",
                                 symbolClassName
                             )}
                         >

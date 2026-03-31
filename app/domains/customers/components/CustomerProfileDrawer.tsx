@@ -30,6 +30,7 @@ import { type Customer, useCustomerTransactions } from "../hooks/useCustomers"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { type Order } from "../../orders/types"
 import { formatCompactCurrency, formatDate } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { cn } from "@/app/lib/utils"
 import { OrderDetailsDrawer } from "../../orders/components/OrderDetailsDrawer"
 import { CustomerLedgerDrawer } from "./CustomerLedgerDrawer"
@@ -153,7 +154,7 @@ export function CustomerProfileDrawer({
                                     <TrendingUp className="w-5 h-5" />
                                 </div>
                                 <span className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                    {formatCompactCurrency(customer.totalSpent, { currency: currencyCode })}
+                                    <CurrencyText value={formatCompactCurrency(customer.totalSpent, { currency: currencyCode })} />
                                 </span>
                             </div>
                         </GlassCard>
@@ -184,7 +185,9 @@ export function CustomerProfileDrawer({
                                     "text-2xl font-serif font-medium transition-colors",
                                     hasDebt ? "text-rose-500" : "text-brand-deep/40 dark:text-brand-cream/40"
                                 )}>
-                                    {customer.owing !== "—" ? formatCompactCurrency(customer.owing, { currency: currencyCode }) : customer.owing}
+                                    {customer.owing !== "—"
+                                        ? <CurrencyText value={formatCompactCurrency(customer.owing, { currency: currencyCode })} />
+                                        : customer.owing}
                                 </span>
                             </div>
                         </GlassCard>

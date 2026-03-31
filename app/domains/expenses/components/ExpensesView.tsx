@@ -11,6 +11,7 @@ import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { TableSearch } from "@/app/components/shared/TableSearch"
@@ -147,7 +148,7 @@ export function ExpensesView() {
             header: "Amount",
             render: (_value, item) => (
                 <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">
-                    {formatCurrency(item.amount, { currency: currencyCode })}
+                    <CurrencyText value={formatCurrency(item.amount, { currency: currencyCode })} />
                 </span>
             ),
         },
@@ -220,7 +221,7 @@ export function ExpensesView() {
                                 <Skeleton className="h-8 w-20 mt-1" />
                             ) : (
                                 <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                    {formatCurrency(stats?.totalThisMonth ?? 0, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(stats?.totalThisMonth ?? 0, { currency: currencyCode })} />
                                 </p>
                             )}
                         </div>
@@ -241,7 +242,7 @@ export function ExpensesView() {
                                 <Skeleton className="h-8 w-16 mt-1" />
                             ) : (
                                 <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-gold">
-                                    {formatCurrency(stats?.todaySpending ?? 0, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(stats?.todaySpending ?? 0, { currency: currencyCode })} />
                                 </p>
                             )}
                         </div>
@@ -262,7 +263,7 @@ export function ExpensesView() {
                                 <Skeleton className="h-8 w-16 mt-1" />
                             ) : (
                                 <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                    {formatCurrency(stats?.avgDaily ?? 0, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(stats?.avgDaily ?? 0, { currency: currencyCode })} />
                                 </p>
                             )}
                         </div>
@@ -357,7 +358,7 @@ export function ExpensesView() {
                                     meta={formatDate(expense.date, "MMM d, yyyy")}
                                     icon={Receipt}
                                     iconClassName="text-brand-deep/40 dark:text-brand-cream/40"
-                                    value={formatCurrency(expense.amount, { currency: currencyCode })}
+                                    value={<CurrencyText value={formatCurrency(expense.amount, { currency: currencyCode })} />}
                                     valueLabel="Amount"
                                     delay={index * 0.05}
                                     actions={renderActions(expense)}

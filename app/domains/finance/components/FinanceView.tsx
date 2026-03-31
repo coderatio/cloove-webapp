@@ -49,6 +49,7 @@ import { WithdrawDrawer } from './WithdrawDrawer'
 import { PayoutAccountsManager } from './PayoutAccountsManager'
 import { CurrencyDisplay } from '@/app/components/shared/CurrencyDisplay'
 import { formatCurrency, parseCurrencyToNumber } from '@/app/lib/formatters'
+import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import type { FinanceTransactionMock } from '../data/financeMocks'
 import {
     useFinanceSummary,
@@ -282,7 +283,7 @@ export function FinanceView() {
                             "font-serif font-medium text-base",
                             row.type === 'Credit' ? "text-brand-green dark:text-brand-gold" : "text-rose-600 dark:text-rose-400"
                         )}>
-                            {row.type === 'Credit' ? '+' : '-'}{formatted}
+                            <CurrencyText value={`${row.type === 'Credit' ? '+' : '-'}${formatted}`} />
                         </span>
                         <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 font-medium uppercase tracking-tighter">
                             {row.type === 'Credit' ? 'Inbound' : 'Outbound'}
@@ -586,7 +587,7 @@ export function FinanceView() {
                                             subtitle={`${(tx as any).reference ?? tx.id} • ${tx.method}`}
                                             status={tx.status}
                                             statusColor={tx.status === 'Cleared' ? 'success' : tx.status === 'Failed' ? 'danger' : 'warning'}
-                                            value={(isCredit ? '+' : '-') + formatCurrency(num, { currency: currencyCode })}
+                                            value={<CurrencyText value={`${isCredit ? '+' : '-'}${formatCurrency(num, { currency: currencyCode })}`} />}
                                             valueLabel={isCredit ? 'Inbound' : 'Outbound'}
                                             delay={index * 0.05}
                                             onClick={() => setViewingTx(tx)}

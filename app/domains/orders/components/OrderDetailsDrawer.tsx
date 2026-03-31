@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import { Order, OrderStatus } from "../types"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
@@ -121,10 +122,13 @@ export function OrderDetailsDrawer({
                                         <div>
                                             <p className="font-medium text-brand-deep dark:text-brand-cream">{item.productName}</p>
                                             <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">
-                                                {Number(item.quantity)} {Number(item.quantity) === 1 ? 'unit' : 'units'} x {formatCurrency(item.price, { currency: currencyCode })}
+                                                {Number(item.quantity)} {Number(item.quantity) === 1 ? 'unit' : 'units'} x{" "}
+                                                <CurrencyText value={formatCurrency(item.price, { currency: currencyCode })} />
                                             </p>
                                         </div>
-                                        <p className="font-serif font-medium text-brand-deep dark:text-brand-cream">{formatCurrency(item.total, { currency: currencyCode })}</p>
+                                        <p className="font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                            <CurrencyText value={formatCurrency(item.total, { currency: currencyCode })} />
+                                        </p>
                                     </div>
                                 )) || (
                                         <div className="p-4 text-center text-xs opacity-40">No item details available</div>
@@ -133,7 +137,7 @@ export function OrderDetailsDrawer({
                                     <div className="flex justify-between items-center opacity-60">
                                         <p className="font-bold text-[10px] uppercase tracking-widest text-brand-accent">Subtotal</p>
                                         <p className="text-sm font-bold text-brand-deep dark:text-brand-cream">
-                                            {formatCurrency(order.subtotalAmount || order.totalAmount, { currency: currencyCode })}
+                                            <CurrencyText value={formatCurrency(order.subtotalAmount || order.totalAmount, { currency: currencyCode })} />
                                         </p>
                                     </div>
 
@@ -141,7 +145,7 @@ export function OrderDetailsDrawer({
                                         <div className="flex justify-between items-center text-red-500 dark:text-red-400 italic">
                                             <p className="font-bold text-[10px] uppercase tracking-widest">Less: Discount</p>
                                             <p className="text-sm font-bold">
-                                                - {formatCurrency(order.discountAmount, { currency: currencyCode })}
+                                                - <CurrencyText value={formatCurrency(order.discountAmount, { currency: currencyCode })} />
                                             </p>
                                         </div>
                                     ) : null}
@@ -149,13 +153,13 @@ export function OrderDetailsDrawer({
                                     <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400">
                                         <p className="font-bold text-[10px] uppercase tracking-widest">Amount Paid</p>
                                         <p className="text-sm font-bold">
-                                            {formatCurrency(order.amountPaid, { currency: currencyCode })}
+                                            <CurrencyText value={formatCurrency(order.amountPaid, { currency: currencyCode })} />
                                         </p>
                                     </div>
                                     <div className="pt-2 border-t border-brand-accent/10 flex justify-between items-center">
                                         <p className="font-bold text-xs uppercase tracking-widest text-brand-accent">Remaining Balance</p>
                                         <p className="text-2xl font-bold text-brand-green dark:text-brand-gold">
-                                            {formatCurrency(Number(order.remainingAmount || 0), { currency: currencyCode })}
+                                            <CurrencyText value={formatCurrency(Number(order.remainingAmount || 0), { currency: currencyCode })} />
                                         </p>
                                     </div>
                                 </div>

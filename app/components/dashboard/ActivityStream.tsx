@@ -5,6 +5,7 @@ import { ArrowDownLeft, ArrowUpRight, ShoppingBag, CreditCard, UserPlus, Chevron
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "../ui/glass-card"
 import Link from "next/link"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
 export interface ActivityItem {
     id: string
@@ -172,7 +173,7 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
                                                   ? "text-rose-600 dark:text-rose-400"
                                                   : "text-brand-deep dark:text-brand-cream"
                                         )}>
-                                            {item.type === 'withdrawal' || item.type === 'debt' ? '-' : item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? '+' : ''}{item.amount}
+                                            <CurrencyText value={`${item.type === 'withdrawal' || item.type === 'debt' ? '-' : item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? '+' : ''}${item.amount}`} />
                                         </div>
                                     )}
                                     <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors shrink-0" />

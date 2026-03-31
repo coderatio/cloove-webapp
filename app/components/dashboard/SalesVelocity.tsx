@@ -4,6 +4,7 @@ import { GlassCard } from "../ui/glass-card"
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts"
 import { TrendingUp } from "lucide-react"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
 interface SalesVelocityProps {
     data: { date: string; value: number }[]
@@ -34,7 +35,7 @@ function ChartTooltip({
                 </p>
             )}
             <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
-                {formatCurrency(value, { currency: currencyCode })}
+                <CurrencyText value={formatCurrency(value, { currency: currencyCode })} />
             </p>
         </div>
     )
@@ -49,7 +50,7 @@ export function SalesVelocity({ data, total, currencyCode = "NGN", className }: 
                     Sales Velocity
                 </span>
                 <h3 className="text-2xl font-serif text-brand-deep dark:text-brand-cream font-medium mt-1">
-                    {total}
+                    <CurrencyText value={total} />
                 </h3>
             </div>
 

@@ -11,6 +11,7 @@ import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { TableSearch } from "@/app/components/shared/TableSearch"
@@ -261,7 +262,7 @@ export function DebtsView() {
             header: "Amount",
             render: (_value, item) => (
                 <span className="font-serif text-brand-deep dark:text-brand-cream">
-                    {formatCurrency(item.amount, { currency: currencyCode })}
+                    <CurrencyText value={formatCurrency(item.amount, { currency: currencyCode })} />
                 </span>
             ),
         },
@@ -270,7 +271,7 @@ export function DebtsView() {
             header: "Remaining",
             render: (_value, item) => (
                 <span className={cn("font-serif font-medium", item.remainingAmount > 0 ? "text-rose-500" : "text-emerald-500")}>
-                    {formatCurrency(item.remainingAmount, { currency: currencyCode })}
+                    <CurrencyText value={formatCurrency(item.remainingAmount, { currency: currencyCode })} />
                 </span>
             ),
         },
@@ -368,7 +369,7 @@ export function DebtsView() {
                                 <Skeleton className="h-8 w-20 mt-1" />
                             ) : (
                                 <p className="text-2xl font-serif font-medium text-rose-500">
-                                    {formatCurrency(stats?.totalOutstanding ?? 0, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(stats?.totalOutstanding ?? 0, { currency: currencyCode })} />
                                 </p>
                             )}
                         </div>
@@ -521,13 +522,13 @@ export function DebtsView() {
                                 <ListCard
                                     key={debt.id}
                                     title={debt.customerName}
-                                    subtitle={`Owed: ${formatCurrency(debt.amount, { currency: currencyCode })}`}
+                                    subtitle={<><span>Owed: </span><CurrencyText value={formatCurrency(debt.amount, { currency: currencyCode })} /></>}
                                     meta={debt.dueAt ? `Due: ${formatDate(debt.dueAt, "MMM d, yyyy")}` : undefined}
                                     icon={AlertCircle}
                                     iconClassName={displayStatus === "OVERDUE" ? "text-rose-500" : "text-brand-deep/40 dark:text-brand-cream/40"}
                                     status={config.label}
                                     statusColor={config.statusColor}
-                                    value={formatCurrency(debt.remainingAmount, { currency: currencyCode })}
+                                    value={<CurrencyText value={formatCurrency(debt.remainingAmount, { currency: currencyCode })} />}
                                     valueLabel="Remaining"
                                     delay={index * 0.05}
                                     actions={renderActions(debt)}
@@ -601,7 +602,11 @@ export function DebtsView() {
                             </DialogTitle>
                             <DialogDescription className="text-brand-accent/50 dark:text-white/50 text-sm">
                                 Create a payment link for this debt
-                                {paymentLinkDebt ? ` of ${formatCurrency(paymentLinkDebt.remainingAmount, { currency: currencyCode })}` : ''}.
+                                {paymentLinkDebt ? (
+                                    <>
+                                        {" "}of <CurrencyText value={formatCurrency(paymentLinkDebt.remainingAmount, { currency: currencyCode })} />
+                                    </>
+                                ) : ''}.
                             </DialogDescription>
                         </DialogHeader>
 

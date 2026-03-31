@@ -7,11 +7,11 @@ import { ChevronRight, Package } from "lucide-react"
 
 interface ListCardProps {
     title: string
-    subtitle?: string
+    subtitle?: React.ReactNode
     status?: string
     statusColor?: "success" | "warning" | "danger" | "neutral"
     meta?: React.ReactNode
-    value?: string
+    value?: React.ReactNode
     valueLabel?: string
     image?: string
     icon?: React.ElementType

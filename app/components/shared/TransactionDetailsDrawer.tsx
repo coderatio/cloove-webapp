@@ -40,6 +40,7 @@ import {
 } from "@/app/components/ui/drawer"
 import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { VisuallyHidden } from "@/app/components/ui/visually-hidden"
 import { Badge } from "@/app/components/ui/badge"
 import { Skeleton } from "@/app/components/ui/skeleton"
@@ -471,9 +472,9 @@ export function TransactionDetailsDrawer({
                                                                 Sale Total
                                                             </p>
                                                             <p className="text-base font-bold font-mono text-brand-deep dark:text-brand-cream">
-                                                                {formatCurrency(tx.sale.totalAmount, {
+                                                                <CurrencyText value={formatCurrency(tx.sale.totalAmount, {
                                                                     currency: currencyCode,
-                                                                })}
+                                                                })} />
                                                             </p>
                                                         </div>
                                                     </div>

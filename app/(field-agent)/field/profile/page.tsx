@@ -19,6 +19,7 @@ import { useAuth } from "@/app/components/providers/auth-provider"
 import { useFieldAgentStats } from "@/app/domains/field-agent/hooks/useFieldAgentStats"
 import { useFieldAgentWallet } from "@/app/domains/field-agent/hooks/useFieldAgentWallet"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 
@@ -214,7 +215,7 @@ export default function ProfilePage() {
                         <div className="p-6 bg-brand-deep/5 dark:bg-white/5 rounded-3xl border border-brand-deep/5 text-center min-w-[200px]">
                             <p className="text-[10px] uppercase tracking-widest font-black text-brand-deep/30 mb-1">Total Commissions</p>
                             <p className="text-2xl font-serif font-medium text-brand-gold">
-                                {formatCurrency(totalEarned, { currency })}
+                                <CurrencyText value={formatCurrency(totalEarned, { currency })} />
                             </p>
                         </div>
                     </div>

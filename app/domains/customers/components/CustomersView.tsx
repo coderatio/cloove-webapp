@@ -13,6 +13,7 @@ import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { TableSearch } from "@/app/components/shared/TableSearch"
@@ -508,7 +509,7 @@ export function CustomersView() {
                                 <Skeleton className="h-8 w-12 mt-1" />
                             ) : (
                                 <p className="text-2xl font-serif font-medium text-rose-500">
-                                    {formatCurrency(stats?.totalDebt ?? 0, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(stats?.totalDebt ?? 0, { currency: currencyCode })} />
                                 </p>
                             )}
                         </div>

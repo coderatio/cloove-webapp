@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Copy, Check, RefreshCw, ArrowLeft, Building2, Clock, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
 import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 import { CheckoutBusinessHeader } from "./CheckoutBusinessHeader"
@@ -188,13 +189,13 @@ export function CheckoutPaymentStep({ bankTransfer, reference, sessionId, busine
           <div className="flex items-center justify-between text-sm">
             <span className="text-brand-accent/40 dark:text-white/40">Subtotal</span>
             <span className="text-brand-accent/70 dark:text-white/70 font-jakarta">
-              {formatCurrency(bankTransfer.subtotal, { currency })}
+              <CurrencyText value={formatCurrency(bankTransfer.subtotal, { currency })} />
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-brand-accent/40 dark:text-white/40">Fee</span>
             <span className="text-brand-accent/70 dark:text-white/70 font-jakarta">
-              {formatCurrency(bankTransfer.fee, { currency })}
+              <CurrencyText value={formatCurrency(bankTransfer.fee, { currency })} />
             </span>
           </div>
           <div className="h-px bg-brand-deep/10 dark:bg-white/10" />

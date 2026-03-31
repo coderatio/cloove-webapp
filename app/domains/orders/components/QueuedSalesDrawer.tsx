@@ -10,6 +10,7 @@ import {
     ShoppingBag
 } from 'lucide-react'
 import { GlassCard } from '@/app/components/ui/glass-card'
+import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { Button } from '@/app/components/ui/button'
 import { QueuedSale } from '../hooks/useQueuedSales'
 
@@ -102,7 +103,7 @@ export function QueuedSalesDrawer({
                                                     </h3>
                                                 </div>
                                                 <p className="font-sans font-black text-xl text-brand-gold">
-                                                    ₦{sale.total.toLocaleString()}
+                                                    <CurrencyText value={`₦${sale.total.toLocaleString()}`} />
                                                 </p>
                                             </div>
 

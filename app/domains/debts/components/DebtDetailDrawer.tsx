@@ -16,6 +16,7 @@ import {
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { useDebtDetail, useDebtActions, type Debt } from "../hooks/useDebts"
 
 interface DebtDetailDrawerProps {
@@ -105,7 +106,7 @@ export function DebtDetailDrawer({
                                     Original Amount
                                 </p>
                                 <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream mt-1">
-                                    {formatCurrency(debt.amount, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(debt.amount, { currency: currencyCode })} />
                                 </p>
                             </GlassCard>
                             <GlassCard className={cn("p-4 rounded-3xl before:rounded-3xl", debt.remainingAmount > 0 && "border-rose-500/20 bg-rose-500/5")}>
@@ -113,7 +114,7 @@ export function DebtDetailDrawer({
                                     Remaining
                                 </p>
                                 <p className="text-xl font-serif font-medium text-rose-500 mt-1">
-                                    {formatCurrency(debt.remainingAmount, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(debt.remainingAmount, { currency: currencyCode })} />
                                 </p>
                             </GlassCard>
                         </div>
@@ -208,7 +209,7 @@ export function DebtDetailDrawer({
                                             </div>
                                         </div>
                                         <span className="font-serif font-medium text-emerald-500">
-                                            +{formatCurrency(repayment.amount, { currency: currencyCode })}
+                                            +<CurrencyText value={formatCurrency(repayment.amount, { currency: currencyCode })} />
                                         </span>
                                     </GlassCard>
                                 ))

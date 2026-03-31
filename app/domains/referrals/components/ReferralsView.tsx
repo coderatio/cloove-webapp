@@ -38,6 +38,7 @@ import {
     resolveReferralBankAccount,
 } from "../hooks/useReferrals"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import type { ReferralPayout, ReferralBankAccount } from "../types"
 
 const MIN_WITHDRAWAL = 5000
@@ -207,7 +208,7 @@ export function ReferralsView() {
                             <div className="relative z-10">
                                 <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Available Balance</span>
                                 <div className="text-3xl font-serif text-brand-deep dark:text-brand-cream mt-1">
-                                    {isLoading ? "..." : formatCurrency(availableBalance, currency)}
+                                    {isLoading ? "..." : <CurrencyText value={formatCurrency(availableBalance, currency)} />}
                                 </div>
                             </div>
                             <div className="flex gap-2 mt-4">
@@ -233,7 +234,7 @@ export function ReferralsView() {
                             <GlassCard className="p-6 flex flex-col justify-center space-y-2 rounded-3xl before:rounded-3xl">
                                 <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Total Earned</span>
                                 <div className="text-2xl font-serif text-brand-deep dark:text-brand-cream">
-                                    {isLoading ? "..." : formatCurrency(stats?.totalEarnings ?? 0, currency)}
+                                    {isLoading ? "..." : <CurrencyText value={formatCurrency(stats?.totalEarnings ?? 0, currency)} />}
                                 </div>
                             </GlassCard>
                             <GlassCard className="p-6 flex flex-col justify-center space-y-2 rounded-3xl before:rounded-3xl">
@@ -304,7 +305,7 @@ export function ReferralsView() {
                                         </div>
                                         <div className="text-right">
                                             <div className="font-serif text-lg text-brand-deep dark:text-brand-cream">
-                                                {formatCurrency(payout.amount, payout.currency)}
+                                                <CurrencyText value={formatCurrency(payout.amount, payout.currency)} />
                                             </div>
                                             <div className="text-xs text-brand-deep/40 dark:text-brand-cream/40 flex items-center justify-end gap-1">
                                                 View Details <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -398,7 +399,7 @@ export function ReferralsView() {
                                 <div className="p-6 space-y-6">
                                     <div className="text-center space-y-2">
                                         <div className="text-3xl font-serif text-brand-deep dark:text-brand-cream">
-                                            {formatCurrency(selectedPayout.amount, selectedPayout.currency)}
+                                            <CurrencyText value={formatCurrency(selectedPayout.amount, selectedPayout.currency)} />
                                         </div>
                                         <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase ${selectedPayout.status === "completed"
                                             ? "bg-emerald-500/10 text-emerald-500"

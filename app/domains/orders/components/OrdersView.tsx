@@ -33,6 +33,7 @@ import { useDebounce } from '@/app/hooks/useDebounce'
 import { OrdersSkeleton } from './OrdersSkeleton'
 import { Pagination } from '@/app/components/shared/Pagination'
 import { formatCurrency, formatDate } from '@/app/lib/formatters'
+import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { useBusiness } from '@/app/components/BusinessProvider'
 import { OrderActionMenu } from './OrderActionMenu'
 import { toast } from 'sonner'
@@ -234,7 +235,7 @@ export function OrdersView() {
             width: '120px',
             render: (value: number | string, row: Order) => (
                 <span className="text-sm font-bold text-brand-deep dark:text-brand-cream whitespace-nowrap">
-                    {formatCurrency(value, { currency: row.currency || activeBusiness?.currency || 'NGN' })}
+                    <CurrencyText value={formatCurrency(value, { currency: row.currency || activeBusiness?.currency || 'NGN' })} />
                 </span>
             )
         },
@@ -296,7 +297,7 @@ export function OrdersView() {
     const stats = [
         {
             label: "Total Revenue",
-            value: formatCurrency((summary as any)?.completedRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' }),
+            value: <CurrencyText value={formatCurrency((summary as any)?.completedRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' })} />,
             icon: TrendingUp,
             color: "brand-gold",
             description: "Revenue from selected filters"
@@ -310,7 +311,7 @@ export function OrdersView() {
         },
         {
             label: "Avg. Order Value",
-            value: formatCurrency(summary?.averageOrderValue ?? 0, { currency: activeBusiness?.currency || 'NGN' }),
+            value: <CurrencyText value={formatCurrency(summary?.averageOrderValue ?? 0, { currency: activeBusiness?.currency || 'NGN' })} />,
             icon: Receipt,
             color: "brand-gold",
             description: "Average for selected filters"
@@ -505,7 +506,7 @@ export function OrdersView() {
                                 meta={formatDate(order.date, 'MMM d, h:mm a')}
                                 status={statusColorMap[order.status?.toUpperCase() || '']?.label || order.status}
                                 statusColor={statusColorMap[order.status?.toUpperCase() || '']?.color || 'neutral'}
-                                value={formatCurrency(order.totalAmount, { currency: order.currency || activeBusiness?.currency || 'NGN' })}
+                                value={<CurrencyText value={formatCurrency(order.totalAmount, { currency: order.currency || activeBusiness?.currency || 'NGN' })} />}
                                 valueLabel={(order.isAutomated || order.paymentMethod === 'TRANSFER') ? 'Bank Transfer' : order.paymentMethod?.replace('_', ' ').toLowerCase()}
                                 delay={index * 0.05}
                                 actions={

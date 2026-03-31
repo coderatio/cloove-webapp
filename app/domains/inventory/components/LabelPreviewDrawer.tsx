@@ -35,6 +35,7 @@ import { useInventory } from "../hooks/useInventory"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { toast } from "sonner"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import type { InventoryItem, ProductVariant } from "../types"
 import { RefreshCcw, Save } from "lucide-react"
 
@@ -672,7 +673,7 @@ export function LabelPreviewDrawer({
                                                                 )}
                                                             </div>
                                                             <p className="text-sm font-serif font-bold text-brand-deep dark:text-brand-gold mt-1">
-                                                                {label.price}
+                                                                <CurrencyText value={label.price} />
                                                             </p>
 
                                                             {/* Inline barcode preview */}
@@ -877,7 +878,7 @@ function BarcodePreview({
                             "font-black text-brand-deep dark:text-brand-gold leading-none tracking-tighter",
                             template === 'full' ? "text-3xl" : template === 'compact' ? "text-lg" : "text-2xl"
                         )}>
-                            {label.price}
+                            <CurrencyText value={label.price} />
                         </p>
                     </div>
                 </div>

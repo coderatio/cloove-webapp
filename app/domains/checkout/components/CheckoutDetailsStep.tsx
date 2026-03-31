@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { Loader2, ShoppingBag, Building2, Pencil, X, CheckCircle2, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { MoneyInput } from "@/app/components/ui/money-input"
@@ -233,7 +234,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
                     </Button>
                   </div>
                   <p className="text-brand-accent/30 dark:text-white/30 text-xs px-1">
-                    Total due: {formatCurrency(checkout.amount!, { currency: checkout.businessCurrency })}
+                    Total due: <CurrencyText value={formatCurrency(checkout.amount!, { currency: checkout.businessCurrency })} />
                   </p>
                 </div>
               ) : (
@@ -275,7 +276,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
                         )}
                       </div>
                       <span className="text-brand-accent/70 dark:text-white/70 text-sm font-jakarta">
-                        {formatCurrency(item.totalPrice, { currency: checkout.businessCurrency })}
+                        <CurrencyText value={formatCurrency(item.totalPrice, { currency: checkout.businessCurrency })} />
                       </span>
                     </div>
                   ))}
@@ -331,7 +332,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
                   </>
                 ) : payAmount > 0 ? (
                   <>
-                    Pay {formatCurrency(payAmount, { currency: checkout.businessCurrency })}
+                    Pay <CurrencyText value={formatCurrency(payAmount, { currency: checkout.businessCurrency })} />
                     {selectedProviderInfo && (
                       <span className="opacity-50">
                         via {providerDisplayName(selectedProviderInfo.id)}

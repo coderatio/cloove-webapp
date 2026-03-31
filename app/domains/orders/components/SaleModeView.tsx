@@ -56,6 +56,7 @@ import { useInventory } from '../hooks/useInventory'
 import { useCustomers } from '../hooks/useCustomers'
 import { usePromotions } from '../hooks/usePromotions'
 import { formatCurrency } from '@/app/lib/formatters'
+import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { ProductSearchOverlay } from './ProductSearchOverlay'
 import { Product } from '../hooks/useInventory'
 
@@ -321,7 +322,7 @@ const ProductGrid = React.memo(({
                                                         ? "text-brand-gold drop-shadow-md"
                                                         : "text-brand-deep dark:text-brand-gold"
                                                 )}>
-                                                    {formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}
+                                                    <CurrencyText value={formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })} />
                                                 </p>
                                                 <div className={cn(
                                                     "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 shadow-2xl",
@@ -1158,7 +1159,9 @@ export function SaleModeView() {
 
                                         <div className="flex items-center justify-between gap-4">
                                             <div className="flex items-center gap-2 min-w-0">
-                                                <p className="font-bold text-brand-gold text-base tracking-tight shrink-0">₦{item.price.toLocaleString()}</p>
+                                                <p className="font-bold text-brand-gold text-base tracking-tight shrink-0">
+                                                    <CurrencyText value={`₦${item.price.toLocaleString()}`} />
+                                                </p>
                                                 {(item as any).category && (
                                                     <>
                                                         <div className="w-1 h-1 rounded-full bg-brand-accent/20 shrink-0" />
@@ -1242,7 +1245,7 @@ export function SaleModeView() {
                             <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Order Subtotal</span>
                             <div className="flex items-center gap-3">
                                 <span className="text-brand-deep dark:text-brand-cream font-bold tabular-nums">
-                                    {formatCurrency(subtotal, { currency: activeBusiness?.currency || 'NGN' })}
+                                    <CurrencyText value={formatCurrency(subtotal, { currency: activeBusiness?.currency || 'NGN' })} />
                                 </span>
                                 <Button
                                     variant="ghost"
@@ -1383,7 +1386,7 @@ export function SaleModeView() {
                             <span className="font-serif text-lg text-brand-deep dark:text-brand-gold">Total Payable</span>
                             <div className="text-right">
                                 <span className="font-sans font-black text-2xl lg:text-3xl text-brand-deep dark:text-brand-gold tracking-tighter">
-                                    {formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' })}
+                                    <CurrencyText value={formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' })} />
                                 </span>
                             </div>
                         </div>
@@ -1393,7 +1396,7 @@ export function SaleModeView() {
                             <div className="flex justify-between items-center text-sm bg-emerald-500/10 dark:bg-emerald-500/5 rounded-2xl px-4 py-3 border border-emerald-500/20">
                                 <span className="font-bold text-emerald-600 dark:text-emerald-400">Change Due</span>
                                 <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums text-lg">
-                                    {formatCurrency(changeDue, { currency: activeBusiness?.currency || 'NGN' })}
+                                    <CurrencyText value={formatCurrency(changeDue, { currency: activeBusiness?.currency || 'NGN' })} />
                                 </span>
                             </div>
                         )}

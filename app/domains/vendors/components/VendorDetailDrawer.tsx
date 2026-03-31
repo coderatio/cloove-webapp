@@ -17,6 +17,7 @@ import {
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { useVendorPayables, type Vendor, type PayableApi } from "../hooks/useVendors"
 
 interface VendorDetailDrawerProps {
@@ -137,7 +138,7 @@ export function VendorDetailDrawer({
                                     "text-2xl font-serif font-medium",
                                     vendor.outstanding > 0 ? "text-rose-500" : "text-brand-deep dark:text-brand-cream"
                                 )}>
-                                    {formatCurrency(vendor.outstanding, { currency: currencyCode })}
+                                    <CurrencyText value={formatCurrency(vendor.outstanding, { currency: currencyCode })} />
                                 </p>
                             </div>
                             {vendor.outstanding > 0 && (
@@ -198,11 +199,17 @@ export function VendorDetailDrawer({
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-4 text-sm">
                                                     <span className="text-brand-accent/60 dark:text-brand-cream/60">
-                                                        Total: <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">{formatCurrency(payable.amount, { currency: currencyCode })}</span>
+                                                        Total:{" "}
+                                                        <span className="font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                                            <CurrencyText value={formatCurrency(payable.amount, { currency: currencyCode })} />
+                                                        </span>
                                                     </span>
                                                     {payable.remainingAmount > 0 && payable.remainingAmount < payable.amount && (
                                                         <span className="text-rose-500">
-                                                            Remaining: <span className="font-serif font-medium">{formatCurrency(payable.remainingAmount, { currency: currencyCode })}</span>
+                                                            Remaining:{" "}
+                                                            <span className="font-serif font-medium">
+                                                                <CurrencyText value={formatCurrency(payable.remainingAmount, { currency: currencyCode })} />
+                                                            </span>
                                                         </span>
                                                     )}
                                                 </div>

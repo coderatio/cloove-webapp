@@ -15,6 +15,7 @@ import { ActivityIcon, type ActivityItem } from "@/app/components/dashboard/Acti
 import { formatDateTime } from "@/app/lib/date-utils"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
 interface ActivityDetailsDrawerProps {
     activity: ActivityItem | null
@@ -198,8 +199,9 @@ export function ActivityDetailsDrawer({ activity, open, onOpenChange }: Activity
                                                       : "text-brand-deep dark:text-brand-cream"
                                             )}
                                         >
-                                            {(activity.type === "withdrawal" || activity.type === "debt") ? "-" : (activity.type === "sale" || activity.type === "payment" || activity.type === "deposit") ? "+" : ""}
-                                            {activity.amount}
+                                            <CurrencyText
+                                                value={`${(activity.type === "withdrawal" || activity.type === "debt") ? "-" : (activity.type === "sale" || activity.type === "payment" || activity.type === "deposit") ? "+" : ""}${activity.amount}`}
+                                            />
                                         </span>
                                     )}
                                     {activity.timestamp && (

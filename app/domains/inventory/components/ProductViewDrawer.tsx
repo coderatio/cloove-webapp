@@ -35,6 +35,7 @@ import { motion } from "framer-motion"
 import { formatCurrency } from "@/app/lib/formatters"
 import { Badge } from "@/app/components/ui/badge"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { InventoryItem, ProductImage, ProductVariant } from "../types"
 import { LabelPreviewDrawer } from "./LabelPreviewDrawer"
 
@@ -147,7 +148,9 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                             <GlassCard className="p-5 flex flex-col gap-2 bg-white/50 dark:bg-white/5 border-none">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Base Price</span>
-                                <span className="text-2xl font-serif text-brand-deep dark:text-brand-gold">{item.price}</span>
+                                <span className="text-2xl font-serif text-brand-deep dark:text-brand-gold">
+                                    <CurrencyText value={item.price} />
+                                </span>
                             </GlassCard>
                             <GlassCard className="p-5 flex flex-col gap-2 bg-white/50 dark:bg-white/5 border-none">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Total Stock</span>
@@ -220,7 +223,9 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                                             <div className="flex items-center gap-6">
                                                 <div className="text-right">
                                                     <p className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Price</p>
-                                                    <p className="text-sm font-bold text-brand-gold">{v.price ? formatCurrency(v.price, { currency: currencyCode }) : item.price}</p>
+                                                    <p className="text-sm font-bold text-brand-gold">
+                                                        <CurrencyText value={v.price ? formatCurrency(v.price, { currency: currencyCode }) : item.price} />
+                                                    </p>
                                                 </div>
                                                 <div className="h-8 w-px bg-brand-deep/5 dark:border-white/5" />
                                                 <div className="text-right">

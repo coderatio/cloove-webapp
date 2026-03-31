@@ -4,6 +4,7 @@ import * as React from "react"
 import { Search, Barcode, Plus, Package, X } from "lucide-react"
 import { Product } from "../hooks/useInventory"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
@@ -296,7 +297,7 @@ export function ProductSearchOverlay({
                                                         "font-serif font-black text-xl lg:text-2xl tracking-tighter transition-colors",
                                                         activeIndex === index ? "text-brand-gold" : "text-brand-deep dark:text-brand-cream"
                                                     )}>
-                                                        {formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })}
+                                                        <CurrencyText value={formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })} />
                                                     </p>
                                                     <div className={cn(
                                                         "text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg inline-block mt-1 border",
@@ -381,4 +382,3 @@ const PerformanceStyles = () => (
         }
     `}</style>
 )
-

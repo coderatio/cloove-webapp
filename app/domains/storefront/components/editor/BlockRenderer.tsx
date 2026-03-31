@@ -3,6 +3,7 @@
 import type { BlockSection, FaqItem, TestimonialItem, FeatureItem, CtaButton, SectionBackground, GridLayoutColumn, GridLayoutStyle } from "./block-types"
 import { HelpCircle, ChevronDown, Quote, Star, Image as ImageIcon, ShoppingBag, Tag, Megaphone, Plus } from "lucide-react"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useStorefront } from "@/app/domains/storefront/hooks/useStorefront"
 import { cn } from "@/app/lib/utils"
@@ -627,8 +628,12 @@ function ProductTile({
         {product.name}
       </p>
       <p className="text-xs mt-0.5" style={{ color: sectionColor ?? "var(--sf-text)", opacity: 0.9 }}>
-        {hasSale && <span className="line-through opacity-70 mr-1">{formatCurrency(originalNum, { currency })}</span>}
-        {formatCurrency(priceNum, { currency })}
+        {hasSale && (
+          <span className="line-through opacity-70 mr-1">
+            <CurrencyText value={formatCurrency(originalNum, { currency })} />
+          </span>
+        )}
+        <CurrencyText value={formatCurrency(priceNum, { currency })} />
       </p>
     </div>
   )

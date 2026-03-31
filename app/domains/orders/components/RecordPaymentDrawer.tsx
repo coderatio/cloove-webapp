@@ -14,6 +14,7 @@ import { MoneyInput } from '@/app/components/ui/money-input'
 import { Label } from '@/app/components/ui/label'
 import { Order } from '../types'
 import { formatCurrency } from '@/app/lib/formatters'
+import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { Check, Loader2, Wallet, Banknote, CreditCard, Receipt, CheckCircle2 } from 'lucide-react'
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { cn } from '@/app/lib/utils'
@@ -79,15 +80,21 @@ export function RecordPaymentDrawer({
                     <GlassCard className="p-6 space-y-4 bg-brand-deep/5 dark:bg-white/5 border-none rounded-3xl before:rounded-3xl">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-brand-accent/60 dark:text-brand-cream/60">Total Order Amount</span>
-                            <span className="font-bold text-brand-deep dark:text-brand-cream">{formatCurrency(totalAmount, { currency: order.currency || 'NGN' })}</span>
+                            <span className="font-bold text-brand-deep dark:text-brand-cream">
+                                <CurrencyText value={formatCurrency(totalAmount, { currency: order.currency || 'NGN' })} />
+                            </span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-brand-accent/60 dark:text-brand-cream/60">Previously Paid</span>
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(alreadyPaid, { currency: order.currency || 'NGN' })}</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                                <CurrencyText value={formatCurrency(alreadyPaid, { currency: order.currency || 'NGN' })} />
+                            </span>
                         </div>
                         <div className="pt-3 border-t border-brand-deep/5 dark:border-white/10 flex justify-between items-center">
                             <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">Outstanding Balance</span>
-                            <span className="text-xl font-bold text-brand-deep dark:text-brand-cream">{formatCurrency(remainingBalance, { currency: order.currency || 'NGN' })}</span>
+                            <span className="text-xl font-bold text-brand-deep dark:text-brand-cream">
+                                <CurrencyText value={formatCurrency(remainingBalance, { currency: order.currency || 'NGN' })} />
+                            </span>
                         </div>
                     </GlassCard>
 
@@ -156,7 +163,7 @@ export function RecordPaymentDrawer({
                                 "font-bold font-serif",
                                 newBalance === 0 ? "text-brand-green" : "text-brand-deep dark:text-brand-cream"
                             )}>
-                                {formatCurrency(newBalance, { currency: order.currency || 'NGN' })}
+                                <CurrencyText value={formatCurrency(newBalance, { currency: order.currency || 'NGN' })} />
                             </span>
                         </div>
                     </form>

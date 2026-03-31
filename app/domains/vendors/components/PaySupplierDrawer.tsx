@@ -16,6 +16,7 @@ import {
 import { MoneyInput } from "@/app/components/ui/money-input"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { formatCurrency } from "@/app/lib/formatters"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import type { PayableApi } from "../hooks/useVendors"
 
 interface PaySupplierDrawerProps {
@@ -71,7 +72,7 @@ export function PaySupplierDrawer({
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs text-brand-accent/40 dark:text-brand-cream/40">Outstanding</span>
                                     <span className="font-serif font-medium text-rose-500">
-                                        {formatCurrency(payable.remainingAmount, { currency: currencyCode })}
+                                        <CurrencyText value={formatCurrency(payable.remainingAmount, { currency: currencyCode })} />
                                     </span>
                                 </div>
                             </div>
@@ -92,7 +93,7 @@ export function PaySupplierDrawer({
                                 required
                             />
                             <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 ml-1">
-                                Maximum: {formatCurrency(maxAmount, { currency: currencyCode })}
+                                Maximum: <CurrencyText value={formatCurrency(maxAmount, { currency: currencyCode })} />
                             </p>
                         </div>
                     </form>
