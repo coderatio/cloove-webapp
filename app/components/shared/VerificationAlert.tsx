@@ -1,11 +1,12 @@
 "use client"
 
-import { AlertCircle, ExternalLink } from "lucide-react"
+import { AlertCircle, ExternalLink, ArrowRight } from "lucide-react"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { cn } from "@/app/lib/utils"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 import { useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 
 const WHATSAPP_BOT_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER?.replace(/\D/g, "") ?? ""
 
@@ -18,14 +19,16 @@ function buildWhatsAppUrl(): string {
 
 export function VerificationAlert() {
     const { user } = useAuth()
+    const router = useRouter()
     const [emailSent, setEmailSent] = useState(false)
     const pendingRef = useRef(false)
 
     if (!user) return null
 
-    const needsEmailVerify = user.email && user.emailVerified === false
+    const noEmail = !user.email
+    const needsEmailVerify = !noEmail && user.emailVerified === false
     const needsPhoneVerify = user.phoneNumber && user.phoneVerified === false
-    if (!needsEmailVerify && !needsPhoneVerify) return null
+    if (!noEmail && !needsEmailVerify && !needsPhoneVerify) return null
 
     const whatsAppUrl = buildWhatsAppUrl()
 
@@ -59,6 +62,18 @@ export function VerificationAlert() {
                 aria-hidden
             />
             <div className="min-w-0 flex-1">
+                {noEmail && (
+                    <p className="text-sm font-medium text-brand-deep-800 dark:text-brand-cream">
+                        No email on your account.{" "}
+                        <button
+                            onClick={() => router.push("/settings?tab=profile")}
+                            className="underline font-semibold text-brand-deep-600 dark:text-brand-gold hover:text-brand-deep-800 dark:hover:text-brand-gold-300 cursor-pointer inline-flex items-center gap-1"
+                        >
+                            Add one in Settings
+                            <ArrowRight className="w-3 h-3" />
+                        </button>
+                    </p>
+                )}
                 {needsEmailVerify && (
                     <p className="text-sm font-medium text-brand-deep-800 dark:text-brand-cream">
                         {emailSent ? (

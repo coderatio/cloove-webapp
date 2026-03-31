@@ -93,6 +93,7 @@ export const useUpdateBusinessSettings = () => {
 
 export interface UpdateProfilePayload {
     fullName?: string
+    email?: string
     country?: string
     socials?: {
         whatsapp?: string | null
@@ -106,7 +107,7 @@ export const useUpdateProfile = () => {
 
     return useMutation({
         mutationFn: (payload: UpdateProfilePayload) =>
-            apiClient.patch("/settings/profile", payload),
+            apiClient.patch("/settings/profile", payload, { fullResponse: true }),
         onSuccess: (data: any) => {
             toast.success(data.message || "Profile updated successfully")
             queryClient.invalidateQueries({ queryKey: ["settings"] })

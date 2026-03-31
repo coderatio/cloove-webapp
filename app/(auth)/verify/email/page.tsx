@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { AlertCircle, CheckCircle2, Loader2, Mail, Eye, EyeOff } from "lucide-react"
@@ -9,6 +9,7 @@ import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { apiClient } from "@/app/lib/api-client"
+import { useAuth } from "@/app/components/providers/auth-provider"
 import { toast } from "sonner"
 
 function VerifyEmailContent() {
@@ -24,12 +25,22 @@ function VerifyEmailContent() {
     const [hasPassword, setHasPassword] = useState(true)
     const [password, setPassword] = useState("")
     const [showPassword, setShowPassword] = useState(false)
+    // Persists across React StrictMode double-invocations — prevents a second
+    // effect run from overwriting a successful verification with "invalid".
+    const verifiedRef = useRef(false)
+    const { refreshUser } = useAuth()
 
     useEffect(() => {
+        // `cancelled` is set to true when React unmounts/remounts this effect
+        // (e.g. StrictMode double-invocation). Any async callbacks that fire
+        // after cleanup become no-ops, preventing stale state updates from a
+        // superseded invocation racing with the live one.
+        let cancelled = false
+
         if (!token || token.length === 0) {
             setInitializing(false)
             setInvalid(true)
-            return
+            return () => { cancelled = true }
         }
         apiClient
             .get<{ valid: boolean; emailMasked?: string; hasPassword?: boolean }>(
@@ -37,14 +48,38 @@ function VerifyEmailContent() {
                 { token }
             )
             .then((data) => {
-                if (!data.valid) setInvalid(true)
-                else {
-                    setEmailMasked(data.emailMasked ?? "")
-                    setHasPassword(data.hasPassword ?? true)
+                if (cancelled) return
+                if (!data.valid) {
+                    if (!verifiedRef.current) setInvalid(true)
+                    return
+                }
+                setEmailMasked(data.emailMasked ?? "")
+                const needsPasswordSetup = !(data.hasPassword ?? true)
+                setHasPassword(!needsPasswordSetup)
+                // Auto-verify immediately when no password setup is required
+                if (!needsPasswordSetup) {
+                    setLoading(true)
+                    apiClient.post("/security/verify-email", { token })
+                        .then(() => {
+                            if (cancelled) return
+                            verifiedRef.current = true
+                            refreshUser()
+                            setSuccess(true)
+                        })
+                        .catch(() => {
+                            if (cancelled) return
+                            if (!verifiedRef.current) setInvalid(true)
+                        })
+                        .finally(() => { if (!cancelled) setLoading(false) })
                 }
             })
-            .catch(() => setInvalid(true))
-            .finally(() => setInitializing(false))
+            .catch(() => {
+                if (cancelled) return
+                if (!verifiedRef.current) setInvalid(true)
+            })
+            .finally(() => { if (!cancelled) setInitializing(false) })
+
+        return () => { cancelled = true }
     }, [token])
 
     const handleVerify = async (e: React.FormEvent) => {
@@ -61,6 +96,7 @@ function VerifyEmailContent() {
                 payload.password = password.trim()
             }
             await apiClient.post("/security/verify-email", payload)
+            refreshUser()
             setSuccess(true)
         } catch (err) {
             toast.error(err instanceof Error ? err.message : "Verification failed")

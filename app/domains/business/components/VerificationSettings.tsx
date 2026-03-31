@@ -97,7 +97,7 @@ function EmailPrerequisiteCard() {
                         <Button
                             size="sm"
                             className="rounded-xl h-9 px-4 text-xs font-bold"
-                            onClick={() => router.push("/settings?tab=account")}
+                            onClick={() => router.push("/settings?tab=profile")}
                         >
                             Add email in Settings
                             <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
