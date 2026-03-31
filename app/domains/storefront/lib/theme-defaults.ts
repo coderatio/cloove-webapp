@@ -1,5 +1,6 @@
 export const STOREFRONT_LAYOUT_IDS = ['classic', 'minimal', 'compact', 'creative'] as const
 export const THEME_MODES = ['light', 'dark', 'auto'] as const
+export const GOOGLE_FONTS_ALLOWED = [
   'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Montserrat',
   'Source Sans 3', 'Nunito', 'Work Sans', 'Oswald', 'Raleway', 'Merriweather', 'PT Sans',
   'Ubuntu', 'DM Sans', 'Manrope', 'Figtree', 'Outfit',
