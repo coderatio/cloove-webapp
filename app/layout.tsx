@@ -1,18 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Serif, Syne } from "next/font/google";
+import { Instrument_Serif, DM_Sans } from "next/font/google";
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
-  variable: "--font-serif",
+  variable: "--font-instrument-serif",
 });
 
-const syne = Syne({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-sans",
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-dm-sans",
 });
 import { ThemeProvider } from "./components/providers/theme-provider";
 import QueryProvider from "./components/providers/query-provider";
@@ -94,7 +94,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`scroll-smooth ${instrumentSerif.variable} ${syne.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`scroll-smooth ${instrumentSerif.variable} ${dmSans.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{

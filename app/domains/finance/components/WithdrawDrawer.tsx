@@ -318,7 +318,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                         </label>
                                         <div className="relative group">
                                             <div className="absolute -inset-1 bg-brand-gold/0 group-focus-within:bg-brand-gold/10 rounded-4xl transition-all duration-500 blur-md" />
-                                            <div className="relative flex rounded-3xl border border-brand-deep/5 bg-brand-deep/3 dark:bg-white/3 overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
+                                            <div className="relative flex items-center rounded-3xl border border-brand-deep/5 bg-brand-deep/3 dark:bg-white/3 overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
                                                 <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/40 font-serif text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
                                                     {symbol}
                                                 </span>
@@ -329,7 +329,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                     placeholder="0.00"
                                                     value={amount}
                                                     onChange={handleAmountChange}
-                                                    className="h-16 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black text-brand-deep dark:text-white placeholder:text-brand-deep/10"
+                                                    className="h-16 py-0 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black text-brand-deep dark:text-white placeholder:text-brand-deep/10"
                                                 />
                                             </div>
                                         </div>
