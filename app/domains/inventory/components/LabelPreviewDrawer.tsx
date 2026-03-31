@@ -240,7 +240,7 @@ export function LabelPreviewDrawer({
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     html, body { margin: 0; padding: 0; background: #fff; }
     body {
-        font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Syne", "Instrument Serif", system-ui, sans-serif;
         color: #000;
         display: flex;
         flex-wrap: wrap;

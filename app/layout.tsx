@@ -1,5 +1,19 @@
 import type { Metadata, Viewport } from "next";
+import { Instrument_Serif, Syne } from "next/font/google";
 import "./globals.css";
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-sans",
+});
 import { ThemeProvider } from "./components/providers/theme-provider";
 import QueryProvider from "./components/providers/query-provider";
 import { BusinessProvider } from "./components/BusinessProvider";
@@ -80,7 +94,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`scroll-smooth ${instrumentSerif.variable} ${syne.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
