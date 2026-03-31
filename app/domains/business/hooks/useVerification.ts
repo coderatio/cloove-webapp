@@ -86,6 +86,17 @@ export const useVerificationLevels = () => {
     })
 }
 
+export const useRetryVirtualAccount = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: () => apiClient.post("/verification/retry-virtual-account", {}),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["finance", "deposit-accounts"] })
+        },
+    })
+}
+
 export const useSubmitVerification = () => {
     const queryClient = useQueryClient()
 

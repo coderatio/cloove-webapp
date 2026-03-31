@@ -30,6 +30,7 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { VisuallyHidden } from "@/app/components/ui/visually-hidden"
 import { Skeleton } from "@/app/components/ui/skeleton"
 import { useDepositAccounts, useWalletBalance, type DepositAccount } from "@/app/domains/finance/hooks/useFinance"
+import { useRetryVirtualAccount } from "@/app/domains/business/hooks/useVerification"
 import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 import { useCreateWalletPaymentLink, useWalletPaymentLink } from "@/app/domains/checkout/hooks/usePaymentLinks"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -600,6 +601,8 @@ function VerificationRequiredView({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function NoAccountsView({ onStartVerification }: { onStartVerification: () => void }) {
+    const { mutate: retry, isPending, isError } = useRetryVirtualAccount()
+
     return (
         <motion.div
             key="no-accounts"
@@ -616,17 +619,29 @@ function NoAccountsView({ onStartVerification }: { onStartVerification: () => vo
                     No Deposit Account
                 </h3>
                 <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed max-w-[280px] mx-auto">
-                    Your verification is complete but no deposit account was created. Please contact support or retry verification.
+                    {isError
+                        ? "We couldn't set up your deposit account. Please contact support."
+                        : "Your verification is complete but your deposit account wasn't created yet."}
                 </p>
             </div>
-            <Button
-                onClick={onStartVerification}
-                variant="outline"
-                className="h-12 rounded-2xl border-brand-deep/10 dark:border-white/10 px-6"
-            >
-                Go to Settings
-                <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
+            {isError ? (
+                <Button
+                    onClick={onStartVerification}
+                    variant="outline"
+                    className="h-12 rounded-2xl border-brand-deep/10 dark:border-white/10 px-6"
+                >
+                    Contact Support
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+            ) : (
+                <Button
+                    onClick={() => retry()}
+                    disabled={isPending}
+                    className="h-12 rounded-2xl px-6"
+                >
+                    {isPending ? "Setting up account…" : "Retry Setup"}
+                </Button>
+            )}
         </motion.div>
     )
 }
