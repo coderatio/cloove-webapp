@@ -84,13 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         const callbackUrl = encodeURIComponent(pathname)
-        try {
-            setUser(null)
-            await apiClient.logout()
-            window.location.href = `/login?callbackUrl=${callbackUrl}`
-        } catch (error) {
-            window.location.href = `/login?callbackUrl=${callbackUrl}`
-        }
+        setUser(null)
+        await apiClient.logout(`/login?callbackUrl=${callbackUrl}`)
     }
 
     const updateUserMetadata = () => {

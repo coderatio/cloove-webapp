@@ -5,6 +5,10 @@ import { useIdleTracker } from "@/app/hooks/useIdleTracker"
 import { apiClient } from "@/app/lib/api-client"
 import { SessionTimeoutDrawer } from "./SessionTimeoutDrawer"
 
+/** Show the warning this many ms before the session actually expires */
+const WARNING_BEFORE_MS = 5 * 60 * 1000 // 5 minutes
+const CHECK_INTERVAL_MS = 1000
+
 interface SessionManagerProps {
     sessionMetadata?: {
         expiresAt?: string
@@ -13,118 +17,138 @@ interface SessionManagerProps {
     onSessionRefresh?: () => void
 }
 
-/**
- * Manages the session lifecycle, inactivity tracking, and token rotation
- */
+function parseDuration(duration: string): number {
+    const value = parseInt(duration)
+    if (duration.endsWith('s')) return value * 1000
+    if (duration.endsWith('m')) return value * 60 * 1000
+    if (duration.endsWith('h')) return value * 60 * 60 * 1000
+    return value || 5 * 60 * 1000
+}
+
 export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionManagerProps) {
     const { lastActivity, resetActivity } = useIdleTracker()
     const [showWarning, setShowWarning] = useState(false)
-    const [remainingSeconds, setRemainingSeconds] = useState(60) // 1 minute warning
+    const [remainingSeconds, setRemainingSeconds] = useState(0)
 
-    // Configurable thresholds (defaults)
     const refreshIntervalMs = parseDuration(sessionMetadata?.refreshInterval || "5m")
-    const totalIdleTimeoutMs = refreshIntervalMs
-    const proactiveRefreshThresholdMs = refreshIntervalMs * 0.6 // Refresh at 3 mins if 5 min TTL
-    const warningThresholdMs = refreshIntervalMs * 0.8 // Warn at 4 mins if 5 min TTL
 
-
-    const lastRefreshTime = useRef(Date.now())
-    const warningStartedAtRef = useRef<number | null>(null)
-    const timerRef = useRef<NodeJS.Timeout | null>(null)
-
-    // Function to parse Adonis-style duration strings (e.g., "5m", "1h")
-    function parseDuration(duration: string): number {
-        const value = parseInt(duration)
-        if (duration.endsWith('s')) return value * 1000
-        if (duration.endsWith('m')) return value * 60 * 1000
-        if (duration.endsWith('h')) return value * 60 * 60 * 1000
-        return value || 5 * 60 * 1000 // Default 5 mins
-    }
-
-    const handleRefresh = useCallback(async () => {
-        try {
-            await apiClient.refresh()
-            lastRefreshTime.current = Date.now()
-            warningStartedAtRef.current = null
-            setShowWarning(false)
-            resetActivity()
-            if (onSessionRefresh) {
-                onSessionRefresh()
-            }
-        } catch (error: any) {
-            // If it's a 401, we might have already expired on backend
-            // Instead of instant logout, show the warning to give one last chance
-            if (error.statusCode === 401) {
-                setShowWarning(true)
-                setRemainingSeconds(30) // Give short grace period
-            } else {
-                // For other errors, logout to be safe
-                apiClient.logout()
-            }
-        }
-    }, [onSessionRefresh])
-
-    const handleLogout = useCallback(() => {
-        apiClient.logout()
-    }, [])
-
+    // Source of truth for when the session expires — updated after each successful refresh
+    const effectiveExpiresAtRef = useRef<number | null>(null)
     const lastActivityRef = useRef(lastActivity)
+    const isRefreshingRef = useRef(false)
+
+    // Keep lastActivity readable inside the stable interval callback
     useEffect(() => {
         lastActivityRef.current = lastActivity
     }, [lastActivity])
 
+    // Seed the expiry from session metadata on first load and when it changes
+    // (e.g. after a server-side token rotation that updates the user object)
     useEffect(() => {
+        if (sessionMetadata?.expiresAt) {
+            const parsed = new Date(sessionMetadata.expiresAt).getTime()
+            if (!Number.isNaN(parsed)) {
+                effectiveExpiresAtRef.current = parsed
+            }
+        }
+    }, [sessionMetadata?.expiresAt])
+
+    const handleLogout = useCallback((reason: 'timeout' | 'manual' = 'manual') => {
+        // Close the drawer immediately — don't wait for navigation
+        setShowWarning(false)
+        setRemainingSeconds(0)
+        const redirectTo = reason === 'timeout' ? '/login?reason=session_expired' : '/login'
+        apiClient.logout(redirectTo)
+    }, [])
+
+    const handleRefresh = useCallback(async () => {
+        if (isRefreshingRef.current) return
+        isRefreshingRef.current = true
+        try {
+            const result = await apiClient.refresh()
+            // Update the tracked expiry from the server response
+            if (result?.expiresAt) {
+                const parsed = new Date(result.expiresAt).getTime()
+                if (!Number.isNaN(parsed)) {
+                    effectiveExpiresAtRef.current = parsed
+                }
+            } else {
+                // Fallback: optimistically extend by one refresh interval
+                effectiveExpiresAtRef.current = Date.now() + refreshIntervalMs
+            }
+            setShowWarning(false)
+            resetActivity()
+            onSessionRefresh?.()
+        } catch (error: any) {
+            if (error?.statusCode === 401) {
+                // Backend already expired the session — log out immediately
+                handleLogout('timeout')
+            }
+            // Other errors: leave warning open so user can retry
+        } finally {
+            isRefreshingRef.current = false
+        }
+    }, [refreshIntervalMs, resetActivity, onSessionRefresh, handleLogout])
+
+    // Use refs for the callbacks so the interval never needs to be recreated
+    const handleRefreshRef = useRef(handleRefresh)
+    const handleLogoutRef = useRef(handleLogout)
+    useEffect(() => { handleRefreshRef.current = handleRefresh }, [handleRefresh])
+    useEffect(() => { handleLogoutRef.current = handleLogout }, [handleLogout])
+
+    useEffect(() => {
+        if (!sessionMetadata?.expiresAt) return
+
         const checkSession = () => {
+            const expiresAt = effectiveExpiresAtRef.current
+            if (!expiresAt) return
+
             const now = Date.now()
-            const currentLastActivity = lastActivityRef.current
-            const idleTime = now - currentLastActivity
+            const remainingMs = expiresAt - now
 
-
-            // 1. Proactive Refresh logic (only if active and NO warning shown)
-            // If user is active (idleTime is small) but token is getting old
-            if (!showWarning && idleTime < proactiveRefreshThresholdMs && (now - lastRefreshTime.current) >= proactiveRefreshThresholdMs) {
-                handleRefresh()
+            // Session has fully expired
+            if (remainingMs <= 0) {
+                setShowWarning(true)
+                setRemainingSeconds(0)
+                handleLogoutRef.current('timeout')
                 return
             }
 
-            // 2. Warning logic (Once triggered, stay until explicit decision by user)
-            if (showWarning || idleTime >= warningThresholdMs) {
-                if (!showWarning) {
-                    setShowWarning(true)
-                    warningStartedAtRef.current = now
-                }
+            const remainingSecs = Math.ceil(remainingMs / 1000)
+            const idleTimeMs = now - lastActivityRef.current
 
-                // Use fixed start time for warning to ignore subsequent activity
-                const warningStartedAt = warningStartedAtRef.current || now
-                const warningDurationMs = totalIdleTimeoutMs - warningThresholdMs
-                const totalTimeoutAt = warningStartedAt + warningDurationMs
+            // Proactive refresh: user is actively using the app and token is within
+            // one refresh window of expiry — extend silently before the warning appears
+            const isActive = idleTimeMs < refreshIntervalMs * 0.5
+            const isNearExpiry = remainingMs <= refreshIntervalMs * 1.1
+            if (!isRefreshingRef.current && isActive && isNearExpiry) {
+                handleRefreshRef.current()
+                return
+            }
 
-                const remaining = Math.max(0, Math.ceil((totalTimeoutAt - now) / 1000))
-                setRemainingSeconds(remaining)
-
-                // 3. LOGOUT: Trigger if time is officially up
-                if (remaining === 0) {
-                    handleLogout()
-                    return
-                }
-
-                // 4. Fallback: Security logout if way past everything (safety)
-                if (idleTime >= totalIdleTimeoutMs + (5 * 60 * 1000)) {
-                    handleLogout()
-                }
+            // Show/update warning when approaching expiry
+            if (remainingMs <= WARNING_BEFORE_MS) {
+                setShowWarning(true)
+                setRemainingSeconds(remainingSecs)
+            } else {
+                // Dismiss warning if session was extended (e.g. another tab refreshed)
+                setShowWarning(false)
             }
         }
 
-        const interval = setInterval(checkSession, 1000)
+        const interval = setInterval(checkSession, CHECK_INTERVAL_MS)
         return () => clearInterval(interval)
-    }, [proactiveRefreshThresholdMs, warningThresholdMs, totalIdleTimeoutMs, showWarning, handleRefresh, handleLogout])
+        // Intentionally stable: only recreate if the session itself changes
+        // (new login). refreshIntervalMs is a config value that doesn't change at runtime.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sessionMetadata?.expiresAt, refreshIntervalMs])
 
     return (
         <SessionTimeoutDrawer
             isOpen={showWarning}
             remainingSeconds={remainingSeconds}
             onExtend={handleRefresh}
-            onLogout={handleLogout}
+            onLogout={() => handleLogout('manual')}
         />
     )
 }

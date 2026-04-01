@@ -1,8 +1,9 @@
 "use client"
 
 import Image from "next/image"
-import { Loader2 } from "lucide-react"
+import { Loader2, ShieldAlert } from "lucide-react"
 import dynamic from "next/dynamic"
+import { useSearchParams } from "next/navigation"
 import { LoginSignupLink } from "@/app/domains/auth/components/LoginSignupLink"
 
 // 1. Background elements as stable divs to avoid framer-motion SSR mismatches
@@ -28,6 +29,9 @@ const LoginFlowWrapper = dynamic(
 )
 
 export default function LoginPage() {
+    const searchParams = useSearchParams()
+    const isSessionExpired = searchParams.get('reason') === 'session_expired'
+
     return (
         <div className="min-h-dvh w-full flex flex-col items-center justify-center p-4 relative overflow-hidden bg-brand-deep-950">
             <BackgroundDecor />
@@ -39,6 +43,18 @@ export default function LoginPage() {
             />
 
             <div className="w-full max-w-md relative z-10">
+                {isSessionExpired && (
+                    <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                        <div>
+                            <p className="text-sm font-semibold text-amber-300">Session expired</p>
+                            <p className="mt-0.5 text-xs text-amber-300/70">
+                                You were logged out due to inactivity. Please sign in again to continue.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Logo Section */}
                 <div className="flex flex-col items-center mb-12">
                     <div className="relative h-16 w-16 mb-4">

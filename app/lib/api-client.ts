@@ -48,13 +48,13 @@ export const apiClient = {
         }
     },
 
-    async logout() {
+    async logout(redirectTo = '/login') {
         try {
             await this.post("/security/logout", {})
         } finally {
             storage.clear()
             if (typeof window !== 'undefined') {
-                window.location.href = '/login'
+                window.location.href = redirectTo
             }
         }
     },
