@@ -11,6 +11,7 @@ import {
 
 interface SessionTimeoutDrawerProps {
     isOpen: boolean
+    onOpenChange?: (open: boolean) => void
     onExtend: () => void
     onLogout: () => void
     remainingSeconds: number
@@ -21,6 +22,7 @@ interface SessionTimeoutDrawerProps {
  */
 export function SessionTimeoutDrawer({
     isOpen,
+    onOpenChange,
     onExtend,
     onLogout,
     remainingSeconds
@@ -29,7 +31,7 @@ export function SessionTimeoutDrawer({
     const seconds = remainingSeconds % 60
 
     return (
-        <Drawer open={isOpen} dismissible={false}>
+        <Drawer open={isOpen} onOpenChange={onOpenChange} dismissible={false}>
             <DrawerContent className="max-w-xl mx-auto">
                 <div className="p-8 pt-6 relative">
                     <div className="flex flex-col items-center text-center space-y-6">

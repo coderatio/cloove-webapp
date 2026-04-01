@@ -14,6 +14,7 @@ export function RootSessionManager() {
 
     return (
         <SessionManager
+            key={user.id}
             sessionMetadata={user.session}
             onSessionRefresh={updateUserMetadata}
         />
