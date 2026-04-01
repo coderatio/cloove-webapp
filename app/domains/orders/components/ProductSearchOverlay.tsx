@@ -264,57 +264,53 @@ export function ProductSearchOverlay({
                                                 }
                                             }}
                                             className={cn(
-                                                "relative flex items-center justify-between p-5 rounded-[24px] cursor-pointer transition-[background-color,border-color,box-shadow,transform] duration-200 border group will-change-transform",
+                                                "relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border group",
                                                 activeIndex === index
-                                                    ? "bg-brand-gold/10 dark:bg-white/10 border-brand-gold/30 shadow-sm ring-1 ring-brand-gold/20"
-                                                    : "bg-transparent border-transparent hover:bg-brand-accent/2 dark:hover:bg-white/2"
+                                                    ? "bg-brand-deep/5 dark:bg-white/5 border-brand-accent/20 dark:border-white/20 shadow-xs"
+                                                    : "bg-transparent border-transparent hover:bg-brand-accent/5 dark:hover:bg-white/5"
                                             )}
                                         >
-                                            <div className="flex items-center gap-6 relative z-10">
-                                                <div className="h-14 w-14 rounded-2xl bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center overflow-hidden border border-brand-accent/5 dark:border-white/5 transition-transform group-hover:scale-105">
+                                            <div className="flex items-center gap-4 relative z-10 min-w-0 pr-4">
+                                                <div className="h-12 w-12 rounded-xl bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center overflow-hidden border border-brand-accent/5 dark:border-white/5 shrink-0 transition-transform group-hover:scale-105">
                                                     {product.image ? (
                                                         <img src={product.image} alt={product.product} className="h-full w-full object-cover" />
                                                     ) : (
-                                                        <Package className="h-7 w-7 text-brand-accent/10 dark:text-brand-cream/10" />
+                                                        <Package className="h-6 w-6 text-brand-accent/20 dark:text-brand-cream/20" />
                                                     )}
                                                 </div>
-                                                <div className="flex flex-col">
+                                                <div className="flex flex-col min-w-0">
                                                     <h4 className={cn(
-                                                        "font-sans text-xl lg:text-2xl leading-tight transition-colors tracking-tight font-medium",
-                                                        activeIndex === index ? "text-brand-gold" : "text-brand-deep dark:text-brand-cream"
+                                                        "font-medium tracking-tight text-[15px] leading-tight truncate",
+                                                        activeIndex === index ? "text-brand-deep dark:text-brand-cream font-semibold" : "text-brand-deep/80 dark:text-brand-cream/80"
                                                     )}>
                                                         {product.product}
                                                     </h4>
-                                                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-accent/60 dark:text-brand-cream/50 mt-0.5">
-                                                        {product.category} • {product.stock} in stock
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40 mt-1 truncate">
+                                                        {product.category} • {product.stock} left
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-8 relative z-10">
-                                                <div className="text-right">
+                                            <div className="flex items-center gap-4 relative z-10 shrink-0">
+                                                <div className="flex flex-col items-end">
                                                     <p className={cn(
-                                                        "font-serif font-black text-xl lg:text-2xl tracking-tighter transition-colors",
-                                                        activeIndex === index ? "text-brand-gold" : "text-brand-deep dark:text-brand-cream"
+                                                        "font-semibold tracking-tight text-lg",
+                                                        activeIndex === index ? "text-brand-deep dark:text-brand-cream" : "text-brand-deep/80 dark:text-brand-cream/80"
                                                     )}>
-                                                        <CurrencyText value={formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })} />
+                                                        <CurrencyText value={formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' }).replace('NGN', '₦')} />
                                                     </p>
                                                     <div className={cn(
-                                                        "text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg inline-block mt-1 border",
+                                                        "text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded flex items-center gap-1 mt-0.5",
                                                         product.status === 'In Stock'
-                                                            ? "bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                                                            : "bg-rose-500/5 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                                                            ? "text-emerald-500"
+                                                            : "text-rose-500"
                                                     )}>
+                                                        <div className={cn(
+                                                            "w-1.5 h-1.5 rounded-full",
+                                                            product.status === 'In Stock' ? "bg-emerald-500" : "bg-rose-500"
+                                                        )} />
                                                         {product.status}
                                                     </div>
-                                                </div>
-                                                <div className={cn(
-                                                    "h-12 w-12 rounded-2xl flex items-center justify-center transition-opacity duration-200 border shadow-lg",
-                                                    activeIndex === index
-                                                        ? "bg-brand-gold text-brand-deep opacity-100 border-brand-gold/50"
-                                                        : "bg-brand-deep dark:bg-brand-accent text-brand-gold opacity-0 border-transparent"
-                                                )}>
-                                                    <Plus className="h-6 w-6" />
                                                 </div>
                                             </div>
                                         </div>

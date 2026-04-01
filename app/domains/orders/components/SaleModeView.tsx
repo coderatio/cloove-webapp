@@ -224,7 +224,7 @@ const ProductGrid = React.memo(({
             className="flex-1 overflow-y-auto custom-scrollbar pr-1 lg:pr-2 -mr-1 lg:-mr-2 min-h-0 [scrollbar-gutter:stable] overscroll-contain isolation-auto"
         >
             <div className={cn(
-                "grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 pb-6 will-change-scroll"
+                "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4 pb-6 will-change-scroll"
             )}>
                 <AnimatePresence mode="popLayout">
                     {isLoading || !activeBusiness ? (
@@ -251,95 +251,52 @@ const ProductGrid = React.memo(({
                     ) : (
                         paginatedProducts.map((product: Product) => (
                             <motion.div key={product.id} variants={itemVariants}>
-                                <GlassCard
+                                <button
                                     onClick={() => addToCart(product)}
-                                    hoverEffect
                                     className={cn(
-                                        "group cursor-pointer flex flex-col h-[220px] relative overflow-hidden p-0 rounded-[32px] transition-none!",
+                                        "w-full cursor-pointer text-left group flex flex-col h-[130px] lg:h-[140px] relative overflow-hidden rounded-2xl transition-all duration-200 active:scale-[0.98] border shadow-xs hover:shadow-sm isolate outline-none focus-visible:ring-2 focus-visible:ring-brand-deep/20 dark:focus-visible:ring-white/20",
                                         product.image
-                                            ? "bg-brand-deep! border-none!"
-                                            : "bg-white! dark:bg-brand-deep-800! border! border-brand-gold/25! dark:border-white/10!"
+                                            ? "bg-brand-deep/5 dark:bg-white/5 border-transparent"
+                                            : "bg-white dark:bg-white/5 border-brand-accent/10 dark:border-white/10 hover:border-brand-accent/20 dark:hover:border-white/20"
                                     )}
                                 >
-                                    {product.image ? (
-                                        <div className="absolute inset-0 z-0">
+                                    {product.image && (
+                                        <div className="absolute inset-x-0 top-0 h-16 bg-brand-deep/5 overflow-hidden z-0 border-b border-brand-accent/5 dark:border-white/5">
                                             <img
                                                 src={product.image}
                                                 alt={product.product}
                                                 loading="lazy"
-                                                className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                                className="h-full w-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
                                             />
-                                            <div className="absolute inset-x-0 top-0 h-1/3 bg-linear-to-b from-brand-deep-1000/80 to-transparent z-10 pointer-events-none" />
-                                            <div className="absolute inset-0 bg-brand-deep-1000/20 z-10" />
-                                            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-brand-deep-1000/90 to-transparent z-10 pointer-events-none" />
-                                        </div>
-                                    ) : (
-                                        <div className="absolute inset-0 z-0 opacity-[0.04] dark:opacity-[0.08] pointer-events-none overflow-hidden">
-                                            <div className="absolute -right-8 -bottom-8 scale-[2] rotate-[-15deg]">
-                                                <h4 className="font-serif text-8xl font-black select-none tracking-tighter">CLOOVE</h4>
-                                            </div>
-                                            <div className="absolute -left-4 top-1/4 scale-[1.5] rotate-10 opacity-50">
-                                                <h4 className="font-serif text-6xl font-black select-none tracking-tighter">EST 2024</h4>
-                                            </div>
                                         </div>
                                     )}
 
-                                    <div className="relative z-20 flex flex-col h-full p-5 lg:p-6">
-                                        <div className="absolute top-4 right-4 lg:top-5 lg:right-5">
+                                    <div className={cn("relative z-10 flex flex-col h-full p-3.5", product.image ? "mt-16 bg-white dark:bg-brand-deep-900" : "")}>
+                                        <div className="flex justify-between items-start gap-2 mb-auto">
+                                            <h3 className={cn(
+                                                "font-medium text-[15px] leading-snug line-clamp-2",
+                                                "text-brand-deep dark:text-brand-cream"
+                                            )} title={product.product}>
+                                                {product.product}
+                                            </h3>
                                             <div className={cn(
-                                                "w-2 h-2 rounded-full border-2 border-white/20 shadow-xl",
-                                                product.status === 'In Stock' ? "bg-emerald-500 shadow-emerald-500/40" : "bg-rose-500 shadow-rose-500/40"
+                                                "flex-shrink-0 w-1.5 h-1.5 rounded-full mt-1.5",
+                                                product.status === 'In Stock' ? "bg-emerald-500" : "bg-rose-500"
                                             )} />
                                         </div>
 
-                                        <div className="space-y-4 flex flex-col h-full">
-                                            <div className="space-y-1">
-                                                <h3 className={cn(
-                                                    "font-serif text-xl lg:text-2xl leading-[1.15] transition-colors duration-500 line-clamp-2 min-h-[2.3em]",
-                                                    product.image
-                                                        ? "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
-                                                        : "text-brand-deep dark:text-brand-cream"
-                                                )}>
-                                                    {product.product}
-                                                </h3>
-                                                <p className={cn(
-                                                    "text-[9px] font-bold uppercase tracking-[0.2em]",
-                                                    product.image
-                                                        ? "text-brand-cream opacity-80 drop-shadow-sm"
-                                                        : "text-brand-accent dark:text-brand-cream opacity-40"
-                                                )}>
-                                                    {product.status} • {product.stock} units
-                                                </p>
-                                            </div>
-
-                                            <div className={cn(
-                                                "flex items-center justify-between pt-4 border-t transition-colors duration-500 mt-auto",
-                                                product.image ? "border-white/20" : "border-brand-accent/5 dark:border-white/10"
-                                            )}>
-                                                <p className={cn(
-                                                    "font-serif font-black text-xl lg:text-2xl tracking-tight",
-                                                    product.image
-                                                        ? "text-brand-gold drop-shadow-md"
-                                                        : "text-brand-deep dark:text-brand-gold"
-                                                )}>
+                                        <div className="flex items-end justify-between mt-2 pt-2 border-t border-brand-accent/5 dark:border-white/5">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-medium text-brand-accent/50 dark:text-brand-cream/40 uppercase tracking-widest mb-0.5">
+                                                    {product.stock} left
+                                                </span>
+                                                <span className="font-semibold text-brand-deep dark:text-brand-cream text-lg tracking-tight">
                                                     <CurrencyText value={formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })} />
-                                                </p>
-                                                <div className={cn(
-                                                    "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 shadow-2xl",
-                                                    product.image
-                                                        ? "bg-brand-gold text-brand-deep shadow-brand-gold/20"
-                                                        : "bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep shadow-xl"
-                                                )}>
-                                                    <Plus className="h-5 w-5" />
-                                                </div>
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
-
-                                    {product.image && (
-                                        <div className="absolute bottom-0 inset-x-0 h-2/5 bg-linear-to-t from-brand-deep-1000/80 to-transparent z-10 pointer-events-none" />
-                                    )}
-                                </GlassCard>
+                                </button>
                             </motion.div>
                         ))
                     )}
@@ -375,7 +332,7 @@ export function SaleModeView() {
     React.useEffect(() => { setMounted(true) }, [])
 
     // Extras Panel State
-    const itemsPerPage = 12
+    const itemsPerPage = 20
     const [discount, setDiscount] = React.useState(0)
     const [note, setNote] = React.useState('')
     const [amountPaid, setAmountPaid] = React.useState<number | "">("")
@@ -716,7 +673,7 @@ export function SaleModeView() {
                     isLocalMode={isLocalMode}
                     onSearchChange={setLocalSearch}
                 />
-                <div className="flex-1 flex flex-col p-4 lg:pt-2 lg:px-8 lg:pb-8 space-y-4 lg:space-y-6 min-h-0">
+                <div className="flex-1 flex flex-col p-4 lg:pt-2 lg:px-8 lg:pb-4 space-y-4 lg:space-y-6 min-h-0">
                     <header className="flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-6">
                             <Link href="/orders" className="hidden lg:block">
@@ -761,46 +718,48 @@ export function SaleModeView() {
                     </header>
 
                     {/* Filters & Search */}
-                    <div className="flex flex-col lg:flex-row gap-4 items-start">
-                        <div className="w-full lg:w-auto min-w-[320px] flex-2">
+                    <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
+                        <div className="w-full lg:w-auto min-w-[320px] flex-none">
                             {/* Desktop: Opens Overlay */}
                             <div
                                 className="relative hidden lg:flex items-center group cursor-pointer"
                                 onClick={() => setIsSearchOpen(true)}
                             >
                                 <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
-                                    <Search className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
+                                    <Search className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-hover:text-brand-deep dark:group-hover:text-brand-cream transition-colors" />
                                 </div>
-                                <div className="pl-12 pr-6 h-14 bg-white/40 dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-2xl flex items-center text-brand-accent/40 dark:text-brand-cream/40 text-sm select-none w-full group-hover:border-brand-gold/30 transition-all">
-                                    Search catalog or scan barcode... <span className="ml-auto text-[10px] font-black bg-brand-accent/5 dark:bg-white/5 px-2 py-1 rounded-lg border border-brand-accent/10">/</span>
+                                <div className="pl-11 pr-6 h-12 bg-white dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-[14px] flex items-center text-brand-accent/40 dark:text-brand-cream/40 text-[13px] font-medium select-none w-full group-hover:border-brand-accent/30 dark:group-hover:border-white/30 transition-all shadow-xs">
+                                    Search catalog or scan... <span className="ml-auto text-[10px] font-bold bg-brand-accent/5 dark:bg-white/5 px-2 py-0.5 rounded-md border border-brand-accent/10">/</span>
                                 </div>
                             </div>
 
                             {/* Mobile: Inline Search Input */}
                             <div className="relative flex lg:hidden items-center group">
                                 <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
-                                    <Search className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-focus-within:text-brand-gold transition-colors" />
+                                    <Search className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-focus-within:text-brand-deep dark:group-focus-within:text-brand-cream transition-colors" />
                                 </div>
                                 <input
                                     ref={mobileInputRef}
                                     type="text"
-                                    placeholder="Search catalog or scan..."
+                                    placeholder="Search or scan..."
                                     value={localSearch}
                                     onChange={(e) => handleSearchChange(e.target.value)}
-                                    className="w-full pl-12 pr-6 h-14 bg-white/40 dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-2xl text-brand-deep dark:text-brand-cream text-sm placeholder:text-brand-accent/40 dark:placeholder:text-brand-cream/40 focus:outline-none focus:border-brand-gold/30 focus:ring-1 focus:ring-brand-gold/30 transition-all"
+                                    className="w-full pl-11 pr-6 h-12 bg-white dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-[14px] text-brand-deep dark:text-brand-cream text-[13px] font-medium placeholder:text-brand-accent/40 dark:placeholder:text-brand-cream/40 focus:outline-none focus:border-brand-accent/30 focus:ring-1 focus:ring-brand-accent/30 dark:focus:border-white/30 dark:focus:ring-white/30 transition-all shadow-xs"
                                 />
                             </div>
                         </div>
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none scroll-smooth w-full">
+                        <div className="flex gap-2 overflow-x-auto scrollbar-none scroll-smooth w-full lg:flex-1 py-1">
                             <Button
                                 variant={!selectedCategory ? 'base' : 'outline'}
                                 onClick={() => setSelectedCategory(null)}
                                 className={cn(
-                                    "rounded-2xl h-14 px-8 min-w-max transition-all duration-500",
-                                    !selectedCategory && "bg-brand-deep dark:bg-brand-deep-800 border-brand-deep dark:border-brand-deep-800 text-brand-gold dark:hover:bg-brand-deep-700 shadow-sm"
+                                    "rounded-[12px] h-10 px-5 min-w-max transition-all duration-300 text-sm font-medium",
+                                    !selectedCategory
+                                        ? "bg-brand-deep dark:bg-white text-white dark:text-brand-deep shadow-xs border-transparent"
+                                        : "bg-white dark:bg-transparent text-brand-accent/60 dark:text-brand-cream/60 border-brand-accent/10 dark:border-white/10 hover:border-brand-accent/30 dark:hover:border-white/30"
                                 )}
                             >
-                                Catalog
+                                All Items
                             </Button>
                             {categories.map((cat: string) => (
                                 <Button
@@ -808,8 +767,10 @@ export function SaleModeView() {
                                     variant={selectedCategory === cat ? 'base' : 'outline'}
                                     onClick={() => setSelectedCategory(cat)}
                                     className={cn(
-                                        "rounded-2xl h-14 px-8 min-w-max transition-all duration-500",
-                                        selectedCategory === cat && "bg-brand-deep dark:bg-brand-deep-800 border-brand-deep dark:border-brand-deep-800 text-brand-gold dark:hover:bg-brand-deep-700 shadow-sm"
+                                        "rounded-[12px] h-10 px-5 min-w-max transition-all duration-300 text-sm font-medium",
+                                        selectedCategory === cat
+                                            ? "bg-brand-deep dark:bg-white text-white dark:text-brand-deep shadow-xs border-transparent"
+                                            : "bg-white dark:bg-transparent text-brand-accent/60 dark:text-brand-cream/60 border-brand-accent/10 dark:border-white/10 hover:border-brand-accent/30 dark:hover:border-white/30"
                                     )}
                                 >
                                     {cat}
@@ -818,7 +779,7 @@ export function SaleModeView() {
                         </div>
                     </div>                    {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
                     <div className="flex-1 min-h-0 flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-0">
-                        <ProductGrid 
+                        <ProductGrid
                             products={products}
                             isLoading={isLoadingProducts}
                             activeBusiness={activeBusiness}
@@ -831,71 +792,71 @@ export function SaleModeView() {
                         />
                     </div>
 
-                        {/* Pagination Controls - Fixed Bottom */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-center lg:justify-center gap-2 lg:gap-6 py-3 lg:py-4 border-t border-brand-accent/5 dark:border-white/5 bg-brand-cream/40 dark:bg-background backdrop-blur-sm rounded-2xl shrink-0 relative">
-                                {/* Mobile Back Button */}
-                                <div className="absolute left-2 lg:hidden">
-                                    <Link href="/orders">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="rounded-xl h-10 w-10 hover:bg-brand-gold/10 transition-all duration-500"
-                                        >
-                                            <ArrowLeft className="h-5 w-5" />
-                                        </Button>
-                                    </Link>
-                                </div>
-
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                    disabled={currentPage === 1}
-                                    className="rounded-xl px-2 lg:px-4 hover:bg-brand-gold/5 transition-all text-[10px] lg:text-xs font-bold uppercase tracking-widest h-10"
-                                >
-                                    <ChevronLeft className="h-4 w-4 lg:mr-2" />
-                                    <span className="hidden lg:inline">Previous</span>
-                                </Button>
-
-                                <div className="flex items-center gap-1 lg:gap-2">
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                                        // Logic to show fewer pages on mobile
-                                        const isVisibleOnMobile = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
-                                        if (!isVisibleOnMobile) return null;
-
-                                        return (
-                                            <Button
-                                                key={page}
-                                                variant={currentPage === page ? 'default' : 'ghost'}
-                                                size="sm"
-                                                onClick={() => setCurrentPage(page)}
-                                                className={cn(
-                                                    "w-10 h-10 rounded-xl font-bold transition-all duration-300",
-                                                    currentPage === page
-                                                        ? "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-lg shadow-brand-deep/20"
-                                                        : "text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-brand-accent/5"
-                                                )}
-                                            >
-                                                {page}
-                                            </Button>
-                                        )
-                                    })}
-                                </div>
-
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="rounded-xl px-2 lg:px-4 hover:bg-brand-gold/5 transition-all text-[10px] lg:text-xs font-bold uppercase tracking-widest h-10"
-                                >
-                                    <span className="hidden lg:inline">Next</span>
-                                    <ChevronRight className="h-4 w-4 lg:ml-2" />
-                                </Button>
+                    {/* Pagination Controls - Fixed Bottom */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center lg:justify-center gap-2 lg:gap-4 py-2 lg:pb-0 lg:mt-3 shrink-0 relative">
+                            {/* Mobile Back Button */}
+                            <div className="absolute left-2 lg:hidden">
+                                <Link href="/orders">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="rounded-lg h-8 w-8 hover:bg-brand-gold/10 transition-all duration-500"
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                </Link>
                             </div>
-                        )}
-                    </div>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
+                            >
+                                <ChevronLeft className="h-3 w-3 lg:mr-1.5" />
+                                <span className="hidden lg:inline">Previous</span>
+                            </Button>
+
+                            <div className="flex items-center gap-1">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                    // Logic to show fewer pages on mobile
+                                    const isVisibleOnMobile = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
+                                    if (!isVisibleOnMobile) return null;
+
+                                    return (
+                                        <Button
+                                            key={page}
+                                            variant={currentPage === page ? 'default' : 'ghost'}
+                                            size="sm"
+                                            onClick={() => setCurrentPage(page)}
+                                            className={cn(
+                                                "w-8 h-8 rounded-lg font-semibold transition-all duration-300 text-xs",
+                                                currentPage === page
+                                                    ? "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-xs"
+                                                    : "text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-accent hover:bg-brand-accent/5"
+                                            )}
+                                        >
+                                            {page}
+                                        </Button>
+                                    )
+                                })}
+                            </div>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
+                            >
+                                <span className="hidden lg:inline">Next</span>
+                                <ChevronRight className="h-3 w-3 lg:ml-1.5" />
+                            </Button>
+                        </div>
+                    )}
+                </div>
 
                 {/* Mobile Floating Action Button */}
                 {mobileView === 'catalog' && cart.length > 0 && (
@@ -1112,7 +1073,7 @@ export function SaleModeView() {
                 </div>
 
                 {/* Cart Items List */}
-                <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-3 custom-scrollbar min-h-0">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-5 custom-scrollbar min-h-0">
                     <AnimatePresence mode="popLayout">
                         {cart.length === 0 ? (
                             <motion.div
@@ -1121,145 +1082,109 @@ export function SaleModeView() {
                                 animate={{ opacity: 1 }}
                                 className="h-full flex flex-col items-center justify-center text-center py-20"
                             >
-                                <div className="mb-12 relative group">
-                                    <div className="absolute inset-0 bg-brand-gold/20 blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000 rounded-full" />
-                                    <GlassCard className="h-24 w-48 rounded-[48px] border-brand-gold/10 bg-white/5 dark:bg-white/2 flex items-center justify-center relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-500">
-                                        <div className="absolute inset-0 bg-linear-to-br from-brand-gold/5 to-transparent animate-float-slow" />
-                                        <ShoppingCart className="h-10 w-10 text-brand-gold/40 relative z-10 group-hover:rotate-12 transition-transform duration-500" />
-                                    </GlassCard>
+                                <div className="mb-6 h-20 w-20 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center border border-brand-accent/5 dark:border-white/5">
+                                    <ShoppingCart className="h-8 w-8 text-brand-accent/30 dark:text-brand-cream/30" />
                                 </div>
-                                <h4 className="font-serif text-2xl text-brand-deep/40 dark:text-brand-cream/40 mb-2">Cart is empty</h4>
-                                <p className="text-sm text-brand-accent/40 dark:text-brand-cream/20 px-8">Select items from the catalog to begin recording this sale.</p>
+                                <h4 className="font-semibold text-lg text-brand-deep/60 dark:text-brand-cream/60 mb-1 tracking-tight">Cart is empty</h4>
+                                <p className="text-[13px] text-brand-accent/40 dark:text-brand-cream/30 px-8">Select items to begin recording.</p>
                             </motion.div>
                         ) : (
-                            cart.map((item) => (
-                                <motion.div
-                                    key={item.id}
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, x: 20 }}
-                                    className="group"
-                                >
-                                    <GlassCard className="p-4 rounded-[20px] before:rounded-[20px] sm:rounded-3xl sm:before:rounded-3xl flex flex-col gap-3 bg-white/40 dark:bg-white/10 border-brand-accent/10 dark:border-white/5 group-hover:border-brand-gold/20 transition-all duration-300">
-                                        <div className="flex gap-4 items-center min-w-0">
-                                            {item.image && (
-                                                <div className="h-12 w-12 rounded-xl overflow-hidden bg-brand-deep/5 dark:bg-white/5 shrink-0 border border-brand-accent/5 dark:border-white/5 relative">
-                                                    <img
-                                                        src={item.image}
-                                                        alt={item.product}
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                </div>
-                                            )}
-                                            <div className="min-w-0 flex-1">
-                                                <h4 className="font-medium text-brand-deep dark:text-brand-cream truncate text-lg group-hover:text-brand-gold transition-colors">{item.product}</h4>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <p className="font-bold text-brand-gold text-base tracking-tight shrink-0">
-                                                    <CurrencyText value={`₦${item.price.toLocaleString()}`} />
+                            <div className="flex flex-col">
+                                {cart.map((item, index) => (
+                                    <motion.div
+                                        key={item.id}
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        className={cn(
+                                            "flex items-center gap-4 py-3 group",
+                                            index !== cart.length - 1 && "border-b border-brand-accent/5 dark:border-white/5"
+                                        )}
+                                    >
+                                        <div className="min-w-0 flex-1 flex flex-col justify-center">
+                                            <div className="flex items-center justify-between mb-0.5">
+                                                <h4 className="font-medium text-[15px] text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-accent transition-colors">{item.product}</h4>
+                                                <p className="font-semibold text-brand-deep dark:text-brand-cream text-[15px] tracking-tight shrink-0 ml-4">
+                                                    <CurrencyText value={formatCurrency(item.price * item.quantity, { currency: activeBusiness?.currency || 'NGN' }).replace('NGN', '₦')} />
                                                 </p>
-                                                {(item as any).category && (
-                                                    <>
-                                                        <div className="w-1 h-1 rounded-full bg-brand-accent/20 shrink-0" />
-                                                        <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/30 uppercase tracking-widest truncate">{(item as any).category}</p>
-                                                    </>
-                                                )}
                                             </div>
-
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex items-center gap-1.5 bg-brand-deep/5 dark:bg-white/5 rounded-xl p-0.5 border border-brand-accent/5 dark:border-white/5">
+                                            <div className="flex items-center justify-between mt-1">
+                                                <div className="flex items-center gap-1.5 bg-brand-deep/5 dark:bg-white/5 rounded-lg p-0.5">
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={() => updateQuantity(item.id, -1)}
-                                                        className="h-7 w-7 flex items-center justify-center text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-brand-gold/10 rounded-md transition-all"
+                                                        className="h-6 w-6 flex items-center justify-center text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-deep hover:bg-black/5 rounded-[6px] transition-all"
                                                     >
                                                         <Minus className="h-3 w-3" />
                                                     </Button>
-                                                    <span className="w-6 text-center text-xs font-bold text-brand-deep dark:text-brand-cream tabular-nums">{item.quantity}</span>
+                                                    <span className="w-5 text-center text-[13px] font-semibold text-brand-deep dark:text-brand-cream tabular-nums">{item.quantity}</span>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={() => updateQuantity(item.id, 1)}
-                                                        className="h-7 w-7 flex items-center justify-center text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-brand-gold/10 rounded-md transition-all"
+                                                        className="h-6 w-6 flex items-center justify-center text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-deep hover:bg-black/5 rounded-[6px] transition-all"
                                                     >
                                                         <Plus className="h-3 w-3" />
                                                     </Button>
                                                 </div>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => updateQuantity(item.id, -item.quantity)}
-                                                    className="h-8 w-8 flex items-center justify-center text-rose-500/30 dark:text-rose-300/80 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <p className="text-[12px] text-brand-accent/40 dark:text-brand-cream/30 font-medium tracking-wide">
+                                                    {item.quantity} × <CurrencyText value={formatCurrency(item.price, { currency: activeBusiness?.currency || 'NGN' }).replace('NGN', '₦')} />
+                                                </p>
                                             </div>
                                         </div>
-                                    </GlassCard>
-                                </motion.div>
-                            ))
+                                    </motion.div>
+                                ))}
+                            </div>
                         )}
                     </AnimatePresence>
                 </div>
 
                 {/* Billing Summary & Actions */}
-                <div className="p-4 lg:p-5 bg-brand-gold/5 dark:bg-brand-gold/5 border-t border-brand-accent/10 dark:border-white/5 space-y-4 shrink-0">
+                <div className="p-4 bg-brand-deep/5 dark:bg-brand-gold/5 border-t border-brand-accent/10 dark:border-white/5 shrink-0 flex flex-col gap-4">
                     {/* Adaptive Payment Selection */}
-                    <div className="space-y-2.5">
+                    <div className="flex flex-col gap-2">
                         <header className="flex justify-between items-center">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">Settlement Method</p>
-                            <div className="h-px flex-1 mx-4 bg-brand-accent/10 dark:bg-brand-gold/10" />
+                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/50 dark:text-brand-cream/50">Settlement Method</p>
                         </header>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="flex bg-brand-deep/5 dark:bg-white/5 p-1 rounded-xl">
                             {[
-                                { id: 'Cash', icon: Banknote },
-                                { id: 'Transfer', icon: ArrowBigUpDash },
-                                { id: 'POS', icon: CreditCard }
+                                { id: 'Cash' },
+                                { id: 'Transfer' },
+                                { id: 'POS' }
                             ].map((method) => (
-                                <Button
+                                <button
                                     key={method.id}
-                                    variant={paymentMethod === method.id ? 'default' : 'outline'}
                                     onClick={() => setPaymentMethod(method.id as any)}
                                     className={cn(
-                                        "flex flex-col items-center gap-1 py-2 px-2 rounded-2xl border transition-all duration-500 h-auto",
+                                        "flex-1 py-2 rounded-lg text-xs font-semibold transition-all duration-200 outline-none",
                                         paymentMethod === method.id
-                                            ? "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-xl shadow-brand-deep/20 scale-[1.02]"
-                                            : "bg-white/40 dark:bg-white/5 border-brand-accent/10 dark:border-white/5 text-brand-accent/40 dark:text-brand-cream/40 hover:border-brand-gold/50"
+                                            ? "bg-white dark:bg-brand-deep shadow-xs text-brand-deep dark:text-brand-cream"
+                                            : "text-brand-accent/50 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream"
                                     )}
                                 >
-                                    <method.icon className={cn("h-5 w-5 transition-transform duration-500", paymentMethod === method.id && "scale-110")} />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">{method.id}</span>
-                                </Button>
+                                    {method.id}
+                                </button>
                             ))}
                         </div>
                     </div>
 
                     {/* Breakdown */}
-                    <div className="space-y-4 py-6 border-y border-brand-accent/10 dark:border-white/10">
-                        <div className="flex justify-between items-center text-sm">
-                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Order Subtotal</span>
-                            <div className="flex items-center gap-3">
-                                <span className="text-brand-deep dark:text-brand-cream font-bold tabular-nums">
+                    <div className="flex flex-col gap-2 border-t border-brand-accent/10 dark:border-white/10 pt-4">
+                        <div className="flex justify-between items-center text-[13px]">
+                            <span className="text-brand-accent/60 dark:text-brand-cream/60 font-medium">Order Subtotal</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-brand-deep dark:text-brand-cream font-semibold tabular-nums">
                                     <CurrencyText value={formatCurrency(subtotal, { currency: activeBusiness?.currency || 'NGN' })} />
                                 </span>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setShowExtras(!showExtras)}
-                                    className={cn(
-                                        "h-7 px-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
-                                        showExtras
-                                            ? "bg-brand-gold/10 text-brand-gold border border-brand-gold/20"
-                                            : "text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-gold hover:bg-brand-gold/5"
-                                    )}
+                                    className="h-6 px-1.5 -mr-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-brand-accent/40 dark:text-brand-cream/40 hover:bg-brand-deep/5"
                                 >
-                                    {showExtras ? "Hide Options" : "Add Options/Discount"}
-                                    <ChevronDown className={cn("ml-1 h-3 w-3 transition-transform duration-300", showExtras && "rotate-180")} />
+                                    <ChevronDown className={cn("h-3 w-3 transition-transform duration-300", showExtras && "rotate-180")} />
                                 </Button>
                             </div>
                         </div>
@@ -1271,32 +1196,30 @@ export function SaleModeView() {
                                     animate={{ height: "auto", opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
                                 >
-                                    <div className="space-y-4">
+                                    <div className="flex flex-col gap-3 pb-2">
                                         {/* Discount Input & Promotions */}
-                                        <div className="flex items-center justify-between text-sm gap-3 pt-2">
-                                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Discount</span>
+                                        <div className="flex items-center justify-between text-[13px] gap-3 pt-1">
+                                            <span className="text-brand-accent/60 dark:text-brand-cream/60 font-medium">Discount</span>
 
                                             <div className="flex items-center justify-end gap-2 flex-1">
                                                 {selectedPromotion !== 'none' ? (
-                                                    <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-xl">
-                                                        <span className="text-xs font-bold truncate max-w-[120px]">
+                                                    <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded-md">
+                                                        <span className="text-[11px] font-bold truncate max-w-[100px]">
                                                             {promotions?.find((p: any) => p.id === selectedPromotion)?.name || 'Promo'}
                                                         </span>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
+                                                        <button
                                                             onClick={() => {
                                                                 setSelectedPromotion('none')
                                                                 setDiscount(0)
                                                             }}
-                                                            className="h-6 w-6 rounded-full hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+                                                            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                                                             aria-label="Remove promotion"
                                                         >
                                                             <X className="w-3 h-3" />
-                                                        </Button>
+                                                        </button>
                                                     </div>
                                                 ) : (
-                                                    <div className="w-36">
+                                                    <div className="w-28">
                                                         <MoneyInput
                                                             size="sm"
                                                             value={discount || ''}
@@ -1305,7 +1228,7 @@ export function SaleModeView() {
                                                                 if (val > 0) setShowExtras(true)
                                                             }}
                                                             currencySymbol={currency}
-                                                            className="border-brand-accent/10 dark:border-white/10 text-emerald-600 dark:text-brand-gold transition-colors"
+                                                            className="h-8 border-brand-accent/10 dark:border-white/10 text-emerald-600 dark:text-brand-gold text-xs"
                                                         />
                                                     </div>
                                                 )}
@@ -1332,9 +1255,9 @@ export function SaleModeView() {
                                                             }
                                                         }}
                                                     >
-                                                        <SelectTrigger className="w-10 h-10 shrink-0 px-0 justify-center border-brand-accent/10 dark:border-white/10 dark:bg-white/5 rounded-xl hover:bg-white/50 dark:hover:bg-white/10 transition-colors [&>svg:last-child]:hidden [&>span]:hidden" aria-label="Apply promotion">
+                                                        <SelectTrigger className="w-8 h-8 px-0 justify-center border-brand-accent/10 dark:border-white/10 dark:bg-white/5 rounded-md hover:bg-white/50 dark:hover:bg-white/10 transition-colors [&>svg:last-child]:hidden [&>span]:hidden" aria-label="Apply promotion">
                                                             <SelectValue placeholder="Promo" />
-                                                            <Tag className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60" />
+                                                            <Tag className="w-3.5 h-3.5 text-brand-accent/60 dark:text-brand-cream/60" />
                                                         </SelectTrigger>
                                                         <SelectContent align="end">
                                                             <SelectItem value="none">Custom amount</SelectItem>
@@ -1349,30 +1272,30 @@ export function SaleModeView() {
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col text-sm gap-2">
-                                            <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium">Order Note</span>
+                                        <div className="flex flex-col text-[13px] gap-1.5">
+                                            <span className="text-brand-accent/60 dark:text-brand-cream/60 font-medium">Order Note</span>
                                             <Textarea
                                                 value={note}
                                                 onChange={(e) => setNote(e.target.value)}
                                                 placeholder="Special instructions or remarks..."
                                                 maxLength={120}
                                                 rows={1}
-                                                className="w-full bg-white/40 dark:bg-white/5 rounded-xl border border-brand-accent/10 dark:border-white/10 px-3 py-2 text-sm text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 outline-none focus:border-brand-gold/40 transition-colors resize-none min-h-[44px]"
+                                                className="w-full bg-white dark:bg-white/5 rounded-lg border border-brand-accent/10 dark:border-white/10 px-3 py-1.5 text-xs text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/20 outline-none focus:border-brand-deep/20 transition-colors resize-none min-h-[36px]"
                                             />
                                         </div>
 
                                         {/* Amount Received (Cash only) */}
                                         {paymentMethod === 'Cash' && (
-                                            <div className="flex items-center justify-between text-sm gap-3 pt-2">
-                                                <span className="text-brand-accent/60 dark:text-brand-cream/40 font-medium shrink-0">Amount Received</span>
-                                                <div className="flex-1 max-w-[180px]">
+                                            <div className="flex items-center justify-between text-[13px] gap-3 pt-1">
+                                                <span className="text-brand-accent/60 dark:text-brand-cream/60 font-medium shrink-0">Amount Received</span>
+                                                <div className="flex-1 max-w-[140px]">
                                                     <MoneyInput
                                                         size="sm"
                                                         value={amountPaid === '' ? '' : amountPaid}
                                                         onChange={(val) => setAmountPaid(val === 0 ? '' : val)}
                                                         currencySymbol={currency}
                                                         placeholder={String(totalAfterDiscount)}
-                                                        className="h-11 border-brand-accent/10 dark:border-white/10 text-brand-deep dark:text-brand-cream text-base"
+                                                        className="h-8 border-brand-accent/10 dark:border-white/10 text-brand-deep dark:text-brand-cream text-[13px]"
                                                     />
                                                 </div>
                                             </div>
@@ -1382,20 +1305,18 @@ export function SaleModeView() {
                             )}
                         </AnimatePresence>
 
-                        <div className="flex justify-between items-center pt-4 border-t border-brand-accent/5 dark:border-white/5">
-                            <span className="font-serif text-lg text-brand-deep dark:text-brand-gold">Total Payable</span>
-                            <div className="text-right">
-                                <span className="font-sans font-black text-2xl lg:text-3xl text-brand-deep dark:text-brand-gold tracking-tighter">
-                                    <CurrencyText value={formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' })} />
-                                </span>
-                            </div>
+                        <div className="flex justify-between items-end pt-2">
+                            <span className="text-[13px] font-semibold text-brand-deep dark:text-brand-cream/80">Total Payable</span>
+                            <span className="font-semibold text-2xl text-brand-deep dark:text-brand-cream tracking-tight leading-none tabular-nums">
+                                <CurrencyText value={formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' })} />
+                            </span>
                         </div>
 
                         {/* Change Due (Cash only) */}
                         {paymentMethod === 'Cash' && changeDue > 0 && (
-                            <div className="flex justify-between items-center text-sm bg-emerald-500/10 dark:bg-emerald-500/5 rounded-2xl px-4 py-3 border border-emerald-500/20">
-                                <span className="font-bold text-emerald-600 dark:text-emerald-400">Change Due</span>
-                                <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums text-lg">
+                            <div className="flex justify-between items-center text-xs bg-emerald-500/10 dark:bg-emerald-500/5 rounded-lg px-3 py-2 border border-emerald-500/20 mt-1">
+                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">Change Due</span>
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums text-sm">
                                     <CurrencyText value={formatCurrency(changeDue, { currency: activeBusiness?.currency || 'NGN' })} />
                                 </span>
                             </div>
@@ -1403,41 +1324,37 @@ export function SaleModeView() {
                     </div>
 
                     {/* Pro Actions */}
-                    <div className="flex flex-col gap-3">
-                        <div className="grid grid-cols-2 gap-3">
-                            <Button
-                                variant="outline"
-                                className="h-12 px-3 rounded-[14px] border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
-                                onClick={handlePrintReceipt}
-                                disabled={cart.length === 0}
-                            >
-                                <ReceiptText className="h-4 w-4 mr-2" />
-                                Print
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="h-12 px-3 rounded-[14px] border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-gold/5 hover:text-brand-gold font-bold transition-all duration-500"
-                                onClick={handleQueueSale}
-                                disabled={cart.length === 0}
-                            >
-                                <Layers className="h-4 w-4 mr-2" />
-                                Queue
-                            </Button>
-                        </div>
+                    <div className="flex items-center gap-2 mt-2">
                         <Button
-                            className="h-14 px-3 rounded-[20px] bg-brand-deep dark:bg-brand-accent text-brand-gold font-serif font-black text-xl hover:scale-[1.01] shadow-xl active:scale-95 transition-all duration-500 border border-brand-gold/30 group relative overflow-hidden"
+                            variant="outline"
+                            className="h-12 w-12 shrink-0 rounded-[14px] border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-deep/5 hover:text-brand-deep transition-all duration-300"
+                            onClick={handlePrintReceipt}
+                            disabled={cart.length === 0}
+                            title="Print Receipt"
+                        >
+                            <ReceiptText className="h-5 w-5" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="h-12 w-12 shrink-0 rounded-[14px] border-brand-accent/10 dark:border-white/10 text-brand-accent/60 dark:text-brand-cream/80 hover:bg-brand-deep/5 hover:text-brand-deep transition-all duration-300"
+                            onClick={handleQueueSale}
+                            disabled={cart.length === 0}
+                            title="Queue Sale"
+                        >
+                            <Layers className="h-5 w-5" />
+                        </Button>
+                        <Button
+                            className="h-12 flex-1 rounded-[14px] bg-brand-deep dark:bg-white text-white dark:text-brand-deep font-semibold text-base hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 border-none group relative overflow-hidden disabled:opacity-50"
                             onClick={handleCheckout}
                             disabled={isRecording || cart.length === 0}
                         >
-                            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                             {isRecording ? (
                                 <motion.div key="loader" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
-                                    <ArrowRight className="h-7 w-7" />
+                                    <ArrowRight className="h-5 w-5" />
                                 </motion.div>
                             ) : (
                                 <motion.span key="text" className="inline-flex items-center">
-                                    Finalize Sale
-                                    <CheckCircle2 className="h-6 w-6 ml-3" />
+                                    Charge <CurrencyText value={formatCurrency(totalAfterDiscount, { currency: activeBusiness?.currency || 'NGN' }).replace('NGN', '₦')} className="ml-1" />
                                 </motion.span>
                             )}
                         </Button>
