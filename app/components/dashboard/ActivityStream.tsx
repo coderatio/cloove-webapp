@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { ArrowDownLeft, ArrowUpRight, ShoppingBag, CreditCard, UserPlus, ChevronRight, PackageSearch, Sparkles, ArrowRight, Wallet } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "../ui/glass-card"
@@ -53,57 +52,15 @@ export const ActivityIcon = ({ type }: { type: ActivityItem['type'] }) => {
 
 const ActivityEmptyState = () => {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="flex flex-col items-center justify-center py-12 px-8 text-center"
-        >
+        <div className="flex flex-col items-center justify-center py-12 px-8 text-center">
             <div className="relative mb-6">
-                {/* Animated Ambient Glow */}
-                <motion.div
-                    animate={{
-                        scale: [1, 1.15, 1],
-                        opacity: [0.05, 0.12, 0.05],
-                    }}
-                    transition={{
-                        duration: 6,
-                        repeat: Infinity,
-                        ease: "linear",
-                    }}
-                    className="absolute -inset-8 bg-brand-gold blur-3xl rounded-full"
-                />
-
-                {/* Floating "Pulse" Container */}
-                <motion.div
-                    animate={{ y: [0, -12, 0] }}
-                    transition={{
-                        duration: 4,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                    }}
-                    className="relative h-20 w-20 rounded-[28px] bg-white/40 dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex items-center justify-center group"
-                >
+                <div className="relative h-20 w-20 rounded-[28px] bg-white/40 dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex items-center justify-center group">
                     <div className="absolute inset-0 rounded-[28px] bg-linear-to-tr from-brand-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     <Sparkles className="w-8 h-8 text-brand-gold transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12" />
-
-                    {/* Orbiting micro-dots */}
-                    <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                        className="absolute -inset-2 pointer-events-none"
-                    >
-                        <div className="absolute top-0 left-1/2 w-1.5 h-1.5 rounded-full bg-brand-gold/40" />
-                    </motion.div>
-                </motion.div>
+                </div>
             </div>
 
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 1 }}
-                className="space-y-3"
-            >
+            <div className="space-y-3">
                 <h4 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">
                     The Pulse of Potential
                 </h4>
@@ -111,19 +68,14 @@ const ActivityEmptyState = () => {
                     Your store's narrative is just beginning. Once you record sales or adjust stock, your activity stream will bloom.
                 </p>
 
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.8 }}
-                    className="pt-4"
-                >
+                <div className="pt-4">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
                         <div className="w-1 h-1 rounded-full bg-brand-gold animate-pulse" />
                         <span className="text-[10px] uppercase tracking-widest font-bold text-brand-accent/40 dark:text-brand-cream/40">Awakening System</span>
                     </div>
-                </motion.div>
-            </motion.div>
-        </motion.div>
+                </div>
+            </div>
+        </div>
     )
 }
 
@@ -144,13 +96,7 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
                 {activities.length > 0 ? (
                     activities.map((item, index) => {
                         const Content = (
-                            <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.4 + (index * 0.05) }}
-                                whileHover={{ x: 4 }}
-                                className="flex items-center gap-4 p-3 hover:bg-white/60 dark:hover:bg-white/5 rounded-2xl transition-all group cursor-pointer"
-                            >
+                            <div className="flex items-center gap-4 p-3 hover:bg-white/60 dark:hover:bg-white/5 hover:translate-x-1 rounded-2xl transition-all group cursor-pointer">
                                 <ActivityIcon type={item.type} />
 
                                 <div className="flex-1 min-w-0">
@@ -178,7 +124,7 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
                                     )}
                                     <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors shrink-0" />
                                 </div>
-                            </motion.div>
+                            </div>
                         )
 
                         if (item.type === 'sale' && item.orderId && onOrderClick) {

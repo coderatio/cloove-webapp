@@ -69,8 +69,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
         if (business) {
             storage.setActiveBusinessId(business.id)
-            // Invalidate all queries to force refetch with new business header
-            queryClient.invalidateQueries()
+            // Mark all queries stale without immediately firing them —
+            // each section refetches on demand with the new business header
+            queryClient.invalidateQueries({ refetchType: 'none' })
 
             if (!options?.quiet) {
                 const isSelectionPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/select-business')

@@ -83,8 +83,9 @@ export function DashboardView() {
             <div className="max-w-5xl mx-auto space-y-8 pb-20">
                 <header className="pt-1">
                     <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
                         className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
                     >
                         <div className="min-w-0">

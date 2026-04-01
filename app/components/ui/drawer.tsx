@@ -7,7 +7,7 @@ import { cn } from "@/app/lib/utils"
 import { X } from "lucide-react"
 
 const Drawer = ({
-    shouldScaleBackground = true,
+    shouldScaleBackground = false,
     ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
     <DrawerPrimitive.Root
@@ -29,7 +29,7 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DrawerPrimitive.Overlay
         ref={ref}
-        className={cn("fixed inset-0 z-50 bg-black/40 backdrop-blur-sm", className)}
+        className={cn("fixed inset-0 z-50 bg-black/40", className)}
         {...props}
     />
 ))

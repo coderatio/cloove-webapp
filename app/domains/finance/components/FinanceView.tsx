@@ -64,6 +64,26 @@ import { Badge } from '@/app/components/ui/badge'
 
 const WALLET_BALANCE_NUMERIC = 0
 
+const STATUS_FILTER_OPTIONS = [
+    { label: "Cleared", value: "Cleared" },
+    { label: "Pending", value: "Pending" },
+    { label: "Processing", value: "Processing" },
+    { label: "Failed", value: "Failed" },
+] as const
+
+const TYPE_FILTER_OPTIONS = [
+    { label: "Revenue (Credit)", value: "Credit" },
+    { label: "Expense (Debit)", value: "Debit" },
+] as const
+
+const CATEGORY_FILTER_OPTIONS = [
+    { label: "Sale", value: "Sale" },
+    { label: "Refund", value: "Refund" },
+    { label: "Expense", value: "Expense" },
+    { label: "Wallet", value: "Wallet" },
+    { label: "Other", value: "Other" },
+] as const
+
 function getTransactionCategory(method: string | undefined): { label: string; variant: 'success' | 'warning' | 'gold' | 'outline' } {
     if (!method) return { label: 'Other', variant: 'outline' }
     const m = method.toLowerCase()
@@ -94,29 +114,11 @@ export function FinanceView() {
     const [selectedStoreId, setSelectedStoreId] = React.useState<string>('all-stores')
     const [currentPage, setCurrentPage] = React.useState(1)
 
-    const statusFilterOptions = [
-        { label: "Cleared", value: "Cleared" },
-        { label: "Pending", value: "Pending" },
-        { label: "Processing", value: "Processing" },
-        { label: "Failed", value: "Failed" },
-    ] as const
-    const typeFilterOptions = [
-        { label: "Revenue (Credit)", value: "Credit" },
-        { label: "Expense (Debit)", value: "Debit" },
-    ] as const
-    const categoryFilterOptions = [
-        { label: "Sale", value: "Sale" },
-        { label: "Refund", value: "Refund" },
-        { label: "Expense", value: "Expense" },
-        { label: "Wallet", value: "Wallet" },
-        { label: "Other", value: "Other" },
-    ] as const
-
     // Parse selectedFilters array into structured server-side filter params
     const serverFilters = React.useMemo<TransactionFilterParams>(() => {
-        const status = selectedFilters.filter(f => statusFilterOptions.some(o => o.value === f))
-        const type = selectedFilters.filter(f => typeFilterOptions.some(o => o.value === f))
-        const category = selectedFilters.filter(f => categoryFilterOptions.some(o => o.value === f))
+        const status = selectedFilters.filter(f => STATUS_FILTER_OPTIONS.some(o => o.value === f))
+        const type = selectedFilters.filter(f => TYPE_FILTER_OPTIONS.some(o => o.value === f))
+        const category = selectedFilters.filter(f => CATEGORY_FILTER_OPTIONS.some(o => o.value === f))
         return {
             ...(deferredSearch ? { search: deferredSearch } : {}),
             ...(status.length > 0 ? { status } : {}),
@@ -149,12 +151,12 @@ export function FinanceView() {
 
     const showBalance = settings?.business?.configs?.show_wallet_balance ?? true
 
-    const toggleBalance = () => {
+    const toggleBalance = React.useCallback(() => {
         updateSettings.mutate({
             show_wallet_balance: !showBalance,
             quiet: true
         })
-    }
+    }, [updateSettings, showBalance])
 
     const transactions = useApi ? apiTransactions.map(t => ({ ...t, amountNumeric: t.amount })) : mockTransactions
     const isFetching = useApi ? (summaryFetching || transactionsFetching) : false
@@ -162,9 +164,9 @@ export function FinanceView() {
 
     const filterGroups: (FilterGroup & { key: string })[] = [
         { key: 'storeId', title: "Store Location", options: stores.map(s => ({ label: s.name, value: s.id })) },
-        { key: 'status', title: "Transaction Status", options: [...statusFilterOptions] },
-        { key: 'type', title: "Type", options: [...typeFilterOptions] },
-        { key: 'category', title: "Category", options: [...categoryFilterOptions] },
+        { key: 'status', title: "Transaction Status", options: [...STATUS_FILTER_OPTIONS] },
+        { key: 'type', title: "Type", options: [...TYPE_FILTER_OPTIONS] },
+        { key: 'category', title: "Category", options: [...CATEGORY_FILTER_OPTIONS] },
     ]
 
     const walletBalanceFormatted = useApi && apiSummary
@@ -181,10 +183,10 @@ export function FinanceView() {
     const displayTransactions = React.useMemo(() => {
         if (useApi) return transactions
         const query = search.toLowerCase()
-        const activeStatuses = new Set(selectedFilters.filter(f => statusFilterOptions.some(o => o.value === f)))
-        const activeTypes = new Set(selectedFilters.filter(f => typeFilterOptions.some(o => o.value === f)))
+        const activeStatuses = new Set(selectedFilters.filter(f => STATUS_FILTER_OPTIONS.some(o => o.value === f)))
+        const activeTypes = new Set(selectedFilters.filter(f => TYPE_FILTER_OPTIONS.some(o => o.value === f)))
         const activeStores = new Set(selectedFilters.filter(f => stores.some(s => s.id === f)))
-        const activeCategories = new Set(selectedFilters.filter(f => categoryFilterOptions.some(o => o.value === f)))
+        const activeCategories = new Set(selectedFilters.filter(f => CATEGORY_FILTER_OPTIONS.some(o => o.value === f)))
 
         const storeScoped = selectedStoreId === 'all-stores'
             ? transactions
@@ -202,33 +204,31 @@ export function FinanceView() {
         })
     }, [useApi, transactions, search, selectedFilters, selectedStoreId, stores])
 
-    const handleRequery = async () => {
+    const handleRequery = React.useCallback(async () => {
         if (!viewingTx) return
-
         try {
             const response = await requeryTx(viewingTx.id)
             if (response.data) {
                 setViewingTx(response.data)
             }
         } catch (error) {
-            // Error handling is managed by the hook (toast.error)
             console.error("Requery failed:", error)
         }
-    }
+    }, [viewingTx, requeryTx])
 
-    const handleClearManual = () => {
+    const handleClearManual = React.useCallback(() => {
         if (!viewingTx || isApiRow(viewingTx)) return
         setMockTransactions(prev => prev.map(t =>
             t.id === viewingTx.id ? { ...t, status: 'Cleared' as const } : t
         ))
         setViewingTx(null)
-    }
+    }, [viewingTx])
 
     const showMockActions = viewingTx && !isApiRow(viewingTx)
 
     const selectedStoreName = selectedStoreId === 'all-stores' ? 'your business' : stores.find(s => s.id === selectedStoreId)?.name || 'your business'
 
-    const columns: any[] = [
+    const columns = React.useMemo<any[]>(() => [
         {
             key: 'type',
             header: '',
@@ -340,7 +340,7 @@ export function FinanceView() {
                 </span>
             )
         },
-    ]
+    ], [currencyCode])
 
     const intelligenceWhisper = pendingReconciliation > 0
         ? `You have **${pendingReconciliation} payments** pending reconciliation. Use the **Re-query** tool to automatically verify bank transfers.`

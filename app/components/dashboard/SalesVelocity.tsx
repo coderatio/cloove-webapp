@@ -81,6 +81,7 @@ export function SalesVelocity({ data, total, currencyCode = "NGN", className }: 
                             strokeWidth={2}
                             fillOpacity={1}
                             fill="url(#colorSales)"
+                            isAnimationActive={false}
                         />
                     </AreaChart>
                 </ResponsiveContainer>

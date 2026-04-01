@@ -1,6 +1,5 @@
 "use client"
 
-import { motion } from "framer-motion"
 import { AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
@@ -23,12 +22,7 @@ export function ActionRow({ items, className }: ActionRowProps) {
     return (
         <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-4", className)}>
             {items.map((item, index) => (
-                <motion.div
-                    key={`${item.label}-${index}`}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 + (index * 0.1) }}
-                >
+                <div key={`${item.label}-${index}`}>
                     <Link href={item.href} className="block h-full">
                         <GlassCard className={cn(
                             "rounded-[32px] p-4 md:p-5 h-full transition-all group",
@@ -55,7 +49,7 @@ export function ActionRow({ items, className }: ActionRowProps) {
                             </p>
                         </GlassCard>
                     </Link>
-                </motion.div>
+                </div>
             ))}
         </div>
     )

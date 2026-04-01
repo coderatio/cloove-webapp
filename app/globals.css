@@ -1090,3 +1090,15 @@ h6 {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+
+/* ─── Vaul drawer speed override ─────────────────────────────────────────────
+   vaul hard-codes 500ms; override to 220ms for snappier open/close.           */
+[data-vaul-drawer] {
+  animation-duration: 0.22s !important;
+  transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+[data-vaul-overlay] {
+  animation-duration: 0.22s !important;
+  transition: opacity 0.22s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}

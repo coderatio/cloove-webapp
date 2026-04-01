@@ -105,6 +105,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
             queryFn: () =>
                 apiClient.get<ApiResponse<any[]>>(`/stores/${sid}/activities`, { limit: '10' }, { fullResponse: true }),
             enabled: !!activeBusiness?.id && activityStoreIds.length > 0 && stores.some(s => s.id === sid),
+            staleTime: 30 * 1000,
         })),
     })
 

@@ -100,6 +100,7 @@ export function useFinanceSummary(storeId?: string, date?: string, enabled = tru
         queryKey: ['finance', 'summary', businessId, storeId, date],
         queryFn: () => apiClient.get<ApiResponse<FinanceSummary>>('/finance/summary', params, { fullResponse: true }),
         enabled: !!businessId && enabled,
+        staleTime: 60 * 1000, // 1 min — summary refreshes on mutation invalidation
     })
 
     return {
@@ -120,6 +121,7 @@ export function useFinancePeriodSummary(from: string, to: string, storeId?: stri
         queryKey: ['finance', 'summary', 'period', businessId, from, to, storeId],
         queryFn: () => apiClient.get<ApiResponse<FinanceSummary>>('/finance/summary', params, { fullResponse: true }),
         enabled: !!businessId && !!from && !!to && enabled,
+        staleTime: 60 * 1000,
     })
 
     return {
@@ -161,6 +163,7 @@ export function useFinanceTransactions(
         queryKey: ['finance', 'transactions', businessId, storeId, page, limit, filters?.search, filters?.status, filters?.type, filters?.category],
         queryFn: () => apiClient.get<ApiResponse<FinanceTransactionRow[]>>('/finance/transactions', params, { fullResponse: true }),
         enabled: !!businessId && enabled,
+        staleTime: 30 * 1000, // 30s — users expect to see recent transactions quickly
     })
 
     const meta = response?.meta
@@ -184,6 +187,7 @@ export function useTransaction(id: string | null) {
         queryKey: ['finance', 'transaction', businessId, id],
         queryFn: () => apiClient.get<ApiResponse<FinanceTransactionRow>>(`/finance/transactions/${id}`, {}, { fullResponse: true }),
         enabled: !!businessId && !!id,
+        staleTime: 30 * 1000,
     })
 
     return {
@@ -201,6 +205,7 @@ export function useWalletBalance(enabled = true) {
         queryKey: ['finance', 'wallet', businessId],
         queryFn: () => apiClient.get<ApiResponse<WalletBalanceData>>('/finance/wallet', {}, { fullResponse: true }),
         enabled: !!businessId && enabled,
+        staleTime: 30 * 1000,
     })
 
     return {
@@ -219,6 +224,7 @@ export function usePayoutAccounts() {
         queryKey: ['finance', 'payout-accounts', businessId],
         queryFn: () => apiClient.get<ApiResponse<PayoutAccountOption[]>>('/finance/payout-accounts', {}, { fullResponse: true }),
         enabled: !!businessId,
+        staleTime: 2 * 60 * 1000, // 2 min — payout accounts rarely change
     })
 
     return {
