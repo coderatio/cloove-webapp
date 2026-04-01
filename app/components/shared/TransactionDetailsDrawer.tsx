@@ -492,7 +492,60 @@ export function TransactionDetailsDrawer({
                                         </div>
                                     )}
 
-                                    {!tx?.sale && !tx?.withdrawal && tx?.metadata && (
+                                    {!tx?.sale && !tx?.withdrawal && tx?.metadata && tx?.method === 'Fee' && (
+                                        <div className="rounded-[2rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 p-1.5">
+                                            <div className="p-6 rounded-[1.5rem] bg-white dark:bg-brand-deep/40">
+                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-4">
+                                                Fee Details
+                                            </p>
+                                            {(() => {
+                                                const meta = tx.metadata as any
+                                                const feeTypeLabels: Record<string, string> = {
+                                                    virtual_account_deposit_fee: 'Virtual Account Deposit Fee',
+                                                    wallet_virtual_account_deposit_fee: 'Wallet Deposit Fee',
+                                                    withdrawal_fee: 'Withdrawal Fee',
+                                                }
+                                                const feeTypeLabel = meta?.feeType
+                                                    ? (feeTypeLabels[meta.feeType] ?? meta.feeType)
+                                                    : undefined
+
+                                                const rows = [
+                                                    feeTypeLabel ? { label: "Fee Type", value: feeTypeLabel } : null,
+                                                    meta?.payerName ? { label: "Depositor", value: meta.payerName } : null,
+                                                    meta?.payerBank ? { label: "Bank", value: meta.payerBank } : null,
+                                                    meta?.payerAccountNumber ? { label: "Account", value: meta.payerAccountNumber } : null,
+                                                    meta?.saleShortCode ? { label: "Sale", value: `#${meta.saleShortCode}` } : null,
+                                                    meta?.parentReference ? { label: "Original Ref", value: meta.parentReference } : null,
+                                                ].filter(Boolean) as { label: string; value: string }[]
+
+                                                if (rows.length === 0) {
+                                                    return (
+                                                        <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                                                            No additional fee details available.
+                                                        </p>
+                                                    )
+                                                }
+
+                                                return (
+                                                    <div className="space-y-3">
+                                                        {rows.map((row) => (
+                                                            <div key={row.label} className="flex items-center justify-between gap-4">
+                                                                <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
+                                                                    {row.label}
+                                                                </p>
+                                                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream text-right break-all">
+                                                                    {row.value}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )
+                                            })()}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {!tx?.sale && !tx?.withdrawal && tx?.metadata && tx?.method !== 'Fee' && (
                                         <div className="rounded-[2rem] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 p-1.5">
                                             <div className="p-6 rounded-[1.5rem] bg-white dark:bg-brand-deep/40">
                                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-4">
@@ -504,19 +557,17 @@ export function TransactionDetailsDrawer({
                                                     ? meta.paymentSourceInformation[0]
                                                     : meta?.paymentSourceInformation
                                                 const depositorName =
+                                                    meta?.payerName ||
                                                     sourceInfo?.accountName ||
                                                     sourceInfo?.sourceAccountName ||
-                                                    meta?.payerName ||
-                                                    meta?.senderName ||
-                                                    meta?.customerName ||
-                                                    meta?.customer?.name
+                                                    meta?.senderName
                                                 const bankName =
+                                                    meta?.payerBank ||
                                                     sourceInfo?.bankName ||
-                                                    sourceInfo?.sourceBankName ||
-                                                    meta?.bankName
+                                                    sourceInfo?.sourceBankName
                                                 const accountNumber =
-                                                    sourceInfo?.accountNumber ||
-                                                    meta?.accountNumber
+                                                    meta?.payerAccountNumber ||
+                                                    sourceInfo?.accountNumber
                                                 const paymentRef =
                                                     meta?.paymentReference ||
                                                     meta?.transactionReference ||
