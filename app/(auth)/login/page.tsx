@@ -69,7 +69,7 @@ export default function LoginPage() {
                     <h1 className="font-serif text-3xl md:text-4xl text-brand-cream font-medium tracking-tight text-center">
                         Welcome Back
                     </h1>
-                    <p className="text-brand-cream/60 text-sm mt-3 tracking-wide uppercase font-bold text-center">
+                    <p className="text-brand-cream/60 text-md mt-1 tracking-wide font-medium text-center">
                         Your calm AI-powered business partner
                     </p>
                 </div>

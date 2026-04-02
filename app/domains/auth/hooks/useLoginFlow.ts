@@ -133,12 +133,13 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
 
     const handleIdentifierSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!identifier) return
+        const trimmedIdentifier = identifier.trim()
+        if (!trimmedIdentifier) return
 
         setIsLoading(true)
         try {
             const response = await apiClient.post<IdentifyResponse>('/security/identifier', {
-                identifier,
+                identifier: trimmedIdentifier,
                 country: selectedCountry?.id
             })
 
@@ -170,7 +171,7 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
         setIsLoading(true)
         try {
             const response = await apiClient.post<LoginResponse>('/security/login', {
-                identifier,
+                identifier: identifier.trim(),
                 [isPinLogin ? 'pin' : 'password']: isPinLogin ? pin : password,
                 country: selectedCountry?.id
             })
@@ -189,7 +190,7 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
         setIsLoading(true)
         try {
             const response = await apiClient.post<OtpVerifyResponse>('/security/verify-setup-otp', {
-                identifier,
+                identifier: identifier.trim(),
                 otp,
                 country: selectedCountry?.id
             })
@@ -216,7 +217,7 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
         setIsLoading(true)
         try {
             const response = await apiClient.post<LoginResponse>('/security/setup-password', {
-                identifier,
+                identifier: identifier.trim(),
                 password: newPassword,
                 setupToken,   // ← proves ownership; API must validate this
                 country: selectedCountry?.id

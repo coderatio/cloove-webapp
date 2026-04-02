@@ -2,7 +2,7 @@
 
 import { useRef } from "react"
 import { Mail, Phone, ArrowRight } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { CountrySelector } from "@/app/components/ui/country-selector"
@@ -23,6 +23,10 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
         setTimeout(() => inputRef.current?.focus(), 50)
     }
 
+    // Determine if the country selector should be visible based on the identifier input
+    // We show it if the input is empty or looks like it could be a phone number
+    const showCountry = !state.identifier || /^[+\d\s\-()]*$/.test(state.identifier)
+
     return (
         <motion.div
             key="identifier"
@@ -37,13 +41,26 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                         <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold ml-1">
                             Phone or Email
                         </label>
-                        <div className="flex gap-2">
-                            <CountrySelector
-                                countries={state.countries}
-                                selectedCountry={state.selectedCountry}
-                                onSelect={handleCountrySelect}
-                                disabled={state.isLoading || state.isLoadingCountries}
-                            />
+                        <div className="flex">
+                            <AnimatePresence mode="wait">
+                                {showCountry && (
+                                    <motion.div
+                                        key="country-selector"
+                                        initial={{ width: 0, opacity: 0, marginRight: 0 }}
+                                        animate={{ width: "auto", opacity: 1, marginRight: 8 }}
+                                        exit={{ width: 0, opacity: 0, marginRight: 0 }}
+                                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                                        style={{ overflow: "hidden" }}
+                                    >
+                                        <CountrySelector
+                                            countries={state.countries}
+                                            selectedCountry={state.selectedCountry}
+                                            onSelect={handleCountrySelect}
+                                            disabled={state.isLoading || state.isLoadingCountries}
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             <div className="relative group flex-1">
                                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-cream/60 group-focus-within:text-brand-gold transition-colors">
@@ -56,8 +73,8 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                                     required
                                     autoComplete="username"
                                     placeholder={state.isPhone && state.selectedCountry ? `+${state.selectedCountry.phoneCode} ...` : (state.isEmail ? "email@example.com" : "Phone or Email")}
-                                    value={state.identifier.trim()}
-                                    onChange={(e) => actions.setIdentifier(e.target.value.trim())}
+                                    value={state.identifier}
+                                    onChange={(e) => actions.setIdentifier(e.target.value)}
                                     className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-4 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all text-base"
                                 />
                             </div>
