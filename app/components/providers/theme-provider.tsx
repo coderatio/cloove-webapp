@@ -5,7 +5,7 @@ import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
 
 const LIGHT_THEME_COLOR = "#fdfcf8"
-const DARK_THEME_COLOR = "#062c21"
+const DARK_THEME_COLOR = "#061b15"
 
 /**
  * Routes that should use an opaque (non-immersive) status bar.
@@ -13,14 +13,13 @@ const DARK_THEME_COLOR = "#062c21"
  * the layout is designed for a standard viewport, not edge-to-edge.
  * Keep in sync with the forcedTheme check below.
  */
-const PUBLIC_ROUTE_PATTERN = /^\/(login|register|staff-invite|verify)(\/.*)?$/
+const PUBLIC_ROUTE_PATTERN = /^\/(login|register|staff-invite|verify|onboarding|reset-password)(\/.*)?$/
 
 function ThemeColorSync() {
     const { resolvedTheme } = useTheme()
     const pathname = usePathname()
 
     React.useEffect(() => {
-        const isPublicRoute = PUBLIC_ROUTE_PATTERN.test(pathname ?? "")
 
         const themeColor =
             resolvedTheme === "dark"
@@ -32,23 +31,19 @@ function ThemeColorSync() {
                         : LIGHT_THEME_COLOR
 
         // ── theme-color (Chrome toolbar / Android status bar) ─────────────────
-        let meta = document.querySelector('meta[name="theme-color"][data-theme-color="dynamic"]') as HTMLMetaElement | null
-        if (!meta) {
-            meta = document.createElement("meta")
-            meta.name = "theme-color"
-            meta.setAttribute("data-theme-color", "dynamic")
-            document.head.appendChild(meta)
-        }
-        meta.content = themeColor
+        // First, remove any existing theme-color tags (including those from Next.js)
+        const existingMetas = document.querySelectorAll('meta[name="theme-color"]')
+        existingMetas.forEach(el => el.remove())
 
-        const allThemeMetas = document.querySelectorAll('meta[name="theme-color"]')
-        allThemeMetas.forEach((tag) => {
-            if (tag !== meta) {
-                tag.setAttribute("content", themeColor)
-            }
-        })
+        // Create a single, authoritative theme-color tag
+        const meta = document.createElement("meta")
+        meta.name = "theme-color"
+        meta.setAttribute("data-theme-color", "dynamic")
+        meta.content = themeColor
+        document.head.appendChild(meta)
 
         document.documentElement.style.colorScheme = resolvedTheme === "dark" ? "dark" : "light"
+        document.documentElement.classList.toggle("dark", resolvedTheme === "dark")
 
         // ── iOS PWA status bar style ──────────────────────────────────────────
         // black-translucent → immersive: content extends under the status bar
@@ -64,7 +59,7 @@ function ThemeColorSync() {
             statusBarMeta.name = "apple-mobile-web-app-status-bar-style"
             document.head.appendChild(statusBarMeta)
         }
-        statusBarMeta.content = isPublicRoute ? "black" : "black-translucent"
+        statusBarMeta.content = "black-translucent"
     }, [resolvedTheme, pathname])
 
     return null

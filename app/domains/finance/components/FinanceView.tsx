@@ -708,13 +708,24 @@ export function FinanceView() {
                                     const num = (tx as any).amountNumeric ?? (typeof (tx as any).amount === 'number' ? (tx as any).amount : parseCurrencyToNumber((tx as any).amount))
                                     const isCredit = tx.type === 'Credit'
                                     const Icon = isCredit ? ArrowDownRight : ArrowUpRight
+                                    const { label } = getTransactionCategory((tx as any).method)
+                                    const entity = resolveEntityPurpose(tx)
+                                    const fullRef = String((tx as any).reference ?? tx.id ?? '')
+
                                     return (
                                         <ListCard
                                             key={tx.id}
-                                            title={tx.customer}
+                                            title={entity.primary}
                                             icon={Icon}
                                             iconClassName={isCredit ? "text-brand-green dark:text-brand-gold" : "text-rose-500 dark:text-rose-400"}
-                                            subtitle={`${(tx as any).reference ?? tx.id} • ${tx.method}`}
+                                            subtitle={entity.secondary || undefined}
+                                            meta={
+                                                <>
+                                                    <span className="font-sans font-bold">{label}</span>
+                                                    <span>•</span>
+                                                    <span className="truncate">{fullRef}</span>
+                                                </>
+                                            }
                                             status={tx.status}
                                             statusColor={tx.status === 'Cleared' ? 'success' : tx.status === 'Failed' ? 'danger' : 'warning'}
                                             value={<CurrencyText value={`${isCredit ? '+' : '-'}${formatCurrency(num, { currency: currencyCode })}`} />}
