@@ -109,16 +109,26 @@ export default function RootLayout({
                   const isPublic = PUBLIC_PATTERN.test(window.location.pathname);
                   const html = document.documentElement;
                   
-                  if (isPublic) {
+                  const isSystemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                  const isDark = isPublic || isSystemDark;
+                  
+                  if (isDark) {
                     html.classList.add('dark');
                     html.style.colorScheme = 'dark';
+                  } else {
+                    html.classList.remove('dark');
+                    html.style.colorScheme = 'light';
                   }
 
-                  const meta = document.createElement('meta');
-                  meta.name = 'theme-color';
-                  meta.setAttribute('data-theme-color', 'dynamic');
-                  meta.content = isPublic ? DARK_COLOR : LIGHT_COLOR;
-                  document.head.appendChild(meta);
+                  // ── Defensive Theme Color Creation ──
+                  let meta = document.head.querySelector('meta[name="theme-color"]');
+                  if (!meta) {
+                    meta = document.createElement('meta');
+                    meta.name = 'theme-color';
+                    document.head.appendChild(meta);
+                  }
+                  meta.setAttribute('data-theme-color', 'early');
+                  meta.content = isDark ? DARK_COLOR : LIGHT_COLOR;
                 } catch (e) {}
               })();
             `,
