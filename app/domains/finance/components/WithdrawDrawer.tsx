@@ -562,7 +562,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
 
     return (
         <Drawer open={isOpen} onOpenChange={onOpenChange} dismissible={false}>
-            <DrawerContent>
+            <DrawerContent className="h-[96vh] sm:h-auto sm:max-h-[90vh]">
                 <DrawerHeader className="px-8 py-6 pb-2">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
@@ -589,7 +589,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                         </Button>
                     </div>
                 </DrawerHeader>
-                <div className="mx-auto w-full max-w-md md:max-w-lg flex flex-col min-h-0 h-full overflow-hidden">
+                <div className="mx-auto w-full max-w-md md:max-w-lg flex-1 flex flex-col min-h-0 overflow-hidden">
                     {renderContent()}
                 </div>
             </DrawerContent>
