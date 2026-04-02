@@ -55,7 +55,7 @@ export function formatNumberWithCommas(value: string | number): string {
 }
 
 /**
- * Formats a numeric value into a compact currency string (e.g., 10k, 1.2m).
+ * Formats a numeric value into a compact currency string (e.g., ₦10k, ₦1.2m).
  */
 export function formatCompactCurrency(
     value: number | string,
@@ -65,6 +65,22 @@ export function formatCompactCurrency(
     } = {}
 ): string {
     return formatCurrency(value, { ...options, notation: 'compact' });
+}
+
+/**
+ * Formats a number into a compact string (e.g., 1.2k, 1m).
+ */
+export function formatCompactNumber(
+    value: number | string,
+    locale: string = 'en-NG'
+): string {
+    const numericValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : value;
+    if (isNaN(numericValue)) return '0';
+
+    return new Intl.NumberFormat(locale, {
+        notation: 'compact',
+        maximumFractionDigits: 1
+    }).format(numericValue);
 }
 
 /**

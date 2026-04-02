@@ -32,7 +32,7 @@ import { useOrders } from '../hooks/useOrders'
 import { useDebounce } from '@/app/hooks/useDebounce'
 import { OrdersSkeleton } from './OrdersSkeleton'
 import { Pagination } from '@/app/components/shared/Pagination'
-import { formatCurrency, formatDate } from '@/app/lib/formatters'
+import { formatCurrency, formatDate, formatCompactCurrency, formatCompactNumber } from '@/app/lib/formatters'
 import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { useBusiness } from '@/app/components/BusinessProvider'
 import { OrderActionMenu } from './OrderActionMenu'
@@ -297,31 +297,28 @@ export function OrdersView() {
     const stats = [
         {
             label: "Total Revenue",
-            value: <CurrencyText value={formatCurrency((summary as any)?.completedRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' })} />,
+            value: <CurrencyText value={formatCompactCurrency((summary as any)?.completedRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' })} />,
             icon: TrendingUp,
             color: "brand-gold",
-            description: "Revenue from selected filters"
         },
         {
             label: "Total Orders",
-            value: summary?.totalOrders ?? meta?.total ?? '—',
+            value: formatCompactNumber(summary?.totalOrders ?? meta?.total ?? 0),
             icon: ShoppingBag,
             color: "brand-green",
-            description: "Total orders for this business"
         },
         {
             label: "Avg. Order Value",
-            value: <CurrencyText value={formatCurrency(summary?.averageOrderValue ?? 0, { currency: activeBusiness?.currency || 'NGN' })} />,
+            value: <CurrencyText value={formatCompactCurrency(summary?.averageOrderValue ?? 0, { currency: activeBusiness?.currency || 'NGN' })} />,
             icon: Receipt,
             color: "brand-gold",
-            description: "Average for selected filters"
         },
         {
             label: "Pending Fulfillment",
-            value: summary?.pendingOrdersCount ?? '—',
+            value: formatCompactNumber(summary?.pendingOrdersCount ?? 0),
             icon: Clock,
             color: "brand-gold",
-            description: "Global awaiting fulfillment"
+            isPending: pendingCount > 0
         }
     ]
 
@@ -366,33 +363,49 @@ export function OrdersView() {
                 <InsightWhisper insight={intelligenceWhisper} />
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     {stats.map((stat, i) => (
-                        <GlassCard key={i} className="p-4 flex flex-col gap-3 relative overflow-hidden group border-brand-green/10 bg-white dark:bg-white/5 dark:border-white/5 shadow-sm hover:shadow-md transition-all duration-300">
-                            <div className="absolute -right-2 -top-2 p-3 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity rotate-12 group-hover:rotate-0 duration-700">
-                                <stat.icon className="w-20 h-20 dark:text-brand-cream" />
+                        <GlassCard
+                            key={i}
+                            className="p-6 flex flex-col justify-between relative overflow-hidden group border-brand-green/5 bg-white/40 dark:bg-white/5 dark:border-white/5 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-500 min-h-[140px]"
+                        >
+                            {/* Decorative ghost icon */}
+                            <div className="absolute -right-4 -bottom-4 p-3 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 transition-all rotate-12 group-hover:rotate-0 duration-1000">
+                                <stat.icon className="w-24 h-24 dark:text-brand-cream" />
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <div className={cn(
-                                    "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-110",
-                                    stat.color === "brand-green"
-                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                        : "bg-brand-gold/10 text-brand-gold"
-                                )}>
-                                    <stat.icon className="h-5 w-5" />
+                            <div className="relative z-10 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className={cn(
+                                        "h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:rotate-6 shadow-sm",
+                                        stat.color === "brand-green"
+                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                            : "bg-brand-gold/10 text-brand-gold"
+                                    )}>
+                                        <stat.icon className="h-5 w-5" />
+                                    </div>
+                                    
+                                    {(stat as any).isPending && (
+                                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 animate-pulse">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                            <span className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Action Required</span>
+                                        </div>
+                                    )}
                                 </div>
+
                                 <div>
-                                    <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.15em]">{stat.label}</p>
-                                    <p className="text-xl font-serif font-semibold text-brand-deep dark:text-brand-cream truncate">{stat.value}</p>
+                                    <p className="text-[10px] font-black text-brand-accent/30 dark:text-brand-cream/30 uppercase tracking-[0.2em] mb-1 leading-none">{stat.label}</p>
+                                    <div className="text-3xl font-serif font-black text-brand-deep dark:text-brand-cream tracking-tighter leading-none">
+                                        {stat.value}
+                                    </div>
                                 </div>
                             </div>
-
-                            {stat.description && (
-                                <p className="text-[10px] text-brand-accent/50 dark:text-brand-cream/50 group-hover:text-brand-accent/70 dark:group-hover:text-brand-cream/70 transition-colors">
-                                    {stat.description}
-                                </p>
-                            )}
+                            
+                            {/* Subtle hover accent line */}
+                            <div className={cn(
+                                "absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-700",
+                                stat.color === "brand-green" ? "bg-emerald-500/30" : "bg-brand-gold/30"
+                            )} />
                         </GlassCard>
                     ))}
                 </div>
