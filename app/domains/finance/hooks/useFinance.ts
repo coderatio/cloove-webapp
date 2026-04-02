@@ -61,6 +61,7 @@ export interface WalletBalanceData {
     currency: string
     minimumWithdrawalAmount?: number
     withdrawalFeeTiers?: { min: number; max: number | null; fee: number }[]
+    defaultWithdrawalProvider?: string
 }
 
 export interface PayoutAccountOption {
@@ -69,6 +70,8 @@ export interface PayoutAccountOption {
     accountNumber?: string
     accountName: string
     isDefault: boolean
+    bankCode?: string
+    provider?: string
 }
 
 export interface Bank {
@@ -257,6 +260,25 @@ export function useBanks(provider?: string) {
     }
 }
 
+export function useRecentWithdrawalAccounts() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const { data: response, isLoading, isFetching, error } = useQuery<ApiResponse<PayoutAccountOption[]>>({
+        queryKey: ['finance', 'withdraw', 'recents', businessId],
+        queryFn: () => apiClient.get<ApiResponse<PayoutAccountOption[]>>('/finance/withdraw/recents', {}, { fullResponse: true }),
+        enabled: !!businessId,
+        staleTime: 5 * 60 * 1000,
+    })
+
+    return {
+        recentAccounts: response?.data ?? [],
+        isLoading,
+        isFetching,
+        error,
+    }
+}
+
 export interface PaymentProviderOption {
     id: string
     name: string
@@ -322,7 +344,17 @@ export function useWithdraw() {
     const businessId = activeBusiness?.id
 
     return useMutation({
-        mutationFn: async (payload: { amount: number; payoutAccountId: string; pin: string }) => {
+        mutationFn: async (payload: {
+            amount: number
+            payoutAccountId?: string
+            pin: string
+            bankCode?: string
+            accountNumber?: string
+            accountName?: string
+            bankName?: string
+            provider?: string
+            saveToPayoutAccounts?: boolean
+        }) => {
             return apiClient.post<WithdrawalResponse>('/finance/withdraw', payload)
         },
         onSuccess: () => {

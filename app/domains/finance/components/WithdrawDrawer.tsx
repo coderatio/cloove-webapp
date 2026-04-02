@@ -11,8 +11,9 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerBody,
+    DrawerFooter,
 } from "@/app/components/ui/drawer"
-import { useWalletBalance, usePayoutAccounts, useWithdraw, useDepositAccounts } from "@/app/domains/finance/hooks/useFinance"
+import { useWalletBalance, usePayoutAccounts, useWithdraw, useDepositAccounts, useRecentWithdrawalAccounts } from "@/app/domains/finance/hooks/useFinance"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { toast } from "sonner"
@@ -20,6 +21,7 @@ import { cn } from "@/app/lib/utils"
 import { PayoutAccountsManager } from './PayoutAccountsManager'
 import { useRouter } from "next/navigation"
 import { GlassCard } from "@/app/components/ui/glass-card"
+import { WithdrawToOtherAccountForm } from "./WithdrawToOtherAccountForm"
 
 const FALLBACK_MIN_WITHDRAWAL = 50
 
@@ -59,12 +61,13 @@ function calculateWithdrawalFee(amount: number, tiers: { min: number; max: numbe
     return matchedFee ?? (sorted.length > 0 ? sorted[sorted.length - 1].fee : 0)
 }
 
-type Step = 'details' | 'pin' | 'manage_payouts'
+type Step = 'details' | 'destination_selection' | 'other_account_form' | 'pin' | 'manage_payouts'
 
 export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep = 'details' }: WithdrawDrawerProps) {
     const { wallet, isLoading: walletLoading } = useWalletBalance()
     const { payoutAccounts, isLoading: accountsLoading } = usePayoutAccounts()
     const { depositData, isLoading: verificationLoading } = useDepositAccounts()
+    const { recentAccounts, isLoading: recentLoading } = useRecentWithdrawalAccounts()
     const withdrawMutation = useWithdraw()
     const router = useRouter()
 
@@ -74,6 +77,14 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
     const [step, setStep] = React.useState<Step>("details")
     const [amount, setAmount] = React.useState("")
     const [payoutAccountId, setPayoutAccountId] = React.useState("")
+    const [otherAccountDetails, setOtherAccountDetails] = React.useState<{
+        bankCode: string
+        bankName: string
+        accountNumber: string
+        accountName: string
+        provider: string
+    } | null>(null)
+    const [saveToPayout, setSaveToPayout] = React.useState(false)
     const [pinDigits, setPinDigits] = React.useState(["", "", "", ""])
 
     const amountNum = parseAmount(amount)
@@ -99,7 +110,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         hasFeeConfig &&
         amountNum >= minWithdrawal &&
         totalDebit <= available &&
-        payoutAccountId &&
+        (payoutAccountId || otherAccountDetails) &&
         !withdrawMutation.isPending
     const pin = pinDigits.join("")
     const canSubmit = canContinue && pin.length === 4 && !withdrawMutation.isPending
@@ -134,12 +145,22 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         try {
             await withdrawMutation.mutateAsync({
                 amount: amountNum,
-                payoutAccountId,
+                payoutAccountId: payoutAccountId || undefined,
                 pin,
+                ...(otherAccountDetails ? {
+                    bankCode: otherAccountDetails.bankCode,
+                    accountNumber: otherAccountDetails.accountNumber,
+                    accountName: otherAccountDetails.accountName,
+                    bankName: otherAccountDetails.bankName,
+                    provider: otherAccountDetails.provider,
+                    saveToPayoutAccounts: saveToPayout,
+                } : {})
             })
             toast.success("Withdrawal submitted. We're processing it.")
             setAmount("")
             setPayoutAccountId("")
+            setOtherAccountDetails(null)
+            setSaveToPayout(false)
             setPinDigits(["", "", "", ""])
             setStep("details")
             onOpenChange(false)
@@ -155,15 +176,17 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
     React.useEffect(() => {
         if (isOpen && payoutAccounts.length) {
             const defaultAccount = payoutAccounts.find((a) => a.isDefault) ?? payoutAccounts[0]
-            if (defaultAccount && !payoutAccountId) {
+            if (defaultAccount && !payoutAccountId && !otherAccountDetails) {
                 setPayoutAccountId(defaultAccount.id)
             }
         }
 
         if (!isOpen) {
             setPayoutAccountId('')
+            setOtherAccountDetails(null)
+            setSaveToPayout(false)
         }
-    }, [isOpen, payoutAccounts, payoutAccountId])
+    }, [isOpen, payoutAccounts, payoutAccountId, otherAccountDetails])
 
     React.useEffect(() => {
         if (!isOpen) {
@@ -191,10 +214,356 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
 
     const symbol = currencySymbol(currencyCode)
 
+    const renderContent = () => {
+        if (verificationLoading) {
+            return (
+                <DrawerBody className="p-4 flex items-center justify-center min-h-[300px] no-scrollbar">
+                    <Loader2 className="w-6 h-6 animate-spin text-brand-gold" />
+                </DrawerBody>
+            )
+        }
+
+        if (!isVerified) {
+            return (
+                <DrawerBody className="p-4 flex-1 overflow-y-auto no-scrollbar flex flex-col items-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
+                    <div className="relative">
+                        <div className="w-24 h-24 rounded-3xl bg-brand-gold/10 flex items-center justify-center">
+                            <ShieldCheck className="w-12 h-12 text-brand-gold" />
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-brand-deep dark:bg-brand-cream flex items-center justify-center shadow-lg">
+                            <Lock className="w-5 h-5 text-brand-gold dark:text-brand-deep" />
+                        </div>
+                    </div>
+                    <div className="space-y-3">
+                        <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                            Verification Required
+                        </h3>
+                        <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed max-w-[300px] mx-auto">
+                            Complete Level 1 verification to unlock withdrawals and move funds to your bank account.
+                        </p>
+                    </div>
+                    <div className="w-full space-y-2 max-w-sm">
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
+                                Level {verificationLevel} of 3
+                            </span>
+                            <span className="text-brand-gold font-medium">
+                                {Math.round((verificationLevel / 3) * 100)}%
+                            </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-brand-deep/5 dark:bg-white/5 overflow-hidden">
+                            <div
+                                className="h-full rounded-full bg-linear-to-r from-brand-gold/60 to-brand-gold transition-all duration-800"
+                                style={{ width: `${(verificationLevel / 3) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                    <GlassCard className="w-full p-6 space-y-4 border-brand-gold/10 bg-brand-gold/2 max-w-sm">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">
+                            What Level 1 Unlocks
+                        </p>
+                        <div className="space-y-3">
+                            {["Withdraw funds to your bank account", "Full access to wallet features", "Higher transaction limits"].map((benefit, i) => (
+                                <div key={i} className="flex items-start gap-3">
+                                    <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center shrink-0 mt-0.5">
+                                        <Check className="w-3 h-3 text-brand-gold" />
+                                    </div>
+                                    <p className="text-sm text-brand-deep/80 dark:text-brand-cream/80 text-left leading-snug">
+                                        {benefit}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </GlassCard>
+                    <div className="w-full max-w-sm pt-4">
+                        <Button
+                            onClick={() => {
+                                onOpenChange(false)
+                                setTimeout(() => router.push("/settings?tab=verification"), 300)
+                            }}
+                            className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                        >
+                            Start Verification
+                            <ArrowRight className="w-5 h-5" />
+                        </Button>
+                    </div>
+                </DrawerBody>
+            )
+        }
+
+        switch (step) {
+            case 'manage_payouts':
+                return (
+                    <DrawerBody className="p-4 animate-in fade-in slide-in-from-right-4 duration-500 no-scrollbar">
+                        <PayoutAccountsManager onClose={() => setStep("details")} />
+                    </DrawerBody>
+                )
+            case 'details':
+                return (
+                    <>
+                        <DrawerBody className="p-6 space-y-8 animate-in fade-in slide-in-from-left-4 duration-500 no-scrollbar">
+                            <div className="space-y-6">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 ml-1">
+                                        Amount (Min <CurrencyText value={formatCurrency(minWithdrawal, { currency: currencyCode })} />)
+                                    </label>
+                                    <div className="relative group">
+                                        <div className="absolute -inset-1 bg-brand-gold/0 group-focus-within:bg-brand-gold/10 rounded-4xl transition-all duration-500 blur-md" />
+                                        <div className="relative flex items-center rounded-3xl border border-brand-deep/5 bg-brand-deep/3 dark:bg-white/3 overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
+                                            <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/40 font-sans text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
+                                                {symbol}
+                                            </span>
+                                            <Input
+                                                ref={amountInputRef}
+                                                type="text"
+                                                inputMode="numeric"
+                                                placeholder="0.00"
+                                                value={amount}
+                                                onChange={handleAmountChange}
+                                                className="h-16 py-0 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black text-brand-deep dark:text-white placeholder:text-brand-deep/10"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between px-1">
+                                        {amountError ? (
+                                            <div className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-rose-500 animate-in slide-in-from-left-2">
+                                                <AlertCircle className="w-3 h-3" />
+                                                {amountError.text}
+                                            </div>
+                                        ) : amountNum > 0 ? (
+                                            <div className="flex items-center gap-1.5 h-4 animate-in fade-in">
+                                                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-white/30">
+                                                    Fee: {walletLoading ? "Calculating…" : <CurrencyText value={formatCurrency(fee, { currency: currencyCode })} />}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-white/20">
+                                                Available: {walletLoading ? "…" : <CurrencyText value={formatCurrency(available, { currency: currencyCode })} />}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </DrawerBody>
+                        <DrawerFooter className="p-6 md:p-8">
+                            <Button
+                                onClick={() => setStep("destination_selection")}
+                                disabled={!amount || !!amountError}
+                                className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-3xl shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50"
+                            >
+                                Choose Withdrawal Account
+                            </Button>
+                        </DrawerFooter>
+                    </>
+                )
+            case 'destination_selection':
+                return (
+                    <>
+                        <DrawerBody className="p-6 space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 no-scrollbar">
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between ml-1">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
+                                        Saved Accounts
+                                    </label>
+                                    <button
+                                        onClick={() => setStep("manage_payouts")}
+                                        className="text-[10px] cursor-pointer font-black text-brand-gold hover:text-brand-gold/80 uppercase tracking-widest flex items-center gap-1 transition-all"
+                                    >
+                                        <Settings2 className="w-3 h-3" />
+                                        Manage
+                                    </button>
+                                </div>
+
+                                {payoutAccounts.length === 0 && !accountsLoading ? (
+                                    <div className="py-8 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/3 dark:bg-white/3 rounded-3xl border border-dashed border-brand-gold/20">
+                                        <Building2 className="w-8 h-8 text-brand-gold/40" />
+                                        <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase tracking-widest font-black">No saved accounts</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {payoutAccounts.map((account) => (
+                                            <button
+                                                key={account.id}
+                                                onClick={() => {
+                                                    setPayoutAccountId(account.id)
+                                                    setOtherAccountDetails(null)
+                                                    setStep("pin")
+                                                }}
+                                                className="group cursor-pointer flex items-center justify-between p-4 rounded-3xl border border-brand-deep/5 dark:border-white/5 bg-brand-deep/2 dark:bg-white/2 hover:ring-1 hover:ring-brand-gold/30 hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-all"
+                                            >
+                                                <div className="flex items-center gap-4 min-w-0">
+                                                    <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                                                        <Building2 className="w-5 h-5" />
+                                                    </div>
+                                                    <div className="text-left min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[11px] font-black uppercase truncate text-brand-deep dark:text-brand-cream">{account.bankName}</span>
+                                                            {account.isDefault && <span className="text-[8px] bg-brand-gold/20 text-brand-gold px-1.5 py-0.5 rounded-full font-black">Default</span>}
+                                                        </div>
+                                                        <span className="text-[10px] font-mono text-brand-deep/40 dark:text-white/40">{account.accountNumber} • {account.accountName}</span>
+                                                    </div>
+                                                </div>
+                                                <ArrowRight className="w-4 h-4 text-brand-gold/40 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {recentAccounts.length > 0 && (
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 ml-1">
+                                        Recent Transfers
+                                    </label>
+                                    <div className="overflow-x-auto pb-2 -mx-1 px-1">
+                                        <div className="flex gap-4">
+                                            {recentAccounts.map((account, i) => (
+                                                <button
+                                                    key={`recent-${i}`}
+                                                    onClick={() => {
+                                                        setOtherAccountDetails({
+                                                            bankCode: account.bankCode || '',
+                                                            bankName: account.bankName,
+                                                            accountNumber: account.accountNumber || '',
+                                                            accountName: account.accountName,
+                                                            provider: account.provider || 'monnify'
+                                                        })
+                                                        setPayoutAccountId("")
+                                                        setStep("pin")
+                                                    }}
+                                                    className="flex flex-col items-center space-y-2 min-w-[72px] group cursor-pointer"
+                                                >
+                                                    <div className="w-14 h-14 rounded-[1.2rem] bg-brand-deep/5 dark:bg-white/5 border border-transparent group-hover:border-brand-gold/30 flex items-center justify-center transition-all group-hover:translate-y-[-4px]">
+                                                        <div className="text-sm font-black text-brand-gold">
+                                                            {account.bankName.charAt(0)}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="text-[10px] font-black text-brand-deep dark:text-brand-cream/80 truncate w-16">{account.accountName.split(' ')[0]}</p>
+                                                        <p className="text-[8px] font-medium text-brand-deep/40 dark:text-brand-cream/40 truncate w-16">{account.bankName}</p>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </DrawerBody>
+                        <DrawerFooter className="p-6 md:p-8">
+                            <Button
+                                onClick={() => setStep("other_account_form")}
+                                className="w-full h-18 bg-white dark:bg-white/5 border-2 border-dashed border-brand-gold/30 text-brand-gold font-black uppercase tracking-widest text-[10px] rounded-3xl hover:bg-brand-gold/5 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Transfer to New Account
+                            </Button>
+                        </DrawerFooter>
+                    </>
+                )
+            case 'other_account_form':
+                return (
+                    <WithdrawToOtherAccountForm
+                        onBack={() => setStep("destination_selection")}
+                        onConfirm={(details, saveToPayout) => {
+                            setOtherAccountDetails(details)
+                            setSaveToPayout(saveToPayout)
+                            setPayoutAccountId("")
+                            setStep("pin")
+                        }}
+                    />
+                )
+            case 'pin':
+                return (
+                    <>
+                        <DrawerBody className="p-6 no-scrollbar">
+                            <div className="space-y-8 py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                <div className="text-center space-y-6">
+                                    <div className="mx-auto w-20 h-20 rounded-4xl bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-2 group relative">
+                                        <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full animate-pulse" />
+                                        <Lock className="w-10 h-10 relative z-10" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h4 className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">Authorize Withdrawal</h4>
+                                        <p className="text-brand-deep/40 dark:text-white/30 font-base max-w-[340px] mx-auto leading-relaxed">Enter your 4-digit pin to authorize the following transaction</p>
+                                    </div>
+                                </div>
+
+                                <GlassCard className="p-5 space-y-4 border-brand-gold/10 bg-brand-gold/2 max-w-sm mx-auto shadow-xs">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-white/30">Withdrawal Amount</span>
+                                        <span className="text-sm font-serif font-bold text-brand-deep dark:text-white">
+                                            <CurrencyText value={formatCurrency(amountNum, { currency: currencyCode })} />
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-white/30">Transaction Fee</span>
+                                        <span className="text-sm font-serif font-bold text-brand-deep dark:text-white">
+                                            <CurrencyText value={formatCurrency(fee, { currency: currencyCode })} />
+                                        </span>
+                                    </div>
+                                    <div className="pt-3 border-t border-brand-gold/10 flex items-center justify-between">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold font-bold">Total to Debit</span>
+                                        <span className="text-xl font-serif font-black text-brand-deep dark:text-white">
+                                            <CurrencyText value={formatCurrency(amountNum + fee, { currency: currencyCode })} />
+                                        </span>
+                                    </div>
+                                </GlassCard>
+                            </div>
+
+                            <div className="flex justify-center gap-4 max-w-sm mx-auto mt-8">
+                                {pinDigits.map((digit, i) => (
+                                    <input
+                                        key={i}
+                                        ref={i === 0 ? pinFirstInputRef : undefined}
+                                        id={`withdraw-pin-${i}`}
+                                        type="password"
+                                        inputMode="numeric"
+                                        maxLength={1}
+                                        value={digit}
+                                        onChange={(e) => handlePinDigit(i, e.target.value)}
+                                        onKeyDown={(e) => handlePinKeyDown(i, e)}
+                                        className="sm:w-20 sm:h-20 w-16 h-16 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-2 border-transparent focus:border-brand-gold focus:bg-white dark:focus:bg-brand-deep text-center text-3xl font-serif font-black transition-all outline-hidden shadow-inner text-brand-deep dark:text-white"
+                                    />
+                                ))}
+                            </div>
+                        </DrawerBody>
+                        <DrawerFooter className="p-6 md:p-8 space-y-4">
+                            <Button
+                                onClick={handleWithdraw}
+                                disabled={pinDigits.some(d => !d) || withdrawMutation.isPending}
+                                className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
+                            >
+                                {withdrawMutation.isPending ? (
+                                    <div className="flex items-center gap-3">
+                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                        <span>Processing...</span>
+                                    </div>
+                                ) : (
+                                    "Confirm & Execute"
+                                )}
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => setStep(otherAccountDetails ? "other_account_form" : "destination_selection")}
+                                disabled={withdrawMutation.isPending}
+                                className="h-12 w-full rounded-2xl border border-brand-deep/10 dark:border-white/10 text-brand-deep/40 dark:text-brand-cream/40 font-black uppercase tracking-widest text-[9px] hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                            >
+                                Correction / Change Details
+                            </Button>
+                        </DrawerFooter>
+                    </>
+                )
+            default:
+                return null
+        }
+    }
+
     return (
-        <Drawer open={isOpen} onOpenChange={onOpenChange}>
+        <Drawer open={isOpen} onOpenChange={onOpenChange} dismissible={false}>
             <DrawerContent>
-                <DrawerHeader className="px-8 py-6">
+                <DrawerHeader className="px-8 py-6 pb-2">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <DrawerTitle className="text-xl font-serif text-brand-deep dark:text-brand-cream text-left">
@@ -207,288 +576,21 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => step === 'manage_payouts' ? setStep('details') : onOpenChange(false)}
+                            onClick={() => {
+                                if (step === 'manage_payouts') setStep('details')
+                                else if (step === 'destination_selection') setStep('details')
+                                else if (step === 'other_account_form') setStep('destination_selection')
+                                else if (step === 'pin') setStep(otherAccountDetails ? 'other_account_form' : 'destination_selection')
+                                else onOpenChange(false)
+                            }}
                             className="h-10 w-10 rounded-full bg-brand-deep/5 cursor-pointer dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0"
                         >
                             <X className="w-5 h-5 text-brand-deep/40 dark:text-brand-cream/40" />
                         </Button>
                     </div>
                 </DrawerHeader>
-                <div className="mx-auto w-full max-w-md h-full flex flex-col min-h-[500px]">
-
-
-                    <DrawerBody className="p-4 flex-1 overflow-y-auto max-h-[calc(100vh-160px)]">
-                        {verificationLoading ? (
-                            <div className="py-12 flex items-center justify-center">
-                                <Loader2 className="w-6 h-6 animate-spin text-brand-gold" />
-                            </div>
-                        ) : !isVerified ? (
-                            <div className="py-8 flex flex-col items-center text-center max-w-md mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-700">
-                                <div className="relative">
-                                    <div className="w-24 h-24 rounded-3xl bg-brand-gold/10 flex items-center justify-center">
-                                        <ShieldCheck className="w-12 h-12 text-brand-gold" />
-                                    </div>
-                                    <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-brand-deep dark:bg-brand-cream flex items-center justify-center shadow-lg">
-                                        <Lock className="w-5 h-5 text-brand-gold dark:text-brand-deep" />
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                        Verification Required
-                                    </h3>
-                                    <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed max-w-[300px] mx-auto">
-                                        Complete Level 1 verification to unlock withdrawals and move funds to your bank account.
-                                    </p>
-                                </div>
-                                <div className="w-full space-y-2">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
-                                            Level {verificationLevel} of 3
-                                        </span>
-                                        <span className="text-brand-gold font-medium">
-                                            {Math.round((verificationLevel / 3) * 100)}%
-                                        </span>
-                                    </div>
-                                    <div className="h-2 rounded-full bg-brand-deep/5 dark:bg-white/5 overflow-hidden">
-                                        <div
-                                            className="h-full rounded-full bg-linear-to-r from-brand-gold/60 to-brand-gold transition-all duration-800"
-                                            style={{ width: `${(verificationLevel / 3) * 100}%` }}
-                                        />
-                                    </div>
-                                </div>
-                                <GlassCard className="w-full p-6 space-y-4 border-brand-gold/10 bg-brand-gold/2">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">
-                                        What Level 1 Unlocks
-                                    </p>
-                                    <div className="space-y-3">
-                                        {["Withdraw funds to your bank account", "Full access to wallet features", "Higher transaction limits"].map((benefit, i) => (
-                                            <div key={i} className="flex items-start gap-3">
-                                                <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center shrink-0 mt-0.5">
-                                                    <Check className="w-3 h-3 text-brand-gold" />
-                                                </div>
-                                                <p className="text-sm text-brand-deep/80 dark:text-brand-cream/80 text-left leading-snug">
-                                                    {benefit}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </GlassCard>
-                                <Button
-                                    onClick={() => {
-                                        onOpenChange(false)
-                                        setTimeout(() => router.push("/settings?tab=verification"), 300)
-                                    }}
-                                    className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
-                                >
-                                    Start Verification
-                                    <ArrowRight className="w-5 h-5" />
-                                </Button>
-                            </div>
-                        ) : step === "manage_payouts" ? (
-                            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                                <PayoutAccountsManager onClose={() => setStep("details")} />
-                            </div>
-                        ) : payoutAccounts.length === 0 && !accountsLoading ? (
-                            <div className="py-12 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
-                                <div className="relative">
-                                    <div className="absolute inset-0 bg-brand-gold/20 blur-3xl rounded-full animate-pulse" />
-                                    <div className="relative w-24 h-24 rounded-[2.5rem] bg-linear-to-br from-brand-deep to-brand-accent flex items-center justify-center shadow-2xl overflow-hidden group rotate-3">
-                                        <Building2 className="w-12 h-12 text-brand-gold group-hover:scale-110 transition-transform duration-700 -rotate-3" />
-                                        <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
-                                    </div>
-                                </div>
-                                <div className="space-y-2 max-w-[280px]">
-                                    <h4 className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">No settlement account</h4>
-                                    <p className="text-[10px] text-brand-deep/40 dark:text-white/30 leading-relaxed uppercase tracking-[0.2em] font-black">Link a bank account to start receiving your business settlements directly.</p>
-                                </div>
-                                <Button
-                                    onClick={() => setStep("manage_payouts")}
-                                    className="w-full h-16 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-widest text-xs rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] flex items-center justify-center gap-3 group hover:translate-y-[-4px] active:translate-y-0 transition-all duration-300"
-                                >
-                                    <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
-                                    Link Bank Account
-                                </Button>
-                            </div>
-                        ) : step === "details" ? (
-                            <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
-                                <div className="space-y-6">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 ml-1">
-                                            Amount (Min <CurrencyText value={formatCurrency(minWithdrawal, { currency: currencyCode })} />)
-                                        </label>
-                                        <div className="relative group">
-                                            <div className="absolute -inset-1 bg-brand-gold/0 group-focus-within:bg-brand-gold/10 rounded-4xl transition-all duration-500 blur-md" />
-                                            <div className="relative flex items-center rounded-3xl border border-brand-deep/5 bg-brand-deep/3 dark:bg-white/3 overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
-                                                <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/40 font-sans text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
-                                                    {symbol}
-                                                </span>
-                                                <Input
-                                                    ref={amountInputRef}
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    placeholder="0.00"
-                                                    value={amount}
-                                                    onChange={handleAmountChange}
-                                                    className="h-16 py-0 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black text-brand-deep dark:text-white placeholder:text-brand-deep/10"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between px-1">
-                                            {amountError ? (
-                                                <div className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-rose-500 animate-in slide-in-from-left-2">
-                                                    <AlertCircle className="w-3 h-3" />
-                                                    {amountError.text}
-                                                </div>
-                                            ) : amountNum > 0 ? (
-                                                <div className="flex items-center gap-1.5 h-4 animate-in fade-in">
-                                                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-white/30">
-                                                        Fee: {walletLoading ? "Calculating…" : <CurrencyText value={formatCurrency(fee, { currency: currencyCode })} />}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-white/20">
-                                                    Available: {walletLoading ? "…" : <CurrencyText value={formatCurrency(available, { currency: currencyCode })} />}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3 bg-white dark:bg-white/10 border border-brand-deep/10 dark:border-white/10 rounded-3xl p-4">
-                                        <div className="flex items-center justify-between ml-1">
-                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
-                                                Select Destination
-                                            </label>
-                                            <button
-                                                onClick={() => setStep("manage_payouts")}
-                                                className="text-[10px] cursor-pointer font-black text-brand-gold hover:text-brand-gold/80 uppercase tracking-widest flex items-center gap-1 transition-all hover:gap-1.5"
-                                            >
-                                                <Settings2 className="w-3 h-3" />
-                                                Manage
-                                            </button>
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {payoutAccounts.map((account) => (
-                                                <button
-                                                    key={account.id}
-                                                    onClick={() => setPayoutAccountId(account.id)}
-                                                    className={cn(
-                                                        "group cursor-pointer relative flex items-center justify-between p-4 rounded-3xl border transition-all duration-500",
-                                                        payoutAccountId === account.id
-                                                            ? "bg-brand-gold shadow-[0_15px_30px_rgba(182,143,76,0.15)] border-brand-gold"
-                                                            : "bg-brand-deep/3 dark:bg-white/3 border-transparent hover:border-brand-deep/10 dark:hover:border-white/10"
-                                                    )}
-                                                >
-                                                    <div className="flex items-center gap-4 min-w-0">
-                                                        <div className={cn(
-                                                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                            payoutAccountId === account.id ? "bg-white/60 text-brand-deep shadow-inner" : "bg-white dark:bg-white/10 text-brand-deep/30 dark:text-white/30"
-                                                        )}>
-                                                            <Building2 className="w-6 h-6" />
-                                                        </div>
-                                                        <div className="text-left min-w-0">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className={cn(
-                                                                    "text-[11px] font-black uppercase tracking-tight truncate",
-                                                                    payoutAccountId === account.id ? "text-brand-deep" : "text-brand-deep dark:text-brand-cream"
-                                                                )}>
-                                                                    {account.bankName}
-                                                                </span>
-                                                                {account.isDefault && (
-                                                                    <span className={cn(
-                                                                        "text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter",
-                                                                        payoutAccountId === account.id ? "bg-brand-deep/10 text-brand-deep" : "bg-brand-gold/20 text-brand-gold"
-                                                                    )}>Default</span>
-                                                                )}
-                                                            </div>
-                                                            <span className={cn(
-                                                                "text-xs font-mono font-medium block",
-                                                                payoutAccountId === account.id ? "text-brand-deep/60" : "text-brand-accent/40 dark:text-white/40"
-                                                            )}>{account.accountNumber}</span>
-                                                        </div>
-                                                    </div>
-                                                    {payoutAccountId === account.id && (
-                                                        <div className="w-6 h-6 rounded-full bg-brand-deep flex items-center justify-center shadow-lg animate-in zoom-in duration-500">
-                                                            <Check className="w-3.5 h-3.5 text-brand-gold" strokeWidth={4} />
-                                                        </div>
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4">
-                                    <Button
-                                        onClick={() => setStep("pin")}
-                                        disabled={!amount || !!amountError || !payoutAccountId}
-                                        className="w-full h-16 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-3xl shadow-2xl hover:translate-y-[-4px] active:translate-y-0 transition-all duration-300 disabled:opacity-50 disabled:translate-y-0"
-                                    >
-                                        Authorize Withdrawal
-                                    </Button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-10 py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                <div className="text-center space-y-6">
-                                    <div className="mx-auto w-20 h-20 rounded-4xl bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-6 group relative">
-                                        <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full animate-pulse" />
-                                        <Lock className="w-10 h-10 relative z-10" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <h4 className="text-3xl font-serif font-black text-brand-deep dark:text-white tracking-tight">Authorize Withdrawal</h4>
-                                        <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase font-black tracking-[0.2em]">Enter your 4-digit pin to authorize debit of</p>
-                                        <div className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">
-                                            <CurrencyText value={formatCurrency(amountNum + fee, { currency: currencyCode })} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-center gap-4 max-w-sm mx-auto">
-                                    {pinDigits.map((digit, i) => (
-                                        <input
-                                            key={i}
-                                            ref={i === 0 ? pinFirstInputRef : undefined}
-                                            id={`withdraw-pin-${i}`}
-                                            type="password"
-                                            inputMode="numeric"
-                                            maxLength={1}
-                                            value={digit}
-                                            onChange={(e) => handlePinDigit(i, e.target.value)}
-                                            onKeyDown={(e) => handlePinKeyDown(i, e)}
-                                            className="sm:w-20 sm:h-20 w-16 h-16 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-2 border-transparent focus:border-brand-gold focus:bg-white dark:focus:bg-brand-deep text-center text-3xl font-serif font-black transition-all outline-hidden shadow-inner text-brand-deep dark:text-white"
-                                        />
-                                    ))}
-                                </div>
-
-                                <div className="flex flex-col gap-4 pt-4">
-                                    <Button
-                                        onClick={handleWithdraw}
-                                        disabled={pinDigits.some(d => !d) || withdrawMutation.isPending}
-                                        className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
-                                    >
-                                        {withdrawMutation.isPending ? (
-                                            <div className="flex items-center gap-3">
-                                                <Loader2 className="w-6 h-6 animate-spin" />
-                                                <span>Processing...</span>
-                                            </div>
-                                        ) : (
-                                            "Confirm & Execute"
-                                        )}
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => setStep("details")}
-                                        disabled={withdrawMutation.isPending}
-                                        className="h-12 rounded-2xl border border-brand-deep/10 dark:border-white/10 text-brand-deep/40 dark:text-brand-cream/40 font-black uppercase tracking-widest text-[9px] hover:bg-brand-deep/5 dark:hover:bg-white/5"
-                                    >
-                                        Correction / Change Details
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                    </DrawerBody>
+                <div className="mx-auto w-full max-w-md md:max-w-lg flex flex-col min-h-0 h-full overflow-hidden">
+                    {renderContent()}
                 </div>
             </DrawerContent>
         </Drawer>
