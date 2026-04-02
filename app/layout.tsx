@@ -97,6 +97,33 @@ export default function RootLayout({
   return (
     <html lang="en" className={`scroll-smooth ${dmSerifDisplay.variable} ${dmSans.variable} ${dmMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
+        {/* ── Early Theme Sync (Prevents white flash/bar on forced-dark public routes) ── */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const DARK_COLOR = "#061b15";
+                  const LIGHT_COLOR = "#fdfcf8";
+                  const PUBLIC_PATTERN = /^\\/(login|register|staff-invite|verify|onboarding|reset-password)(\\/.*)?$/;
+                  const isPublic = PUBLIC_PATTERN.test(window.location.pathname);
+                  const html = document.documentElement;
+                  
+                  if (isPublic) {
+                    html.classList.add('dark');
+                    html.style.colorScheme = 'dark';
+                  }
+
+                  const meta = document.createElement('meta');
+                  meta.name = 'theme-color';
+                  meta.setAttribute('data-theme-color', 'dynamic');
+                  meta.content = isPublic ? DARK_COLOR : LIGHT_COLOR;
+                  document.head.appendChild(meta);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
