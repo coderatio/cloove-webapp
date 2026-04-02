@@ -13,6 +13,7 @@ import {
     DrawerBody,
     DrawerFooter,
 } from "@/app/components/ui/drawer"
+import { PinInputDrawer } from "@/app/components/shared/PinInputDrawer"
 import { useWalletBalance, usePayoutAccounts, useWithdraw, useDepositAccounts, useRecentWithdrawalAccounts } from "@/app/domains/finance/hooks/useFinance"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -61,7 +62,7 @@ function calculateWithdrawalFee(amount: number, tiers: { min: number; max: numbe
     return matchedFee ?? (sorted.length > 0 ? sorted[sorted.length - 1].fee : 0)
 }
 
-type Step = 'details' | 'destination_selection' | 'other_account_form' | 'pin' | 'manage_payouts'
+type Step = 'details' | 'destination_selection' | 'other_account_form' | 'summary' | 'manage_payouts'
 
 export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep = 'details' }: WithdrawDrawerProps) {
     const { wallet, isLoading: walletLoading } = useWalletBalance()
@@ -85,7 +86,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         provider: string
     } | null>(null)
     const [saveToPayout, setSaveToPayout] = React.useState(false)
-    const [pinDigits, setPinDigits] = React.useState(["", "", "", ""])
+    const [isPinOpen, setIsPinOpen] = React.useState(false)
 
     const amountNum = parseAmount(amount)
     const withdrawalFeeTiers = wallet?.withdrawalFeeTiers ?? []
@@ -112,8 +113,6 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         totalDebit <= available &&
         (payoutAccountId || otherAccountDetails) &&
         !withdrawMutation.isPending
-    const pin = pinDigits.join("")
-    const canSubmit = canContinue && pin.length === 4 && !withdrawMutation.isPending
 
     const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const raw = e.target.value.replace(/[^0-9]/g, "")
@@ -124,24 +123,10 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         }
     }
 
-    const handlePinDigit = (index: number, value: string) => {
-        if (value.length > 1) return
-        const next = [...pinDigits]
-        next[index] = value.replace(/\D/g, "")
-        setPinDigits(next)
-        if (value && index < 3) {
-            document.getElementById(`withdraw-pin-${index + 1}`)?.focus()
-        }
-    }
 
-    const handlePinKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Backspace" && !pinDigits[index] && index > 0) {
-            document.getElementById(`withdraw-pin-${index - 1}`)?.focus()
-        }
-    }
 
-    const handleWithdraw = async () => {
-        if (!canSubmit) return
+    const handleWithdraw = async (pin: string) => {
+        if (!canContinue) return
         try {
             await withdrawMutation.mutateAsync({
                 amount: amountNum,
@@ -161,7 +146,6 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
             setPayoutAccountId("")
             setOtherAccountDetails(null)
             setSaveToPayout(false)
-            setPinDigits(["", "", "", ""])
             setStep("details")
             onOpenChange(false)
         } catch (err: unknown) {
@@ -169,7 +153,8 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                 (err as { data?: { message?: string }; message?: string })?.data?.message ||
                 (err as Error)?.message ||
                 "Withdrawal failed"
-            toast.error(msg)
+            // Re-throw so PinInputDrawer shows the error
+            throw new Error(msg)
         }
     }
 
@@ -192,7 +177,8 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         if (!isOpen) {
             setStep("details")
         } else if (initialStep) {
-            setStep(initialStep)
+            const targetStep = (initialStep as string) === 'pin' ? 'summary' : initialStep as Step;
+            setStep(targetStep)
         }
     }, [isOpen, initialStep])
 
@@ -204,13 +190,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         }
     }, [isOpen, step])
 
-    const pinFirstInputRef = React.useRef<HTMLInputElement>(null)
-    React.useEffect(() => {
-        if (step === "pin") {
-            const t = setTimeout(() => pinFirstInputRef.current?.focus(), 0)
-            return () => clearTimeout(t)
-        }
-    }, [step])
+
 
     const symbol = currencySymbol(currencyCode)
 
@@ -389,7 +369,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                 onClick={() => {
                                                     setPayoutAccountId(account.id)
                                                     setOtherAccountDetails(null)
-                                                    setStep("pin")
+                                                    setStep("summary")
                                                 }}
                                                 className="group cursor-pointer flex items-center justify-between p-4 rounded-3xl border border-brand-deep/5 dark:border-white/5 bg-brand-deep/2 dark:bg-white/2 hover:ring-1 hover:ring-brand-gold/30 hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-all"
                                             >
@@ -431,7 +411,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                             provider: account.provider || 'monnify'
                                                         })
                                                         setPayoutAccountId("")
-                                                        setStep("pin")
+                                                        setStep("summary")
                                                     }}
                                                     className="flex flex-col items-center space-y-2 min-w-[72px] group cursor-pointer"
                                                 >
@@ -470,11 +450,11 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                             setOtherAccountDetails(details)
                             setSaveToPayout(saveToPayout)
                             setPayoutAccountId("")
-                            setStep("pin")
+                            setStep("summary")
                         }}
                     />
                 )
-            case 'pin':
+            case 'summary':
                 return (
                     <>
                         <DrawerBody className="p-6 no-scrollbar">
@@ -482,11 +462,11 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 <div className="text-center space-y-6">
                                     <div className="mx-auto w-20 h-20 rounded-4xl bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-2 group relative">
                                         <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full animate-pulse" />
-                                        <Lock className="w-10 h-10 relative z-10" />
+                                        <ShieldCheck className="w-10 h-10 relative z-10" />
                                     </div>
                                     <div className="space-y-2">
-                                        <h4 className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">Authorize Withdrawal</h4>
-                                        <p className="text-brand-deep/40 dark:text-white/30 font-base max-w-[340px] mx-auto leading-relaxed">Enter your 4-digit pin to authorize the following transaction</p>
+                                        <h4 className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">Confirm Details</h4>
+                                        <p className="text-brand-deep/40 dark:text-white/30 font-base max-w-[340px] mx-auto leading-relaxed">Please review your withdrawal summary before authorizing the transaction.</p>
                                     </div>
                                 </div>
 
@@ -504,50 +484,41 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                         </span>
                                     </div>
                                     <div className="pt-3 border-t border-brand-gold/10 flex items-center justify-between">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold font-bold">Total to Debit</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold">Total to Debit</span>
                                         <span className="text-xl font-serif font-black text-brand-deep dark:text-white">
                                             <CurrencyText value={formatCurrency(amountNum + fee, { currency: currencyCode })} />
                                         </span>
                                     </div>
                                 </GlassCard>
-                            </div>
 
-                            <div className="flex justify-center gap-4 max-w-sm mx-auto mt-8">
-                                {pinDigits.map((digit, i) => (
-                                    <input
-                                        key={i}
-                                        ref={i === 0 ? pinFirstInputRef : undefined}
-                                        id={`withdraw-pin-${i}`}
-                                        type="password"
-                                        inputMode="numeric"
-                                        maxLength={1}
-                                        value={digit}
-                                        onChange={(e) => handlePinDigit(i, e.target.value)}
-                                        onKeyDown={(e) => handlePinKeyDown(i, e)}
-                                        className="sm:w-20 sm:h-20 w-16 h-16 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-2 border-transparent focus:border-brand-gold focus:bg-white dark:focus:bg-brand-deep text-center text-3xl font-serif font-black transition-all outline-hidden shadow-inner text-brand-deep dark:text-white"
-                                    />
-                                ))}
+                                <div className="max-w-sm mx-auto p-4 rounded-3xl bg-brand-deep/3 dark:bg-white/3 border border-brand-deep/5 dark:border-white/5 space-y-3">
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-white/20">Destination Account</div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-brand-gold/20 flex items-center justify-center">
+                                            <Building2 className="w-5 h-5 text-brand-gold" />
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-black text-brand-deep dark:text-white uppercase truncate">
+                                                {payoutAccounts.find(a => a.id === payoutAccountId)?.bankName || otherAccountDetails?.bankName}
+                                            </div>
+                                            <div className="text-[10px] font-mono text-brand-deep/40 dark:text-white/40">
+                                                {payoutAccounts.find(a => a.id === payoutAccountId)?.accountNumber || otherAccountDetails?.accountNumber}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </DrawerBody>
                         <DrawerFooter className="p-6 md:p-8 space-y-4">
                             <Button
-                                onClick={handleWithdraw}
-                                disabled={pinDigits.some(d => !d) || withdrawMutation.isPending}
+                                onClick={() => setIsPinOpen(true)}
                                 className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
                             >
-                                {withdrawMutation.isPending ? (
-                                    <div className="flex items-center gap-3">
-                                        <Loader2 className="w-6 h-6 animate-spin" />
-                                        <span>Processing...</span>
-                                    </div>
-                                ) : (
-                                    "Confirm & Execute"
-                                )}
+                                Confirm & Execute
                             </Button>
                             <Button
                                 variant="ghost"
                                 onClick={() => setStep(otherAccountDetails ? "other_account_form" : "destination_selection")}
-                                disabled={withdrawMutation.isPending}
                                 className="h-12 w-full rounded-2xl border border-brand-deep/10 dark:border-white/10 text-brand-deep/40 dark:text-brand-cream/40 font-black uppercase tracking-widest text-[9px] hover:bg-brand-deep/5 dark:hover:bg-white/5"
                             >
                                 Correction / Change Details
@@ -580,7 +551,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 if (step === 'manage_payouts') setStep('details')
                                 else if (step === 'destination_selection') setStep('details')
                                 else if (step === 'other_account_form') setStep('destination_selection')
-                                else if (step === 'pin') setStep(otherAccountDetails ? 'other_account_form' : 'destination_selection')
+                                else if (step === 'summary') setStep(otherAccountDetails ? 'other_account_form' : 'destination_selection')
                                 else onOpenChange(false)
                             }}
                             className="h-10 w-10 rounded-full bg-brand-deep/5 cursor-pointer dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0"
@@ -593,6 +564,14 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                     {renderContent()}
                 </div>
             </DrawerContent>
+
+            <PinInputDrawer
+                open={isPinOpen}
+                onOpenChange={setIsPinOpen}
+                onSubmit={handleWithdraw}
+                title="Authorize Withdrawal"
+                description="Enter your 4-digit PIN to confirm the bank transfer."
+            />
         </Drawer>
     )
 }
