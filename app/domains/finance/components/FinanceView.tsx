@@ -90,8 +90,107 @@ function getTransactionCategory(method: string | undefined): { label: string; va
     if (m.includes('refund')) return { label: 'Refund', variant: 'warning' }
     if (m.includes('sale')) return { label: 'Sale', variant: 'success' }
     if (m.includes('expense') || m.includes('supplier') || m.includes('debt')) return { label: 'Expense', variant: 'warning' }
-    if (m.includes('wallet') || m.includes('withdrawal') || m.includes('deposit')) return { label: 'Wallet', variant: 'gold' }
+    if (m.includes('wallet') || m.includes('withdrawal') || m.includes('deposit') || m.includes('fee')) return { label: 'Wallet', variant: 'gold' }
+    if (m.includes('subscription')) return { label: 'Subscription', variant: 'outline' }
+    if (m.includes('commission') || m.includes('adjustment')) return { label: 'Internal', variant: 'outline' }
     return { label: 'Other', variant: 'outline' }
+}
+
+function maskAccount(accountNumber: string): string {
+    if (!accountNumber || accountNumber.length < 4) return accountNumber
+    return `•••• ${accountNumber.slice(-4)}`
+}
+
+interface EntityResolution {
+    primary: string
+    secondary: string | null
+}
+
+function resolveEntityPurpose(row: any): EntityResolution {
+    const method = (row.method || '').toLowerCase()
+    const meta = (row.metadata || {}) as any
+
+    // ── Withdrawal → destination bank + masked account ───────────────────────
+    if (method === 'withdrawal' && row.withdrawal) {
+        const { bankName, accountNumber, accountName } = row.withdrawal
+        return {
+            primary: `${bankName}  ${maskAccount(accountNumber)}`,
+            secondary: accountName || null,
+        }
+    }
+
+    // ── Fee → "Withdrawal Fee" + parent withdrawal short-ref ────────────────
+    if (method === 'fee') {
+        const desc = String(row.customer || '')
+        const parentRef: string | null =
+            meta.withdrawalReference ||
+            meta.originalReference ||
+            desc.match(/CLV-WD-[A-Z0-9-]+/)?.[0] ||
+            null
+        return {
+            primary: 'Withdrawal Fee',
+            secondary: parentRef ? `For ${parentRef.length > 22 ? parentRef.slice(0, 22) + '…' : parentRef}` : null,
+        }
+    }
+
+    // ── Refund / Reversal → label the reversal type with parent context ──────
+    if (method === 'refund') {
+        const desc = String(row.customer || '').toLowerCase()
+        const isFeeReversal = desc.includes('fee')
+        const originalRef: string | null =
+            meta.originalReference ||
+            meta.originalWithdrawalId ||
+            desc.match(/CLV-WD-[A-Z0-9-]+/)?.[0] ||
+            null
+        return {
+            primary: isFeeReversal ? 'Fee Reversal' : 'Withdrawal Reversed',
+            secondary: originalRef
+                ? `Ref: ${originalRef.length > 20 ? originalRef.slice(0, 20) + '…' : originalRef}`
+                : null,
+        }
+    }
+
+    // ── Sale / Storefront Sale → customer name + order code ─────────────────
+    if (method === 'sale' || method === 'storefront sale') {
+        const customerName = row.sale?.customerName || row.customer || 'Walk-in Customer'
+        return {
+            primary: customerName,
+            secondary: row.sale?.shortCode ? `Sale #${row.sale.shortCode}` : null,
+        }
+    }
+
+    // ── Wallet Deposit → payer info if available ─────────────────────────────
+    if (method === 'wallet deposit') {
+        const payerName = meta.payer?.name || meta.payerName || meta.senderName || null
+        const payerAccount = meta.payerAccountNumber || meta.payer?.accountNumber || null
+        return {
+            primary: payerName || 'Bank Transfer Deposit',
+            secondary: payerAccount ? maskAccount(payerAccount) : null,
+        }
+    }
+
+    // ── Subscription → plan label ────────────────────────────────────────────
+    if (method === 'subscription') {
+        return {
+            primary: 'Subscription Payment',
+            secondary: meta.planName || meta.plan || null,
+        }
+    }
+
+    // ── Commission (referral / agent) ────────────────────────────────────────
+    if (method.includes('commission')) {
+        return {
+            primary: 'Commission Credit',
+            secondary: meta.sourceType || null,
+        }
+    }
+
+    // ── Expense / Debt / Supplier → customer field is already meaningful ─────
+    // ── Adjustment / fallback ────────────────────────────────────────────────
+    return {
+        primary: row.customer || row.method || 'Transaction',
+        secondary: null,
+    }
 }
 const PAGE_SIZE = 10
 
@@ -253,17 +352,23 @@ export function FinanceView() {
             header: 'Entity / Purpose',
             width: '320px',
             cellClassName: 'max-w-[320px] min-w-0',
-            render: (value: string, row: any) => {
+            render: (_value: string, row: any) => {
                 const { label, variant } = getTransactionCategory(row.method)
+                const entity = resolveEntityPurpose(row)
                 const fullRef = String(row.reference ?? row.id ?? '')
                 return (
                     <div className="flex flex-col gap-0.5 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 overflow-hidden">
-                            <span className="font-medium text-brand-deep dark:text-brand-cream truncate flex-1 min-w-0" title={value}>
-                                {value}
+                            <span className="font-medium text-brand-deep dark:text-brand-cream truncate flex-1 min-w-0" title={entity.primary}>
+                                {entity.primary}
                             </span>
                             <Badge variant={variant} className="shrink-0 text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider">{label}</Badge>
                         </div>
+                        {entity.secondary && (
+                            <span className="text-[11px] text-brand-deep/60 dark:text-brand-cream/60 truncate block min-w-0" title={entity.secondary}>
+                                {entity.secondary}
+                            </span>
+                        )}
                         <span className="font-mono text-[10px] text-brand-accent/40 dark:text-brand-cream/40 truncate block min-w-0" title={fullRef}>
                             {fullRef}
                         </span>
@@ -334,11 +439,36 @@ export function FinanceView() {
         {
             key: 'date',
             header: 'Date',
-            render: (value: string) => (
-                <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60 tabular-nums">
-                    {value}
-                </span>
-            )
+            render: (_value: string, row: any) => {
+                // fullDate = "Apr 02, 2026 • 03:45 PM" from API
+                // createdAt = ISO string fallback
+                const fullDate: string = row.fullDate || ''
+                const parts = fullDate.split(' • ')
+                const dateStr = parts[0] || (() => {
+                    const d = row.createdAt ? new Date(row.createdAt) : null
+                    return d && !isNaN(d.getTime())
+                        ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : _value
+                })()
+                const timeStr = parts[1] || (() => {
+                    const d = row.createdAt ? new Date(row.createdAt) : null
+                    return d && !isNaN(d.getTime())
+                        ? d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })
+                        : null
+                })()
+                return (
+                    <div className="flex flex-col gap-0.5">
+                        <span className="text-xs font-medium text-brand-deep dark:text-brand-cream tabular-nums whitespace-nowrap">
+                            {dateStr}
+                        </span>
+                        {timeStr && (
+                            <span className="text-[10px] text-brand-accent/50 dark:text-brand-cream/40 tabular-nums whitespace-nowrap">
+                                {timeStr}
+                            </span>
+                        )}
+                    </div>
+                )
+            }
         },
     ], [currencyCode])
 

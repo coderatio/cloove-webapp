@@ -245,7 +245,7 @@ export function TransactionDetailsDrawer({
                     </div>
                 </DrawerStickyHeader>
 
-                <DrawerBody className="pb-12 pt-8">
+                <DrawerBody className="pb-12 pt-8 px-3 sm:px-6">
                     {!tx ? (
                         <div className="max-w-2xl mx-auto space-y-6 px-4">
                             <Skeleton className="h-24 w-full rounded-2xl" />
@@ -612,7 +612,7 @@ export function TransactionDetailsDrawer({
                                 </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-4 pt-4 px-1">
+                            <div className="flex flex-row gap-4 pt-4 px-1">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
@@ -621,7 +621,7 @@ export function TransactionDetailsDrawer({
                                             className="flex-1 h-14 rounded-3xl border-brand-deep/10 dark:border-white/10 font-bold flex items-center justify-center gap-3 transition-all duration-300 hover:bg-brand-deep/5"
                                         >
                                             <Share2 className={cn("w-4 h-4", (isGeneratingPdf || isGeneratingImage) && "animate-pulse")} />
-                                            {isGeneratingPdf || isGeneratingImage ? "Generating..." : "Share Receipt"}
+                                            {isGeneratingPdf || isGeneratingImage ? "Generating..." : "Receipt"}
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="start" className="w-56 rounded-2xl p-2 bg-white/80 backdrop-blur-xl border-brand-deep/5">
