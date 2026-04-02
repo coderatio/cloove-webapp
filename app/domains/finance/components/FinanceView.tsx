@@ -240,6 +240,7 @@ export function FinanceView() {
     )
     const [viewingTx, setViewingTx] = React.useState<TransactionRow | null>(null)
     const { mutateAsync: requeryTx, isPending: isRequerying } = useRequeryTransaction()
+    const isRequeryingRef = React.useRef(false)
     const [isAddMoneyOpen, setIsAddMoneyOpen] = React.useState(false)
     const [isWithdrawOpen, setIsWithdrawOpen] = React.useState(false)
     const [isPayoutSettingsOpen, setIsPayoutSettingsOpen] = React.useState(false)
@@ -304,14 +305,17 @@ export function FinanceView() {
     }, [useApi, transactions, search, selectedFilters, selectedStoreId, stores])
 
     const handleRequery = React.useCallback(async () => {
-        if (!viewingTx) return
+        if (!viewingTx || isRequeryingRef.current) return
+        isRequeryingRef.current = true
         try {
-            const response = await requeryTx(viewingTx.id)
-            if (response.data) {
-                setViewingTx(response.data)
+            const updated = await requeryTx(viewingTx.id)
+            if (updated) {
+                setViewingTx(updated)
             }
         } catch (error) {
             console.error("Requery failed:", error)
+        } finally {
+            isRequeryingRef.current = false
         }
     }, [viewingTx, requeryTx])
 

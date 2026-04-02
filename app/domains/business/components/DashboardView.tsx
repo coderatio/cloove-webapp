@@ -9,7 +9,7 @@ import { DashboardHero } from "@/app/components/dashboard/DashboardHero"
 import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
 import { ActionRow } from "@/app/components/dashboard/ActionRow"
 import { ActivityStream } from "@/app/components/dashboard/ActivityStream"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { DateRange } from "react-day-picker"
 import { subDays } from "date-fns"
 import { DateRangeFilter } from "@/app/components/dashboard/DateRangeFilter"
@@ -52,6 +52,7 @@ export function DashboardView() {
     const { order } = useOrder(selectedOrderId)
     const { transaction, isLoading: transactionLoading } = useTransaction(selectedTxId)
     const { mutateAsync: requeryTx, isPending: isRequerying } = useRequeryTransaction()
+    const isRequeryingRef = useRef(false)
     const {
         wallet,
         sales,
@@ -203,6 +204,8 @@ export function DashboardView() {
                     onRequery={
                         selectedTxId
                             ? async () => {
+                                if (isRequeryingRef.current) return
+                                isRequeryingRef.current = true
                                 try {
                                     await requeryTx(selectedTxId)
                                     await queryClient.invalidateQueries({
@@ -210,6 +213,8 @@ export function DashboardView() {
                                     })
                                 } catch {
                                     // toast handled by hook
+                                } finally {
+                                    isRequeryingRef.current = false
                                 }
                             }
                             : undefined

@@ -433,18 +433,18 @@ export function TransactionDetailsDrawer({
                                                     <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest mb-4">
                                                         Destination Account
                                                     </p>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 rounded-2xl bg-brand-deep/10 dark:bg-brand-gold/10 flex items-center justify-center">
-                                                            <Banknote className="w-6 h-6 text-brand-deep dark:text-brand-gold" />
+                                                    <div className="divide-y divide-brand-deep/5 dark:divide-white/5">
+                                                        <div className="flex items-center justify-between gap-4 py-2.5 first:pt-0">
+                                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest shrink-0">Bank</p>
+                                                            <p className="text-sm font-medium text-brand-deep dark:text-brand-cream text-right truncate max-w-[60%]">{tx.withdrawal.bankName}</p>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-base font-bold text-brand-deep dark:text-brand-cream">
-                                                                {tx.withdrawal.bankName}
-                                                            </p>
-                                                            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
-                                                                {tx.withdrawal.accountNumber} •{" "}
-                                                                {tx.withdrawal.accountName}
-                                                            </p>
+                                                        <div className="flex items-center justify-between gap-4 py-2.5">
+                                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest shrink-0">Account No.</p>
+                                                            <p className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream text-right">{tx.withdrawal.accountNumber}</p>
+                                                        </div>
+                                                        <div className="flex items-center justify-between gap-4 py-2.5 last:pb-0">
+                                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest shrink-0">Account Name</p>
+                                                            <p className="text-sm font-medium text-brand-deep dark:text-brand-cream text-right truncate max-w-[55%]">{tx.withdrawal.accountName}</p>
                                                         </div>
                                                     </div>
                                                 </div>
