@@ -17,21 +17,20 @@ import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
-import { AddPayoutAccountForm } from './AddPayoutAccountForm'
 import { PayoutAccountsManager } from './PayoutAccountsManager'
 import { useRouter } from "next/navigation"
 import { GlassCard } from "@/app/components/ui/glass-card"
 
-const FALLBACK_MIN_WITHDRAWAL = 1000
+const FALLBACK_MIN_WITHDRAWAL = 50
 
 function currencySymbol(code: string): string {
-    if (code === "NGN") return "₦"
-    const parts = new Intl.NumberFormat("en", {
-        style: "currency",
+    if (code === 'NGN') return '₦'
+    const parts = new Intl.NumberFormat('en', {
+        style: 'currency',
         currency: code,
-        currencyDisplay: "narrowSymbol",
+        currencyDisplay: 'narrowSymbol',
     }).formatToParts(0)
-    return parts.find((p) => p.type === "currency")?.value ?? code
+    return parts.find((p) => p.type === 'currency')?.value ?? code
 }
 
 interface WithdrawDrawerProps {
@@ -60,9 +59,9 @@ function calculateWithdrawalFee(amount: number, tiers: { min: number; max: numbe
     return matchedFee ?? (sorted.length > 0 ? sorted[sorted.length - 1].fee : 0)
 }
 
-type Step = "details" | "pin" | "manage_payouts"
+type Step = 'details' | 'pin' | 'manage_payouts'
 
-export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep = "details" }: WithdrawDrawerProps) {
+export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep = 'details' }: WithdrawDrawerProps) {
     const { wallet, isLoading: walletLoading } = useWalletBalance()
     const { payoutAccounts, isLoading: accountsLoading } = usePayoutAccounts()
     const { depositData, isLoading: verificationLoading } = useDepositAccounts()

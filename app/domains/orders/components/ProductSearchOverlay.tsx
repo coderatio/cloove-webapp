@@ -187,10 +187,10 @@ export function ProductSearchOverlay({
                         animate={{ x: 0 }}
                         exit={{ x: "-100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="relative z-10 w-[720px] max-w-[90%] bg-white dark:bg-brand-deep border-r border-brand-accent/10 dark:border-white/10 shadow-2xl flex flex-col h-full overflow-hidden"
+                        className="relative z-10 w-[720px] max-w-[90%] bg-white dark:bg-brand-deep-900 border-r border-brand-accent/10 dark:border-white/10 shadow-2xl flex flex-col h-full overflow-hidden"
                     >
                         {/* Header / Search Area */}
-                        <div className="flex items-center gap-4 border-b border-brand-accent/5 dark:border-white/5 px-6 h-24 shrink-0 bg-white dark:bg-brand-deep relative z-30">
+                        <div className="flex items-center gap-4 border-b border-brand-accent/5 dark:border-white/5 px-6 h-24 shrink-0 bg-white dark:bg-brand-deep-950 relative z-30">
                             <div className="relative flex-1 flex items-center">
                                 <Search className="absolute left-0 h-6 w-6 text-brand-accent/40 dark:text-brand-cream/40" />
                                 <input
@@ -223,11 +223,11 @@ export function ProductSearchOverlay({
                         </div>
 
                         {/* Results List */}
-                        <div 
-                            className="flex-1 overflow-y-auto custom-scrollbar relative z-10 [scrollbar-gutter:stable] overscroll-contain isolation-auto" 
+                        <div
+                            className="flex-1 overflow-y-auto custom-scrollbar relative z-10 [scrollbar-gutter:stable] overscroll-contain isolation-auto"
                             ref={listRef}
                         >
-                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-accent/40 dark:text-brand-cream/40 px-10 sticky top-0 bg-white dark:bg-brand-deep py-6 z-20 border-b border-brand-accent/5 dark:border-white/5 flex items-center justify-between">
+                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-accent/40 dark:text-brand-cream/40 px-10 sticky top-0 bg-white dark:bg-brand-deep-900 py-6 z-20 border-b border-brand-accent/5 dark:border-white/5 flex items-center justify-between">
                                 <span>
                                     {isLocalMode ? 'Local Catalog' : 'Cloud Search'} • {(isLocalMode ? filteredProducts : products).length} Results
                                 </span>
@@ -239,7 +239,7 @@ export function ProductSearchOverlay({
                                 )}
                             </div>
 
-                            <div 
+                            <div
                                 id="product-search-results"
                                 role="listbox"
                                 className="p-6 px-10 space-y-2 will-change-scroll"
@@ -264,7 +264,7 @@ export function ProductSearchOverlay({
                                                 }
                                             }}
                                             className={cn(
-                                                "relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border group",
+                                                "relative flex items-center justify-between p-4 rounded-3xl cursor-pointer transition-all duration-200 border group",
                                                 activeIndex === index
                                                     ? "bg-brand-deep/5 dark:bg-white/5 border-brand-accent/20 dark:border-white/20 shadow-xs"
                                                     : "bg-transparent border-transparent hover:bg-brand-accent/5 dark:hover:bg-white/5"

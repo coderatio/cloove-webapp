@@ -47,8 +47,14 @@ export function ThemeProvider({
     children,
     ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
+    const pathname = usePathname()
+    const isAuthPage = pathname && /^\/(login|register|staff-invite|verify)(\/.*)?$/.test(pathname)
+
     return (
-        <NextThemesProvider {...props}>
+        <NextThemesProvider 
+            {...props} 
+            forcedTheme={isAuthPage ? "dark" : props.forcedTheme}
+        >
             <ThemeColorSync />
             {children}
         </NextThemesProvider>

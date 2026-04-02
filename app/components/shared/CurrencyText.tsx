@@ -30,7 +30,7 @@ export function CurrencyText({ value, className, symbolClassName }: CurrencyText
     }, [value])
 
     return (
-        <span className={cn("inline-flex items-baseline gap-0.5", className)}>
+        <span className={cn("inline-flex items-baseline gap-0.1", className)}>
             {parts.symbol && !parts.suffix ? (
                 <span className={cn("font-sans", symbolClassName)}>{parts.symbol}</span>
             ) : null}
