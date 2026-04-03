@@ -2,11 +2,13 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
+import Link from "next/link"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { ListCard } from "@/app/components/ui/list-card"
 import { PlanCard } from "@/app/components/billing/PlanCard"
 import { Button } from "@/app/components/ui/button"
-import { AlertCircle, Download, Loader2, FileText, ChevronRight, Wallet } from "lucide-react"
+import { AlertCircle, CreditCard, Download, Loader2, FileText, ChevronRight, Lock, Wallet } from "lucide-react"
+import { Switch } from "@/app/components/ui/switch"
 import { Progress } from "@/app/components/ui/progress"
 import { cn } from "@/app/lib/utils"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -19,7 +21,11 @@ import {
     DrawerDescription,
     DrawerFooter,
     DrawerClose,
+    DrawerStickyHeader,
+    DrawerBody,
 } from "@/app/components/ui/drawer"
+import { PinInputDrawer } from "@/app/components/shared/PinInputDrawer"
+import { ApiError } from "@/app/lib/api-client"
 import {
     Select,
     SelectContent,
@@ -33,6 +39,9 @@ import {
     useSubscriptionPlans,
     useCurrentSubscription,
     useInitiateSubscription,
+    useSubscriptionQuote,
+    usePaySubscriptionFromWallet,
+    useUpdateRenewalPreference,
     useUsageStats,
     useDowngradeSubscription,
     useBillingHistory,
@@ -65,6 +74,8 @@ export function BillingSettings() {
     const { data: plans = [], isLoading: isLoadingPlans } = useSubscriptionPlans()
     const { data: subData, isLoading: isLoadingSub } = useCurrentSubscription(effectiveWalletId)
     const initiateSub = useInitiateSubscription()
+    const payFromWallet = usePaySubscriptionFromWallet()
+    const updateRenewalPref = useUpdateRenewalPreference()
     const downgradeSub = useDowngradeSubscription()
     const { data: billingHistory = [], isLoading: isLoadingHistory } =
         useBillingHistory(effectiveWalletId)
@@ -74,6 +85,17 @@ export function BillingSettings() {
 
     const [selectedInvoice, setSelectedInvoice] = useState<BillingHistoryItem | null>(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
+    const [checkoutOpen, setCheckoutOpen] = useState(false)
+    const [checkoutPlanSlug, setCheckoutPlanSlug] = useState<string | null>(null)
+    const [pinDrawerOpen, setPinDrawerOpen] = useState(false)
+
+    const { data: checkoutQuote, isLoading: checkoutQuoteLoading } = useSubscriptionQuote(
+        checkoutPlanSlug,
+        billingCycle,
+        effectiveWalletId,
+        checkoutOpen && !!checkoutPlanSlug
+    )
 
     const handlePlanSelect = (planSlug: string) => {
         const plan = plans.find((p) => p.slug === planSlug)
@@ -86,11 +108,8 @@ export function BillingSettings() {
                 businessIdOverride: effectiveWalletId,
             })
         } else {
-            initiateSub.mutate({
-                planSlug,
-                interval: billingCycle,
-                businessIdOverride: effectiveWalletId,
-            })
+            setCheckoutPlanSlug(planSlug)
+            setCheckoutOpen(true)
         }
     }
 
@@ -264,6 +283,47 @@ export function BillingSettings() {
                                     Fund your wallet to ensure automatic renewal of your{" "}
                                     {currentPlan?.name || "Starter"} plan.
                                 </p>
+
+                                {subData?.renewalPreference && (
+                                    <div className="space-y-3 pt-4 border-t border-brand-deep/10 dark:border-white/10">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                                            Renewal preferences
+                                        </p>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-xs text-brand-deep/80 dark:text-brand-cream/80">
+                                                Auto-renew from wallet
+                                            </span>
+                                            <Switch
+                                                checked={subData.renewalPreference.walletDeductionEnabled !== false}
+                                                disabled={updateRenewalPref.isPending}
+                                                onCheckedChange={(v) =>
+                                                    updateRenewalPref.mutate({
+                                                        walletDeductionEnabled: v,
+                                                        businessIdOverride: effectiveWalletId,
+                                                    })
+                                                }
+                                            />
+                                        </div>
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="text-xs text-brand-deep/80 dark:text-brand-cream/80">
+                                                Card/bank only (no wallet auto-debit)
+                                            </span>
+                                            <Switch
+                                                checked={
+                                                    subData.renewalPreference.autoRenewalMode ===
+                                                    "gateway_only"
+                                                }
+                                                disabled={updateRenewalPref.isPending}
+                                                onCheckedChange={(v) =>
+                                                    updateRenewalPref.mutate({
+                                                        autoRenewalMode: v ? "gateway_only" : "wallet",
+                                                        businessIdOverride: effectiveWalletId,
+                                                    })
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
@@ -317,7 +377,7 @@ export function BillingSettings() {
             </section>
 
             {/* Available Plans */}
-            <section className="space-y-6">
+            <section id="plans" className="space-y-6 scroll-mt-24">
                 <div className="flex items-center justify-between">
                     <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Available Plans</h2>
                     <div className="flex items-center gap-2 p-1 bg-brand-deep/5 dark:bg-white/5 rounded-lg">
@@ -359,7 +419,15 @@ export function BillingSettings() {
                             features={plan.features}
                             isRecommended={plan.slug === 'growth'}
                             isCurrent={(currentPlan?.slug === plan.slug || (!currentPlan && plan.slug === 'starter')) && (plan.monthlyPrice === 0 || subscription?.interval === billingCycle)}
-                            isLoading={(initiateSub.isPending && initiateSub.variables?.planSlug === plan.slug) || (downgradeSub.isPending && (downgradeSub.variables === plan.slug || (typeof downgradeSub.variables === "object" && downgradeSub.variables?.planSlug === plan.slug)))}
+                            isLoading={
+                                (initiateSub.isPending && initiateSub.variables?.planSlug === plan.slug) ||
+                                (payFromWallet.isPending &&
+                                    payFromWallet.variables?.planSlug === plan.slug) ||
+                                (downgradeSub.isPending &&
+                                    (downgradeSub.variables === plan.slug ||
+                                        (typeof downgradeSub.variables === "object" &&
+                                            downgradeSub.variables?.planSlug === plan.slug)))
+                            }
                             onSelect={() => handlePlanSelect(plan.slug)}
                         />
                     ))}
@@ -451,7 +519,168 @@ export function BillingSettings() {
                 </div>
             </section>
 
-            {/* Mobile Invoice Drawer */}
+            {/* Subscription checkout — wallet vs gateway (Calm Intelligence: glass, serif, gold accent) */}
+            <Drawer
+                open={checkoutOpen}
+                onOpenChange={(open) => {
+                    setCheckoutOpen(open)
+                    if (!open) {
+                        setCheckoutPlanSlug(null)
+                        setPinDrawerOpen(false)
+                    }
+                }}
+            >
+                <DrawerContent className="max-w-2xl mx-auto max-h-[92vh] flex flex-col rounded-t-[32px] border border-brand-deep/5 dark:border-white/10 bg-brand-cream dark:bg-brand-deep-900 shadow-2xl">
+                    <div className="pointer-events-none absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-brand-gold/40 to-transparent" />
+                    <DrawerStickyHeader className="pb-4 border-b border-brand-deep/5 dark:border-white/5">
+                        <div className="text-center w-full space-y-2 pr-10">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand-deep/35 dark:text-brand-cream/35">
+                                Complete payment
+                            </p>
+                            <DrawerTitle className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream tracking-tight">
+                                {checkoutPlanSlug
+                                    ? plans.find((p) => p.slug === checkoutPlanSlug)?.name ?? "Plan"
+                                    : "Plan"}
+                            </DrawerTitle>
+                            <DrawerDescription className="text-sm text-brand-deep/55 dark:text-brand-cream/55 leading-relaxed max-w-md mx-auto">
+                                Choose how you would like to pay. Card and bank transfers are processed by
+                                our payment partner — they may show additional fees at checkout.
+                            </DrawerDescription>
+                        </div>
+                    </DrawerStickyHeader>
+
+                    <DrawerBody className="flex-1 overflow-y-auto px-6 md:px-8 pt-2 pb-4">
+                        {checkoutQuoteLoading ? (
+                            <div className="flex justify-center py-16">
+                                <Loader2 className="w-10 h-10 animate-spin text-brand-gold" />
+                            </div>
+                        ) : checkoutQuote ? (
+                            <div className="space-y-6">
+                                <GlassCard className="p-6 space-y-4 border-brand-gold/15 bg-brand-gold/3 dark:bg-white/3 shadow-sm">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                                            Plan amount
+                                        </span>
+                                        <span className="text-xl font-serif font-semibold text-brand-deep dark:text-brand-cream tabular-nums">
+                                            {formatPrice(checkoutQuote.baseAmount, checkoutQuote.currency)}
+                                        </span>
+                                    </div>
+                                    {checkoutQuote.wallet ? (
+                                        <div className="pt-3 border-t border-brand-deep/10 dark:border-white/10 space-y-1">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-brand-deep/50 dark:text-brand-cream/50">
+                                                    Business wallet
+                                                </span>
+                                                <span className="font-medium tabular-nums text-brand-deep dark:text-brand-cream">
+                                                    {formatPrice(
+                                                        checkoutQuote.wallet.balance,
+                                                        checkoutQuote.wallet.currency
+                                                    )}
+                                                </span>
+                                            </div>
+                                            {!checkoutQuote.wallet.sufficient ? (
+                                                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                                    Insufficient balance for this plan. Fund your wallet or
+                                                    pay with card.
+                                                </p>
+                                            ) : !user?.hasTransactionPin ? (
+                                                <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed flex items-start gap-2">
+                                                    <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-brand-gold" />
+                                                    <span>
+                                                        Set a 4-digit transaction PIN in Security to pay from
+                                                        your wallet.{" "}
+                                                        <Link
+                                                            href="/settings?tab=security"
+                                                            className="font-semibold text-brand-gold underline-offset-2 hover:underline"
+                                                        >
+                                                            Set up PIN
+                                                        </Link>
+                                                    </span>
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    ) : null}
+                                </GlassCard>
+                            </div>
+                        ) : null}
+                    </DrawerBody>
+
+                    <DrawerFooter className="flex-col gap-3 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/80 dark:bg-brand-deep-900/95 backdrop-blur-md">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full h-12 rounded-2xl border-brand-deep/15 dark:border-white/15 text-brand-deep dark:text-brand-cream hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                            disabled={
+                                !checkoutQuote?.wallet?.sufficient ||
+                                !user?.hasTransactionPin ||
+                                payFromWallet.isPending ||
+                                initiateSub.isPending
+                            }
+                            onClick={() => {
+                                if (!checkoutPlanSlug || !effectiveWalletId) return
+                                if (!checkoutQuote?.wallet?.sufficient) return
+                                if (!user?.hasTransactionPin) {
+                                    toast.error(
+                                        "Set a transaction PIN in Security settings to pay from your wallet."
+                                    )
+                                    return
+                                }
+                                setPinDrawerOpen(true)
+                            }}
+                        >
+                            <Wallet className="w-4 h-4 mr-2 shrink-0" />
+                            Pay from wallet
+                        </Button>
+                        <Button
+                            type="button"
+                            className="w-full h-12 rounded-2xl bg-brand-gold text-brand-deep hover:bg-brand-gold/90 font-semibold shadow-lg shadow-brand-gold/20"
+                            disabled={initiateSub.isPending || payFromWallet.isPending}
+                            onClick={() => {
+                                if (!checkoutPlanSlug || !effectiveWalletId) return
+                                initiateSub.mutate({
+                                    planSlug: checkoutPlanSlug,
+                                    interval: billingCycle,
+                                    businessIdOverride: effectiveWalletId,
+                                })
+                            }}
+                        >
+                            <CreditCard className="w-4 h-4 mr-2 shrink-0" />
+                            Pay with card / bank
+                        </Button>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
+
+            <PinInputDrawer
+                open={pinDrawerOpen}
+                onOpenChange={setPinDrawerOpen}
+                title="Confirm wallet payment"
+                description="Enter your 4-digit transaction PIN to debit your business wallet for this subscription."
+                onSubmit={async (pin) => {
+                    if (!checkoutPlanSlug || !effectiveWalletId) {
+                        throw new Error("Checkout expired. Please try again.")
+                    }
+                    try {
+                        await payFromWallet.mutateAsync({
+                            planSlug: checkoutPlanSlug,
+                            interval: billingCycle,
+                            pin,
+                            businessIdOverride: effectiveWalletId,
+                        })
+                        setCheckoutOpen(false)
+                        setCheckoutPlanSlug(null)
+                    } catch (err) {
+                        const message =
+                            err instanceof ApiError
+                                ? err.message
+                                : err instanceof Error
+                                  ? err.message
+                                  : "Payment failed"
+                        throw new Error(message)
+                    }
+                }}
+            />
+
             <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
                 <DrawerContent>
                     <DrawerHeader className="text-left">

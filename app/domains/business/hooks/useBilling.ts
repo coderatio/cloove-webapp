@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 import { storage } from "@/app/lib/storage"
+import { useAuth } from "@/app/components/providers/auth-provider"
 
 export interface Plan {
     id: string
@@ -39,6 +40,21 @@ export interface SubscriptionResponse {
     wallet?: {
         balance: number
         currency: string
+    } | null
+    renewalPreference?: {
+        walletDeductionEnabled: boolean
+        autoRenewalMode: "wallet" | "gateway_only"
+    }
+}
+
+export interface SubscriptionQuote {
+    baseAmount: number
+    currency: string
+    wallet: {
+        businessId: string
+        balance: number
+        currency: string
+        sufficient: boolean
     } | null
 }
 
@@ -88,6 +104,83 @@ export const useInitiateSubscription = () => {
         },
         onError: (error: Error) => {
             toast.error(error.message || "Failed to initiate subscription")
+        },
+    })
+}
+
+export const useSubscriptionQuote = (
+    planSlug: string | null,
+    interval: "monthly" | "yearly" | null,
+    billingBusinessId?: string | null,
+    enabled = true
+) => {
+    const effectiveId = billingBusinessId ?? storage.getActiveBusinessId()
+    return useQuery({
+        queryKey: ["subscription-quote", effectiveId ?? "", planSlug ?? "", interval ?? ""],
+        queryFn: () =>
+            apiClient.get<SubscriptionQuote>(
+                "/subscriptions/quote",
+                {
+                    planSlug: planSlug!,
+                    interval: interval!,
+                },
+                { businessIdOverride: effectiveId ?? undefined }
+            ),
+        enabled: !!effectiveId && !!planSlug && !!interval && enabled,
+    })
+}
+
+export const usePaySubscriptionFromWallet = () => {
+    const queryClient = useQueryClient()
+    const { refreshUser } = useAuth()
+    return useMutation({
+        mutationFn: (payload: {
+            planSlug: string
+            interval: "monthly" | "yearly"
+            pin: string
+            businessIdOverride?: string | null
+        }) => {
+            const { businessIdOverride, pin, ...body } = payload
+            return apiClient.post<{ subscription: Subscription; changeType: string }>(
+                "/subscriptions/pay-with-wallet",
+                { ...body, pin },
+                { businessIdOverride: businessIdOverride ?? undefined }
+            )
+        },
+        onSuccess: async (_data, variables) => {
+            toast.success("Subscription updated")
+            const id = variables.businessIdOverride ?? storage.getActiveBusinessId()
+            queryClient.invalidateQueries({ queryKey: ["current-subscription", id] })
+            queryClient.invalidateQueries({ queryKey: ["billing-history", id ?? ""] })
+            queryClient.invalidateQueries({ queryKey: ["subscription-quote"] })
+            await refreshUser()
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || "Wallet payment failed")
+        },
+    })
+}
+
+export const useUpdateRenewalPreference = () => {
+    const queryClient = useQueryClient()
+    return useMutation({
+        mutationFn: (payload: {
+            autoRenewalMode?: "wallet" | "gateway_only"
+            walletDeductionEnabled?: boolean
+            businessIdOverride?: string | null
+        }) => {
+            const { businessIdOverride, ...body } = payload
+            return apiClient.post("/subscriptions/renewal-preference", body, {
+                businessIdOverride: businessIdOverride ?? undefined,
+            })
+        },
+        onSuccess: (_data, variables) => {
+            toast.success("Renewal preferences saved")
+            const id = variables.businessIdOverride ?? storage.getActiveBusinessId()
+            queryClient.invalidateQueries({ queryKey: ["current-subscription", id] })
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || "Could not save preferences")
         },
     })
 }

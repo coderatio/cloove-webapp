@@ -6,12 +6,14 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Loader2, CheckCircle2, XCircle, ArrowRight } from "lucide-react"
 import { useVerifyPayment } from "../../domains/business/hooks/useBilling"
+import { useAuth } from "@/app/components/providers/auth-provider"
 import { toast } from "sonner"
 
 export default function SubscriptionVerifyPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const verifyPayment = useVerifyPayment()
+    const { refreshUser } = useAuth()
     const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying")
 
     const transaction_id = searchParams.get("transaction_id")
@@ -26,10 +28,11 @@ export default function SubscriptionVerifyPage() {
         verifyPayment.mutate(
             { transaction_id, tx_ref },
             {
-                onSuccess: (data) => {
+                onSuccess: async (data) => {
                     if (data.success) {
                         setStatus("success")
                         toast.success("Payment verified successfully!")
+                        await refreshUser()
                     } else {
                         setStatus("error")
                         toast.error(data.message || "Verification failed")

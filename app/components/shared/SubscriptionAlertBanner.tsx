@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { AlertTriangle, CreditCard, FileText } from "lucide-react"
+import { AlertTriangle, CreditCard, FileText, Wallet } from "lucide-react"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { cn } from "@/app/lib/utils"
 
@@ -44,6 +44,24 @@ export function SubscriptionAlertBanner() {
                         <CreditCard className="w-3.5 h-3.5" />
                         Billing &amp; plans
                     </Link>
+                    {(alert.type === "grace_period" || alert.type === "expired") && (
+                        <>
+                            <Link
+                                href="/settings?tab=billing#plans"
+                                className="inline-flex items-center gap-1.5 font-semibold text-brand-deep dark:text-brand-cream/90 underline-offset-2 hover:underline"
+                            >
+                                <Wallet className="w-3.5 h-3.5" />
+                                Renew with wallet
+                            </Link>
+                            <Link
+                                href="/settings?tab=billing#plans"
+                                className="inline-flex items-center gap-1.5 font-semibold text-brand-deep dark:text-brand-cream/90 underline-offset-2 hover:underline"
+                            >
+                                <CreditCard className="w-3.5 h-3.5" />
+                                Renew with card / bank
+                            </Link>
+                        </>
+                    )}
                     {alert.invoiceUrl ? (
                         <a
                             href={alert.invoiceUrl}
