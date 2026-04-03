@@ -2,7 +2,6 @@
 
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { ALL_STORES_ID } from "@/app/domains/stores/data/storesMocks"
-import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { motion } from "framer-motion"
 import { DashboardHero } from "@/app/components/dashboard/DashboardHero"
@@ -37,7 +36,6 @@ function getTimeBasedGreeting(): string {
 
 export function DashboardView() {
     const { ownerName, activeBusiness } = useBusiness()
-    const isDesktop = useMediaQuery("(min-width: 768px)")
     const queryClient = useQueryClient()
     const { can } = usePermission()
     const { stores } = useStores()
@@ -89,17 +87,62 @@ export function DashboardView() {
                         transition={{ duration: 0.2 }}
                         className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
                     >
-                        <div className="min-w-0">
-                            <p className="text-[10px] md:text-sm text-brand-accent/80 dark:text-brand-cream/80 font-medium mb-0 md:mb-1 capitalize">
-                                {isDesktop ? getTimeBasedGreeting() : "Welcome,"}
+                        {/* Mobile: one row — greeting + grouped filters (store + icon date) */}
+                        <div className="flex w-full min-w-0 items-center justify-between gap-2 md:hidden">
+                            <div className="min-w-0 flex-1 pr-1">
+                                <p className="text-[10px] font-medium capitalize leading-none text-brand-accent/80 dark:text-brand-cream/80">
+                                    Welcome,
+                                </p>
+                                <h1 className="mt-0.5 truncate font-serif text-xl leading-tight tracking-tight text-brand-deep dark:text-brand-cream">
+                                    {ownerName}
+                                </h1>
+                            </div>
+                            <div
+                                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-brand-accent/15 bg-white/60 p-0.5 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
+                                role="toolbar"
+                                aria-label="Dashboard filters"
+                            >
+                                <StoreContextSelector
+                                    compact
+                                    value={storeId}
+                                    onChange={setStoreId}
+                                    className="max-w-[118px] border-0 bg-transparent shadow-none dark:bg-transparent"
+                                />
+                                <span
+                                    className="mx-0.5 h-6 w-px shrink-0 bg-brand-deep/10 dark:bg-white/15"
+                                    aria-hidden
+                                />
+                                <DateRangeFilter
+                                    iconOnly
+                                    date={date}
+                                    setDate={setDate}
+                                    className="min-w-0"
+                                    buttonClassName="border-0 bg-transparent shadow-none dark:bg-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Desktop */}
+                        <div className="hidden min-w-0 md:block">
+                            <p className="mb-1 text-sm font-medium capitalize text-brand-accent/80 dark:text-brand-cream/80">
+                                {getTimeBasedGreeting()}
                             </p>
-                            <h1 className="font-serif text-2xl md:text-4xl text-brand-deep dark:text-brand-cream">
+                            <h1 className="font-serif text-4xl text-brand-deep dark:text-brand-cream">
                                 {ownerName}
                             </h1>
                         </div>
-                        <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2 md:w-auto">
-                            <StoreContextSelector value={storeId} onChange={setStoreId} className="w-[180px] sm:w-[200px] shadow-sm border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300" />
-                            <DateRangeFilter date={date} setDate={setDate} className="min-w-0" buttonClassName="rounded-full" />
+                        <div className="hidden w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-2 md:grid md:w-auto">
+                            <StoreContextSelector
+                                value={storeId}
+                                onChange={setStoreId}
+                                className="w-[180px] sm:w-[200px] shadow-sm border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300"
+                            />
+                            <DateRangeFilter
+                                date={date}
+                                setDate={setDate}
+                                className="min-w-0"
+                                buttonClassName="rounded-full"
+                            />
                         </div>
                     </motion.div>
                 </header>

@@ -19,6 +19,8 @@ export const STORAGE_KEYS = {
     BT_PRINTER_PROFILE: 'cloove_bt_printer_profile',
     /** Whether to always use Bluetooth for printing */
     BT_ALWAYS_USE: 'cloove_bt_always_use',
+    /** Last successful /businesses payload (survives rate limits / transient errors) */
+    BUSINESSES_CACHE: 'cloove_businesses_cache',
 } as const
 
 type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]
@@ -58,6 +60,7 @@ export const storage = {
         if (typeof window === 'undefined') return
         this.remove(STORAGE_KEYS.ACTIVE_BUSINESS_ID)
         this.remove(STORAGE_KEYS.LAST_ACTIVITY)
+        this.remove(STORAGE_KEYS.BUSINESSES_CACHE)
     },
 
     /**
@@ -247,5 +250,16 @@ export const storage = {
      */
     setSidebarCollapsed(collapsed: boolean): void {
         this.set(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(collapsed))
-    }
+    },
+
+    /**
+     * Raw JSON of last successful businesses list (used when /businesses fails e.g. 429)
+     */
+    getBusinessesCacheJson(): string | null {
+        return this.get(STORAGE_KEYS.BUSINESSES_CACHE)
+    },
+
+    setBusinessesCacheJson(json: string): void {
+        this.set(STORAGE_KEYS.BUSINESSES_CACHE, json)
+    },
 }

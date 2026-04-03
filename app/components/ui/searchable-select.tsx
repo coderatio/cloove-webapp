@@ -28,6 +28,8 @@ interface SearchableSelectProps {
     className?: string
     triggerClassName?: string
     renderTrigger?: (selectedValue: string | undefined, options: SearchableSelectOption[]) => React.ReactNode
+    /** Cross-axis alignment vs trigger; `end` helps right-edge toolbars stay inset from the screen */
+    popoverAlign?: 'start' | 'center' | 'end'
 }
 
 export function SearchableSelect({
@@ -40,7 +42,8 @@ export function SearchableSelect({
     disabled = false,
     className,
     triggerClassName,
-    renderTrigger
+    renderTrigger,
+    popoverAlign = 'end',
 }: SearchableSelectProps) {
     const [open, setOpen] = React.useState(false)
     const [searchQuery, setSearchQuery] = React.useState("")
@@ -99,10 +102,12 @@ export function SearchableSelect({
             </PopoverTrigger>
             <PopoverContent
                 className={cn(
-                    "w-(--radix-popover-trigger-width) p-0 rounded-xl overflow-hidden shadow-xl border-brand-deep/5 dark:border-brand-cream/10 bg-white dark:bg-brand-deep-800",
+                    // At least ~280px so narrow triggers (e.g. compact store chip) don’t squash the list; cap to viewport on small phones
+                    "w-[max(18.5rem,var(--radix-popover-trigger-width))] max-w-[min(20rem,calc(100vw-2.5rem))] p-0 rounded-3xl overflow-hidden shadow-xl border-brand-deep/5 dark:border-brand-cream/10 bg-white dark:bg-brand-deep-800",
                     className
                 )}
-                align="start"
+                align={popoverAlign}
+                collisionPadding={20}
                 onOpenAutoFocus={(e) => e.preventDefault()}
             >
                 <div className="flex flex-col max-h-[300px]">

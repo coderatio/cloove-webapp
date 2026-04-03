@@ -17,6 +17,9 @@ function SelectBusinessContent() {
         setActiveBusiness,
         activeBusiness,
         isLoading,
+        isRefreshing,
+        refreshBusinesses,
+        businessesLoadFailed,
         isMultiBusinessRestricted,
         primaryBusinessId,
         isBusinessSelectable,
@@ -106,7 +109,27 @@ function SelectBusinessContent() {
                 )}
 
                 <div className="grid gap-6">
-                    {businesses.length === 0 ? (
+                    {businesses.length === 0 && businessesLoadFailed ? (
+                        <GlassCard className="p-12 text-center space-y-6">
+                            <div className="h-16 w-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <LayoutGrid className="h-8 w-8 text-amber-600/80 dark:text-amber-400/80" />
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-brand-deep dark:text-brand-cream">Couldn&apos;t load businesses</h3>
+                                <p className="text-brand-accent/60 dark:text-brand-cream/60 text-sm max-w-sm mx-auto">
+                                    The server may be busy or limiting requests. Your session is still active — try again in a few seconds.
+                                </p>
+                            </div>
+                            <Button
+                                type="button"
+                                disabled={isRefreshing}
+                                onClick={() => void refreshBusinesses()}
+                                className="h-14 rounded-2xl px-12 bg-brand-gold text-brand-deep font-bold hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60"
+                            >
+                                {isRefreshing ? 'Retrying…' : 'Try again'}
+                            </Button>
+                        </GlassCard>
+                    ) : businesses.length === 0 ? (
                         <GlassCard className="p-12 text-center space-y-6">
                             <div className="h-16 w-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                 <LayoutGrid className="h-8 w-8 text-brand-cream/20" />

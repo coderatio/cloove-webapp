@@ -3,7 +3,8 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter, usePathname } from 'next/navigation'
-import { apiClient } from '@/app/lib/api-client'
+import { apiClient, ApiError } from '@/app/lib/api-client'
+import { HttpStatus } from '@/app/lib/http-status'
 import { storage } from '@/app/lib/storage'
 import { toast } from 'sonner'
 import { useAuth } from './providers/auth-provider'
@@ -32,6 +33,10 @@ interface BusinessContextType {
     isLoading: boolean
     isRefreshing: boolean
     refreshBusinesses: () => Promise<Business[] | undefined>
+    /** True when /businesses failed and we had no cached list to restore (do not show “create business” onboarding) */
+    businessesLoadFailed: boolean
+    /** Last fetch failed but we restored businesses from local cache (e.g. rate limit) */
+    isUsingStaleBusinesses: boolean
     isMultiBusinessRestricted: boolean
     primaryBusinessId: string | null
 
@@ -55,6 +60,37 @@ const BUSINESS_TYPE_EXEMPT_PATHS = [
     '/register',
 ]
 
+interface BusinessesCachePayload {
+    userId: string
+    businesses: Business[]
+    primaryBusinessId: string | null
+    isMultiBusinessRestricted: boolean
+}
+
+function parseBusinessesCache(userId: string): BusinessesCachePayload | null {
+    const raw = storage.getBusinessesCacheJson()
+    if (!raw) return null
+    try {
+        const p = JSON.parse(raw) as BusinessesCachePayload
+        if (p.userId !== userId || !Array.isArray(p.businesses)) return null
+        return p
+    } catch {
+        return null
+    }
+}
+
+async function fetchBusinessesWithRetry(): Promise<Business[]> {
+    try {
+        return await apiClient.get<Business[]>('/businesses')
+    } catch (e) {
+        if (e instanceof ApiError && e.statusCode === HttpStatus.TOO_MANY_REQUESTS) {
+            await new Promise((r) => setTimeout(r, 1600))
+            return await apiClient.get<Business[]>('/businesses')
+        }
+        throw e
+    }
+}
+
 export function BusinessProvider({ children }: { children: ReactNode }) {
     const queryClient = useQueryClient()
     const [businesses, setBusinesses] = useState<Business[]>([])
@@ -64,6 +100,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     const [primaryBusinessId, setPrimaryBusinessId] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
+    const [businessesLoadFailed, setBusinessesLoadFailed] = useState(false)
+    const [isUsingStaleBusinesses, setIsUsingStaleBusinesses] = useState(false)
     const router = useRouter()
     const pathname = usePathname()
     // Tracks which user's businesses have been fetched to prevent Strict Mode double-calls
@@ -102,9 +140,32 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }, [queryClient, isBusinessSelectable])
 
     const refreshBusinesses = useCallback(async (): Promise<Business[] | undefined> => {
+        if (!user?.id) return undefined
         setIsRefreshing(true)
+
+        const applyActiveSelection = (
+            data: Business[],
+            nextRestricted: boolean,
+            firstBusinessId: string | null,
+            firstBusiness: Business | null,
+        ) => {
+            const savedId = storage.getActiveBusinessId()
+            if (data.length === 1) {
+                setActiveBusiness(data[0], { quiet: true })
+            } else if (savedId) {
+                const found = data.find((b) => b.id === savedId)
+                if (found && (!nextRestricted || found.id === firstBusinessId)) {
+                    setActiveBusiness(found, { quiet: true })
+                } else if (nextRestricted && firstBusiness) {
+                    setActiveBusiness(firstBusiness, { quiet: true })
+                }
+            } else if (nextRestricted && firstBusiness) {
+                setActiveBusiness(firstBusiness, { quiet: true })
+            }
+        }
+
         try {
-            const data = await apiClient.get<Business[]>('/businesses')
+            const data = await fetchBusinessesWithRetry()
             setBusinesses(data)
             const ownerBusinesses = data.filter((b) => b.role === 'OWNER')
             const firstBusiness = ownerBusinesses[0] ?? data[0] ?? null
@@ -132,29 +193,54 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
                 }
             }
             setIsMultiBusinessRestricted(nextRestricted)
+            applyActiveSelection(data, nextRestricted, firstBusinessId, firstBusiness)
 
-            const savedId = storage.getActiveBusinessId()
-            if (data.length === 1) {
-                setActiveBusiness(data[0], { quiet: true })
-            } else if (savedId) {
-                const found = data.find(b => b.id === savedId)
-                if (found && (!nextRestricted || found.id === firstBusinessId)) {
-                    setActiveBusiness(found, { quiet: true })
-                } else if (nextRestricted && firstBusiness) {
-                    setActiveBusiness(firstBusiness, { quiet: true })
-                }
-            } else if (nextRestricted && firstBusiness) {
-                setActiveBusiness(firstBusiness, { quiet: true })
+            try {
+                storage.setBusinessesCacheJson(
+                    JSON.stringify({
+                        userId: user.id,
+                        businesses: data,
+                        primaryBusinessId: firstBusinessId,
+                        isMultiBusinessRestricted: nextRestricted,
+                    } satisfies BusinessesCachePayload),
+                )
+            } catch {
+                // ignore quota / private mode
             }
+
+            setBusinessesLoadFailed(false)
+            setIsUsingStaleBusinesses(false)
             return data
         } catch {
+            const cached = parseBusinessesCache(user.id)
+            if (cached && cached.businesses.length > 0) {
+                setBusinesses(cached.businesses)
+                setPrimaryBusinessId(cached.primaryBusinessId)
+                setIsMultiBusinessRestricted(cached.isMultiBusinessRestricted)
+                const ownerBusinesses = cached.businesses.filter((b) => b.role === 'OWNER')
+                const firstBusiness = ownerBusinesses[0] ?? cached.businesses[0] ?? null
+                const firstBusinessId =
+                    cached.primaryBusinessId ?? firstBusiness?.id ?? null
+                applyActiveSelection(
+                    cached.businesses,
+                    cached.isMultiBusinessRestricted,
+                    firstBusinessId,
+                    firstBusiness,
+                )
+                setBusinessesLoadFailed(false)
+                setIsUsingStaleBusinesses(true)
+                toast.message('Could not refresh your businesses (requests limited). Using saved data — try again shortly.')
+                return cached.businesses
+            }
+
+            setBusinessesLoadFailed(true)
             toast.error('Failed to load businesses. Please try again.')
             return undefined
         } finally {
             setIsLoading(false)
             setIsRefreshing(false)
         }
-    }, [setActiveBusiness])
+    }, [setActiveBusiness, user?.id])
 
     useEffect(() => {
         if (isAuthLoading) return // Wait for auth check to finish
@@ -164,6 +250,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             setActiveBusinessState(null)
             setIsMultiBusinessRestricted(false)
             setPrimaryBusinessId(null)
+            setBusinessesLoadFailed(false)
+            setIsUsingStaleBusinesses(false)
             fetchedForUserRef.current = null
             return
         }
@@ -248,6 +336,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             isLoading,
             isRefreshing,
             refreshBusinesses,
+            businessesLoadFailed,
+            isUsingStaleBusinesses,
             isMultiBusinessRestricted,
             primaryBusinessId,
             businessName: activeBusiness?.name || "",
