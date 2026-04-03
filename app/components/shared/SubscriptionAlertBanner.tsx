@@ -15,6 +15,9 @@ import {
     DrawerTitle,
 } from "@/app/components/ui/drawer"
 import { cn } from "@/app/lib/utils"
+import { storage } from "@/app/lib/storage"
+import { useCurrentSubscription } from "@/app/domains/business/hooks/useBilling"
+import { Markdown } from "@/app/components/ui/markdown"
 
 const BILLING_HREF = "/settings?tab=billing"
 const PLANS_HREF = "/settings?tab=billing#plans"
@@ -94,6 +97,18 @@ export function SubscriptionAlertBanner() {
     const alert = user?.subscriptionAlert
     const bannerRef = useRef<HTMLDivElement>(null)
 
+    const businessId = storage.getActiveBusinessId()
+    const { data: subData, isSuccess: subscriptionLoaded } = useCurrentSubscription(businessId)
+    const currentPlan = subData?.currentPlan
+    const subscription = subData?.subscription
+    const isOnFreePlan =
+        !subscription ||
+        currentPlan?.slug === "starter" ||
+        Number(currentPlan?.monthlyPrice ?? 0) === 0
+    /** Trial ended but user is on free tier — renewal copy is misleading; they need to upgrade. */
+    const isExpiredTrialOnFreePlan =
+        subscriptionLoaded && alert?.type === "expired" && isOnFreePlan
+
     /**
      * Mobile: banner is `position:fixed` and stacks message + CTA — height is not a fixed rem value.
      * Sync measured height to `--subscription-banner-offset` so the fixed header sits below the banner (not under it).
@@ -145,24 +160,37 @@ export function SubscriptionAlertBanner() {
     const showPaymentPaths =
         alert.type === "grace_period" ||
         alert.type === "expired" ||
-        alert.type === "renewal_failed"
+        alert.type === "renewal_failed" ||
+        alert.type === "trial_active"
 
     const ctaLabel =
         alert.type === "renewal_success"
             ? "View billing"
-            : isUrgent
-              ? "Renew subscription"
-              : "Renewal options"
+            : alert.type === "trial_active"
+              ? "Trial & billing"
+              : isExpiredTrialOnFreePlan
+                ? "Upgrade plan"
+                : isUrgent
+                  ? "Renew subscription"
+                  : "Renewal options"
 
     const drawerTitle =
         alert.type === "renewal_success"
             ? "Subscription active"
-            : "Renew your subscription"
+            : alert.type === "trial_active"
+              ? "Your trial"
+              : isExpiredTrialOnFreePlan
+                ? "Upgrade your plan"
+                : "Renew your subscription"
 
     const drawerDescription =
         alert.type === "renewal_success"
             ? "Manage plans, payment methods, and invoices from billing settings."
-            : "Pick how you want to pay or review your invoice. You can change plans anytime in billing."
+            : alert.type === "trial_active"
+              ? "When your trial ends, paid access continues on the plan you choose. Add a payment method or pay from your wallet below."
+              : isExpiredTrialOnFreePlan
+                ? "Choose a paid plan to unlock more features. You can compare options and pay from billing settings."
+                : "Pick how you want to pay or review your invoice. You can change plans anytime in billing."
 
     return (
         <>
@@ -189,9 +217,12 @@ export function SubscriptionAlertBanner() {
                         )}
                         aria-hidden
                     />
-                    <p className="text-sm font-medium leading-snug text-brand-deep dark:text-brand-cream">
-                        {alert.message}
-                    </p>
+                    <div className="min-w-0 flex-1 text-sm font-medium leading-snug text-brand-deep dark:text-brand-cream [&_.prose]:text-inherit">
+                        <Markdown
+                            content={alert.message}
+                            className="prose-p:my-0 prose-p:leading-snug prose-headings:my-1 prose-headings:text-[0.95em] prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-a:font-semibold prose-a:text-brand-deep prose-a:underline-offset-2 dark:prose-a:text-brand-cream"
+                        />
+                    </div>
                 </div>
                 <Button
                     type="button"
@@ -238,7 +269,13 @@ export function SubscriptionAlertBanner() {
                                     href={BILLING_HREF}
                                     icon={CreditCard}
                                     title="Billing & plans"
-                                    description="Compare plans, update payment method, and manage renewal preferences."
+                                    description={
+                                        alert.type === "trial_active"
+                                            ? "See trial end date, compare plans, and add a payment method."
+                                            : isExpiredTrialOnFreePlan
+                                              ? "Compare paid plans, payment methods, and billing history."
+                                              : "Compare plans, update payment method, and manage renewal preferences."
+                                    }
                                 />
                                 {showPaymentPaths ? (
                                     <>

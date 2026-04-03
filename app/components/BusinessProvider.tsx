@@ -64,7 +64,8 @@ interface BusinessesCachePayload {
     userId: string
     businesses: Business[]
     primaryBusinessId: string | null
-    isMultiBusinessRestricted: boolean
+    /** Legacy field — ignored on read; restriction is always resolved live from `/subscriptions`. */
+    isMultiBusinessRestricted?: boolean
 }
 
 function parseBusinessesCache(userId: string): BusinessesCachePayload | null {
@@ -88,6 +89,51 @@ async function fetchBusinessesWithRetry(): Promise<Business[]> {
             return await apiClient.get<Business[]>('/businesses')
         }
         throw e
+    }
+}
+
+type SubscriptionBusinessGate = {
+    /** Extra businesses locked (free tier or overdue). */
+    multiBusinessRestricted: boolean
+    /** Current plan is starter/free/$0 — used with `subscriptionAlert` to bust stale localStorage. */
+    isFreeTierPlan: boolean
+}
+
+/**
+ * Multi-business restriction + free-tier flag from `/subscriptions`.
+ * Uses current plan entitlements — not `subscription.status === 'expired'` alone (stale row after upgrade).
+ *
+ * Extra businesses are locked only on free/starter/$0 plans. Do **not** lock on `past_due` while the user
+ * is still entitled to a paid plan (e.g. `grace_period` / billing grace, or trialing) — `subscriptionAlert`
+ * types are informational; gating follows plan tier from `/subscriptions`.
+ */
+async function resolveSubscriptionBusinessGate(
+    firstBusinessId: string | null,
+    businessCount: number
+): Promise<SubscriptionBusinessGate> {
+    if (!firstBusinessId) {
+        return { multiBusinessRestricted: false, isFreeTierPlan: true }
+    }
+    try {
+        const subData = await apiClient.get<{
+            currentPlan: { monthlyPrice?: number; slug?: string } | null
+            subscription: { status?: string } | null
+        }>('/subscriptions', undefined, { businessIdOverride: firstBusinessId })
+
+        const plan = subData?.currentPlan
+        const slug = (plan?.slug ?? '').toLowerCase()
+        const monthly = Number(plan?.monthlyPrice ?? 0)
+        const isFreeTierPlan =
+            !plan || monthly === 0 || slug === 'starter' || slug === 'free'
+
+        const multiBusinessRestricted = businessCount > 1 && isFreeTierPlan
+
+        return { multiBusinessRestricted, isFreeTierPlan }
+    } catch {
+        return {
+            multiBusinessRestricted: businessCount > 1,
+            isFreeTierPlan: true,
+        }
     }
 }
 
@@ -173,27 +219,14 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
             setPrimaryBusinessId(firstBusinessId)
 
-            let nextRestricted = false
-            if (firstBusinessId && data.length > 1) {
-                try {
-                    const subData = await apiClient.get<{
-                        currentPlan: { monthlyPrice?: number } | null
-                        subscription: { status?: string } | null
-                    }>('/subscriptions', undefined, { businessIdOverride: firstBusinessId })
+            const gate = await resolveSubscriptionBusinessGate(firstBusinessId, data.length)
+            setIsMultiBusinessRestricted(gate.multiBusinessRestricted)
+            applyActiveSelection(data, gate.multiBusinessRestricted, firstBusinessId, firstBusiness)
 
-                    const isFreePlan =
-                        !subData?.currentPlan ||
-                        Number(subData.currentPlan.monthlyPrice) === 0 ||
-                        subData.subscription?.status === 'expired' ||
-                        subData.subscription?.status === 'past_due'
-
-                    nextRestricted = isFreePlan
-                } catch {
-                    nextRestricted = true
-                }
+            // Server has no billing alert and user is on a paid plan — drop stale businesses snapshot, then persist fresh.
+            if (user.subscriptionAlert == null && !gate.isFreeTierPlan) {
+                storage.clearBusinessesCache()
             }
-            setIsMultiBusinessRestricted(nextRestricted)
-            applyActiveSelection(data, nextRestricted, firstBusinessId, firstBusiness)
 
             try {
                 storage.setBusinessesCacheJson(
@@ -201,7 +234,6 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
                         userId: user.id,
                         businesses: data,
                         primaryBusinessId: firstBusinessId,
-                        isMultiBusinessRestricted: nextRestricted,
                     } satisfies BusinessesCachePayload),
                 )
             } catch {
@@ -216,14 +248,18 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             if (cached && cached.businesses.length > 0) {
                 setBusinesses(cached.businesses)
                 setPrimaryBusinessId(cached.primaryBusinessId)
-                setIsMultiBusinessRestricted(cached.isMultiBusinessRestricted)
                 const ownerBusinesses = cached.businesses.filter((b) => b.role === 'OWNER')
                 const firstBusiness = ownerBusinesses[0] ?? cached.businesses[0] ?? null
                 const firstBusinessId =
                     cached.primaryBusinessId ?? firstBusiness?.id ?? null
+                const gate = await resolveSubscriptionBusinessGate(
+                    firstBusinessId,
+                    cached.businesses.length
+                )
+                setIsMultiBusinessRestricted(gate.multiBusinessRestricted)
                 applyActiveSelection(
                     cached.businesses,
-                    cached.isMultiBusinessRestricted,
+                    gate.multiBusinessRestricted,
                     firstBusinessId,
                     firstBusiness,
                 )
@@ -240,7 +276,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
             setIsLoading(false)
             setIsRefreshing(false)
         }
-    }, [setActiveBusiness, user?.id])
+    }, [setActiveBusiness, user?.id, user?.subscriptionAlert])
 
     useEffect(() => {
         if (isAuthLoading) return // Wait for auth check to finish
@@ -260,8 +296,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         fetchedForUserRef.current = user.id
         setIsLoading(true) // Ensure guard waits during the initial fetch for a new user
         refreshBusinesses()
-    // refreshBusinesses is a stable useCallback — safe to omit from deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // refreshBusinesses is a stable useCallback — safe to omit from deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id, isAuthLoading])
 
     // Handle all business-related redirects (Selection -> Type Selection -> Dashboard)

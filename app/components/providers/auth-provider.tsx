@@ -15,7 +15,7 @@ export interface UserCountryDetail {
 }
 
 export interface SubscriptionAlert {
-    type: "grace_period" | "renewal_success" | "renewal_failed" | "expired"
+    type: "grace_period" | "renewal_success" | "renewal_failed" | "expired" | "trial_active"
     daysOverdue: number
     gracePeriodEndsAt: string | null
     planName: string

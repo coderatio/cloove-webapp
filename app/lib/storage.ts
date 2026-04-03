@@ -262,4 +262,9 @@ export const storage = {
     setBusinessesCacheJson(json: string): void {
         this.set(STORAGE_KEYS.BUSINESSES_CACHE, json)
     },
+
+    /** Drop last /businesses snapshot (e.g. after upgrade when server has no subscription alert). */
+    clearBusinessesCache(): void {
+        this.remove(STORAGE_KEYS.BUSINESSES_CACHE)
+    },
 }

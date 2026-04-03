@@ -59,6 +59,14 @@ const formatPrice = (amount: number, currency: string = "NGN") => {
     }).format(amount)
 }
 
+/** e.g. `past_due` → "Past due", `trialing` → "Trialing" */
+const formatSubscriptionStatusLabel = (raw: string) => {
+    const normalized = raw.replace(/_/g, " ").trim()
+    if (!normalized) return "Inactive"
+    const lower = normalized.toLowerCase()
+    return lower.charAt(0).toUpperCase() + lower.slice(1)
+}
+
 
 export function BillingSettings() {
     const { user } = useAuth()
@@ -150,6 +158,20 @@ export function BillingSettings() {
 
     const currentPlanPrice = Number(billingCycle === "yearly" ? (currentPlan?.yearlyPrice || 0) : (currentPlan?.monthlyPrice || 0))
 
+    /** Free tier has no billable period; an "expired" row from a past trial must not label the current plan as expired. */
+    const isFreePlan =
+        !subscription ||
+        currentPlan?.slug === "starter" ||
+        Number(currentPlan?.monthlyPrice ?? 0) === 0
+    const subscriptionStatusRaw = subscription?.status ?? "Inactive"
+    const subscriptionStatusLabel =
+        isFreePlan &&
+            ["expired", "canceled", "cancelled", "inactive"].includes(
+                String(subscriptionStatusRaw).toLowerCase()
+            )
+            ? "Active"
+            : formatSubscriptionStatusLabel(String(subscriptionStatusRaw))
+
     const isUnlimitedConversations = maxConversations === null || maxConversations === Infinity
     const isUnlimitedProducts = maxProducts === null || maxProducts === Infinity
     const isUnlimitedStaff = planBenefits.staffAccounts === null || planBenefits.staffAccounts === Infinity
@@ -161,6 +183,7 @@ export function BillingSettings() {
     const isUnlimitedBusinesses = planBenefits.maxBusinesses === null || planBenefits.maxBusinesses === Infinity
     const businessProgress = isUnlimitedBusinesses ? 0 : (usage ? (usage.businesses / Number(planBenefits.maxBusinesses)) * 100 : 0)
 
+    const subscriptionStatusNorm = subscription?.status?.toLowerCase() ?? ""
 
     const isDownloadingInvoice = (id: string) =>
         downloadReceipt.isPending &&
@@ -177,8 +200,8 @@ export function BillingSettings() {
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 text-sm">
                         <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                         <p>
-                            Your account is currently limited to your first business on the free plan.
-                            Upgrade your subscription to re-enable access to your other businesses.
+                            Your account is currently limited to your one business on the free plan.
+                            Upgrade your subscription to re-enable access to your multiple businesses.
                         </p>
                     </div>
                 )}
@@ -193,45 +216,86 @@ export function BillingSettings() {
                                         </h3>
                                         <span className={cn(
                                             "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                                            subscription?.status === 'active'
+                                            ["active", "trialing", "trialling"].includes(
+                                                String(subscriptionStatusLabel).toLowerCase()
+                                            )
                                                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                                                 : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                                         )}>
-                                            {subscription?.status || 'Inactive'}
+                                            {subscriptionStatusLabel}
                                         </span>
                                     </div>
                                     <p className="text-sm text-brand-deep/60 dark:text-brand-cream/60">
                                         {(() => {
-                                            if (!subscription || currentPlan?.slug === 'starter' || currentPlan?.monthlyPrice === 0) {
+                                            if (!subscription || currentPlan?.slug === "starter" || currentPlan?.monthlyPrice === 0) {
                                                 return "Free forever. Upgrade anytime."
                                             }
-                                            if (subscription.status === 'trialling') {
+                                            const amountEl = (
+                                                <CurrencyText
+                                                    value={formatPrice(Number(subscription.amount), ownerCurrencyCode)}
+                                                    className="font-medium text-brand-deep/80 dark:text-brand-cream/80"
+                                                />
+                                            )
+                                            const periodLabel = subscription.interval === "yearly" ? "year" : "month"
+
+                                            if (subscriptionStatusNorm === "trialing" || subscriptionStatusNorm === "trialling") {
                                                 return (
                                                     <>
                                                         Trial ends on{" "}
                                                         {subscription.trialEndsAt
                                                             ? new Date(subscription.trialEndsAt).toLocaleDateString()
-                                                            : "N/A"}
-                                                        . Renews for{" "}
-                                                        <CurrencyText
-                                                            value={formatPrice(Number(subscription.amount), ownerCurrencyCode)}
-                                                            className="font-medium text-brand-deep/80 dark:text-brand-cream/80"
-                                                        />{" "}
-                                                        thereafter.
+                                                            : "—"}
+                                                        . After that, {amountEl} per {periodLabel} — subscribe to continue using paid features.
                                                     </>
                                                 )
                                             }
+
+                                            if (subscriptionStatusNorm === "past_due" && subscription.trialEndsAt) {
+                                                return (
+                                                    <>
+                                                        Your trial ends on{" "}
+                                                        {new Date(subscription.trialEndsAt).toLocaleDateString()}.
+                                                        Subscribe to continue at {amountEl} per {periodLabel}.
+                                                    </>
+                                                )
+                                            }
+
+                                            if (subscriptionStatusNorm === "past_due") {
+                                                return (
+                                                    <>
+                                                        Payment overdue.
+                                                        {subscription.endsAt ? (
+                                                            <>
+                                                                {" "}
+                                                                Last period ended{" "}
+                                                                {new Date(subscription.endsAt).toLocaleDateString()}.
+                                                            </>
+                                                        ) : null}{" "}
+                                                        Pay {amountEl} to restore access.
+                                                    </>
+                                                )
+                                            }
+
+                                            if (subscriptionStatusNorm === "active") {
+                                                return (
+                                                    <>
+                                                        Renews automatically on{" "}
+                                                        {subscription.endsAt
+                                                            ? new Date(subscription.endsAt).toLocaleDateString()
+                                                            : "—"}{" "}
+                                                        for {amountEl}
+                                                    </>
+                                                )
+                                            }
+
                                             return (
                                                 <>
-                                                    Renews automatically on{" "}
-                                                    {subscription.endsAt
-                                                        ? new Date(subscription.endsAt).toLocaleDateString()
-                                                        : "N/A"}{" "}
-                                                    for{" "}
-                                                    <CurrencyText
-                                                        value={formatPrice(Number(subscription.amount), ownerCurrencyCode)}
-                                                        className="font-medium text-brand-deep/80 dark:text-brand-cream/80"
-                                                    />
+                                                    {subscription.endsAt ? (
+                                                        <>
+                                                            Next period {new Date(subscription.endsAt).toLocaleDateString()} —{" "}
+                                                        </>
+                                                    ) : null}
+                                                    {amountEl}
                                                 </>
                                             )
                                         })()}

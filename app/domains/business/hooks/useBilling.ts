@@ -3,6 +3,7 @@ import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 import { storage } from "@/app/lib/storage"
 import { useAuth } from "@/app/components/providers/auth-provider"
+import { useBusiness } from "@/app/components/BusinessProvider"
 
 export interface Plan {
     id: string
@@ -133,6 +134,7 @@ export const useSubscriptionQuote = (
 export const usePaySubscriptionFromWallet = () => {
     const queryClient = useQueryClient()
     const { refreshUser } = useAuth()
+    const { refreshBusinesses } = useBusiness()
     return useMutation({
         mutationFn: (payload: {
             planSlug: string
@@ -154,6 +156,7 @@ export const usePaySubscriptionFromWallet = () => {
             queryClient.invalidateQueries({ queryKey: ["billing-history", id ?? ""] })
             queryClient.invalidateQueries({ queryKey: ["subscription-quote"] })
             await refreshUser()
+            await refreshBusinesses()
         },
         onError: (error: Error) => {
             toast.error(error.message || "Wallet payment failed")
@@ -220,6 +223,7 @@ export const useUsageStats = () => {
 export const useDowngradeSubscription = () => {
     const queryClient = useQueryClient()
     const businessId = storage.getActiveBusinessId()
+    const { refreshBusinesses } = useBusiness()
 
     return useMutation({
         mutationFn: (
@@ -234,13 +238,14 @@ export const useDowngradeSubscription = () => {
                 { businessIdOverride: businessIdOverride ?? undefined }
             )
         },
-        onSuccess: (data, variables) => {
+        onSuccess: async (data, variables) => {
             toast.success(data.message || "Plan changed successfully")
             const effectiveId =
                 typeof variables === "string"
                     ? businessId
                     : variables.businessIdOverride ?? businessId
             queryClient.invalidateQueries({ queryKey: ["current-subscription", effectiveId] })
+            await refreshBusinesses()
         },
         onError: (error: Error) => {
             toast.error(error.message || "Failed to change plan")
