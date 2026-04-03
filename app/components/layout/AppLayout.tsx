@@ -122,14 +122,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     )}
                 >
                     {!isAssistantPage && (
-                        <div className="px-4 md:px-0 pt-3 sm:pt-0 max-w-5xl md:mx-auto space-y-4">
-                            <VerificationAlert />
+                        <div className="max-md:[padding-top:max(0.75rem,var(--subscription-banner-offset,0px))] space-y-4 px-4 md:mx-auto md:max-w-5xl md:px-0 md:pt-0">
+                            {/* Subscription first: fixed mobile bar must sit above verification in the stack */}
                             <SubscriptionAlertBanner />
+                            <VerificationAlert />
                         </div>
                     )}
-                    {/* Mobile Header - Hide on Assistant Page */}
+                    {/* Mobile header: fixed (sticky breaks when a sibling uses position:fixed, e.g. subscription bar) */}
                     {!isAssistantPage && (
-                        <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-white/10 dark:border-white/5">
+                        <div className="fixed left-0 right-0 top-[var(--subscription-banner-offset,0px)] z-30 flex items-center justify-between border-b border-white/10 bg-background/60 px-4 py-3 backdrop-blur-xl dark:border-white/5 md:hidden">
                             <div className="flex items-center gap-2">
                                 <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green text-brand-cream shadow-sm overflow-hidden">
                                     <Image
@@ -207,6 +208,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             </div>
                         </div>
                     )}
+                    {/* Reserve space for fixed mobile header (in-flow when header is md:hidden fixed) */}
+                    {!isAssistantPage && <div className="h-14 shrink-0 md:hidden" aria-hidden />}
 
                     <div className={cn(isAssistantPage ? "p-0" : "px-4 pt-4 md:p-0 pb-24")}>
                         <BusinessGuard>

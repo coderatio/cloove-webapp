@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type ElementType } from "react"
+import { useLayoutEffect, useRef, useState, type ElementType } from "react"
 import Link from "next/link"
 import { AlertTriangle, ChevronRight, CreditCard, FileText, Wallet } from "lucide-react"
 import { useAuth } from "@/app/components/providers/auth-provider"
@@ -92,6 +92,53 @@ export function SubscriptionAlertBanner() {
     const { user } = useAuth()
     const [drawerOpen, setDrawerOpen] = useState(false)
     const alert = user?.subscriptionAlert
+    const bannerRef = useRef<HTMLDivElement>(null)
+
+    /**
+     * Mobile: banner is `position:fixed` and stacks message + CTA — height is not a fixed rem value.
+     * Sync measured height to `--subscription-banner-offset` so the fixed header sits below the banner (not under it).
+     */
+    useLayoutEffect(() => {
+        const clear = () => {
+            document.documentElement.style.removeProperty("--subscription-banner-offset")
+        }
+        if (!alert?.message) {
+            clear()
+            return
+        }
+
+        const mq = window.matchMedia("(max-width: 767px)")
+
+        const publishHeight = () => {
+            if (!mq.matches) {
+                clear()
+                return
+            }
+            const node = bannerRef.current
+            if (!node) return
+            const h = Math.ceil(node.getBoundingClientRect().height)
+            if (h > 0) {
+                document.documentElement.style.setProperty("--subscription-banner-offset", `${h}px`)
+            }
+        }
+
+        publishHeight()
+        const raf = requestAnimationFrame(publishHeight)
+
+        const ro = new ResizeObserver(publishHeight)
+        const node = bannerRef.current
+        if (node) ro.observe(node)
+
+        mq.addEventListener("change", publishHeight)
+
+        return () => {
+            cancelAnimationFrame(raf)
+            ro.disconnect()
+            mq.removeEventListener("change", publishHeight)
+            clear()
+        }
+    }, [alert?.message])
+
     if (!alert?.message) return null
 
     const isUrgent = alert.type === "expired" || alert.type === "renewal_failed"
@@ -120,9 +167,13 @@ export function SubscriptionAlertBanner() {
     return (
         <>
             <div
+                ref={bannerRef}
                 role="alert"
                 className={cn(
                     "mb-6 flex flex-col gap-4 rounded-3xl border px-4 py-4 shadow-lg backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6",
+                    // Mobile: pin below status bar so renewal notice stays visible while scrolling
+                    "max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:z-[45] max-md:mb-0 max-md:rounded-none max-md:border-x-0 max-md:border-t-0 max-md:rounded-b-3xl max-md:px-4 max-md:py-3 max-md:pt-[max(0.75rem,env(safe-area-inset-top))] max-md:shadow-xl",
+                    "md:relative md:mb-6",
                     isUrgent
                         ? "border-amber-500/40 bg-amber-500/10 dark:bg-amber-500/15"
                         : "border-brand-gold/30 bg-brand-gold/5 dark:bg-brand-gold/10"

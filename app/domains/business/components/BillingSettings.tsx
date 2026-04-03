@@ -7,7 +7,7 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { ListCard } from "@/app/components/ui/list-card"
 import { PlanCard } from "@/app/components/billing/PlanCard"
 import { Button } from "@/app/components/ui/button"
-import { AlertCircle, CreditCard, Download, Loader2, FileText, ChevronRight, Lock, Wallet } from "lucide-react"
+import { AlertCircle, Copy, CreditCard, Download, Loader2, FileText, ChevronRight, Lock, Wallet } from "lucide-react"
 import { Switch } from "@/app/components/ui/switch"
 import { Progress } from "@/app/components/ui/progress"
 import { cn } from "@/app/lib/utils"
@@ -16,7 +16,6 @@ import { useAuth } from "@/app/components/providers/auth-provider"
 import {
     Drawer,
     DrawerContent,
-    DrawerHeader,
     DrawerTitle,
     DrawerDescription,
     DrawerFooter,
@@ -25,6 +24,8 @@ import {
     DrawerBody,
 } from "@/app/components/ui/drawer"
 import { PinInputDrawer } from "@/app/components/shared/PinInputDrawer"
+import { AddFundsDrawer } from "@/app/components/shared/AddFundsDrawer"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { ApiError } from "@/app/lib/api-client"
 import {
     Select,
@@ -89,6 +90,7 @@ export function BillingSettings() {
     const [checkoutOpen, setCheckoutOpen] = useState(false)
     const [checkoutPlanSlug, setCheckoutPlanSlug] = useState<string | null>(null)
     const [pinDrawerOpen, setPinDrawerOpen] = useState(false)
+    const [addFundsOpen, setAddFundsOpen] = useState(false)
 
     const { data: checkoutQuote, isLoading: checkoutQuoteLoading } = useSubscriptionQuote(
         checkoutPlanSlug,
@@ -204,9 +206,34 @@ export function BillingSettings() {
                                                 return "Free forever. Upgrade anytime."
                                             }
                                             if (subscription.status === 'trialling') {
-                                                return `Trial ends on ${subscription.trialEndsAt ? new Date(subscription.trialEndsAt).toLocaleDateString() : 'N/A'}. Renews for ${formatPrice(Number(subscription.amount), ownerCurrencyCode)} thereafter.`
+                                                return (
+                                                    <>
+                                                        Trial ends on{" "}
+                                                        {subscription.trialEndsAt
+                                                            ? new Date(subscription.trialEndsAt).toLocaleDateString()
+                                                            : "N/A"}
+                                                        . Renews for{" "}
+                                                        <CurrencyText
+                                                            value={formatPrice(Number(subscription.amount), ownerCurrencyCode)}
+                                                            className="font-medium text-brand-deep/80 dark:text-brand-cream/80"
+                                                        />{" "}
+                                                        thereafter.
+                                                    </>
+                                                )
                                             }
-                                            return `Renews automatically on ${subscription.endsAt ? new Date(subscription.endsAt).toLocaleDateString() : 'N/A'} for ${formatPrice(Number(subscription.amount), ownerCurrencyCode)}`
+                                            return (
+                                                <>
+                                                    Renews automatically on{" "}
+                                                    {subscription.endsAt
+                                                        ? new Date(subscription.endsAt).toLocaleDateString()
+                                                        : "N/A"}{" "}
+                                                    for{" "}
+                                                    <CurrencyText
+                                                        value={formatPrice(Number(subscription.amount), ownerCurrencyCode)}
+                                                        className="font-medium text-brand-deep/80 dark:text-brand-cream/80"
+                                                    />
+                                                </>
+                                            )
                                         })()}
                                     </p>
                                 </div>
@@ -270,13 +297,20 @@ export function BillingSettings() {
                                     <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                         Current Balance
                                     </span>
-                                    <span className="text-2xl font-serif text-brand-deep dark:text-brand-cream tabular-nums mt-0.5">
-                                        {isLoadingSub
-                                            ? "Loading..."
-                                            : wallet
-                                                ? formatPrice(wallet.balance, wallet.currency)
-                                                : formatPrice(0, ownerCurrencyCode)}
-                                    </span>
+                                    {isLoadingSub ? (
+                                        <span className="mt-0.5 text-2xl font-serif tabular-nums text-brand-deep dark:text-brand-cream">
+                                            Loading...
+                                        </span>
+                                    ) : (
+                                        <CurrencyText
+                                            value={
+                                                wallet
+                                                    ? formatPrice(wallet.balance, wallet.currency)
+                                                    : formatPrice(0, ownerCurrencyCode)
+                                            }
+                                            className="mt-0.5 text-2xl font-serif tabular-nums text-brand-deep dark:text-brand-cream"
+                                        />
+                                    )}
                                 </div>
 
                                 <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 leading-relaxed italic">
@@ -363,9 +397,7 @@ export function BillingSettings() {
                                         "transition-colors duration-200 shrink-0",
                                         visibleWalletBusinesses.length > 1 ? "sm:w-auto sm:flex-initial" : "w-full"
                                     )}
-                                    onClick={() => {
-                                        toast.info("Wallet funding feature coming soon")
-                                    }}
+                                    onClick={() => setAddFundsOpen(true)}
                                 >
                                     <Wallet className="w-3.5 h-3.5 mr-2 shrink-0" />
                                     Fund Wallet
@@ -464,7 +496,9 @@ export function BillingSettings() {
                                 >
                                     <td className="px-6 py-4 text-sm text-brand-deep/60">{invoice.date}</td>
                                     <td className="px-6 py-4 text-sm font-medium">{invoice.description}</td>
-                                    <td className="px-6 py-4 text-sm font-medium">{formatPrice(invoice.amount, invoice.currency)}</td>
+                                    <td className="px-6 py-4 text-sm font-medium">
+                                        <CurrencyText value={formatPrice(invoice.amount, invoice.currency)} />
+                                    </td>
                                     <td className="px-6 py-4">
                                         <span className={cn(
                                             "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
@@ -506,7 +540,12 @@ export function BillingSettings() {
                             subtitle={item.date}
                             status={item.status}
                             statusColor={item.status === 'Paid' ? 'success' : 'warning'}
-                            value={formatPrice(item.amount, item.currency)}
+                            value={
+                                <CurrencyText
+                                    value={formatPrice(item.amount, item.currency)}
+                                    className="font-semibold"
+                                />
+                            }
                             onClick={() => handleInvoiceClick(item)}
                         />
                     ))}
@@ -561,9 +600,10 @@ export function BillingSettings() {
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                             Plan amount
                                         </span>
-                                        <span className="text-xl font-serif font-semibold text-brand-deep dark:text-brand-cream tabular-nums">
-                                            {formatPrice(checkoutQuote.baseAmount, checkoutQuote.currency)}
-                                        </span>
+                                        <CurrencyText
+                                            value={formatPrice(checkoutQuote.baseAmount, checkoutQuote.currency)}
+                                            className="text-xl font-serif font-semibold tabular-nums text-brand-deep dark:text-brand-cream"
+                                        />
                                     </div>
                                     {checkoutQuote.wallet ? (
                                         <div className="pt-3 border-t border-brand-deep/10 dark:border-white/10 space-y-1">
@@ -571,12 +611,13 @@ export function BillingSettings() {
                                                 <span className="text-brand-deep/50 dark:text-brand-cream/50">
                                                     Business wallet
                                                 </span>
-                                                <span className="font-medium tabular-nums text-brand-deep dark:text-brand-cream">
-                                                    {formatPrice(
+                                                <CurrencyText
+                                                    value={formatPrice(
                                                         checkoutQuote.wallet.balance,
                                                         checkoutQuote.wallet.currency
                                                     )}
-                                                </span>
+                                                    className="font-medium tabular-nums text-brand-deep dark:text-brand-cream"
+                                                />
                                             </div>
                                             {!checkoutQuote.wallet.sufficient ? (
                                                 <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
@@ -674,61 +715,108 @@ export function BillingSettings() {
                             err instanceof ApiError
                                 ? err.message
                                 : err instanceof Error
-                                  ? err.message
-                                  : "Payment failed"
+                                    ? err.message
+                                    : "Payment failed"
                         throw new Error(message)
                     }
                 }}
             />
 
+            <AddFundsDrawer
+                isOpen={addFundsOpen}
+                onOpenChange={setAddFundsOpen}
+                currencyCode={wallet?.currency ?? ownerCurrencyCode}
+            />
+
             <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
                 <DrawerContent>
-                    <DrawerHeader className="text-left">
+                    <DrawerStickyHeader className="text-left">
                         <DrawerTitle>Invoice Details</DrawerTitle>
                         <DrawerDescription>
                             Review details for this billing period.
                         </DrawerDescription>
-                    </DrawerHeader>
+                    </DrawerStickyHeader>
 
                     {selectedInvoice && (
-                        <div className="p-4 space-y-6">
-                            <div className="flex items-center justify-between py-2 px-4 sm:py-3 sm:px-6 rounded-3xl bg-brand-deep/5 dark:bg-white/5">
-                                <div className="space-y-1">
-                                    <span className="text-xs text-brand-deep/60 dark:text-brand-cream/60 uppercase tracking-wider font-medium">Status</span>
+                        <DrawerBody className="space-y-6 p-4">
+                            <div className="flex flex-row items-start justify-between gap-4 rounded-2xl bg-brand-deep/5 px-4 py-4 dark:bg-white/5 sm:gap-6 sm:px-6">
+                                <div className="min-w-0 flex-1 space-y-1.5">
+                                    <span className="block text-xs font-medium uppercase tracking-wider text-brand-deep/60 dark:text-brand-cream/60">
+                                        Status
+                                    </span>
                                     <div className="flex items-center gap-2">
-                                        <span className={cn(
-                                            "w-2 h-2 rounded-full",
-                                            selectedInvoice.status === 'Paid' ? "bg-emerald-500" : "bg-amber-500"
-                                        )} />
-                                        <span className="text-sm font-bold text-brand-deep dark:text-brand-cream">{selectedInvoice.status}</span>
+                                        <span
+                                            className={cn(
+                                                "h-2 w-2 shrink-0 rounded-full",
+                                                selectedInvoice.status === "Paid" ? "bg-emerald-500" : "bg-amber-500"
+                                            )}
+                                        />
+                                        <span className="text-sm font-bold text-brand-deep dark:text-brand-cream">
+                                            {selectedInvoice.status}
+                                        </span>
                                     </div>
                                 </div>
-                                <div className="text-right space-y-1">
-                                    <span className="text-xs text-brand-deep/60 dark:text-brand-cream/60 uppercase tracking-wider font-medium">Amount</span>
-                                    <div className="text-xl font-serif text-brand-deep dark:text-brand-cream">{formatPrice(selectedInvoice.amount, selectedInvoice.currency)}</div>
+                                <div className="min-w-0 flex-1 space-y-1.5 text-right">
+                                    <span className="block text-xs font-medium uppercase tracking-wider text-brand-deep/60 dark:text-brand-cream/60">
+                                        Amount
+                                    </span>
+                                    <CurrencyText
+                                        value={formatPrice(selectedInvoice.amount, selectedInvoice.currency)}
+                                        className="inline-flex justify-end text-xl font-serif text-brand-deep dark:text-brand-cream"
+                                    />
                                 </div>
                             </div>
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-start py-3 border-b border-brand-deep/5 dark:border-white/5">
-                                    <span className="text-brand-deep/60 dark:text-brand-cream/60 text-sm shrink-0">Reference</span>
-                                    <span className="text-sm font-mono text-right break-all ml-4">{selectedInvoice?.reference}</span>
+                            <div className="space-y-0">
+                                <div className="flex flex-col gap-2 border-b border-brand-deep/5 py-3 dark:border-white/5 md:flex-row md:items-center md:justify-between md:gap-4">
+                                    <span className="w-full shrink-0 text-sm text-brand-deep/60 dark:text-brand-cream/60 md:max-w-[40%]">
+                                        Reference
+                                    </span>
+                                    <div className="flex w-full min-w-0 items-center gap-2 md:flex-1 md:justify-end">
+                                        <span
+                                            className="min-w-0 flex-1 truncate font-mono text-sm text-brand-deep dark:text-brand-cream md:text-right"
+                                            title={selectedInvoice.reference}
+                                        >
+                                            {selectedInvoice.reference}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            className="shrink-0 rounded-lg p-1.5 text-brand-deep/45 transition-colors hover:bg-brand-deep/5 hover:text-brand-deep dark:text-brand-cream/45 dark:hover:bg-white/10 dark:hover:text-brand-cream"
+                                            aria-label="Copy reference"
+                                            onClick={() => {
+                                                void navigator.clipboard.writeText(selectedInvoice.reference).then(() => {
+                                                    toast.success("Reference copied")
+                                                })
+                                            }}
+                                        >
+                                            <Copy className="h-4 w-4" aria-hidden />
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-start py-3 border-b border-brand-deep/5 dark:border-white/5">
-                                    <span className="text-brand-deep/60 dark:text-brand-cream/60 text-sm shrink-0">Date</span>
-                                    <span className="text-sm text-right">{selectedInvoice?.date}</span>
-                                </div>
-                                <div className="flex justify-between items-start py-3 border-b border-brand-deep/5 dark:border-white/5">
-                                    <span className="text-brand-deep/60 dark:text-brand-cream/60 text-sm shrink-0">Description</span>
-                                    <span className="text-sm text-right ml-4">{selectedInvoice?.description}</span>
-                                </div>
-                                <div className="flex justify-between items-center py-4 text-brand-deep dark:text-brand-cream">
-                                    <span className="text-sm font-medium">Total Amount</span>
-                                    <span className="text-xl font-serif font-bold">
-                                        {selectedInvoice && formatPrice(selectedInvoice.amount, selectedInvoice.currency)}
+                                <div className="flex flex-col gap-1 border-b border-brand-deep/5 py-3 dark:border-white/5 md:flex-row md:items-start md:justify-between md:gap-4">
+                                    <span className="w-full shrink-0 text-sm text-brand-deep/60 dark:text-brand-cream/60 md:max-w-[40%]">
+                                        Date
+                                    </span>
+                                    <span className="w-full text-sm text-brand-deep dark:text-brand-cream md:text-right">
+                                        {selectedInvoice.date}
                                     </span>
                                 </div>
+                                <div className="flex flex-col gap-1 border-b border-brand-deep/5 py-3 dark:border-white/5 md:flex-row md:items-start md:justify-between md:gap-4">
+                                    <span className="w-full shrink-0 text-sm text-brand-deep/60 dark:text-brand-cream/60 md:max-w-[40%]">
+                                        Description
+                                    </span>
+                                    <span className="w-full text-sm text-brand-deep dark:text-brand-cream md:text-right">
+                                        {selectedInvoice.description}
+                                    </span>
+                                </div>
+                                <div className="flex flex-col gap-1 py-4 text-brand-deep dark:text-brand-cream md:flex-row md:items-baseline md:justify-between md:gap-4">
+                                    <span className="w-full text-sm font-medium md:max-w-[40%]">Total Amount</span>
+                                    <CurrencyText
+                                        value={formatPrice(selectedInvoice.amount, selectedInvoice.currency)}
+                                        className="w-full text-xl font-serif font-bold md:inline-flex md:w-auto md:justify-end"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        </DrawerBody>
                     )}
 
                     <DrawerFooter>

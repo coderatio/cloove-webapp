@@ -3,6 +3,7 @@
 import { Button } from "@/app/components/ui/button"
 import { Check, Loader2 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
 interface PlanCardProps {
     name: string
@@ -31,11 +32,13 @@ export function PlanCard({
     isLoading,
     currency
 }: PlanCardProps) {
-    const formattedPrice = new Intl.NumberFormat('en-NG', {
-        style: 'currency',
-        currency: currency === "₦" ? 'NGN' : currency,
+    const currencyCode = currency.length === 3 ? currency : currency === "₦" ? "NGN" : currency
+    const formattedPrice = new Intl.NumberFormat("en", {
+        style: "currency",
+        currency: currencyCode,
+        currencyDisplay: "narrowSymbol",
         minimumFractionDigits: 0,
-    }).format(price).replace('NGN', '₦')
+    }).format(price)
 
     const getButtonText = () => {
         if (isLoading) return <Loader2 className="w-4 h-4 animate-spin" />
@@ -79,9 +82,14 @@ export function PlanCard({
 
             <div className="mb-8">
                 <div className="flex items-baseline gap-1">
-                    <span className="font-serif text-4xl text-brand-deep dark:text-brand-cream">
-                        {price === 0 ? "Free" : formattedPrice}
-                    </span>
+                    {price === 0 ? (
+                        <span className="font-serif text-4xl text-brand-deep dark:text-brand-cream">Free</span>
+                    ) : (
+                        <CurrencyText
+                            value={formattedPrice}
+                            className="text-4xl font-serif text-brand-deep dark:text-brand-cream"
+                        />
+                    )}
                     {price > 0 && (
                         <span className="text-sm text-brand-deep/60 dark:text-brand-cream/60 font-medium lowercase">
                             /{interval}
