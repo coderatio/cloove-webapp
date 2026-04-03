@@ -38,7 +38,7 @@ const secondaryNavItems: MobileNavItem[] = [
 const moreItems: MobileNavItem[] = [
     { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
     { href: "/debts", icon: AlertCircle, label: "Debts", permission: 'VIEW_CUSTOMERS' },
-    { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STAFF' },
+    { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STORES' },
     { href: "/inventory", icon: Package, label: "Inventory", permission: 'MANAGE_PRODUCTS' },
     { href: "/expenses", icon: Receipt, label: "Expenses", permission: 'VIEW_EXPENSES' },
     { href: "/vendors", icon: Truck, label: "Vendors", permission: 'VIEW_SUPPLIERS' },
@@ -49,7 +49,7 @@ const moreItems: MobileNavItem[] = [
     },
     { href: "/activity", icon: Activity, label: "Activity", permission: 'VIEW_DASHBOARD' },
     { href: "/staff", icon: ShieldCheck, label: "Staff", permission: 'MANAGE_STAFF' },
-    { href: "/storefront", icon: ShoppingBag, label: "Storefront", permission: 'MANAGE_STAFF' },
+    { href: "/storefront", icon: ShoppingBag, label: "Storefront", permission: 'MANAGE_STORES' },
 ]
 
 export function MobileNav() {

@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { BusinessGuard } from "../shared/BusinessGuard"
 import { VerificationAlert } from "../shared/VerificationAlert"
+import { SubscriptionAlertBanner } from "../shared/SubscriptionAlertBanner"
 import { apiClient } from "@/app/lib/api-client"
 import { useAuth } from "../providers/auth-provider"
 import { usePermission } from "@/app/hooks/usePermission"
@@ -121,8 +122,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     )}
                 >
                     {!isAssistantPage && (
-                        <div className="px-4 md:px-0 pt-3 sm:pt-0 max-w-5xl md:mx-auto">
+                        <div className="px-4 md:px-0 pt-3 sm:pt-0 max-w-5xl md:mx-auto space-y-4">
                             <VerificationAlert />
+                            <SubscriptionAlertBanner />
                         </div>
                     )}
                     {/* Mobile Header - Hide on Assistant Page */}

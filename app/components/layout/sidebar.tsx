@@ -85,7 +85,7 @@ const navGroups: NavGroup[] = [
         label: "Operations",
         items: [
             { href: "/inventory", icon: Package, label: "Inventory", permission: 'MANAGE_PRODUCTS' },
-            { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STAFF' },
+            { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STORES' },
             { href: "/activity", icon: Activity, label: "Activity", permission: 'VIEW_DASHBOARD' },
         ]
     },
@@ -103,7 +103,7 @@ const navGroups: NavGroup[] = [
     {
         label: "Staff & Management",
         items: [
-            { href: "/storefront", icon: Store, label: "Storefront", permission: 'MANAGE_STAFF' },
+            { href: "/storefront", icon: Store, label: "Storefront", permission: 'MANAGE_STORES' },
             { href: "/staff", icon: ShieldCheck, label: "Staff", permission: 'MANAGE_STAFF' },
         ]
     }

@@ -32,8 +32,11 @@ import {
 import { PERMISSIONS, Role } from "../data/staffMocks"
 import { useStaff, type StaffMember } from "../hooks/useStaff"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
+import { usePermission } from "@/app/hooks/usePermission"
+import Link from "next/link"
 
 export function StaffView() {
+    const { canInviteStaff, loading: permissionLoading } = usePermission()
     const { staff, isLoading, inviteStaff, updateStaff, removeStaff, resendInvite } = useStaff()
     const [searchTerm, setSearchTerm] = useState("")
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -82,9 +85,12 @@ export function StaffView() {
     }
 
     const handleAdd = () => {
+        if (!canInviteStaff()) return
         setEditingStaff(null)
         setIsDrawerOpen(true)
     }
+
+    const showAddStaff = !permissionLoading && canInviteStaff()
 
     const handleSave = async () => {
         setIsSaving(true)
@@ -152,9 +158,24 @@ export function StaffView() {
                     searchValue={searchTerm}
                     onSearchChange={setSearchTerm}
                     searchPlaceholder="Search staff by name or phone..."
-                    addButtonLabel="Add Staff Member"
-                    onAddClick={handleAdd}
+                    {...(showAddStaff
+                        ? { addButtonLabel: "Add Staff Member" as const, onAddClick: handleAdd }
+                        : {})}
                 />
+
+                {!permissionLoading && !showAddStaff && (
+                    <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-500/10 px-4 py-3 text-sm text-brand-deep dark:text-brand-cream/90">
+                        You can&apos;t add more staff on your current plan{" "}
+                        <span className="opacity-70">(limit reached or staff not included).</span>{" "}
+                        <Link
+                            href="/settings?tab=billing"
+                            className="font-semibold text-brand-gold underline-offset-2 hover:underline"
+                        >
+                            Upgrade in Billing
+                        </Link>{" "}
+                        to invite more team members.
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 gap-4">
                     {isLoading ? (

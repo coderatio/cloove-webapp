@@ -19,9 +19,17 @@ import { useBusiness } from "../BusinessProvider"
 import { usePermission } from "@/app/hooks/usePermission"
 import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 import { useCurrentSubscription, useUsageStats } from "@/app/domains/business/hooks/useBilling"
+import Link from "next/link"
 
 export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }) {
-    const { businesses, activeBusiness, setActiveBusiness } = useBusiness()
+    const {
+        businesses,
+        activeBusiness,
+        setActiveBusiness,
+        isMultiBusinessRestricted,
+        primaryBusinessId,
+        isBusinessSelectable,
+    } = useBusiness()
     const { role } = usePermission()
     const { data: subData } = useCurrentSubscription()
     const { data: usage, isLoading: isLoadingUsage } = useUsageStats()
@@ -66,14 +74,19 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                 <div className="px-2 py-2 text-[10px] uppercase tracking-widest font-bold text-white/30 border-b border-white/5 mb-1">Your Businesses</div>
                 <div className="space-y-0.5 max-h-[200px] overflow-y-auto">
                     {businesses.map((business) => (
+                        (() => {
+                            const isLocked = !isBusinessSelectable(business)
+                            return (
                         <button
                             key={business.id}
+                            disabled={isLocked}
                             onClick={() => {
                                 setActiveBusiness(business)
                                 setOpen(false)
                             }}
                             className={cn(
-                                "relative flex w-full cursor-pointer select-none items-center rounded-xl px-2 py-2.5 text-sm font-medium outline-none transition-all hover:bg-white/10 text-brand-cream",
+                                "relative flex w-full select-none items-center rounded-xl px-2 py-2.5 text-sm font-medium outline-none transition-all text-brand-cream",
+                                isLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-white/10",
                                 activeBusiness?.id === business.id && "bg-white/10 text-brand-gold"
                             )}
                         >
@@ -83,6 +96,8 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                             <span className="flex-1 text-left truncate">{business.name}</span>
                             {activeBusiness?.id === business.id && <Check className="ml-auto h-4 w-4 text-brand-gold" />}
                         </button>
+                            )
+                        })()
                     ))}
                     {canAddBusiness && (
                         <button
@@ -95,6 +110,18 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                             </div>
                             <span className="flex-1 text-left">Add business</span>
                         </button>
+                    )}
+                    {isMultiBusinessRestricted && businesses.length > 1 && (
+                        <div className="mt-2 rounded-lg border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                            Free plan allows only your first business.{" "}
+                            <Link
+                                href="/settings?tab=billing"
+                                onClick={() => setOpen(false)}
+                                className="underline font-semibold"
+                            >
+                                Upgrade to unlock all.
+                            </Link>
+                        </div>
                     )}
                 </div>
             </div>
@@ -150,14 +177,19 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                 <div className="p-4 flex-1 overflow-y-auto">
                     <div className="space-y-1">
                         {businesses.map((business) => (
+                            (() => {
+                                const isLocked = !isBusinessSelectable(business)
+                                return (
                             <button
                                 key={business.id}
+                                disabled={isLocked}
                                 onClick={() => {
                                     setActiveBusiness(business)
                                     setOpen(false)
                                 }}
                                 className={cn(
-                                    "flex w-full cursor-pointer items-center gap-4 rounded-2xl p-4 transition-all hover:bg-black/5 dark:hover:bg-white/5",
+                                    "flex w-full items-center gap-4 rounded-2xl p-4 transition-all",
+                                    isLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5",
                                     activeBusiness?.id === business.id && "bg-black/5 dark:bg-white/5 ring-1 ring-brand-gold/20"
                                 )}
                             >
@@ -174,6 +206,8 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                     </div>
                                 )}
                             </button>
+                                )
+                            })()
                         ))}
                         {canAddBusiness && (
                             <button
@@ -188,6 +222,24 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                     <h3 className="font-bold text-brand-deep dark:text-brand-cream">Add business</h3>
                                 </div>
                             </button>
+                        )}
+                        {isMultiBusinessRestricted && businesses.length > 1 && (
+                            <div className="mt-2 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200">
+                                Free plan allows only your first business.
+                                <button
+                                    onClick={() => {
+                                        if (primaryBusinessId) {
+                                            const primary = businesses.find((b) => b.id === primaryBusinessId)
+                                            if (primary) setActiveBusiness(primary, { quiet: true })
+                                        }
+                                        setOpen(false)
+                                        router.push("/settings?tab=billing")
+                                    }}
+                                    className="ml-1 underline font-semibold"
+                                >
+                                    Upgrade to unlock all.
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>

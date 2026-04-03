@@ -14,6 +14,15 @@ export interface UserCountryDetail {
     currency: { code: string; symbol: string }
 }
 
+export interface SubscriptionAlert {
+    type: "grace_period" | "renewal_success" | "renewal_failed" | "expired"
+    daysOverdue: number
+    gracePeriodEndsAt: string | null
+    planName: string
+    message: string
+    invoiceUrl: string | null
+}
+
 interface User {
     id: string
     fullName: string
@@ -38,6 +47,8 @@ interface User {
         agentCode: string
         agentId: string
     } | null
+    /** Present when subscription needs attention (grace, expired, etc.). */
+    subscriptionAlert?: SubscriptionAlert | null
 }
 
 interface AuthContextType {

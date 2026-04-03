@@ -6,7 +6,7 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { ListCard } from "@/app/components/ui/list-card"
 import { PlanCard } from "@/app/components/billing/PlanCard"
 import { Button } from "@/app/components/ui/button"
-import { CreditCard, AlertCircle, Download, Loader2, FileText, ChevronRight, Wallet } from "lucide-react"
+import { AlertCircle, Download, Loader2, FileText, ChevronRight, Wallet } from "lucide-react"
 import { Progress } from "@/app/components/ui/progress"
 import { cn } from "@/app/lib/utils"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -52,11 +52,15 @@ const formatPrice = (amount: number, currency: string = "NGN") => {
 
 export function BillingSettings() {
     const { user } = useAuth()
-    const { activeBusiness, businesses } = useBusiness()
+    const { activeBusiness, businesses, isMultiBusinessRestricted, primaryBusinessId } = useBusiness()
     const ownerBusinesses = businesses.filter((b) => b.role === "OWNER")
     const [selectedWalletBusinessId, setSelectedWalletBusinessId] = useState<string | null>(null)
     const effectiveWalletId =
         selectedWalletBusinessId ?? activeBusiness?.id ?? ownerBusinesses[0]?.id ?? null
+    const isWalletLocked = isMultiBusinessRestricted && !!primaryBusinessId
+    const visibleWalletBusinesses = isWalletLocked
+        ? ownerBusinesses.filter((b) => b.id === primaryBusinessId)
+        : ownerBusinesses
 
     const { data: plans = [], isLoading: isLoadingPlans } = useSubscriptionPlans()
     const { data: subData, isLoading: isLoadingSub } = useCurrentSubscription(effectiveWalletId)
@@ -148,6 +152,15 @@ export function BillingSettings() {
             {/* Current Subscription Status */}
             <section className="space-y-4">
                 <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Subscription</h2>
+                {isMultiBusinessRestricted && businesses.length > 1 && (
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 text-sm">
+                        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                        <p>
+                            Your account is currently limited to your first business on the free plan.
+                            Upgrade your subscription to re-enable access to your other businesses.
+                        </p>
+                    </div>
+                )}
                 <GlassCard className="p-6">
                     <div className="grid md:grid-cols-3 gap-8">
                         <div className="col-span-1 md:col-span-2 space-y-6">
@@ -254,7 +267,7 @@ export function BillingSettings() {
                             </div>
 
                             <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
-                                {ownerBusinesses.length > 1 && (
+                                {visibleWalletBusinesses.length > 1 && (
                                     <Select
                                         value={effectiveWalletId ?? ""}
                                         onValueChange={(id) => setSelectedWalletBusinessId(id || null)}
@@ -271,7 +284,7 @@ export function BillingSettings() {
                                             <SelectValue placeholder="Select wallet" />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl">
-                                            {ownerBusinesses.map((b) => (
+                                            {visibleWalletBusinesses.map((b) => (
                                                 <SelectItem
                                                     key={b.id}
                                                     value={b.id}
@@ -288,7 +301,7 @@ export function BillingSettings() {
                                     className={cn(
                                         "text-xs h-10 rounded-xl border-brand-gold/20 hover:bg-brand-gold/5 text-brand-deep dark:text-brand-cream",
                                         "transition-colors duration-200 shrink-0",
-                                        ownerBusinesses.length > 1 ? "sm:w-auto sm:flex-initial" : "w-full"
+                                        visibleWalletBusinesses.length > 1 ? "sm:w-auto sm:flex-initial" : "w-full"
                                     )}
                                     onClick={() => {
                                         toast.info("Wallet funding feature coming soon")
