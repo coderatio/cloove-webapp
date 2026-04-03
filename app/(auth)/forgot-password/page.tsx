@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, ArrowRight, Loader2, Mail, Lock, CheckCircle2, Shield } from "lucide-react"
-import { apiClient, ApiError } from "@/app/lib/api-client"
+import { apiClient, ApiError, ApiResponse } from "@/app/lib/api-client"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
         setError(null)
 
         try {
-            const response = await apiClient.post<{ status: string }>("/security/forgot-password", {
+            const response = await apiClient.post<ApiResponse<{ status: string }>>("/security/forgot-password", {
                 identifier,
                 email: status === "email_required" ? email : undefined,
                 pin: status === "email_required" ? pin : undefined,
