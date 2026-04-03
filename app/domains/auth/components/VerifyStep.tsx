@@ -2,6 +2,7 @@
 
 import { Lock, Shield, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react"
 import { motion } from "framer-motion"
+import Link from "next/link"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
@@ -128,7 +129,16 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                             <p className="text-[10px] text-brand-cream/60 text-center px-4 leading-relaxed mt-2">
                                 First time login? Use the 4-digit PIN you use for WhatsApp transactions.
                             </p>
-                        ) : null}
+                        ) : (
+                            <div className="flex justify-end pr-1">
+                                <Link
+                                    href="/forgot-password"
+                                    className="text-[11px] font-medium text-brand-gold/60 hover:text-brand-gold transition-colors"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
+                        )}
                     </div>
 
                     <Button

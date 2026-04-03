@@ -284,13 +284,13 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                         <DrawerBody className="p-6 space-y-8 animate-in fade-in slide-in-from-left-4 duration-500 no-scrollbar">
                             <div className="space-y-6">
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 ml-1">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/80 ml-1">
                                         Amount (Min <CurrencyText value={formatCurrency(minWithdrawal, { currency: currencyCode })} />)
                                     </label>
                                     <div className="relative group">
                                         <div className="absolute -inset-1 bg-brand-gold/0 group-focus-within:bg-brand-gold/10 rounded-4xl transition-all duration-500 blur-md" />
                                         <div className="relative flex items-center rounded-3xl border border-brand-deep/5 bg-brand-deep/3 dark:bg-white/3 overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-brand-gold/30 focus-within:bg-white dark:focus-within:bg-brand-deep group shadow-xs">
-                                            <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/40 font-sans text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
+                                            <span className="flex items-center justify-center min-w-16 px-4 h-16 text-brand-deep/40 dark:text-brand-cream/80 font-sans text-2xl shrink-0 border-r border-brand-deep/5 dark:border-white/5">
                                                 {symbol}
                                             </span>
                                             <Input
@@ -300,7 +300,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                 placeholder="0.00"
                                                 value={amount}
                                                 onChange={handleAmountChange}
-                                                className="h-16 py-0 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black text-brand-deep dark:text-white placeholder:text-brand-deep/10"
+                                                className="h-16 py-0 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black text-brand-cream! dark:text-white! dark:bg-brand-deep/30 placeholder:text-brand-deep/20 dark:placeholder:text-white/60"
                                             />
                                         </div>
                                     </div>
@@ -314,12 +314,12 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                         ) : amountNum > 0 ? (
                                             <div className="flex items-center gap-1.5 h-4 animate-in fade-in">
                                                 <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-white/30">
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/60">
                                                     Fee: {walletLoading ? "Calculating…" : <CurrencyText value={formatCurrency(fee, { currency: currencyCode })} />}
                                                 </span>
                                             </div>
                                         ) : (
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-white/20">
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/60">
                                                 Available: {walletLoading ? "…" : <CurrencyText value={formatCurrency(available, { currency: currencyCode })} />}
                                             </span>
                                         )}
@@ -327,11 +327,11 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 </div>
                             </div>
                         </DrawerBody>
-                        <DrawerFooter className="p-6 md:p-8">
+                        <DrawerFooter className="p-6 md:p-8 dark:bg-transparent">
                             <Button
                                 onClick={() => setStep("destination_selection")}
                                 disabled={!amount || !!amountError}
-                                className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-3xl shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50"
+                                className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold-400 dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-3xl shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50"
                             >
                                 Choose Withdrawal Account
                             </Button>
@@ -431,7 +431,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 </div>
                             )}
                         </DrawerBody>
-                        <DrawerFooter className="p-6 md:p-8">
+                        <DrawerFooter className="p-6 md:p-8 dark:bg-transparent">
                             <Button
                                 onClick={() => setStep("other_account_form")}
                                 className="w-full h-18 bg-white dark:bg-white/5 border-2 border-dashed border-brand-gold/30 text-brand-gold font-black uppercase tracking-widest text-[10px] rounded-3xl hover:bg-brand-gold/5 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md"
@@ -509,7 +509,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 </div>
                             </div>
                         </DrawerBody>
-                        <DrawerFooter className="p-6 md:p-8 space-y-4">
+                        <DrawerFooter className="p-6 md:p-8 space-y-4 dark:bg-transparent">
                             <Button
                                 onClick={() => setIsPinOpen(true)}
                                 className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
@@ -534,7 +534,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
     return (
         <Drawer open={isOpen} onOpenChange={onOpenChange} dismissible={false}>
             <DrawerContent className="h-[96vh] sm:h-auto sm:max-h-[90vh]">
-                <DrawerHeader className="px-8 py-6 pb-2">
+                <DrawerHeader className="px-8 py-6 pb-2 dark:bg-brand-deep rounded-t-3xl">
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <DrawerTitle className="text-xl font-serif text-brand-deep dark:text-brand-cream text-left">

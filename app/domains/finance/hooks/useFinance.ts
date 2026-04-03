@@ -459,7 +459,7 @@ export function useRequeryTransaction() {
 
     return useMutation({
         mutationFn: async (id: string) => {
-            return apiClient.post<ApiResponse<FinanceTransactionRow>>(`/finance/transactions/${id}/requery`, {})
+            return apiClient.post<ApiResponse<FinanceTransactionRow>>(`/finance/transactions/${id}/requery`, {}, { fullResponse: true })
         },
         onSuccess: (response) => {
             toast.success(response.message || "Transaction status updated")

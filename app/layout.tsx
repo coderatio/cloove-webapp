@@ -105,7 +105,7 @@ export default function RootLayout({
                 try {
                   const DARK_COLOR = "#061b15";
                   const LIGHT_COLOR = "#fdfcf8";
-                  const PUBLIC_PATTERN = /^\\/(login|register|staff-invite|verify|onboarding|reset-password)(\\/.*)?$/;
+                  const PUBLIC_PATTERN = /^\/(login|register|staff-invite|verify|onboarding|forgot-password|password-reset)(\/.*)?$/;
                   const isPublic = PUBLIC_PATTERN.test(window.location.pathname);
                   const html = document.documentElement;
                   

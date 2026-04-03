@@ -213,7 +213,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
             )}
             <div className="space-y-4">
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Bank Name</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/80 ml-1">Bank Name</label>
                     <Button
                         type="button"
                         variant="outline"
@@ -228,7 +228,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Account Number</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/80 ml-1">Account Number</label>
                     <Input
                         type="tel"
                         placeholder="0123456789"
@@ -241,7 +241,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
 
                 <div className="space-y-2">
                     <div className="flex items-center justify-between ml-1">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30">Account Name</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/80">Account Name</label>
                         {isResolving && (
                             <span className="text-[10px] font-bold text-brand-gold flex items-center gap-1 uppercase tracking-tighter">
                                 <Loader2 className="w-3 h-3 animate-spin" /> Resolving...
@@ -270,7 +270,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30 ml-1">Transaction PIN</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/80 ml-1">Transaction PIN</label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/20 dark:text-white/20" />
                         <Input
@@ -304,7 +304,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                 <Button
                     type="submit"
                     disabled={!isValid}
-                    className="flex-3 h-12 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest"
+                    className="flex-3 h-12 bg-brand-deep text-brand-gold dark:bg-brand-gold-400 dark:text-brand-deep shadow-2xl! font-bold rounded-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest"
                 >
                     {addPayoutAccount.isPending ? (
                         <div className="flex items-center gap-2">

@@ -309,8 +309,8 @@ export function FinanceView() {
         isRequeryingRef.current = true
         try {
             const updated = await requeryTx(viewingTx.id)
-            if (updated) {
-                setViewingTx(updated)
+            if (updated?.data) {
+                setViewingTx(updated.data)
             }
         } catch (error) {
             console.error("Requery failed:", error)

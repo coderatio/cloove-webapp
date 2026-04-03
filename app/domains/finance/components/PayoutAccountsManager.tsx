@@ -95,7 +95,7 @@ export function PayoutAccountsManager({
                             <ArrowLeft className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
                         </Button>
                     )}
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20 pl-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/80 pl-1">
                         Payout Accounts
                     </span>
                 </div>
@@ -143,7 +143,7 @@ export function PayoutAccountsManager({
                     </div>
                     <Button
                         onClick={() => setIsAdding(true)}
-                        className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl"
+                        className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold-400 dark:text-brand-deep font-bold rounded-xl shadow-lg!"
                     >
                         Add First Account
                     </Button>
@@ -173,7 +173,7 @@ export function PayoutAccountsManager({
                                         )}
                                     </div>
                                     <p className="text-xs font-mono text-brand-accent/60 dark:text-white/40">{account.accountNumber}</p>
-                                    <p className="text-[10px] text-brand-accent/40 dark:text-white/20 uppercase tracking-widest">{account.accountName}</p>
+                                    <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/80 uppercase tracking-widest">{account.accountName}</p>
                                 </div>
                             </div>
 
@@ -253,7 +253,7 @@ export function PayoutAccountsManager({
                                     onClick={handleAction}
                                     className={cn(
                                         "flex-1 rounded-xl h-11 font-black uppercase text-[10px] tracking-widest",
-                                        confirmAction.type === 'delete' ? "bg-rose-600 text-white" : "bg-brand-gold text-brand-deep shadow-lg"
+                                        confirmAction.type === 'delete' ? "bg-rose-600 text-white" : "bg-brand-gold dark:bg-brand-gold-400 dark:text-brand-deep shadow-lg"
                                     )}
                                 >
                                     {(deleteAccount.isPending || setDefaultAccount.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm'}

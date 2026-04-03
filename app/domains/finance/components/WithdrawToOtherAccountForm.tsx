@@ -138,8 +138,8 @@ export function WithdrawToOtherAccountForm({ onBack, onConfirm }: WithdrawToOthe
                                             {selectedBank?.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Selected Bank</div>
-                                            <div className="font-bold text-brand-deep dark:text-brand-cream truncate">{selectedBank?.name}</div>
+                                            <div className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/80">Selected Bank</div>
+                                            <div className="font-bold text-brand-deep dark:text-brand-cream text-base">{selectedBank?.name}</div>
                                         </div>
                                         <Button
                                             variant="ghost"
@@ -153,7 +153,7 @@ export function WithdrawToOtherAccountForm({ onBack, onConfirm }: WithdrawToOthe
 
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Account Number</Label>
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/80 ml-1">Account Number</Label>
                                             <div className="relative">
                                                 <Input
                                                     type="text"
@@ -161,7 +161,7 @@ export function WithdrawToOtherAccountForm({ onBack, onConfirm }: WithdrawToOthe
                                                     placeholder="0123456789"
                                                     value={accountNumber}
                                                     onChange={handleAccountNumberChange}
-                                                    className="h-14 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-brand-deep transition-all text-lg font-mono tracking-wider"
+                                                    className="h-14 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-brand-deep transition-all text-lg font-mono tracking-wider dark:text-white!"
                                                     autoFocus
                                                 />
                                                 {resolveAccountMutation.isPending && (
@@ -214,11 +214,11 @@ export function WithdrawToOtherAccountForm({ onBack, onConfirm }: WithdrawToOthe
             </DrawerBody>
 
             {step === "details" && (
-                <DrawerFooter className="p-4 md:p-6">
+                <DrawerFooter className="p-4 md:p-6 dark:bg-transparent">
                     <Button
                         onClick={handleSubmit}
                         disabled={!canContinue}
-                        className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-xs rounded-4xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-95 transition-all duration-300 disabled:opacity-50"
+                        className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold-400 dark:text-brand-deep font-black uppercase tracking-[0.3em] text-xs rounded-4xl shadow-[0_20px_40px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-95 transition-all duration-300 disabled:opacity-50"
                     >
                         Continue with this account
                     </Button>

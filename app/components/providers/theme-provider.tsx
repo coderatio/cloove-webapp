@@ -13,7 +13,7 @@ const DARK_THEME_COLOR = "#061b15"
  * the layout is designed for a standard viewport, not edge-to-edge.
  * Keep in sync with the forcedTheme check below.
  */
-const PUBLIC_ROUTE_PATTERN = /^\/(login|register|staff-invite|verify|onboarding|reset-password)(\/.*)?$/
+const PUBLIC_ROUTE_PATTERN = /^\/(login|register|staff-invite|verify|onboarding|reset-password|forgot-password|password-reset)(\/.*)?$/
 
 function ThemeColorSync() {
     const { resolvedTheme } = useTheme()
@@ -21,7 +21,7 @@ function ThemeColorSync() {
 
     React.useEffect(() => {
         const isPublicRoute = pathname ? PUBLIC_ROUTE_PATTERN.test(pathname) : false
-        
+
         // Forced dark for public routes, otherwise follow resolved theme
         const isDark = isPublicRoute || resolvedTheme === "dark" || (resolvedTheme !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches)
         const themeColor = isDark ? DARK_THEME_COLOR : LIGHT_THEME_COLOR
