@@ -300,7 +300,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                 placeholder="0.00"
                                                 value={amount}
                                                 onChange={handleAmountChange}
-                                                className="h-16 py-0 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black text-brand-cream! dark:text-white! dark:bg-brand-deep/30 placeholder:text-brand-deep/20 dark:placeholder:text-white/60"
+                                                className="h-16 py-0 rounded-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-4 text-3xl font-serif font-black dark:text-brand-cream! dark:bg-brand-deep/30 placeholder:text-brand-deep/20 dark:placeholder:text-white/60"
                                             />
                                         </div>
                                     </div>
