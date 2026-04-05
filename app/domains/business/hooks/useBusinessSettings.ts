@@ -10,6 +10,8 @@ export interface BusinessConfigs {
     daily_summary_enabled: boolean
     email_summaries_enabled: boolean
     show_wallet_balance: boolean
+    ui_layout_preset?: string
+    feature_flags?: Record<string, boolean>
     [key: string]: any
 }
 

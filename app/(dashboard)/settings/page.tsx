@@ -11,10 +11,10 @@ import {
     Save,
     CreditCard,
     Loader2,
-    Printer
+    Printer,
+    LayoutTemplate,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { toast } from "sonner"
 import { BillingSettings } from "@/app/domains/business/components/BillingSettings"
 import { VerificationSettings } from "@/app/domains/business/components/VerificationSettings"
 import { BusinessSettings } from "@/app/domains/business/components/BusinessSettings"
@@ -25,17 +25,19 @@ import { PageTransition } from "@/app/components/layout/page-transition"
 import { PersistedTabs, TabItem } from "@/app/components/shared/PersistedTabs"
 import { usePermission } from "@/app/hooks/usePermission"
 import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
+import { WorkspaceSettings } from "@/app/domains/workspace/components/WorkspaceSettings"
 
-type Tab = "business" | "profile" | "billing" | "security" | "verification" | "printer"
+type Tab = "business" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace"
 
 function SettingsContent() {
-    const { role } = usePermission()
+    const { role, can } = usePermission()
     const [isDirty, setIsDirty] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [saveTrigger, setSaveTrigger] = useState(0)
 
     const allTabs: (TabItem & { id: Tab })[] = [
         { id: "business", label: "Business", icon: Building2 },
+        { id: "workspace", label: "Workspace", icon: LayoutTemplate },
         { id: "profile", label: "My Profile", icon: User },
         { id: "verification", label: "Verification", icon: ShieldCheck },
         { id: "billing", label: "Billing", icon: CreditCard },
@@ -46,6 +48,7 @@ function SettingsContent() {
     // Role-based filtering
     const tabs = allTabs.filter(tab => {
         if (tab.id === "profile" || tab.id === "security" || tab.id === "printer") return true
+        if (tab.id === "workspace") return can("MANAGE_BUSINESS_CONFIG")
         if (role === 'OWNER') return true
         if (tab.id === "billing" && role === 'ACCOUNTANT') return true
         return false
@@ -94,6 +97,7 @@ function SettingsContent() {
                             saveTrigger={saveTrigger}
                         />
                     )}
+                    {activeTab === "workspace" && can("MANAGE_BUSINESS_CONFIG") && <WorkspaceSettings />}
                     {activeTab === "profile" && <ProfileSettings />}
                     {activeTab === "verification" && role === 'OWNER' && <VerificationSettings />}
                     {activeTab === "billing" && (role === 'OWNER' || role === 'ACCOUNTANT') && <BillingSettings />}

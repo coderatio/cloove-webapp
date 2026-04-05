@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, Sparkles, Package, Users, ShoppingBag, Menu, X, Settings, LogOut, Bell, HelpCircle, LayoutGrid, Banknote, ShieldCheck, Gift, Activity, Link2, ArrowLeft, ChevronRight, AlertCircle, Receipt, Truck } from "lucide-react"
+import { Sparkles, Menu, X, LogOut, LayoutGrid, Gift, ArrowLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
     Drawer,
@@ -17,40 +17,8 @@ import { useMobileNav } from "../providers/mobile-nav-provider"
 import { useAuth } from "../providers/auth-provider"
 import { Button } from "../ui/button"
 import { toast } from "sonner"
-
-interface MobileNavItem {
-    href: string
-    icon: any
-    label: string
-    permission?: string
-    children?: MobileNavItem[]
-}
-
-const mainNavItems: MobileNavItem[] = [
-    { href: "/", icon: Home, label: "Home" },
-    { href: "/orders", icon: ShoppingBag, label: "Orders", permission: 'VIEW_SALES' },
-]
-
-const secondaryNavItems: MobileNavItem[] = [
-    { href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS' },
-]
-
-const moreItems: MobileNavItem[] = [
-    { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
-    { href: "/debts", icon: AlertCircle, label: "Debts", permission: 'VIEW_CUSTOMERS' },
-    { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STORES' },
-    { href: "/inventory", icon: Package, label: "Inventory", permission: 'MANAGE_PRODUCTS' },
-    { href: "/expenses", icon: Receipt, label: "Expenses", permission: 'VIEW_EXPENSES' },
-    { href: "/vendors", icon: Truck, label: "Vendors", permission: 'VIEW_SUPPLIERS' },
-    {
-        href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS', children: [
-            { href: "/finance/payment-links", icon: Link2, label: "Payment Links", permission: 'VIEW_FINANCIALS' },
-        ]
-    },
-    { href: "/activity", icon: Activity, label: "Activity", permission: 'VIEW_DASHBOARD' },
-    { href: "/staff", icon: ShieldCheck, label: "Staff", permission: 'MANAGE_STAFF' },
-    { href: "/storefront", icon: ShoppingBag, label: "Storefront", permission: 'MANAGE_STORES' },
-]
+import { useWorkspaceNav } from "@/app/domains/workspace/hooks/useWorkspaceNav"
+import { useBusiness } from "../BusinessProvider"
 
 export function MobileNav() {
     const pathname = usePathname()
@@ -59,6 +27,9 @@ export function MobileNav() {
     const isAssistantPage = pathname === "/assistant"
     const { isMenuOpen, setIsMenuOpen } = useMobileNav()
     const [isMoreOpen, setIsMoreOpen] = useState(false)
+
+    const { mobilePrimary, mobileSecondary, mobileMoreItems } = useWorkspaceNav()
+    const { features } = useBusiness()
 
     const handleLogout = () => {
         toast.promise(
@@ -70,8 +41,8 @@ export function MobileNav() {
             }
         )
     }
-    const [submenuParent, setSubmenuParent] = useState<MobileNavItem | null>(null)
-    const { can } = usePermission()
+    const [submenuParent, setSubmenuParent] = useState<typeof mobileMoreItems[0] | null>(null)
+    const { can, role } = usePermission()
 
     const handleMoreOpenChange = (open: boolean) => {
         setIsMoreOpen(open)
@@ -139,20 +110,24 @@ export function MobileNav() {
                             <div className="flex-1 flex justify-between px-4 w-full">
                                 {/* Left Side */}
                                 <div className="flex gap-6 items-center">
-                                    {mainNavItems.map((item) => {
-                                        const isActive = pathname === item.href
+                                    {mobilePrimary.map((item) => {
+                                        const isActive =
+                                            item.href === "/"
+                                                ? pathname === "/"
+                                                : pathname === item.href || pathname.startsWith(item.href + "/")
+                                        const label = item.id === "overview" ? "Home" : item.label
                                         return (
                                             <Link
                                                 key={item.href}
                                                 href={item.href}
                                                 className={cn(
                                                     "flex flex-col items-center gap-1 transition-colors",
-                                                    (item as any).permission && !can((item as any).permission) ? "hidden" : "",
+                                                    (item.permission && !can(item.permission)) ? "hidden" : "",
                                                     isActive ? "text-brand-gold" : "text-white/40"
                                                 )}
                                             >
                                                 <item.icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
-                                                <span className="text-[9px] font-bold uppercase tracking-tighter Otros">{item.label}</span>
+                                                <span className="text-[9px] font-bold uppercase tracking-tighter">{label}</span>
                                             </Link>
                                         )
                                     })}
@@ -160,15 +135,15 @@ export function MobileNav() {
 
                                 {/* Right Side */}
                                 <div className="flex gap-6 items-center">
-                                    {secondaryNavItems.map((item) => {
-                                        const isActive = pathname === item.href
+                                    {mobileSecondary.map((item) => {
+                                        const isActive = pathname === item.href || pathname.startsWith(item.href)
                                         return (
                                             <Link
                                                 key={item.href}
                                                 href={item.href}
                                                 className={cn(
                                                     "flex flex-col items-center gap-1 transition-colors",
-                                                    (item as any).permission && !can((item as any).permission) ? "hidden" : "",
+                                                    (item.permission && !can(item.permission)) ? "hidden" : "",
                                                     isActive ? "text-brand-gold" : "text-white/40"
                                                 )}
                                             >
@@ -226,7 +201,6 @@ export function MobileNav() {
                                     transition={{ duration: 0.2 }}
                                     className="flex flex-col gap-3"
                                 >
-                                    {/* Parent item itself */}
                                     <Link
                                         href={submenuParent.href}
                                         onClick={() => handleMoreOpenChange(false)}
@@ -246,7 +220,6 @@ export function MobileNav() {
                                         <span className="font-semibold">{submenuParent.label}</span>
                                     </Link>
 
-                                    {/* Children */}
                                     {submenuParent.children?.map((child) => {
                                         if (child.permission && !can(child.permission)) return null
                                         return (
@@ -280,35 +253,36 @@ export function MobileNav() {
                                     exit={{ opacity: 0, x: -40 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    <div className="mb-6">
-                                        <Link
-                                            href="/referrals"
-                                            onClick={() => handleMoreOpenChange(false)}
-                                            className="flex items-center justify-between p-4 rounded-3xl bg-linear-to-br from-brand-deep to-black text-brand-cream relative overflow-hidden group shadow-xl"
-                                        >
-                                            {/* Background Effect */}
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 blur-3xl rounded-full -mr-10 -mt-10" />
+                                    {role === 'OWNER' && features?.module_referrals !== false && (
+                                        <div className="mb-6">
+                                            <Link
+                                                href="/referrals"
+                                                onClick={() => handleMoreOpenChange(false)}
+                                                className="flex items-center justify-between p-4 rounded-3xl bg-linear-to-br from-brand-deep to-black text-brand-cream relative overflow-hidden group shadow-xl"
+                                            >
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 blur-3xl rounded-full -mr-10 -mt-10" />
 
-                                            <div className="relative z-10 flex items-center gap-4">
-                                                <div className="h-12 w-12 rounded-2xl bg-brand-gold flex items-center justify-center shadow-lg text-brand-deep shrink-0">
-                                                    <Gift className="h-6 w-6" />
+                                                <div className="relative z-10 flex items-center gap-4">
+                                                    <div className="h-12 w-12 rounded-2xl bg-brand-gold flex items-center justify-center shadow-lg text-brand-deep shrink-0">
+                                                        <Gift className="h-6 w-6" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-serif text-lg font-medium text-brand-gold">Refer & Earn</h4>
+                                                        <p className="text-xs text-brand-cream/60">Get 10% commission per referral</p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <h4 className="font-serif text-lg font-medium text-brand-gold">Refer & Earn</h4>
-                                                    <p className="text-xs text-brand-cream/60">Get 10% commission per referral</p>
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    </div>
+                                            </Link>
+                                        </div>
+                                    )}
                                     <div className="flex flex-col gap-3">
-                                        {[...mainNavItems, ...moreItems].map((item) => {
+                                        {mobileMoreItems.map((item) => {
                                             if (item.permission && !can(item.permission)) {
                                                 return null
                                             }
                                             const hasChildren = item.children && item.children.length > 0
                                             return (
                                                 <button
-                                                    key={item.href}
+                                                    key={item.id}
                                                     onClick={() => {
                                                         if (hasChildren) {
                                                             setSubmenuParent(item)

@@ -5,28 +5,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-    Home,
-    Sparkles,
-    Package,
-    Users,
-    ShoppingBag,
     ChevronRight,
-    ChevronLeft,
     ChevronDown,
     Moon,
     Sun,
-    LayoutGrid,
     Settings,
     LogOut,
-    Store,
     Gift,
-    Banknote,
-    ShieldCheck,
-    Activity,
-    AlertCircle,
-    Receipt,
-    Truck,
-    Link2,
     PanelRightClose,
     PanelRightOpen,
 } from "lucide-react"
@@ -40,75 +25,10 @@ import { useTheme } from "next-themes"
 import { BusinessSwitcher } from "../shared/BusinessSwitcher"
 import { Button } from "../ui/button"
 import { toast } from "sonner"
-import { apiClient } from "@/app/lib/api-client"
-
 import { usePermission } from "@/app/hooks/usePermission"
 import { useAuth } from "../providers/auth-provider"
-
-interface NavItem {
-    href: string;
-    icon: any;
-    label: string;
-    permission?: string;
-    children?: NavItem[];
-}
-
-interface NavGroup {
-    label: string;
-    items: NavItem[];
-}
-
-const navGroups: NavGroup[] = [
-    {
-        label: "Main",
-        items: [
-            { href: "/", icon: Home, label: "Overview" },
-            { href: "/assistant", icon: Sparkles, label: "Assistant" },
-        ]
-    },
-    {
-        label: "Sales & Finance",
-        items: [
-            { href: "/orders", icon: ShoppingBag, label: "Orders", permission: 'VIEW_SALES' },
-            {
-                href: "/finance", icon: Banknote, label: "Finance", permission: 'VIEW_FINANCIALS', children: [
-                    { href: "/finance/payment-links", icon: Link2, label: "Payment Links", permission: 'VIEW_FINANCIALS' },
-                ]
-            },
-            { href: "/customers", icon: Users, label: "Customers", permission: 'VIEW_CUSTOMERS' },
-            { href: "/debts", icon: AlertCircle, label: "Debts", permission: 'VIEW_CUSTOMERS' },
-            { href: "/expenses", icon: Receipt, label: "Expenses", permission: 'VIEW_EXPENSES' },
-            { href: "/vendors", icon: Truck, label: "Vendors", permission: 'VIEW_SUPPLIERS' },
-        ]
-    },
-    {
-        label: "Operations",
-        items: [
-            { href: "/inventory", icon: Package, label: "Inventory", permission: 'MANAGE_PRODUCTS' },
-            { href: "/stores", icon: LayoutGrid, label: "Stores", permission: 'MANAGE_STORES' },
-            { href: "/activity", icon: Activity, label: "Activity", permission: 'VIEW_DASHBOARD' },
-        ]
-    },
-    // {
-    //     label: "Growth",
-    //     items: [
-    //         {
-    //             label: "Marketing",
-    //             href: "/marketing",
-    //             icon: Megaphone,
-    //             description: "Campaigns & Promotions"
-    //         }
-    //     ]
-    // },
-    {
-        label: "Staff & Management",
-        items: [
-            { href: "/storefront", icon: Store, label: "Storefront", permission: 'MANAGE_STORES' },
-            { href: "/staff", icon: ShieldCheck, label: "Staff", permission: 'MANAGE_STAFF' },
-        ]
-    }
-]
-
+import { useBusiness } from "../BusinessProvider"
+import { useWorkspaceNav } from "@/app/domains/workspace/hooks/useWorkspaceNav"
 interface SidebarProps {
     isCollapsed: boolean;
     setIsCollapsed: (value: boolean) => void;
@@ -118,17 +38,22 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname()
     const { theme, setTheme } = useTheme()
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
-    const getExpandedForPath = (path: string) => {
+    const { navGroups } = useWorkspaceNav()
+    const { features } = useBusiness()
+
+    const getExpandedForPath = React.useCallback((path: string, groups: typeof navGroups) => {
         const expanded = new Set<string>()
-        for (const group of navGroups) {
+        for (const group of groups) {
             for (const item of group.items) {
                 const isParentOrChildActive = path === item.href || item.children?.some(child => path.startsWith(child.href))
                 if (isParentOrChildActive && item.children?.length) expanded.add(item.href)
             }
         }
         return expanded
-    }
-    const [expandedItems, setExpandedItems] = React.useState<Set<string>>(() => getExpandedForPath(pathname))
+    }, [])
+    const [expandedItems, setExpandedItems] = React.useState<Set<string>>(() =>
+        getExpandedForPath(pathname, navGroups)
+    )
     const [collapsedSettled, setCollapsedSettled] = React.useState(false)
     const settleRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -143,11 +68,17 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     }, [isCollapsed])
 
     const { can, role } = usePermission()
-    const { user, logout } = useAuth()
 
     React.useEffect(() => {
-        setExpandedItems(getExpandedForPath(pathname))
-    }, [pathname])
+        const next = getExpandedForPath(pathname, navGroups)
+        setExpandedItems((prev) => {
+            if (prev.size === next.size && [...next].every((href) => prev.has(href))) {
+                return prev
+            }
+            return next
+        })
+    }, [pathname, navGroups, getExpandedForPath])
+    const { user, logout } = useAuth()
 
     const toggleExpanded = (href: string) => {
         setExpandedItems(prev => {
@@ -249,15 +180,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
                 {/* Nav Items Grouped */}
                 <nav className={cn("flex-1 overflow-y-auto scrollbar-hide pb-6", isCollapsed ? "space-y-2 px-2" : "space-y-6 px-4")}>
-                    {navGroups.map((group) => {
-                        // Filter items in the group based on permissions
-                        const filteredItems = group.items.filter(item => !item.permission || can(item.permission))
+                    {navGroups.map((group, groupIndex) => {
+                        const filteredItems = group.items
 
-                        // If no items are left in the group, don't render the group at all
                         if (filteredItems.length === 0) return null
 
                         return (
-                            <div key={group.label} className="space-y-1">
+                            <div key={group.key} className="space-y-1">
                                 {!isCollapsed && (
                                     <h3 className="px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-cream/50 mb-3">
                                         {group.label}
@@ -390,7 +319,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                     })}
                                 </div>
                                 {/* Divider for grouped look when collapsed */}
-                                {isCollapsed && group !== navGroups[navGroups.length - 1] && (
+                                {isCollapsed && groupIndex < navGroups.length - 1 && (
                                     <div className="mx-3 my-2 h-px bg-white/5" />
                                 )}
                             </div>
@@ -403,7 +332,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                     {/* Footer buttons removed from here to be moved inside their own relative containers if needed, but primarily profile menu needs it */}
 
                     {/* Refer & Earn Button */}
-                    {role === 'OWNER' && (
+                    {role === 'OWNER' && features?.module_referrals !== false && (
                         <Link
                             href="/referrals"
                             className={cn(
