@@ -13,6 +13,7 @@ import { Button } from '@/app/components/ui/button'
 import { cn } from '@/app/lib/utils'
 import { Order, OrderStatus } from '../types'
 import { toast } from 'sonner'
+import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 
 interface OrderActionMenuProps {
     order: Order
@@ -35,11 +36,17 @@ export function OrderActionMenu({
     onRecordPayment,
     onGeneratePaymentLink
 }: OrderActionMenuProps) {
+    const layoutPresetId = useLayoutPresetId()
     const [isProcessing, setIsProcessing] = useState(false)
     const [activeAction, setActiveAction] = useState<string | null>(null)
+    const recordLabel = layoutPresetId === "school" ? "Fee Record" : "Order"
 
-    const hasBalance = Number(order.remainingAmount || 0) > 0 ||
-        (order.status === 'PENDING' && Number(order.amountPaid || 0) < Number(order.totalAmount))
+    const computedRemaining = Math.max(
+        0,
+        Number(order.totalAmount || 0) - Number(order.amountPaid || 0)
+    )
+    const hasBalance = computedRemaining > 0
+    const isPayable = hasBalance && order.status !== 'CANCELLED' && order.status !== 'REFUNDED'
 
     const handleAction = async (actionName: string, label: string, fn: () => Promise<any>) => {
         setIsProcessing(true)
@@ -84,7 +91,7 @@ export function OrderActionMenu({
                     <span className="font-medium text-sm">View Details</span>
                 </DropdownMenuItem>
 
-                {hasBalance && (
+                {isPayable && (
                     <DropdownMenuItem
                         onSelect={() => onRecordPayment(order)}
                         className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer text-brand-green dark:text-brand-gold"
@@ -95,7 +102,7 @@ export function OrderActionMenu({
                     </DropdownMenuItem>
                 )}
 
-                {order.status === 'PENDING' && onGeneratePaymentLink && (
+                {isPayable && onGeneratePaymentLink && (
                     <DropdownMenuItem
                         onSelect={() => onGeneratePaymentLink(order)}
                         className="gap-3 rounded-xl py-2.5 focus:bg-brand-gold/10 cursor-pointer"
@@ -164,13 +171,13 @@ export function OrderActionMenu({
                         <DropdownMenuItem
                             onSelect={(e) => {
                                 e.preventDefault()
-                                handleAction('cancel', 'Cancel Order', () => onUpdateStatus(order.id, 'CANCELLED' as any))
+                                handleAction('cancel', `Cancel ${recordLabel}`, () => onUpdateStatus(order.id, 'CANCELLED' as any))
                             }}
                             className="gap-3 rounded-xl py-2.5 focus:bg-red-500/10 text-red-600 dark:text-red-400 cursor-pointer"
                             disabled={isProcessing}
                         >
                             {activeAction === 'cancel' ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                            <span className="font-medium text-sm">Cancel Order</span>
+                            <span className="font-medium text-sm">{`Cancel ${recordLabel}`}</span>
                         </DropdownMenuItem>
                     </>
                 )}

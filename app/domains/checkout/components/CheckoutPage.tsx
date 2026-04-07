@@ -57,6 +57,8 @@ export function CheckoutPage({ reference }: Props) {
         businessName={checkout.businessName}
         businessLogo={checkout.businessLogo}
         currency={checkout.businessCurrency}
+        financialSummary={checkout.financialSummary}
+        academicContext={checkout.academicContext}
         onPaid={handlePaid}
         onBack={() => setStep('details')}
       />

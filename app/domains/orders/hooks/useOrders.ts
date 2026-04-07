@@ -65,9 +65,10 @@ export function useOrders(
     if (filters?.storeId && filters.storeId !== 'all-stores') params.storeId = filters.storeId
     if (filters?.storeIds && filters.storeIds.length > 0) params.storeIds = filters.storeIds.join(',')
     if (filters?.customerId) params.customerId = filters.customerId
+    if (filters?.academicTermId) params.academicTermId = filters.academicTermId
 
     const { data: response, isLoading, isFetching, error, refetch } = useQuery<OrdersResponse>({
-        queryKey: ['sales', businessId, page, limit, filters?.search, filters?.status, filters?.paymentStatus, filters?.automation, filters?.isAutomated, filters?.startDate, filters?.endDate, filters?.storeId, filters?.storeIds],
+        queryKey: ['sales', businessId, page, limit, filters?.search, filters?.status, filters?.paymentStatus, filters?.automation, filters?.isAutomated, filters?.startDate, filters?.endDate, filters?.storeId, filters?.storeIds, filters?.academicTermId],
         queryFn: () => apiClient.get<OrdersResponse>('/sales', params, { fullResponse: true }),
         enabled: !!businessId,
         staleTime: 30000, // 30 seconds

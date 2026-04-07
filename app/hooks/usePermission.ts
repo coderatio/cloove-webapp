@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import { useBusiness } from "../components/BusinessProvider"
 import { useCurrentSubscription, useUsageStats } from "@/app/domains/business/hooks/useBilling"
 import type { SubscriptionResponse } from "@/app/domains/business/hooks/useBilling"
@@ -28,12 +28,12 @@ export function usePermission() {
     /**
      * True when the current plan allows at least one staff seat (matches backend PlanService.canAccessFeature).
      */
-    const canUseStaffFeature = (): boolean => staffAllowedByPlan
+    const canUseStaffFeature = useCallback((): boolean => staffAllowedByPlan, [staffAllowedByPlan])
 
     /**
      * True when the user can invite another staff member (under plan limit).
      */
-    const canInviteStaff = (): boolean => {
+    const canInviteStaff = useCallback((): boolean => {
         if (!staffAllowedByPlan) return false
         if (role !== "OWNER" && permissions?.MANAGE_STAFF !== true) return false
 
@@ -44,30 +44,36 @@ export function usePermission() {
         if (isUnlimited) return true
         if (usage == null) return false
         return usage.staffAccounts < Number(maxStaff)
-    }
+    }, [staffAllowedByPlan, role, permissions, subData?.currentPlan?.benefits, usage])
 
     /**
      * Check if the user has a specific permission (aligned with API: staff perms require plan + role).
      */
-    const can = (permission: string): boolean => {
-        if (STAFF_PERMISSIONS.has(permission)) {
-            if (!staffAllowedByPlan) return false
+    const can = useCallback(
+        (permission: string): boolean => {
+            if (STAFF_PERMISSIONS.has(permission)) {
+                if (!staffAllowedByPlan) return false
+                if (role === "OWNER") return true
+                if (!permissions) return false
+                return permissions[permission] === true
+            }
+
             if (role === "OWNER") return true
             if (!permissions) return false
             return permissions[permission] === true
-        }
-
-        if (role === "OWNER") return true
-        if (!permissions) return false
-        return permissions[permission] === true
-    }
+        },
+        [staffAllowedByPlan, role, permissions]
+    )
 
     /**
      * Check if the user has any of the given permissions (OR logic).
      */
-    const canAny = (permissionsList: string[]): boolean => {
-        return permissionsList.some((p) => can(p))
-    }
+    const canAny = useCallback(
+        (permissionsList: string[]): boolean => {
+            return permissionsList.some((p) => can(p))
+        },
+        [can]
+    )
 
     /**
      * Check if the user has a specific role

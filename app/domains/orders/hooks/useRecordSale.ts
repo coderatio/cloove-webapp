@@ -8,6 +8,7 @@ export interface RecordSaleItem {
     productName: string
     quantity: number
     customPrice?: number
+    lineType?: "PRODUCT" | "FEE"
 }
 
 export interface RecordSalePayload {
@@ -20,6 +21,8 @@ export interface RecordSalePayload {
     customerName?: string
     notes?: string
     channel?: string
+    /** School preset: omit to use workspace default; null = no term */
+    academicTermId?: string | null
 }
 
 export interface RecordedSale {

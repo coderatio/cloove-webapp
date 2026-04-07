@@ -18,6 +18,8 @@ import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { Check, Loader2, Wallet, Banknote, CreditCard, Receipt, CheckCircle2 } from 'lucide-react'
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { cn } from '@/app/lib/utils'
+import { useBusiness } from '@/app/components/BusinessProvider'
+import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 
 interface RecordPaymentDrawerProps {
     order: Order | null
@@ -34,8 +36,11 @@ export function RecordPaymentDrawer({
     onSuccess,
     isSubmitting
 }: RecordPaymentDrawerProps) {
+    const { currency: currencySymbol } = useBusiness()
+    const layoutPresetId = useLayoutPresetId()
     const [amount, setAmount] = useState<number>(0)
     const [method, setMethod] = useState<string>("CASH")
+    const recordLabel = layoutPresetId === "school" ? "Fee Record" : "Order"
 
     const totalAmount = order ? Number(order.totalAmount) : 0
     const alreadyPaid = order ? Number(order.amountPaid) : 0
@@ -71,7 +76,7 @@ export function RecordPaymentDrawer({
                 <DrawerStickyHeader>
                     <DrawerTitle>Record Payment</DrawerTitle>
                     <DrawerDescription>
-                        Record a partial or full payment for Order #{order.shortCode || order.id.substring(0, 6)}
+                        {`Record a partial or full payment for ${recordLabel} #${order.shortCode || order.id.substring(0, 6)}`}
                     </DrawerDescription>
                 </DrawerStickyHeader>
 
@@ -79,7 +84,7 @@ export function RecordPaymentDrawer({
                     {/* Summary Card */}
                     <GlassCard className="p-6 space-y-4 bg-brand-deep/5 dark:bg-white/5 border-none rounded-3xl before:rounded-3xl">
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-brand-accent/60 dark:text-brand-cream/60">Total Order Amount</span>
+                            <span className="text-brand-accent/60 dark:text-brand-cream/60">Total amount</span>
                             <span className="font-bold text-brand-deep dark:text-brand-cream">
                                 <CurrencyText value={formatCurrency(totalAmount, { currency: order.currency || 'NGN' })} />
                             </span>
@@ -108,7 +113,7 @@ export function RecordPaymentDrawer({
                                     className="h-14 rounded-2xl text-lg font-bold bg-white dark:bg-[#021a12] border-brand-deep/10 focus:ring-brand-gold focus:border-brand-gold"
                                     placeholder="0.00"
                                     max={remainingBalance}
-                                    currencySymbol={order.currency || 'NGN'}
+                                    currencySymbol={currencySymbol}
                                     required
                                 />
                                 {amount > 0 && (

@@ -35,26 +35,44 @@ import { Pagination } from '@/app/components/shared/Pagination'
 import { formatCurrency, formatDate, formatCompactCurrency, formatCompactNumber } from '@/app/lib/formatters'
 import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { useAcademicCalendar } from "@/app/domains/school/hooks/useAcademicCalendar"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
 import { OrderActionMenu } from './OrderActionMenu'
 import { toast } from 'sonner'
 import { useReceiptPrinter } from '@/app/hooks/useReceiptPrinter'
 import { format } from 'date-fns'
 import { useCreatePaymentLink } from '@/app/domains/checkout/hooks/usePaymentLinks'
 import { PaymentLinkDialog } from '@/app/domains/checkout/components/PaymentLinkDialog'
+import { Markdown } from '@/app/components/ui/markdown'
+import { PresetOrdersQuickStrip } from '@/app/domains/workspace/components/preset-feature-modules/PresetOrdersQuickStrip'
+import { SchoolFeeRecordDrawer } from '@/app/domains/school/components/SchoolFeeRecordDrawer'
 
 export function OrdersView() {
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
+    const layoutPreset = useLayoutPresetId()
+    const pageCopy = usePresetPageCopy()
+    const oui = pageCopy.ordersUi
+    const { data: academicCal } = useAcademicCalendar()
     const { currentStore, stores } = useStores()
     const [page, setPage] = React.useState(1)
     const [search, setSearch] = React.useState("")
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [startDate, setStartDate] = React.useState<string | undefined>()
     const [endDate, setEndDate] = React.useState<string | undefined>()
+    const [academicTermFilter, setAcademicTermFilter] = React.useState<string>("")
     const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
     const [recordingPaymentOrder, setRecordingPaymentOrder] = React.useState<Order | null>(null)
     const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = React.useState(false)
     const [generatedPaymentLink, setGeneratedPaymentLink] = React.useState<string | null>(null)
+    const [schoolFeeDrawerOpen, setSchoolFeeDrawerOpen] = React.useState(false)
     const statusColorMap: Record<string, { label: string, color: 'success' | 'warning' | 'danger' | 'neutral', className: string, icon: any }> = {
         COMPLETED: {
             label: 'Completed',
@@ -101,7 +119,8 @@ export function OrdersView() {
         automation: selectedFilters.filter(f => f.startsWith('A:')).map(f => f.slice(2)),
         startDate,
         endDate,
-        storeId: currentStore?.id
+        storeId: currentStore?.id,
+        academicTermId: layoutPreset === "school" && academicTermFilter ? academicTermFilter : undefined,
     })
 
     const { printReceipt } = useReceiptPrinter()
@@ -161,40 +180,72 @@ export function OrdersView() {
 
     const totalPages = meta?.lastPage || (meta as any)?.last_page || 1
 
-    const filterGroups = [
-        {
-            title: "Order Status",
-            options: [
-                { label: "Completed", value: "S:COMPLETED" },
-                { label: "Pending", value: "S:PENDING" },
-                { label: "Cancelled", value: "S:CANCELLED" },
-                { label: "Refunded", value: "S:REFUNDED" },
-            ]
-        },
-        {
-            title: "Payment Status",
-            options: [
-                { label: "Paid", value: "P:PAID" },
-                { label: "Partial", value: "P:PARTIAL" },
-                { label: "Pending", value: "P:PENDING" },
-            ]
-        },
-        {
-            title: "Type",
-            options: [
-                { label: "Automated", value: "A:AUTOMATED" },
-                { label: "Manual", value: "A:MANUAL" },
-            ]
-        }
-    ]
+    const fo = oui.filterOptions
+    const filterGroups = React.useMemo(
+        () => [
+            {
+                title: oui.filterGroups.orderStatus,
+                options: [
+                    { label: fo.orderStatus.completed, value: "S:COMPLETED" },
+                    { label: fo.orderStatus.pending, value: "S:PENDING" },
+                    { label: fo.orderStatus.cancelled, value: "S:CANCELLED" },
+                    { label: fo.orderStatus.refunded, value: "S:REFUNDED" },
+                ],
+            },
+            {
+                title: oui.filterGroups.paymentStatus,
+                options: [
+                    { label: fo.paymentStatus.paid, value: "P:PAID" },
+                    { label: fo.paymentStatus.partial, value: "P:PARTIAL" },
+                    { label: fo.paymentStatus.pending, value: "P:PENDING" },
+                ],
+            },
+            {
+                title: oui.filterGroups.type,
+                options: [
+                    { label: fo.type.automated, value: "A:AUTOMATED" },
+                    { label: fo.type.manual, value: "A:MANUAL" },
+                ],
+            },
+        ],
+        [oui.filterGroups, fo]
+    )
 
     // Simplified filter logic handled by FilterPopover internally
     // handleFilterChange removed in favor of direct setSelectedFilters usage
 
-    const columns: any[] = [
+    const columns: any[] = React.useMemo(() => {
+        const termColumn =
+            layoutPreset === "school" && oui.table.term
+                ? [
+                      {
+                          key: "academicTerm",
+                          header: oui.table.term,
+                          width: "140px",
+                          cellClassName: "whitespace-normal",
+                          render: (_: unknown, row: Order) => {
+                              const t = row.academicTerm
+                              if (!t) {
+                                  return (
+                                      <span className="text-xs text-brand-accent/45 dark:text-brand-cream/45">—</span>
+                                  )
+                              }
+                              const sess = t.session?.name
+                              return (
+                                  <span className="text-xs text-brand-accent/75 dark:text-brand-cream/75">
+                                      {sess ? `${sess} · ` : ""}
+                                      {t.name}
+                                  </span>
+                              )
+                          },
+                      },
+                  ]
+                : []
+
+        return [
         {
             key: 'customer',
-            header: 'Customer',
+            header: oui.table.customer,
             width: '200px',
             cellClassName: 'whitespace-normal',
             render: (value: string, row: Order) => {
@@ -210,10 +261,10 @@ export function OrdersView() {
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     navigator.clipboard.writeText(orderId)
-                                    toast.success('Order ID copied')
+                                    toast.success(oui.toastOrderIdCopied)
                                 }}
                                 className="opacity-0 group-hover/id:opacity-100 transition-opacity p-0.5 rounded hover:bg-brand-deep/5 dark:hover:bg-white/10"
-                                title="Copy Order ID"
+                                title={oui.copyOrderIdTitle}
                             >
                                 <Copy className="w-3 h-3 text-brand-accent/40 dark:text-brand-cream/40" />
                             </button>
@@ -224,14 +275,15 @@ export function OrdersView() {
         },
         {
             key: 'items',
-            header: 'Summary',
+            header: oui.table.summary,
             width: 'auto',
             cellClassName: 'whitespace-normal min-w-[200px]',
             render: (_: any, row: Order) => <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">{row.summary}</span>
         },
+        ...termColumn,
         {
             key: 'totalAmount',
-            header: 'Total',
+            header: oui.table.total,
             width: '120px',
             render: (value: number | string, row: Order) => (
                 <span className="text-sm font-bold text-brand-deep dark:text-brand-cream whitespace-nowrap">
@@ -241,7 +293,7 @@ export function OrdersView() {
         },
         {
             key: 'status',
-            header: 'Status',
+            header: oui.table.status,
             width: '100px',
             render: (value: string | undefined) => {
                 const status = value?.toUpperCase() || 'UNKNOWN'
@@ -264,7 +316,7 @@ export function OrdersView() {
         },
         {
             key: 'date',
-            header: 'Time',
+            header: oui.table.time,
             width: '120px',
             render: (_: any, order: Order) => (
                 <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">{formatDate(order.date, 'MMM d, h:mm a')}</span>
@@ -288,37 +340,41 @@ export function OrdersView() {
             )
         }
     ]
+    }, [layoutPreset, oui, activeBusiness?.currency])
 
     const pendingCount = summary?.pendingOrdersCount ?? 0
-    const intelligenceWhisper = pendingCount > 0
-        ? `You have **${pendingCount} pending orders** awaiting fulfillment. Ensuring prompt delivery builds customer trust.`
-        : `All orders have been successfully fulfilled. Your operations are running smoothly today.`
+    const pendingOutstandingAmount = summary?.pendingOutstandingAmount ?? 0
+    const intelligenceWhisper =
+        pendingCount > 0 ? oui.whisperPending(pendingCount) : oui.whisperClear
 
     const stats = [
         {
-            label: "Total Revenue",
+            label: oui.stats.totalRevenue,
             value: <CurrencyText value={formatCompactCurrency((summary as any)?.completedRevenue ?? 0, { currency: activeBusiness?.currency || 'NGN' })} />,
             icon: TrendingUp,
             color: "brand-gold",
         },
         {
-            label: "Total Orders",
+            label: oui.stats.totalOrders,
             value: formatCompactNumber(summary?.totalOrders ?? meta?.total ?? 0),
             icon: ShoppingBag,
             color: "brand-green",
         },
         {
-            label: "Avg. Order Value",
+            label: oui.stats.avgOrderValue,
             value: <CurrencyText value={formatCompactCurrency(summary?.averageOrderValue ?? 0, { currency: activeBusiness?.currency || 'NGN' })} />,
             icon: Receipt,
             color: "brand-gold",
         },
         {
-            label: "Pending Fulfillment",
-            value: formatCompactNumber(summary?.pendingOrdersCount ?? 0),
+            label: oui.stats.pendingFulfillment,
+            value:
+                layoutPreset === "school"
+                    ? <CurrencyText value={formatCompactCurrency(pendingOutstandingAmount, { currency: activeBusiness?.currency || 'NGN' })} />
+                    : formatCompactNumber(summary?.pendingOrdersCount ?? 0),
             icon: Clock,
             color: "brand-gold",
-            isPending: pendingCount > 0
+            isPending: layoutPreset === "school" ? pendingOutstandingAmount > 0 : pendingCount > 0
         }
     ]
 
@@ -329,13 +385,13 @@ export function OrdersView() {
                     <div className="h-16 w-16 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 mb-4">
                         <AlertCircle className="h-8 w-8" />
                     </div>
-                    <h2 className="text-xl font-serif font-medium mb-2">Failed to load orders</h2>
+                    <h2 className="text-xl font-serif font-medium mb-2">{oui.errorLoadTitle}</h2>
                     <p className="text-brand-accent/60 dark:text-brand-cream/60 max-w-sm mb-6">
-                        {error.message || "Something went wrong while fetching your orders. Please check your connection and try again."}
+                        {error.message || oui.errorLoadHint}
                     </p>
                     <Button onClick={() => refetch()} className="rounded-full px-8">
                         <RefreshCw className="h-4 w-4 mr-2" />
-                        Retry
+                        {oui.retry}
                     </Button>
                 </div>
             </PageTransition>
@@ -346,21 +402,41 @@ export function OrdersView() {
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
-                    title="Orders"
-                    description={`Monitor sales pipeline and track order fulfillment for ${currentStore?.name || 'your business'}.`}
+                    title={pageCopy.orders.title}
+                    description={pageCopy.orders.descriptionWithStore(
+                        currentStore?.name || oui.storeDescriptionFallback
+                    )}
                     extraActions={
-                        <Link href="/orders/sale" className="hidden md:block">
+                        layoutPreset === "school" ? (
                             <Button
-                                className="rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
+                                className="hidden md:flex rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
+                                onClick={() => setSchoolFeeDrawerOpen(true)}
                             >
                                 <ShoppingBag className="w-4 h-4 mr-2" />
-                                Record Sale
+                                {oui.recordSale}
                             </Button>
-                        </Link>
+                        ) : (
+                            <Link href="/orders/sale" className="hidden md:block">
+                                <Button
+                                    className="rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
+                                >
+                                    <ShoppingBag className="w-4 h-4 mr-2" />
+                                    {oui.recordSale}
+                                </Button>
+                            </Link>
+                        )
                     }
                 />
 
+                <PresetOrdersQuickStrip />
+
                 <InsightWhisper insight={intelligenceWhisper} />
+
+                {oui.retailCheckoutBanner.trim() ? (
+                    <div className="rounded-2xl border border-brand-gold/20 bg-brand-gold/5 px-4 py-3 text-sm text-brand-deep/90 dark:text-brand-cream/90 md:px-5">
+                        <Markdown content={oui.retailCheckoutBanner} />
+                    </div>
+                ) : null}
 
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -388,7 +464,7 @@ export function OrdersView() {
                                     {(stat as any).isPending && (
                                         <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 animate-pulse">
                                             <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Action Required</span>
+                                            <span className="text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">{oui.actionRequired}</span>
                                         </div>
                                     )}
                                 </div>
@@ -414,14 +490,14 @@ export function OrdersView() {
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
-                            {isLoading ? "Fetching Records..." : "Recent Transactions"}
+                            {isLoading ? oui.sectionTitleLoading : oui.sectionTitle}
                         </p>
 
                         <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
                             <TableSearch
                                 value={search}
                                 onChange={(val) => { setSearch(val); setPage(1); }}
-                                placeholder="Search customer or ID..."
+                                placeholder={oui.searchPlaceholder}
                             />
                             <div className="flex items-center gap-3 w-full md:w-auto">
                                 <FilterPopover
@@ -448,8 +524,31 @@ export function OrdersView() {
                                         setEndDate(range?.to);
                                         setPage(1);
                                     }}
-                                    placeholder="Filter by date"
+                                    placeholder={oui.dateFilterPlaceholder}
                                 />
+                                {layoutPreset === "school" && (academicCal?.sessions?.length ?? 0) > 0 ? (
+                                    <Select
+                                        value={academicTermFilter || "__all__"}
+                                        onValueChange={(v) => {
+                                            setAcademicTermFilter(v === "__all__" ? "" : v)
+                                            setPage(1)
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full md:w-[220px]">
+                                            <SelectValue placeholder="Term" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="__all__">All terms</SelectItem>
+                                            {(academicCal?.sessions ?? []).flatMap((s) =>
+                                                (s.terms ?? []).map((t) => (
+                                                    <SelectItem key={t.id} value={t.id}>
+                                                        {s.name} · {t.name}
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                ) : null}
                             </div>
                         </div>
                     </div>
@@ -462,7 +561,8 @@ export function OrdersView() {
                         const isFiltered = search !== "" ||
                             selectedFilters.length > 0 ||
                             startDate !== undefined ||
-                            endDate !== undefined;
+                            endDate !== undefined ||
+                            (layoutPreset === "school" && !!academicTermFilter);
 
                         return (
                             <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-3xl flex flex-col items-center justify-center py-24 px-8 text-center text-brand-deep dark:text-brand-cream">
@@ -474,12 +574,10 @@ export function OrdersView() {
                                     )}
                                 </div>
                                 <h3 className="text-xl font-serif font-medium mb-2">
-                                    {isFiltered ? "No orders match your criteria" : "No orders yet"}
+                                    {isFiltered ? oui.emptyFilteredTitle : oui.emptyUnfilteredTitle}
                                 </h3>
                                 <p className="text-sm text-brand-accent/40 dark:text-brand-cream/40 mb-8 max-w-sm">
-                                    {isFiltered
-                                        ? "We couldn't find any orders matching your current filters. Try adjusting your search or filtering by a different status."
-                                        : "Your sales pipeline is empty. Once you record a sale, it will appear here for you to track and manage."}
+                                    {isFiltered ? oui.emptyFilteredHint : oui.emptyUnfilteredHint}
                                 </p>
                                 {isFiltered ? (
                                     <Button
@@ -490,10 +588,11 @@ export function OrdersView() {
                                             setSelectedFilters([])
                                             setStartDate(undefined)
                                             setEndDate(undefined)
+                                            setAcademicTermFilter("")
                                             setPage(1)
                                         }}
                                     >
-                                        Clear All Filters
+                                        {oui.clearFilters}
                                     </Button>
                                 ) : (
                                     <Link href="/orders/sale">
@@ -502,7 +601,7 @@ export function OrdersView() {
                                             className="rounded-full px-8 h-12 border-brand-accent/20 dark:border-white/20 hover:bg-brand-accent/5 dark:hover:bg-white/5"
                                         >
                                             <ShoppingBag className="w-4 h-4 mr-2 text-brand-gold" />
-                                            Record Your First Sale
+                                            {oui.recordFirstSale}
                                         </Button>
                                     </Link>
                                 )}
@@ -584,14 +683,24 @@ export function OrdersView() {
                         exit={{ scale: 0, opacity: 0, y: 20 }}
                         className="fixed bottom-28 right-6 z-40 md:hidden"
                     >
-                        <Link href="/orders/sale">
+                        {layoutPreset === "school" ? (
                             <Button
                                 size="icon"
                                 className="h-16 w-16 rounded-full bg-brand-gold text-brand-deep shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-brand-cream dark:border-brand-deep animate-pulse-glow"
+                                onClick={() => setSchoolFeeDrawerOpen(true)}
                             >
                                 <ShoppingBag className="w-7 h-7" />
                             </Button>
-                        </Link>
+                        ) : (
+                            <Link href="/orders/sale">
+                                <Button
+                                    size="icon"
+                                    className="h-16 w-16 rounded-full bg-brand-gold text-brand-deep shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-brand-cream dark:border-brand-deep animate-pulse-glow"
+                                >
+                                    <ShoppingBag className="w-7 h-7" />
+                                </Button>
+                            </Link>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -626,6 +735,13 @@ export function OrdersView() {
                     }
                 }}
             />
+
+            {layoutPreset === "school" && (
+                <SchoolFeeRecordDrawer
+                    open={schoolFeeDrawerOpen}
+                    onOpenChange={setSchoolFeeDrawerOpen}
+                />
+            )}
         </PageTransition>
     )
 }

@@ -10,6 +10,7 @@ import { Link2, CheckCircle2, Clock, XCircle, ChevronLeft, ChevronRight, MoreHor
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
 import { Button } from "@/app/components/ui/button"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
@@ -40,6 +41,7 @@ const PAGE_SIZE = 20
 export function PaymentLinksView() {
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
+    const pageCopy = usePresetPageCopy()
     const currencyCode = activeBusiness?.currency ?? "NGN"
     const currencySymbol = currencyCode === "USD" ? "$" : currencyCode === "GHS" ? "GH₵" : "₦"
 
@@ -295,7 +297,10 @@ export function PaymentLinksView() {
         return (
             <PageTransition>
                 <div className="max-w-5xl mx-auto space-y-8 pb-24">
-                    <ManagementHeader title="Payment Links" description="Manage payment links." />
+                    <ManagementHeader
+                        title={pageCopy.paymentLinks.title}
+                        description={pageCopy.paymentLinks.descriptionShort}
+                    />
                     <GlassCard className="p-8 text-center">
                         <p className="text-brand-deep dark:text-brand-cream mb-4">
                             {(error as Error).message}
@@ -317,8 +322,8 @@ export function PaymentLinksView() {
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
-                    title="Payment Links"
-                    description="Manage payment links for sales, debts, and wallet top-ups."
+                    title={pageCopy.paymentLinks.title}
+                    description={pageCopy.paymentLinks.descriptionLong}
                     addButtonLabel="Create Link"
                     onAddClick={() => setIsCreateOpen(true)}
                 />

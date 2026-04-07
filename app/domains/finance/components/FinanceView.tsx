@@ -28,6 +28,7 @@ import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { useStores } from '@/app/domains/stores/providers/StoreProvider'
 import { Button } from '@/app/components/ui/button'
 import {
@@ -203,6 +204,7 @@ function isApiRow(row: TransactionRow): row is import('../hooks/useFinance').Fin
 export function FinanceView() {
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
+    const pageCopy = usePresetPageCopy()
     const currencyCode = activeBusiness?.currency || 'NGN'
     const { stores, currentStore } = useStores()
     const useApi = !!activeBusiness?.id
@@ -476,16 +478,17 @@ export function FinanceView() {
         },
     ], [currencyCode])
 
-    const intelligenceWhisper = pendingReconciliation > 0
-        ? `You have **${pendingReconciliation} payments** pending reconciliation. Use the **Re-query** tool to automatically verify bank transfers.`
-        : `Your books are perfectly reconciled. All transactions have been cleared for the current period.`
+    const intelligenceWhisper =
+        pendingReconciliation > 0
+            ? pageCopy.financeUi.whisperPendingReconciliation(pendingReconciliation)
+            : pageCopy.financeUi.whisperReconciled
 
     return (
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
-                    title="Finance"
-                    description={`Monitor cash flow and reconcile transactions for ${selectedStoreName}.`}
+                    title={pageCopy.finance.title}
+                    description={pageCopy.finance.descriptionWithStore(selectedStoreName)}
                     extraActions={
                         <StoreContextSelector
                             value={selectedStoreId}

@@ -34,7 +34,7 @@ export function InsightWhisper({ insight, actionLabel, actionLink, className }: 
                     </div>
 
                     <div className="flex-1">
-                        <div className="text-xl md:text-2xl text-brand-deep dark:text-brand-cream/90 leading-relaxed font-sans tracking-tight">
+                        <div className="text-lg md:text-xl text-brand-deep dark:text-brand-cream/90 leading-relaxed font-sans tracking-tight">
                             <Markdown content={insight} />
                         </div>
                     </div>

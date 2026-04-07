@@ -13,6 +13,8 @@ import { useDashboardInsights } from "./useDashboardInsights"
 import { apiClient, ApiResponse } from "@/app/lib/api-client"
 import { formatCurrency } from "@/app/lib/formatters"
 import type { ActivityItem } from "@/app/components/dashboard/ActivityStream"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import type { DashboardActionKind } from "@/app/domains/workspace/copy/preset-page-copy"
 
 const ALL_STORES_ID = "all-stores"
 const ACTIVITIES_MERGE_LIMIT = 10
@@ -35,6 +37,8 @@ export interface DashboardSales {
 }
 
 export interface DashboardActionItem {
+    /** Present for built-in tiles so permissions do not depend on translated labels */
+    actionKind?: DashboardActionKind
     label: string
     count: number
     type: "urgent" | "warning" | "info"
@@ -55,6 +59,7 @@ export interface UseDashboardDataParams {
 export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams) {
     const { activeBusiness } = useBusiness()
     const { can } = usePermission()
+    const pageCopy = usePresetPageCopy()
     const canViewFinancials = can("VIEW_FINANCIALS")
     const { stores } = useStores()
     const from = dateRange.from
@@ -219,11 +224,11 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         return {
             balance: formatCurrency(balance, { currency }),
             isVerified,
-            label: "Wallet Balance",
+            label: pageCopy.dashboard.walletBalanceLabel,
         }
-    }, [wallet, isVerified])
+    }, [wallet, isVerified, pageCopy.dashboard.walletBalanceLabel])
 
-    const salesLabel = "Total Sales"
+    const salesLabel = pageCopy.dashboard.salesMetricLabel
     const storeNameForSales =
         effectiveStoreId === ALL_STORES_ID
             ? "All Stores"
@@ -246,10 +251,12 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
 
     const actions: DashboardActionItem[] = useMemo(() => {
         const items: DashboardActionItem[] = []
+        const ac = pageCopy.dashboard.actions
         const pendingCount = summary?.pendingOrdersCount ?? 0
         if (pendingCount > 0) {
             items.push({
-                label: "Pending Orders",
+                actionKind: "pending_orders",
+                label: ac.pending_orders,
                 count: pendingCount,
                 type: "urgent",
                 href: "/orders",
@@ -259,7 +266,8 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         const lowStock = inventorySummary?.lowStockItems ?? 0
         if (lowStock > 0) {
             items.push({
-                label: "Low Stock",
+                actionKind: "low_stock",
+                label: ac.low_stock,
                 count: lowStock,
                 type: "warning",
                 href: "/inventory",
@@ -269,7 +277,8 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         const hasDebt = (summary?.pendingDebtTotal ?? 0) > 0
         if (hasDebt) {
             items.push({
-                label: "Overdue Debts",
+                actionKind: "overdue_debts",
+                label: ac.overdue_debts,
                 count: 1,
                 type: "urgent",
                 href: "/finance",
@@ -285,7 +294,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         items.sort((a, b) => priorityScore[b.type] - priorityScore[a.type])
 
         return items.slice(0, 4)
-    }, [summary, inventorySummary, insightActions])
+    }, [summary, inventorySummary, insightActions, pageCopy.dashboard.actions])
 
     const velocityData = useMemo(() => {
         return (summary as any)?.velocityData || []
@@ -309,7 +318,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
         actions,
         activities,
         inventorySummary: inventory,
-        insight: "View your assistant for tailored insights and reports.",
+        insight: pageCopy.dashboard.insightAssistant,
         currency,
         isLoading,
         inventoryLoading,
