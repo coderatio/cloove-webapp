@@ -11,6 +11,7 @@ import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -57,6 +58,8 @@ const PAGE_SIZE = 20
 export function CustomersView() {
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
+    const pageCopy = usePresetPageCopy()
+    const cui = pageCopy.customersUi
     const { currentStore, stores } = useStores()
     const currencyCode = activeBusiness?.currency ?? "NGN"
     const [search, setSearch] = React.useState("")
@@ -107,14 +110,14 @@ export function CustomersView() {
 
     const filterGroups = [
         {
-            title: "Store Location",
+            title: cui.filters.storeLocation,
             options: stores.map((s) => ({ label: s.name, value: s.id })),
         },
         {
-            title: "Account Status",
+            title: cui.filters.accountStatus,
             options: [
-                { label: "Has Debt", value: "owing" },
-                { label: "Up to Date", value: "clean" },
+                { label: cui.filters.hasDebt, value: "owing" },
+                { label: cui.filters.upToDate, value: "clean" },
             ],
         },
     ]
@@ -209,7 +212,7 @@ export function CustomersView() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-brand-deep/5 dark:border-white/5 shadow-2xl">
                     <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 p-3">
-                        Relationship Actions
+                        {cui.actionsMenu.sectionLabel}
                     </DropdownMenuLabel>
                     <DropdownMenuItem
                         onClick={() => setViewingCustomerId(item.id)}
@@ -218,7 +221,7 @@ export function CustomersView() {
                         <div className="h-8 w-8 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
                             <User className="w-4 h-4" />
                         </div>
-                        <span className="font-medium">View Profile</span>
+                        <span className="font-medium">{cui.actionsMenu.viewProfile}</span>
                     </DropdownMenuItem>
 
                     {item.owing !== "—" && (
@@ -229,7 +232,7 @@ export function CustomersView() {
                             <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
                                 <Receipt className="w-4 h-4" />
                             </div>
-                            <span className="font-medium">Record Payment</span>
+                            <span className="font-medium">{cui.actionsMenu.recordPayment}</span>
                         </DropdownMenuItem>
                     )}
 
@@ -242,7 +245,7 @@ export function CustomersView() {
                                     <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
                                         <Phone className="w-4 h-4" />
                                     </div>
-                                    <span className="font-medium">Direct Call</span>
+                                    <span className="font-medium">{cui.actionsMenu.directCall}</span>
                                 </a>
                             </DropdownMenuItem>
                             <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5" asChild>
@@ -250,7 +253,7 @@ export function CustomersView() {
                                     <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                                         <MessageSquare className="w-4 h-4" />
                                     </div>
-                                    <span className="font-medium">WhatsApp Chat</span>
+                                    <span className="font-medium">{cui.actionsMenu.whatsappChat}</span>
                                 </a>
                             </DropdownMenuItem>
                         </>
@@ -265,7 +268,7 @@ export function CustomersView() {
                         <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
                             <UserPenIcon className="w-4 h-4" />
                         </div>
-                        <span className="font-medium">Edit Profile</span>
+                        <span className="font-medium">{cui.actionsMenu.editProfile}</span>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
@@ -286,7 +289,7 @@ export function CustomersView() {
                         )}>
                             {item.isBlacklisted ? <CheckCircle2 className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
                         </div>
-                        <span className="font-medium">{item.isBlacklisted ? "Un-blacklist" : "Blacklist"}</span>
+                        <span className="font-medium">{item.isBlacklisted ? cui.actionsMenu.unblacklist : cui.actionsMenu.blacklist}</span>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
@@ -307,7 +310,7 @@ export function CustomersView() {
                         )}>
                             <Star className={cn("w-4 h-4", item.isVip ? "text-brand-accent fill-brand-accent/20" : "text-brand-gold")} />
                         </div>
-                        <span>{item.isVip ? "Demote from VIP" : "Make VIP"}</span>
+                        <span>{item.isVip ? cui.actionsMenu.demoteVip : cui.actionsMenu.makeVip}</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -317,7 +320,7 @@ export function CustomersView() {
     const columns: Column<Customer>[] = [
         {
             key: "name",
-            header: "Customer",
+            header: cui.table.customer,
             render: (_value: Customer[keyof Customer], item: Customer) => (
                 <div className="flex flex-col gap-0.5">
                     <span
@@ -333,23 +336,23 @@ export function CustomersView() {
                     {item.isVip && (
                         <div className="flex items-center gap-1 mt-1">
                             <Crown className="w-3 h-3 text-brand-gold fill-brand-gold/20" />
-                            <span className="text-[9px] font-bold text-brand-gold uppercase tracking-widest">VIP</span>
+                            <span className="text-[9px] font-bold text-brand-gold uppercase tracking-widest">{cui.listCard.statusVip}</span>
                         </div>
                     )}
                     {item.isBlacklisted && (
                         <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tighter mt-1">
-                            Blacklisted
+                            {cui.listCard.statusBlacklisted}
                         </span>
                     )}
                 </div>
             ),
         },
-        { key: "orders", header: "Orders" },
-        { key: "totalSpent", header: "Total Spent" },
-        { key: "lastOrder", header: "Last Order" },
+        { key: "orders", header: cui.table.orders },
+        { key: "totalSpent", header: cui.table.totalSpent },
+        { key: "lastOrder", header: cui.table.lastOrder },
         {
             key: "owing",
-            header: "Owing",
+            header: cui.table.owing,
             render: (value: Customer[keyof Customer]) => {
                 const owing = String(value)
                 return (
@@ -376,10 +379,11 @@ export function CustomersView() {
         },
     ]
 
+    const debtDisplay = formatCurrency(totalDebtOnPage, { currency: currencyCode })
     const intelligenceWhisper =
         owingCustomersOnPage > 0
-            ? `There are **${owingCustomersOnPage} customers** with unpaid debts totaling **₦${totalDebtOnPage.toLocaleString()}** on this page. Consider sending friendly reminders.`
-            : `All customers on this page are up to date with their payments. Your credit health is looking excellent.`
+            ? cui.whisperWithDebt(owingCustomersOnPage, debtDisplay)
+            : cui.whisperClear
 
     const isFormPending = isCreating || isUpdating
     const totalPages = meta?.totalPages ?? 1
@@ -390,7 +394,10 @@ export function CustomersView() {
         return (
             <PageTransition>
                 <div className="max-w-5xl mx-auto space-y-8 pb-24">
-                    <ManagementHeader title="Customers" description="Manage customer relationships." />
+                    <ManagementHeader
+                        title={pageCopy.customers.title}
+                        description={pageCopy.customers.descriptionWithStore(pageCopy.ordersUi.storeDescriptionFallback)}
+                    />
                     <GlassCard className="p-8 text-center">
                         <p className="text-brand-deep dark:text-brand-cream mb-4">
                             {(error as Error).message}
@@ -412,9 +419,11 @@ export function CustomersView() {
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
-                    title="Customers"
-                    description={`Manage customer relationships and track credit history for ${currentStore?.name || "your business"}.`}
-                    addButtonLabel="Add Customer"
+                    title={pageCopy.customers.title}
+                    description={pageCopy.customers.descriptionWithStore(
+                        currentStore?.name || pageCopy.ordersUi.storeDescriptionFallback
+                    )}
+                    addButtonLabel={cui.addCustomer}
                     onAddClick={() => {
                         resetForm()
                         setIsAddOpen(true)
@@ -433,7 +442,7 @@ export function CustomersView() {
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-widest">
-                                Total Customers
+                                {cui.stats.totalCustomers}
                             </p>
                             {isStatsLoading ? (
                                 <Skeleton className="h-8 w-16 mt-1" />
@@ -454,7 +463,7 @@ export function CustomersView() {
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-gold/60 dark:text-brand-gold/80 uppercase tracking-widest">
-                                Active (30d)
+                                {cui.stats.active30d}
                             </p>
                             {isStatsLoading ? (
                                 <Skeleton className="h-8 w-12 mt-1" />
@@ -475,7 +484,7 @@ export function CustomersView() {
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
-                                New This Month
+                                {cui.stats.newThisMonth}
                             </p>
                             {isStatsLoading ? (
                                 <Skeleton className="h-8 w-12 mt-1" />
@@ -503,7 +512,7 @@ export function CustomersView() {
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">
-                                Total Credit
+                                {cui.stats.totalCredit}
                             </p>
                             {isStatsLoading ? (
                                 <Skeleton className="h-8 w-12 mt-1" />
@@ -519,13 +528,13 @@ export function CustomersView() {
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
-                            Relationship List
+                            {cui.relationshipList}
                         </p>
                         <div className="flex items-center gap-3 font-sans w-full md:w-auto">
                             <TableSearch
                                 value={search}
                                 onChange={setSearch}
-                                placeholder="Search by name..."
+                                placeholder={cui.searchPlaceholder}
                                 className="flex-1 min-w-0 w-full"
                             />
                             <div className="shrink-0">
@@ -554,9 +563,9 @@ export function CustomersView() {
                                     <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
                                         <Users className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
                                     </div>
-                                    <h3 className="text-brand-deep dark:text-brand-cream font-medium">No customers found</h3>
+                                    <h3 className="text-brand-deep dark:text-brand-cream font-medium">{cui.emptyState.title}</h3>
                                     <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
-                                        Try adjusting your filters or search terms to find what you're looking for.
+                                        {cui.emptyState.hint}
                                     </p>
                                 </div>
                             </GlassCard>
@@ -565,16 +574,30 @@ export function CustomersView() {
                                 <ListCard
                                     key={customer.id}
                                     title={customer.name}
-                                    subtitle={customer.lastOrder !== "Never" ? `Last order: ${customer.lastOrder}` : "No orders yet"}
-                                    meta={`${customer.orders} orders total`}
+                                    subtitle={
+                                        customer.lastOrder !== "Never"
+                                            ? `${cui.listCard.lastOrderPrefix} ${customer.lastOrder}`
+                                            : cui.listCard.noOrdersYet
+                                    }
+                                    meta={`${customer.orders} ${cui.listCard.ordersTotalSuffix}`}
                                     icon={User}
                                     iconClassName="text-brand-deep/40 dark:text-brand-cream/40"
-                                    status={customer.isBlacklisted ? "Blacklisted" : customer.isVip ? "VIP" : undefined}
+                                    status={
+                                        customer.isBlacklisted
+                                            ? cui.listCard.statusBlacklisted
+                                            : customer.isVip
+                                              ? cui.listCard.statusVip
+                                              : undefined
+                                    }
                                     statusColor={customer.isBlacklisted ? "danger" : customer.isVip ? "warning" : undefined}
                                     value={
                                         customer.owing !== "—" ? customer.owing : customer.totalSpent
                                     }
-                                    valueLabel={customer.owing !== "—" ? "Current Debt" : "Total Lifetime Spend"}
+                                    valueLabel={
+                                        customer.owing !== "—"
+                                            ? cui.listCard.currentDebt
+                                            : cui.listCard.totalLifetimeSpend
+                                    }
                                     delay={index * 0.05}
                                     actions={renderCustomerActions(customer)}
                                     onClick={() => setViewingCustomerId(customer.id)}
@@ -587,7 +610,7 @@ export function CustomersView() {
                         <DataTable
                             columns={columns}
                             data={filteredCustomers}
-                            emptyMessage="No customers found"
+                            emptyMessage={cui.tableEmpty}
                         />
                     </GlassCard>
                 )}
@@ -632,12 +655,10 @@ export function CustomersView() {
                     <DrawerContent>
                         <DrawerStickyHeader>
                             <DrawerTitle>
-                                {editingItem ? "Edit Profile" : "Add New Customer"}
+                                {editingItem ? cui.drawer.editTitle : cui.drawer.addTitle}
                             </DrawerTitle>
                             <DrawerDescription>
-                                {editingItem
-                                    ? "Update customer information."
-                                    : "Start a new business relationship."}
+                                {editingItem ? cui.drawer.editDescription : cui.drawer.addDescription}
                             </DrawerDescription>
                         </DrawerStickyHeader>
 
@@ -648,7 +669,7 @@ export function CustomersView() {
                             >
                                 <div className="space-y-3">
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1 block">
-                                        Customer Name
+                                        {cui.drawer.nameLabel}
                                     </label>
                                     <input
                                         autoFocus
@@ -664,7 +685,7 @@ export function CustomersView() {
 
                                 <div className="space-y-3">
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1 block">
-                                        Phone Number
+                                        {cui.drawer.phoneLabel}
                                     </label>
                                     <input
                                         type="tel"
@@ -682,7 +703,7 @@ export function CustomersView() {
 
                                 <div className="space-y-3">
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1 block">
-                                        Email Address
+                                        {cui.drawer.emailLabel}
                                     </label>
                                     <input
                                         type="email"
@@ -699,10 +720,10 @@ export function CustomersView() {
                                     <div className="flex items-center justify-between p-4 rounded-2xl bg-brand-deep/2 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
                                         <div className="space-y-0.5">
                                             <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
-                                                Blacklist Customer
+                                                {cui.drawer.blacklistTitle}
                                             </p>
                                             <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">
-                                                Prevent this customer from making new orders.
+                                                {cui.drawer.blacklistHint}
                                             </p>
                                         </div>
                                         <Switch
@@ -724,7 +745,7 @@ export function CustomersView() {
                                             variant="outline"
                                             className="flex-1 rounded-2xl h-14 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
                                         >
-                                            Cancel
+                                            {cui.drawer.cancel}
                                         </Button>
                                     </DrawerClose>
                                     <Button
@@ -735,9 +756,9 @@ export function CustomersView() {
                                         {isFormPending ? (
                                             <Loader2 className="w-5 h-5 animate-spin" />
                                         ) : editingItem ? (
-                                            "Save Changes"
+                                            cui.drawer.saveChanges
                                         ) : (
-                                            "Create Customer"
+                                            cui.drawer.createButton
                                         )}
                                     </Button>
                                 </div>
@@ -758,7 +779,7 @@ export function CustomersView() {
                                             ) : (
                                                 <Trash2 className="w-4 h-4" />
                                             )}
-                                            Remove Customer Profile
+                                            {cui.drawer.removeProfile}
                                         </button>
                                     </div>
                                 )}
@@ -771,9 +792,13 @@ export function CustomersView() {
                     open={confirmDeleteOpen}
                     onOpenChange={setConfirmDeleteOpen}
                     onConfirm={handleDelete}
-                    title="Delete Customer Profile"
-                    description={`Are you sure you want to remove ${itemToDelete?.name}? This action cannot be undone and will remove their contact records.`}
-                    confirmText="Delete Profile"
+                    title={cui.deleteConfirm.title}
+                    description={
+                        itemToDelete?.name
+                            ? cui.deleteConfirm.description(itemToDelete.name)
+                            : cui.deleteConfirm.title
+                    }
+                    confirmText={cui.deleteConfirm.confirm}
                     variant="destructive"
                 />
 

@@ -29,6 +29,7 @@ import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { useStores } from '@/app/domains/stores/providers/StoreProvider'
 import { Button } from '@/app/components/ui/button'
 import { FilterPopover } from '@/app/components/shared/FilterPopover'
@@ -57,6 +58,7 @@ import { StoreContextSelector } from '@/app/components/shared/StoreContextSelect
 import { BulkUploadDrawer } from './BulkUploadDrawer'
 import { ManageCategoriesDrawer } from './ManageCategoriesDrawer'
 import { ConfirmDialog } from '@/app/components/shared/ConfirmDialog'
+import { Markdown } from '@/app/components/ui/markdown'
 import { ProductViewDrawer } from './ProductViewDrawer'
 import { LabelPreviewDrawer } from './LabelPreviewDrawer'
 
@@ -130,6 +132,8 @@ function StoreStockInputs({
 export function InventoryView() {
     const isMobile = useIsMobile()
     const { currency, activeBusiness } = useBusiness()
+    const pageCopy = usePresetPageCopy()
+    const iui = pageCopy.inventoryUi
     const currencyCode = activeBusiness?.currency || 'NGN'
     const { stores, currentStore } = useStores()
     const [selectedStoreId, setSelectedStoreId] = React.useState<string>('all-stores')
@@ -633,17 +637,16 @@ export function InventoryView() {
         },
     ]
 
-    const intelligenceWhisper = lowStockItems > 0
-        ? `You have **${lowStockItems} items** critically low on stock. Consider restocking soon to avoid losing sales.`
-        : `Your inventory levels are looking healthy. No urgent restocks required today.`
+    const intelligenceWhisper =
+        lowStockItems > 0 ? iui.whisperLowStock(lowStockItems) : iui.whisperHealthy
 
     const isAllStores = selectedStoreId === 'all-stores'
     return (
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
-                    title="Inventory"
-                    description="Track and manage your products across all stores."
+                    title={pageCopy.inventory.title}
+                    description={pageCopy.inventory.description}
                     extraActions={
                         <div className="w-full flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                             <StoreContextSelector
@@ -668,7 +671,7 @@ export function InventoryView() {
                             </Button>
                         </div>
                     }
-                    addButtonLabel="Add Product"
+                    addButtonLabel={iui.addProduct}
                     onAddClick={() => {
                         setFormData({
                             ...INITIAL_FORM_STATE,
@@ -686,6 +689,12 @@ export function InventoryView() {
                     <InsightWhisper insight={intelligenceWhisper} />
                 )}
 
+                {pageCopy.inventoryUi.expiryComplianceBanner.trim() ? (
+                    <div className="rounded-2xl border border-amber-500/25 bg-amber-500/5 px-4 py-3 text-sm text-brand-deep/90 dark:text-brand-cream/85 md:px-5">
+                        <Markdown content={pageCopy.inventoryUi.expiryComplianceBanner} />
+                    </div>
+                ) : null}
+
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
@@ -696,7 +705,7 @@ export function InventoryView() {
                             {isFetching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-6 w-6" />}
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">Total Units</p>
+                            <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">{iui.stats.totalUnits}</p>
                             {isFetching ? <Skeleton className="h-8 w-20 mt-1" /> : <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{totalStockUnits}</p>}
                         </div>
                     </GlassCard>
@@ -709,7 +718,7 @@ export function InventoryView() {
                             {isFetching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">Products</p>
+                            <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">{iui.stats.products}</p>
                             {isFetching ? <Skeleton className="h-8 w-16 mt-1" /> : <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{totalProducts}</p>}
                         </div>
                     </GlassCard>
@@ -722,7 +731,7 @@ export function InventoryView() {
                             {isFetching ? <Loader2 className="h-5 w-5 animate-spin text-brand-gold" /> : <AlertTriangle className="h-6 w-6" />}
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">Inventory Value</p>
+                            <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">{iui.stats.inventoryValue}</p>
                             {isFetching ? <Skeleton className="h-8 w-32 mt-1" /> : <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                                 <CurrencyText value={formatCurrency(totalInventoryValue, { currency: currencyCode })} />
                             </p>}
@@ -733,13 +742,13 @@ export function InventoryView() {
                 {/* Main Content */}
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">Product List</p>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">{iui.productList}</p>
 
                         <div className="flex items-center gap-3">
                             <TableSearch
                                 value={search}
                                 onChange={setSearch}
-                                placeholder="Search products..."
+                                placeholder={iui.searchPlaceholder}
                             />
                             <FilterPopover
                                 groups={filterGroups}

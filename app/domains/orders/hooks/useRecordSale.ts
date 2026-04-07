@@ -20,6 +20,8 @@ export interface RecordSalePayload {
     customerName?: string
     notes?: string
     channel?: string
+    /** School preset: omit to use workspace default; null = no term */
+    academicTermId?: string | null
 }
 
 export interface RecordedSale {

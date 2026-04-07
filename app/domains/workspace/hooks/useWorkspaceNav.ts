@@ -22,7 +22,7 @@ export function useWorkspaceNav() {
 
     const navGroups: ResolvedNavGroup[] = useMemo(() => {
         const layoutGroups = applyLayoutPreset(presetId)
-        return buildResolvedNavGroups(layoutGroups, features, can)
+        return buildResolvedNavGroups(layoutGroups, features, can, presetId)
     }, [presetId, features, can])
 
     const preset = useMemo(() => getLayoutPreset(presetId), [presetId])

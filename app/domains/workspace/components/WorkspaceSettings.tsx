@@ -16,6 +16,7 @@ import {
     LAYOUT_PRESET_LIST,
     type LayoutPresetId,
 } from "@/app/domains/workspace/nav/layout-presets"
+import { PresetModuleRecommendations } from "@/app/domains/workspace/components/PresetModuleRecommendations"
 import { Button } from "@/app/components/ui/button"
 import { usePermission } from "@/app/hooks/usePermission"
 
@@ -40,37 +41,37 @@ const PLAN_FEATURE_ROWS: {
     description: string
     group: string
 }[] = [
-    {
-        key: "hasExpenses",
-        title: "Expenses",
-        description: "Record and track business expenses.",
-        group: "Money",
-    },
-    {
-        key: "hasDebts",
-        title: "Debts & credit",
-        description: "Customer credit and debt tracking.",
-        group: "Money",
-    },
-    {
-        key: "hasAdvancedAnalytics",
-        title: "Advanced analytics",
-        description: "Deeper reporting and insights.",
-        group: "Insights",
-    },
-    {
-        key: "hasApiAccess",
-        title: "API access",
-        description: "Programmatic access and integrations.",
-        group: "Platform",
-    },
-    {
-        key: "canHaveCustomDomain",
-        title: "Custom domain",
-        description: "Use your own domain on the storefront.",
-        group: "Platform",
-    },
-]
+        {
+            key: "hasExpenses",
+            title: "Expenses",
+            description: "Record and track business expenses.",
+            group: "Money",
+        },
+        {
+            key: "hasDebts",
+            title: "Debts & credit",
+            description: "Customer credit and debt tracking.",
+            group: "Money",
+        },
+        {
+            key: "hasAdvancedAnalytics",
+            title: "Advanced analytics",
+            description: "Deeper reporting and insights.",
+            group: "Insights",
+        },
+        {
+            key: "hasApiAccess",
+            title: "API access",
+            description: "Programmatic access and integrations.",
+            group: "Platform",
+        },
+        {
+            key: "canHaveCustomDomain",
+            title: "Custom domain",
+            description: "Use your own domain on the storefront.",
+            group: "Platform",
+        },
+    ]
 
 const MODULE_ROWS: {
     key: ModuleToggleKey
@@ -78,43 +79,43 @@ const MODULE_ROWS: {
     description: string
     group: string
 }[] = [
-    {
-        key: "module_expenses",
-        title: "Expenses in navigation",
-        description: "Show Expenses in the sidebar when your plan allows it.",
-        group: "Navigation",
-    },
-    {
-        key: "module_debts",
-        title: "Debts in navigation",
-        description: "Show Debts in the sidebar when your plan allows it.",
-        group: "Navigation",
-    },
-    {
-        key: "module_vendors",
-        title: "Vendors",
-        description: "Supplier and vendor management.",
-        group: "Navigation",
-    },
-    {
-        key: "module_storefront",
-        title: "Storefront",
-        description: "Online storefront and pages.",
-        group: "Navigation",
-    },
-    {
-        key: "module_staff",
-        title: "Staff",
-        description: "Team and permissions (also depends on your plan).",
-        group: "Navigation",
-    },
-    {
-        key: "module_referrals",
-        title: "Refer & earn",
-        description: "Referral program entry in the sidebar.",
-        group: "Navigation",
-    },
-]
+        {
+            key: "module_expenses",
+            title: "Expenses in navigation",
+            description: "Show Expenses in the sidebar when your plan allows it.",
+            group: "Navigation",
+        },
+        {
+            key: "module_debts",
+            title: "Debts in navigation",
+            description: "Show Debts in the sidebar when your plan allows it.",
+            group: "Navigation",
+        },
+        {
+            key: "module_vendors",
+            title: "Vendors",
+            description: "Supplier and vendor management.",
+            group: "Navigation",
+        },
+        {
+            key: "module_storefront",
+            title: "Storefront",
+            description: "Online storefront and pages.",
+            group: "Navigation",
+        },
+        {
+            key: "module_staff",
+            title: "Staff",
+            description: "Team and permissions (also depends on your plan).",
+            group: "Navigation",
+        },
+        {
+            key: "module_referrals",
+            title: "Refer & earn",
+            description: "Referral program entry in the sidebar.",
+            group: "Navigation",
+        },
+    ]
 
 function parseFeatureFlags(raw: unknown): Record<string, boolean> {
     if (raw && typeof raw === "object" && !Array.isArray(raw)) {
@@ -237,7 +238,7 @@ export function WorkspaceSettings() {
                     </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 bg-brand-deep/5 dark:bg-white/5 rounded-3xl p-4">
                     {LAYOUT_PRESET_LIST.map((preset) => {
                         const selected = currentPreset === preset.id
                         const busy = updateSettings.isPending && pendingPreset === preset.id
@@ -251,7 +252,7 @@ export function WorkspaceSettings() {
                                     applyPreset(preset.id)
                                 }}
                                 className={cn(
-                                    "text-left rounded-2xl border p-4 transition-all",
+                                    "text-left rounded-3xl cursor-pointer border p-4 transition-all",
                                     selected
                                         ? "border-brand-gold bg-brand-gold/10 dark:bg-brand-gold/5"
                                         : "border-brand-deep/10 dark:border-white/10 hover:border-brand-gold/40 bg-white/50 dark:bg-white/5"
@@ -278,6 +279,35 @@ export function WorkspaceSettings() {
                     })}
                 </div>
             </section>
+
+            <PresetModuleRecommendations
+                currentPreset={currentPreset}
+                mergedFlags={mergedFlags}
+                planAllowsExpenses={planAllows("hasExpenses")}
+                planAllowsDebts={planAllows("hasDebts")}
+                canUseStaff={canUseStaffFeature()}
+                updatePending={updateSettings.isPending}
+                onToggle={setModuleToggle}
+            />
+
+            {currentPreset === "school" ? (
+                <section className="space-y-3">
+                    <GlassCard className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all duration-300">
+                        <div>
+                            <h3 className="font-serif text-base font-medium text-brand-deep dark:text-brand-cream tracking-tight">
+                                Years & terms
+                            </h3>
+                            <p className="text-sm text-brand-deep/65 dark:text-brand-cream/65 mt-1 max-w-xl">
+                                Add academic sessions and terms, set the default fee period, and keep fee collections
+                                aligned with your school calendar.
+                            </p>
+                        </div>
+                        <Button asChild variant="secondary" className="rounded-full shrink-0">
+                            <Link href="/school/calendar">Open school calendar</Link>
+                        </Button>
+                    </GlassCard>
+                </section>
+            ) : null}
 
             <section className="space-y-4">
                 <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">

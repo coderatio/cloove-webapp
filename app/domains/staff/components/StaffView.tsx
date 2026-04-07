@@ -33,9 +33,11 @@ import { PERMISSIONS, Role } from "../data/staffMocks"
 import { useStaff, type StaffMember } from "../hooks/useStaff"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { usePermission } from "@/app/hooks/usePermission"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import Link from "next/link"
 
 export function StaffView() {
+    const pageCopy = usePresetPageCopy()
     const { canInviteStaff, loading: permissionLoading } = usePermission()
     const { staff, isLoading, inviteStaff, updateStaff, removeStaff, resendInvite } = useStaff()
     const [searchTerm, setSearchTerm] = useState("")
@@ -153,8 +155,8 @@ export function StaffView() {
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8">
                 <ManagementHeader
-                    title="Staff Management"
-                    description="Assign roles and manage permissions for your team members."
+                    title={pageCopy.staff.title}
+                    description={pageCopy.staff.description}
                     searchValue={searchTerm}
                     onSearchChange={setSearchTerm}
                     searchPlaceholder="Search staff by name or phone..."

@@ -26,6 +26,9 @@ import { TransactionDetailsDrawer } from "@/app/components/shared/TransactionDet
 import { useQueryClient } from "@tanstack/react-query"
 import { Can } from "@/app/components/shared/Can"
 import { usePermission } from "@/app/hooks/usePermission"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { PresetDashboardModules } from "@/app/domains/workspace/components/preset-feature-modules/PresetDashboardModules"
+import type { DashboardActionKind } from "@/app/domains/workspace/copy/preset-page-copy"
 
 function getTimeBasedGreeting(): string {
     const h = new Date().getHours()
@@ -38,6 +41,7 @@ export function DashboardView() {
     const { ownerName, activeBusiness } = useBusiness()
     const queryClient = useQueryClient()
     const { can } = usePermission()
+    const pageCopy = usePresetPageCopy()
     const { stores } = useStores()
     const [date, setDate] = useState<DateRange | undefined>({
         from: subDays(new Date(), 30),
@@ -154,9 +158,13 @@ export function DashboardView() {
                 <section>
                     <InsightWhisper
                         insight={insight}
-                        actionLabel="View Report"
+                        actionLabel={pageCopy.dashboard.insightViewReportLabel}
                         actionLink="/assistant"
                     />
+                </section>
+
+                <section>
+                    <PresetDashboardModules />
                 </section>
 
                 <section className={`grid grid-cols-1 ${can("VIEW_SALES") && can("VIEW_PRODUCTS") ? "md:grid-cols-2" : ""} gap-6`}>
@@ -178,25 +186,34 @@ export function DashboardView() {
                             <InventoryPulse
                                 totalItems={inventorySummary.totalItems}
                                 lowStockItems={inventorySummary.lowStockItems}
+                                title={pageCopy.dashboard.inventoryPulseTitle}
+                                itemsLabelSuffix={pageCopy.dashboard.inventoryPulseItemsSuffix}
+                                lowStockLine={pageCopy.dashboard.inventoryLowStockLine}
+                                lowStockHint={pageCopy.dashboard.inventoryLowStockHint}
+                                healthyHint={pageCopy.dashboard.inventoryFullyStockedHint}
+                                fullyStockedLabel={pageCopy.dashboard.inventoryFullyStockedHeading}
                             />
                         )}
                     </Can>
                 </section>
 
                 {(() => {
-                    const permissionMap: Record<string, string> = {
-                        "Pending Orders": "VIEW_SALES",
-                        "Low Stock": "VIEW_PRODUCTS",
-                        "Overdue Debts": "VIEW_FINANCIALS",
+                    const permissionByKind: Record<DashboardActionKind, string> = {
+                        pending_orders: "VIEW_SALES",
+                        low_stock: "VIEW_PRODUCTS",
+                        overdue_debts: "VIEW_FINANCIALS",
                     }
                     const filtered = actions.filter((a) => {
-                        const perm = permissionMap[a.label]
-                        return !perm || can(perm)
+                        if (a.actionKind) {
+                            const perm = permissionByKind[a.actionKind]
+                            return !perm || can(perm)
+                        }
+                        return true
                     })
                     return filtered.length > 0 ? (
                         <section>
                             <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream mb-4 px-2">
-                                Needs Attention
+                                {pageCopy.dashboard.needsAttentionTitle}
                             </h3>
                             <ActionRow items={filtered} />
                         </section>

@@ -10,6 +10,7 @@ import { Truck, Users, AlertCircle, ChevronLeft, ChevronRight, MoreHorizontal, P
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
@@ -33,6 +34,7 @@ import {
 const PAGE_SIZE = 20
 
 export function VendorsView() {
+    const pageCopy = usePresetPageCopy()
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
     const currencyCode = activeBusiness?.currency ?? "NGN"
@@ -227,7 +229,10 @@ export function VendorsView() {
         return (
             <PageTransition>
                 <div className="max-w-5xl mx-auto space-y-8 pb-24">
-                    <ManagementHeader title="Vendors" description="Manage your suppliers." />
+                    <ManagementHeader
+                        title={pageCopy.vendors.title}
+                        description={pageCopy.vendors.descriptionShort}
+                    />
                     <GlassCard className="p-8 text-center">
                         <p className="text-brand-deep dark:text-brand-cream mb-4">
                             {(error as Error).message}
@@ -249,8 +254,8 @@ export function VendorsView() {
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
-                    title="Vendors"
-                    description="Manage your suppliers and track payables."
+                    title={pageCopy.vendors.title}
+                    description={pageCopy.vendors.descriptionLong}
                     addButtonLabel="Add Vendor"
                     onAddClick={() => setIsAddOpen(true)}
                 />

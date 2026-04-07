@@ -11,6 +11,10 @@ export interface BusinessConfigs {
     email_summaries_enabled: boolean
     show_wallet_balance: boolean
     ui_layout_preset?: string
+    /** School preset: UUID of default academic term for new fee sales */
+    school_active_academic_term_id?: string
+    /** School preset: fee label/amount presets (JSON array or parsed) */
+    school_fee_templates?: unknown
     feature_flags?: Record<string, boolean>
     [key: string]: any
 }

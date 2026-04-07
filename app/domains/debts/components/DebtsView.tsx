@@ -10,6 +10,7 @@ import { AlertCircle, Users, Clock, TrendingUp, ChevronLeft, ChevronRight, MoreH
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
@@ -65,6 +66,7 @@ function getDebtDisplayStatus(debt: Debt): string {
 export function DebtsView() {
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
+    const pageCopy = usePresetPageCopy()
     const currencyCode = activeBusiness?.currency ?? "NGN"
     const [search, setSearch] = React.useState("")
     const deferredSearch = React.useDeferredValue(search)
@@ -320,7 +322,10 @@ export function DebtsView() {
         return (
             <PageTransition>
                 <div className="max-w-5xl mx-auto space-y-8 pb-24">
-                    <ManagementHeader title="Debts" description="Track customer debts." />
+                    <ManagementHeader
+                        title={pageCopy.debts.title}
+                        description={pageCopy.debts.descriptionShort}
+                    />
                     <GlassCard className="p-8 text-center">
                         <p className="text-brand-deep dark:text-brand-cream mb-4">
                             {(error as Error).message}
@@ -342,8 +347,8 @@ export function DebtsView() {
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
-                    title="Debts"
-                    description="Track and manage customer debts and repayments."
+                    title={pageCopy.debts.title}
+                    description={pageCopy.debts.descriptionLong}
                     addButtonLabel="Record Debt"
                     onAddClick={() => setIsAddOpen(true)}
                 />

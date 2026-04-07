@@ -14,8 +14,13 @@ export interface ResolvedNavGroup {
 function isItemVisible(
     item: NavItemDef,
     features: Record<string, boolean> | null,
-    can: (permission: string) => boolean
+    can: (permission: string) => boolean,
+    presetId?: string | null
 ): boolean {
+    if (item.visibleForPresets?.length) {
+        if (!presetId || !item.visibleForPresets.includes(presetId)) return false
+    }
+
     if (item.permission && !can(item.permission)) return false
 
     if (item.planFeatureKey) {
@@ -34,12 +39,13 @@ function isItemVisible(
 function resolveItem(
     item: NavItemDef,
     features: Record<string, boolean> | null,
-    can: (permission: string) => boolean
+    can: (permission: string) => boolean,
+    presetId?: string | null
 ): ResolvedNavItem | null {
-    if (!isItemVisible(item, features, can)) return null
+    if (!isItemVisible(item, features, can, presetId)) return null
 
     const children = item.children
-        ?.map((c) => resolveItem(c as NavItemDef, features, can))
+        ?.map((c) => resolveItem(c as NavItemDef, features, can, presetId))
         .filter((c): c is ResolvedNavItem => c !== null)
 
     const resolvedChildren =
@@ -64,14 +70,15 @@ function resolveItem(
 export function buildResolvedNavGroups(
     groups: NavGroupDef[],
     features: Record<string, boolean> | null,
-    can: (permission: string) => boolean
+    can: (permission: string) => boolean,
+    presetId?: string | null
 ): ResolvedNavGroup[] {
     const out: ResolvedNavGroup[] = []
 
     for (const g of groups) {
         const items: ResolvedNavItem[] = []
         for (const item of g.items) {
-            const r = resolveItem(item, features, can)
+            const r = resolveItem(item, features, can, presetId)
             if (r) items.push(r)
         }
         if (items.length === 0) continue

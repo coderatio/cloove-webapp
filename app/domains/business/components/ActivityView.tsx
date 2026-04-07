@@ -20,6 +20,7 @@ import { subDays } from "date-fns"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
 import { ActivityDetailsDrawer } from "@/app/components/shared/ActivityDetailsDrawer"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 
 const PAGE_SIZE = 15
 
@@ -259,6 +260,7 @@ function ActivitySkeleton() {
 }
 
 export function ActivityView() {
+    const pageCopy = usePresetPageCopy()
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const [page, setPage] = useState(1)
     const [storeId, setStoreId] = useState<string>(ALL_STORES_ID)
@@ -294,8 +296,8 @@ export function ActivityView() {
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-20">
                 <ManagementHeader
-                    title="Activity"
-                    description="All sales, inventory, and payment events across your business."
+                    title={pageCopy.activity.title}
+                    description={pageCopy.activity.description}
                     extraActions={
                         <div className="ml-auto w-fit flex flex-wrap md:flex-nowrap items-center gap-3">
                             <StoreContextSelector

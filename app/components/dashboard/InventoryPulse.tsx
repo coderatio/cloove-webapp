@@ -8,9 +8,29 @@ interface InventoryPulseProps {
     totalItems: number
     lowStockItems: number
     className?: string
+    /** Card heading (preset-aware) */
+    title?: string
+    /** Word after the total count, e.g. "Items" or "SKU" */
+    itemsLabelSuffix?: string
+    /** Label for the low-stock alert line */
+    lowStockLine?: string
+    lowStockHint?: string
+    healthyHint?: string
+    /** When no low-stock lines (preset-aware, e.g. "Fully Stocked" vs "Lines OK") */
+    fullyStockedLabel?: string
 }
 
-export function InventoryPulse({ totalItems, lowStockItems, className }: InventoryPulseProps) {
+export function InventoryPulse({
+    totalItems,
+    lowStockItems,
+    className,
+    title = "Inventory Health",
+    itemsLabelSuffix = "Items",
+    lowStockLine = "Low Stock",
+    lowStockHint = "Items need restocking soon to avoid missed sales.",
+    healthyHint = "Your inventory is healthy. No immediate actions needed.",
+    fullyStockedLabel = "Fully Stocked",
+}: InventoryPulseProps) {
     const safeItems = totalItems - lowStockItems
     const data = [
         { name: 'In Stock', value: safeItems, color: '#115f47ff' }, // Brand Green
@@ -26,10 +46,10 @@ export function InventoryPulse({ totalItems, lowStockItems, className }: Invento
                     <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full">
                         <Package className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream tracking-wide">Inventory Health</span>
+                    <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream tracking-wide">{title}</span>
                 </div>
                 <span className="text-xs font-bold bg-brand-deep/5 dark:bg-white/10 px-2 py-1 rounded-full text-brand-deep dark:text-brand-cream">
-                    {totalItems} Items
+                    {totalItems} {itemsLabelSuffix}
                 </span>
             </div>
 
@@ -63,17 +83,19 @@ export function InventoryPulse({ totalItems, lowStockItems, className }: Invento
                         <div className="space-y-1">
                             <div className="flex items-center gap-2 text-warning">
                                 <AlertTriangle className="w-4 h-4" />
-                                <span className="text-sm font-bold">{lowStockItems} Low Stock</span>
+                                <span className="text-sm font-bold">
+                                    {lowStockItems} {lowStockLine}
+                                </span>
                             </div>
                             <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60 leading-tight">
-                                Items need restocking soon to avoid missed sales.
+                                {lowStockHint}
                             </p>
                         </div>
                     ) : (
                         <div className="space-y-1">
-                            <p className="text-sm font-bold text-brand-green dark:text-brand-gold">Fully Stocked</p>
+                            <p className="text-sm font-bold text-brand-green dark:text-brand-gold">{fullyStockedLabel}</p>
                             <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60 leading-tight">
-                                Your inventory is healthy. No immediate actions needed.
+                                {healthyHint}
                             </p>
                         </div>
                     )}

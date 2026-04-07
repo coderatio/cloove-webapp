@@ -27,6 +27,12 @@ export interface Order {
     channel?: string
     notes?: string
     tags?: Array<{ id: string; name: string; slug: string; color?: string }>
+    /** School preset: fee posted to this academic term */
+    academicTerm?: {
+        id: string
+        name: string
+        session?: { id: string; name: string }
+    }
     isAutomated?: boolean
     deposit?: {
         virtualAccountNumber: string
@@ -76,4 +82,5 @@ export interface OrderFilterParams {
     storeId?: string
     storeIds?: string[]
     customerId?: string
+    academicTermId?: string
 }

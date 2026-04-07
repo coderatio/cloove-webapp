@@ -10,6 +10,7 @@ import { Banknote, TrendingDown, Calculator, Tag, Trash2, Loader2, ChevronLeft, 
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
@@ -32,6 +33,7 @@ const PAGE_SIZE = 20
 export function ExpensesView() {
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
+    const pageCopy = usePresetPageCopy()
     const currencyCode = activeBusiness?.currency ?? "NGN"
     const [search, setSearch] = React.useState("")
     const deferredSearch = React.useDeferredValue(search)
@@ -177,7 +179,10 @@ export function ExpensesView() {
         return (
             <PageTransition>
                 <div className="max-w-5xl mx-auto space-y-8 pb-24">
-                    <ManagementHeader title="Expenses" description="Track business expenses." />
+                    <ManagementHeader
+                        title={pageCopy.expenses.title}
+                        description={pageCopy.expenses.descriptionShort}
+                    />
                     <GlassCard className="p-8 text-center">
                         <p className="text-brand-deep dark:text-brand-cream mb-4">
                             {(error as Error).message}
@@ -199,8 +204,8 @@ export function ExpensesView() {
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
-                    title="Expenses"
-                    description="Track and manage your business expenses."
+                    title={pageCopy.expenses.title}
+                    description={pageCopy.expenses.descriptionLong}
                     addButtonLabel="Record Expense"
                     onAddClick={() => setIsAddOpen(true)}
                 />

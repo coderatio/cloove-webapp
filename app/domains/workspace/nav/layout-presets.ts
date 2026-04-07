@@ -78,17 +78,19 @@ const pharmacyPreset: LayoutPreset = {
 const schoolPreset: LayoutPreset = {
     id: "school",
     title: "School & training",
-    description: "People-first navigation for fees, resources, and your public presence.",
+    description:
+        "People-first navigation plus academic years & terms for fee collection, resources, and your public presence.",
     groupOrder: ["main", "sales_finance", "operations", "staff_management"],
     labelOverrides: {
         customers: "Students & parents",
         orders: "Fees & sales",
+        school_calendar: "Years & terms",
         inventory: "Resources & stock",
         storefront: "Public pages",
         staff: "Faculty & staff",
     },
     mobilePrimaryIds: ["overview", "customers"],
-    mobileSecondaryIds: ["orders"],
+    mobileSecondaryIds: ["orders", "school_calendar"],
 }
 
 export const LAYOUT_PRESETS: Record<LayoutPresetId, LayoutPreset> = {

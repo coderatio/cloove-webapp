@@ -55,6 +55,8 @@ import { useRecordSale } from '../hooks/useRecordSale'
 import { useInventory } from '../hooks/useInventory'
 import { useCustomers } from '../hooks/useCustomers'
 import { usePromotions } from '../hooks/usePromotions'
+import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { useAcademicCalendar } from "@/app/domains/school/hooks/useAcademicCalendar"
 import { formatCurrency } from '@/app/lib/formatters'
 import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { ProductSearchOverlay } from './ProductSearchOverlay'
@@ -348,6 +350,9 @@ export function SaleModeView() {
     const { currency, activeBusiness } = useBusiness()
     const { printReceipt } = useReceiptPrinter()
     const { recordSale, isRecording } = useRecordSale()
+    const layoutPreset = useLayoutPresetId()
+    const { data: academicCal } = useAcademicCalendar()
+    const [feeTermChoice, setFeeTermChoice] = React.useState<string>("__default__")
 
     // Initial fetch checks if we can use local mode. If not, it passes the debounced search to the backend.
     const { products, isLoadingProducts, isLocalMode, totalProducts } = useInventory({
@@ -540,6 +545,16 @@ export function SaleModeView() {
                 customerId: saleCustomer?.id?.startsWith('new-') ? undefined : saleCustomer?.id,
                 customerName: saleCustomer?.name,
                 notes: note.trim() || undefined,
+                ...(layoutPreset === "school"
+                    ? {
+                          academicTermId:
+                              feeTermChoice === "__default__"
+                                  ? undefined
+                                  : feeTermChoice === "__none__"
+                                    ? null
+                                    : feeTermChoice,
+                      }
+                    : {}),
             })
 
             const buildReceiptData = () => ({
@@ -1304,6 +1319,30 @@ export function SaleModeView() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+
+                        {layoutPreset === "school" ? (
+                            <div className="flex flex-col gap-1.5 pt-1 border-t border-brand-accent/5 dark:border-white/5 mt-1">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/45">
+                                    Fee period
+                                </span>
+                                <Select value={feeTermChoice} onValueChange={setFeeTermChoice}>
+                                    <SelectTrigger className="h-9 text-xs bg-white dark:bg-white/5 border-brand-accent/10">
+                                        <SelectValue placeholder="Term" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__default__">Workspace default</SelectItem>
+                                        <SelectItem value="__none__">No term</SelectItem>
+                                        {(academicCal?.sessions ?? []).flatMap((s) =>
+                                            (s.terms ?? []).map((t) => (
+                                                <SelectItem key={t.id} value={t.id}>
+                                                    {s.name} · {t.name}
+                                                </SelectItem>
+                                            ))
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        ) : null}
 
                         <div className="flex justify-between items-end pt-2">
                             <span className="text-[13px] font-semibold text-brand-deep dark:text-brand-cream/80">Total Payable</span>

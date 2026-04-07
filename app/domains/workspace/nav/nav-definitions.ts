@@ -3,6 +3,7 @@ import {
     Activity,
     AlertCircle,
     Banknote,
+    CalendarRange,
     Home,
     LayoutGrid,
     Link2,
@@ -21,6 +22,7 @@ export type NavRouteId =
     | "overview"
     | "assistant"
     | "orders"
+    | "school_calendar"
     | "finance"
     | "payment_links"
     | "customers"
@@ -60,6 +62,8 @@ export interface NavItemDef {
     planFeatureKey?: PlanFeatureKey
     /** When set, hide when `features[key] === false`; omit or true = show */
     moduleFeatureKey?: ModuleFeatureKey
+    /** When set, only show for these layout presets (e.g. school-only items) */
+    visibleForPresets?: string[]
     children?: NavItemDef[]
 }
 
@@ -88,6 +92,14 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 icon: ShoppingBag,
                 defaultLabel: "Orders",
                 permission: "VIEW_SALES",
+            },
+            {
+                id: "school_calendar",
+                href: "/school/calendar",
+                icon: CalendarRange,
+                defaultLabel: "School calendar",
+                permission: "VIEW_SALES",
+                visibleForPresets: ["school"],
             },
             {
                 id: "finance",
