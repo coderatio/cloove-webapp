@@ -343,6 +343,7 @@ export function OrdersView() {
     }, [layoutPreset, oui, activeBusiness?.currency])
 
     const pendingCount = summary?.pendingOrdersCount ?? 0
+    const pendingOutstandingAmount = summary?.pendingOutstandingAmount ?? 0
     const intelligenceWhisper =
         pendingCount > 0 ? oui.whisperPending(pendingCount) : oui.whisperClear
 
@@ -367,10 +368,13 @@ export function OrdersView() {
         },
         {
             label: oui.stats.pendingFulfillment,
-            value: formatCompactNumber(summary?.pendingOrdersCount ?? 0),
+            value:
+                layoutPreset === "school"
+                    ? <CurrencyText value={formatCompactCurrency(pendingOutstandingAmount, { currency: activeBusiness?.currency || 'NGN' })} />
+                    : formatCompactNumber(summary?.pendingOrdersCount ?? 0),
             icon: Clock,
             color: "brand-gold",
-            isPending: pendingCount > 0
+            isPending: layoutPreset === "school" ? pendingOutstandingAmount > 0 : pendingCount > 0
         }
     ]
 

@@ -65,6 +65,7 @@ export interface OrdersResponse {
         totalRevenue: number
         averageOrderValue: number
         pendingOrdersCount: number
+        pendingOutstandingAmount?: number
         completedOrdersCount: number
     }
 }

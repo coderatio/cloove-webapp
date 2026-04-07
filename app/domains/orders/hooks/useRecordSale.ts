@@ -8,6 +8,7 @@ export interface RecordSaleItem {
     productName: string
     quantity: number
     customPrice?: number
+    lineType?: "PRODUCT" | "FEE"
 }
 
 export interface RecordSalePayload {

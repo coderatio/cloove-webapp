@@ -28,6 +28,7 @@ import { Order, OrderStatus } from "../types"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
 
@@ -78,6 +79,7 @@ export function OrderDetailsDrawer({
     isLoading,
 }: OrderDetailsDrawerProps) {
     const { activeBusiness } = useBusiness()
+    const layoutPresetId = useLayoutPresetId()
     const currencyCode = order?.currency || activeBusiness?.currency || 'NGN'
 
     if (open && !order && isLoading) {
@@ -101,14 +103,17 @@ export function OrderDetailsDrawer({
         icon: AlertCircle
     }
     const StatusIcon = config.icon
+    const recordLabel = layoutPresetId === "school" ? "Fee Record" : "Order"
+    const computedRemaining = Math.max(0, Number(order.totalAmount || 0) - Number(order.amountPaid || 0))
+    const remainingBalance = computedRemaining
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
             <DrawerContent>
                 <DrawerStickyHeader>
-                    <DrawerTitle>Order Details</DrawerTitle>
+                    <DrawerTitle>{recordLabel} Details</DrawerTitle>
                     <DrawerDescription>
-                        Transaction #{order.shortCode || order.id.substring(0, 6)} for {order.customer}
+                        {recordLabel} #{order.shortCode || order.id.substring(0, 6)} for {order.customer}
                     </DrawerDescription>
                 </DrawerStickyHeader>
 
@@ -159,7 +164,7 @@ export function OrderDetailsDrawer({
                                     <div className="pt-2 border-t border-brand-accent/10 flex justify-between items-center">
                                         <p className="font-bold text-xs uppercase tracking-widest text-brand-accent">Remaining Balance</p>
                                         <p className="text-2xl font-bold text-brand-green dark:text-brand-gold">
-                                            <CurrencyText value={formatCurrency(Number(order.remainingAmount || 0), { currency: currencyCode })} />
+                                            <CurrencyText value={formatCurrency(remainingBalance, { currency: currencyCode })} />
                                         </p>
                                     </div>
                                 </div>
@@ -291,7 +296,7 @@ export function OrderDetailsDrawer({
                                             className="flex items-center justify-center gap-2 w-full h-14 text-xs font-bold text-amber-600 hover:text-amber-700 transition-all uppercase tracking-widest border-amber-600/10 rounded-2xl"
                                         >
                                             <RefreshCw className={cn("w-4 h-4", isUpdating && "animate-spin")} />
-                                            {isUpdating ? "Cancelling..." : "Cancel Order"}
+                                            {isUpdating ? "Cancelling..." : `Cancel ${recordLabel}`}
                                         </Button>
                                     ) : null}
                                 </div>
@@ -306,7 +311,7 @@ export function OrderDetailsDrawer({
                                     className="flex items-center justify-center gap-2 w-full h-14 text-xs font-bold text-rose-500/60 hover:text-rose-500 hover:bg-rose-500/5 transition-all uppercase tracking-widest disabled:opacity-50 rounded-2xl"
                                 >
                                     <Trash2 className={cn("w-4 h-4", isDeleting && "animate-spin")} />
-                                    {isDeleting ? "Deleting..." : "Cancel & Delete Order"}
+                                    {isDeleting ? "Deleting..." : `Cancel & Delete ${recordLabel}`}
                                 </Button>
                             )}
                         </div>

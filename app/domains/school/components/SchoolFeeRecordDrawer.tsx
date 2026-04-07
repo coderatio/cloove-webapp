@@ -44,6 +44,7 @@ import {
 } from "@/app/components/ui/select"
 import { useCustomers } from "@/app/domains/orders/hooks/useCustomers"
 import { useAcademicCalendar } from "@/app/domains/school/hooks/useAcademicCalendar"
+import { useDebounce } from "@/app/hooks/useDebounce"
 import { useSettings } from "@/app/domains/business/hooks/useBusinessSettings"
 import { useRecordSale } from "@/app/domains/orders/hooks/useRecordSale"
 import { useCreatePaymentLink } from "@/app/domains/checkout/hooks/usePaymentLinks"
@@ -140,18 +141,35 @@ function StudentStep({
     onSelectCustomer,
     adHocName,
     onAdHocName,
-    onNext,
 }: {
     selectedCustomer: Customer | null
     onSelectCustomer: (c: Customer | null) => void
     adHocName: string
     onAdHocName: (name: string) => void
-    onNext: () => void
 }) {
     const [search, setSearch] = React.useState("")
-    const { customers, isLoadingCustomers } = useCustomers(search)
+    const [page, setPage] = React.useState(1)
+    const debouncedSearch = useDebounce(search, 300)
+    const { customers, meta, isLoadingCustomers, isFetchingCustomers } = useCustomers({
+        search: debouncedSearch,
+        page,
+        limit: 20,
+    })
+    const currentPage = Number(meta?.currentPage ?? page)
+    const lastPage = Number(meta?.lastPage ?? 1)
 
-    const canProceed = !!selectedCustomer || adHocName.trim().length >= 1
+    React.useEffect(() => {
+        setPage(1)
+    }, [debouncedSearch])
+
+    const getInitials = (name: string) => {
+        const parts = name.trim().split(/\s+/).filter(Boolean)
+        if (parts.length >= 2) {
+            return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+        }
+        const first = parts[0] ?? ""
+        return first.slice(0, 2).toUpperCase()
+    }
 
     return (
         <div className="space-y-5">
@@ -175,13 +193,13 @@ function StudentStep({
                 </div>
             ) : (
                 <ul className="space-y-1.5 max-h-64 overflow-y-auto">
-                    {customers.slice(0, 25).map((c) => {
+                    {customers.map((c) => {
                         const isSelected = selectedCustomer?.id === c.id
                         return (
                             <li key={c.id}>
                                 <Button
                                     type="button"
-                                    variant="ghost"
+                                    variant="outline"
                                     onClick={() => {
                                         onSelectCustomer(isSelected ? null : c)
                                         onAdHocName("")
@@ -201,7 +219,7 @@ function StudentStep({
                                                 : "bg-brand-deep/8 dark:bg-white/8 text-brand-deep dark:text-brand-cream"
                                         )}
                                     >
-                                        {c.name.charAt(0).toUpperCase()}
+                                        {getInitials(c.name)}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <p className="text-sm font-medium text-brand-deep dark:text-brand-cream truncate">
@@ -227,6 +245,33 @@ function StudentStep({
                     )}
                 </ul>
             )}
+            {lastPage > 1 && (
+                <div className="flex items-center justify-between">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-full px-3 text-brand-deep/60 dark:text-brand-cream/60"
+                        disabled={currentPage <= 1 || isFetchingCustomers}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                        Previous
+                    </Button>
+                    <span className="text-xs text-brand-deep/50 dark:text-brand-cream/50">
+                        Page {currentPage} of {lastPage}
+                    </span>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-full px-3 text-brand-deep/60 dark:text-brand-cream/60"
+                        disabled={currentPage >= lastPage || isFetchingCustomers}
+                        onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                    >
+                        Next
+                    </Button>
+                </div>
+            )}
 
             {/* Ad-hoc name fallback */}
             {!selectedCustomer && (
@@ -243,15 +288,6 @@ function StudentStep({
                 </div>
             )}
 
-            <Button
-                type="button"
-                className="w-full rounded-full h-12"
-                disabled={!canProceed}
-                onClick={onNext}
-            >
-                Continue
-                <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
-            </Button>
         </div>
     )
 }
@@ -908,6 +944,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
     const [successInfo, setSuccessInfo] = React.useState<SuccessInfo | null>(null)
 
     const totalAmount = feeItems.reduce((s, f) => s + f.amount, 0)
+    const canProceedFromStudent = !!selectedCustomer || adHocName.trim().length >= 1
 
     // Sync amount to total when fees change
     React.useEffect(() => {
@@ -957,6 +994,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                     productName: f.label,
                     quantity: 1,
                     customPrice: f.amount,
+                    lineType: "FEE" as const,
                 })),
                 paymentMethod,
                 amountPaid,
@@ -1039,7 +1077,6 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                                     onSelectCustomer={setSelectedCustomer}
                                     adHocName={adHocName}
                                     onAdHocName={setAdHocName}
-                                    onNext={() => setStep("fees")}
                                 />
                             </motion.div>
                         )}
@@ -1106,12 +1143,21 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                 </DrawerBody>
 
                 {step === "student" && (
-                    <DrawerFooter className="flex-row justify-start">
+                    <DrawerFooter className="flex-row gap-3">
                         <DrawerClose asChild>
                             <Button type="button" variant="ghost" className="rounded-full text-brand-deep/50 dark:text-brand-cream/50">
                                 Cancel
                             </Button>
                         </DrawerClose>
+                        <Button
+                            type="button"
+                            className="flex-1 rounded-full h-12"
+                            disabled={!canProceedFromStudent}
+                            onClick={() => setStep("fees")}
+                        >
+                            Continue
+                            <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+                        </Button>
                     </DrawerFooter>
                 )}
                 {step === "fees" && (
