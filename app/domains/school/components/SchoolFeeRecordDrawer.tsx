@@ -179,14 +179,15 @@ function StudentStep({
                         const isSelected = selectedCustomer?.id === c.id
                         return (
                             <li key={c.id}>
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
                                     onClick={() => {
                                         onSelectCustomer(isSelected ? null : c)
                                         onAdHocName("")
                                     }}
                                     className={cn(
-                                        "w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all duration-200",
+                                        "w-full h-auto whitespace-normal justify-start flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all duration-200",
                                         isSelected
                                             ? "bg-brand-gold/10 border border-brand-gold/30 ring-1 ring-brand-gold/20"
                                             : "border border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/20 hover:bg-brand-gold/5"
@@ -215,7 +216,7 @@ function StudentStep({
                                     {isSelected && (
                                         <Check className="h-4 w-4 text-brand-gold shrink-0" />
                                     )}
-                                </button>
+                                </Button>
                             </li>
                         )
                     })}
@@ -264,6 +265,7 @@ function FeesStep({
     onAddCustom,
     onRemoveItem,
     currency,
+    currencySymbol,
     onNext,
     onBack,
 }: {
@@ -273,86 +275,207 @@ function FeesStep({
     onAddCustom: (label: string, amount: number) => void
     onRemoveItem: (key: string) => void
     currency: string
+    currencySymbol: string
     onNext: () => void
     onBack: () => void
 }) {
     const [customLabel, setCustomLabel] = React.useState("")
     const [customAmount, setCustomAmount] = React.useState<number>(0)
     const [showCustomForm, setShowCustomForm] = React.useState(false)
+    const [lastAdded, setLastAdded] = React.useState<string | null>(null)
+    const labelRef = React.useRef<HTMLInputElement>(null)
 
     const total = feeItems.reduce((s, f) => s + f.amount, 0)
     const templateSelectedIds = new Set(feeItems.filter((f) => !f.isCustom).map((f) => f.key))
-
     const handleAddCustom = () => {
         if (!customLabel.trim() || customAmount <= 0) {
             toast.error("Enter a label and a positive amount.")
             return
         }
-        onAddCustom(customLabel.trim(), customAmount)
+        const label = customLabel.trim()
+        onAddCustom(label, customAmount)
+        setLastAdded(label)
+        // Stay on form – just clear the fields so staff can add another
         setCustomLabel("")
         setCustomAmount(0)
-        setShowCustomForm(false)
+        setTimeout(() => {
+            labelRef.current?.focus()
+            setLastAdded(null)
+        }, 1200)
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") handleAddCustom()
+        if (e.key === "Escape") setShowCustomForm(false)
     }
 
     return (
         <div className="space-y-5">
             {/* Presets */}
             {templates.length > 0 && (
-                <div className="space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                <div className="space-y-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-deep/35 dark:text-brand-cream/35">
                         Fee presets
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {templates.map((t) => {
                             const isSelected = templateSelectedIds.has(t.id)
                             return (
-                                <button
+                                <Button
                                     key={t.id}
                                     type="button"
+                                    variant="ghost"
                                     onClick={() => onToggleTemplate(t)}
                                     className={cn(
-                                        "flex items-start justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all duration-200",
+                                        "group relative h-auto whitespace-normal w-full flex items-start justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200",
                                         isSelected
-                                            ? "bg-brand-gold/10 border-brand-gold/40 ring-1 ring-brand-gold/20"
-                                            : "border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/20 hover:bg-brand-gold/5"
+                                            ? "bg-brand-gold/8 border-brand-gold/35 shadow-sm shadow-brand-gold/10"
+                                            : "border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/25 hover:bg-brand-gold/4"
                                     )}
                                 >
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                        <p className={cn(
+                                            "text-sm font-semibold transition-colors",
+                                            isSelected ? "text-brand-deep dark:text-brand-cream" : "text-brand-deep/80 dark:text-brand-cream/80"
+                                        )}>
                                             {t.label}
                                         </p>
                                         {t.notes ? (
-                                            <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50 mt-0.5 truncate">
+                                            <p className="text-xs text-brand-deep/45 dark:text-brand-cream/45 mt-0.5 truncate">
                                                 {t.notes}
                                             </p>
                                         ) : null}
-                                        <p className="text-sm font-bold text-brand-gold mt-1">
-                                            <CurrencyText
-                                                value={formatCurrency(t.amount, { currency })}
-                                            />
+                                        <p className={cn(
+                                            "text-sm font-bold mt-1.5 transition-colors",
+                                            isSelected ? "text-brand-gold" : "text-brand-deep/60 dark:text-brand-cream/60"
+                                        )}>
+                                            <CurrencyText value={formatCurrency(t.amount, { currency })} />
                                         </p>
                                     </div>
-                                    <div
-                                        className={cn(
-                                            "h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all",
-                                            isSelected
-                                                ? "bg-brand-gold border-brand-gold"
-                                                : "border-brand-deep/20 dark:border-white/20"
-                                        )}
-                                    >
-                                        {isSelected && <Check className="h-3 w-3 text-brand-deep" />}
+                                    {/* Checkbox */}
+                                    <div className={cn(
+                                        "h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 border-2 transition-all duration-200",
+                                        isSelected
+                                            ? "bg-brand-gold border-brand-gold scale-110"
+                                            : "border-brand-deep/20 dark:border-white/15 group-hover:border-brand-gold/40"
+                                    )}>
+                                        {isSelected && <Check className="h-2.5 w-2.5 text-brand-deep" strokeWidth={3} />}
                                     </div>
-                                </button>
+                                </Button>
                             )
                         })}
                     </div>
                 </div>
             )}
 
-            {/* Selected custom items */}
+            {/* Custom fee inline form */}
+            <AnimatePresence initial={false}>
+                {showCustomForm ? (
+                    <motion.div
+                        key="custom-form"
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.18 }}
+                        className="rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/[0.02] dark:bg-white/[0.02] overflow-hidden"
+                    >
+                        {/* Header row */}
+                        <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-deep/40 dark:text-brand-cream/40">
+                                Custom fee
+                            </p>
+                            {lastAdded && (
+                                <motion.span
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"
+                                >
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    "{lastAdded}" added
+                                </motion.span>
+                            )}
+                        </div>
+
+                        {/* Fields */}
+                        <div className="flex items-end gap-2 px-4 pb-3" onKeyDown={handleKeyDown}>
+                            <div className="flex-1 space-y-1.5">
+                                <Label className="text-xs text-brand-deep/55 dark:text-brand-cream/55">
+                                    Fee label
+                                </Label>
+                                <Input
+                                    ref={labelRef}
+                                    value={customLabel}
+                                    onChange={(e) => setCustomLabel(e.target.value)}
+                                    placeholder="e.g. Exam levy"
+                                    className="h-10 rounded-xl border-brand-deep/10 dark:border-white/10"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="w-40 space-y-1.5">
+                                <Label className="text-xs text-brand-deep/55 dark:text-brand-cream/55">
+                                    Amount
+                                </Label>
+                                <MoneyInput
+                                    value={customAmount}
+                                    onChange={setCustomAmount}
+                                    size="sm"
+                                    currencySymbol={currencySymbol}
+                                    className="rounded-xl"
+                                    placeholder="0"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 px-4 pb-4">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="rounded-full text-brand-deep/45 dark:text-brand-cream/45 hover:text-brand-deep dark:hover:text-brand-cream text-xs"
+                                onClick={() => setShowCustomForm(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                className="rounded-full px-4"
+                                onClick={handleAddCustom}
+                                disabled={!customLabel.trim() || customAmount <= 0}
+                            >
+                                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                Add line
+                            </Button>
+                        </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="custom-trigger"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setShowCustomForm(true)}
+                            className="w-full h-auto whitespace-normal justify-start flex items-center gap-3 rounded-2xl border border-dashed border-brand-deep/15 dark:border-white/15 px-4 py-3 text-sm text-brand-deep/50 dark:text-brand-cream/50 hover:border-brand-gold/30 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-gold/4 group"
+                        >
+                            <div className="h-7 w-7 rounded-full border border-dashed border-brand-deep/15 dark:border-white/15 group-hover:border-brand-gold/40 group-hover:bg-brand-gold/8 flex items-center justify-center transition-all">
+                                <Plus className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="font-medium">Add custom fee</span>
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Custom items already added */}
             {feeItems.filter((f) => f.isCustom).length > 0 && (
                 <div className="space-y-1.5">
-                    <p className="text-xs font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-deep/35 dark:text-brand-cream/35">
                         Custom lines
                     </p>
                     {feeItems
@@ -360,23 +483,22 @@ function FeesStep({
                         .map((f) => (
                             <div
                                 key={f.key}
-                                className="flex items-center justify-between gap-3 rounded-xl border border-brand-deep/8 dark:border-white/8 px-4 py-2.5"
+                                className="flex items-center justify-between gap-3 rounded-xl border border-brand-deep/8 dark:border-white/8 bg-white/50 dark:bg-white/[0.03] px-4 py-2.5"
                             >
-                                <span className="text-sm text-brand-deep dark:text-brand-cream">
+                                <span className="text-sm font-medium text-brand-deep dark:text-brand-cream truncate">
                                     {f.label}
                                 </span>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-bold text-brand-gold">
-                                        <CurrencyText
-                                            value={formatCurrency(f.amount, { currency })}
-                                        />
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <span className="text-sm font-bold text-brand-deep/70 dark:text-brand-cream/70 tabular-nums">
+                                        <CurrencyText value={formatCurrency(f.amount, { currency })} />
                                     </span>
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
+                                        className="h-7 w-7 rounded-lg text-brand-deep/30 dark:text-brand-cream/30 hover:text-destructive hover:bg-destructive/8 transition-colors"
                                         onClick={() => onRemoveItem(f.key)}
+                                        aria-label={`Remove ${f.label}`}
                                     >
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
@@ -386,80 +508,31 @@ function FeesStep({
                 </div>
             )}
 
-            {/* Add custom fee */}
-            {showCustomForm ? (
-                <div className="rounded-2xl border border-brand-deep/10 dark:border-white/10 p-4 space-y-3">
-                    <p className="text-xs font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                        Custom fee
-                    </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1">
-                            <Label className="text-xs text-brand-deep/60 dark:text-brand-cream/60">
-                                Fee label
-                            </Label>
-                            <Input
-                                value={customLabel}
-                                onChange={(e) => setCustomLabel(e.target.value)}
-                                placeholder="e.g. Exam levy"
-                                className="rounded-xl"
-                                autoFocus
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-xs text-brand-deep/60 dark:text-brand-cream/60">
-                                Amount
-                            </Label>
-                            <MoneyInput
-                                value={customAmount}
-                                onChange={setCustomAmount}
-                                className="rounded-xl"
-                                currencySymbol={currency}
-                            />
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            className="rounded-full"
-                            onClick={() => setShowCustomForm(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button type="button" className="rounded-full" onClick={handleAddCustom}>
-                            Add line
-                        </Button>
-                    </div>
-                </div>
-            ) : (
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full rounded-full border-dashed border-brand-deep/20 dark:border-white/20"
-                    onClick={() => setShowCustomForm(true)}
-                >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add custom fee
-                </Button>
-            )}
-
             {/* Running total */}
             {feeItems.length > 0 && (
-                <div className="rounded-2xl bg-brand-gold/5 border border-brand-gold/15 px-4 py-3 flex items-center justify-between">
-                    <span className="text-sm font-medium text-brand-deep/70 dark:text-brand-cream/70">
-                        Total ({feeItems.length} item{feeItems.length !== 1 ? "s" : ""})
-                    </span>
-                    <span className="text-lg font-bold font-serif text-brand-deep dark:text-brand-cream">
+                <motion.div
+                    layout
+                    className="flex items-center justify-between rounded-2xl bg-linear-to-r from-brand-gold/8 to-brand-gold/4 border border-brand-gold/15 px-5 py-3.5"
+                >
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-deep/40 dark:text-brand-cream/40">
+                            Total
+                        </p>
+                        <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50 mt-0.5">
+                            {feeItems.length} line{feeItems.length !== 1 ? "s" : ""}
+                        </p>
+                    </div>
+                    <span className="text-xl font-bold font-serif text-brand-deep dark:text-brand-cream tabular-nums">
                         <CurrencyText value={formatCurrency(total, { currency })} />
                     </span>
-                </div>
+                </motion.div>
             )}
 
             <div className="flex gap-3 pt-1">
                 <Button
                     type="button"
                     variant="ghost"
-                    className="rounded-full gap-2 text-brand-deep/50 dark:text-brand-cream/50"
+                    className="rounded-full gap-2 text-brand-deep/45 dark:text-brand-cream/45"
                     onClick={onBack}
                 >
                     <ArrowLeft className="h-4 w-4" />
@@ -467,7 +540,7 @@ function FeesStep({
                 </Button>
                 <Button
                     type="button"
-                    className="flex-1 rounded-full h-12"
+                    className="flex-1 rounded-full h-12 font-semibold"
                     disabled={feeItems.length === 0}
                     onClick={onNext}
                 >
@@ -492,6 +565,7 @@ function PaymentStep({
     notes,
     onNotes,
     currency,
+    currencySymbol,
     onBack,
     onSubmit,
     isSubmitting,
@@ -506,6 +580,7 @@ function PaymentStep({
     notes: string
     onNotes: (v: string) => void
     currency: string
+    currencySymbol: string
     onBack: () => void
     onSubmit: () => void
     isSubmitting: boolean
@@ -587,12 +662,13 @@ function PaymentStep({
                         const Icon = m.icon
                         const isSelected = paymentMethod === m.value
                         return (
-                            <button
+                            <Button
                                 key={m.value}
                                 type="button"
+                                variant="ghost"
                                 onClick={() => onPaymentMethod(m.value)}
                                 className={cn(
-                                    "flex flex-col items-center gap-2 rounded-2xl border px-3 py-3 relative transition-all duration-200",
+                                    "h-auto whitespace-normal flex flex-col items-center gap-2 rounded-2xl border px-3 py-3 relative transition-all duration-200",
                                     isSelected
                                         ? "bg-brand-gold/10 border-brand-gold/40 ring-1 ring-brand-gold/20 scale-[1.02] shadow-md"
                                         : "border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/20 hover:bg-brand-gold/5"
@@ -617,7 +693,7 @@ function PaymentStep({
                                         <CheckCircle2 className="h-3 w-3 text-brand-gold" />
                                     </div>
                                 )}
-                            </button>
+                            </Button>
                         )
                     })}
                 </div>
@@ -629,19 +705,21 @@ function PaymentStep({
                     <Label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                         Amount paid
                     </Label>
-                    <button
+                    <Button
                         type="button"
-                        className="text-xs text-brand-gold hover:underline"
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs text-brand-gold"
                         onClick={() => onAmountPaid(total)}
                     >
                         Pay in full
-                    </button>
+                    </Button>
                 </div>
                 <MoneyInput
                     value={amountPaid}
                     onChange={onAmountPaid}
                     max={total}
-                    currencySymbol={currency}
+                    currencySymbol={currencySymbol}
                     className="h-14 rounded-2xl text-lg font-bold border-brand-deep/10 dark:border-white/10"
                     placeholder="0.00"
                 />
@@ -864,7 +942,7 @@ const STEP_DESC: Record<Step, string> = {
 let customCounter = 0
 
 export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDrawerProps) {
-    const { activeBusiness } = useBusiness()
+    const { activeBusiness, currency: currencySymbol } = useBusiness()
     const currency = activeBusiness?.currency ?? "NGN"
     const { data: settings } = useSettings()
     const { recordSale, isRecording } = useRecordSale()
@@ -1035,6 +1113,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                                     onAddCustom={handleAddCustom}
                                     onRemoveItem={handleRemoveItem}
                                     currency={currency}
+                                    currencySymbol={currencySymbol}
                                     onNext={() => setStep("payment")}
                                     onBack={() => setStep("student")}
                                 />
@@ -1059,6 +1138,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                                     notes={notes}
                                     onNotes={setNotes}
                                     currency={currency}
+                                    currencySymbol={currencySymbol}
                                     onBack={() => setStep("fees")}
                                     onSubmit={() => void handleSubmit()}
                                     isSubmitting={isRecording}

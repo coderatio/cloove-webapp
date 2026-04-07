@@ -10,7 +10,6 @@ import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Markdown } from "@/app/components/ui/markdown"
 import { SchoolAcademicCalendarPanel } from "./SchoolAcademicCalendarPanel"
-import { SchoolFeeToolsSection } from "./SchoolFeeToolsSection"
 import { SchoolRosterImportDrawer } from "./SchoolRosterImportDrawer"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { usePermission } from "@/app/hooks/usePermission"
@@ -136,10 +135,8 @@ export function SchoolCalendarView() {
                 <motion.div
                     {...sectionMotion}
                     transition={{ duration: 0.35, delay: 0.1 }}
-                    className="space-y-8"
                 >
                     <SchoolAcademicCalendarPanel showIntro={false} />
-                    <SchoolFeeToolsSection />
                 </motion.div>
             </div>
         </PageTransition>

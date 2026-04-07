@@ -3,6 +3,7 @@ import {
     Activity,
     AlertCircle,
     Banknote,
+    BookOpen,
     CalendarRange,
     Home,
     LayoutGrid,
@@ -23,6 +24,7 @@ export type NavRouteId =
     | "assistant"
     | "orders"
     | "school_calendar"
+    | "school_fee_tools"
     | "finance"
     | "payment_links"
     | "customers"
@@ -92,6 +94,16 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 icon: ShoppingBag,
                 defaultLabel: "Orders",
                 permission: "VIEW_SALES",
+                children: [
+                    {
+                        id: "school_fee_tools",
+                        href: "/school/fee-tools",
+                        icon: BookOpen,
+                        defaultLabel: "Fee tools",
+                        permission: "VIEW_SALES",
+                        visibleForPresets: ["school"],
+                    },
+                ],
             },
             {
                 id: "school_calendar",

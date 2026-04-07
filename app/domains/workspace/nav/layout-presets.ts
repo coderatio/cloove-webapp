@@ -85,6 +85,7 @@ const schoolPreset: LayoutPreset = {
         customers: "Students & parents",
         orders: "Fees & sales",
         school_calendar: "Years & terms",
+        school_fee_tools: "Fee presets & links",
         inventory: "Resources & stock",
         storefront: "Public pages",
         staff: "Faculty & staff",
