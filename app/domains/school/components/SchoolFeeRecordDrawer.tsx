@@ -542,9 +542,6 @@ function PaymentStep({
     onNotes,
     currency,
     currencySymbol,
-    onBack,
-    onSubmit,
-    isSubmitting,
 }: {
     feeItems: FeeItem[]
     termId: string
@@ -557,9 +554,6 @@ function PaymentStep({
     onNotes: (v: string) => void
     currency: string
     currencySymbol: string
-    onBack: () => void
-    onSubmit: () => void
-    isSubmitting: boolean
 }) {
     const { data: academicCal } = useAcademicCalendar()
     const total = feeItems.reduce((s, f) => s + f.amount, 0)
@@ -739,31 +733,6 @@ function PaymentStep({
                 />
             </div>
 
-            <div className="flex gap-3 pt-1">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    className="rounded-full gap-2 text-brand-deep/50 dark:text-brand-cream/50"
-                    onClick={onBack}
-                    disabled={isSubmitting}
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                </Button>
-                <Button
-                    type="button"
-                    className="flex-1 rounded-full h-12 font-semibold"
-                    onClick={onSubmit}
-                    disabled={isSubmitting || amountPaid <= 0}
-                >
-                    {isSubmitting ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                        <Receipt className="h-4 w-4 mr-2" />
-                    )}
-                    {amountPaid >= total ? "Record full payment" : "Record partial payment"}
-                </Button>
-            </div>
         </div>
     )
 }
@@ -1113,9 +1082,6 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                                     onNotes={setNotes}
                                     currency={currency}
                                     currencySymbol={currencySymbol}
-                                    onBack={() => setStep("fees")}
-                                    onSubmit={() => void handleSubmit()}
-                                    isSubmitting={isRecording}
                                 />
                             </motion.div>
                         )}
@@ -1167,6 +1133,33 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                         >
                             Continue
                             <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+                        </Button>
+                    </DrawerFooter>
+                )}
+                {step === "payment" && (
+                    <DrawerFooter className="flex-row gap-3">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="rounded-full gap-2 text-brand-deep/50 dark:text-brand-cream/50"
+                            onClick={() => setStep("fees")}
+                            disabled={isRecording}
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                            Back
+                        </Button>
+                        <Button
+                            type="button"
+                            className="flex-1 rounded-full h-12 font-semibold"
+                            onClick={() => void handleSubmit()}
+                            disabled={isRecording || amountPaid <= 0}
+                        >
+                            {isRecording ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (
+                                <Receipt className="h-4 w-4 mr-2" />
+                            )}
+                            {amountPaid >= totalAmount ? "Record full payment" : "Record partial payment"}
                         </Button>
                     </DrawerFooter>
                 )}
