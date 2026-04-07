@@ -25,11 +25,31 @@ interface Props {
   businessName: string
   businessLogo?: string | null
   currency: string
+  financialSummary?: {
+    totalAmount: number
+    amountPaid: number
+    amountDue: number
+  } | null
+  academicContext?: {
+    academicYear: string
+    term: string
+  } | null
   onPaid: () => void
   onBack: () => void
 }
 
-export function CheckoutPaymentStep({ bankTransfer, reference, sessionId, businessName, businessLogo, currency, onPaid, onBack }: Props) {
+export function CheckoutPaymentStep({
+  bankTransfer,
+  reference,
+  sessionId,
+  businessName,
+  businessLogo,
+  currency,
+  financialSummary,
+  academicContext,
+  onPaid,
+  onBack,
+}: Props) {
   const [copied, setCopied] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -208,6 +228,48 @@ export function CheckoutPaymentStep({ bankTransfer, reference, sessionId, busine
             />
           </div>
         </div>
+
+        {financialSummary && (
+          <div className="space-y-2">
+            <div className="h-px bg-brand-deep/10 dark:bg-white/10" />
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-brand-accent/40 dark:text-white/40">Original amount</span>
+              <span className="text-brand-accent/70 dark:text-white/70 font-jakarta">
+                <CurrencyText value={formatCurrency(financialSummary.totalAmount, { currency })} />
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-brand-accent/40 dark:text-white/40">Already paid</span>
+              <span className="text-brand-green dark:text-brand-gold font-jakarta">
+                <CurrencyText value={formatCurrency(financialSummary.amountPaid, { currency })} />
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm font-medium">
+              <span className="text-brand-accent/60 dark:text-white/60">Outstanding balance</span>
+              <span className="text-brand-deep dark:text-brand-cream font-jakarta">
+                <CurrencyText value={formatCurrency(financialSummary.amountDue, { currency })} />
+              </span>
+            </div>
+          </div>
+        )}
+
+        {academicContext && (
+          <div className="space-y-2">
+            <div className="h-px bg-brand-deep/10 dark:bg-white/10" />
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-brand-accent/40 dark:text-white/40">Academic year</span>
+              <span className="text-brand-accent/70 dark:text-white/70 font-jakarta">
+                {academicContext.academicYear}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-brand-accent/40 dark:text-white/40">Term</span>
+              <span className="text-brand-deep dark:text-brand-cream font-jakarta">
+                {academicContext.term}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="space-y-3">

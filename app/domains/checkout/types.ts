@@ -31,6 +31,15 @@ export interface CheckoutData {
     totalPrice: number
   }> | null
   depositAccounts?: CheckoutDepositAccount[] | null
+  financialSummary?: {
+    totalAmount: number
+    amountPaid: number
+    amountDue: number
+  } | null
+  academicContext?: {
+    academicYear: string
+    term: string
+  } | null
 }
 
 export interface BankTransferData {

@@ -60,6 +60,8 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
   const payAmount = showAmountInput || isEditingAmount
     ? customAmount > 0 ? customAmount : 0
     : checkout.amount || 0
+  const financialSummary = checkout.financialSummary
+  const academicContext = checkout.academicContext
 
   // Auto-select first provider
   if (!selectedProvider && enabledProviders.length > 0) {
@@ -259,12 +261,63 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
               )}
             </div>
 
+            {financialSummary && (
+              <div className="space-y-2">
+                <p className="text-brand-accent/40 dark:text-white/40 text-[10px] font-bold uppercase tracking-widest">
+                  Payment Summary
+                </p>
+                <div className="bg-brand-deep/3 dark:bg-white/3 rounded-2xl border border-brand-deep/5 dark:border-white/5 p-3 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-brand-accent/40 dark:text-white/40">Original amount</span>
+                    <span className="text-brand-accent/70 dark:text-white/70 font-jakarta">
+                      <CurrencyText value={formatCurrency(financialSummary.totalAmount, { currency: checkout.businessCurrency })} />
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-brand-accent/40 dark:text-white/40">Already paid</span>
+                    <span className="text-brand-green dark:text-brand-gold font-jakarta">
+                      <CurrencyText value={formatCurrency(financialSummary.amountPaid, { currency: checkout.businessCurrency })} />
+                    </span>
+                  </div>
+                  <div className="h-px bg-brand-deep/10 dark:bg-white/10" />
+                  <div className="flex items-center justify-between text-sm font-medium">
+                    <span className="text-brand-accent/60 dark:text-white/60">Outstanding balance</span>
+                    <span className="text-brand-deep dark:text-brand-cream font-jakarta">
+                      <CurrencyText value={formatCurrency(financialSummary.amountDue, { currency: checkout.businessCurrency })} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {academicContext && (
+              <div className="space-y-2">
+                <p className="text-brand-accent/40 dark:text-white/40 text-[10px] font-bold uppercase tracking-widest">
+                  Academic Session
+                </p>
+                <div className="bg-brand-deep/3 dark:bg-white/3 rounded-2xl border border-brand-deep/5 dark:border-white/5 p-3 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-brand-accent/40 dark:text-white/40">Academic year</span>
+                    <span className="text-brand-accent/70 dark:text-white/70 font-jakarta">
+                      {academicContext.academicYear}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-brand-accent/40 dark:text-white/40">Term</span>
+                    <span className="text-brand-deep dark:text-brand-cream font-jakarta">
+                      {academicContext.term}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Item Breakdown */}
             {checkout.items && checkout.items.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-brand-accent/40 dark:text-white/40 text-[10px] font-bold uppercase tracking-widest">
                   <ShoppingBag className="w-3.5 h-3.5" />
-                  <span>Items</span>
+                  <span>What You're Paying For</span>
                 </div>
                 <div className="bg-brand-deep/3 dark:bg-white/3 rounded-2xl border border-brand-deep/5 dark:border-white/5 divide-y divide-brand-deep/5 dark:divide-white/5">
                   {checkout.items.map((item, index) => (
