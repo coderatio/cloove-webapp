@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Mail, Phone, ArrowRight, Loader2, Eye, EyeOff, CheckCircle2, Sparkles } from "lucide-react"
+import { Mail, Phone, ArrowRight, Loader2, Eye, EyeOff, CheckCircle2, Sparkles, MessageCircle, ExternalLink } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
@@ -18,6 +18,10 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Briefcase, Users, ShieldCheck, Zap, Globe, Sparkle } from "lucide-react"
 
 const NOISE_BG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+
+const BOT_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER?.replace(/\D/g, "") ?? ""
+const BOT_DISPLAY = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER ?? ""
+const WHATSAPP_URL = BOT_NUMBER ? `https://wa.me/${BOT_NUMBER}?text=${encodeURIComponent("Hi")}` : ""
 
 interface SignupConfig {
     signupEnabled: boolean
@@ -226,29 +230,67 @@ export function RegisterView() {
                             </div>
                         </div>
 
-                        <div className="space-y-4 mb-12">
-                            <motion.p 
+                        <div className="space-y-4 mb-10">
+                            <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.3 }}
                                 className="text-[10px] font-bold uppercase tracking-[0.5em] text-brand-gold"
                             >
-                                {isEmail ? "Transmission Sent" : "Account Identity Prepared"}
+                                {isEmail ? "Transmission Sent" : "One step left"}
                             </motion.p>
                             <h2 className="font-serif text-[2.5rem] leading-[1.1] text-brand-cream tracking-tight">
-                                {isEmail ? <>Check your <span className="italic font-normal text-brand-gold/90">inbox.</span></> : "Ready for focus."}
+                                {isEmail ? <>Check your <span className="italic font-normal text-brand-gold/90">inbox.</span></> : <>Message our <span className="italic font-normal text-brand-gold/90">bot.</span></>}
                             </h2>
                             <p className="text-brand-cream/60 leading-relaxed max-w-sm mx-auto font-sans">
                                 {success.message}
                             </p>
                         </div>
 
+                        {!isEmail && WHATSAPP_URL && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="mb-6 space-y-3"
+                            >
+                                <a
+                                    href={WHATSAPP_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-between gap-3 w-full px-5 py-4 rounded-2xl bg-brand-gold/8 border border-brand-gold/20 hover:bg-brand-gold/12 hover:border-brand-gold/35 transition-all duration-200 group"
+                                >
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/55 mb-0.5">
+                                            WhatsApp bot number
+                                        </p>
+                                        <p className="text-lg font-semibold text-brand-cream tracking-wide">
+                                            {BOT_DISPLAY}
+                                        </p>
+                                    </div>
+                                    <ExternalLink className="w-4 h-4 text-brand-gold/50 group-hover:text-brand-gold transition-colors shrink-0" />
+                                </a>
+                                <Button
+                                    asChild
+                                    className="w-full h-14 rounded-2xl bg-[#25D366] text-white font-bold hover:bg-[#22c55e] transition-all duration-300 shadow-2xl shadow-black/20"
+                                >
+                                    <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                                        <MessageCircle className="size-5 mr-2" />
+                                        Open in WhatsApp
+                                    </a>
+                                </Button>
+                            </motion.div>
+                        )}
+
                         <Button
                             asChild
-                            className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 transition-all duration-300 shadow-2xl shadow-brand-gold/20"
+                            className={isEmail
+                                ? "w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 transition-all duration-300 shadow-2xl shadow-brand-gold/20"
+                                : "w-full h-12 rounded-2xl bg-white/5 border border-white/10 text-brand-cream/70 font-semibold hover:bg-white/8 hover:text-brand-cream transition-all duration-300"
+                            }
                         >
-                            <Link href="/login" className="flex items-center gap-2">
-                                Enter Workspace
+                            <Link href="/login" className="flex items-center gap-2 justify-center">
+                                {isEmail ? "Enter Workspace" : "I'll do this later — go to login"}
                                 <ArrowRight className="size-4" />
                             </Link>
                         </Button>

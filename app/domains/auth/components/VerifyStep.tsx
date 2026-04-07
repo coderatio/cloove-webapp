@@ -1,6 +1,6 @@
 "use client"
 
-import { Lock, Shield, Eye, EyeOff, ArrowRight, MessageCircle } from "lucide-react"
+import { Lock, Shield, Eye, EyeOff, ArrowRight, MessageCircle, ExternalLink } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { Button } from "@/app/components/ui/button"
@@ -8,6 +8,10 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
 import { LoginBackButton } from "./LoginBackButton"
 import type { useLoginFlow } from "../hooks/useLoginFlow"
+
+const BOT_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER?.replace(/\D/g, "") ?? ""
+const BOT_DISPLAY = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER ?? ""
+const WHATSAPP_URL = BOT_NUMBER ? `https://wa.me/${BOT_NUMBER}?text=${encodeURIComponent("Hi")}` : ""
 
 interface VerifyStepProps {
     flow: ReturnType<typeof useLoginFlow>
@@ -43,22 +47,61 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                         Activate your number
                     </motion.h1>
                     <motion.p
-                        className="text-brand-cream/80 text-sm sm:text-base mb-8 max-w-sm mx-auto leading-relaxed"
+                        className="text-brand-cream/80 text-sm sm:text-base mb-6 max-w-sm mx-auto leading-relaxed"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2, duration: 0.25 }}
                     >
                         Send a message to our WhatsApp bot to activate your phone number, then come back here to log in.
                     </motion.p>
+                    {WHATSAPP_URL && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.24, duration: 0.25 }}
+                            className="mb-6"
+                        >
+                            <a
+                                href={WHATSAPP_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-3 w-full justify-between px-5 py-3.5 rounded-2xl bg-brand-gold/10 border border-brand-gold/25 hover:bg-brand-gold/15 hover:border-brand-gold/40 transition-all duration-200 group"
+                            >
+                                <div className="text-left">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/60 mb-0.5">
+                                        WhatsApp bot number
+                                    </p>
+                                    <p className="text-base font-semibold text-brand-cream tracking-wide">
+                                        {BOT_DISPLAY}
+                                    </p>
+                                </div>
+                                <ExternalLink className="w-4 h-4 text-brand-gold/60 group-hover:text-brand-gold transition-colors shrink-0" />
+                            </a>
+                        </motion.div>
+                    )}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.28, duration: 0.25 }}
+                        className="space-y-3"
                     >
+                        {WHATSAPP_URL && (
+                            <Button
+                                asChild
+                                size="lg"
+                                className="w-full h-12 rounded-xl bg-[#25D366] text-white font-semibold hover:bg-[#22c55e] shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                            >
+                                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                                    <MessageCircle className="w-4 h-4 mr-2" />
+                                    Open in WhatsApp
+                                </a>
+                            </Button>
+                        )}
                         <Button
                             onClick={actions.backToIdentifier}
+                            variant="ghost"
                             size="lg"
-                            className="w-full min-w-[180px] h-12 rounded-xl bg-brand-gold text-brand-deep font-semibold hover:bg-brand-gold/90 shadow-lg shadow-brand-gold/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full h-12 rounded-xl text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
                         >
                             Back to login
                             <ArrowRight className="w-4 h-4 ml-2" />
