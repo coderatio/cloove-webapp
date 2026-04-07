@@ -4,7 +4,7 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { usePermission } from "@/app/hooks/usePermission"
 import { QuickLinkRow } from "./QuickLinkRow"
-import { ScanBarcode, ShoppingBag, Package, Pill, Users, GraduationCap, UtensilsCrossed, Banknote } from "lucide-react"
+import { ScanBarcode, ShoppingBag, Package, Pill, Users, GraduationCap, UtensilsCrossed, Banknote, CalendarRange } from "lucide-react"
 
 /**
  * Secondary preset module on the orders workspace: fast paths without replacing the main table.
@@ -35,7 +35,7 @@ export function PresetOrdersQuickStrip() {
         : presetId === "school"
           ? [
             { href: "/customers", label: pageCopy.customers.title, icon: GraduationCap, ...common },
-            { href: "/orders/sale", label: oui.recordSale, icon: ShoppingBag, ...common },
+            { href: "/school/calendar", label: "Years & terms", icon: CalendarRange, ...common },
             { href: "/inventory", label: pageCopy.inventory.title, icon: Package, show: can("VIEW_PRODUCTS") },
           ]
           : presetId === "restaurant"

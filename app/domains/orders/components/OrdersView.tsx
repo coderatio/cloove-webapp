@@ -52,6 +52,7 @@ import { useCreatePaymentLink } from '@/app/domains/checkout/hooks/usePaymentLin
 import { PaymentLinkDialog } from '@/app/domains/checkout/components/PaymentLinkDialog'
 import { Markdown } from '@/app/components/ui/markdown'
 import { PresetOrdersQuickStrip } from '@/app/domains/workspace/components/preset-feature-modules/PresetOrdersQuickStrip'
+import { SchoolFeeRecordDrawer } from '@/app/domains/school/components/SchoolFeeRecordDrawer'
 
 export function OrdersView() {
     const isMobile = useIsMobile()
@@ -71,6 +72,7 @@ export function OrdersView() {
     const [recordingPaymentOrder, setRecordingPaymentOrder] = React.useState<Order | null>(null)
     const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = React.useState(false)
     const [generatedPaymentLink, setGeneratedPaymentLink] = React.useState<string | null>(null)
+    const [schoolFeeDrawerOpen, setSchoolFeeDrawerOpen] = React.useState(false)
     const statusColorMap: Record<string, { label: string, color: 'success' | 'warning' | 'danger' | 'neutral', className: string, icon: any }> = {
         COMPLETED: {
             label: 'Completed',
@@ -401,14 +403,24 @@ export function OrdersView() {
                         currentStore?.name || oui.storeDescriptionFallback
                     )}
                     extraActions={
-                        <Link href="/orders/sale" className="hidden md:block">
+                        layoutPreset === "school" ? (
                             <Button
-                                className="rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
+                                className="hidden md:flex rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
+                                onClick={() => setSchoolFeeDrawerOpen(true)}
                             >
                                 <ShoppingBag className="w-4 h-4 mr-2" />
                                 {oui.recordSale}
                             </Button>
-                        </Link>
+                        ) : (
+                            <Link href="/orders/sale" className="hidden md:block">
+                                <Button
+                                    className="rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
+                                >
+                                    <ShoppingBag className="w-4 h-4 mr-2" />
+                                    {oui.recordSale}
+                                </Button>
+                            </Link>
+                        )
                     }
                 />
 
@@ -667,14 +679,24 @@ export function OrdersView() {
                         exit={{ scale: 0, opacity: 0, y: 20 }}
                         className="fixed bottom-28 right-6 z-40 md:hidden"
                     >
-                        <Link href="/orders/sale">
+                        {layoutPreset === "school" ? (
                             <Button
                                 size="icon"
                                 className="h-16 w-16 rounded-full bg-brand-gold text-brand-deep shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-brand-cream dark:border-brand-deep animate-pulse-glow"
+                                onClick={() => setSchoolFeeDrawerOpen(true)}
                             >
                                 <ShoppingBag className="w-7 h-7" />
                             </Button>
-                        </Link>
+                        ) : (
+                            <Link href="/orders/sale">
+                                <Button
+                                    size="icon"
+                                    className="h-16 w-16 rounded-full bg-brand-gold text-brand-deep shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-brand-cream dark:border-brand-deep animate-pulse-glow"
+                                >
+                                    <ShoppingBag className="w-7 h-7" />
+                                </Button>
+                            </Link>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -709,6 +731,13 @@ export function OrdersView() {
                     }
                 }}
             />
+
+            {layoutPreset === "school" && (
+                <SchoolFeeRecordDrawer
+                    open={schoolFeeDrawerOpen}
+                    onOpenChange={setSchoolFeeDrawerOpen}
+                />
+            )}
         </PageTransition>
     )
 }
