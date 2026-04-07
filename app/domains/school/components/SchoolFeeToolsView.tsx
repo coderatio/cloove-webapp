@@ -301,8 +301,9 @@ function SaleRow({
     onToggle: () => void
     currency: string
 }) {
-    const remaining = Number(order.remainingAmount ?? 0)
-    const total = Number(order.totalAmount)
+    const total = Number(order.totalAmount || 0)
+    const paid = Number(order.amountPaid || 0)
+    const remaining = Math.max(0, Number(order.remainingAmount ?? total - paid))
 
     return (
         <Button
@@ -370,14 +371,9 @@ function BatchLinksSection() {
     >([])
     const batch = useBatchSalePaymentLinks()
 
-    const { data: ordersData, isLoading } = useOrders(1, 100, {
+    const { orders, isLoading } = useOrders(1, 100, {
         paymentStatus: ["PARTIAL"],
     })
-
-    const orders = React.useMemo(
-        () => ordersData?.data ?? [],
-        [ordersData]
-    )
 
     const filtered = React.useMemo(() => {
         const q = search.trim().toLowerCase()
