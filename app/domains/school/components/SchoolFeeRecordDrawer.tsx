@@ -124,8 +124,8 @@ function StepDots({ current }: { current: Step }) {
                         s === current
                             ? "w-5 bg-brand-gold"
                             : steps.indexOf(current) > i
-                              ? "w-1.5 bg-brand-gold/40"
-                              : "w-1.5 bg-brand-deep/10 dark:bg-white/10"
+                                ? "w-1.5 bg-brand-gold/40"
+                                : "w-1.5 bg-brand-deep/10 dark:bg-white/10"
                     )}
                 />
             ))}
@@ -266,8 +266,6 @@ function FeesStep({
     onRemoveItem,
     currency,
     currencySymbol,
-    onNext,
-    onBack,
 }: {
     templates: FeeTemplate[]
     feeItems: FeeItem[]
@@ -276,8 +274,6 @@ function FeesStep({
     onRemoveItem: (key: string) => void
     currency: string
     currencySymbol: string
-    onNext: () => void
-    onBack: () => void
 }) {
     const [customLabel, setCustomLabel] = React.useState("")
     const [customAmount, setCustomAmount] = React.useState<number>(0)
@@ -528,26 +524,6 @@ function FeesStep({
                 </motion.div>
             )}
 
-            <div className="flex gap-3 pt-1">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    className="rounded-full gap-2 text-brand-deep/45 dark:text-brand-cream/45"
-                    onClick={onBack}
-                >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back
-                </Button>
-                <Button
-                    type="button"
-                    className="flex-1 rounded-full h-12 font-semibold"
-                    disabled={feeItems.length === 0}
-                    onClick={onNext}
-                >
-                    Continue
-                    <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
-                </Button>
-            </div>
         </div>
     )
 }
@@ -603,7 +579,7 @@ function PaymentStep({
     return (
         <div className="space-y-6">
             {/* Fee summary */}
-            <GlassCard className="p-0 overflow-hidden border-brand-deep/8 dark:border-white/8">
+            <GlassCard className="p-0 overflow-hidden rounded-3xl before:rounded-3xl border-brand-deep/8 dark:border-white/8">
                 <div className="divide-y divide-brand-deep/5 dark:divide-white/5">
                     {feeItems.map((f) => (
                         <div
@@ -1024,8 +1000,8 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                     termId === "__default__"
                         ? undefined
                         : termId === "__none__"
-                          ? null
-                          : termId,
+                            ? null
+                            : termId,
             })
 
             setSuccessInfo({
@@ -1114,8 +1090,6 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                                     onRemoveItem={handleRemoveItem}
                                     currency={currency}
                                     currencySymbol={currencySymbol}
-                                    onNext={() => setStep("payment")}
-                                    onBack={() => setStep("student")}
                                 />
                             </motion.div>
                         )}
@@ -1172,6 +1146,28 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                                 Cancel
                             </Button>
                         </DrawerClose>
+                    </DrawerFooter>
+                )}
+                {step === "fees" && (
+                    <DrawerFooter className="flex-row gap-3">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="rounded-full gap-2 text-brand-deep/45 dark:text-brand-cream/45"
+                            onClick={() => setStep("student")}
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                            Back
+                        </Button>
+                        <Button
+                            type="button"
+                            className="flex-1 rounded-full h-12 font-semibold"
+                            disabled={feeItems.length === 0}
+                            onClick={() => setStep("payment")}
+                        >
+                            Continue
+                            <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+                        </Button>
                     </DrawerFooter>
                 )}
             </DrawerContent>
