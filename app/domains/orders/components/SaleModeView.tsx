@@ -56,11 +56,13 @@ import { useInventory } from '../hooks/useInventory'
 import { useCustomers } from '../hooks/useCustomers'
 import { usePromotions } from '../hooks/usePromotions'
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { getPresetCapabilities } from "@/app/domains/workspace/nav/preset-capabilities"
 import { useAcademicCalendar } from "@/app/domains/school/hooks/useAcademicCalendar"
 import { formatCurrency } from '@/app/lib/formatters'
 import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { ProductSearchOverlay } from './ProductSearchOverlay'
 import { Product } from '../hooks/useInventory'
+import { useRestaurantTables } from '@/app/domains/restaurant/hooks/useRestaurantOps'
 
 // Stagger variants for the container
 const containerVariants: Variants = {
@@ -282,7 +284,7 @@ const ProductGrid = React.memo(({
                                                 {product.product}
                                             </h3>
                                             <div className={cn(
-                                                "flex-shrink-0 w-1.5 h-1.5 rounded-full mt-1.5",
+                                                "shrink-0 w-1.5 h-1.5 rounded-full mt-1.5",
                                                 product.status === 'In Stock' ? "bg-emerald-500" : "bg-rose-500"
                                             )} />
                                         </div>
@@ -342,6 +344,11 @@ export function SaleModeView() {
     const [autoPrint, setAutoPrint] = React.useState(true)
     const [showExtras, setShowExtras] = React.useState(false)
     const [isSearchOpen, setIsSearchOpen] = React.useState(false)
+    const [serviceMode, setServiceMode] = React.useState<'DINE_IN' | 'TAKEAWAY'>('DINE_IN')
+    const [tableLabel, setTableLabel] = React.useState('')
+    const [covers, setCovers] = React.useState(1)
+    const [kitchenStation, setKitchenStation] = React.useState('kitchen')
+    const [sendToKitchen, setSendToKitchen] = React.useState(true)
 
     // Queue Sale State
     const { queuedSales, queueSale, removeQueuedSale } = useQueuedSales()
@@ -351,6 +358,7 @@ export function SaleModeView() {
     const { printReceipt } = useReceiptPrinter()
     const { recordSale, isRecording } = useRecordSale()
     const layoutPreset = useLayoutPresetId()
+    const presetCapabilities = React.useMemo(() => getPresetCapabilities(layoutPreset), [layoutPreset])
     const { data: academicCal } = useAcademicCalendar()
     const [feeTermChoice, setFeeTermChoice] = React.useState<string>("__default__")
 
@@ -362,6 +370,7 @@ export function SaleModeView() {
 
     const { customers, createCustomer } = useCustomers(customerSearch)
     const { data: promotions } = usePromotions()
+    const { data: restaurantTables = [] } = useRestaurantTables()
 
     // Handlers
     const addToCart = React.useCallback((product: any) => {
@@ -480,23 +489,6 @@ export function SaleModeView() {
         setCurrentPage(1)
     }, [localSearch, selectedCategory])
 
-    // Keyboard shortcut for search
-    React.useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === '/' && !isSearchOpen) {
-                // Don't open if user is typing in another input
-                const isInput = document.activeElement?.tagName === 'INPUT' ||
-                    document.activeElement?.tagName === 'TEXTAREA'
-                if (!isInput) {
-                    e.preventDefault()
-                    setIsSearchOpen(true)
-                }
-            }
-        }
-        window.addEventListener('keydown', handleKeyDown)
-        return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isSearchOpen])
-
     // Click outside customer dropdown
     React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -523,6 +515,10 @@ export function SaleModeView() {
             toast.error("Cart is empty")
             return
         }
+        if (presetCapabilities.requirePaymentMethodBeforeCheckout && !paymentMethod) {
+            toast.error("Select a payment method before checkout")
+            return
+        }
 
         // Snapshot cart before clearing
         const saleCart = [...cart]
@@ -534,6 +530,7 @@ export function SaleModeView() {
         try {
             const result = await recordSale({
                 items: saleCart.map(item => ({
+                    productId: item.id,
                     productName: item.product,
                     quantity: item.quantity,
                     customPrice: item.price,
@@ -544,6 +541,12 @@ export function SaleModeView() {
                 promotionId: selectedPromotion !== 'none' ? selectedPromotion : undefined,
                 customerId: saleCustomer?.id?.startsWith('new-') ? undefined : saleCustomer?.id,
                 customerName: saleCustomer?.name,
+                tags: layoutPreset === "restaurant" ? [serviceMode === "DINE_IN" ? "dine-in" : "takeaway"] : undefined,
+                serviceMode: layoutPreset === "restaurant" ? serviceMode : undefined,
+                tableLabel: layoutPreset === "restaurant" && serviceMode === "DINE_IN" ? tableLabel.trim() || undefined : undefined,
+                covers: layoutPreset === "restaurant" && serviceMode === "DINE_IN" ? covers : undefined,
+                kitchenStation: layoutPreset === "restaurant" ? kitchenStation.trim() || undefined : undefined,
+                sendToKitchen: layoutPreset === "restaurant" ? sendToKitchen : undefined,
                 notes: note.trim() || undefined,
                 ...(layoutPreset === "school"
                     ? {
@@ -637,6 +640,34 @@ export function SaleModeView() {
         setAmountPaid('')
     }
 
+    // Keyboard shortcuts for search and fast checkout
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === '/' && !isSearchOpen) {
+                const isInput = document.activeElement?.tagName === 'INPUT' ||
+                    document.activeElement?.tagName === 'TEXTAREA'
+                if (!isInput) {
+                    e.preventDefault()
+                    setIsSearchOpen(true)
+                }
+            }
+            if (!presetCapabilities.fastCheckout) return
+            const isInput = document.activeElement?.tagName === 'INPUT' ||
+                document.activeElement?.tagName === 'TEXTAREA'
+            if (isInput) return
+            if ((e.key === 'Enter' || e.key.toLowerCase() === 'p') && cart.length > 0 && !isRecording) {
+                e.preventDefault()
+                void handleCheckout()
+            }
+            if (e.key.toLowerCase() === 'k' && cart.length > 0) {
+                e.preventDefault()
+                handleQueueSale()
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [isSearchOpen, presetCapabilities.fastCheckout, cart.length, isRecording, handleCheckout])
+
     const handleRecallSale = (sale: any) => {
         if (cart.length > 0) {
             toast.error("Cart not empty", {
@@ -702,7 +733,9 @@ export function SaleModeView() {
                             </Link>
                             <div>
                                 <h2 className="text-3xl lg:text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
-                                <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs lg:text-sm font-sans uppercase tracking-[0.2em] font-black">Catalog</p>
+                                <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs lg:text-sm font-sans uppercase tracking-[0.2em] font-black">
+                                    {presetCapabilities.fastCheckout ? "Fast Checkout" : "Catalog"}
+                                </p>
                             </div>
                         </div>
 
@@ -792,7 +825,112 @@ export function SaleModeView() {
                                 </Button>
                             ))}
                         </div>
-                    </div>                    {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
+                    </div>
+                    {layoutPreset === "restaurant" && presetCapabilities.showServiceModeChips ? (
+                        <div className="rounded-2xl border border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 p-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {/* Service mode toggle */}
+                                <div className="flex items-center gap-1 bg-brand-accent/5 dark:bg-white/5 rounded-xl p-1 border border-brand-accent/8 dark:border-white/5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setServiceMode('DINE_IN')}
+                                        className={cn(
+                                            "flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-bold transition-all duration-200",
+                                            serviceMode === 'DINE_IN'
+                                                ? "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-cream shadow-sm"
+                                                : "text-brand-accent/50 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream"
+                                        )}
+                                    >
+                                        <UsersRoundIcon className="h-3 w-3" />
+                                        Dine-in
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setServiceMode('TAKEAWAY')}
+                                        className={cn(
+                                            "flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-bold transition-all duration-200",
+                                            serviceMode === 'TAKEAWAY'
+                                                ? "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-cream shadow-sm"
+                                                : "text-brand-accent/50 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream"
+                                        )}
+                                    >
+                                        <ArrowBigUpDash className="h-3 w-3" />
+                                        Takeaway
+                                    </button>
+                                </div>
+
+                                {/* Dine-in options */}
+                                {serviceMode === "DINE_IN" ? (
+                                    <>
+                                        <Select value={tableLabel || "__none__"} onValueChange={(v) => setTableLabel(v === "__none__" ? "" : v)}>
+                                            <SelectTrigger className="h-8 w-40 text-xs bg-white dark:bg-white/5 border-brand-accent/10 dark:border-white/10 rounded-xl">
+                                                <SelectValue placeholder="Select table" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__none__">Manual entry</SelectItem>
+                                                {restaurantTables
+                                                    .filter((t) => t.isActive)
+                                                    .map((t) => (
+                                                        <SelectItem key={t.id} value={t.label}>
+                                                            {t.label} · {t.capacity} seats
+                                                        </SelectItem>
+                                                    ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {(!tableLabel || !restaurantTables.some((t) => t.label === tableLabel)) ? (
+                                            <Input
+                                                value={tableLabel}
+                                                onChange={(e) => setTableLabel(e.target.value)}
+                                                placeholder="e.g. T12"
+                                                className="h-8 w-28 text-xs rounded-xl bg-white dark:bg-white/5"
+                                            />
+                                        ) : null}
+                                        {/* Covers stepper */}
+                                        <div className="flex items-center gap-1 h-8 px-2 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40 mr-0.5">Cov.</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setCovers((v) => Math.max(1, v - 1))}
+                                                className="h-5 w-5 flex items-center justify-center text-brand-accent/50 hover:text-brand-deep dark:hover:text-brand-cream rounded transition-colors"
+                                            >
+                                                <Minus className="h-2.5 w-2.5" />
+                                            </button>
+                                            <span className="text-sm font-bold w-5 text-center text-brand-deep dark:text-brand-cream tabular-nums">
+                                                {covers}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => setCovers((v) => v + 1)}
+                                                className="h-5 w-5 flex items-center justify-center text-brand-accent/50 hover:text-brand-deep dark:hover:text-brand-cream rounded transition-colors"
+                                            >
+                                                <Plus className="h-2.5 w-2.5" />
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : null}
+
+                                {/* Kitchen station + toggle */}
+                                <div className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40">Station</span>
+                                    <input
+                                        value={kitchenStation}
+                                        onChange={(e) => setKitchenStation(e.target.value)}
+                                        placeholder="kitchen"
+                                        className="w-20 text-xs bg-transparent border-none outline-none text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/30 font-medium"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40">Kitchen</span>
+                                    <Switch checked={sendToKitchen} onCheckedChange={setSendToKitchen} className="scale-[0.7] origin-right" />
+                                </div>
+
+                                <span className="ml-auto text-[9px] font-black uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/25 hidden lg:block">
+                                    Enter/P · Pay &nbsp;·&nbsp; K · Park
+                                </span>
+                            </div>
+                        </div>
+                    ) : null}
+                    {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
                     <div className="flex-1 min-h-0 flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-0">
                         <ProductGrid
                             products={products}

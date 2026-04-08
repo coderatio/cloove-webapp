@@ -5,6 +5,7 @@ import {
     Banknote,
     BookOpen,
     CalendarRange,
+    ChefHat,
     Home,
     LayoutGrid,
     Link2,
@@ -23,8 +24,12 @@ export type NavRouteId =
     | "overview"
     | "assistant"
     | "orders"
+    | "orders_sale"
     | "school_calendar"
     | "school_fee_tools"
+    | "restaurant_live"
+    | "restaurant_tables"
+    | "restaurant_kitchen"
     | "finance"
     | "payment_links"
     | "customers"
@@ -96,12 +101,43 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 permission: "VIEW_SALES",
                 children: [
                     {
+                        id: "orders_sale",
+                        href: "/orders/sale",
+                        icon: ShoppingBag,
+                        defaultLabel: "Record sale",
+                        permission: "VIEW_SALES",
+                    },
+                    {
                         id: "school_fee_tools",
                         href: "/school/fee-tools",
                         icon: BookOpen,
                         defaultLabel: "Fee tools",
                         permission: "VIEW_SALES",
                         visibleForPresets: ["school"],
+                    },
+                    {
+                        id: "restaurant_live",
+                        href: "/restaurant/live",
+                        icon: ChefHat,
+                        defaultLabel: "Service Console",
+                        permission: "VIEW_DASHBOARD",
+                        visibleForPresets: ["restaurant"],
+                    },
+                    {
+                        id: "restaurant_tables",
+                        href: "/restaurant/tables",
+                        icon: LayoutGrid,
+                        defaultLabel: "Tables",
+                        permission: "VIEW_SALES",
+                        visibleForPresets: ["restaurant"],
+                    },
+                    {
+                        id: "restaurant_kitchen",
+                        href: "/restaurant/kitchen",
+                        icon: ChefHat,
+                        defaultLabel: "Kitchen Board",
+                        permission: "VIEW_SALES",
+                        visibleForPresets: ["restaurant"],
                     },
                 ],
             },

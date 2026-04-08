@@ -19,6 +19,12 @@ export interface RecordSalePayload {
     promotionId?: string
     customerId?: string
     customerName?: string
+    tags?: string[]
+    serviceMode?: "DINE_IN" | "TAKEAWAY"
+    tableLabel?: string
+    covers?: number
+    kitchenStation?: string
+    sendToKitchen?: boolean
     notes?: string
     channel?: string
     /** School preset: omit to use workspace default; null = no term */
