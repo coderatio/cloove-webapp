@@ -83,6 +83,7 @@ export function RegisterView() {
     const [success, setSuccess] = useState<{ channel: "email" | "phone"; message: string } | null>(null)
     const [step, setStep] = useState<0 | 1>(0)
     const [intendedRole, setIntendedRole] = useState<"business_owner" | "field_agent" | null>(null)
+    const [termsAccepted, setTermsAccepted] = useState(false)
 
     useEffect(() => {
         apiClient
@@ -112,6 +113,10 @@ export function RegisterView() {
             toast.error("First name is required")
             return
         }
+        if (!termsAccepted) {
+            toast.error("Please accept the Terms of Service and Privacy Policy to continue")
+            return
+        }
         setIsSubmitting(true)
         try {
             const payload: Record<string, unknown> = {
@@ -121,6 +126,7 @@ export function RegisterView() {
                 lastName: lastName.trim() || undefined,
                 intendedRole: intendedRole!,
             }
+            payload.termsAccepted = true
             if (identifierType === "email") {
                 payload.email = email.trim().toLowerCase()
                 if (password) payload.password = password
@@ -590,10 +596,55 @@ export function RegisterView() {
                                                 </div>
                                             </div>
 
+                                            <label className="flex items-start gap-3 cursor-pointer group">
+                                                <div className="relative mt-0.5 shrink-0">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={termsAccepted}
+                                                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                                                        className="sr-only peer"
+                                                    />
+                                                    <div className={cn(
+                                                        "size-5 rounded-md border transition-all duration-200 flex items-center justify-center",
+                                                        termsAccepted
+                                                            ? "bg-brand-gold border-brand-gold"
+                                                            : "bg-white/5 border-white/20 group-hover:border-brand-gold/40"
+                                                    )}>
+                                                        {termsAccepted && (
+                                                            <svg className="size-3 text-brand-deep" viewBox="0 0 12 12" fill="none">
+                                                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                                            </svg>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <span className="text-xs text-brand-cream/50 leading-relaxed group-hover:text-brand-cream/70 transition-colors">
+                                                    I agree to the{" "}
+                                                    <a
+                                                        href="https://clooveai.com/terms"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="text-brand-gold/80 hover:text-brand-gold underline underline-offset-2 transition-colors"
+                                                    >
+                                                        Terms of Service
+                                                    </a>
+                                                    {" "}and{" "}
+                                                    <a
+                                                        href="https://clooveai.com/privacy"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="text-brand-gold/80 hover:text-brand-gold underline underline-offset-2 transition-colors"
+                                                    >
+                                                        Privacy Policy
+                                                    </a>
+                                                </span>
+                                            </label>
+
                                             <Button
                                                 type="submit"
-                                                disabled={isSubmitting}
-                                                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 shadow-2xl shadow-brand-gold/10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                                                disabled={isSubmitting || !termsAccepted}
+                                                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 shadow-2xl shadow-brand-gold/10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                             >
                                                 {isSubmitting ? (
                                                     <Loader2 className="animate-spin size-5" />

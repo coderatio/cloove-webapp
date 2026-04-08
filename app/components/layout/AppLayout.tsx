@@ -23,6 +23,7 @@ import { cn } from "@/app/lib/utils"
 import { BusinessGuard } from "../shared/BusinessGuard"
 import { VerificationAlert } from "../shared/VerificationAlert"
 import { SubscriptionAlertBanner } from "../shared/SubscriptionAlertBanner"
+import { TermsGate } from "../shared/TermsGate"
 import { apiClient } from "@/app/lib/api-client"
 import { useAuth } from "../providers/auth-provider"
 import { usePermission } from "@/app/hooks/usePermission"
@@ -212,11 +213,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     {!isAssistantPage && <div className="h-14 shrink-0 md:hidden" aria-hidden />}
 
                     <div className={cn(isAssistantPage ? "p-0" : "px-4 pt-4 md:p-0 pb-24")}>
-                        <BusinessGuard>
-                            <StoreProvider>
-                                {children}
-                            </StoreProvider>
-                        </BusinessGuard>
+                        <TermsGate>
+                            <BusinessGuard>
+                                <StoreProvider>
+                                    {children}
+                                </StoreProvider>
+                            </BusinessGuard>
+                        </TermsGate>
                     </div>
                 </main>
 

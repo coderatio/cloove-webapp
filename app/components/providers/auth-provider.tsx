@@ -49,6 +49,8 @@ interface User {
     } | null
     /** Present when subscription needs attention (grace, expired, etc.). */
     subscriptionAlert?: SubscriptionAlert | null
+    /** ISO timestamp of when the user accepted the current terms. Null means not yet accepted. */
+    termsAcceptedAt?: string | null
 }
 
 interface AuthContextType {
