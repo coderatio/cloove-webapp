@@ -6,7 +6,7 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt } from 'lucide-react'
+import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt, UtensilsCrossed, ChefHat, ShoppingCart } from 'lucide-react'
 import { Order, OrderStatus, PaymentStatus } from "../types"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { DateRangePicker } from "@/app/components/shared/DateRangePicker"
@@ -29,6 +29,7 @@ import {
 } from "@/app/components/ui/drawer"
 import Link from 'next/link'
 import { useOrders } from '../hooks/useOrders'
+import { useKitchenTicketActions } from '@/app/domains/restaurant/hooks/useRestaurantOps'
 import { useDebounce } from '@/app/hooks/useDebounce'
 import { OrdersSkeleton } from './OrdersSkeleton'
 import { Pagination } from '@/app/components/shared/Pagination'
@@ -117,6 +118,7 @@ export function OrdersView() {
         status: selectedFilters.filter(f => f.startsWith('S:')).map(f => f.slice(2)) as OrderStatus[],
         paymentStatus: selectedFilters.filter(f => f.startsWith('P:')).map(f => f.slice(2)) as PaymentStatus[],
         automation: selectedFilters.filter(f => f.startsWith('A:')).map(f => f.slice(2)),
+        serviceMode: selectedFilters.find(f => f.startsWith('M:'))?.slice(2),
         startDate,
         endDate,
         storeId: currentStore?.id,
@@ -124,6 +126,12 @@ export function OrdersView() {
     })
 
     const { printReceipt } = useReceiptPrinter()
+    const kitchenAction = useKitchenTicketActions()
+    const handleAdvanceKitchen = React.useCallback(
+        (ticketId: string, status: 'queued' | 'preparing' | 'ready' | 'served') =>
+            kitchenAction.mutateAsync({ id: ticketId, status }),
+        [kitchenAction]
+    )
     const createPaymentLink = useCreatePaymentLink()
 
     const handleGeneratePaymentLink = React.useCallback(async (order: Order) => {
@@ -207,8 +215,17 @@ export function OrdersView() {
                     { label: fo.type.manual, value: "A:MANUAL" },
                 ],
             },
+            ...(layoutPreset === "restaurant" ? [
+                {
+                    title: "Service Mode",
+                    options: [
+                        { label: "Dine-In", value: "M:DINE_IN" },
+                        { label: "Takeaway", value: "M:TAKEAWAY" },
+                    ],
+                },
+            ] : []),
         ],
-        [oui.filterGroups, fo]
+        [oui.filterGroups, fo, layoutPreset]
     )
 
     // Simplified filter logic handled by FilterPopover internally
@@ -269,6 +286,35 @@ export function OrdersView() {
                                 <Copy className="w-3 h-3 text-brand-accent/40 dark:text-brand-cream/40" />
                             </button>
                         </div>
+                        {layoutPreset === "restaurant" && row.serviceMode && (
+                            <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                {row.serviceMode === "DINE_IN" ? (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/8 text-blue-700 dark:text-blue-300 text-[9px] font-bold uppercase tracking-wider">
+                                        <UtensilsCrossed className="w-2.5 h-2.5" />
+                                        {row.tableLabel ?? "Dine-In"}
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/8 text-amber-700 dark:text-amber-300 text-[9px] font-bold uppercase tracking-wider">
+                                        <ShoppingCart className="w-2.5 h-2.5" />
+                                        Takeaway
+                                    </span>
+                                )}
+                                {row.kitchenTicketStatus && (() => {
+                                    const cfg = {
+                                        queued:    { label: "Queued",    className: "bg-amber-500/8 text-amber-700 dark:text-amber-300" },
+                                        preparing: { label: "Preparing", className: "bg-blue-500/8 text-blue-700 dark:text-blue-300" },
+                                        ready:     { label: "Ready",     className: "bg-emerald-500/8 text-emerald-700 dark:text-emerald-300" },
+                                        served:    { label: "Served",    className: "bg-brand-accent/8 text-brand-accent/60 dark:text-brand-cream/50" },
+                                    }[row.kitchenTicketStatus]
+                                    return (
+                                        <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
+                                            <ChefHat className="w-2.5 h-2.5" />
+                                            {cfg.label}
+                                        </span>
+                                    )
+                                })()}
+                            </div>
+                        )}
                     </div>
                 )
             }
@@ -336,11 +382,12 @@ export function OrdersView() {
                     onPrintReceipt={handlePrintReceipt}
                     onRecordPayment={setRecordingPaymentOrder}
                     onGeneratePaymentLink={handleGeneratePaymentLink}
+                    onAdvanceKitchen={handleAdvanceKitchen}
                 />
             )
         }
     ]
-    }, [layoutPreset, oui, activeBusiness?.currency])
+    }, [layoutPreset, oui, activeBusiness?.currency, handlePrintReceipt, handleGeneratePaymentLink, handleUpdateStatus, requeryOrder, generateReceipt, handleAdvanceKitchen])
 
     const pendingCount = summary?.pendingOrdersCount ?? 0
     const pendingOutstandingAmount = summary?.pendingOutstandingAmount ?? 0
@@ -614,7 +661,37 @@ export function OrdersView() {
                             <ListCard
                                 key={order.id}
                                 title={order.customer}
-                                subtitle={order.id.startsWith('#') ? order.id : `#${order.id.slice(0, 8)}`}
+                                subtitle={
+                                    <span className="flex items-center gap-1.5 flex-wrap">
+                                        <span>{order.id.startsWith('#') ? order.id : `#${order.id.slice(0, 8)}`}</span>
+                                        {layoutPreset === "restaurant" && order.serviceMode === "DINE_IN" && (
+                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/8 text-blue-700 dark:text-blue-300 text-[9px] font-bold uppercase tracking-wider">
+                                                <UtensilsCrossed className="w-2.5 h-2.5" />
+                                                {order.tableLabel ?? "Dine-In"}
+                                            </span>
+                                        )}
+                                        {layoutPreset === "restaurant" && order.serviceMode === "TAKEAWAY" && (
+                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/8 text-amber-700 dark:text-amber-300 text-[9px] font-bold uppercase tracking-wider">
+                                                <ShoppingCart className="w-2.5 h-2.5" />
+                                                Takeaway
+                                            </span>
+                                        )}
+                                        {layoutPreset === "restaurant" && order.kitchenTicketStatus && (() => {
+                                            const cfg = {
+                                                queued:    { label: "Queued",    className: "bg-amber-500/8 text-amber-700 dark:text-amber-300" },
+                                                preparing: { label: "Preparing", className: "bg-blue-500/8 text-blue-700 dark:text-blue-300" },
+                                                ready:     { label: "Ready",     className: "bg-emerald-500/8 text-emerald-700 dark:text-emerald-300" },
+                                                served:    { label: "Served",    className: "bg-brand-accent/8 text-brand-accent/60 dark:text-brand-cream/50" },
+                                            }[order.kitchenTicketStatus]
+                                            return (
+                                                <span className={cn("inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
+                                                    <ChefHat className="w-2.5 h-2.5" />
+                                                    {cfg.label}
+                                                </span>
+                                            )
+                                        })()}
+                                    </span>
+                                }
                                 meta={formatDate(order.date, 'MMM d, h:mm a')}
                                 status={statusColorMap[order.status?.toUpperCase() || '']?.label || order.status}
                                 statusColor={statusColorMap[order.status?.toUpperCase() || '']?.color || 'neutral'}
@@ -630,6 +707,7 @@ export function OrdersView() {
                                         onGenerateReceipt={generateReceipt}
                                         onPrintReceipt={handlePrintReceipt}
                                         onRecordPayment={setRecordingPaymentOrder}
+                                        onAdvanceKitchen={handleAdvanceKitchen}
                                     />
                                 }
                             />

@@ -34,6 +34,11 @@ export interface Order {
         session?: { id: string; name: string }
     }
     isAutomated?: boolean
+    serviceMode?: 'DINE_IN' | 'TAKEAWAY' | null
+    tableSessionId?: string | null
+    tableLabel?: string | null
+    kitchenTicketId?: string | null
+    kitchenTicketStatus?: 'queued' | 'preparing' | 'ready' | 'served' | null
     deposit?: {
         virtualAccountNumber: string
         bankName: string
@@ -84,4 +89,5 @@ export interface OrderFilterParams {
     storeIds?: string[]
     customerId?: string
     academicTermId?: string
+    serviceMode?: string
 }
