@@ -6,6 +6,7 @@ import {
     BookOpen,
     CalendarRange,
     ChefHat,
+    GlassWater,
     Home,
     LayoutGrid,
     Link2,
@@ -30,6 +31,7 @@ export type NavRouteId =
     | "restaurant_live"
     | "restaurant_tables"
     | "restaurant_kitchen"
+    | "restaurant_bar"
     | "finance"
     | "payment_links"
     | "customers"
@@ -137,6 +139,14 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         href: "/restaurant/kitchen",
                         icon: ChefHat,
                         defaultLabel: "Kitchen Board",
+                        permission: "VIEW_SALES",
+                        visibleForPresets: ["restaurant"],
+                    },
+                    {
+                        id: "restaurant_bar",
+                        href: "/restaurant/bar",
+                        icon: GlassWater,
+                        defaultLabel: "Bar Board",
                         permission: "VIEW_SALES",
                         visibleForPresets: ["restaurant"],
                     },

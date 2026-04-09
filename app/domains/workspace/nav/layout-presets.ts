@@ -47,6 +47,7 @@ const restaurantPreset: LayoutPreset = {
         restaurant_live: "Service Console",
         restaurant_tables: "Tables",
         restaurant_kitchen: "Kitchen Board",
+        restaurant_bar: "Bar Board",
     },
     mobilePrimaryIds: ["overview", "orders"],
     mobileSecondaryIds: ["restaurant_live"],

@@ -12,6 +12,14 @@ export interface KitchenTicket {
   createdAt: string
 }
 
+export interface BarTicket {
+  id: string
+  saleId: string | null
+  station: string
+  status: "ordered" | "making" | "ready" | "served"
+  createdAt: string
+}
+
 export interface TableSession {
   id: string
   storeId: string | null
@@ -121,6 +129,57 @@ export function useRestaurantTableActions() {
   })
 
   return { createTable, updateTable, deleteTable, restoreTable, permanentDeleteTable }
+}
+
+export function useBarTickets(options?: { refetchInterval?: number | false }) {
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+  return useQuery({
+    queryKey: ["restaurant", "barTickets", businessId],
+    queryFn: () => apiClient.get<BarTicket[]>("/restaurant/bar-tickets"),
+    enabled: !!businessId,
+    refetchInterval: options?.refetchInterval ?? 5000,
+  })
+}
+
+export function useBarTicketActions() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["restaurant", "barTickets", businessId] })
+
+  const advance = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: BarTicket["status"] }) =>
+      apiClient.patch(`/restaurant/bar-tickets/${id}`, { status }),
+    onSuccess: invalidate,
+  })
+
+  const updateLabel = useMutation({
+    mutationFn: ({ id, label }: { id: string; label: string }) =>
+      apiClient.patch(`/restaurant/bar-tickets/${id}`, { label }),
+    onSuccess: invalidate,
+  })
+
+  const remove = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/restaurant/bar-tickets/${id}`),
+    onSuccess: invalidate,
+  })
+
+  return { advance, updateLabel, remove }
+}
+
+export function useCreateBarTicket() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+  return useMutation({
+    mutationFn: (payload: { saleId?: string; label?: string }) =>
+      apiClient.post<BarTicket>("/restaurant/bar-tickets", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["restaurant", "barTickets", businessId] })
+    },
+  })
 }
 
 export function useKitchenTicketActions() {

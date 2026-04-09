@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Activity, LayoutGrid, ChefHat, RefreshCw } from "lucide-react"
+import { Activity, LayoutGrid, ChefHat, GlassWater, RefreshCw } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
   Select,
@@ -20,6 +20,7 @@ const TABS = [
   { href: "/restaurant/live", label: "Live Board", icon: Activity },
   { href: "/restaurant/tables", label: "Tables", icon: LayoutGrid },
   { href: "/restaurant/kitchen", label: "Kitchen", icon: ChefHat },
+  { href: "/restaurant/bar", label: "Bar", icon: GlassWater },
 ] as const
 
 export function RestaurantNavTabs() {
@@ -49,7 +50,7 @@ export function RestaurantNavTabs() {
         })}
       </div>
 
-      {pathname.startsWith("/restaurant/live") && (
+      {(pathname.startsWith("/restaurant/live") || pathname.startsWith("/restaurant/bar") || pathname.startsWith("/restaurant/kitchen")) && (
         <div className="w-auto">
           <Select value={value} onValueChange={(v) => setValue(v as RefreshIntervalValue)}>
             <SelectTrigger className="h-11 rounded-2xl px-3 w-[140px] bg-white/70 dark:bg-white/5">

@@ -19,11 +19,15 @@ import { AnimatePresence, motion } from "framer-motion"
 import {
   useKitchenTickets,
   useKitchenTicketActions,
+  useBarTickets,
+  useBarTicketActions,
+  useCreateBarTicket,
   useRestaurantTableActions,
   useRestaurantTables,
   useTableSessions,
   useTableSessionActions,
   type KitchenTicket,
+  type BarTicket,
   type TableSession,
   type RestaurantTable,
 } from "../hooks/useRestaurantOps"
@@ -33,6 +37,7 @@ import { useRestaurantRefreshInterval } from "@/app/domains/restaurant/hooks/use
 import {
   UtensilsCrossed,
   ChefHat,
+  GlassWater,
   Armchair,
   CheckCircle2,
   Clock,
@@ -76,6 +81,46 @@ const STATUS_CONFIG: Record<
     border: "border-blue-500/20",
     icon: ChefHat,
     dotColor: "bg-blue-400",
+  },
+  ready: {
+    label: "Ready",
+    color: "text-emerald-700 dark:text-emerald-300",
+    bg: "bg-emerald-500/8 dark:bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    icon: Zap,
+    dotColor: "bg-emerald-400",
+  },
+  served: {
+    label: "Served",
+    color: "text-brand-accent/60 dark:text-brand-cream/50",
+    bg: "bg-brand-accent/5 dark:bg-white/5",
+    border: "border-brand-accent/10",
+    icon: CheckCircle2,
+    dotColor: "bg-brand-accent/40",
+  },
+}
+
+const BAR_FLOW: BarTicket["status"][] = ["ordered", "making", "ready", "served"]
+
+const BAR_STATUS_CONFIG: Record<
+  BarTicket["status"],
+  { label: string; color: string; bg: string; border: string; icon: React.ElementType; dotColor: string }
+> = {
+  ordered: {
+    label: "Ordered",
+    color: "text-amber-700 dark:text-amber-300",
+    bg: "bg-amber-500/8 dark:bg-amber-500/10",
+    border: "border-amber-500/20",
+    icon: Clock,
+    dotColor: "bg-amber-400",
+  },
+  making: {
+    label: "Making",
+    color: "text-violet-700 dark:text-violet-300",
+    bg: "bg-violet-500/8 dark:bg-violet-500/10",
+    border: "border-violet-500/20",
+    icon: GlassWater,
+    dotColor: "bg-violet-400",
   },
   ready: {
     label: "Ready",
@@ -144,6 +189,102 @@ function ElapsedBadge({ createdAt, status }: { createdAt: string; status: Kitche
     </span>
   )
 }
+
+const BarTicketCard = React.memo(function BarTicketCard({
+  ticket,
+  onAdvance,
+  onEdit,
+  onDelete,
+  isPending,
+}: {
+  ticket: BarTicket
+  onAdvance: (id: string, status: BarTicket["status"]) => void
+  onEdit: (ticket: BarTicket) => void
+  onDelete: (id: string) => void
+  isPending: boolean
+}) {
+  const idx = BAR_FLOW.indexOf(ticket.status)
+  const prev = BAR_FLOW[idx - 1]
+  const next = BAR_FLOW[idx + 1]
+
+  return (
+    <div
+      className={cn(
+        "rounded-3xl border p-3.5 space-y-2.5 transition-colors duration-200",
+        getUrgencyClass(ticket.createdAt, ticket.status === "served" ? "served" : "queued")
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-brand-deep dark:text-brand-cream truncate">{ticket.station}</p>
+          <p className="text-[10px] text-brand-accent/50 dark:text-brand-cream/40 font-mono mt-0.5">
+            #{ticket.saleId?.slice(0, 8) ?? "manual"}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <ElapsedBadge createdAt={ticket.createdAt} status={ticket.status === "served" ? "served" : "queued"} />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(ticket)}
+            className="h-6 w-6 rounded-lg text-brand-accent/30 hover:text-brand-accent/70 dark:text-brand-cream/30 dark:hover:text-brand-cream/70 hover:bg-black/5 dark:hover:bg-white/10"
+            title="Edit label"
+          >
+            <PencilLine className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(ticket.id)}
+            className="h-6 w-6 rounded-lg text-red-400/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+            title="Delete"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex gap-1.5">
+        {prev && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="flex-none h-8 w-8 rounded-xl border border-brand-accent/10 dark:border-white/10 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream hover:border-brand-accent/30 dark:hover:border-white/20 transition-all p-0"
+            onClick={() => onAdvance(ticket.id, prev)}
+            disabled={isPending}
+          >
+            <ArrowLeft className="h-3 w-3" />
+          </Button>
+        )}
+        {next ? (
+          <Button
+            size="sm"
+            className={cn(
+              "flex-1 h-8 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all",
+              next === "making" &&
+              "bg-violet-500/10 hover:bg-violet-500/20 text-violet-700 dark:text-violet-300 border border-violet-500/20",
+              next === "ready" &&
+              "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20",
+              next === "served" &&
+              "bg-brand-deep dark:bg-white/10 hover:bg-brand-deep/90 text-white hover:text-white dark:text-brand-cream border-transparent"
+            )}
+            variant="ghost"
+            onClick={() => onAdvance(ticket.id, next)}
+            disabled={isPending}
+          >
+            <span>{BAR_STATUS_CONFIG[next].label}</span>
+            <ArrowRight className="h-3 w-3 ml-1.5" />
+          </Button>
+        ) : (
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent/40 dark:text-brand-cream/30">
+            <CheckCircle2 className="h-3 w-3" />
+            Complete
+          </div>
+        )}
+      </div>
+    </div>
+  )
+})
 
 const KitchenTicketCard = React.memo(function KitchenTicketCard({
   ticket,
@@ -455,12 +596,19 @@ const ArchivedTableCard = React.memo(function ArchivedTableCard({
   )
 })
 
-export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" | "kitchen" }) {
+export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" | "kitchen" | "bar" }) {
   const { intervalMs } = useRestaurantRefreshInterval()
   const refetchInterval: number | false = typeof intervalMs === "number" ? intervalMs : false
   const { data: tickets = [], isLoading: ticketsLoading } = useKitchenTickets({
     refetchInterval,
   })
+  const { data: barTickets = [], isLoading: barTicketsLoading } = useBarTickets({
+    refetchInterval,
+  })
+  const barAction = useBarTicketActions()
+  const createBarTicket = useCreateBarTicket()
+  const [barDrawer, setBarDrawer] = React.useState<{ open: boolean; ticket: BarTicket | null }>({ open: false, ticket: null })
+  const [barLabel, setBarLabel] = React.useState("")
   const { data: activeSessions = [], isLoading: activeSessionsLoading } = useTableSessions({
     status: "open",
     refetchInterval,
@@ -630,6 +778,45 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
 
   const showTables = mode === "all" || mode === "tables"
   const showKitchen = mode === "all" || mode === "kitchen"
+  const showBar = mode === "bar"
+
+  const handleAdvanceBarTicket = async (id: string, status: BarTicket["status"]) => {
+    try {
+      await barAction.advance.mutateAsync({ id, status })
+    } catch {
+      toast.error("Failed to update bar ticket")
+    }
+  }
+
+  const openBarDrawer = (ticket: BarTicket | null) => {
+    setBarLabel(ticket ? ticket.station : "")
+    setBarDrawer({ open: true, ticket })
+  }
+
+  const closeBarDrawer = () => setBarDrawer({ open: false, ticket: null })
+
+  const handleBarDrawerSave = async () => {
+    const label = barLabel.trim()
+    if (!label) return
+    try {
+      if (barDrawer.ticket) {
+        await barAction.updateLabel.mutateAsync({ id: barDrawer.ticket.id, label })
+      } else {
+        await createBarTicket.mutateAsync({ label })
+      }
+      closeBarDrawer()
+    } catch {
+      toast.error("Failed to save bar order")
+    }
+  }
+
+  const handleBarTicketDelete = async (id: string) => {
+    try {
+      await barAction.remove.mutateAsync(id)
+    } catch {
+      toast.error("Failed to delete bar ticket")
+    }
+  }
 
   return (
     <div className="space-y-4 pb-28 md:pb-4">
@@ -1160,6 +1347,159 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
             </div>
           )}
         </GlassCard>
+      )}
+
+      {/* Bar Board */}
+      {showBar && (
+        <>
+          <Drawer open={barDrawer.open} onOpenChange={(open) => !open && closeBarDrawer()}>
+            <DrawerContent className="max-w-md">
+              <DrawerStickyHeader>
+                <DrawerTitle>{barDrawer.ticket ? "Edit order" : "New bar order"}</DrawerTitle>
+              </DrawerStickyHeader>
+              <DrawerBody className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
+                    Order description
+                  </label>
+                  <Input
+                    placeholder="e.g. T4 · 2× Mojito, 1× Beer"
+                    value={barLabel}
+                    onChange={(e) => setBarLabel(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleBarDrawerSave()}
+                    autoFocus
+                  />
+                  <p className="text-[11px] text-brand-accent/40 dark:text-brand-cream/40">
+                    Include table and drink details so the bartender knows what to make.
+                  </p>
+                </div>
+              </DrawerBody>
+              <div className="p-4 border-t border-brand-deep/5 dark:border-white/5 flex gap-2">
+                <Button
+                  variant="ghost"
+                  className="flex-1 h-12 rounded-2xl"
+                  onClick={closeBarDrawer}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold"
+                  onClick={handleBarDrawerSave}
+                  disabled={!barLabel.trim() || createBarTicket.isPending || barAction.updateLabel.isPending}
+                >
+                  {barDrawer.ticket ? "Save" : "Add order"}
+                </Button>
+              </div>
+            </DrawerContent>
+          </Drawer>
+
+          <GlassCard className="p-4 rounded-[1.8rem]">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream tracking-tight">
+                  Bar Board
+                </h3>
+                <p className="text-[10px] uppercase tracking-[0.18em] font-black text-brand-accent/40 dark:text-brand-cream/40 mt-0.5">
+                  {barTickets.filter((t) => t.status !== "served").length} active · auto-refreshes
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => openBarDrawer(null)}
+                  className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-700 dark:text-violet-300 text-[11px] font-bold uppercase tracking-wider"
+                >
+                  <Plus className="h-3 w-3" />
+                  New order
+                </Button>
+                <div className="flex items-center gap-1.5 bg-violet-100/60 dark:bg-violet-950/30 px-2.5 py-1 rounded-full">
+                  <GlassWater className="h-3 w-3 text-violet-600 dark:text-violet-400" />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-violet-700 dark:text-violet-400">
+                    Bar
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {barTicketsLoading ? (
+              <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-32 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse shrink-0 w-[70vw] md:w-auto" />
+                ))}
+              </div>
+            ) : barTickets.length === 0 ? (
+              <div className="py-12 flex flex-col items-center text-center">
+                <GlassWater className="h-10 w-10 text-brand-accent/15 dark:text-brand-cream/15 mb-3" />
+                <p className="text-base font-serif text-brand-deep dark:text-brand-cream">All clear</p>
+                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/30 mt-1">
+                  No bar orders yet. Tap "New order" to add one.
+                </p>
+              </div>
+            ) : (
+              <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar pb-2 md:pb-0">
+                {BAR_FLOW.map((column) => {
+                  const cfg = BAR_STATUS_CONFIG[column]
+                  const columnTickets = barTickets.filter((t) => t.status === column)
+                  const Icon = cfg.icon
+
+                  return (
+                    <div
+                      key={column}
+                      className={cn(
+                        "rounded-2xl border p-3 space-y-2 shrink-0 w-[72vw] md:w-auto",
+                        cfg.bg,
+                        cfg.border
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className={cn("flex items-center gap-1.5", cfg.color)}>
+                          <Icon className="h-3.5 w-3.5" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">
+                            {cfg.label}
+                          </span>
+                        </div>
+                        {columnTickets.length > 0 && (
+                          <span
+                            className={cn(
+                              "text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center",
+                              cfg.color,
+                              "bg-white/60 dark:bg-black/20"
+                            )}
+                          >
+                            {columnTickets.length}
+                          </span>
+                        )}
+                      </div>
+
+                      <AnimatePresence>
+                        {columnTickets.length === 0 ? (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="py-4 text-center"
+                          >
+                            <p className={cn("text-[10px] font-medium opacity-40", cfg.color)}>Empty</p>
+                          </motion.div>
+                        ) : (
+                          columnTickets.map((ticket) => (
+                            <BarTicketCard
+                              key={ticket.id}
+                              ticket={ticket}
+                              onAdvance={handleAdvanceBarTicket}
+                              onEdit={openBarDrawer}
+                              onDelete={handleBarTicketDelete}
+                              isPending={barAction.advance.isPending}
+                            />
+                          ))
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </GlassCard>
+        </>
       )}
     </div>
   )
