@@ -13,6 +13,13 @@ import {
   DrawerTitle,
   DrawerBody,
 } from "@/app/components/ui/drawer"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { AnimatePresence, motion } from "framer-motion"
@@ -21,7 +28,6 @@ import {
   useKitchenTicketActions,
   useBarTickets,
   useBarTicketActions,
-  useCreateBarTicket,
   useRestaurantTableActions,
   useRestaurantTables,
   useTableSessions,
@@ -31,6 +37,8 @@ import {
   type TableSession,
   type RestaurantTable,
 } from "../hooks/useRestaurantOps"
+import { useRecordSale } from "@/app/domains/orders/hooks/useRecordSale"
+import { QuickProductPicker, type PickedItem } from "@/app/components/shared/QuickProductPicker"
 import { cn } from "@/app/lib/utils"
 import { CapacityStepper } from "@/app/domains/restaurant/components/CapacityStepper"
 import { useRestaurantRefreshInterval } from "@/app/domains/restaurant/hooks/useRestaurantRefreshInterval"
@@ -116,11 +124,11 @@ const BAR_STATUS_CONFIG: Record<
   },
   making: {
     label: "Making",
-    color: "text-violet-700 dark:text-violet-300",
-    bg: "bg-violet-500/8 dark:bg-violet-500/10",
-    border: "border-violet-500/20",
+    color: "text-blue-700 dark:text-blue-300",
+    bg: "bg-blue-500/8 dark:bg-blue-500/10",
+    border: "border-blue-500/20",
     icon: GlassWater,
-    dotColor: "bg-violet-400",
+    dotColor: "bg-blue-400",
   },
   ready: {
     label: "Ready",
@@ -223,24 +231,28 @@ const BarTicketCard = React.memo(function BarTicketCard({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <ElapsedBadge createdAt={ticket.createdAt} status={ticket.status === "served" ? "served" : "queued"} />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(ticket)}
-            className="h-6 w-6 rounded-lg text-brand-accent/30 hover:text-brand-accent/70 dark:text-brand-cream/30 dark:hover:text-brand-cream/70 hover:bg-black/5 dark:hover:bg-white/10"
-            title="Edit label"
-          >
-            <PencilLine className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(ticket.id)}
-            className="h-6 w-6 rounded-lg text-red-400/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
-            title="Delete"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
+          {(ticket.status === "ordered" || ticket.status === "making") && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEdit(ticket)}
+                className="h-6 w-6 rounded-lg text-brand-accent/30 hover:text-brand-accent/70 dark:text-brand-cream/30 dark:hover:text-brand-cream/70 hover:bg-black/5 dark:hover:bg-white/10"
+                title="Edit order"
+              >
+                <PencilLine className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(ticket.id)}
+                className="h-6 w-6 rounded-lg text-red-400/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                title="Cancel order"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -262,7 +274,7 @@ const BarTicketCard = React.memo(function BarTicketCard({
             className={cn(
               "flex-1 h-8 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all",
               next === "making" &&
-              "bg-violet-500/10 hover:bg-violet-500/20 text-violet-700 dark:text-violet-300 border border-violet-500/20",
+              "bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/20",
               next === "ready" &&
               "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20",
               next === "served" &&
@@ -606,9 +618,15 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
     refetchInterval,
   })
   const barAction = useBarTicketActions()
-  const createBarTicket = useCreateBarTicket()
-  const [barDrawer, setBarDrawer] = React.useState<{ open: boolean; ticket: BarTicket | null }>({ open: false, ticket: null })
-  const [barLabel, setBarLabel] = React.useState("")
+  const { recordSale, isRecording } = useRecordSale()
+  const [barOrderOpen, setBarOrderOpen] = React.useState(false)
+  const [barEditTicket, setBarEditTicket] = React.useState<BarTicket | null>(null)
+  const [barEditLabel, setBarEditLabel] = React.useState("")
+  const [barEditPaymentMethod, setBarEditPaymentMethod] = React.useState("CASH")
+  const [barItems, setBarItems] = React.useState<PickedItem[]>([])
+  const [barTableLabel, setBarTableLabel] = React.useState("__none__")
+  const [barPaymentMethod, setBarPaymentMethod] = React.useState("CASH")
+  const [barInitialStatus, setBarInitialStatus] = React.useState<BarTicket["status"]>("ordered")
   const { data: activeSessions = [], isLoading: activeSessionsLoading } = useTableSessions({
     status: "open",
     refetchInterval,
@@ -788,25 +806,63 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
     }
   }
 
-  const openBarDrawer = (ticket: BarTicket | null) => {
-    setBarLabel(ticket ? ticket.station : "")
-    setBarDrawer({ open: true, ticket })
+  const openBarOrder = () => {
+    setBarItems([])
+    setBarTableLabel("__none__")
+    setBarPaymentMethod("CASH")
+    setBarInitialStatus("ordered")
+    setBarOrderOpen(true)
   }
 
-  const closeBarDrawer = () => setBarDrawer({ open: false, ticket: null })
+  const closeBarOrder = () => {
+    setBarOrderOpen(false)
+    setBarItems([])
+  }
 
-  const handleBarDrawerSave = async () => {
-    const label = barLabel.trim()
-    if (!label) return
+  const handleBarOrderSubmit = async () => {
+    if (barItems.length === 0) return
     try {
-      if (barDrawer.ticket) {
-        await barAction.updateLabel.mutateAsync({ id: barDrawer.ticket.id, label })
-      } else {
-        await createBarTicket.mutateAsync({ label })
-      }
-      closeBarDrawer()
+      await recordSale({
+        items: barItems.map((i) => ({
+          productId: i.productId,
+          productName: i.productName,
+          quantity: i.quantity,
+        })),
+        paymentMethod: barPaymentMethod,
+        serviceMode: barTableLabel && barTableLabel !== "__none__" ? "DINE_IN" : "TAKEAWAY",
+        tableLabel: barTableLabel && barTableLabel !== "__none__" ? barTableLabel : undefined,
+        sendToKitchen: true,
+        kitchenStation: "bar",
+        kitchenTicketInitialStatus: barInitialStatus,
+        channel: "IN_PERSON",
+      })
+      toast.success("Bar order added to board")
+      closeBarOrder()
     } catch {
-      toast.error("Failed to save bar order")
+      // error toast handled by useRecordSale
+    }
+  }
+
+  const openBarEditTicket = (ticket: BarTicket) => {
+    setBarEditTicket(ticket)
+    setBarEditLabel(ticket.station)
+    setBarEditPaymentMethod(ticket.paymentMethod ?? "CASH")
+  }
+
+  const closeBarEditTicket = () => {
+    setBarEditTicket(null)
+    setBarEditLabel("")
+    setBarEditPaymentMethod("CASH")
+  }
+
+  const handleBarEditSave = async () => {
+    const label = barEditLabel.trim()
+    if (!label || !barEditTicket) return
+    try {
+      await barAction.updateLabel.mutateAsync({ id: barEditTicket.id, label, paymentMethod: barEditPaymentMethod })
+      closeBarEditTicket()
+    } catch {
+      toast.error("Failed to update bar order")
     }
   }
 
@@ -1352,42 +1408,153 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
       {/* Bar Board */}
       {showBar && (
         <>
-          <Drawer open={barDrawer.open} onOpenChange={(open) => !open && closeBarDrawer()}>
-            <DrawerContent className="max-w-md">
-              <DrawerStickyHeader>
-                <DrawerTitle>{barDrawer.ticket ? "Edit order" : "New bar order"}</DrawerTitle>
+          {/* New Order Drawer — creates a real sale */}
+          <Drawer open={barOrderOpen} onOpenChange={(open) => !open && closeBarOrder()} dismissible={false}>
+            <DrawerContent className="max-w-lg">
+              <DrawerStickyHeader showClose={false}>
+                <DrawerTitle>New bar order</DrawerTitle>
               </DrawerStickyHeader>
-              <DrawerBody className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
-                    Order description
-                  </label>
-                  <Input
-                    placeholder="e.g. T4 · 2× Mojito, 1× Beer"
-                    value={barLabel}
-                    onChange={(e) => setBarLabel(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleBarDrawerSave()}
-                    autoFocus
-                  />
-                  <p className="text-[11px] text-brand-accent/40 dark:text-brand-cream/40">
-                    Include table and drink details so the bartender knows what to make.
-                  </p>
+              <DrawerBody className="space-y-4 pt-2">
+                {/* Optional table + payment method row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
+                      Table <span className="normal-case font-normal opacity-60">(optional)</span>
+                    </label>
+                    <Select value={barTableLabel} onValueChange={setBarTableLabel}>
+                      <SelectTrigger className="h-10 rounded-xl">
+                        <SelectValue placeholder="Walk-up (no table)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Walk-up (no table)</SelectItem>
+                        {activeTables.map((t) => (
+                          <SelectItem key={t.id} value={t.label}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
+                      Payment
+                    </label>
+                    <Select value={barPaymentMethod} onValueChange={setBarPaymentMethod}>
+                      <SelectTrigger className="h-10 rounded-xl w-full">
+                        <SelectValue placeholder="Payment method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="TRANSFER">Transfer</SelectItem>
+                        <SelectItem value="POS">POS</SelectItem>
+                        <SelectItem value="CREDIT">Credit (tab)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+
+                {/* Initial status */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
+                    Starting status
+                  </label>
+                  <div className="flex gap-1.5">
+                    {BAR_FLOW.map((s) => {
+                      const cfg = BAR_STATUS_CONFIG[s]
+                      const Icon = cfg.icon
+                      const active = barInitialStatus === s
+                      return (
+                        <Button
+                          key={s}
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setBarInitialStatus(s)}
+                          className={cn(
+                            "flex-1 h-auto py-2 flex flex-col items-center gap-1 rounded-xl border text-[10px] font-bold uppercase tracking-wider transition-all",
+                            active
+                              ? cn("border-transparent", cfg.bg, cfg.color)
+                              : "border-brand-accent/8 dark:border-white/8 bg-white dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40"
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                          {cfg.label}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Product picker */}
+                <QuickProductPicker
+                  selected={barItems}
+                  onChange={setBarItems}
+                  categoryHint="drinks"
+                />
               </DrawerBody>
               <div className="p-4 border-t border-brand-deep/5 dark:border-white/5 flex gap-2">
                 <Button
                   variant="ghost"
-                  className="flex-1 h-12 rounded-2xl"
-                  onClick={closeBarDrawer}
+                  className="flex-none h-12 px-6 rounded-2xl"
+                  onClick={closeBarOrder}
                 >
                   Cancel
                 </Button>
                 <Button
                   className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold"
-                  onClick={handleBarDrawerSave}
-                  disabled={!barLabel.trim() || createBarTicket.isPending || barAction.updateLabel.isPending}
+                  onClick={handleBarOrderSubmit}
+                  disabled={barItems.length === 0 || isRecording}
                 >
-                  {barDrawer.ticket ? "Save" : "Add order"}
+                  {isRecording ? "Adding…" : `Add to bar${barItems.length > 0 ? ` · ${barItems.reduce((s, i) => s + i.quantity, 0)} item${barItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}` : ""}`}
+                </Button>
+              </div>
+            </DrawerContent>
+          </Drawer>
+
+          {/* Edit order drawer */}
+          <Drawer open={!!barEditTicket} onOpenChange={(open) => !open && closeBarEditTicket()}>
+            <DrawerContent className="max-w-md">
+              <DrawerStickyHeader>
+                <DrawerTitle>Edit order</DrawerTitle>
+              </DrawerStickyHeader>
+              <DrawerBody className="pt-4 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
+                    Order label
+                  </label>
+                  <Input
+                    placeholder="e.g. T4 · 2× Mojito"
+                    value={barEditLabel}
+                    onChange={(e) => setBarEditLabel(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleBarEditSave()}
+                    autoFocus
+                    className="h-10 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
+                    Payment method
+                  </label>
+                  <Select value={barEditPaymentMethod} onValueChange={setBarEditPaymentMethod}>
+                    <SelectTrigger className="h-10 rounded-xl w-full">
+                      <SelectValue placeholder="Payment method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CASH">Cash</SelectItem>
+                      <SelectItem value="TRANSFER">Transfer</SelectItem>
+                      <SelectItem value="POS">POS</SelectItem>
+                      <SelectItem value="CREDIT">Credit (tab)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </DrawerBody>
+              <div className="p-4 border-t border-brand-deep/5 dark:border-white/5 flex gap-2">
+                <Button variant="ghost" className="flex-1 h-12 rounded-2xl" onClick={closeBarEditTicket}>
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold"
+                  onClick={handleBarEditSave}
+                  disabled={!barEditLabel.trim() || barAction.updateLabel.isPending}
+                >
+                  Save
                 </Button>
               </div>
             </DrawerContent>
@@ -1403,28 +1570,20 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   {barTickets.filter((t) => t.status !== "served").length} active · auto-refreshes
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => openBarDrawer(null)}
-                  className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-violet-500/10 hover:bg-violet-500/20 text-violet-700 dark:text-violet-300 text-[11px] font-bold uppercase tracking-wider"
-                >
-                  <Plus className="h-3 w-3" />
-                  New order
-                </Button>
-                <div className="flex items-center gap-1.5 bg-violet-100/60 dark:bg-violet-950/30 px-2.5 py-1 rounded-full">
-                  <GlassWater className="h-3 w-3 text-violet-600 dark:text-violet-400" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-violet-700 dark:text-violet-400">
-                    Bar
-                  </span>
-                </div>
-              </div>
+              <Button
+                variant="ghost"
+                onClick={openBarOrder}
+                className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-slate-500/10 hover:bg-slate-500/18 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider"
+              >
+                <Plus className="h-3 w-3" />
+                New order
+              </Button>
             </div>
 
             {barTicketsLoading ? (
               <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-32 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse shrink-0 w-[70vw] md:w-auto" />
+                  <div key={i} className="h-32 rounded-3xl bg-brand-accent/5 dark:bg-white/5 animate-pulse shrink-0 w-[70vw] md:w-auto" />
                 ))}
               </div>
             ) : barTickets.length === 0 ? (
@@ -1446,7 +1605,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                     <div
                       key={column}
                       className={cn(
-                        "rounded-2xl border p-3 space-y-2 shrink-0 w-[72vw] md:w-auto",
+                        "rounded-3xl border p-3 space-y-2 shrink-0 w-[72vw] md:w-auto",
                         cfg.bg,
                         cfg.border
                       )}
@@ -1459,25 +1618,14 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                           </span>
                         </div>
                         {columnTickets.length > 0 && (
-                          <span
-                            className={cn(
-                              "text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center",
-                              cfg.color,
-                              "bg-white/60 dark:bg-black/20"
-                            )}
-                          >
+                          <span className={cn("text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center", cfg.color, "bg-white/60 dark:bg-black/20")}>
                             {columnTickets.length}
                           </span>
                         )}
                       </div>
-
                       <AnimatePresence>
                         {columnTickets.length === 0 ? (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="py-4 text-center"
-                          >
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-4 text-center">
                             <p className={cn("text-[10px] font-medium opacity-40", cfg.color)}>Empty</p>
                           </motion.div>
                         ) : (
@@ -1486,7 +1634,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                               key={ticket.id}
                               ticket={ticket}
                               onAdvance={handleAdvanceBarTicket}
-                              onEdit={openBarDrawer}
+                              onEdit={openBarEditTicket}
                               onDelete={handleBarTicketDelete}
                               isPending={barAction.advance.isPending}
                             />

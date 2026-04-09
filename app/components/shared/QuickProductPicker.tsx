@@ -1,0 +1,231 @@
+"use client"
+
+import * as React from "react"
+import { Minus, Plus, Search, Package } from "lucide-react"
+import { cn } from "@/app/lib/utils"
+import { Button } from "@/app/components/ui/button"
+import { Input } from "@/app/components/ui/input"
+import { useInventory } from "@/app/domains/orders/hooks/useInventory"
+import { formatCurrency } from "@/app/lib/formatters"
+import { useBusiness } from "@/app/components/BusinessProvider"
+
+export interface PickedItem {
+    productId: string
+    productName: string
+    price: number
+    quantity: number
+}
+
+interface QuickProductPickerProps {
+    selected: PickedItem[]
+    onChange: (items: PickedItem[]) => void
+    /** Pre-filter to this category slug/name if it exists */
+    categoryHint?: string
+}
+
+export function QuickProductPicker({ selected, onChange, categoryHint }: QuickProductPickerProps) {
+    const { activeBusiness } = useBusiness()
+    const currency = activeBusiness?.currency ?? "NGN"
+    const [search, setSearch] = React.useState("")
+    const [activeCategory, setActiveCategory] = React.useState<string>("All")
+
+    const { products, isLoadingProducts } = useInventory()
+
+    // Derive unique categories from products
+    const categories = React.useMemo(() => {
+        const cats = Array.from(new Set(products.map((p) => p.category).filter(Boolean)))
+        return ["All", ...cats]
+    }, [products])
+
+    // Set initial category from hint once products load
+    React.useEffect(() => {
+        if (!categoryHint || isLoadingProducts) return
+        const match = categories.find(
+            (c) => c.toLowerCase() === categoryHint.toLowerCase()
+        )
+        if (match) setActiveCategory(match)
+    }, [categories, categoryHint, isLoadingProducts])
+
+    const filtered = React.useMemo(() => {
+        let list = products
+        if (activeCategory !== "All") list = list.filter((p) => p.category === activeCategory)
+        if (search.trim()) {
+            const q = search.toLowerCase()
+            list = list.filter((p) => p.product.toLowerCase().includes(q))
+        }
+        return list
+    }, [products, activeCategory, search])
+
+    const selectedMap = React.useMemo(
+        () => new Map(selected.map((i) => [i.productId, i])),
+        [selected]
+    )
+
+    const total = selected.reduce((sum, i) => sum + i.price * i.quantity, 0)
+
+    const increment = (productId: string, productName: string, price: number) => {
+        const existing = selectedMap.get(productId)
+        if (existing) {
+            onChange(selected.map((i) => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i))
+        } else {
+            onChange([...selected, { productId, productName, price, quantity: 1 }])
+        }
+    }
+
+    const decrement = (productId: string) => {
+        const existing = selectedMap.get(productId)
+        if (!existing) return
+        if (existing.quantity <= 1) {
+            onChange(selected.filter((i) => i.productId !== productId))
+        } else {
+            onChange(selected.map((i) => i.productId === productId ? { ...i, quantity: i.quantity - 1 } : i))
+        }
+    }
+
+    return (
+        <div className="flex flex-col gap-3">
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-accent/40 dark:text-brand-cream/30 pointer-events-none" />
+                <Input
+                    placeholder="Search products..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 h-10 rounded-xl"
+                />
+            </div>
+
+            {/* Category tabs */}
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                {categories.map((cat) => (
+                    <Button
+                        key={cat}
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setActiveCategory(cat)}
+                        className={cn(
+                            "shrink-0 h-auto px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider",
+                            activeCategory === cat
+                                ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90"
+                                : "bg-brand-accent/5 dark:bg-white/5 text-brand-accent/60 dark:text-brand-cream/50 hover:bg-brand-accent/10 dark:hover:bg-white/10"
+                        )}
+                    >
+                        {cat}
+                    </Button>
+                ))}
+            </div>
+
+            {/* Product grid */}
+            {isLoadingProducts ? (
+                <div className="grid grid-cols-3 gap-2">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="h-24 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse" />
+                    ))}
+                </div>
+            ) : filtered.length === 0 ? (
+                <div className="py-8 flex flex-col items-center text-center">
+                    <Package className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
+                    <p className="text-sm text-brand-accent/40 dark:text-brand-cream/40">No products found</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-0.5">
+                    {filtered.map((product) => {
+                        const qty = selectedMap.get(product.id)?.quantity ?? 0
+                        const outOfStock = product.status === "Out of Stock"
+                        return (
+                            <Button
+                                key={product.id}
+                                type="button"
+                                variant="ghost"
+                                disabled={outOfStock}
+                                onClick={() => !outOfStock && increment(product.id, product.product, product.price)}
+                                className={cn(
+                                    "relative h-auto flex flex-col items-center justify-between rounded-2xl border p-2.5 text-center active:scale-95",
+                                    qty > 0
+                                        ? "border-brand-gold/40 bg-brand-gold/8 dark:bg-brand-gold/10"
+                                        : "border-brand-accent/8 dark:border-white/8 bg-white dark:bg-white/5 hover:border-brand-accent/20 dark:hover:border-white/20",
+                                    outOfStock && "opacity-40 cursor-not-allowed"
+                                )}
+                            >
+                                {qty > 0 && (
+                                    <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-brand-gold text-brand-deep text-[10px] font-black flex items-center justify-center shadow">
+                                        {qty}
+                                    </span>
+                                )}
+                                {product.image ? (
+                                    <img
+                                        src={product.image}
+                                        alt={product.product}
+                                        className="h-10 w-10 rounded-xl object-cover mb-1.5"
+                                    />
+                                ) : (
+                                    <div className="h-10 w-10 rounded-xl bg-brand-accent/8 dark:bg-white/8 flex items-center justify-center mb-1.5">
+                                        <Package className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/30" />
+                                    </div>
+                                )}
+                                <p className="text-[11px] font-semibold text-brand-deep dark:text-brand-cream leading-tight line-clamp-2 mb-1">
+                                    {product.product}
+                                </p>
+                                <p className="text-[10px] font-bold text-brand-accent/50 dark:text-brand-cream/40">
+                                    {formatCurrency(product.price, { currency })}
+                                </p>
+                            </Button>
+                        )
+                    })}
+                </div>
+            )}
+
+            {/* Selected items */}
+            {selected.length > 0 && (
+                <div className="rounded-2xl border border-brand-accent/10 dark:border-white/10 bg-brand-accent/3 dark:bg-white/3 overflow-hidden">
+                    <div className="px-3 py-2 border-b border-brand-accent/8 dark:border-white/8">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40">
+                            Order · {selected.reduce((s, i) => s + i.quantity, 0)} item{selected.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
+                        </span>
+                    </div>
+                    <div className="divide-y divide-brand-accent/5 dark:divide-white/5">
+                        {selected.map((item) => (
+                            <div key={item.productId} className="flex items-center gap-2 px-3 py-2">
+                                <p className="flex-1 text-sm font-medium text-brand-deep dark:text-brand-cream truncate">
+                                    {item.productName}
+                                </p>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => decrement(item.productId)}
+                                        className="h-6 w-6 rounded-lg border border-brand-accent/10 dark:border-white/10 text-brand-accent/50 dark:text-brand-cream/50"
+                                    >
+                                        <Minus className="h-2.5 w-2.5" />
+                                    </Button>
+                                    <span className="text-sm font-bold text-brand-deep dark:text-brand-cream w-4 text-center">
+                                        {item.quantity}
+                                    </span>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => increment(item.productId, item.productName, item.price)}
+                                        className="h-6 w-6 rounded-lg border border-brand-accent/10 dark:border-white/10 text-brand-accent/50 dark:text-brand-cream/50"
+                                    >
+                                        <Plus className="h-2.5 w-2.5" />
+                                    </Button>
+                                    <span className="text-[11px] font-bold text-brand-accent/60 dark:text-brand-cream/50 w-16 text-right">
+                                        {formatCurrency(item.price * item.quantity, { currency })}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex items-center justify-between px-3 py-2.5 bg-brand-accent/5 dark:bg-white/5 border-t border-brand-accent/8 dark:border-white/8">
+                        <span className="text-xs font-bold uppercase tracking-wider text-brand-accent/60 dark:text-brand-cream/50">Total</span>
+                        <span className="text-base font-black text-brand-deep dark:text-brand-cream">
+                            {formatCurrency(total, { currency })}
+                        </span>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}

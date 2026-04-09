@@ -6,6 +6,7 @@ import { useBusiness } from "@/app/components/BusinessProvider"
 import { toast } from "sonner"
 
 export interface RecordSaleItem {
+    productId?: string
     productName: string
     quantity: number
     customPrice?: number
@@ -25,6 +26,7 @@ export interface RecordSalePayload {
     tableLabel?: string
     covers?: number
     kitchenStation?: string
+    kitchenTicketInitialStatus?: string
     sendToKitchen?: boolean
     notes?: string
     channel?: string

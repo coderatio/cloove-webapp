@@ -18,6 +18,7 @@ export interface BarTicket {
   station: string
   status: "ordered" | "making" | "ready" | "served"
   createdAt: string
+  paymentMethod: string | null
 }
 
 export interface TableSession {
@@ -156,8 +157,8 @@ export function useBarTicketActions() {
   })
 
   const updateLabel = useMutation({
-    mutationFn: ({ id, label }: { id: string; label: string }) =>
-      apiClient.patch(`/restaurant/bar-tickets/${id}`, { label }),
+    mutationFn: ({ id, label, paymentMethod }: { id: string; label: string; paymentMethod?: string }) =>
+      apiClient.patch(`/restaurant/bar-tickets/${id}`, { label, paymentMethod }),
     onSuccess: invalidate,
   })
 
