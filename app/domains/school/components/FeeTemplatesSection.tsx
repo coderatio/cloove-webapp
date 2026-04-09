@@ -23,6 +23,15 @@ import {
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
+import { Calendar } from "@/app/components/ui/calendar"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover"
 import {
     Drawer,
     DrawerContent,
@@ -48,6 +57,8 @@ import {
 import { formatCurrency } from "@/app/lib/formatters"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
+import { format } from "date-fns"
+import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -237,10 +248,10 @@ function TemplateCard({
                         {/* Total amount */}
                         <div className="shrink-0 text-right">
                             <p className="font-serif text-[17px] font-semibold text-brand-deep dark:text-brand-cream tabular-nums">
-                                {formatCurrency(total, { currency })}
+                                <CurrencyText value={formatCurrency(total, { currency })} />
                             </p>
                             <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/35 mt-0.5">
-                                {mandatory.length} fee{mandatory.length !== 1 ? "s" : ""}
+                                {mandatory.length} item{mandatory.length !== 1 ? "s" : ""}
                             </p>
                         </div>
                     </div>
@@ -440,7 +451,7 @@ function ItemRow({
             </span>
 
             <Input
-                className="flex-1 h-9 text-sm"
+                className="flex-1 h-12 text-sm"
                 placeholder={`e.g. Tuition fee, Transport levy…`}
                 value={item.name}
                 onChange={(e) => onUpdate({ name: e.target.value })}
@@ -452,6 +463,7 @@ function ItemRow({
                     onChange={(v) => onUpdate({ amount: v })}
                     currencySymbol={currencySymbol}
                     placeholder="0"
+                    className="h-12 text-sm"
                     size="sm"
                 />
             </div>
@@ -535,7 +547,7 @@ function FilterTabs({
                     type="button"
                     onClick={() => onChange(key)}
                     className={cn(
-                        "flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all duration-200",
+                        "flex-1 flex cursor-pointer items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all duration-200",
                         active === key
                             ? "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-cream shadow-sm"
                             : "text-brand-accent/50 dark:text-brand-cream/40 hover:text-brand-deep/70 dark:hover:text-brand-cream/70"
@@ -722,6 +734,7 @@ export function FeeTemplatesSection() {
     }
 
     const isEditingActive = editing?.status === "ACTIVE"
+    const selectedDueDate = dueAt ? new Date(`${dueAt}T00:00:00`) : undefined
 
     return (
         <>
@@ -838,7 +851,7 @@ export function FeeTemplatesSection() {
                     <div className="flex-1 overflow-y-auto">
                         {/* Section 1: Details */}
                         <div className="px-8 pt-8 pb-6 space-y-4 border-b border-brand-deep/5 dark:border-white/5">
-                            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-accent/35 dark:text-brand-cream/35">
+                            <h3 className="text-[10px] font-sans! font-bold uppercase tracking-[0.15em] text-brand-accent/35 dark:text-brand-cream/60">
                                 Template Details
                             </h3>
                             <div className="space-y-4">
@@ -869,7 +882,7 @@ export function FeeTemplatesSection() {
 
                         {/* Section 2: Target & Period */}
                         <div className="px-8 py-6 space-y-4 border-b border-brand-deep/5 dark:border-white/5">
-                            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-accent/35 dark:text-brand-cream/35">
+                            <h3 className="text-[10px] font-sans! font-bold uppercase tracking-[0.15em] text-brand-accent/35 dark:text-brand-cream/60">
                                 Target & Period
                             </h3>
 
@@ -879,23 +892,51 @@ export function FeeTemplatesSection() {
                                         Academic Term{" "}
                                         <span className="text-brand-accent/35 dark:text-brand-cream/30 font-normal">(optional)</span>
                                     </Label>
-                                    <select
-                                        className="w-full h-10 rounded-xl border border-input bg-transparent px-3 text-sm text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-ring"
-                                        value={academicTermId}
-                                        onChange={(e) => setAcademicTermId(e.target.value)}
+                                    <Select
+                                        value={academicTermId || "__none__"}
+                                        onValueChange={(value) => setAcademicTermId(value === "__none__" ? "" : value)}
                                     >
-                                        <option value="">No term</option>
-                                        {allTerms.map((t: any) => (
-                                            <option key={t.id} value={t.id}>{t.name}</option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger className="h-12 rounded-xl">
+                                            <SelectValue placeholder="No term" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="__none__">No term</SelectItem>
+                                            {allTerms.map((t: any) => (
+                                                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-sm">
                                         Due Date{" "}
                                         <span className="text-brand-accent/35 dark:text-brand-cream/30 font-normal">(optional)</span>
                                     </Label>
-                                    <Input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className={cn(
+                                                    "h-12 w-full rounded-xl justify-start text-left px-3 font-normal",
+                                                    !dueAt && "text-brand-accent/35 dark:text-brand-cream/35"
+                                                )}
+                                            >
+                                                <span className="truncate">
+                                                    {selectedDueDate ? format(selectedDueDate, "dd/MM/yyyy") : "dd/mm/yyyy"}
+                                                </span>
+                                                <CalendarDays className="ml-auto h-4 w-4 opacity-70" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={selectedDueDate}
+                                                onSelect={(date) => setDueAt(date ? format(date, "yyyy-MM-dd") : "")}
+                                                autoFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
 
@@ -904,33 +945,39 @@ export function FeeTemplatesSection() {
                                 <Label className="text-sm">Apply To</Label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {(["ALL", "DEPARTMENT"] as const).map((s) => (
-                                        <button
+                                        <Button
                                             key={s}
                                             type="button"
+                                            variant="ghost"
                                             onClick={() => setScope(s)}
                                             className={cn(
                                                 "relative h-auto py-3 px-4 rounded-2xl border text-left transition-all duration-200 group",
+                                                "flex flex-col items-start justify-start whitespace-normal",
                                                 scope === s
                                                     ? "border-brand-gold/40 bg-brand-gold/6 dark:bg-brand-gold/8"
                                                     : "border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/25 hover:bg-brand-gold/3"
                                             )}
                                         >
-                                            <div className={cn(
-                                                "w-3.5 h-3.5 rounded-full border-2 mb-2 transition-colors",
-                                                scope === s
-                                                    ? "border-brand-gold bg-brand-gold"
-                                                    : "border-brand-deep/25 dark:border-white/25"
-                                            )} />
-                                            <p className={cn(
-                                                "text-[12px] font-semibold leading-tight",
-                                                scope === s ? "text-brand-gold" : "text-brand-deep/70 dark:text-brand-cream/60"
-                                            )}>
-                                                {s === "ALL" ? "All Students" : "Department / Faculty"}
-                                            </p>
-                                            <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/35 mt-0.5">
-                                                {s === "ALL" ? "Every student in your roster" : "Members of a specific group"}
-                                            </p>
-                                        </button>
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn(
+                                                    "w-3.5 h-3.5 rounded-full border-2 mb-2 transition-colors",
+                                                    scope === s
+                                                        ? "border-brand-gold bg-brand-gold"
+                                                        : "border-brand-deep/25 dark:border-white/25"
+                                                )} />
+                                                <div>
+                                                    <p className={cn(
+                                                        "text-[12px] font-semibold leading-tight",
+                                                        scope === s ? "text-brand-gold" : "text-brand-deep/70 dark:text-brand-cream/60"
+                                                    )}>
+                                                        {s === "ALL" ? "All Students" : "Department / Faculty"}
+                                                    </p>
+                                                    <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/35 mt-0.5">
+                                                        {s === "ALL" ? "Every student in your roster" : "Members of a specific group"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </Button>
                                     ))}
                                 </div>
                             </div>
@@ -941,7 +988,7 @@ export function FeeTemplatesSection() {
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: "auto" }}
                                         exit={{ opacity: 0, height: 0 }}
-                                        className="space-y-2 overflow-hidden"
+                                        className="space-y-2"
                                     >
                                         <Label className="text-sm">Department <span className="text-brand-gold font-normal">*</span></Label>
                                         {departments.length === 0 ? (
@@ -949,16 +996,20 @@ export function FeeTemplatesSection() {
                                                 No departments yet. Create one in the Staff section first.
                                             </p>
                                         ) : (
-                                            <select
-                                                className="w-full h-10 rounded-xl border border-input bg-transparent px-3 text-sm text-brand-deep dark:text-brand-cream focus:outline-none focus:ring-2 focus:ring-ring"
-                                                value={departmentId}
-                                                onChange={(e) => setDepartmentId(e.target.value)}
+                                            <Select
+                                                value={departmentId || "__none__"}
+                                                onValueChange={(value) => setDepartmentId(value === "__none__" ? "" : value)}
                                             >
-                                                <option value="">Select department</option>
-                                                {departments.map((d) => (
-                                                    <option key={d.id} value={d.id}>{d.name}</option>
-                                                ))}
-                                            </select>
+                                                <SelectTrigger className="h-12 rounded-xl">
+                                                    <SelectValue placeholder="Select department" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="__none__">Select department</SelectItem>
+                                                    {departments.map((d) => (
+                                                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         )}
                                     </motion.div>
                                 )}
@@ -968,7 +1019,7 @@ export function FeeTemplatesSection() {
                         {/* Section 3: Fee Items */}
                         <div className="px-8 py-6 space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-brand-accent/35 dark:text-brand-cream/35">
+                                <h3 className="text-[10px] font-sans! font-bold uppercase tracking-[0.15em] text-brand-accent/35 dark:text-brand-cream/60">
                                     Fee Line Items
                                 </h3>
                                 {totalAmount > 0 && (
@@ -979,7 +1030,9 @@ export function FeeTemplatesSection() {
                                     >
                                         <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/35">Total</span>
                                         <span className="font-serif text-[15px] font-semibold text-brand-deep dark:text-brand-cream tabular-nums">
-                                            {formatCurrency(totalAmount, { currency: currencyCode })}
+                                            <CurrencyText
+                                                value={formatCurrency(totalAmount, { currency: currencyCode })}
+                                            />
                                         </span>
                                     </motion.div>
                                 )}
@@ -1005,7 +1058,7 @@ export function FeeTemplatesSection() {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="rounded-full border-dashed mt-2 text-brand-accent/50 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream"
+                                className="rounded-full bg-white dark:bg-brand-deep border-dashed mt-2 text-brand-accent/50 dark:text-brand-cream/80 hover:text-brand-deep dark:hover:text-brand-cream"
                                 onClick={addItem}
                             >
                                 <Plus className="w-3.5 h-3.5 mr-1.5" />
@@ -1015,12 +1068,10 @@ export function FeeTemplatesSection() {
                     </div>
 
                     <DrawerFooter>
-                        <DrawerClose asChild>
-                            <Button variant="outline" disabled={isSaving}>Cancel</Button>
-                        </DrawerClose>
                         <Button
                             onClick={handleSave}
                             disabled={!name.trim() || isSaving}
+                            className="h-13 rounded-2xl"
                         >
                             {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             {editing ? "Save Changes" : "Create Template"}

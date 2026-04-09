@@ -124,6 +124,16 @@ export interface CustomersUiCopy {
         nameLabel: string
         phoneLabel: string
         emailLabel: string
+        departmentLabel: string
+        departmentPlaceholder: string
+        departmentEmptyHint: string
+        feeTemplateLabel: string
+        feeTemplatePlaceholder: string
+        feeTemplateHint: string
+        feeTemplateNotFoundToast: string
+        feeTemplateEmptyToast: string
+        feeTemplateAppliedToast: string
+        showDepartmentField: boolean
         blacklistTitle: string
         blacklistHint: string
         cancel: string
@@ -135,6 +145,14 @@ export interface CustomersUiCopy {
         title: string
         description: (name: string) => string
         confirm: string
+    }
+    toasts: {
+        added: string
+        updated: string
+        removed: string
+        addFailed: string
+        updateFailed: string
+        removeFailed: string
     }
 }
 
@@ -193,6 +211,17 @@ export interface PresetPageCopy {
     staff: {
         title: string
         description: string
+    }
+    departments: {
+        title: string
+        description: string
+        emptyTitle: string
+        emptyHint: string
+        createFirstButton: string
+        createDescription: string
+        editDescription: string
+        namePlaceholder: string
+        descriptionPlaceholder: string
     }
     paymentLinks: {
         title: string
@@ -270,6 +299,17 @@ const DEFAULT_PAGE_COPY: PresetPageCopy = {
     staff: {
         title: "Staff Management",
         description: "Assign roles and manage permissions for your team members.",
+    },
+    departments: {
+        title: "Departments",
+        description: "Group your team into departments for clearer management.",
+        emptyTitle: "No departments yet",
+        emptyHint: "Organize your team into departments for clearer management.",
+        createFirstButton: "Create first department",
+        createDescription: "Create a department to group team members together.",
+        editDescription: "Rename this department or update its description.",
+        namePlaceholder: "e.g. Operations, Sales, Administration",
+        descriptionPlaceholder: "A brief note about this department's scope or purpose...",
     },
     paymentLinks: {
         title: "Payment Links",
@@ -404,6 +444,16 @@ const DEFAULT_PAGE_COPY: PresetPageCopy = {
             nameLabel: "Customer Name",
             phoneLabel: "Phone Number",
             emailLabel: "Email Address",
+            departmentLabel: "Department",
+            departmentPlaceholder: "No department",
+            departmentEmptyHint: "No departments yet. Create one from Staff to organize your contacts.",
+            feeTemplateLabel: "Fee Template",
+            feeTemplatePlaceholder: "No template",
+            feeTemplateHint: "Optional: apply one template now to create outstanding fee lines for this customer.",
+            feeTemplateNotFoundToast: "Selected fee template was not found.",
+            feeTemplateEmptyToast: "This fee template has no mandatory line items to apply.",
+            feeTemplateAppliedToast: "Fee template applied to this contact.",
+            showDepartmentField: false,
             blacklistTitle: "Blacklist Customer",
             blacklistHint: "Prevent this customer from making new orders.",
             cancel: "Cancel",
@@ -416,6 +466,14 @@ const DEFAULT_PAGE_COPY: PresetPageCopy = {
             description: (name: string) =>
                 `Are you sure you want to remove ${name}? This action cannot be undone and will remove their contact records.`,
             confirm: "Delete Profile",
+        },
+        toasts: {
+            added: "Customer added",
+            updated: "Customer updated",
+            removed: "Customer removed",
+            addFailed: "Failed to add customer",
+            updateFailed: "Failed to update customer",
+            removeFailed: "Failed to remove customer",
         },
     },
     inventoryUi: {
@@ -914,6 +972,13 @@ const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
             title: "Faculty & staff",
             description: "Roles and permissions for your team.",
         },
+        departments: {
+            description: "Group faculty and students into departments or faculties.",
+            emptyHint:
+                "Organize your faculty and students into departments or faculties for clearer management.",
+            createDescription: "Create a department to group staff and students together.",
+            namePlaceholder: "e.g. Faculty of Science, Administration, Sciences",
+        },
         paymentLinks: {
             title: "Fee payment links",
             descriptionShort: "Share links for tuition and fees.",
@@ -1017,6 +1082,18 @@ const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
                 nameLabel: "Full name",
                 phoneLabel: "Phone number",
                 emailLabel: "Email address",
+                departmentLabel: "Department / Faculty",
+                departmentPlaceholder: "No department",
+                departmentEmptyHint:
+                    "No departments or faculties yet. Create one in Faculty & staff to group contacts.",
+                feeTemplateLabel: "Fee template",
+                feeTemplatePlaceholder: "No template",
+                feeTemplateHint:
+                    "Optional: apply a fee template now to create this contact's outstanding fee lines.",
+                feeTemplateNotFoundToast: "Selected fee template was not found.",
+                feeTemplateEmptyToast: "This fee template has no mandatory fee lines to apply.",
+                feeTemplateAppliedToast: "Fee template applied to this contact.",
+                showDepartmentField: true,
                 blacklistTitle: "Restrict contact",
                 blacklistHint: "Block new fee charges until resolved.",
                 cancel: "Cancel",
@@ -1029,6 +1106,14 @@ const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
                 description: (name: string) =>
                     `Remove ${name} from your directory? This cannot be undone and clears stored contact details.`,
                 confirm: "Remove",
+            },
+            toasts: {
+                added: "Contact added",
+                updated: "Contact updated",
+                removed: "Contact removed",
+                addFailed: "Failed to add contact",
+                updateFailed: "Failed to update contact",
+                removeFailed: "Failed to remove contact",
             },
         },
         inventoryUi: {
@@ -1157,6 +1242,7 @@ export function getPresetPageCopy(presetId: string | null | undefined): PresetPa
         debts: { ...DEFAULT_PAGE_COPY.debts, ...o.debts },
         expenses: { ...DEFAULT_PAGE_COPY.expenses, ...o.expenses },
         staff: { ...DEFAULT_PAGE_COPY.staff, ...o.staff },
+        departments: { ...DEFAULT_PAGE_COPY.departments, ...o.departments },
         paymentLinks: { ...DEFAULT_PAGE_COPY.paymentLinks, ...o.paymentLinks },
         activity: { ...DEFAULT_PAGE_COPY.activity, ...o.activity },
         ordersUi: mergeOrdersUi(DEFAULT_PAGE_COPY.ordersUi, o.ordersUi as Partial<OrdersUiCopy> | undefined),

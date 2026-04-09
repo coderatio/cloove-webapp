@@ -31,9 +31,18 @@ import { StoreProvider } from "../../domains/stores/providers/StoreProvider"
 
 import { storage } from "@/app/lib/storage"
 
+/** Paths (prefix-matched) where zen mode is supported */
+export const ZEN_MODE_PATHS = ["/restaurant"] as const
+
+export const ZenModeContext = React.createContext<{
+    isZenMode: boolean
+    toggleZenMode: () => void
+}>({ isZenMode: false, toggleZenMode: () => {} })
+
 export default function AppLayout({ children }: AppLayoutProps) {
     const [mounted, setMounted] = React.useState(false)
     const [isCollapsed, setIsCollapsed] = React.useState(false)
+    const [isZenMode, setIsZenMode] = React.useState(false)
     const isTablet = useIsTablet()
 
     // 1. Initial mount: Load saved state and determine initial collapse
@@ -44,6 +53,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         } else {
             setIsCollapsed(saved)
         }
+        setIsZenMode(storage.getRestaurantZenMode())
         setMounted(true)
     }, [])
 
@@ -68,6 +78,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     const pathname = usePathname()
     const isAssistantPage = pathname?.startsWith("/assistant")
+    const zenActive = isZenMode && ZEN_MODE_PATHS.some((p) => pathname?.startsWith(p))
 
     const { theme, setTheme } = useTheme()
     const [isProfileMenuOpen, setIsProfileMenuOpen] = React.useState(false)
@@ -84,6 +95,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
 
     const userInitials = user?.fullName ? getInitials(user.fullName) : '??'
+
+    const toggleZenMode = React.useCallback(() => {
+        setIsZenMode((prev) => {
+            const next = !prev
+            storage.setRestaurantZenMode(next)
+            return next
+        })
+    }, [])
 
     const handleLogout = () => {
         toast.promise(
@@ -105,6 +124,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
 
     return (
+        <ZenModeContext.Provider value={{ isZenMode, toggleZenMode }}>
         <div className="min-h-screen bg-brand-cream dark:bg-background text-foreground transition-colors duration-300">
             {/* Background Gradient Mesh (Optional "Premium" touch) */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-10">
@@ -113,13 +133,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </div>
 
             <MobileNavProvider>
-                <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+                {!zenActive && <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />}
 
                 <main
                     className={cn(
                         "relative z-10 min-h-screen transition-all duration-300",
                         !isAssistantPage && "md:pr-8 md:pt-6 md:pb-8",
-                        isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
+                        zenActive ? "md:pl-8" : isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
                     )}
                 >
                     {!isAssistantPage && (
@@ -223,8 +243,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     </div>
                 </main>
 
-                <MobileNav />
+                {!zenActive && <MobileNav />}
             </MobileNavProvider>
         </div>
+        </ZenModeContext.Provider>
     )
 }

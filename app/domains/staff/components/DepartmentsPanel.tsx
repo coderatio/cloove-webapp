@@ -10,11 +10,11 @@ import {
     Trash2,
     Loader2,
     Search,
-    ChevronRight,
 } from "lucide-react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
+import { Textarea } from "@/app/components/ui/textarea"
 import {
     Drawer,
     DrawerContent,
@@ -22,11 +22,11 @@ import {
     DrawerTitle,
     DrawerDescription,
     DrawerFooter,
-    DrawerClose,
 } from "@/app/components/ui/drawer"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { cn } from "@/app/lib/utils"
 import { useDepartments, type Department } from "../hooks/useDepartments"
+import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 
 // ─── Avatar ────────────────────────────────────────────────────────────────────
 
@@ -161,7 +161,6 @@ function DeptCard({
                         >
                             <Trash2 className="w-3.5 h-3.5" />
                         </Button>
-                        <ChevronRight className="w-3.5 h-3.5 text-brand-accent/20 dark:text-brand-cream/20 ml-0.5" />
                     </div>
                 </div>
             </div>
@@ -171,7 +170,17 @@ function DeptCard({
 
 // ─── Empty State ────────────────────────────────────────────────────────────────
 
-function DeptEmptyState({ onAdd }: { onAdd: () => void }) {
+function DeptEmptyState({
+    onAdd,
+    title,
+    hint,
+    buttonLabel,
+}: {
+    onAdd: () => void
+    title: string
+    hint: string
+    buttonLabel: string
+}) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -189,10 +198,10 @@ function DeptEmptyState({ onAdd }: { onAdd: () => void }) {
             </div>
             <div className="space-y-1.5 max-w-xs">
                 <h4 className="font-serif text-[15px] font-semibold text-brand-deep dark:text-brand-cream">
-                    No departments yet
+                    {title}
                 </h4>
                 <p className="text-[13px] text-brand-accent/55 dark:text-brand-cream/45 leading-relaxed">
-                    Organise your staff and students into departments or faculties for clearer management.
+                    {hint}
                 </p>
             </div>
             <Button
@@ -202,7 +211,7 @@ function DeptEmptyState({ onAdd }: { onAdd: () => void }) {
                 onClick={onAdd}
             >
                 <Plus className="w-3.5 h-3.5 mr-1.5" />
-                Create first department
+                {buttonLabel}
             </Button>
         </motion.div>
     )
@@ -211,6 +220,8 @@ function DeptEmptyState({ onAdd }: { onAdd: () => void }) {
 // ─── Main Component ─────────────────────────────────────────────────────────────
 
 export function DepartmentsPanel() {
+    const pageCopy = usePresetPageCopy()
+    const departmentsCopy = pageCopy.departments
     const {
         departments,
         isLoading,
@@ -286,7 +297,7 @@ export function DepartmentsPanel() {
     return (
         <>
             {/* ── Section Container ── */}
-            <GlassCard className="overflow-hidden border-brand-gold/12 bg-linear-to-br from-white/70 to-brand-gold/[0.02] dark:from-white/[0.06] dark:to-brand-gold/[0.02] p-0">
+            <GlassCard className="overflow-hidden border-brand-gold/12 bg-linear-to-br from-white/70 to-brand-gold/2 dark:from-white/6 dark:to-brand-gold/2 p-0">
 
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-brand-deep/5 dark:border-white/6">
@@ -297,7 +308,7 @@ export function DepartmentsPanel() {
                         <div>
                             <div className="flex items-center gap-2.5">
                                 <p className="font-serif text-[15px] font-semibold text-brand-deep dark:text-brand-cream">
-                                    Departments
+                                    {departmentsCopy.title}
                                 </p>
                                 {departments.length > 0 && (
                                     <span className="px-2 py-0.5 rounded-full bg-brand-deep/6 dark:bg-white/8 text-[10px] font-bold text-brand-accent/60 dark:text-brand-cream/50 tabular-nums tracking-wide">
@@ -306,12 +317,12 @@ export function DepartmentsPanel() {
                                 )}
                             </div>
                             <p className="mt-0.5 text-[12.5px] text-brand-deep/55 dark:text-brand-cream/50 max-w-sm">
-                                Group staff and students into departments or faculties.
-                                {totalMembers > 0 && (
+                                {departmentsCopy.description}
+                                {/* {totalMembers > 0 && (
                                     <span className="ml-1.5 text-brand-gold/70">
                                         {totalMembers} total {totalMembers === 1 ? "member" : "members"}.
                                     </span>
-                                )}
+                                )} */}
                             </p>
                         </div>
                     </div>
@@ -357,7 +368,12 @@ export function DepartmentsPanel() {
                             {[1, 2, 3].map((i) => <DeptSkeleton key={i} />)}
                         </div>
                     ) : departments.length === 0 ? (
-                        <DeptEmptyState onAdd={openCreate} />
+                        <DeptEmptyState
+                            onAdd={openCreate}
+                            title={departmentsCopy.emptyTitle}
+                            hint={departmentsCopy.emptyHint}
+                            buttonLabel={departmentsCopy.createFirstButton}
+                        />
                     ) : filtered.length === 0 ? (
                         <div className="py-8 text-center">
                             <p className="text-sm text-brand-accent/45 dark:text-brand-cream/40">
@@ -389,8 +405,8 @@ export function DepartmentsPanel() {
                         </DrawerTitle>
                         <DrawerDescription>
                             {editing
-                                ? "Rename this department or update its description."
-                                : "Create a department to group staff and students together."}
+                                ? departmentsCopy.editDescription
+                                : departmentsCopy.createDescription}
                         </DrawerDescription>
                     </DrawerStickyHeader>
 
@@ -421,7 +437,7 @@ export function DepartmentsPanel() {
                                     Department Name <span className="text-brand-gold normal-case tracking-normal font-normal">*</span>
                                 </label>
                                 <Input
-                                    placeholder="e.g. Faculty of Science, Administration, Sciences"
+                                    placeholder={departmentsCopy.namePlaceholder}
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSave()}
@@ -439,7 +455,7 @@ export function DepartmentsPanel() {
                                         (optional)
                                     </span>
                                 </label>
-                                <textarea
+                                <Textarea
                                     className={cn(
                                         "w-full min-h-[80px] px-3 py-2.5 text-sm rounded-xl resize-none",
                                         "border border-input bg-transparent",
@@ -448,7 +464,7 @@ export function DepartmentsPanel() {
                                         "transition-colors duration-150",
                                         "text-brand-deep dark:text-brand-cream"
                                     )}
-                                    placeholder="A brief note about this department's scope or purpose…"
+                                    placeholder={departmentsCopy.descriptionPlaceholder}
                                     value={description}
                                     maxLength={500}
                                     onChange={(e) => setDescription(e.target.value)}
@@ -463,12 +479,11 @@ export function DepartmentsPanel() {
                     </div>
 
                     <DrawerFooter>
-                        <DrawerClose asChild>
-                            <Button variant="outline" disabled={isSaving}>
-                                Cancel
-                            </Button>
-                        </DrawerClose>
-                        <Button onClick={handleSave} disabled={!name.trim() || isSaving}>
+                        <Button
+                            onClick={handleSave}
+                            disabled={!name.trim() || isSaving}
+                            className="h-13 rounded-2xl"
+                        >
                             {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             {editing ? "Save Changes" : "Create Department"}
                         </Button>

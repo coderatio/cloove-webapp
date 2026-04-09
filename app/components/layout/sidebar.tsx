@@ -331,6 +331,26 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 <div className="mt-auto p-4 border-t border-white/10 space-y-4 relative">
                     {/* Footer buttons removed from here to be moved inside their own relative containers if needed, but primarily profile menu needs it */}
 
+                    {/* Settings Button */}
+                    <Link
+                        href="/settings"
+                        className={cn(
+                            "flex items-center rounded-xl transition-all duration-200 mb-2",
+                            isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-3 py-2 text-sm font-medium",
+                            pathname === "/settings" || pathname.startsWith("/settings/")
+                                ? "bg-white/10 text-brand-gold-light"
+                                : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                        )}
+                    >
+                        <Settings className={cn(
+                            "h-5 w-5 shrink-0",
+                            pathname === "/settings" || pathname.startsWith("/settings/")
+                                ? "text-brand-gold-light"
+                                : "text-brand-cream/70"
+                        )} />
+                        {!isCollapsed && <span className="whitespace-nowrap">Settings</span>}
+                    </Link>
+
                     {/* Refer & Earn Button */}
                     {role === 'OWNER' && features?.module_referrals !== false && (
                         <Link

@@ -62,12 +62,14 @@ export function useDepartments() {
         mutationFn: ({
             departmentId,
             members,
+            quiet,
         }: {
             departmentId: string
             members: Array<{ memberableType: 'BusinessUser' | 'Customer'; memberableId: string }>
+            quiet?: boolean
         }) => apiClient.post(`/departments/${departmentId}/members`, { members }),
         onSuccess: (_data, vars) => {
-            toast.success('Member(s) added')
+            if (!vars.quiet) toast.success('Member(s) added')
             queryClient.invalidateQueries({ queryKey: ['departments', businessId] })
             queryClient.invalidateQueries({ queryKey: ['department-members', vars.departmentId] })
         },
@@ -78,12 +80,14 @@ export function useDepartments() {
         mutationFn: ({
             departmentId,
             members,
+            quiet,
         }: {
             departmentId: string
             members: Array<{ memberableType: 'BusinessUser' | 'Customer'; memberableId: string }>
+            quiet?: boolean
         }) => apiClient.request(`/departments/${departmentId}/members`, { method: 'DELETE', body: JSON.stringify({ members }) }),
         onSuccess: (_data, vars) => {
-            toast.success('Member(s) removed')
+            if (!vars.quiet) toast.success('Member(s) removed')
             queryClient.invalidateQueries({ queryKey: ['departments', businessId] })
             queryClient.invalidateQueries({ queryKey: ['department-members', vars.departmentId] })
         },

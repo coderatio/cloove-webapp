@@ -50,7 +50,10 @@ import {
   Archive,
   RotateCcw,
   ChevronRight,
+  Maximize2,
+  Minimize2,
 } from "lucide-react"
+import { ZenModeContext } from "@/app/components/layout/AppLayout"
 
 const KITCHEN_FLOW: KitchenTicket["status"][] = ["queued", "preparing", "ready", "served"]
 
@@ -446,12 +449,13 @@ const ArchivedTableCard = React.memo(function ArchivedTableCard({
 
 export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" | "kitchen" }) {
   const { intervalMs } = useRestaurantRefreshInterval()
+  const refetchInterval: number | false = typeof intervalMs === "number" ? intervalMs : false
   const { data: tickets = [], isLoading: ticketsLoading } = useKitchenTickets({
-    refetchInterval: intervalMs,
+    refetchInterval,
   })
   const { data: activeSessions = [], isLoading: activeSessionsLoading } = useTableSessions({
     status: "open",
-    refetchInterval: intervalMs || false,
+    refetchInterval,
   })
   const { data: closedSessions = [], isLoading: closedSessionsLoading } = useTableSessions({
     status: "closed",
@@ -607,6 +611,15 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
+  const { isZenMode, toggleZenMode } = React.useContext(ZenModeContext)
+
+  React.useEffect(() => {
+    if (!isZenMode) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") toggleZenMode() }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [isZenMode, toggleZenMode])
+
   const showTables = mode === "all" || mode === "tables"
   const showKitchen = mode === "all" || mode === "kitchen"
 
@@ -704,6 +717,21 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
         </DrawerContent>
       </Drawer>
       {/* Metrics */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[9px] uppercase tracking-[0.2em] font-black text-brand-accent/40 dark:text-brand-cream/40 hidden md:block">
+          Live overview
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={toggleZenMode}
+          title={isZenMode ? "Exit zen mode (Esc)" : "Enter zen mode"}
+          className="ml-auto h-8 w-8 rounded-xl p-0 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-accent/8 dark:hover:bg-white/8 transition-all hidden md:flex items-center justify-center"
+        >
+          {isZenMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+        </Button>
+      </div>
       <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar pb-1">
         {[
           {
