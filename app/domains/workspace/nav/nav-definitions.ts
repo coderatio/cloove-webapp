@@ -115,7 +115,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         href: "/school/fee-tools",
                         icon: BookOpen,
                         defaultLabel: "Fee tools",
-                        permission: "VIEW_SALES",
+                        permission: "VIEW_FEE_TEMPLATES",
                         visibleForPresets: ["school"],
                     },
                     {
@@ -123,7 +123,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         href: "/restaurant/live",
                         icon: ChefHat,
                         defaultLabel: "Service Console",
-                        permission: "VIEW_DASHBOARD",
+                        permission: "VIEW_RESTAURANT_TABLES",
                         visibleForPresets: ["restaurant"],
                     },
                     {
@@ -131,7 +131,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         href: "/restaurant/tables",
                         icon: LayoutGrid,
                         defaultLabel: "Tables",
-                        permission: "VIEW_SALES",
+                        permission: "VIEW_RESTAURANT_TABLES",
                         visibleForPresets: ["restaurant"],
                     },
                     {
@@ -139,7 +139,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         href: "/restaurant/kitchen",
                         icon: ChefHat,
                         defaultLabel: "Kitchen Board",
-                        permission: "VIEW_SALES",
+                        permission: "VIEW_KITCHEN_TICKETS",
                         visibleForPresets: ["restaurant"],
                     },
                     {
@@ -147,7 +147,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         href: "/restaurant/bar",
                         icon: GlassWater,
                         defaultLabel: "Bar Board",
-                        permission: "VIEW_SALES",
+                        permission: "VIEW_BAR_TICKETS",
                         visibleForPresets: ["restaurant"],
                     },
                 ],
@@ -157,7 +157,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 href: "/school/calendar",
                 icon: CalendarRange,
                 defaultLabel: "School calendar",
-                permission: "VIEW_SALES",
+                permission: "VIEW_ACADEMIC_CALENDAR",
                 visibleForPresets: ["school"],
             },
             {
@@ -227,7 +227,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 href: "/stores",
                 icon: LayoutGrid,
                 defaultLabel: "Stores",
-                permission: "MANAGE_STORES",
+                permission: "VIEW_STORES",
             },
             {
                 id: "activity",

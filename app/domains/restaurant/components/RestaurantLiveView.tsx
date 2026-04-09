@@ -614,7 +614,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const { data: tickets = [], isLoading: ticketsLoading } = useKitchenTickets({
     refetchInterval,
   })
-  const { data: barTickets = [], isLoading: barTicketsLoading } = useBarTickets({
+  const { data: barTickets = [], isLoading: barTicketsLoading, refetch: refetchBarTickets } = useBarTickets({
     refetchInterval,
   })
   const barAction = useBarTicketActions()
@@ -836,8 +836,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
         kitchenTicketInitialStatus: barInitialStatus,
         channel: "IN_PERSON",
       })
-      toast.success("Bar order added to board")
       closeBarOrder()
+      toast.success("Bar order added to board")
+      refetchBarTickets()
     } catch {
       // error toast handled by useRecordSale
     }
