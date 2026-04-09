@@ -12,10 +12,8 @@ import {
     useUpdateBusinessSettings,
 } from "@/app/domains/business/hooks/useBusinessSettings"
 import { useCurrentSubscription } from "@/app/domains/business/hooks/useBilling"
-import {
-    LAYOUT_PRESET_LIST,
-    type LayoutPresetId,
-} from "@/app/domains/workspace/nav/layout-presets"
+import type { LayoutPresetId } from "@/app/domains/workspace/nav/layout-presets"
+import { useSystemPresets } from "@/app/domains/workspace/hooks/useSystemPresets"
 import { PresetModuleRecommendations } from "@/app/domains/workspace/components/PresetModuleRecommendations"
 import { Button } from "@/app/components/ui/button"
 import { usePermission } from "@/app/hooks/usePermission"
@@ -126,7 +124,8 @@ function parseFeatureFlags(raw: unknown): Record<string, boolean> {
 
 export function WorkspaceSettings() {
     const { data: settings, isLoading: settingsLoading } = useSettings()
-    const { features, refreshBusinesses } = useBusiness()
+    const { features, refreshBusinesses, activeBusiness } = useBusiness()
+    const { data: systemPresets, isLoading: presetsLoading } = useSystemPresets()
     const { canUseStaffFeature } = usePermission()
     const updateSettings = useUpdateBusinessSettings()
     const { data: subData } = useCurrentSubscription()
@@ -153,7 +152,7 @@ export function WorkspaceSettings() {
 
     const mergedFlags = featureFlags
 
-    const currentPreset = (settings?.business?.configs?.ui_layout_preset as LayoutPresetId) || "default"
+    const currentPreset = (activeBusiness?.layoutPreset as LayoutPresetId) || "default"
 
     const [pendingPreset, setPendingPreset] = useState<LayoutPresetId | null>(null)
 
@@ -239,7 +238,11 @@ export function WorkspaceSettings() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 bg-brand-deep/5 dark:bg-white/5 rounded-3xl p-4">
-                    {LAYOUT_PRESET_LIST.map((preset) => {
+                    {presetsLoading
+                        ? Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="h-20 rounded-3xl bg-brand-accent/8 dark:bg-white/5 animate-pulse" />
+                        ))
+                    : (systemPresets ?? []).filter((p) => p.isEnabled).map((preset) => {
                         const selected = currentPreset === preset.id
                         const busy = updateSettings.isPending && pendingPreset === preset.id
                         return (
@@ -249,7 +252,7 @@ export function WorkspaceSettings() {
                                 disabled={updateSettings.isPending}
                                 onClick={() => {
                                     if (preset.id === currentPreset) return
-                                    applyPreset(preset.id)
+                                    applyPreset(preset.id as LayoutPresetId)
                                 }}
                                 className={cn(
                                     "text-left rounded-3xl cursor-pointer border p-4 transition-all",
@@ -260,7 +263,7 @@ export function WorkspaceSettings() {
                             >
                                 <div className="flex items-center justify-between gap-2 mb-2">
                                     <span className="font-semibold text-brand-deep dark:text-brand-cream">
-                                        {preset.title}
+                                        {preset.label}
                                     </span>
                                     {selected && (
                                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold text-brand-deep">

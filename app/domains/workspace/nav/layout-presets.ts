@@ -49,7 +49,7 @@ const restaurantPreset: LayoutPreset = {
         restaurant_kitchen: "Kitchen Board",
     },
     mobilePrimaryIds: ["overview", "orders"],
-    mobileSecondaryIds: ["inventory", "restaurant_live"],
+    mobileSecondaryIds: ["restaurant_live"],
 }
 
 const retailPreset: LayoutPreset = {
@@ -95,7 +95,7 @@ const schoolPreset: LayoutPreset = {
         staff: "Faculty & staff",
     },
     mobilePrimaryIds: ["overview", "customers"],
-    mobileSecondaryIds: ["orders", "school_calendar"],
+    mobileSecondaryIds: ["orders"],
 }
 
 export const LAYOUT_PRESETS: Record<LayoutPresetId, LayoutPreset> = {

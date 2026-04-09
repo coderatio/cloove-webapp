@@ -27,7 +27,7 @@ export function RestaurantNavTabs() {
   const { value, setValue } = useRestaurantRefreshInterval()
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+    <div className="flex flex-row items-center gap-2 sm:gap-3 w-full sm:w-auto">
       <div className="flex items-center gap-1 p-1 rounded-2xl bg-brand-accent/5 dark:bg-white/5 border border-brand-accent/8 dark:border-white/5 w-fit h-11">
         {TABS.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(href)
@@ -50,20 +50,20 @@ export function RestaurantNavTabs() {
       </div>
 
       {pathname.startsWith("/restaurant/live") && (
-        <div className="w-full sm:w-auto">
+        <div className="w-auto">
           <Select value={value} onValueChange={(v) => setValue(v as RefreshIntervalValue)}>
-            <SelectTrigger className="h-11 rounded-2xl px-3 w-full sm:w-[160px] bg-white/70 dark:bg-white/5">
+            <SelectTrigger className="h-11 rounded-2xl px-3 w-[140px] bg-white/70 dark:bg-white/5">
               <div className="flex items-center gap-2">
                 <RefreshCw className="h-3.5 w-3.5 text-brand-accent/50" />
                 <SelectValue placeholder="Refresh" />
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0">Refresh: Off</SelectItem>
-              <SelectItem value="5">Every 5s</SelectItem>
-              <SelectItem value="10">Every 10s</SelectItem>
-              <SelectItem value="30">Every 30s</SelectItem>
-              <SelectItem value="60">Every 60s</SelectItem>
+              <SelectItem value="0" className="rounded-xl">Refresh: Off</SelectItem>
+              <SelectItem value="5" className="rounded-xl">Every 5s</SelectItem>
+              <SelectItem value="10" className="rounded-xl">Every 10s</SelectItem>
+              <SelectItem value="30" className="rounded-xl">Every 30s</SelectItem>
+              <SelectItem value="60" className="rounded-xl">Every 60s</SelectItem>
             </SelectContent>
           </Select>
         </div>

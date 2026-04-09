@@ -1,22 +1,24 @@
 "use client"
 
 import { useMemo } from "react"
-import { useSettings } from "@/app/domains/business/hooks/useBusinessSettings"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import { getPresetPageCopy, type PresetPageCopy } from "../copy/preset-page-copy"
-import type { LayoutPresetId } from "../nav/layout-presets"
+import { LAYOUT_PRESETS, type LayoutPresetId } from "../nav/layout-presets"
+
+const VALID_PRESET_IDS = Object.keys(LAYOUT_PRESETS) as LayoutPresetId[]
 
 export function useLayoutPresetId(): LayoutPresetId {
-    const { data: settings } = useSettings()
-    const raw = settings?.business?.configs?.ui_layout_preset as string | undefined
-    if (raw && ["default", "restaurant", "retail", "pharmacy", "school"].includes(raw)) {
+    const { activeBusiness } = useBusiness()
+    const raw = activeBusiness?.layoutPreset
+    if (raw && VALID_PRESET_IDS.includes(raw as LayoutPresetId)) {
         return raw as LayoutPresetId
     }
     return "default"
 }
 
 export function usePresetPageCopy(): PresetPageCopy {
-    const { data: settings } = useSettings()
-    const presetId = settings?.business?.configs?.ui_layout_preset as string | undefined
+    const { activeBusiness } = useBusiness()
+    const presetId = activeBusiness?.layoutPreset
 
     return useMemo(() => getPresetPageCopy(presetId), [presetId])
 }

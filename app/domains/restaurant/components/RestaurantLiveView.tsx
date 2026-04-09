@@ -103,11 +103,19 @@ function formatElapsed(isoString: string): string {
 }
 
 function getUrgencyClass(isoString: string, status: KitchenTicket["status"]): string {
-  if (status === "served") return ""
+  // Served: calm surface + border (same family as default, slightly softer than active urgency)
+  if (status === "served") {
+    return "border-brand-deep/10 dark:border-white/12 bg-white dark:bg-white/[0.06]"
+  }
   const mins = (Date.now() - new Date(isoString).getTime()) / 60000
-  if (mins > 30) return "ring-1 ring-rose-400/40 bg-rose-50/50 dark:bg-rose-950/20"
-  if (mins > 15) return "ring-1 ring-amber-400/30"
-  return ""
+  if (mins > 30) {
+    return "border-brand-deep/14 dark:border-white/12 bg-neutral-50 dark:bg-white/[0.07]"
+  }
+  if (mins > 15) {
+    return "border-brand-deep/11 dark:border-white/10 bg-neutral-50/80 dark:bg-white/[0.05]"
+  }
+  // Default active: subtle border + solid card fill (visible, calm)
+  return "border-brand-deep/8 dark:border-white/9 bg-white dark:bg-white/5"
 }
 
 function ElapsedBadge({ createdAt, status }: { createdAt: string; status: KitchenTicket["status"] }) {
@@ -153,7 +161,7 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border bg-white dark:bg-white/5 p-3.5 space-y-2.5 transition-colors duration-200",
+        "rounded-3xl border p-3.5 space-y-2.5 transition-colors duration-200",
         getUrgencyClass(ticket.createdAt, ticket.status)
       )}
     >
@@ -196,7 +204,7 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
             onClick={() => onAdvance(ticket.id, next)}
             disabled={isPending}
           >
-            <span className="hidden sm:block">{STATUS_CONFIG[next].label}</span>
+            <span>{STATUS_CONFIG[next].label}</span>
             <ArrowRight className="h-3 w-3 ml-1.5" />
           </Button>
         ) : (
@@ -225,7 +233,7 @@ const TableSessionCard = React.memo(function TableSessionCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border p-4 flex flex-col gap-3 transition-colors duration-200",
+        "rounded-3xl border p-4 flex flex-col gap-3 transition-colors duration-200",
         isOpen
           ? "bg-white dark:bg-white/5 border-brand-accent/10"
           : "bg-brand-accent/3 dark:bg-white/3 border-brand-accent/5 opacity-60"
@@ -304,7 +312,7 @@ const RegisteredTableCard = React.memo(function RegisteredTableCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border p-3.5 flex items-center gap-3 transition-all",
+        "rounded-[20px] border p-3.5 flex items-center gap-3 transition-all",
         table.isActive
           ? "bg-white dark:bg-white/5 border-brand-accent/10"
           : "bg-brand-accent/3 dark:bg-white/3 border-brand-accent/5 opacity-60"
@@ -624,7 +632,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const showKitchen = mode === "all" || mode === "kitchen"
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-28 md:pb-4">
       <Drawer open={!!editingTable} onOpenChange={(open) => !open && closeEditTable()}>
         <DrawerContent className="max-w-xl">
           <DrawerStickyHeader className="pb-5">
@@ -707,7 +715,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   <TableSessionCard
                     key={session.id}
                     session={session}
-                    onClose={() => {}}
+                    onClose={() => { }}
                     isPending={false}
                   />
                 ))}
@@ -981,7 +989,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                       className={cn(
                         "relative inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all h-9",
                         isActive
-                          ? "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-gold shadow-sm"
+                          ? "bg-white hover:bg-white/80 dark:hover:bg-white/20 dark:bg-white/10 text-brand-deep dark:text-brand-gold shadow-sm"
                           : "text-brand-deep/60 dark:text-brand-cream/60 hover:bg-white/50 dark:hover:bg-white/5"
                       )}
                     >
@@ -1077,9 +1085,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
           </div>
 
           {ticketsLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse" />
+                <div key={i} className="h-32 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse shrink-0 w-[70vw] md:w-auto" />
               ))}
             </div>
           ) : tickets.length === 0 ? (
@@ -1091,7 +1099,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar pb-2 md:pb-0">
               {KITCHEN_FLOW.map((column) => {
                 const cfg = STATUS_CONFIG[column]
                 const columnTickets = tickets.filter((t) => t.status === column)
@@ -1101,7 +1109,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   <div
                     key={column}
                     className={cn(
-                      "rounded-2xl border p-3 space-y-2",
+                      "rounded-3xl border p-3 space-y-2 shrink-0 w-[72vw] md:w-auto",
                       cfg.bg,
                       cfg.border
                     )}

@@ -15,10 +15,13 @@ export interface Business {
     id: string
     name: string
     slug: string
+    code: string
     currency: string
     logo?: string
     role: string
     businessType: BusinessType | null
+    /** Active workspace layout preset for this business (e.g. 'restaurant', 'retail') */
+    layoutPreset: string
     permissions: Record<string, boolean> | null
     stores: Array<{ id: string; name: string }>
     features: Record<string, boolean> | null
