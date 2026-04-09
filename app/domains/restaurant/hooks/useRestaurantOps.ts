@@ -115,7 +115,12 @@ export function useRestaurantTableActions() {
     onSuccess: invalidate,
   })
 
-  return { createTable, updateTable, deleteTable, restoreTable }
+  const permanentDeleteTable = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/restaurant/tables/${id}/permanent`),
+    onSuccess: invalidate,
+  })
+
+  return { createTable, updateTable, deleteTable, restoreTable, permanentDeleteTable }
 }
 
 export function useKitchenTicketActions() {

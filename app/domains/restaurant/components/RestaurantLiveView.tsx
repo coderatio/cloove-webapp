@@ -134,7 +134,7 @@ function ElapsedBadge({ createdAt, status }: { createdAt: string; status: Kitche
   )
 }
 
-function KitchenTicketCard({
+const KitchenTicketCard = React.memo(function KitchenTicketCard({
   ticket,
   onAdvance,
   isPending,
@@ -205,9 +205,9 @@ function KitchenTicketCard({
       </div>
     </div>
   )
-}
+})
 
-function TableSessionCard({
+const TableSessionCard = React.memo(function TableSessionCard({
   session,
   onClose,
   isPending,
@@ -281,9 +281,9 @@ function TableSessionCard({
       )}
     </div>
   )
-}
+})
 
-function RegisteredTableCard({
+const RegisteredTableCard = React.memo(function RegisteredTableCard({
   table,
   onToggle,
   onDelete,
@@ -361,41 +361,88 @@ function RegisteredTableCard({
       </div>
     </div>
   )
-}
+})
 
-function ArchivedTableCard({
+const ArchivedTableCard = React.memo(function ArchivedTableCard({
   table,
   onRestore,
+  onPermanentDelete,
   isRestorePending,
+  isDeletePending,
 }: {
   table: RestaurantTable
   onRestore: (id: string) => void
+  onPermanentDelete: (id: string) => void
   isRestorePending: boolean
+  isDeletePending: boolean
 }) {
+  const [confirming, setConfirming] = React.useState(false)
+
   return (
-    <div className="rounded-2xl border p-3.5 flex items-center gap-3 bg-brand-accent/3 dark:bg-white/3 border-brand-accent/5 dark:border-white/5 opacity-80">
-      <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 font-black text-xs bg-brand-accent/5 dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/30">
-        {table.label.slice(0, 2).toUpperCase()}
+    <div className="rounded-2xl border p-3.5 bg-brand-accent/3 dark:bg-white/3 border-brand-accent/5 dark:border-white/5 opacity-80">
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 font-black text-xs bg-brand-accent/5 dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/30">
+          {table.label.slice(0, 2).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-brand-deep dark:text-brand-cream truncate">{table.label}</p>
+          <p className="text-[10px] text-brand-accent/50 dark:text-brand-cream/40">
+            {table.capacity} seats · archived
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 rounded-xl p-0 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-brand-accent/30 dark:text-brand-cream/30 hover:text-rose-500 dark:hover:text-rose-400 transition-all"
+            onClick={() => setConfirming(true)}
+            disabled={isRestorePending || isDeletePending || confirming}
+            title="Permanently delete table"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 rounded-xl p-0 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-brand-accent/30 dark:text-brand-cream/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all"
+            onClick={() => onRestore(table.id)}
+            disabled={isRestorePending || isDeletePending || confirming}
+            title="Restore table"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-brand-deep dark:text-brand-cream truncate">{table.label}</p>
-        <p className="text-[10px] text-brand-accent/50 dark:text-brand-cream/40">
-          {table.capacity} seats · archived
-        </p>
-      </div>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="h-8 w-8 rounded-xl p-0 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-brand-accent/30 dark:text-brand-cream/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all"
-        onClick={() => onRestore(table.id)}
-        disabled={isRestorePending}
-        title="Restore table"
-      >
-        <RotateCcw className="h-3.5 w-3.5" />
-      </Button>
+      {confirming && (
+        <div className="mt-3 pt-3 border-t border-rose-200/60 dark:border-rose-900/40 flex items-center justify-between gap-2">
+          <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+            Permanently delete this table?
+          </p>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 rounded-lg px-3 text-[10px] font-bold uppercase tracking-wider text-brand-accent/50 dark:text-brand-cream/50 hover:bg-brand-accent/5"
+              onClick={() => setConfirming(false)}
+              disabled={isDeletePending}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 rounded-lg px-3 text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/50"
+              onClick={() => onPermanentDelete(table.id)}
+              disabled={isDeletePending}
+            >
+              {isDeletePending ? "Deleting…" : "Delete"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
-}
+})
 
 export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" | "kitchen" }) {
   const { intervalMs } = useRestaurantRefreshInterval()
@@ -460,11 +507,11 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
     }
   }
 
-  const openEditTable = (table: RestaurantTable) => {
+  const openEditTable = React.useCallback((table: RestaurantTable) => {
     setEditingTable(table)
     setEditLabel(table.label)
     setEditCapacity(table.capacity || 1)
-  }
+  }, [])
 
   const closeEditTable = () => {
     setEditingTable(null)
@@ -493,12 +540,37 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
     }
   }
 
-  const counts = {
+  const handleAdvanceTicket = React.useCallback(
+    (id: string, status: KitchenTicket["status"]) => kitchenAction.mutate({ id, status }),
+    [kitchenAction]
+  )
+  const handleCloseSession = React.useCallback(
+    (id: string) => tableAction.mutate(id),
+    [tableAction]
+  )
+  const handleToggleTable = React.useCallback(
+    (id: string, isActive: boolean) => tableCrud.updateTable.mutate({ id, isActive }),
+    [tableCrud.updateTable]
+  )
+  const handleDeleteTable = React.useCallback(
+    (id: string) => tableCrud.deleteTable.mutate(id),
+    [tableCrud.deleteTable]
+  )
+  const handleRestoreTable = React.useCallback(
+    (id: string) => tableCrud.restoreTable.mutate(id),
+    [tableCrud.restoreTable]
+  )
+  const handlePermanentDeleteTable = React.useCallback(
+    (id: string) => tableCrud.permanentDeleteTable.mutate(id),
+    [tableCrud.permanentDeleteTable]
+  )
+
+  const counts = React.useMemo(() => ({
     openTables: activeSessions.length,
     queuedTickets: tickets.filter((t) => t.status === "queued").length,
     preparingTickets: tickets.filter((t) => t.status === "preparing").length,
     readyTickets: tickets.filter((t) => t.status === "ready").length,
-  }
+  }), [activeSessions, tickets])
 
   const currentTables = tableTab === "archived" ? archivedTables : activeTables
   const tablesLoading = tableTab === "archived" ? archivedTablesLoading : activeTablesLoading
@@ -798,7 +870,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                       <TableSessionCard
                         key={session.id}
                         session={session}
-                        onClose={(id) => tableAction.mutate(id)}
+                        onClose={handleCloseSession}
                         isPending={tableAction.isPending}
                       />
                     ))}
@@ -932,16 +1004,18 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                       <ArchivedTableCard
                         key={table.id}
                         table={table}
-                        onRestore={(id) => tableCrud.restoreTable.mutate(id)}
+                        onRestore={handleRestoreTable}
+                        onPermanentDelete={handlePermanentDeleteTable}
                         isRestorePending={tableCrud.restoreTable.isPending}
+                        isDeletePending={tableCrud.permanentDeleteTable.isPending}
                       />
                     ))
                     : currentTables.map((table) => (
                       <RegisteredTableCard
                         key={table.id}
                         table={table}
-                        onToggle={(id, isActive) => tableCrud.updateTable.mutate({ id, isActive })}
-                        onDelete={(id) => tableCrud.deleteTable.mutate(id)}
+                        onToggle={handleToggleTable}
+                        onDelete={handleDeleteTable}
                         onEdit={openEditTable}
                         isTogglePending={tableCrud.updateTable.isPending}
                         isDeletePending={tableCrud.deleteTable.isPending}
@@ -1038,7 +1112,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                           <KitchenTicketCard
                             key={ticket.id}
                             ticket={ticket}
-                            onAdvance={(id, status) => kitchenAction.mutate({ id, status })}
+                            onAdvance={handleAdvanceTicket}
                             isPending={kitchenAction.isPending}
                           />
                         ))
