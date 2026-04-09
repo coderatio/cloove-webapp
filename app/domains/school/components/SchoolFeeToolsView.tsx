@@ -28,6 +28,7 @@ import { usePermission } from "@/app/hooks/usePermission"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useOrders } from "@/app/domains/orders/hooks/useOrders"
 import { useBatchSalePaymentLinks } from "@/app/domains/checkout/hooks/useBatchSalePaymentLinks"
+import { FeeTemplatesSection } from "./FeeTemplatesSection"
 import { formatCurrency } from "@/app/lib/formatters"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
@@ -624,6 +625,7 @@ export function SchoolFeeToolsView() {
                     transition={{ duration: 0.35, delay: 0.06 }}
                     className="space-y-6"
                 >
+                    <FeeTemplatesSection />
                     <FeePresetsSection />
                     <BatchLinksSection />
                 </motion.div>

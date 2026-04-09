@@ -34,6 +34,7 @@ import { useStaff, type StaffMember } from "../hooks/useStaff"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { usePermission } from "@/app/hooks/usePermission"
 import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { DepartmentsPanel } from "./DepartmentsPanel"
 import Link from "next/link"
 
 export function StaffView() {
@@ -205,6 +206,9 @@ export function StaffView() {
                         </GlassCard>
                     )}
                 </div>
+
+                {/* Departments */}
+                <DepartmentsPanel />
 
                 {/* Staff Editor Drawer */}
                 <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
