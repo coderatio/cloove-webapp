@@ -1,6 +1,6 @@
 import { RestaurantLiveView } from "@/app/domains/restaurant/components/RestaurantLiveView"
 import { RestaurantNavTabs } from "@/app/domains/restaurant/components/RestaurantNavTabs"
-import { RestaurantPresetGate } from "@/app/domains/restaurant/components/RestaurantPresetGate"
+import { PresetGate } from "@/app/components/shared/PresetGate"
 
 export const metadata = {
   title: "Restaurant Tables | Cloove",
@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function RestaurantTablesPage() {
   return (
-    <RestaurantPresetGate featureLabel="Tables">
+    <PresetGate preset="restaurant" featureLabel="Tables">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
@@ -27,6 +27,6 @@ export default function RestaurantTablesPage() {
         </div>
         <RestaurantLiveView mode="tables" />
       </div>
-    </RestaurantPresetGate>
+    </PresetGate>
   )
 }
