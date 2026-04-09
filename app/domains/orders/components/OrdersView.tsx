@@ -765,15 +765,20 @@ export function OrdersView() {
                         const total = Number(recordingPaymentOrder.totalAmount)
                         const newStatus = newAmountPaid >= total ? 'COMPLETED' : recordingPaymentOrder.status
 
-                        await updateOrder({
-                            id: recordingPaymentOrder.id,
-                            updates: {
-                                amountPaid: newAmountPaid,
-                                paymentMethod: method as any,
-                                status: newStatus as any
-                            }
-                        })
-                        toast.success(`Recorded ${formatCurrency(amount, { currency: recordingPaymentOrder.currency || 'NGN' })} payment`)
+                        try {
+                            await updateOrder({
+                                id: recordingPaymentOrder.id,
+                                updates: {
+                                    amountPaid: newAmountPaid,
+                                    paymentMethod: method as any,
+                                    status: newStatus as any
+                                }
+                            })
+                            toast.success(`Recorded ${formatCurrency(amount, { currency: recordingPaymentOrder.currency || 'NGN' })} payment`)
+                        } catch (err: any) {
+                            // onError in useOrders also toasts, this is a safety net
+                            if (!err?.message) toast.error('Failed to record payment')
+                        }
                     }
                 }}
             />

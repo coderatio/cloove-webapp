@@ -87,7 +87,11 @@ export function useOrders(
             apiClient.patch(`/sales/${id}`, updates),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sales', businessId] })
-        }
+        },
+        onError: (error: any) => {
+            const message = error?.message || 'Failed to update order'
+            toast.error(message)
+        },
     })
 
     const requeryOrderMutation = useMutation({

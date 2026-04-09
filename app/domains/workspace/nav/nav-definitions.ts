@@ -106,6 +106,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         icon: ShoppingBag,
                         defaultLabel: "Record sale",
                         permission: "VIEW_SALES",
+                        visibleForPresets: ["default", "restaurant", "retail", "pharmacy"],
                     },
                     {
                         id: "school_fee_tools",
