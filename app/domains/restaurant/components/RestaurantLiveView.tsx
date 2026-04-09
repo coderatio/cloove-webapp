@@ -1,11 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Input } from "@/app/components/ui/input"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerStickyHeader,
+  DrawerTitle,
+  DrawerBody,
+} from "@/app/components/ui/drawer"
+import { PersistedTabs, type TabItem } from "@/app/components/shared/PersistedTabs"
 import { toast } from "sonner"
+import { AnimatePresence, motion } from "framer-motion"
 import {
   useKitchenTickets,
   useKitchenTicketActions,
@@ -18,6 +28,7 @@ import {
   type RestaurantTable,
 } from "../hooks/useRestaurantOps"
 import { cn } from "@/app/lib/utils"
+import { CapacityStepper } from "@/app/domains/restaurant/components/CapacityStepper"
 import {
   UtensilsCrossed,
   ChefHat,
@@ -26,14 +37,17 @@ import {
   Clock,
   Users,
   Plus,
-  Minus,
   Circle,
+  ArrowLeft,
   ArrowRight,
   Zap,
   TableProperties,
   ToggleLeft,
   ToggleRight,
   Trash2,
+  PencilLine,
+  Archive,
+  RotateCcw,
 } from "lucide-react"
 
 const KITCHEN_FLOW: KitchenTicket["status"][] = ["queued", "preparing", "ready", "served"]
@@ -127,17 +141,14 @@ function KitchenTicketCard({
   onAdvance: (id: string, status: KitchenTicket["status"]) => void
   isPending: boolean
 }) {
-  const next = KITCHEN_FLOW[KITCHEN_FLOW.indexOf(ticket.status) + 1]
+  const idx = KITCHEN_FLOW.indexOf(ticket.status)
+  const prev = KITCHEN_FLOW[idx - 1]
+  const next = KITCHEN_FLOW[idx + 1]
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
+    <div
       className={cn(
-        "rounded-2xl border bg-white dark:bg-white/5 p-3.5 space-y-2.5 transition-all",
+        "rounded-2xl border bg-white dark:bg-white/5 p-3.5 space-y-2.5 transition-colors duration-200",
         getUrgencyClass(ticket.createdAt, ticket.status)
       )}
     >
@@ -151,32 +162,46 @@ function KitchenTicketCard({
         <ElapsedBadge createdAt={ticket.createdAt} status={ticket.status} />
       </div>
 
-      {next ? (
-        <Button
-          size="sm"
-          className={cn(
-            "w-full h-8 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all",
-            next === "preparing" &&
+      <div className="flex gap-1.5">
+        {prev && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="flex-none h-8 w-8 rounded-xl border border-brand-accent/10 dark:border-white/10 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream hover:border-brand-accent/30 dark:hover:border-white/20 transition-all p-0"
+            onClick={() => onAdvance(ticket.id, prev)}
+            disabled={isPending}
+            title={`Move back to ${STATUS_CONFIG[prev].label}`}
+          >
+            <ArrowLeft className="h-3 w-3" />
+          </Button>
+        )}
+        {next ? (
+          <Button
+            size="sm"
+            className={cn(
+              "flex-1 h-8 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all",
+              next === "preparing" &&
               "bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/20",
-            next === "ready" &&
+              next === "ready" &&
               "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20",
-            next === "served" &&
+              next === "served" &&
               "bg-brand-deep dark:bg-white/10 hover:bg-brand-deep/90 text-white dark:text-brand-cream border-transparent"
-          )}
-          variant="ghost"
-          onClick={() => onAdvance(ticket.id, next)}
-          disabled={isPending}
-        >
-          <ArrowRight className="h-3 w-3 mr-1.5" />
-          {STATUS_CONFIG[next].label}
-        </Button>
-      ) : (
-        <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent/40 dark:text-brand-cream/30">
-          <CheckCircle2 className="h-3 w-3" />
-          Complete
-        </div>
-      )}
-    </motion.div>
+            )}
+            variant="ghost"
+            onClick={() => onAdvance(ticket.id, next)}
+            disabled={isPending}
+          >
+            <ArrowRight className="h-3 w-3 mr-1.5" />
+            {STATUS_CONFIG[next].label}
+          </Button>
+        ) : (
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent/40 dark:text-brand-cream/30">
+            <CheckCircle2 className="h-3 w-3" />
+            Complete
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -193,13 +218,9 @@ function TableSessionCard({
   const openedMins = Math.floor((Date.now() - new Date(session.openedAt).getTime()) / 60000)
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+    <div
       className={cn(
-        "rounded-2xl border p-4 flex flex-col gap-3 transition-all",
+        "rounded-2xl border p-4 flex flex-col gap-3 transition-colors duration-200",
         isOpen
           ? "bg-white dark:bg-white/5 border-brand-accent/10"
           : "bg-brand-accent/3 dark:bg-white/3 border-brand-accent/5 opacity-60"
@@ -256,7 +277,7 @@ function TableSessionCard({
           </Button>
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
 
@@ -264,12 +285,14 @@ function RegisteredTableCard({
   table,
   onToggle,
   onDelete,
+  onEdit,
   isTogglePending,
   isDeletePending,
 }: {
   table: RestaurantTable
   onToggle: (id: string, isActive: boolean) => void
   onDelete: (id: string) => void
+  onEdit: (table: RestaurantTable) => void
   isTogglePending: boolean
   isDeletePending: boolean
 }) {
@@ -303,6 +326,16 @@ function RegisteredTableCard({
           size="sm"
           variant="ghost"
           className="h-8 w-8 rounded-xl p-0 hover:bg-brand-accent/5 dark:hover:bg-white/5"
+          onClick={() => onEdit(table)}
+          disabled={isTogglePending || isDeletePending}
+          title="Edit table"
+        >
+          <PencilLine className="h-3.5 w-3.5 text-brand-accent/50 dark:text-brand-cream/50" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 rounded-xl p-0 hover:bg-brand-accent/5 dark:hover:bg-white/5"
           onClick={() => onToggle(table.id, !table.isActive)}
           disabled={isTogglePending}
           title={table.isActive ? "Disable table" : "Enable table"}
@@ -328,15 +361,55 @@ function RegisteredTableCard({
   )
 }
 
+function ArchivedTableCard({
+  table,
+  onRestore,
+  isRestorePending,
+}: {
+  table: RestaurantTable
+  onRestore: (id: string) => void
+  isRestorePending: boolean
+}) {
+  return (
+    <div className="rounded-2xl border p-3.5 flex items-center gap-3 bg-brand-accent/3 dark:bg-white/3 border-brand-accent/5 dark:border-white/5 opacity-80">
+      <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0 font-black text-xs bg-brand-accent/5 dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/30">
+        {table.label.slice(0, 2).toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm text-brand-deep dark:text-brand-cream truncate">{table.label}</p>
+        <p className="text-[10px] text-brand-accent/50 dark:text-brand-cream/40">
+          {table.capacity} seats · archived
+        </p>
+      </div>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-8 w-8 rounded-xl p-0 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-brand-accent/30 dark:text-brand-cream/30 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all"
+        onClick={() => onRestore(table.id)}
+        disabled={isRestorePending}
+        title="Restore table"
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  )
+}
+
 export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" | "kitchen" }) {
   const { data: tickets = [], isLoading: ticketsLoading } = useKitchenTickets()
   const { data: sessions = [], isLoading: sessionsLoading } = useTableSessions()
-  const { data: restaurantTables = [], isLoading: restaurantTablesLoading } = useRestaurantTables()
+  const { data: activeTables = [], isLoading: activeTablesLoading } = useRestaurantTables("active")
+  const { data: archivedTables = [], isLoading: archivedTablesLoading } =
+    useRestaurantTables("archived")
   const kitchenAction = useKitchenTicketActions()
   const tableAction = useTableSessionActions()
   const tableCrud = useRestaurantTableActions()
   const [newTableLabel, setNewTableLabel] = React.useState("")
   const [newTableCapacity, setNewTableCapacity] = React.useState(4)
+  const [editingTable, setEditingTable] = React.useState<RestaurantTable | null>(null)
+  const [editLabel, setEditLabel] = React.useState("")
+  const [editCapacity, setEditCapacity] = React.useState(4)
+  const [tableTab, setTableTab] = React.useState("active")
 
   const handleCreateTable = async () => {
     const label = newTableLabel.trim()
@@ -353,7 +426,45 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
       setNewTableCapacity(4)
       toast.success("Table added to floor")
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to create table"
+      const rawMessage = err instanceof Error ? err.message : "Failed to create table"
+      const message =
+        rawMessage.toLowerCase().includes("already exists") ||
+          rawMessage.toLowerCase().includes("duplicate key")
+          ? "A table with this label already exists. Check Archived to restore it."
+          : rawMessage
+      toast.error(message)
+    }
+  }
+
+  const openEditTable = (table: RestaurantTable) => {
+    setEditingTable(table)
+    setEditLabel(table.label)
+    setEditCapacity(table.capacity || 1)
+  }
+
+  const closeEditTable = () => {
+    setEditingTable(null)
+    setEditLabel("")
+    setEditCapacity(4)
+  }
+
+  const handleUpdateTable = async () => {
+    if (!editingTable) return
+    const label = editLabel.trim()
+    if (!label) {
+      toast.error("Table label is required")
+      return
+    }
+    try {
+      await tableCrud.updateTable.mutateAsync({
+        id: editingTable.id,
+        label,
+        capacity: Math.max(1, Number(editCapacity || 1)),
+      })
+      toast.success("Table updated")
+      closeEditTable()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to update table"
       toast.error(message)
     }
   }
@@ -364,11 +475,71 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
     readyTickets: tickets.filter((t) => t.status === "ready").length,
   }
 
+  const tableTabs: TabItem[] = [
+    { id: "active", label: `Active (${activeTables.length})`, icon: TableProperties },
+    { id: "archived", label: `Archived (${archivedTables.length})`, icon: Archive },
+  ]
+
+  const currentTables = tableTab === "archived" ? archivedTables : activeTables
+  const tablesLoading = tableTab === "archived" ? archivedTablesLoading : activeTablesLoading
+
   const showTables = mode === "all" || mode === "tables"
   const showKitchen = mode === "all" || mode === "kitchen"
 
   return (
     <div className="space-y-4">
+      <Drawer open={!!editingTable} onOpenChange={(open) => !open && closeEditTable()}>
+        <DrawerContent className="max-w-xl">
+          <DrawerStickyHeader className="pb-5">
+            <DrawerTitle>Edit table</DrawerTitle>
+            <DrawerDescription>Update the label or seat count for this table.</DrawerDescription>
+          </DrawerStickyHeader>
+          <DrawerBody className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
+                  Label
+                </label>
+                <Input
+                  value={editLabel}
+                  onChange={(e) => setEditLabel(e.target.value)}
+                  placeholder="Table label"
+                  className="rounded-xl h-12"
+                  disabled={tableCrud.updateTable.isPending}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/50">
+                  Seats
+                </label>
+                <CapacityStepper
+                  value={editCapacity}
+                  onChange={setEditCapacity}
+                  disabled={tableCrud.updateTable.isPending}
+                  className="w-[140px] h-12"
+                />
+              </div>
+            </div>
+          </DrawerBody>
+          <DrawerFooter className="gap-2 sm:flex-row sm:items-center">
+            <Button
+              variant="ghost"
+              onClick={closeEditTable}
+              disabled={tableCrud.updateTable.isPending}
+              className="w-full sm:w-auto sm:flex-1 h-12 rounded-2xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateTable}
+              disabled={tableCrud.updateTable.isPending}
+              className="w-full sm:w-auto sm:flex-1 h-12 rounded-2xl"
+            >
+              {tableCrud.updateTable.isPending ? "Saving…" : "Save changes"}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
       {/* Metrics */}
       <div className="grid grid-cols-3 gap-3">
         {[
@@ -423,7 +594,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
       {showTables && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Active Sessions */}
-          <GlassCard className="p-4 rounded-[1.8rem]">
+          <GlassCard className="p-4 rounded-[1.8rem] flex flex-col h-[520px] min-h-0">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream tracking-tight">
@@ -441,23 +612,26 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               </div>
             </div>
 
-            {sessionsLoading ? (
-              <div className="space-y-2">
-                {[1, 2].map((i) => (
-                  <div key={i} className="h-20 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse" />
-                ))}
-              </div>
-            ) : sessions.length === 0 ? (
-              <div className="py-10 flex flex-col items-center text-center">
-                <Armchair className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
-                <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">No active sessions</p>
-                <p className="text-xs text-brand-accent/30 dark:text-brand-cream/30 mt-0.5">
-                  Sessions open when a dine-in sale is recorded
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <AnimatePresence>
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+              {sessionsLoading ? (
+                <div className="space-y-2">
+                  {[1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="h-20 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : sessions.length === 0 ? (
+                <div className="py-10 flex flex-col items-center text-center">
+                  <Armchair className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
+                  <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">No active sessions</p>
+                  <p className="text-xs text-brand-accent/30 dark:text-brand-cream/30 mt-0.5">
+                    Sessions open when a dine-in sale is recorded
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {sessions.map((session) => (
                     <TableSessionCard
                       key={session.id}
@@ -466,96 +640,112 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                       isPending={tableAction.isPending}
                     />
                   ))}
-                </AnimatePresence>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </GlassCard>
 
           {/* Registered Tables */}
-          <GlassCard className="p-4 rounded-[1.8rem]">
+          <GlassCard className="p-4 rounded-[1.8rem] flex flex-col h-[520px] min-h-0">
             <div className="mb-4">
               <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream tracking-tight">
                 Table Register
               </h3>
               <p className="text-[10px] uppercase tracking-[0.18em] font-black text-brand-accent/40 dark:text-brand-cream/40 mt-0.5">
-                {restaurantTables.filter((t) => t.isActive).length} of {restaurantTables.length} active
+                {activeTables.filter((t) => t.isActive).length} of {activeTables.length} active
               </p>
             </div>
 
             {/* Add Table Form */}
-            <div className="flex gap-2 mb-4 p-3 rounded-2xl bg-brand-accent/3 dark:bg-white/3 border border-brand-accent/8 dark:border-white/5">
-              <Input
-                value={newTableLabel}
-                onChange={(e) => setNewTableLabel(e.target.value)}
-                placeholder="Label (e.g. T12)"
-                aria-label="Table label"
-                name="tableLabel"
-                autoComplete="off"
-                className="flex-1 h-9 text-sm bg-white dark:bg-white/5"
-                onKeyDown={(e) => e.key === "Enter" && void handleCreateTable()}
-              />
-              <div className="flex items-center gap-1 bg-white dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-lg px-2">
-                <button
-                  className="h-5 w-5 flex items-center justify-center text-brand-accent/50 hover:text-brand-deep dark:hover:text-brand-cream transition-colors"
-                  onClick={() => setNewTableCapacity((v) => Math.max(1, v - 1))}
-                  type="button"
+            {tableTab === "active" ? (
+              <div className="flex gap-2 mb-4 p-3 rounded-2xl bg-brand-accent/3 dark:bg-white/3 border border-brand-accent/8 dark:border-white/5">
+                <Input
+                  value={newTableLabel}
+                  onChange={(e) => setNewTableLabel(e.target.value)}
+                  placeholder="Label (e.g. T12)"
+                  aria-label="Table label"
+                  name="tableLabel"
+                  autoComplete="off"
+                  className="flex-1 h-10 text-sm bg-white dark:bg-white/5 rounded-xl"
+                  onKeyDown={(e) => e.key === "Enter" && void handleCreateTable()}
+                />
+                <CapacityStepper value={newTableCapacity} onChange={setNewTableCapacity} className="h-10" />
+                <Button
+                  onClick={() => void handleCreateTable()}
+                  disabled={tableCrud.createTable.isPending || !newTableLabel.trim()}
+                  size="sm"
+                  className="h-10 px-4 rounded-xl text-xs font-bold"
                 >
-                  <Minus className="h-3 w-3" />
-                </button>
-                <span className="text-sm font-bold w-5 text-center text-brand-deep dark:text-brand-cream tabular-nums">
-                  {newTableCapacity}
-                </span>
-                <button
-                  className="h-5 w-5 flex items-center justify-center text-brand-accent/50 hover:text-brand-deep dark:hover:text-brand-cream transition-colors"
-                  onClick={() => setNewTableCapacity((v) => v + 1)}
-                  type="button"
-                >
-                  <Plus className="h-3 w-3" />
-                </button>
-              </div>
-              <Button
-                onClick={() => void handleCreateTable()}
-                disabled={tableCrud.createTable.isPending || !newTableLabel.trim()}
-                size="sm"
-                className="h-9 px-3 rounded-xl text-xs font-bold"
-              >
-                {tableCrud.createTable.isPending ? (
-                  <Circle className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Plus className="h-3.5 w-3.5" />
-                )}
-                <span className="ml-1.5">{tableCrud.createTable.isPending ? "Adding…" : "Add"}</span>
-              </Button>
-            </div>
-
-            {restaurantTablesLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-14 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse" />
-                ))}
-              </div>
-            ) : restaurantTables.length === 0 ? (
-              <div className="py-8 flex flex-col items-center text-center">
-                <TableProperties className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
-                <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">No tables registered yet</p>
-                <p className="text-xs text-brand-accent/30 dark:text-brand-cream/30 mt-0.5">
-                  Add tables to use the dine-in selector in sale mode
-                </p>
+                  {tableCrud.createTable.isPending ? (
+                    <Circle className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" />
+                  )}
+                  <span className="ml-1.5">{tableCrud.createTable.isPending ? "Adding…" : "Add"}</span>
+                </Button>
               </div>
             ) : (
-              <div className="space-y-2">
-                {restaurantTables.map((table) => (
-                  <RegisteredTableCard
-                    key={table.id}
-                    table={table}
-                    onToggle={(id, isActive) => tableCrud.updateTable.mutate({ id, isActive })}
-                    onDelete={(id) => tableCrud.deleteTable.mutate(id)}
-                    isTogglePending={tableCrud.updateTable.isPending}
-                    isDeletePending={tableCrud.deleteTable.isPending}
-                  />
-                ))}
+              <div className="mb-4 rounded-2xl border border-brand-accent/8 dark:border-white/5 bg-brand-accent/3 dark:bg-white/3 px-4 py-3 text-xs text-brand-accent/60 dark:text-brand-cream/60">
+                Archived tables are hidden from sale mode. Restore one to make it available again.
               </div>
             )}
+
+            <PersistedTabs
+              tabs={tableTabs}
+              activeTab={tableTab}
+              onChange={setTableTab}
+              defaultTab="active"
+              queryParamName="tables"
+              className="mb-4"
+            />
+
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+              {tablesLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-14 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : currentTables.length === 0 ? (
+                <div className="py-8 flex flex-col items-center text-center">
+                  <TableProperties className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
+                  <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">
+                    {tableTab === "archived" ? "No archived tables" : "No tables registered yet"}
+                  </p>
+                  <p className="text-xs text-brand-accent/30 dark:text-brand-cream/30 mt-0.5">
+                    {tableTab === "archived"
+                      ? "Archived tables appear here for easy restoration."
+                      : "Add tables to use the dine-in selector in sale mode"}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {tableTab === "archived"
+                    ? currentTables.map((table) => (
+                      <ArchivedTableCard
+                        key={table.id}
+                        table={table}
+                        onRestore={(id) => tableCrud.restoreTable.mutate(id)}
+                        isRestorePending={tableCrud.restoreTable.isPending}
+                      />
+                    ))
+                    : currentTables.map((table) => (
+                      <RegisteredTableCard
+                        key={table.id}
+                        table={table}
+                        onToggle={(id, isActive) => tableCrud.updateTable.mutate({ id, isActive })}
+                        onDelete={(id) => tableCrud.deleteTable.mutate(id)}
+                        onEdit={openEditTable}
+                        isTogglePending={tableCrud.updateTable.isPending}
+                        isDeletePending={tableCrud.deleteTable.isPending}
+                      />
+                    ))}
+                </div>
+              )}
+            </div>
           </GlassCard>
         </div>
       )}

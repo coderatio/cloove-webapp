@@ -29,6 +29,7 @@ export interface RestaurantTable {
   label: string
   capacity: number
   isActive: boolean
+  deletedAt?: string | null
 }
 
 export function useKitchenTickets() {
@@ -53,12 +54,12 @@ export function useTableSessions() {
   })
 }
 
-export function useRestaurantTables() {
+export function useRestaurantTables(status: "active" | "archived" | "all" = "active") {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
   return useQuery({
-    queryKey: ["restaurant", "tables", businessId],
-    queryFn: () => apiClient.get<RestaurantTable[]>("/restaurant/tables"),
+    queryKey: ["restaurant", "tables", businessId, status],
+    queryFn: () => apiClient.get<RestaurantTable[]>("/restaurant/tables", { status }),
     enabled: !!businessId,
     staleTime: 30000,
   })
@@ -98,7 +99,12 @@ export function useRestaurantTableActions() {
     onSuccess: invalidate,
   })
 
-  return { createTable, updateTable, deleteTable }
+  const restoreTable = useMutation({
+    mutationFn: (id: string) => apiClient.patch(`/restaurant/tables/${id}/restore`, {}),
+    onSuccess: invalidate,
+  })
+
+  return { createTable, updateTable, deleteTable, restoreTable }
 }
 
 export function useKitchenTicketActions() {
