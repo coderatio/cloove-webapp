@@ -32,25 +32,36 @@ export interface RestaurantTable {
   deletedAt?: string | null
 }
 
-export function useKitchenTickets() {
+export function useKitchenTickets(options?: { refetchInterval?: number | false }) {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
   return useQuery({
     queryKey: ["restaurant", "kitchenTickets", businessId],
     queryFn: () => apiClient.get<KitchenTicket[]>("/restaurant/kitchen-tickets"),
     enabled: !!businessId,
-    refetchInterval: 5000,
+    refetchInterval: options?.refetchInterval ?? 5000,
   })
 }
 
-export function useTableSessions() {
+export function useTableSessions(options?: {
+  status?: "open" | "closed" | "merged" | "transferred" | "all"
+  limit?: number
+  enabled?: boolean
+  refetchInterval?: number | false
+}) {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
+  const status = options?.status ?? "all"
+  const limit = options?.limit
   return useQuery({
-    queryKey: ["restaurant", "tableSessions", businessId],
-    queryFn: () => apiClient.get<TableSession[]>("/restaurant/table-sessions"),
-    enabled: !!businessId,
-    refetchInterval: 5000,
+    queryKey: ["restaurant", "tableSessions", businessId, status, limit],
+    queryFn: () =>
+      apiClient.get<TableSession[]>("/restaurant/table-sessions", {
+        status,
+        ...(limit ? { limit: String(limit) } : {}),
+      }),
+    enabled: (options?.enabled ?? true) && !!businessId,
+    refetchInterval: options?.refetchInterval ?? (status === "open" ? 5000 : false),
   })
 }
 

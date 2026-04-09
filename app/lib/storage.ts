@@ -19,6 +19,8 @@ export const STORAGE_KEYS = {
     BT_PRINTER_PROFILE: 'cloove_bt_printer_profile',
     /** Whether to always use Bluetooth for printing */
     BT_ALWAYS_USE: 'cloove_bt_always_use',
+    /** Restaurant live refresh interval (seconds) */
+    RESTAURANT_REFRESH_INTERVAL: 'cloove_restaurant_refresh_interval',
     /** Last successful /businesses payload (survives rate limits / transient errors) */
     BUSINESSES_CACHE: 'cloove_businesses_cache',
 } as const

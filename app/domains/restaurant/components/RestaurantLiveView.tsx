@@ -13,7 +13,7 @@ import {
   DrawerTitle,
   DrawerBody,
 } from "@/app/components/ui/drawer"
-import { PersistedTabs, type TabItem } from "@/app/components/shared/PersistedTabs"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { AnimatePresence, motion } from "framer-motion"
 import {
@@ -29,6 +29,7 @@ import {
 } from "../hooks/useRestaurantOps"
 import { cn } from "@/app/lib/utils"
 import { CapacityStepper } from "@/app/domains/restaurant/components/CapacityStepper"
+import { useRestaurantRefreshInterval } from "@/app/domains/restaurant/hooks/useRestaurantRefreshInterval"
 import {
   UtensilsCrossed,
   ChefHat,
@@ -48,6 +49,7 @@ import {
   PencilLine,
   Archive,
   RotateCcw,
+  ChevronRight,
 } from "lucide-react"
 
 const KITCHEN_FLOW: KitchenTicket["status"][] = ["queued", "preparing", "ready", "served"]
@@ -185,14 +187,14 @@ function KitchenTicketCard({
               next === "ready" &&
               "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20",
               next === "served" &&
-              "bg-brand-deep dark:bg-white/10 hover:bg-brand-deep/90 text-white dark:text-brand-cream border-transparent"
+              "bg-brand-deep dark:bg-white/10 hover:bg-brand-deep/90 text-white hover:text-white dark:text-brand-cream border-transparent"
             )}
             variant="ghost"
             onClick={() => onAdvance(ticket.id, next)}
             disabled={isPending}
           >
-            <ArrowRight className="h-3 w-3 mr-1.5" />
-            {STATUS_CONFIG[next].label}
+            <span className="hidden sm:block">{STATUS_CONFIG[next].label}</span>
+            <ArrowRight className="h-3 w-3 ml-1.5" />
           </Button>
         ) : (
           <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent/40 dark:text-brand-cream/30">
@@ -396,8 +398,26 @@ function ArchivedTableCard({
 }
 
 export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" | "kitchen" }) {
-  const { data: tickets = [], isLoading: ticketsLoading } = useKitchenTickets()
-  const { data: sessions = [], isLoading: sessionsLoading } = useTableSessions()
+  const { intervalMs } = useRestaurantRefreshInterval()
+  const { data: tickets = [], isLoading: ticketsLoading } = useKitchenTickets({
+    refetchInterval: intervalMs,
+  })
+  const { data: activeSessions = [], isLoading: activeSessionsLoading } = useTableSessions({
+    status: "open",
+    refetchInterval: intervalMs || false,
+  })
+  const { data: closedSessions = [], isLoading: closedSessionsLoading } = useTableSessions({
+    status: "closed",
+    limit: 50,
+    refetchInterval: false,
+  })
+  const [isHistoryOpen, setIsHistoryOpen] = React.useState(false)
+  const { data: historySessions = [], isLoading: historyLoading } = useTableSessions({
+    status: "closed",
+    limit: 200,
+    enabled: isHistoryOpen,
+    refetchInterval: false,
+  })
   const { data: activeTables = [], isLoading: activeTablesLoading } = useRestaurantTables("active")
   const { data: archivedTables = [], isLoading: archivedTablesLoading } =
     useRestaurantTables("archived")
@@ -410,6 +430,10 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const [editLabel, setEditLabel] = React.useState("")
   const [editCapacity, setEditCapacity] = React.useState(4)
   const [tableTab, setTableTab] = React.useState("active")
+  const [sessionTab, setSessionTab] = React.useState<"active" | "closed">("active")
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const handleCreateTable = async () => {
     const label = newTableLabel.trim()
@@ -470,18 +494,46 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   }
 
   const counts = {
-    openTables: sessions.filter((t) => t.status === "open").length,
+    openTables: activeSessions.length,
     queuedTickets: tickets.filter((t) => t.status === "queued").length,
+    preparingTickets: tickets.filter((t) => t.status === "preparing").length,
     readyTickets: tickets.filter((t) => t.status === "ready").length,
   }
 
-  const tableTabs: TabItem[] = [
-    { id: "active", label: `Active (${activeTables.length})`, icon: TableProperties },
-    { id: "archived", label: `Archived (${archivedTables.length})`, icon: Archive },
-  ]
-
   const currentTables = tableTab === "archived" ? archivedTables : activeTables
   const tablesLoading = tableTab === "archived" ? archivedTablesLoading : activeTablesLoading
+  const visibleSessions = sessionTab === "active" ? activeSessions : closedSessions
+  const sessionsPanelLoading = sessionTab === "active" ? activeSessionsLoading : closedSessionsLoading
+
+  React.useEffect(() => {
+    const tabParam = searchParams.get("tables")
+    if (tabParam && ["active", "archived"].includes(tabParam) && tabParam !== tableTab) {
+      setTableTab(tabParam)
+    }
+  }, [searchParams, tableTab])
+
+  const handleTableTabChange = (next: "active" | "archived") => {
+    if (next === tableTab) return
+    setTableTab(next)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tables", next)
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }
+
+  React.useEffect(() => {
+    const tabParam = searchParams.get("sessions")
+    if (tabParam && ["active", "closed"].includes(tabParam) && tabParam !== sessionTab) {
+      setSessionTab(tabParam as "active" | "closed")
+    }
+  }, [searchParams, sessionTab])
+
+  const handleSessionTabChange = (next: "active" | "closed") => {
+    if (next === sessionTab) return
+    setSessionTab(next)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("sessions", next)
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }
 
   const showTables = mode === "all" || mode === "tables"
   const showKitchen = mode === "all" || mode === "kitchen"
@@ -540,8 +592,47 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+
+      <Drawer open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+        <DrawerContent className="max-w-3xl">
+          <DrawerStickyHeader className="pb-5">
+            <DrawerTitle>Session history</DrawerTitle>
+            <DrawerDescription>Most recent closed sessions (up to 200).</DrawerDescription>
+          </DrawerStickyHeader>
+          <DrawerBody className="pt-4">
+            {historyLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="h-20 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : historySessions.length === 0 ? (
+              <div className="py-10 flex flex-col items-center text-center">
+                <Armchair className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
+                <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">
+                  No closed sessions yet
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {historySessions.map((session) => (
+                  <TableSessionCard
+                    key={session.id}
+                    session={session}
+                    onClose={() => {}}
+                    isPending={false}
+                  />
+                ))}
+              </div>
+            )}
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
       {/* Metrics */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar pb-1">
         {[
           {
             label: "Open Tables",
@@ -560,6 +651,14 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
             bg: "bg-amber-500/8",
           },
           {
+            label: "Preparing",
+            value: counts.preparingTickets,
+            helper: "in the kitchen",
+            icon: ChefHat,
+            accent: "text-blue-600 dark:text-blue-400",
+            bg: "bg-blue-500/8",
+          },
+          {
             label: "Ready",
             value: counts.readyTickets,
             helper: "ready to serve",
@@ -570,7 +669,10 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
         ].map((metric) => {
           const Icon = metric.icon
           return (
-            <GlassCard key={metric.label} className="p-1 rounded-[1.6rem] border-brand-accent/10">
+            <GlassCard
+              key={metric.label}
+              className="p-1 rounded-[1.6rem] border-brand-accent/10 min-w-[250px] md:min-w-0 overflow-none"
+            >
               <div className="rounded-[1.2rem] bg-white/80 dark:bg-transparent p-4">
                 <div className="flex items-start justify-between mb-2">
                   <p className="text-[9px] uppercase tracking-[0.2em] font-black text-brand-accent/50 dark:text-brand-cream/50">
@@ -612,8 +714,58 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               </div>
             </div>
 
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-deep/5 dark:bg-white/5 p-1.5">
+                {[
+                  { id: "active" as const, label: "Active", count: activeSessions.length },
+                  { id: "closed" as const, label: "Closed", count: closedSessions.length },
+                ].map((tab) => {
+                  const isActive = sessionTab === tab.id
+                  return (
+                    <Button
+                      key={tab.id}
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSessionTabChange(tab.id)}
+                      className={cn(
+                        "relative inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all h-9",
+                        isActive
+                          ? "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-gold shadow-sm"
+                          : "text-brand-deep/60 dark:text-brand-cream/60 hover:bg-white/50 dark:hover:bg-white/5"
+                      )}
+                    >
+                      <span>{tab.label}</span>
+                      <span
+                        className={cn(
+                          "inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold",
+                          isActive
+                            ? "bg-brand-deep/5 text-brand-deep dark:bg-white/10 dark:text-brand-gold"
+                            : "bg-brand-deep/10 text-brand-deep/70 dark:bg-white/10 dark:text-brand-cream/70"
+                        )}
+                      >
+                        {tab.count}
+                      </span>
+                    </Button>
+                  )
+                })}
+              </div>
+              {sessionTab === "closed" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs rounded-full px-3"
+                  onClick={() => setIsHistoryOpen(true)}
+                >
+                  View history
+                  <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+
             <div className="flex-1 min-h-0 overflow-y-auto pr-1">
-              {sessionsLoading ? (
+              {sessionsPanelLoading ? (
                 <div className="space-y-2">
                   {[1, 2].map((i) => (
                     <div
@@ -622,25 +774,36 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                     />
                   ))}
                 </div>
-              ) : sessions.length === 0 ? (
+              ) : visibleSessions.length === 0 ? (
                 <div className="py-10 flex flex-col items-center text-center">
                   <Armchair className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
-                  <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">No active sessions</p>
+                  <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">
+                    {sessionTab === "active" ? "No active sessions" : "No closed sessions"}
+                  </p>
                   <p className="text-xs text-brand-accent/30 dark:text-brand-cream/30 mt-0.5">
-                    Sessions open when a dine-in sale is recorded
+                    {sessionTab === "active"
+                      ? "Sessions open when a dine-in sale is recorded"
+                      : "Closed sessions will appear here"}
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {sessions.map((session) => (
-                    <TableSessionCard
-                      key={session.id}
-                      session={session}
-                      onClose={(id) => tableAction.mutate(id)}
-                      isPending={tableAction.isPending}
-                    />
-                  ))}
-                </div>
+                <>
+                  {sessionTab === "closed" && (
+                    <p className="text-[10px] uppercase tracking-[0.18em] font-black text-brand-accent/40 dark:text-brand-cream/40 mb-2">
+                      Recent closed sessions
+                    </p>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {visibleSessions.map((session) => (
+                      <TableSessionCard
+                        key={session.id}
+                        session={session}
+                        onClose={(id) => tableAction.mutate(id)}
+                        isPending={tableAction.isPending}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </GlassCard>
@@ -690,14 +853,55 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               </div>
             )}
 
-            <PersistedTabs
-              tabs={tableTabs}
-              activeTab={tableTab}
-              onChange={setTableTab}
-              defaultTab="active"
-              queryParamName="tables"
-              className="mb-4"
-            />
+            <div className="mb-4">
+              <div className="inline-flex items-center gap-1.5 rounded-2xl bg-brand-deep/5 dark:bg-white/5 p-1.5">
+                {[
+                  {
+                    id: "active" as const,
+                    label: "Active",
+                    count: activeTables.length,
+                    icon: TableProperties,
+                  },
+                  {
+                    id: "archived" as const,
+                    label: "Archived",
+                    count: archivedTables.length,
+                    icon: Archive,
+                  },
+                ].map((tab) => {
+                  const Icon = tab.icon
+                  const isActive = tableTab === tab.id
+                  return (
+                    <Button
+                      key={tab.id}
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleTableTabChange(tab.id)}
+                      className={cn(
+                        "relative inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all h-9",
+                        isActive
+                          ? "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-gold shadow-sm"
+                          : "text-brand-deep/60 dark:text-brand-cream/60 hover:bg-white/50 dark:hover:bg-white/5"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{tab.label}</span>
+                      <span
+                        className={cn(
+                          "inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-bold",
+                          isActive
+                            ? "bg-brand-deep/5 text-brand-deep dark:bg-white/10 dark:text-brand-gold"
+                            : "bg-brand-deep/10 text-brand-deep/70 dark:bg-white/10 dark:text-brand-cream/70"
+                        )}
+                      >
+                        {tab.count}
+                      </span>
+                    </Button>
+                  )
+                })}
+              </div>
+            </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto pr-1">
               {tablesLoading ? (
