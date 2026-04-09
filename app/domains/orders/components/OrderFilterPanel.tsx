@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Filter, Check, X, CalendarIcon } from "lucide-react"
+import { Filter, Check, X, CalendarIcon, ChevronsUpDown } from "lucide-react"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
 import { cn } from "@/app/lib/utils"
@@ -30,6 +30,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/app/components/ui/select"
+import { MultiSelect } from "@/app/components/ui/multi-select"
 import type { OrderFilterConfig, OrderFilterState } from "../types"
 
 interface OrderFilterPanelProps {
@@ -110,37 +111,86 @@ export function OrderFilterPanel({ config, value, onChange, onClear }: OrderFilt
     const PanelBody = (
         <div className="space-y-1">
             {/* Filter groups */}
-            {config.groups.map((group, groupIdx) => (
-                <div key={groupIdx}>
-                    <p className="px-2 py-3 text-[10px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40">
-                        {group.title}
-                    </p>
-                    <div className="space-y-0.5">
-                        {group.options.map((option) => {
-                            const isSelected = value.selectedFilters.includes(option.value)
-                            return (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={() => toggleOption(option.value)}
-                                    className={cn(
-                                        "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 text-left",
-                                        isSelected
-                                            ? "bg-brand-green/10 dark:bg-brand-gold/10 text-brand-deep dark:text-brand-gold"
-                                            : "text-brand-accent/70 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5"
+            {config.groups.map((group, groupIdx) => {
+                const isLast = groupIdx === config.groups.length - 1 && !config.showDateRange && !config.termOptions
+                const groupSelected = group.options.map(o => o.value).filter(v => value.selectedFilters.includes(v))
+
+                const handleGroupChange = (nextSelected: string[]) => {
+                    const otherFilters = value.selectedFilters.filter(v => !group.options.some(o => o.value === v))
+                    onChange({ ...value, selectedFilters: [...otherFilters, ...nextSelected] })
+                }
+
+                return (
+                    <div key={groupIdx}>
+                        <p className="px-2 py-3 text-[10px] font-bold uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40">
+                            {group.title}
+                        </p>
+
+                        {group.type === 'multiselect' ? (
+                            <div className="px-1 pb-1">
+                                <MultiSelect
+                                    options={group.options}
+                                    value={groupSelected}
+                                    onChange={handleGroupChange}
+                                    placeholder={`All ${group.title.toLowerCase()}`}
+                                    searchPlaceholder={`Search ${group.title.toLowerCase()}…`}
+                                    renderTrigger={(selected, opts) => (
+                                        <button
+                                            type="button"
+                                            className={cn(
+                                                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-150 text-left text-sm",
+                                                selected.length > 0
+                                                    ? "border-brand-green/30 dark:border-brand-gold/30 bg-brand-green/8 dark:bg-brand-gold/8 text-brand-deep dark:text-brand-gold"
+                                                    : "border-brand-deep/8 dark:border-white/10 bg-transparent text-brand-accent/60 dark:text-brand-cream/50 hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                                            )}
+                                        >
+                                            <span className="font-medium truncate">
+                                                {selected.length === 0
+                                                    ? `All ${group.title.toLowerCase()}`
+                                                    : selected.length === opts.length
+                                                        ? "All selected"
+                                                        : selected.map(v => opts.find(o => o.value === v)?.label).join(", ")}
+                                            </span>
+                                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                                {selected.length > 0 && (
+                                                    <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold">
+                                                        {selected.length}
+                                                    </span>
+                                                )}
+                                                <ChevronsUpDown className="w-3.5 h-3.5 opacity-40" />
+                                            </div>
+                                        </button>
                                     )}
-                                >
-                                    <span className="text-sm font-medium">{option.label}</span>
-                                    {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
-                                </button>
-                            )
-                        })}
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-0.5">
+                                {group.options.map((option) => {
+                                    const isSelected = value.selectedFilters.includes(option.value)
+                                    return (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => toggleOption(option.value)}
+                                            className={cn(
+                                                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 text-left",
+                                                isSelected
+                                                    ? "bg-brand-green/10 dark:bg-brand-gold/10 text-brand-deep dark:text-brand-gold"
+                                                    : "text-brand-accent/70 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                                            )}
+                                        >
+                                            <span className="text-sm font-medium">{option.label}</span>
+                                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        )}
+
+                        {!isLast && <div className="h-px bg-brand-deep/5 dark:bg-white/5 mx-2 mt-3" />}
                     </div>
-                    {groupIdx < config.groups.length - 1 || config.showDateRange || config.termOptions ? (
-                        <div className="h-px bg-brand-deep/5 dark:bg-white/5 mx-2 mt-3" />
-                    ) : null}
-                </div>
-            ))}
+                )
+            })}
 
             {/* Date range */}
             {config.showDateRange && (

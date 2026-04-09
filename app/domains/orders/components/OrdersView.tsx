@@ -195,6 +195,7 @@ export function OrdersView() {
             groups: [
                 {
                     title: oui.filterGroups.orderStatus,
+                    type: 'multiselect' as const,
                     options: [
                         { label: fo.orderStatus.completed, value: "S:COMPLETED" },
                         { label: fo.orderStatus.pending, value: "S:PENDING" },
@@ -204,6 +205,7 @@ export function OrdersView() {
                 },
                 {
                     title: oui.filterGroups.paymentStatus,
+                    type: 'multiselect' as const,
                     options: [
                         { label: fo.paymentStatus.paid, value: "P:PAID" },
                         { label: fo.paymentStatus.partial, value: "P:PARTIAL" },
