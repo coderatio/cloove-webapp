@@ -8,8 +8,8 @@ import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt, UtensilsCrossed, ChefHat, ShoppingCart } from 'lucide-react'
 import { Order, OrderStatus, PaymentStatus } from "../types"
-import { FilterPopover } from "@/app/components/shared/FilterPopover"
-import { DateRangePicker } from "@/app/components/shared/DateRangePicker"
+import { OrderFilterPanel } from "./OrderFilterPanel"
+import { ActiveFilterChips } from "./ActiveFilterChips"
 import { RecordPaymentDrawer } from "./RecordPaymentDrawer"
 import { OrderDetailsDrawer } from "./OrderDetailsDrawer"
 import { Button } from '@/app/components/ui/button'
@@ -38,13 +38,7 @@ import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { useBusiness } from '@/app/components/BusinessProvider'
 import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { useAcademicCalendar } from "@/app/domains/school/hooks/useAcademicCalendar"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/app/components/ui/select"
+import type { OrderFilterState, OrderFilterConfig } from "../types"
 import { OrderActionMenu } from './OrderActionMenu'
 import { toast } from 'sonner'
 import { useReceiptPrinter } from '@/app/hooks/useReceiptPrinter'
@@ -65,10 +59,17 @@ export function OrdersView() {
     const { currentStore, stores } = useStores()
     const [page, setPage] = React.useState(1)
     const [search, setSearch] = React.useState("")
-    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
-    const [startDate, setStartDate] = React.useState<string | undefined>()
-    const [endDate, setEndDate] = React.useState<string | undefined>()
-    const [academicTermFilter, setAcademicTermFilter] = React.useState<string>("")
+    const [filterState, setFilterState] = React.useState<OrderFilterState>({ selectedFilters: [] })
+
+    const setFilters = React.useCallback((next: OrderFilterState) => {
+        setFilterState(next)
+        setPage(1)
+    }, [])
+
+    const clearFilters = React.useCallback(() => {
+        setFilterState({ selectedFilters: [] })
+        setPage(1)
+    }, [])
     const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
     const [recordingPaymentOrder, setRecordingPaymentOrder] = React.useState<Order | null>(null)
     const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = React.useState(false)
@@ -115,14 +116,14 @@ export function OrdersView() {
         isGeneratingReceipt
     } = useOrders(page, limit, {
         search: debouncedSearch,
-        status: selectedFilters.filter(f => f.startsWith('S:')).map(f => f.slice(2)) as OrderStatus[],
-        paymentStatus: selectedFilters.filter(f => f.startsWith('P:')).map(f => f.slice(2)) as PaymentStatus[],
-        automation: selectedFilters.filter(f => f.startsWith('A:')).map(f => f.slice(2)),
-        serviceMode: selectedFilters.find(f => f.startsWith('M:'))?.slice(2),
-        startDate,
-        endDate,
+        status: filterState.selectedFilters.filter(f => f.startsWith('S:')).map(f => f.slice(2)) as OrderStatus[],
+        paymentStatus: filterState.selectedFilters.filter(f => f.startsWith('P:')).map(f => f.slice(2)) as PaymentStatus[],
+        automation: filterState.selectedFilters.filter(f => f.startsWith('A:')).map(f => f.slice(2)),
+        serviceModes: filterState.selectedFilters.filter(f => f.startsWith('M:')).map(f => f.slice(2)),
+        startDate: filterState.startDate,
+        endDate: filterState.endDate,
         storeId: currentStore?.id,
-        academicTermId: layoutPreset === "school" && academicTermFilter ? academicTermFilter : undefined,
+        academicTermId: layoutPreset === "school" && filterState.academicTermId ? filterState.academicTermId : undefined,
     })
 
     const { printReceipt } = useReceiptPrinter()
@@ -189,47 +190,53 @@ export function OrdersView() {
     const totalPages = meta?.lastPage || (meta as any)?.last_page || 1
 
     const fo = oui.filterOptions
-    const filterGroups = React.useMemo(
-        () => [
-            {
-                title: oui.filterGroups.orderStatus,
-                options: [
-                    { label: fo.orderStatus.completed, value: "S:COMPLETED" },
-                    { label: fo.orderStatus.pending, value: "S:PENDING" },
-                    { label: fo.orderStatus.cancelled, value: "S:CANCELLED" },
-                    { label: fo.orderStatus.refunded, value: "S:REFUNDED" },
-                ],
-            },
-            {
-                title: oui.filterGroups.paymentStatus,
-                options: [
-                    { label: fo.paymentStatus.paid, value: "P:PAID" },
-                    { label: fo.paymentStatus.partial, value: "P:PARTIAL" },
-                    { label: fo.paymentStatus.pending, value: "P:PENDING" },
-                ],
-            },
-            {
-                title: oui.filterGroups.type,
-                options: [
-                    { label: fo.type.automated, value: "A:AUTOMATED" },
-                    { label: fo.type.manual, value: "A:MANUAL" },
-                ],
-            },
-            ...(layoutPreset === "restaurant" ? [
+    const filterConfig = React.useMemo<OrderFilterConfig>(
+        () => ({
+            groups: [
                 {
-                    title: "Service Mode",
+                    title: oui.filterGroups.orderStatus,
                     options: [
-                        { label: "Dine-In", value: "M:DINE_IN" },
-                        { label: "Takeaway", value: "M:TAKEAWAY" },
+                        { label: fo.orderStatus.completed, value: "S:COMPLETED" },
+                        { label: fo.orderStatus.pending, value: "S:PENDING" },
+                        { label: fo.orderStatus.cancelled, value: "S:CANCELLED" },
+                        { label: fo.orderStatus.refunded, value: "S:REFUNDED" },
                     ],
                 },
-            ] : []),
-        ],
-        [oui.filterGroups, fo, layoutPreset]
+                {
+                    title: oui.filterGroups.paymentStatus,
+                    options: [
+                        { label: fo.paymentStatus.paid, value: "P:PAID" },
+                        { label: fo.paymentStatus.partial, value: "P:PARTIAL" },
+                        { label: fo.paymentStatus.pending, value: "P:PENDING" },
+                    ],
+                },
+                {
+                    title: oui.filterGroups.type,
+                    options: [
+                        { label: fo.type.automated, value: "A:AUTOMATED" },
+                        { label: fo.type.manual, value: "A:MANUAL" },
+                    ],
+                },
+                ...(layoutPreset === "restaurant" ? [
+                    {
+                        title: "Service Mode",
+                        options: [
+                            { label: "Dine-In", value: "M:DINE_IN" },
+                            { label: "Takeaway", value: "M:TAKEAWAY" },
+                        ],
+                    },
+                ] : []),
+            ],
+            showDateRange: true,
+            dateRangePlaceholder: oui.dateFilterPlaceholder,
+            termOptions: layoutPreset === "school"
+                ? (academicCal?.sessions ?? []).flatMap(s =>
+                    (s.terms ?? []).map(t => ({ id: t.id, label: `${s.name} · ${t.name}` }))
+                  )
+                : undefined,
+        }),
+        [oui.filterGroups, fo, layoutPreset, academicCal]
     )
-
-    // Simplified filter logic handled by FilterPopover internally
-    // handleFilterChange removed in favor of direct setSelectedFilters usage
 
     const columns: any[] = React.useMemo(() => {
         const termColumn =
@@ -534,71 +541,31 @@ export function OrdersView() {
                 </div>
 
                 {/* Filters */}
-                <div className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1 shrink-0">
                             {isLoading ? oui.sectionTitleLoading : oui.sectionTitle}
                         </p>
-
-                        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
+                        <div className="flex items-center gap-2 flex-1 justify-end">
                             <TableSearch
                                 value={search}
                                 onChange={(val) => { setSearch(val); setPage(1); }}
                                 placeholder={oui.searchPlaceholder}
                             />
-                            <div className="flex items-center gap-3 w-full md:w-auto">
-                                <FilterPopover
-                                    groups={filterGroups}
-                                    className="flex-1 md:flex-initial"
-                                    selectedValues={selectedFilters}
-                                    onSelectionChange={(values) => {
-                                        setSelectedFilters(values)
-                                        setPage(1)
-                                    }}
-                                    onClear={() => {
-                                        setSelectedFilters([])
-                                        setPage(1)
-                                    }}
-                                />
-                                <DateRangePicker
-                                    className="flex-1 md:flex-initial"
-                                    value={{
-                                        from: startDate ? new Date(startDate) : undefined,
-                                        to: endDate ? new Date(endDate) : undefined
-                                    }}
-                                    onChange={(range) => {
-                                        setStartDate(range?.from);
-                                        setEndDate(range?.to);
-                                        setPage(1);
-                                    }}
-                                    placeholder={oui.dateFilterPlaceholder}
-                                />
-                                {layoutPreset === "school" && (academicCal?.sessions?.length ?? 0) > 0 ? (
-                                    <Select
-                                        value={academicTermFilter || "__all__"}
-                                        onValueChange={(v) => {
-                                            setAcademicTermFilter(v === "__all__" ? "" : v)
-                                            setPage(1)
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-full md:w-[220px]">
-                                            <SelectValue placeholder="Term" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="__all__">All terms</SelectItem>
-                                            {(academicCal?.sessions ?? []).flatMap((s) =>
-                                                (s.terms ?? []).map((t) => (
-                                                    <SelectItem key={t.id} value={t.id}>
-                                                        {s.name} · {t.name}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                ) : null}
-                            </div>
+                            <OrderFilterPanel
+                                config={filterConfig}
+                                value={filterState}
+                                onChange={setFilters}
+                                onClear={clearFilters}
+                            />
                         </div>
                     </div>
+                    <ActiveFilterChips
+                        value={filterState}
+                        config={filterConfig}
+                        onChange={setFilters}
+                        onClearAll={clearFilters}
+                    />
                 </div>
 
                 {isLoading ? (
@@ -606,10 +573,9 @@ export function OrdersView() {
                 ) : orders.length === 0 ? (
                     (() => {
                         const isFiltered = search !== "" ||
-                            selectedFilters.length > 0 ||
-                            startDate !== undefined ||
-                            endDate !== undefined ||
-                            (layoutPreset === "school" && !!academicTermFilter);
+                            filterState.selectedFilters.length > 0 ||
+                            !!filterState.startDate ||
+                            !!filterState.academicTermId;
 
                         return (
                             <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-3xl flex flex-col items-center justify-center py-24 px-8 text-center text-brand-deep dark:text-brand-cream">
@@ -632,11 +598,7 @@ export function OrdersView() {
                                         className="rounded-full px-8 h-12"
                                         onClick={() => {
                                             setSearch("")
-                                            setSelectedFilters([])
-                                            setStartDate(undefined)
-                                            setEndDate(undefined)
-                                            setAcademicTermFilter("")
-                                            setPage(1)
+                                            clearFilters()
                                         }}
                                     >
                                         {oui.clearFilters}

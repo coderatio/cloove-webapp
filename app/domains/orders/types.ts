@@ -89,5 +89,24 @@ export interface OrderFilterParams {
     storeIds?: string[]
     customerId?: string
     academicTermId?: string
-    serviceMode?: string
+    serviceModes?: string[]
+}
+
+export interface OrderFilterState {
+    selectedFilters: string[]
+    startDate?: string
+    endDate?: string
+    academicTermId?: string
+}
+
+export interface OrderFilterTermOption {
+    id: string
+    label: string
+}
+
+export interface OrderFilterConfig {
+    groups: import('@/app/components/shared/FilterPopover').FilterGroup[]
+    showDateRange: boolean
+    dateRangePlaceholder?: string
+    termOptions?: OrderFilterTermOption[]
 }
