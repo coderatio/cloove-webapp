@@ -258,7 +258,8 @@ const ProductGrid = React.memo(({
                                 <button
                                     onClick={() => addToCart(product)}
                                     className={cn(
-                                        "w-full cursor-pointer text-left group flex flex-col h-[130px] lg:h-[140px] relative overflow-hidden rounded-2xl transition-all duration-200 active:scale-[0.98] border shadow-xs hover:shadow-sm isolate outline-none focus-visible:ring-2 focus-visible:ring-brand-deep/20 dark:focus-visible:ring-white/20",
+                                        "w-full cursor-pointer text-left group flex flex-col relative overflow-hidden rounded-2xl transition-all duration-200 active:scale-[0.98] border shadow-xs hover:shadow-sm isolate outline-none focus-visible:ring-2 focus-visible:ring-brand-deep/20 dark:focus-visible:ring-white/20",
+                                        product.image ? "h-[168px] lg:h-[178px]" : "h-[136px] lg:h-[146px]",
                                         product.image
                                             ? "bg-brand-deep/5 dark:bg-white/5 border-transparent"
                                             : "bg-white dark:bg-white/5 border-brand-accent/10 dark:border-white/10 hover:border-brand-accent/20 dark:hover:border-white/20"
@@ -275,7 +276,7 @@ const ProductGrid = React.memo(({
                                         </div>
                                     )}
 
-                                    <div className={cn("relative z-10 flex flex-col h-full p-3.5", product.image ? "mt-16 bg-white dark:bg-brand-deep-900" : "")}>
+                                    <div className={cn("relative z-10 flex flex-col h-full min-h-0 p-3.5", product.image ? "mt-16 bg-white dark:bg-brand-deep-900" : "")}>
                                         <div className="flex justify-between items-start gap-2 mb-auto">
                                             <h3 className={cn(
                                                 "font-medium text-[15px] leading-snug line-clamp-2",
@@ -289,12 +290,12 @@ const ProductGrid = React.memo(({
                                             )} />
                                         </div>
 
-                                        <div className="flex items-end justify-between mt-2 pt-2 border-t border-brand-accent/5 dark:border-white/5">
+                                        <div className="shrink-0 flex items-end justify-between mt-2 pt-2 border-t border-brand-accent/5 dark:border-white/5">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] font-medium text-brand-accent/50 dark:text-brand-cream/40 uppercase tracking-widest mb-0.5">
+                                                <span className="whitespace-nowrap text-[10px] font-medium text-brand-accent/50 dark:text-brand-cream/40 uppercase tracking-widest mb-0.5">
                                                     {product.stock} left
                                                 </span>
-                                                <span className="font-semibold text-brand-deep dark:text-brand-cream text-lg tracking-tight">
+                                                <span className="whitespace-nowrap font-semibold text-brand-deep dark:text-brand-cream text-lg tracking-tight leading-none">
                                                     <CurrencyText value={formatCurrency(product.price, { currency: activeBusiness?.currency || 'NGN' })} />
                                                 </span>
                                             </div>

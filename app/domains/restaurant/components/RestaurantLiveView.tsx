@@ -67,6 +67,7 @@ import {
   Minimize2,
 } from "lucide-react"
 import { ZenModeContext } from "@/app/components/layout/AppLayout"
+import { formatCurrency } from "@/app/lib/formatters"
 
 const KITCHEN_FLOW: KitchenTicket["status"][] = ["queued", "preparing", "ready", "served"]
 
@@ -624,6 +625,8 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const [barEditLabel, setBarEditLabel] = React.useState("")
   const [barEditPaymentMethod, setBarEditPaymentMethod] = React.useState("CASH")
   const [barItems, setBarItems] = React.useState<PickedItem[]>([])
+  const [isBarBreakdownVisible, setIsBarBreakdownVisible] = React.useState(false)
+  const barBreakdownAnchorId = "bar-order-breakdown-anchor"
   const [barTableLabel, setBarTableLabel] = React.useState("__none__")
   const [barPaymentMethod, setBarPaymentMethod] = React.useState("CASH")
   const [barInitialStatus, setBarInitialStatus] = React.useState<BarTicket["status"]>("ordered")
@@ -1574,8 +1577,31 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   selected={barItems}
                   onChange={setBarItems}
                   categoryHint="drinks"
+                  onBreakdownVisibilityChange={setIsBarBreakdownVisible}
+                  breakdownAnchorId={barBreakdownAnchorId}
                 />
               </DrawerBody>
+              {barItems.length > 0 && !isBarBreakdownVisible && (
+                <div className="px-4 pb-2 flex justify-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      const anchor = document.getElementById(barBreakdownAnchorId)
+                      anchor?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+                    }}
+                    className="h-8 rounded-full border border-brand-gold/30 bg-brand-gold/10 dark:bg-brand-gold/15 text-brand-deep dark:text-brand-gold px-3 flex items-center gap-3 text-[10px] font-black uppercase tracking-wider hover:bg-brand-gold/15 dark:hover:bg-brand-gold/20 transition-colors"
+                  >
+                    <span>
+                      {barItems.reduce((s, i) => s + i.quantity, 0)} item
+                      {barItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""} selected
+                    </span>
+                    <span className="text-brand-deep/80 dark:text-brand-gold/90">
+                      {formatCurrency(barItems.reduce((s, i) => s + i.price * i.quantity, 0))}
+                    </span>
+                  </Button>
+                </div>
+              )}
               <div className="p-4 border-t border-brand-deep/5 dark:border-white/5 flex gap-2">
                 <Button
                   variant="ghost"
@@ -1683,7 +1709,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                 </p>
               </div>
             ) : (
-              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 lg:grid lg:grid-cols-4 lg:overflow-visible">
                 {BAR_FLOW.map((column) => {
                   const cfg = BAR_STATUS_CONFIG[column]
                   const columnTickets = barTickets.filter((t) => t.status === column)
@@ -1693,7 +1719,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                     <div
                       key={column}
                       className={cn(
-                        "rounded-3xl border p-3 space-y-2 shrink-0 w-[72vw] sm:w-[280px] min-h-[400px]",
+                        "rounded-3xl border p-3 space-y-2 shrink-0 w-[72vw] sm:w-[280px] min-h-[400px] lg:w-auto lg:min-w-0",
                         cfg.bg,
                         cfg.border
                       )}

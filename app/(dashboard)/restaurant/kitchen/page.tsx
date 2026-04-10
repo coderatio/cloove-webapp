@@ -11,7 +11,7 @@ export default function RestaurantKitchenPage() {
   return (
     <PresetGate preset="restaurant" featureLabel="Kitchen Board">
       <div className="space-y-4 px-0 lg:px-8 md:px-0">
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-[10px] uppercase tracking-[0.25em] font-black text-brand-accent/40 dark:text-brand-cream/40 mb-1.5">
               Restaurant
@@ -23,7 +23,9 @@ export default function RestaurantKitchenPage() {
               Full-screen ticket board for your kitchen team. Move orders from queue through to served.
             </p>
           </div>
-          <RestaurantNavTabs />
+          <div className="lg:shrink-0">
+            <RestaurantNavTabs />
+          </div>
         </div>
         <RestaurantLiveView mode="kitchen" />
       </div>

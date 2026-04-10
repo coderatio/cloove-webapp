@@ -43,12 +43,21 @@ export function OrderActionMenu({
     const [activeAction, setActiveAction] = useState<string | null>(null)
     const recordLabel = layoutPresetId === "school" ? "Fee Record" : "Order"
 
-    const kitchenNext = {
+    const kitchenNextMap: Record<
+        'queued' | 'preparing' | 'ready' | 'served',
+        { status: 'preparing' | 'ready' | 'served'; label: string; icon: React.ComponentType<{ className?: string }> } | null
+    > = {
         queued:    { status: 'preparing' as const, label: 'Start Preparing', icon: ChefHat },
         preparing: { status: 'ready'     as const, label: 'Mark as Ready',   icon: Zap },
         ready:     { status: 'served'    as const, label: 'Mark as Served',  icon: UtensilsCrossed },
         served:    null,
-    }[order.kitchenTicketStatus ?? ''] ?? null
+    }
+
+    const kitchenStatus = order.kitchenTicketStatus
+    const kitchenNext =
+        kitchenStatus && kitchenStatus in kitchenNextMap
+            ? kitchenNextMap[kitchenStatus as keyof typeof kitchenNextMap]
+            : null
 
     const computedRemaining = Math.max(
         0,

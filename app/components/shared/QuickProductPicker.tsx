@@ -6,6 +6,7 @@ import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { useInventory } from "@/app/domains/orders/hooks/useInventory"
+import type { Product } from "@/app/domains/orders/hooks/useInventory"
 import { formatCurrency } from "@/app/lib/formatters"
 import { useBusiness } from "@/app/components/BusinessProvider"
 
@@ -21,9 +22,19 @@ interface QuickProductPickerProps {
     onChange: (items: PickedItem[]) => void
     /** Pre-filter to this category slug/name if it exists */
     categoryHint?: string
+    /** Notifies parent when the total breakdown row is visible */
+    onBreakdownVisibilityChange?: (isVisible: boolean) => void
+    /** Optional id target to allow external jump-to-breakdown interactions */
+    breakdownAnchorId?: string
 }
 
-export function QuickProductPicker({ selected, onChange, categoryHint }: QuickProductPickerProps) {
+export function QuickProductPicker({
+    selected,
+    onChange,
+    categoryHint,
+    onBreakdownVisibilityChange,
+    breakdownAnchorId = "quick-product-breakdown",
+}: QuickProductPickerProps) {
     const { activeBusiness } = useBusiness()
     const currency = activeBusiness?.currency ?? "NGN"
     const [search, setSearch] = React.useState("")
@@ -33,7 +44,7 @@ export function QuickProductPicker({ selected, onChange, categoryHint }: QuickPr
 
     // Derive unique categories from products
     const categories = React.useMemo(() => {
-        const cats = Array.from(new Set(products.map((p) => p.category).filter(Boolean)))
+        const cats: string[] = Array.from(new Set(products.map((p: Product) => p.category)))
         return ["All", ...cats]
     }, [products])
 
@@ -47,11 +58,11 @@ export function QuickProductPicker({ selected, onChange, categoryHint }: QuickPr
     }, [categories, categoryHint, isLoadingProducts])
 
     const filtered = React.useMemo(() => {
-        let list = products
-        if (activeCategory !== "All") list = list.filter((p) => p.category === activeCategory)
+        let list: Product[] = products
+        if (activeCategory !== "All") list = list.filter((p: Product) => p.category === activeCategory)
         if (search.trim()) {
             const q = search.toLowerCase()
-            list = list.filter((p) => p.product.toLowerCase().includes(q))
+            list = list.filter((p: Product) => p.product.toLowerCase().includes(q))
         }
         return list
     }, [products, activeCategory, search])
@@ -62,6 +73,25 @@ export function QuickProductPicker({ selected, onChange, categoryHint }: QuickPr
     )
 
     const total = selected.reduce((sum, i) => sum + i.price * i.quantity, 0)
+    const breakdownRef = React.useRef<HTMLDivElement | null>(null)
+
+    React.useEffect(() => {
+        if (!onBreakdownVisibilityChange) return
+        if (!breakdownRef.current || selected.length === 0) {
+            onBreakdownVisibilityChange(false)
+            return
+        }
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                onBreakdownVisibilityChange(entry.isIntersecting)
+            },
+            { threshold: 0.35 }
+        )
+
+        observer.observe(breakdownRef.current)
+        return () => observer.disconnect()
+    }, [selected.length, onBreakdownVisibilityChange])
 
     const increment = (productId: string, productName: string, price: number) => {
         const existing = selectedMap.get(productId)
@@ -117,9 +147,9 @@ export function QuickProductPicker({ selected, onChange, categoryHint }: QuickPr
 
             {/* Product grid */}
             {isLoadingProducts ? (
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="h-24 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse" />
+                        <div key={i} className="h-40 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse" />
                     ))}
                 </div>
             ) : filtered.length === 0 ? (
@@ -128,48 +158,70 @@ export function QuickProductPicker({ selected, onChange, categoryHint }: QuickPr
                     <p className="text-sm text-brand-accent/40 dark:text-brand-cream/40">No products found</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-0.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 max-h-[340px] overflow-y-auto pr-0.5 pb-4">
                     {filtered.map((product) => {
                         const qty = selectedMap.get(product.id)?.quantity ?? 0
                         const outOfStock = product.status === "Out of Stock"
                         return (
-                            <Button
+                            <button
                                 key={product.id}
                                 type="button"
-                                variant="ghost"
                                 disabled={outOfStock}
                                 onClick={() => !outOfStock && increment(product.id, product.product, product.price)}
                                 className={cn(
-                                    "relative h-auto flex flex-col items-center justify-between rounded-2xl border p-2.5 text-center active:scale-95",
-                                    qty > 0
-                                        ? "border-brand-gold/40 bg-brand-gold/8 dark:bg-brand-gold/10"
-                                        : "border-brand-accent/8 dark:border-white/8 bg-white dark:bg-white/5 hover:border-brand-accent/20 dark:hover:border-white/20",
-                                    outOfStock && "opacity-40 cursor-not-allowed"
+                                    "relative w-full cursor-pointer text-left group flex flex-col h-[172px] rounded-2xl border overflow-hidden transition-all duration-200 active:scale-[0.98] outline-none",
+                                    product.image
+                                        ? "bg-brand-deep/5 dark:bg-white/5 border-transparent"
+                                        : "bg-white dark:bg-white/5 border-brand-accent/10 dark:border-white/10 hover:border-brand-accent/20 dark:hover:border-white/20",
+                                    qty > 0 && "border-amber-400/90 dark:border-brand-gold ring-2 ring-amber-300/70 dark:ring-brand-gold/60 shadow-[0_0_0_1px_rgba(251,191,36,0.35)] bg-amber-50/70 dark:bg-brand-gold/10",
+                                    outOfStock && "opacity-45 cursor-not-allowed"
                                 )}
                             >
                                 {qty > 0 && (
-                                    <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-brand-gold text-brand-deep text-[10px] font-black flex items-center justify-center shadow">
+                                    <span className="absolute top-1.5 right-1.5 z-20 h-6 min-w-6 px-1.5 rounded-full bg-amber-400 dark:bg-brand-gold text-brand-deep text-[10px] font-black flex items-center justify-center shadow-md ring-2 ring-white/90 dark:ring-brand-deep/70">
                                         {qty}
                                     </span>
                                 )}
+
                                 {product.image ? (
-                                    <img
-                                        src={product.image}
-                                        alt={product.product}
-                                        className="h-10 w-10 rounded-xl object-cover mb-1.5"
-                                    />
-                                ) : (
-                                    <div className="h-10 w-10 rounded-xl bg-brand-accent/8 dark:bg-white/8 flex items-center justify-center mb-1.5">
-                                        <Package className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/30" />
+                                    <div className="absolute inset-x-0 top-0 h-20 bg-brand-deep/5 overflow-hidden z-0 border-b border-brand-accent/5 dark:border-white/5">
+                                        <img
+                                            src={product.image}
+                                            alt={product.product}
+                                            loading="lazy"
+                                            className="h-full w-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
+                                        />
                                     </div>
-                                )}
-                                <p className="text-[11px] font-semibold text-brand-deep dark:text-brand-cream leading-tight line-clamp-2 mb-1">
-                                    {product.product}
-                                </p>
-                                <p className="text-[10px] font-bold text-brand-accent/50 dark:text-brand-cream/40">
-                                    {formatCurrency(product.price, { currency })}
-                                </p>
-                            </Button>
+                                ) : null}
+
+                                <div className={cn("relative z-10 flex flex-col h-full min-h-0 p-2.5", product.image ? "mt-20 bg-white dark:bg-brand-deep-900" : "")}>
+                                    <div className="flex justify-between items-start gap-2 mb-auto">
+                                        <p
+                                            className="font-semibold text-[12px] leading-snug line-clamp-2 text-brand-deep dark:text-brand-cream"
+                                            title={product.product}
+                                        >
+                                            {product.product}
+                                        </p>
+                                        <span
+                                            className={cn(
+                                                "shrink-0 w-1.5 h-1.5 rounded-full mt-1.5",
+                                                outOfStock ? "bg-rose-500" : "bg-emerald-500"
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className="shrink-0 flex items-end justify-between mt-2 pt-2 border-t border-brand-accent/5 dark:border-white/5">
+                                        <div className="flex flex-col">
+                                            <span className="whitespace-nowrap text-[9px] font-bold text-brand-accent/50 dark:text-brand-cream/40 uppercase tracking-widest">
+                                                {product.stock} left
+                                            </span>
+                                            <span className="whitespace-nowrap font-semibold text-brand-deep dark:text-brand-cream text-[13px] leading-none">
+                                                {formatCurrency(product.price, { currency })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
                         )
                     })}
                 </div>
@@ -218,7 +270,11 @@ export function QuickProductPicker({ selected, onChange, categoryHint }: QuickPr
                             </div>
                         ))}
                     </div>
-                    <div className="flex items-center justify-between px-3 py-2.5 bg-brand-accent/5 dark:bg-white/5 border-t border-brand-accent/8 dark:border-white/8">
+                    <div
+                        ref={breakdownRef}
+                        id={breakdownAnchorId}
+                        className="flex items-center justify-between px-3 py-2.5 bg-brand-accent/5 dark:bg-white/5 border-t border-brand-accent/8 dark:border-white/8"
+                    >
                         <span className="text-xs font-bold uppercase tracking-wider text-brand-accent/60 dark:text-brand-cream/50">Total</span>
                         <span className="text-base font-black text-brand-deep dark:text-brand-cream">
                             {formatCurrency(total, { currency })}

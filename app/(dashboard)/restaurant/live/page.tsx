@@ -12,9 +12,11 @@ export default function RestaurantLivePage() {
   return (
     <PresetGate preset="restaurant" featureLabel="Live Board">
       <div className="space-y-4 px-0 lg:px-8 md:px-0">
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <RestaurantLiveHeader />
-          <RestaurantNavTabs />
+          <div className="lg:shrink-0">
+            <RestaurantNavTabs />
+          </div>
         </div>
         <RestaurantLiveView />
       </div>
