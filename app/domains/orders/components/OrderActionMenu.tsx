@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { MoreVertical, Eye, Check, RefreshCw, Printer, Download, XCircle, Loader2, Link2 } from 'lucide-react'
+import { MoreVertical, Eye, Check, RefreshCw, Printer, Download, XCircle, Loader2, Link2, ChefHat, Zap, UtensilsCrossed } from 'lucide-react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -24,6 +24,7 @@ interface OrderActionMenuProps {
     onPrintReceipt: (order: Order) => void
     onRecordPayment: (order: Order) => void
     onGeneratePaymentLink?: (order: Order) => void
+    onAdvanceKitchen?: (ticketId: string, status: 'queued' | 'preparing' | 'ready' | 'served') => Promise<any>
 }
 
 export function OrderActionMenu({
@@ -34,12 +35,29 @@ export function OrderActionMenu({
     onGenerateReceipt,
     onPrintReceipt,
     onRecordPayment,
-    onGeneratePaymentLink
+    onGeneratePaymentLink,
+    onAdvanceKitchen,
 }: OrderActionMenuProps) {
     const layoutPresetId = useLayoutPresetId()
     const [isProcessing, setIsProcessing] = useState(false)
     const [activeAction, setActiveAction] = useState<string | null>(null)
     const recordLabel = layoutPresetId === "school" ? "Fee Record" : "Order"
+
+    const kitchenNextMap: Record<
+        'queued' | 'preparing' | 'ready' | 'served',
+        { status: 'preparing' | 'ready' | 'served'; label: string; icon: React.ComponentType<{ className?: string }> } | null
+    > = {
+        queued:    { status: 'preparing' as const, label: 'Start Preparing', icon: ChefHat },
+        preparing: { status: 'ready'     as const, label: 'Mark as Ready',   icon: Zap },
+        ready:     { status: 'served'    as const, label: 'Mark as Served',  icon: UtensilsCrossed },
+        served:    null,
+    }
+
+    const kitchenStatus = order.kitchenTicketStatus
+    const kitchenNext =
+        kitchenStatus && kitchenStatus in kitchenNextMap
+            ? kitchenNextMap[kitchenStatus as keyof typeof kitchenNextMap]
+            : null
 
     const computedRemaining = Math.max(
         0,
@@ -164,6 +182,28 @@ export function OrderActionMenu({
                     <Download className={cn("w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40", activeAction === 'receipt' && "animate-pulse")} />
                     <span className="font-medium text-sm">Download Receipt</span>
                 </DropdownMenuItem>
+
+                {layoutPresetId === "restaurant" && onAdvanceKitchen && order.kitchenTicketId && kitchenNext && (
+                    <>
+                        <DropdownMenuSeparator className="bg-brand-deep/5 dark:bg-white/5 my-1" />
+                        <DropdownMenuItem
+                            onSelect={(e) => {
+                                e.preventDefault()
+                                handleAction('kitchen', kitchenNext.label, () =>
+                                    onAdvanceKitchen(order.kitchenTicketId!, kitchenNext.status)
+                                )
+                            }}
+                            className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer"
+                            disabled={isProcessing}
+                        >
+                            {activeAction === 'kitchen'
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : <kitchenNext.icon className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
+                            }
+                            <span className="font-medium text-sm">{kitchenNext.label}</span>
+                        </DropdownMenuItem>
+                    </>
+                )}
 
                 {(order.status === 'PENDING' || (order.status === 'COMPLETED' && !order.isAutomated)) && (
                     <>

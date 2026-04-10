@@ -3,7 +3,7 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
-import { Check, ChevronsUpDown, LayoutGrid, Plus } from "lucide-react"
+import { Check, ChevronsUpDown, Copy, LayoutGrid, Plus } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -34,6 +34,14 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
     const { data: subData } = useCurrentSubscription()
     const { data: usage, isLoading: isLoadingUsage } = useUsageStats()
     const [open, setOpen] = React.useState(false)
+    const [copiedSlug, setCopiedSlug] = React.useState<string | null>(null)
+
+    const copySlug = (e: React.MouseEvent, slug: string) => {
+        e.stopPropagation()
+        navigator.clipboard.writeText(slug)
+        setCopiedSlug(slug)
+        setTimeout(() => setCopiedSlug(null), 1500)
+    }
     const [triggerRect, setTriggerRect] = React.useState<DOMRect | null>(null)
     const triggerRef = React.useRef<HTMLButtonElement>(null)
     const isDesktop = useMediaQuery("(min-width: 768px)")
@@ -93,7 +101,16 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                             <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0 bg-brand-gold/10">
                                 <LayoutGrid className="h-3.5 w-3.5" />
                             </div>
-                            <span className="flex-1 text-left truncate">{business.name}</span>
+                            <div className="flex-1 text-left overflow-hidden">
+                                <span className="block truncate">{business.name}</span>
+                                <span
+                                    onClick={(e) => copySlug(e, business.code)}
+                                    className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-white/40 hover:text-white/70 cursor-copy transition-colors"
+                                >
+                                    {copiedSlug === business.code ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
+                                    {business.code}
+                                </span>
+                            </div>
                             {activeBusiness?.id === business.id && <Check className="ml-auto h-4 w-4 text-brand-gold" />}
                         </button>
                             )
@@ -198,7 +215,13 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                 </div>
                                 <div className="flex-1 text-left">
                                     <h3 className="font-bold text-brand-deep dark:text-brand-cream">{business.name}</h3>
-                                    <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50 uppercase tracking-wider">{business.currency}</p>
+                                    <p
+                                        onClick={(e) => copySlug(e, business.code)}
+                                        className="inline-flex items-center gap-1 text-xs text-brand-deep/50 dark:text-brand-cream/50 uppercase tracking-wider hover:text-brand-deep/80 dark:hover:text-brand-cream/80 cursor-copy transition-colors"
+                                    >
+                                        {copiedSlug === business.code ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                        {business.code}
+                                    </p>
                                 </div>
                                 {activeBusiness?.id === business.id && (
                                     <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">

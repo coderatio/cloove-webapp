@@ -41,11 +41,16 @@ const restaurantPreset: LayoutPreset = {
     groupOrder: ["main", "sales_finance", "operations", "staff_management"],
     labelOverrides: {
         orders: "Sales & service",
+        orders_sale: "Record sale",
         inventory: "Menu & stock",
         customers: "Guests",
+        restaurant_live: "Service Console",
+        restaurant_tables: "Tables",
+        restaurant_kitchen: "Kitchen Board",
+        restaurant_bar: "Bar Board",
     },
     mobilePrimaryIds: ["overview", "orders"],
-    mobileSecondaryIds: ["inventory"],
+    mobileSecondaryIds: ["restaurant_live"],
 }
 
 const retailPreset: LayoutPreset = {
@@ -91,7 +96,7 @@ const schoolPreset: LayoutPreset = {
         staff: "Faculty & staff",
     },
     mobilePrimaryIds: ["overview", "customers"],
-    mobileSecondaryIds: ["orders", "school_calendar"],
+    mobileSecondaryIds: ["orders"],
 }
 
 export const LAYOUT_PRESETS: Record<LayoutPresetId, LayoutPreset> = {

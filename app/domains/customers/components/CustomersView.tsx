@@ -8,14 +8,22 @@ import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { AlertCircle, Users, Trash2, Loader2, ChevronLeft, ChevronRight, UserPenIcon } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import { apiClient } from "@/app/lib/api-client"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
 import { useBusiness } from "@/app/components/BusinessProvider"
-import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Button } from "@/app/components/ui/button"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { TableSearch } from "@/app/components/shared/TableSearch"
 import {
@@ -30,6 +38,9 @@ import { Switch } from "@/app/components/ui/switch"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { Skeleton } from "@/app/components/ui/skeleton"
 import { useCustomers, useCustomerStats, type Customer } from "../hooks/useCustomers"
+import { useDepartments, type DepartmentMember } from "@/app/domains/staff/hooks/useDepartments"
+import { useFeeTemplates } from "@/app/domains/school/hooks/useFeeTemplates"
+import { useRecordSale } from "@/app/domains/orders/hooks/useRecordSale"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -52,6 +63,7 @@ import {
 } from "lucide-react"
 import { CustomerProfileDrawer } from "./CustomerProfileDrawer"
 import { RecordPaymentDrawer } from "@/app/domains/orders/components/RecordPaymentDrawer"
+import { toast } from "sonner"
 
 const PAGE_SIZE = 20
 
@@ -59,7 +71,10 @@ export function CustomersView() {
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
     const pageCopy = usePresetPageCopy()
+    const layoutPresetId = useLayoutPresetId()
+    const isSchoolPreset = layoutPresetId === "school"
     const cui = pageCopy.customersUi
+    const showDepartmentField = cui.drawer.showDepartmentField
     const { currentStore, stores } = useStores()
     const currencyCode = activeBusiness?.currency ?? "NGN"
     const [search, setSearch] = React.useState("")
@@ -72,6 +87,9 @@ export function CustomersView() {
     const [itemToDelete, setItemToDelete] = React.useState<Customer | null>(null)
     const [viewingCustomerId, setViewingCustomerId] = React.useState<string | null>(null)
     const [recordingPaymentFor, setRecordingPaymentFor] = React.useState<Customer | null>(null)
+    const [selectedDepartmentId, setSelectedDepartmentId] = React.useState<string | null>(null)
+    const [selectedFeeTemplateId, setSelectedFeeTemplateId] = React.useState<string | null>(null)
+    const [isDepartmentLookupLoading, setIsDepartmentLookupLoading] = React.useState(false)
 
     const storeIds = React.useMemo(() => stores.map((s) => s.id), [stores])
     const selectedStoreIds = React.useMemo(
@@ -102,8 +120,12 @@ export function CustomersView() {
         currentPage,
         PAGE_SIZE,
         deferredSearch,
-        selectedStoreIds.length > 0 ? selectedStoreIds : undefined
+        selectedStoreIds.length > 0 ? selectedStoreIds : undefined,
+        cui.toasts
     )
+    const { departments, addMembers, removeMembers } = useDepartments()
+    const { templates } = useFeeTemplates()
+    const { recordSale } = useRecordSale()
 
     const { data: statsData, isLoading: isStatsLoading } = useCustomerStats()
     const stats = statsData?.data
@@ -154,16 +176,147 @@ export function CustomersView() {
 
     const resetForm = () => {
         setFormData({ name: "", phoneNumber: "", email: "", isBlacklisted: false })
+        setSelectedDepartmentId(null)
+        setSelectedFeeTemplateId(null)
+    }
+
+    React.useEffect(() => {
+        let cancelled = false
+
+        const resolveCustomerDepartment = async () => {
+            if (!showDepartmentField) {
+                setSelectedDepartmentId(null)
+                setIsDepartmentLookupLoading(false)
+                return
+            }
+            if (!editingItem) {
+                setIsDepartmentLookupLoading(false)
+                return
+            }
+            if (departments.length === 0) {
+                setSelectedDepartmentId(null)
+                return
+            }
+
+            setIsDepartmentLookupLoading(true)
+            try {
+                const memberships = await Promise.all(
+                    departments.map(async (department) => {
+                        const members = await apiClient.get<DepartmentMember[]>(`/departments/${department.id}/members`)
+                        const isMember = members.some(
+                            (member) =>
+                                member.memberableType === "Customer" &&
+                                member.memberableId === editingItem.id
+                        )
+                        return { departmentId: department.id, isMember }
+                    })
+                )
+
+                if (cancelled) return
+                const current = memberships.find((membership) => membership.isMember)
+                setSelectedDepartmentId(current?.departmentId ?? null)
+            } catch {
+                if (!cancelled) setSelectedDepartmentId(null)
+            } finally {
+                if (!cancelled) setIsDepartmentLookupLoading(false)
+            }
+        }
+
+        void resolveCustomerDepartment()
+        return () => {
+            cancelled = true
+        }
+    }, [editingItem, departments, showDepartmentField])
+
+    const syncCustomerDepartment = async (customerId: string) => {
+        if (!showDepartmentField) return
+        if (departments.length === 0) return
+
+        const memberships = await Promise.all(
+            departments.map(async (department) => {
+                const members = await apiClient.get<DepartmentMember[]>(`/departments/${department.id}/members`)
+                const isMember = members.some(
+                    (member) =>
+                        member.memberableType === "Customer" &&
+                        member.memberableId === customerId
+                )
+                return { departmentId: department.id, isMember }
+            })
+        )
+
+        const currentlyAssignedIds = memberships
+            .filter((membership) => membership.isMember)
+            .map((membership) => membership.departmentId)
+        const toRemove = currentlyAssignedIds.filter((id) => id !== selectedDepartmentId)
+
+        if (toRemove.length > 0) {
+            await Promise.all(
+                toRemove.map((departmentId) =>
+                    removeMembers({
+                        departmentId,
+                        members: [{ memberableType: "Customer", memberableId: customerId }],
+                        quiet: true,
+                    })
+                )
+            )
+        }
+
+        if (selectedDepartmentId && !currentlyAssignedIds.includes(selectedDepartmentId)) {
+            await addMembers({
+                departmentId: selectedDepartmentId,
+                members: [{ memberableType: "Customer", memberableId: customerId }],
+                quiet: true,
+            })
+        }
+    }
+
+    const applyTemplateToCustomerIfSelected = async (customerId: string) => {
+        if (!isSchoolPreset) return
+        if (!selectedFeeTemplateId) return
+        const template = templates.find((t) => t.id === selectedFeeTemplateId)
+        if (!template) {
+            toast.error(cui.drawer.feeTemplateNotFoundToast)
+            return
+        }
+
+        const requiredItems = template.items.filter((item) => !item.isOptional && Number(item.amount) > 0)
+        if (requiredItems.length === 0) {
+            toast.error(cui.drawer.feeTemplateEmptyToast)
+            return
+        }
+
+        await recordSale({
+            items: requiredItems.map((item) => ({
+                productName: item.name,
+                quantity: 1,
+                customPrice: Number(item.amount),
+                lineType: "FEE",
+            })),
+            paymentMethod: "CASH",
+            amountPaid: 0,
+            customerId,
+            channel: "IN_STORE",
+            academicTermId: template.academicTermId ?? undefined,
+            notes: `Auto-generated from fee template: ${template.name}`,
+        })
+
+        toast.success(cui.drawer.feeTemplateAppliedToast)
     }
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault()
-        await createCustomer({
+        const created = await createCustomer({
             name: formData.name.trim(),
             phoneNumber: formData.phoneNumber.trim() || undefined,
             email: formData.email.trim() || undefined,
             isBlacklisted: formData.isBlacklisted,
         })
+
+        if (created?.id) {
+            await syncCustomerDepartment(created.id)
+            await applyTemplateToCustomerIfSelected(created.id)
+        }
+
         setIsAddOpen(false)
         resetForm()
     }
@@ -180,6 +333,8 @@ export function CustomersView() {
                 isBlacklisted: formData.isBlacklisted,
             },
         })
+        await syncCustomerDepartment(editingItem.id)
+        await applyTemplateToCustomerIfSelected(editingItem.id)
         setEditingItem(null)
         resetForm()
     }
@@ -199,6 +354,7 @@ export function CustomersView() {
             email: item.email,
             isBlacklisted: item.isBlacklisted,
         })
+        setSelectedFeeTemplateId(null)
         setEditingItem(item)
     }
 
@@ -649,6 +805,7 @@ export function CustomersView() {
                         if (!open) {
                             setIsAddOpen(false)
                             setEditingItem(null)
+                            resetForm()
                         }
                     }}
                 >
@@ -715,6 +872,76 @@ export function CustomersView() {
                                         className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
                                     />
                                 </div>
+
+                                {showDepartmentField && (
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1 block">
+                                            {cui.drawer.departmentLabel}
+                                        </label>
+                                        {isDepartmentLookupLoading ? (
+                                            <div className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 text-sm text-brand-accent/50 dark:text-brand-cream/50">
+                                                Loading current department...
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Select
+                                                    value={selectedDepartmentId ?? "__none__"}
+                                                    onValueChange={(value) =>
+                                                        setSelectedDepartmentId(value === "__none__" ? null : value)
+                                                    }
+                                                >
+                                                    <SelectTrigger className="h-14 rounded-2xl px-6 bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/10">
+                                                        <SelectValue placeholder={cui.drawer.departmentPlaceholder} />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="__none__">{cui.drawer.departmentPlaceholder}</SelectItem>
+                                                        {departments.map((department) => (
+                                                            <SelectItem key={department.id} value={department.id}>
+                                                                {department.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {departments.length === 0 && (
+                                                    <p className="text-xs text-brand-accent/50 dark:text-brand-cream/50 ml-1">
+                                                        {cui.drawer.departmentEmptyHint}
+                                                    </p>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                {isSchoolPreset && (
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1 block">
+                                            {cui.drawer.feeTemplateLabel}
+                                        </label>
+                                        <Select
+                                            value={selectedFeeTemplateId ?? "__none__"}
+                                            onValueChange={(value) =>
+                                                setSelectedFeeTemplateId(value === "__none__" ? null : value)
+                                            }
+                                        >
+                                            <SelectTrigger className="h-14 rounded-2xl px-6 bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/10">
+                                                <SelectValue placeholder={cui.drawer.feeTemplatePlaceholder} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__none__">{cui.drawer.feeTemplatePlaceholder}</SelectItem>
+                                                {templates
+                                                    .filter((template) => template.status !== "ARCHIVED")
+                                                    .map((template) => (
+                                                        <SelectItem key={template.id} value={template.id}>
+                                                            {template.name}
+                                                        </SelectItem>
+                                                    ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-xs text-brand-accent/50 dark:text-brand-cream/50 ml-1">
+                                            {cui.drawer.feeTemplateHint}
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="space-y-4 pt-2">
                                     <div className="flex items-center justify-between p-4 rounded-2xl bg-brand-deep/2 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">

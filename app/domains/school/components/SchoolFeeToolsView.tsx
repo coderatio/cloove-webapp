@@ -23,11 +23,13 @@ import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
 import { MoneyInput } from "@/app/components/ui/money-input"
 import { Badge } from "@/app/components/ui/badge"
+import { PersistedTabs } from "@/app/components/shared/PersistedTabs"
 import { useSettings, useUpdateBusinessSettings } from "@/app/domains/business/hooks/useBusinessSettings"
 import { usePermission } from "@/app/hooks/usePermission"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useOrders } from "@/app/domains/orders/hooks/useOrders"
 import { useBatchSalePaymentLinks } from "@/app/domains/checkout/hooks/useBatchSalePaymentLinks"
+import { FeeTemplatesSection } from "./FeeTemplatesSection"
 import { formatCurrency } from "@/app/lib/formatters"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
@@ -609,6 +611,16 @@ function BatchLinksSection() {
 const sectionMotion = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 } }
 
 export function SchoolFeeToolsView() {
+    const [activeTab, setActiveTab] = React.useState("fee-templates")
+    const tabs = React.useMemo(
+        () => [
+            { id: "fee-templates", label: "Fee templates", icon: CheckSquare },
+            { id: "fee-presets", label: "Saved presets", icon: BookOpen },
+            { id: "batch-links", label: "Batch links", icon: Link2 },
+        ],
+        []
+    )
+
     return (
         <PageTransition>
             <div className="max-w-5xl mx-auto space-y-8 pb-24">
@@ -624,8 +636,16 @@ export function SchoolFeeToolsView() {
                     transition={{ duration: 0.35, delay: 0.06 }}
                     className="space-y-6"
                 >
-                    <FeePresetsSection />
-                    <BatchLinksSection />
+                    <PersistedTabs
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        onChange={setActiveTab}
+                        defaultTab="fee-templates"
+                        queryParamName="section"
+                    />
+                    {activeTab === "fee-templates" && <FeeTemplatesSection />}
+                    {activeTab === "fee-presets" && <FeePresetsSection />}
+                    {activeTab === "batch-links" && <BatchLinksSection />}
                 </motion.div>
             </div>
         </PageTransition>

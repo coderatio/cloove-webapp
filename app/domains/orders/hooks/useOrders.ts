@@ -66,9 +66,10 @@ export function useOrders(
     if (filters?.storeIds && filters.storeIds.length > 0) params.storeIds = filters.storeIds.join(',')
     if (filters?.customerId) params.customerId = filters.customerId
     if (filters?.academicTermId) params.academicTermId = filters.academicTermId
+    if (filters?.serviceModes && filters.serviceModes.length > 0) params.serviceMode = filters.serviceModes.join(',')
 
     const { data: response, isLoading, isFetching, error, refetch } = useQuery<OrdersResponse>({
-        queryKey: ['sales', businessId, page, limit, filters?.search, filters?.status, filters?.paymentStatus, filters?.automation, filters?.isAutomated, filters?.startDate, filters?.endDate, filters?.storeId, filters?.storeIds, filters?.academicTermId],
+        queryKey: ['sales', businessId, page, limit, filters?.search, filters?.status, filters?.paymentStatus, filters?.automation, filters?.isAutomated, filters?.startDate, filters?.endDate, filters?.storeId, filters?.storeIds, filters?.academicTermId, filters?.serviceModes],
         queryFn: () => apiClient.get<OrdersResponse>('/sales', params, { fullResponse: true }),
         enabled: !!businessId,
         staleTime: 30000, // 30 seconds
@@ -86,7 +87,11 @@ export function useOrders(
             apiClient.patch(`/sales/${id}`, updates),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sales', businessId] })
-        }
+        },
+        onError: (error: any) => {
+            const message = error?.message || 'Failed to update order'
+            toast.error(message)
+        },
     })
 
     const requeryOrderMutation = useMutation({

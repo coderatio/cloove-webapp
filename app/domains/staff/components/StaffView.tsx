@@ -3,12 +3,21 @@
 import { useState, useEffect } from "react"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
+import { PersistedTabs } from "@/app/components/shared/PersistedTabs"
 import { StaffCard } from "@/app/domains/staff/components/StaffCard"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
 import { Switch } from "@/app/components/ui/switch"
 import {
+    Building2,
     Search,
     Phone,
     Mail,
@@ -19,6 +28,7 @@ import {
     Loader2
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
+import { apiClient } from "@/app/lib/api-client"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import {
     Drawer,
@@ -29,17 +39,51 @@ import {
     DrawerFooter,
     DrawerClose,
 } from "@/app/components/ui/drawer"
-import { PERMISSIONS, Role } from "../data/staffMocks"
+import { ALL_PERMISSIONS, Role } from "../data/staffMocks"
+import {
+    getPermissionsForPreset,
+    getDefaultsForRoleAndPreset,
+    resolvePermissionsForDisplay,
+    computeOverrides,
+} from "@/app/lib/preset-permissions"
 import { useStaff, type StaffMember } from "../hooks/useStaff"
+import { useDepartments, type DepartmentMember } from "../hooks/useDepartments"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { usePermission } from "@/app/hooks/usePermission"
-import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { DepartmentsPanel } from "./DepartmentsPanel"
 import Link from "next/link"
+
+function StaffSkeletonCard() {
+    return (
+        <GlassCard className="p-5 animate-pulse">
+            <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3 min-w-0">
+                    <div className="h-12 w-12 rounded-2xl bg-brand-deep/8 dark:bg-white/8 shrink-0" />
+                    <div className="space-y-2 min-w-0">
+                        <div className="h-4 w-40 rounded-full bg-brand-deep/8 dark:bg-white/8" />
+                        <div className="h-3 w-28 rounded-full bg-brand-deep/6 dark:bg-white/6" />
+                        <div className="h-3 w-52 rounded-full bg-brand-deep/5 dark:bg-white/5" />
+                    </div>
+                </div>
+                <div className="h-7 w-20 rounded-full bg-brand-deep/6 dark:bg-white/6 shrink-0" />
+            </div>
+        </GlassCard>
+    )
+}
 
 export function StaffView() {
     const pageCopy = usePresetPageCopy()
+    const layoutPreset = useLayoutPresetId()
     const { canInviteStaff, loading: permissionLoading } = usePermission()
     const { staff, isLoading, inviteStaff, updateStaff, removeStaff, resendInvite } = useStaff()
+
+    // Permissions available for this business's preset, with display metadata
+    const presetPermissionKeys = getPermissionsForPreset(layoutPreset).map(String)
+    const availablePermissions = presetPermissionKeys
+        .filter((key) => key in ALL_PERMISSIONS)
+        .map((key) => ({ id: key, ...ALL_PERMISSIONS[key] }))
+
     const [searchTerm, setSearchTerm] = useState("")
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
@@ -52,9 +96,17 @@ export function StaffView() {
     const [role, setRole] = useState<Role>('STAFF')
     const [permissions, setPermissions] = useState<Record<string, boolean>>({})
     const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([])
+    const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(null)
+    const [isDepartmentLookupLoading, setIsDepartmentLookupLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [activeTab, setActiveTab] = useState("staff")
 
     const { stores } = useStores()
+    const { departments, addMembers, removeMembers } = useDepartments()
+    const tabs = [
+        { id: "staff", label: "Staff", icon: UserCog },
+        { id: "departments", label: "Departments", icon: Shield },
+    ]
 
     useEffect(() => {
         if (!isDrawerOpen) return
@@ -64,17 +116,64 @@ export function StaffView() {
             setEmail(editingStaff.user.email || "")
             setPhoneNumber(editingStaff.user.phoneNumber)
             setRole(editingStaff.role)
-            setPermissions(editingStaff.permissions || {})
+            // Show resolved state: role defaults (preset-aware) + stored overrides
+            setPermissions(
+                resolvePermissionsForDisplay(editingStaff.role, layoutPreset, editingStaff.permissions || null)
+            )
             setSelectedStoreIds(editingStaff.stores?.map(s => s.id) || [])
         } else {
             setFullName("")
             setEmail("")
             setPhoneNumber("")
             setRole('STAFF')
-            setPermissions({})
+            // Pre-fill with STAFF role defaults for this preset
+            setPermissions(
+                resolvePermissionsForDisplay('STAFF', layoutPreset, null)
+            )
             setSelectedStoreIds([])
+            setSelectedDepartmentId(null)
         }
-    }, [isDrawerOpen, editingStaff])
+    }, [isDrawerOpen, editingStaff, layoutPreset])
+
+    useEffect(() => {
+        let cancelled = false
+
+        const resolveCurrentDepartment = async () => {
+            if (!isDrawerOpen || !editingStaff) return
+            if (departments.length === 0) {
+                setSelectedDepartmentId(null)
+                return
+            }
+
+            setIsDepartmentLookupLoading(true)
+            try {
+                const memberships = await Promise.all(
+                    departments.map(async (department) => {
+                        const members = await apiClient.get<DepartmentMember[]>(`/departments/${department.id}/members`)
+                        const isMember = members.some(
+                            (member) =>
+                                member.memberableType === "BusinessUser" &&
+                                member.memberableId === editingStaff.id
+                        )
+                        return { departmentId: department.id, isMember }
+                    })
+                )
+
+                if (cancelled) return
+                const current = memberships.find((membership) => membership.isMember)
+                setSelectedDepartmentId(current?.departmentId ?? null)
+            } catch {
+                if (!cancelled) setSelectedDepartmentId(null)
+            } finally {
+                if (!cancelled) setIsDepartmentLookupLoading(false)
+            }
+        }
+
+        void resolveCurrentDepartment()
+        return () => {
+            cancelled = true
+        }
+    }, [isDrawerOpen, editingStaff, departments])
 
     const filteredStaff = staff?.filter(s =>
         (s.user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
@@ -97,10 +196,66 @@ export function StaffView() {
     const handleSave = async () => {
         setIsSaving(true)
         try {
+            const syncDepartmentMembership = async (businessUserId: string) => {
+                if (departments.length === 0) return
+
+                const memberships = await Promise.all(
+                    departments.map(async (department) => {
+                        const members = await apiClient.get<DepartmentMember[]>(`/departments/${department.id}/members`)
+                        const isMember = members.some(
+                            (member) =>
+                                member.memberableType === "BusinessUser" &&
+                                member.memberableId === businessUserId
+                        )
+                        return { departmentId: department.id, isMember }
+                    })
+                )
+
+                const currentlyAssignedIds = memberships
+                    .filter((membership) => membership.isMember)
+                    .map((membership) => membership.departmentId)
+                const toRemove = currentlyAssignedIds.filter((id) => id !== selectedDepartmentId)
+
+                if (toRemove.length > 0) {
+                    await Promise.all(
+                        toRemove.map((departmentId) =>
+                            removeMembers({
+                                departmentId,
+                                members: [{ memberableType: "BusinessUser", memberableId: businessUserId }],
+                                quiet: true,
+                            })
+                        )
+                    )
+                }
+
+                if (selectedDepartmentId && !currentlyAssignedIds.includes(selectedDepartmentId)) {
+                    await addMembers({
+                        departmentId: selectedDepartmentId,
+                        members: [{ memberableType: "BusinessUser", memberableId: businessUserId }],
+                        quiet: true,
+                    })
+                }
+            }
+
+            // Only send permissions that differ from role defaults
+            const permissionOverrides = computeOverrides(permissions, role, layoutPreset)
+
             if (editingStaff) {
-                await updateStaff(editingStaff.userId, { role, permissions, storeIds: selectedStoreIds })
+                await updateStaff(editingStaff.userId, { role, permissions: permissionOverrides, storeIds: selectedStoreIds })
+                await syncDepartmentMembership(editingStaff.id)
             } else {
-                await inviteStaff({ fullName, email, phoneNumber, role, permissions, storeIds: selectedStoreIds })
+                const invited = await inviteStaff({
+                    fullName,
+                    email,
+                    phoneNumber,
+                    role,
+                    permissions: permissionOverrides,
+                    storeIds: selectedStoreIds,
+                }) as StaffMember | undefined
+
+                if (invited?.id) {
+                    await syncDepartmentMembership(invited.id)
+                }
             }
             setIsDrawerOpen(false)
         } catch (error) {
@@ -157,9 +312,6 @@ export function StaffView() {
                 <ManagementHeader
                     title={pageCopy.staff.title}
                     description={pageCopy.staff.description}
-                    searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    searchPlaceholder="Search staff by name or phone..."
                     {...(showAddStaff
                         ? { addButtonLabel: "Add Staff Member" as const, onAddClick: handleAdd }
                         : {})}
@@ -179,32 +331,60 @@ export function StaffView() {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-4">
-                    {isLoading ? (
-                        <div className="p-12 text-center text-brand-accent/40">Loading staff...</div>
-                    ) : (
-                        filteredStaff.map((member, index) => (
-                            <StaffCard
-                                key={member.id}
-                                member={member}
-                                onClick={member.role !== 'OWNER' ? () => handleEdit(member) : undefined}
-                                delay={index * 0.05}
-                            />
-                        ))
-                    )}
+                <PersistedTabs
+                    tabs={tabs}
+                    activeTab={activeTab}
+                    onChange={setActiveTab}
+                    defaultTab="staff"
+                    queryParamName="staffTab"
+                />
 
-                    {!isLoading && filteredStaff.length === 0 && (
-                        <GlassCard className="p-12 text-center space-y-4">
-                            <div className="mx-auto w-16 h-16 rounded-full bg-brand-deep/5 flex items-center justify-center">
-                                <Search className="w-8 h-8 text-brand-accent/20" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-medium text-brand-deep dark:text-brand-cream">No staff found</h3>
-                                <p className="text-brand-accent/60 dark:text-brand-cream/60">Try adjusting your search or add a new team member.</p>
-                            </div>
-                        </GlassCard>
-                    )}
-                </div>
+                {activeTab === "staff" && (
+                    <div className="space-y-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-accent/35 pointer-events-none" />
+                            <Input
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search staff by name or phone..."
+                                className="pl-9 h-12 sm:h-13 rounded-2xl"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                            {isLoading ? (
+                                <>
+                                    {[1, 2, 3].map((idx) => (
+                                        <StaffSkeletonCard key={idx} />
+                                    ))}
+                                </>
+                            ) : (
+                                filteredStaff.map((member, index) => (
+                                    <StaffCard
+                                        key={member.id}
+                                        member={member}
+                                        onClick={member.role !== 'OWNER' ? () => handleEdit(member) : undefined}
+                                        delay={index * 0.05}
+                                    />
+                                ))
+                            )}
+
+                            {!isLoading && filteredStaff.length === 0 && (
+                                <GlassCard className="p-12 text-center space-y-4">
+                                    <div className="mx-auto w-16 h-16 rounded-full bg-brand-deep/5 flex items-center justify-center">
+                                        <Search className="w-8 h-8 text-brand-accent/20" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-medium text-brand-deep dark:text-brand-cream">No staff found</h3>
+                                        <p className="text-brand-accent/60 dark:text-brand-cream/60">Try adjusting your search or add a new team member.</p>
+                                    </div>
+                                </GlassCard>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === "departments" && <DepartmentsPanel />}
 
                 {/* Staff Editor Drawer */}
                 <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
@@ -259,6 +439,56 @@ export function StaffView() {
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="space-y-2 pt-1">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-medium text-brand-deep dark:text-brand-cream pl-1">Department</label>
+                                        <span className="text-[10px] font-bold text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Optional</span>
+                                    </div>
+
+                                    {isDepartmentLookupLoading ? (
+                                        <div className="text-xs text-brand-accent/50 dark:text-white/50 px-1">
+                                            Loading current department...
+                                        </div>
+                                    ) : departments.length === 0 ? (
+                                        <GlassCard className="p-5 border-dashed border-brand-gold/25 bg-brand-gold/5 dark:bg-brand-gold/8">
+                                            <div className="flex items-start gap-3">
+                                                <div className="h-10 w-10 rounded-xl bg-brand-gold/15 text-brand-gold flex items-center justify-center shrink-0">
+                                                    <Building2 className="h-4 w-4" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                                                        Create your first department
+                                                    </p>
+                                                    <p className="text-xs leading-relaxed text-brand-accent/65 dark:text-brand-cream/65">
+                                                        Departments help you group teams like Operations, Accounts, or Faculty.
+                                                        Save this staff profile now, then create a department in the Departments tab
+                                                        and assign them in seconds.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </GlassCard>
+                                    ) : (
+                                        <Select
+                                            value={selectedDepartmentId ?? "__none__"}
+                                            onValueChange={(value) =>
+                                                setSelectedDepartmentId(value === "__none__" ? null : value)
+                                            }
+                                        >
+                                            <SelectTrigger className="h-12 rounded-xl bg-white/50 dark:bg-white/5 border-brand-deep/10 dark:border-white/10">
+                                                <SelectValue placeholder="Select department" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="__none__">No department</SelectItem>
+                                                {departments.map((department) => (
+                                                    <SelectItem key={department.id} value={department.id}>
+                                                        {department.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                </div>
                             </section>
 
                             {/* Role Selection */}
@@ -268,7 +498,10 @@ export function StaffView() {
                                     {['STAFF', 'ACCOUNTANT'].map((r) => (
                                         <button
                                             key={r}
-                                            onClick={() => setRole(r as Role)}
+                                            onClick={() => {
+                                                setRole(r as Role)
+                                                setPermissions(resolvePermissionsForDisplay(r, layoutPreset, null))
+                                            }}
                                             className={cn(
                                                 "p-4 rounded-3xl cursor-pointer border transition-all text-left group active:scale-95",
                                                 role === r
@@ -303,20 +536,41 @@ export function StaffView() {
                                     <span className="text-[10px] font-bold text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Advanced</span>
                                 </div>
 
-                                <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 p-0 overflow-hidden">
-                                    {PERMISSIONS.map((perm) => (
-                                        <div key={perm.id} className="p-4 flex items-center justify-between hover:bg-brand-cream/20 dark:hover:bg-white/5 transition-colors">
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="font-medium text-brand-deep dark:text-brand-cream">{perm.label}</span>
-                                                <span className="text-[10px] text-brand-accent/40 dark:text-white/40 font-bold uppercase tracking-wider">{perm.category}</span>
-                                            </div>
-                                            <Switch
-                                                checked={permissions[perm.id] || false}
-                                                onCheckedChange={() => togglePermission(perm.id)}
-                                            />
+                                {(() => {
+                                    const roleDefaults = getDefaultsForRoleAndPreset(role, layoutPreset)
+                                    const categories = Array.from(new Set(availablePermissions.map(p => p.category)))
+                                    return (
+                                        <div className="space-y-3">
+                                            {categories.map((category) => (
+                                                <div key={category}>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/35 dark:text-white/35 px-1 mb-1">{category}</p>
+                                                    <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 p-0 overflow-hidden">
+                                                        {availablePermissions
+                                                            .filter(p => p.category === category)
+                                                            .map((perm) => {
+                                                                const isDefault = roleDefaults.includes(perm.id)
+                                                                const isOn = permissions[perm.id] ?? false
+                                                                return (
+                                                                    <div key={perm.id} className="p-4 flex items-center justify-between hover:bg-brand-cream/20 dark:hover:bg-white/5 transition-colors">
+                                                                        <div className="flex flex-col gap-0.5">
+                                                                            <span className="font-medium text-brand-deep dark:text-brand-cream">{perm.label}</span>
+                                                                            {isDefault && (
+                                                                                <span className="text-[9px] text-brand-gold/70 font-bold uppercase tracking-wider">Default for {role}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <Switch
+                                                                            checked={isOn}
+                                                                            onCheckedChange={() => togglePermission(perm.id)}
+                                                                        />
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                    </GlassCard>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </GlassCard>
+                                    )
+                                })()}
                             </section>
 
                             {/* Store Access Selection */}
@@ -346,6 +600,7 @@ export function StaffView() {
                                     </p>
                                 </section>
                             )}
+
                         </div>
 
                         <DrawerFooter className="p-8 border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/40 dark:bg-black/20 backdrop-blur-md">

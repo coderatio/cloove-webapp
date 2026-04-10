@@ -29,6 +29,9 @@ export interface FilterOption {
 export interface FilterGroup {
     title: string
     options: FilterOption[]
+    /** 'list' renders flat toggle buttons (default, best for ≤3 options).
+     *  'multiselect' renders a searchable dropdown (best for 4+ options). */
+    type?: 'list' | 'multiselect'
 }
 
 interface FilterPopoverProps {

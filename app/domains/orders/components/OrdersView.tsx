@@ -6,10 +6,10 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt } from 'lucide-react'
+import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt, UtensilsCrossed, ChefHat, ShoppingCart } from 'lucide-react'
 import { Order, OrderStatus, PaymentStatus } from "../types"
-import { FilterPopover } from "@/app/components/shared/FilterPopover"
-import { DateRangePicker } from "@/app/components/shared/DateRangePicker"
+import { OrderFilterPanel } from "./OrderFilterPanel"
+import { ActiveFilterChips } from "./ActiveFilterChips"
 import { RecordPaymentDrawer } from "./RecordPaymentDrawer"
 import { OrderDetailsDrawer } from "./OrderDetailsDrawer"
 import { Button } from '@/app/components/ui/button'
@@ -29,6 +29,7 @@ import {
 } from "@/app/components/ui/drawer"
 import Link from 'next/link'
 import { useOrders } from '../hooks/useOrders'
+import { useKitchenTicketActions } from '@/app/domains/restaurant/hooks/useRestaurantOps'
 import { useDebounce } from '@/app/hooks/useDebounce'
 import { OrdersSkeleton } from './OrdersSkeleton'
 import { Pagination } from '@/app/components/shared/Pagination'
@@ -37,13 +38,7 @@ import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { useBusiness } from '@/app/components/BusinessProvider'
 import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { useAcademicCalendar } from "@/app/domains/school/hooks/useAcademicCalendar"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/app/components/ui/select"
+import type { OrderFilterState, OrderFilterConfig } from "../types"
 import { OrderActionMenu } from './OrderActionMenu'
 import { toast } from 'sonner'
 import { useReceiptPrinter } from '@/app/hooks/useReceiptPrinter'
@@ -53,6 +48,40 @@ import { PaymentLinkDialog } from '@/app/domains/checkout/components/PaymentLink
 import { Markdown } from '@/app/components/ui/markdown'
 import { PresetOrdersQuickStrip } from '@/app/domains/workspace/components/preset-feature-modules/PresetOrdersQuickStrip'
 import { SchoolFeeRecordDrawer } from '@/app/domains/school/components/SchoolFeeRecordDrawer'
+
+const KITCHEN_TICKET_BADGE: Record<
+    'queued' | 'preparing' | 'ready' | 'served',
+    { label: string; className: string }
+> = {
+    queued: {
+        label: 'Queued',
+        className: 'bg-amber-500/8 text-amber-700 dark:text-amber-300',
+    },
+    preparing: {
+        label: 'Preparing',
+        className: 'bg-blue-500/8 text-blue-700 dark:text-blue-300',
+    },
+    ready: {
+        label: 'Ready',
+        className: 'bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    },
+    served: {
+        label: 'Served',
+        className: 'bg-brand-accent/8 text-brand-accent/60 dark:text-brand-cream/50',
+    },
+}
+
+function kitchenTicketBadgeConfig(
+    status: string | null | undefined
+): { label: string; className: string } | null {
+    if (status == null || String(status).trim() === '') return null
+    const key = String(status).toLowerCase().trim() as keyof typeof KITCHEN_TICKET_BADGE
+    if (key in KITCHEN_TICKET_BADGE) return KITCHEN_TICKET_BADGE[key]
+    return {
+        label: String(status).replace(/_/g, ' '),
+        className: 'bg-brand-deep/8 text-brand-accent/70 dark:text-brand-cream/60',
+    }
+}
 
 export function OrdersView() {
     const isMobile = useIsMobile()
@@ -64,10 +93,17 @@ export function OrdersView() {
     const { currentStore, stores } = useStores()
     const [page, setPage] = React.useState(1)
     const [search, setSearch] = React.useState("")
-    const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
-    const [startDate, setStartDate] = React.useState<string | undefined>()
-    const [endDate, setEndDate] = React.useState<string | undefined>()
-    const [academicTermFilter, setAcademicTermFilter] = React.useState<string>("")
+    const [filterState, setFilterState] = React.useState<OrderFilterState>({ selectedFilters: [] })
+
+    const setFilters = React.useCallback((next: OrderFilterState) => {
+        setFilterState(next)
+        setPage(1)
+    }, [])
+
+    const clearFilters = React.useCallback(() => {
+        setFilterState({ selectedFilters: [] })
+        setPage(1)
+    }, [])
     const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
     const [recordingPaymentOrder, setRecordingPaymentOrder] = React.useState<Order | null>(null)
     const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = React.useState(false)
@@ -114,16 +150,23 @@ export function OrdersView() {
         isGeneratingReceipt
     } = useOrders(page, limit, {
         search: debouncedSearch,
-        status: selectedFilters.filter(f => f.startsWith('S:')).map(f => f.slice(2)) as OrderStatus[],
-        paymentStatus: selectedFilters.filter(f => f.startsWith('P:')).map(f => f.slice(2)) as PaymentStatus[],
-        automation: selectedFilters.filter(f => f.startsWith('A:')).map(f => f.slice(2)),
-        startDate,
-        endDate,
+        status: filterState.selectedFilters.filter(f => f.startsWith('S:')).map(f => f.slice(2)) as OrderStatus[],
+        paymentStatus: filterState.selectedFilters.filter(f => f.startsWith('P:')).map(f => f.slice(2)) as PaymentStatus[],
+        automation: filterState.selectedFilters.filter(f => f.startsWith('A:')).map(f => f.slice(2)),
+        serviceModes: filterState.selectedFilters.filter(f => f.startsWith('M:')).map(f => f.slice(2)),
+        startDate: filterState.startDate,
+        endDate: filterState.endDate,
         storeId: currentStore?.id,
-        academicTermId: layoutPreset === "school" && academicTermFilter ? academicTermFilter : undefined,
+        academicTermId: layoutPreset === "school" && filterState.academicTermId ? filterState.academicTermId : undefined,
     })
 
     const { printReceipt } = useReceiptPrinter()
+    const kitchenAction = useKitchenTicketActions()
+    const handleAdvanceKitchen = React.useCallback(
+        (ticketId: string, status: 'queued' | 'preparing' | 'ready' | 'served') =>
+            kitchenAction.mutateAsync({ id: ticketId, status }),
+        [kitchenAction]
+    )
     const createPaymentLink = useCreatePaymentLink()
 
     const handleGeneratePaymentLink = React.useCallback(async (order: Order) => {
@@ -181,38 +224,55 @@ export function OrdersView() {
     const totalPages = meta?.lastPage || (meta as any)?.last_page || 1
 
     const fo = oui.filterOptions
-    const filterGroups = React.useMemo(
-        () => [
-            {
-                title: oui.filterGroups.orderStatus,
-                options: [
-                    { label: fo.orderStatus.completed, value: "S:COMPLETED" },
-                    { label: fo.orderStatus.pending, value: "S:PENDING" },
-                    { label: fo.orderStatus.cancelled, value: "S:CANCELLED" },
-                    { label: fo.orderStatus.refunded, value: "S:REFUNDED" },
-                ],
-            },
-            {
-                title: oui.filterGroups.paymentStatus,
-                options: [
-                    { label: fo.paymentStatus.paid, value: "P:PAID" },
-                    { label: fo.paymentStatus.partial, value: "P:PARTIAL" },
-                    { label: fo.paymentStatus.pending, value: "P:PENDING" },
-                ],
-            },
-            {
-                title: oui.filterGroups.type,
-                options: [
-                    { label: fo.type.automated, value: "A:AUTOMATED" },
-                    { label: fo.type.manual, value: "A:MANUAL" },
-                ],
-            },
-        ],
-        [oui.filterGroups, fo]
+    const filterConfig = React.useMemo<OrderFilterConfig>(
+        () => ({
+            groups: [
+                {
+                    title: oui.filterGroups.orderStatus,
+                    type: 'multiselect' as const,
+                    options: [
+                        { label: fo.orderStatus.completed, value: "S:COMPLETED" },
+                        { label: fo.orderStatus.pending, value: "S:PENDING" },
+                        { label: fo.orderStatus.cancelled, value: "S:CANCELLED" },
+                        { label: fo.orderStatus.refunded, value: "S:REFUNDED" },
+                    ],
+                },
+                {
+                    title: oui.filterGroups.paymentStatus,
+                    type: 'multiselect' as const,
+                    options: [
+                        { label: fo.paymentStatus.paid, value: "P:PAID" },
+                        { label: fo.paymentStatus.partial, value: "P:PARTIAL" },
+                        { label: fo.paymentStatus.pending, value: "P:PENDING" },
+                    ],
+                },
+                {
+                    title: oui.filterGroups.type,
+                    options: [
+                        { label: fo.type.automated, value: "A:AUTOMATED" },
+                        { label: fo.type.manual, value: "A:MANUAL" },
+                    ],
+                },
+                ...(layoutPreset === "restaurant" ? [
+                    {
+                        title: "Service Mode",
+                        options: [
+                            { label: "Dine-In", value: "M:DINE_IN" },
+                            { label: "Takeaway", value: "M:TAKEAWAY" },
+                        ],
+                    },
+                ] : []),
+            ],
+            showDateRange: true,
+            dateRangePlaceholder: oui.dateFilterPlaceholder,
+            termOptions: layoutPreset === "school"
+                ? (academicCal?.sessions ?? []).flatMap(s =>
+                    (s.terms ?? []).map(t => ({ id: t.id, label: `${s.name} · ${t.name}` }))
+                  )
+                : undefined,
+        }),
+        [oui.filterGroups, fo, layoutPreset, academicCal]
     )
-
-    // Simplified filter logic handled by FilterPopover internally
-    // handleFilterChange removed in favor of direct setSelectedFilters usage
 
     const columns: any[] = React.useMemo(() => {
         const termColumn =
@@ -269,6 +329,31 @@ export function OrdersView() {
                                 <Copy className="w-3 h-3 text-brand-accent/40 dark:text-brand-cream/40" />
                             </button>
                         </div>
+                        {layoutPreset === "restaurant" && row.serviceMode && (
+                            <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                {row.serviceMode === "DINE_IN" ? (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/8 text-blue-700 dark:text-blue-300 text-[9px] font-bold uppercase tracking-wider">
+                                        <UtensilsCrossed className="w-2.5 h-2.5" />
+                                        {row.tableLabel ?? "Dine-In"}
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/8 text-amber-700 dark:text-amber-300 text-[9px] font-bold uppercase tracking-wider">
+                                        <ShoppingCart className="w-2.5 h-2.5" />
+                                        Takeaway
+                                    </span>
+                                )}
+                                {(() => {
+                                    const cfg = kitchenTicketBadgeConfig(row.kitchenTicketStatus)
+                                    if (!cfg) return null
+                                    return (
+                                        <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
+                                            <ChefHat className="w-2.5 h-2.5" />
+                                            {cfg.label}
+                                        </span>
+                                    )
+                                })()}
+                            </div>
+                        )}
                     </div>
                 )
             }
@@ -336,11 +421,12 @@ export function OrdersView() {
                     onPrintReceipt={handlePrintReceipt}
                     onRecordPayment={setRecordingPaymentOrder}
                     onGeneratePaymentLink={handleGeneratePaymentLink}
+                    onAdvanceKitchen={handleAdvanceKitchen}
                 />
             )
         }
     ]
-    }, [layoutPreset, oui, activeBusiness?.currency])
+    }, [layoutPreset, oui, activeBusiness?.currency, handlePrintReceipt, handleGeneratePaymentLink, handleUpdateStatus, requeryOrder, generateReceipt, handleAdvanceKitchen])
 
     const pendingCount = summary?.pendingOrdersCount ?? 0
     const pendingOutstandingAmount = summary?.pendingOutstandingAmount ?? 0
@@ -487,71 +573,31 @@ export function OrdersView() {
                 </div>
 
                 {/* Filters */}
-                <div className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1 shrink-0">
                             {isLoading ? oui.sectionTitleLoading : oui.sectionTitle}
                         </p>
-
-                        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
+                        <div className="flex items-center gap-2 flex-1 justify-end">
                             <TableSearch
                                 value={search}
                                 onChange={(val) => { setSearch(val); setPage(1); }}
                                 placeholder={oui.searchPlaceholder}
                             />
-                            <div className="flex items-center gap-3 w-full md:w-auto">
-                                <FilterPopover
-                                    groups={filterGroups}
-                                    className="flex-1 md:flex-initial"
-                                    selectedValues={selectedFilters}
-                                    onSelectionChange={(values) => {
-                                        setSelectedFilters(values)
-                                        setPage(1)
-                                    }}
-                                    onClear={() => {
-                                        setSelectedFilters([])
-                                        setPage(1)
-                                    }}
-                                />
-                                <DateRangePicker
-                                    className="flex-1 md:flex-initial"
-                                    value={{
-                                        from: startDate ? new Date(startDate) : undefined,
-                                        to: endDate ? new Date(endDate) : undefined
-                                    }}
-                                    onChange={(range) => {
-                                        setStartDate(range?.from);
-                                        setEndDate(range?.to);
-                                        setPage(1);
-                                    }}
-                                    placeholder={oui.dateFilterPlaceholder}
-                                />
-                                {layoutPreset === "school" && (academicCal?.sessions?.length ?? 0) > 0 ? (
-                                    <Select
-                                        value={academicTermFilter || "__all__"}
-                                        onValueChange={(v) => {
-                                            setAcademicTermFilter(v === "__all__" ? "" : v)
-                                            setPage(1)
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-full md:w-[220px]">
-                                            <SelectValue placeholder="Term" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="__all__">All terms</SelectItem>
-                                            {(academicCal?.sessions ?? []).flatMap((s) =>
-                                                (s.terms ?? []).map((t) => (
-                                                    <SelectItem key={t.id} value={t.id}>
-                                                        {s.name} · {t.name}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                ) : null}
-                            </div>
+                            <OrderFilterPanel
+                                config={filterConfig}
+                                value={filterState}
+                                onChange={setFilters}
+                                onClear={clearFilters}
+                            />
                         </div>
                     </div>
+                    <ActiveFilterChips
+                        value={filterState}
+                        config={filterConfig}
+                        onChange={setFilters}
+                        onClearAll={clearFilters}
+                    />
                 </div>
 
                 {isLoading ? (
@@ -559,10 +605,9 @@ export function OrdersView() {
                 ) : orders.length === 0 ? (
                     (() => {
                         const isFiltered = search !== "" ||
-                            selectedFilters.length > 0 ||
-                            startDate !== undefined ||
-                            endDate !== undefined ||
-                            (layoutPreset === "school" && !!academicTermFilter);
+                            filterState.selectedFilters.length > 0 ||
+                            !!filterState.startDate ||
+                            !!filterState.academicTermId;
 
                         return (
                             <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-3xl flex flex-col items-center justify-center py-24 px-8 text-center text-brand-deep dark:text-brand-cream">
@@ -585,11 +630,7 @@ export function OrdersView() {
                                         className="rounded-full px-8 h-12"
                                         onClick={() => {
                                             setSearch("")
-                                            setSelectedFilters([])
-                                            setStartDate(undefined)
-                                            setEndDate(undefined)
-                                            setAcademicTermFilter("")
-                                            setPage(1)
+                                            clearFilters()
                                         }}
                                     >
                                         {oui.clearFilters}
@@ -614,7 +655,33 @@ export function OrdersView() {
                             <ListCard
                                 key={order.id}
                                 title={order.customer}
-                                subtitle={order.id.startsWith('#') ? order.id : `#${order.id.slice(0, 8)}`}
+                                subtitle={
+                                    <span className="flex items-center gap-1.5 flex-wrap">
+                                        <span>{order.id.startsWith('#') ? order.id : `#${order.id.slice(0, 8)}`}</span>
+                                        {layoutPreset === "restaurant" && order.serviceMode === "DINE_IN" && (
+                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/8 text-blue-700 dark:text-blue-300 text-[9px] font-bold uppercase tracking-wider">
+                                                <UtensilsCrossed className="w-2.5 h-2.5" />
+                                                {order.tableLabel ?? "Dine-In"}
+                                            </span>
+                                        )}
+                                        {layoutPreset === "restaurant" && order.serviceMode === "TAKEAWAY" && (
+                                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/8 text-amber-700 dark:text-amber-300 text-[9px] font-bold uppercase tracking-wider">
+                                                <ShoppingCart className="w-2.5 h-2.5" />
+                                                Takeaway
+                                            </span>
+                                        )}
+                                        {layoutPreset === "restaurant" && (() => {
+                                            const cfg = kitchenTicketBadgeConfig(order.kitchenTicketStatus)
+                                            if (!cfg) return null
+                                            return (
+                                                <span className={cn("inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
+                                                    <ChefHat className="w-2.5 h-2.5" />
+                                                    {cfg.label}
+                                                </span>
+                                            )
+                                        })()}
+                                    </span>
+                                }
                                 meta={formatDate(order.date, 'MMM d, h:mm a')}
                                 status={statusColorMap[order.status?.toUpperCase() || '']?.label || order.status}
                                 statusColor={statusColorMap[order.status?.toUpperCase() || '']?.color || 'neutral'}
@@ -630,6 +697,7 @@ export function OrdersView() {
                                         onGenerateReceipt={generateReceipt}
                                         onPrintReceipt={handlePrintReceipt}
                                         onRecordPayment={setRecordingPaymentOrder}
+                                        onAdvanceKitchen={handleAdvanceKitchen}
                                     />
                                 }
                             />
@@ -723,15 +791,20 @@ export function OrdersView() {
                         const total = Number(recordingPaymentOrder.totalAmount)
                         const newStatus = newAmountPaid >= total ? 'COMPLETED' : recordingPaymentOrder.status
 
-                        await updateOrder({
-                            id: recordingPaymentOrder.id,
-                            updates: {
-                                amountPaid: newAmountPaid,
-                                paymentMethod: method as any,
-                                status: newStatus as any
-                            }
-                        })
-                        toast.success(`Recorded ${formatCurrency(amount, { currency: recordingPaymentOrder.currency || 'NGN' })} payment`)
+                        try {
+                            await updateOrder({
+                                id: recordingPaymentOrder.id,
+                                updates: {
+                                    amountPaid: newAmountPaid,
+                                    paymentMethod: method as any,
+                                    status: newStatus as any
+                                }
+                            })
+                            toast.success(`Recorded ${formatCurrency(amount, { currency: recordingPaymentOrder.currency || 'NGN' })} payment`)
+                        } catch (err: any) {
+                            // onError in useOrders also toasts, this is a safety net
+                            if (!err?.message) toast.error('Failed to record payment')
+                        }
                     }
                 }}
             />

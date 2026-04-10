@@ -3,7 +3,6 @@
 import { useMemo } from "react"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { usePermission } from "@/app/hooks/usePermission"
-import { useSettings } from "@/app/domains/business/hooks/useBusinessSettings"
 import { applyLayoutPreset, getLayoutPreset, type LayoutPresetId } from "../nav/layout-presets"
 import {
     buildResolvedNavGroups,
@@ -13,12 +12,10 @@ import {
 } from "../nav/build-nav-model"
 
 export function useWorkspaceNav() {
-    const { features } = useBusiness()
+    const { features, activeBusiness } = useBusiness()
     const { can } = usePermission()
-    const { data: settings } = useSettings()
 
-    const presetId =
-        (settings?.business?.configs?.ui_layout_preset as string | undefined) || "default"
+    const presetId = (activeBusiness?.layoutPreset as string | undefined) || "default"
 
     const navGroups: ResolvedNavGroup[] = useMemo(() => {
         const layoutGroups = applyLayoutPreset(presetId)

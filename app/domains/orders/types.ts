@@ -34,6 +34,11 @@ export interface Order {
         session?: { id: string; name: string }
     }
     isAutomated?: boolean
+    serviceMode?: 'DINE_IN' | 'TAKEAWAY' | null
+    tableSessionId?: string | null
+    tableLabel?: string | null
+    kitchenTicketId?: string | null
+    kitchenTicketStatus?: 'queued' | 'preparing' | 'ready' | 'served' | null
     deposit?: {
         virtualAccountNumber: string
         bankName: string
@@ -84,4 +89,24 @@ export interface OrderFilterParams {
     storeIds?: string[]
     customerId?: string
     academicTermId?: string
+    serviceModes?: string[]
+}
+
+export interface OrderFilterState {
+    selectedFilters: string[]
+    startDate?: string
+    endDate?: string
+    academicTermId?: string
+}
+
+export interface OrderFilterTermOption {
+    id: string
+    label: string
+}
+
+export interface OrderFilterConfig {
+    groups: import('@/app/components/shared/FilterPopover').FilterGroup[]
+    showDateRange: boolean
+    dateRangePlaceholder?: string
+    termOptions?: OrderFilterTermOption[]
 }

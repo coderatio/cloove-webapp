@@ -76,7 +76,15 @@ export function useCustomers(
     page: number = 1,
     limit: number = CUSTOMERS_PAGE_SIZE,
     search?: string,
-    storeIds?: string[]
+    storeIds?: string[],
+    toastCopy?: {
+        added: string
+        updated: string
+        removed: string
+        addFailed: string
+        updateFailed: string
+        removeFailed: string
+    }
 ) {
     const queryClient = useQueryClient()
     const { activeBusiness } = useBusiness()
@@ -109,13 +117,14 @@ export function useCustomers(
     const currentPage = meta?.currentPage ?? page
 
     const createCustomerMutation = useMutation({
-        mutationFn: (payload: CreateCustomerPayload) => apiClient.post("/customers", payload),
+        mutationFn: (payload: CreateCustomerPayload) =>
+            apiClient.post<CustomerListItemApi>("/customers", payload),
         onSuccess: () => {
-            toast.success("Customer added")
+            toast.success(toastCopy?.added ?? "Customer added")
             queryClient.invalidateQueries({ queryKey: ["customers", businessId] })
         },
         onError: (err: { message?: string }) => {
-            toast.error(err.message ?? "Failed to add customer")
+            toast.error(err.message ?? toastCopy?.addFailed ?? "Failed to add customer")
         },
     })
 
@@ -142,10 +151,10 @@ export function useCustomers(
             return { previousResponse }
         },
         onSuccess: () => {
-            toast.success("Customer updated")
+            toast.success(toastCopy?.updated ?? "Customer updated")
         },
         onError: (err: { message?: string }, _variables, context) => {
-            toast.error(err.message ?? "Failed to update customer")
+            toast.error(err.message ?? toastCopy?.updateFailed ?? "Failed to update customer")
             // Rollback to the previous value if mutation fails
             if (context?.previousResponse) {
                 queryClient.setQueryData(["customers", businessId, page, limit, search, storeIds], context.previousResponse)
@@ -160,11 +169,11 @@ export function useCustomers(
     const deleteCustomerMutation = useMutation({
         mutationFn: (id: string) => apiClient.delete(`/customers/${id}`),
         onSuccess: () => {
-            toast.success("Customer removed")
+            toast.success(toastCopy?.removed ?? "Customer removed")
             queryClient.invalidateQueries({ queryKey: ["customers", businessId] })
         },
         onError: (err: { message?: string }) => {
-            toast.error(err.message ?? "Failed to remove customer")
+            toast.error(err.message ?? toastCopy?.removeFailed ?? "Failed to remove customer")
         },
     })
 

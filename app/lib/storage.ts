@@ -19,6 +19,10 @@ export const STORAGE_KEYS = {
     BT_PRINTER_PROFILE: 'cloove_bt_printer_profile',
     /** Whether to always use Bluetooth for printing */
     BT_ALWAYS_USE: 'cloove_bt_always_use',
+    /** Restaurant live refresh interval (seconds) */
+    RESTAURANT_REFRESH_INTERVAL: 'cloove_restaurant_refresh_interval',
+    /** Restaurant live view zen/fullscreen mode */
+    RESTAURANT_ZEN_MODE: 'cloove_restaurant_zen_mode',
     /** Last successful /businesses payload (survives rate limits / transient errors) */
     BUSINESSES_CACHE: 'cloove_businesses_cache',
 } as const
@@ -266,5 +270,15 @@ export const storage = {
     /** Drop last /businesses snapshot (e.g. after upgrade when server has no subscription alert). */
     clearBusinessesCache(): void {
         this.remove(STORAGE_KEYS.BUSINESSES_CACHE)
+    },
+
+    // --- Restaurant Zen Mode ---
+
+    getRestaurantZenMode(): boolean {
+        return this.get(STORAGE_KEYS.RESTAURANT_ZEN_MODE) === 'true'
+    },
+
+    setRestaurantZenMode(zen: boolean): void {
+        this.set(STORAGE_KEYS.RESTAURANT_ZEN_MODE, String(zen))
     },
 }
