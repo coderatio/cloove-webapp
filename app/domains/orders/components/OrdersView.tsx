@@ -49,6 +49,40 @@ import { Markdown } from '@/app/components/ui/markdown'
 import { PresetOrdersQuickStrip } from '@/app/domains/workspace/components/preset-feature-modules/PresetOrdersQuickStrip'
 import { SchoolFeeRecordDrawer } from '@/app/domains/school/components/SchoolFeeRecordDrawer'
 
+const KITCHEN_TICKET_BADGE: Record<
+    'queued' | 'preparing' | 'ready' | 'served',
+    { label: string; className: string }
+> = {
+    queued: {
+        label: 'Queued',
+        className: 'bg-amber-500/8 text-amber-700 dark:text-amber-300',
+    },
+    preparing: {
+        label: 'Preparing',
+        className: 'bg-blue-500/8 text-blue-700 dark:text-blue-300',
+    },
+    ready: {
+        label: 'Ready',
+        className: 'bg-emerald-500/8 text-emerald-700 dark:text-emerald-300',
+    },
+    served: {
+        label: 'Served',
+        className: 'bg-brand-accent/8 text-brand-accent/60 dark:text-brand-cream/50',
+    },
+}
+
+function kitchenTicketBadgeConfig(
+    status: string | null | undefined
+): { label: string; className: string } | null {
+    if (status == null || String(status).trim() === '') return null
+    const key = String(status).toLowerCase().trim() as keyof typeof KITCHEN_TICKET_BADGE
+    if (key in KITCHEN_TICKET_BADGE) return KITCHEN_TICKET_BADGE[key]
+    return {
+        label: String(status).replace(/_/g, ' '),
+        className: 'bg-brand-deep/8 text-brand-accent/70 dark:text-brand-cream/60',
+    }
+}
+
 export function OrdersView() {
     const isMobile = useIsMobile()
     const { activeBusiness } = useBusiness()
@@ -308,13 +342,9 @@ export function OrdersView() {
                                         Takeaway
                                     </span>
                                 )}
-                                {row.kitchenTicketStatus && (() => {
-                                    const cfg = {
-                                        queued:    { label: "Queued",    className: "bg-amber-500/8 text-amber-700 dark:text-amber-300" },
-                                        preparing: { label: "Preparing", className: "bg-blue-500/8 text-blue-700 dark:text-blue-300" },
-                                        ready:     { label: "Ready",     className: "bg-emerald-500/8 text-emerald-700 dark:text-emerald-300" },
-                                        served:    { label: "Served",    className: "bg-brand-accent/8 text-brand-accent/60 dark:text-brand-cream/50" },
-                                    }[row.kitchenTicketStatus]
+                                {(() => {
+                                    const cfg = kitchenTicketBadgeConfig(row.kitchenTicketStatus)
+                                    if (!cfg) return null
                                     return (
                                         <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
                                             <ChefHat className="w-2.5 h-2.5" />
@@ -640,13 +670,9 @@ export function OrdersView() {
                                                 Takeaway
                                             </span>
                                         )}
-                                        {layoutPreset === "restaurant" && order.kitchenTicketStatus && (() => {
-                                            const cfg = {
-                                                queued:    { label: "Queued",    className: "bg-amber-500/8 text-amber-700 dark:text-amber-300" },
-                                                preparing: { label: "Preparing", className: "bg-blue-500/8 text-blue-700 dark:text-blue-300" },
-                                                ready:     { label: "Ready",     className: "bg-emerald-500/8 text-emerald-700 dark:text-emerald-300" },
-                                                served:    { label: "Served",    className: "bg-brand-accent/8 text-brand-accent/60 dark:text-brand-cream/50" },
-                                            }[order.kitchenTicketStatus]
+                                        {layoutPreset === "restaurant" && (() => {
+                                            const cfg = kitchenTicketBadgeConfig(order.kitchenTicketStatus)
+                                            if (!cfg) return null
                                             return (
                                                 <span className={cn("inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
                                                     <ChefHat className="w-2.5 h-2.5" />

@@ -10,8 +10,8 @@ export const metadata = {
 export default function RestaurantTablesPage() {
   return (
     <PresetGate preset="restaurant" featureLabel="Tables">
-      <div className="space-y-4 px-auto sm:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="space-y-4 px-0 lg:px-8 md:px-0">
+        <div className="space-y-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.25em] font-black text-brand-accent/40 dark:text-brand-cream/40 mb-1.5">
               Restaurant

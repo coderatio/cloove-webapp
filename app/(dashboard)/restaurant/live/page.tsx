@@ -11,8 +11,8 @@ export const metadata = {
 export default function RestaurantLivePage() {
   return (
     <PresetGate preset="restaurant" featureLabel="Live Board">
-      <div className="space-y-4 px-auto sm:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="space-y-4 px-0 lg:px-8 md:px-0">
+        <div className="space-y-4">
           <RestaurantLiveHeader />
           <RestaurantNavTabs />
         </div>

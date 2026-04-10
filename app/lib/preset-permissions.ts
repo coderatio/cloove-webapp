@@ -1,4 +1,4 @@
-import { Permission } from "@/types/permissions"
+import { Permission } from "@/app/types/permissions"
 
 export type LayoutPresetId =
     | "default"
@@ -196,4 +196,147 @@ export function getPermissionsForPreset(preset: string | null | undefined): Perm
         return PRESET_AVAILABLE_PERMISSIONS[preset as LayoutPresetId]
     }
     return PRESET_AVAILABLE_PERMISSIONS.default
+}
+
+// ---------------------------------------------------------------------------
+// Role-based defaults (mirrors backend permission_defaults.ts)
+// Used by the staff editor to show resolved permission state (defaults + overrides)
+// ---------------------------------------------------------------------------
+
+/** Generic role defaults, preset-agnostic (default / retail / pharmacy). */
+const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
+    STAFF: [
+        'VIEW_DASHBOARD',
+        'VIEW_SALES',
+        'RECORD_SALE',
+        'RECORD_REPAYMENT',
+        'VIEW_STAFF',
+        'VIEW_CUSTOMERS',
+        'CREATE_CUSTOMER',
+        'UPDATE_CUSTOMER',
+        'VIEW_PRODUCTS',
+    ],
+    ACCOUNTANT: [
+        'VIEW_DASHBOARD',
+        'VIEW_FINANCIALS',
+        'VIEW_SALES',
+        'VIEW_EXPENSES',
+        'RECORD_EXPENSE',
+        'RECORD_REPAYMENT',
+        'VIEW_CUSTOMERS',
+        'CREATE_CUSTOMER',
+        'UPDATE_CUSTOMER',
+        'DELETE_CUSTOMER',
+        'VIEW_SUPPLIERS',
+        'MANAGE_SUPPLIERS',
+        'RECORD_PAYABLE',
+        'PAY_SUPPLIER',
+        'VIEW_STAFF',
+    ],
+}
+
+/** Preset-specific overrides for role defaults. */
+const PRESET_ROLE_PERMISSIONS: Partial<Record<LayoutPresetId, Partial<Record<string, string[]>>>> = {
+    school: {
+        STAFF: [
+            'VIEW_DASHBOARD',
+            'VIEW_ACADEMIC_CALENDAR',
+            'VIEW_FEE_TEMPLATES',
+            'VIEW_SALES',
+            'RECORD_SALE',
+            'RECORD_REPAYMENT',
+            'VIEW_STAFF',
+            'VIEW_CUSTOMERS',
+            'CREATE_CUSTOMER',
+            'UPDATE_CUSTOMER',
+            'VIEW_PRODUCTS',
+        ],
+        ACCOUNTANT: [
+            'VIEW_DASHBOARD',
+            'VIEW_FINANCIALS',
+            'VIEW_ACADEMIC_CALENDAR',
+            'VIEW_FEE_TEMPLATES',
+            'VIEW_SALES',
+            'VIEW_EXPENSES',
+            'RECORD_EXPENSE',
+            'RECORD_REPAYMENT',
+            'VIEW_CUSTOMERS',
+            'CREATE_CUSTOMER',
+            'UPDATE_CUSTOMER',
+            'DELETE_CUSTOMER',
+            'VIEW_STAFF',
+        ],
+    },
+    restaurant: {
+        STAFF: [
+            'VIEW_DASHBOARD',
+            'VIEW_RESTAURANT_TABLES',
+            'VIEW_KITCHEN_TICKETS',
+            'VIEW_SALES',
+            'RECORD_SALE',
+            'VIEW_CUSTOMERS',
+            'CREATE_CUSTOMER',
+            'VIEW_PRODUCTS',
+        ],
+        ACCOUNTANT: [
+            'VIEW_DASHBOARD',
+            'VIEW_FINANCIALS',
+            'VIEW_RESTAURANT_TABLES',
+            'VIEW_KITCHEN_TICKETS',
+            'VIEW_BAR_TICKETS',
+            'VIEW_SALES',
+            'VIEW_EXPENSES',
+            'RECORD_EXPENSE',
+            'RECORD_REPAYMENT',
+            'VIEW_CUSTOMERS',
+            'VIEW_SUPPLIERS',
+            'VIEW_STAFF',
+        ],
+    },
+}
+
+/**
+ * Returns the default permission keys for a role in a given preset.
+ * Mirrors getDefaultsForRole() on the backend.
+ */
+export function getDefaultsForRoleAndPreset(role: string, preset: string | null | undefined): string[] {
+    if (role === 'OWNER') return [] // owners have all permissions
+    const presetDefaults = preset ? PRESET_ROLE_PERMISSIONS[preset as LayoutPresetId] : undefined
+    return presetDefaults?.[role] ?? DEFAULT_ROLE_PERMISSIONS[role] ?? []
+}
+
+/**
+ * Compute the full resolved permission map (what the staff member can actually do).
+ * role defaults (preset-aware) + explicit overrides.
+ */
+export function resolvePermissionsForDisplay(
+    role: string,
+    preset: string | null | undefined,
+    overrides: Record<string, boolean> | null
+): Record<string, boolean> {
+    const defaults = getDefaultsForRoleAndPreset(role, preset)
+    const resolved: Record<string, boolean> = {}
+    for (const perm of defaults) resolved[perm] = true
+    if (overrides) {
+        for (const [perm, val] of Object.entries(overrides)) resolved[perm] = val
+    }
+    return resolved
+}
+
+/**
+ * Compute only the overrides that differ from role defaults.
+ * Call this before saving to avoid sending redundant overrides.
+ */
+export function computeOverrides(
+    resolved: Record<string, boolean>,
+    role: string,
+    preset: string | null | undefined
+): Record<string, boolean> {
+    const defaults = getDefaultsForRoleAndPreset(role, preset)
+    const overrides: Record<string, boolean> = {}
+    for (const [perm, val] of Object.entries(resolved)) {
+        const inDefault = defaults.includes(perm)
+        if (val !== inDefault) overrides[perm] = val
+    }
+    return overrides
 }

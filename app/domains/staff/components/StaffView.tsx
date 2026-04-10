@@ -39,12 +39,18 @@ import {
     DrawerFooter,
     DrawerClose,
 } from "@/app/components/ui/drawer"
-import { PERMISSIONS, Role } from "../data/staffMocks"
+import { ALL_PERMISSIONS, Role } from "../data/staffMocks"
+import {
+    getPermissionsForPreset,
+    getDefaultsForRoleAndPreset,
+    resolvePermissionsForDisplay,
+    computeOverrides,
+} from "@/app/lib/preset-permissions"
 import { useStaff, type StaffMember } from "../hooks/useStaff"
 import { useDepartments, type DepartmentMember } from "../hooks/useDepartments"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
 import { usePermission } from "@/app/hooks/usePermission"
-import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { DepartmentsPanel } from "./DepartmentsPanel"
 import Link from "next/link"
 
@@ -68,8 +74,16 @@ function StaffSkeletonCard() {
 
 export function StaffView() {
     const pageCopy = usePresetPageCopy()
+    const layoutPreset = useLayoutPresetId()
     const { canInviteStaff, loading: permissionLoading } = usePermission()
     const { staff, isLoading, inviteStaff, updateStaff, removeStaff, resendInvite } = useStaff()
+
+    // Permissions available for this business's preset, with display metadata
+    const presetPermissionKeys = getPermissionsForPreset(layoutPreset).map(String)
+    const availablePermissions = presetPermissionKeys
+        .filter((key) => key in ALL_PERMISSIONS)
+        .map((key) => ({ id: key, ...ALL_PERMISSIONS[key] }))
+
     const [searchTerm, setSearchTerm] = useState("")
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
@@ -102,18 +116,24 @@ export function StaffView() {
             setEmail(editingStaff.user.email || "")
             setPhoneNumber(editingStaff.user.phoneNumber)
             setRole(editingStaff.role)
-            setPermissions(editingStaff.permissions || {})
+            // Show resolved state: role defaults (preset-aware) + stored overrides
+            setPermissions(
+                resolvePermissionsForDisplay(editingStaff.role, layoutPreset, editingStaff.permissions || null)
+            )
             setSelectedStoreIds(editingStaff.stores?.map(s => s.id) || [])
         } else {
             setFullName("")
             setEmail("")
             setPhoneNumber("")
             setRole('STAFF')
-            setPermissions({})
+            // Pre-fill with STAFF role defaults for this preset
+            setPermissions(
+                resolvePermissionsForDisplay('STAFF', layoutPreset, null)
+            )
             setSelectedStoreIds([])
             setSelectedDepartmentId(null)
         }
-    }, [isDrawerOpen, editingStaff])
+    }, [isDrawerOpen, editingStaff, layoutPreset])
 
     useEffect(() => {
         let cancelled = false
@@ -217,8 +237,11 @@ export function StaffView() {
                 }
             }
 
+            // Only send permissions that differ from role defaults
+            const permissionOverrides = computeOverrides(permissions, role, layoutPreset)
+
             if (editingStaff) {
-                await updateStaff(editingStaff.userId, { role, permissions, storeIds: selectedStoreIds })
+                await updateStaff(editingStaff.userId, { role, permissions: permissionOverrides, storeIds: selectedStoreIds })
                 await syncDepartmentMembership(editingStaff.id)
             } else {
                 const invited = await inviteStaff({
@@ -226,7 +249,7 @@ export function StaffView() {
                     email,
                     phoneNumber,
                     role,
-                    permissions,
+                    permissions: permissionOverrides,
                     storeIds: selectedStoreIds,
                 }) as StaffMember | undefined
 
@@ -475,7 +498,10 @@ export function StaffView() {
                                     {['STAFF', 'ACCOUNTANT'].map((r) => (
                                         <button
                                             key={r}
-                                            onClick={() => setRole(r as Role)}
+                                            onClick={() => {
+                                                setRole(r as Role)
+                                                setPermissions(resolvePermissionsForDisplay(r, layoutPreset, null))
+                                            }}
                                             className={cn(
                                                 "p-4 rounded-3xl cursor-pointer border transition-all text-left group active:scale-95",
                                                 role === r
@@ -510,20 +536,41 @@ export function StaffView() {
                                     <span className="text-[10px] font-bold text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Advanced</span>
                                 </div>
 
-                                <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 p-0 overflow-hidden">
-                                    {PERMISSIONS.map((perm) => (
-                                        <div key={perm.id} className="p-4 flex items-center justify-between hover:bg-brand-cream/20 dark:hover:bg-white/5 transition-colors">
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="font-medium text-brand-deep dark:text-brand-cream">{perm.label}</span>
-                                                <span className="text-[10px] text-brand-accent/40 dark:text-white/40 font-bold uppercase tracking-wider">{perm.category}</span>
-                                            </div>
-                                            <Switch
-                                                checked={permissions[perm.id] || false}
-                                                onCheckedChange={() => togglePermission(perm.id)}
-                                            />
+                                {(() => {
+                                    const roleDefaults = getDefaultsForRoleAndPreset(role, layoutPreset)
+                                    const categories = Array.from(new Set(availablePermissions.map(p => p.category)))
+                                    return (
+                                        <div className="space-y-3">
+                                            {categories.map((category) => (
+                                                <div key={category}>
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/35 dark:text-white/35 px-1 mb-1">{category}</p>
+                                                    <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 p-0 overflow-hidden">
+                                                        {availablePermissions
+                                                            .filter(p => p.category === category)
+                                                            .map((perm) => {
+                                                                const isDefault = roleDefaults.includes(perm.id)
+                                                                const isOn = permissions[perm.id] ?? false
+                                                                return (
+                                                                    <div key={perm.id} className="p-4 flex items-center justify-between hover:bg-brand-cream/20 dark:hover:bg-white/5 transition-colors">
+                                                                        <div className="flex flex-col gap-0.5">
+                                                                            <span className="font-medium text-brand-deep dark:text-brand-cream">{perm.label}</span>
+                                                                            {isDefault && (
+                                                                                <span className="text-[9px] text-brand-gold/70 font-bold uppercase tracking-wider">Default for {role}</span>
+                                                                            )}
+                                                                        </div>
+                                                                        <Switch
+                                                                            checked={isOn}
+                                                                            onCheckedChange={() => togglePermission(perm.id)}
+                                                                        />
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                    </GlassCard>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </GlassCard>
+                                    )
+                                })()}
                             </section>
 
                             {/* Store Access Selection */}

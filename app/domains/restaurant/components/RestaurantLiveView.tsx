@@ -787,13 +787,6 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
 
   const { isZenMode, toggleZenMode } = React.useContext(ZenModeContext)
 
-  React.useEffect(() => {
-    if (!isZenMode) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") toggleZenMode() }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [isZenMode, toggleZenMode])
-
   const showTables = mode === "all" || mode === "tables"
   const showKitchen = mode === "all" || mode === "kitchen"
   const showBar = mode === "bar"
@@ -875,8 +868,94 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
     }
   }
 
+  React.useEffect(() => {
+    const isTextInputTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false
+      const tag = target.tagName
+      return (
+        target.isContentEditable ||
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        target.getAttribute("role") === "textbox"
+      )
+    }
+
+    const onKey = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase()
+      const hasSubmitModifier = e.metaKey || e.ctrlKey
+
+      if (key === "escape") {
+        if (barOrderOpen) {
+          e.preventDefault()
+          closeBarOrder()
+          return
+        }
+        if (barEditTicket) {
+          e.preventDefault()
+          closeBarEditTicket()
+          return
+        }
+        if (isZenMode) {
+          toggleZenMode()
+        }
+        return
+      }
+
+      // Keep all non-escape shortcuts scoped to Bar Board mode.
+      if (!showBar) return
+
+      if (hasSubmitModifier && key === "enter") {
+        if (barOrderOpen && barItems.length > 0 && !isRecording) {
+          e.preventDefault()
+          void handleBarOrderSubmit()
+          return
+        }
+        if (barEditTicket && barEditLabel.trim() && !barAction.updateLabel.isPending) {
+          e.preventDefault()
+          void handleBarEditSave()
+          return
+        }
+      }
+
+      if (isTextInputTarget(e.target)) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+
+      if (key === "n" && !barOrderOpen && !barEditTicket) {
+        e.preventDefault()
+        openBarOrder()
+        return
+      }
+
+      if (key === "r" && !barTicketsLoading) {
+        e.preventDefault()
+        refetchBarTickets()
+      }
+    }
+
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [
+    barAction.updateLabel.isPending,
+    barEditLabel,
+    barEditTicket,
+    barItems.length,
+    barOrderOpen,
+    barTicketsLoading,
+    closeBarEditTicket,
+    closeBarOrder,
+    handleBarEditSave,
+    handleBarOrderSubmit,
+    isRecording,
+    isZenMode,
+    openBarOrder,
+    refetchBarTickets,
+    showBar,
+    toggleZenMode,
+  ])
+
   return (
-    <div className="space-y-4 pb-28 md:pb-4">
+    <div className="space-y-4 pb-28 lg:pb-4">
       <Drawer open={!!editingTable} onOpenChange={(open) => !open && closeEditTable()}>
         <DrawerContent className="max-w-xl">
           <DrawerStickyHeader className="pb-5">
@@ -979,12 +1058,19 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
           size="sm"
           onClick={toggleZenMode}
           title={isZenMode ? "Exit zen mode (Esc)" : "Enter zen mode"}
-          className="ml-auto h-8 w-8 rounded-xl p-0 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-accent/8 dark:hover:bg-white/8 transition-all hidden md:flex items-center justify-center"
+          className={cn(
+            "ml-auto h-8 w-8 rounded-xl p-0 transition-all hidden md:flex items-center justify-center",
+            "text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-accent/8 dark:hover:bg-white/8"
+          )}
         >
-          {isZenMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          {isZenMode ? (
+            <Minimize2 key="zen-on-desktop" className="h-4 w-4" />
+          ) : (
+            <Maximize2 key="zen-off-desktop" className="h-4 w-4" />
+          )}
         </Button>
       </div>
-      <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar pb-1">
+      <div className="flex lg:grid lg:grid-cols-4 gap-3 overflow-x-auto lg:overflow-visible no-scrollbar pb-1">
         {[
           {
             label: "Open Tables",
@@ -1023,7 +1109,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
           return (
             <GlassCard
               key={metric.label}
-              className="p-1 rounded-[1.6rem] border-brand-accent/10 min-w-[250px] md:min-w-0 overflow-none"
+              className="p-1 rounded-[1.6rem] border-brand-accent/10 min-w-[250px] lg:min-w-0 overflow-none"
             >
               <div className="rounded-[1.2rem] bg-white/80 dark:bg-transparent p-4">
                 <div className="flex items-start justify-between mb-2">
@@ -1329,9 +1415,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
           </div>
 
           {ticketsLoading ? (
-            <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse shrink-0 w-[70vw] md:w-auto" />
+                <div key={i} className="h-32 rounded-2xl bg-brand-accent/5 dark:bg-white/5 animate-pulse shrink-0 w-[72vw] sm:w-[280px]" />
               ))}
             </div>
           ) : tickets.length === 0 ? (
@@ -1343,7 +1429,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               </p>
             </div>
           ) : (
-            <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar pb-2 md:pb-0">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
               {KITCHEN_FLOW.map((column) => {
                 const cfg = STATUS_CONFIG[column]
                 const columnTickets = tickets.filter((t) => t.status === column)
@@ -1353,7 +1439,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   <div
                     key={column}
                     className={cn(
-                      "rounded-3xl border p-3 space-y-2 shrink-0 w-[72vw] md:w-auto",
+                      "rounded-3xl border p-3 space-y-2 shrink-0 w-[72vw] sm:w-[280px] min-h-[400px]",
                       cfg.bg,
                       cfg.border
                     )}
@@ -1574,6 +1660,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               <Button
                 variant="ghost"
                 onClick={openBarOrder}
+                title="Shortcuts: N (new), Ctrl/Cmd+Enter (submit), R (refresh), Esc (close)"
                 className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-slate-500/10 hover:bg-slate-500/18 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider"
               >
                 <Plus className="h-3 w-3" />
@@ -1582,9 +1669,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
             </div>
 
             {barTicketsLoading ? (
-              <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar">
+              <div className="flex gap-3 overflow-x-auto no-scrollbar">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-32 rounded-3xl bg-brand-accent/5 dark:bg-white/5 animate-pulse shrink-0 w-[70vw] md:w-auto" />
+                  <div key={i} className="h-32 rounded-3xl bg-brand-accent/5 dark:bg-white/5 animate-pulse shrink-0 w-[72vw] sm:w-[280px]" />
                 ))}
               </div>
             ) : barTickets.length === 0 ? (
@@ -1596,7 +1683,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                 </p>
               </div>
             ) : (
-              <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto md:overflow-visible no-scrollbar pb-2 md:pb-0">
+              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
                 {BAR_FLOW.map((column) => {
                   const cfg = BAR_STATUS_CONFIG[column]
                   const columnTickets = barTickets.filter((t) => t.status === column)
@@ -1606,7 +1693,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                     <div
                       key={column}
                       className={cn(
-                        "rounded-3xl border p-3 space-y-2 shrink-0 w-[72vw] md:w-auto",
+                        "rounded-3xl border p-3 space-y-2 shrink-0 w-[72vw] sm:w-[280px] min-h-[400px]",
                         cfg.bg,
                         cfg.border
                       )}
@@ -1650,6 +1737,27 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
           </GlassCard>
         </>
       )}
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={toggleZenMode}
+        title={isZenMode ? "Exit zen mode (Esc)" : "Enter zen mode"}
+        aria-label={isZenMode ? "Exit zen mode" : "Enter zen mode"}
+        className={cn(
+          "md:hidden fixed bottom-24 right-4 z-40 h-12 w-12 rounded-full shadow-xl backdrop-blur-sm transition-all",
+          isZenMode
+            ? "bg-brand-deep/90 text-brand-gold hover:bg-brand-deep dark:bg-brand-gold/90 dark:text-brand-deep dark:hover:text-brand-deep border border-brand-gold/20 dark:hover:bg-brand-gold"
+            : "bg-white/90 border border-brand-deep/10 text-brand-deep-950 hover:bg-white/80 dark:bg-brand-gold/90 dark:text-brand-deep dark:border-brand-gold/20 dark:hover:text-brand-deep dark:hover:bg-brand-gold"
+        )}
+      >
+        {isZenMode ? (
+          <Minimize2 key="zen-on-mobile" className="h-5 w-5" />
+        ) : (
+          <Maximize2 key="zen-off-mobile" className="h-5 w-5" />
+        )}
+      </Button>
     </div>
   )
 }
