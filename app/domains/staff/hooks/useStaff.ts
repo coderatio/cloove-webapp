@@ -90,6 +90,17 @@ export function useStaff() {
         }
     })
 
+    const setSalesPinMutation = useMutation({
+        mutationFn: ({ userId, pin }: { userId: string; pin: string }) =>
+            apiClient.post(`/staff/${userId}/sales-pin`, { pin }),
+        onSuccess: () => {
+            toast.success("Sales PIN updated successfully")
+        },
+        onError: (error: any) => {
+            toast.error(error.message || "Failed to update sales PIN")
+        },
+    })
+
     return {
         staff,
         isLoading,
@@ -98,6 +109,9 @@ export function useStaff() {
         updateStaff: (userId: string, data: any) => updateStaffMutation.mutateAsync({ userId, data }),
         removeStaff: removeStaffMutation.mutateAsync,
         acceptInvitation: acceptInvitationMutation.mutateAsync,
-        resendInvite: resendInviteMutation.mutateAsync
+        resendInvite: resendInviteMutation.mutateAsync,
+        setSalesPin: async (userId: string, pin: string): Promise<void> => {
+            await setSalesPinMutation.mutateAsync({ userId, pin })
+        },
     }
 }

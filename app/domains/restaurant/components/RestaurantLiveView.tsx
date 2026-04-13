@@ -610,13 +610,18 @@ const ArchivedTableCard = React.memo(function ArchivedTableCard({
 })
 
 export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" | "kitchen" | "bar" }) {
+  const showTables = mode === "all" || mode === "tables"
+  const showKitchen = mode === "all" || mode === "kitchen"
+  const showBar = mode === "bar"
   const { intervalMs } = useRestaurantRefreshInterval()
   const refetchInterval: number | false = typeof intervalMs === "number" ? intervalMs : false
   const { data: tickets = [], isLoading: ticketsLoading } = useKitchenTickets({
     refetchInterval,
+    enabled: showKitchen || showTables,
   })
   const { data: barTickets = [], isLoading: barTicketsLoading, refetch: refetchBarTickets } = useBarTickets({
     refetchInterval,
+    enabled: showBar,
   })
   const barAction = useBarTicketActions()
   const { recordSale, isRecording } = useRecordSale()
@@ -633,22 +638,28 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const { data: activeSessions = [], isLoading: activeSessionsLoading } = useTableSessions({
     status: "open",
     refetchInterval,
+    enabled: showTables,
   })
   const { data: closedSessions = [], isLoading: closedSessionsLoading } = useTableSessions({
     status: "closed",
     limit: 50,
     refetchInterval: false,
+    enabled: showTables,
   })
   const [isHistoryOpen, setIsHistoryOpen] = React.useState(false)
   const { data: historySessions = [], isLoading: historyLoading } = useTableSessions({
     status: "closed",
     limit: 200,
-    enabled: isHistoryOpen,
+    enabled: showTables && isHistoryOpen,
     refetchInterval: false,
   })
-  const { data: activeTables = [], isLoading: activeTablesLoading } = useRestaurantTables("active")
+  const { data: activeTables = [], isLoading: activeTablesLoading } = useRestaurantTables("active", {
+    enabled: showTables,
+  })
   const { data: archivedTables = [], isLoading: archivedTablesLoading } =
-    useRestaurantTables("archived")
+    useRestaurantTables("archived", {
+      enabled: showTables,
+    })
   const kitchenAction = useKitchenTicketActions()
   const tableAction = useTableSessionActions()
   const tableCrud = useRestaurantTableActions()
@@ -746,12 +757,23 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
     [tableCrud.permanentDeleteTable]
   )
 
-  const counts = React.useMemo(() => ({
-    openTables: activeSessions.length,
-    queuedTickets: tickets.filter((t) => t.status === "queued").length,
-    preparingTickets: tickets.filter((t) => t.status === "preparing").length,
-    readyTickets: tickets.filter((t) => t.status === "ready").length,
-  }), [activeSessions, tickets])
+  const counts = React.useMemo(() => {
+    if (showBar) {
+      return {
+        openTables: 0,
+        queuedTickets: barTickets.filter((t) => t.status === "ordered").length,
+        preparingTickets: barTickets.filter((t) => t.status === "making").length,
+        readyTickets: barTickets.filter((t) => t.status === "ready").length,
+      }
+    }
+
+    return {
+      openTables: activeSessions.length,
+      queuedTickets: tickets.filter((t) => t.status === "queued").length,
+      preparingTickets: tickets.filter((t) => t.status === "preparing").length,
+      readyTickets: tickets.filter((t) => t.status === "ready").length,
+    }
+  }, [showBar, barTickets, activeSessions, tickets])
 
   const currentTables = tableTab === "archived" ? archivedTables : activeTables
   const tablesLoading = tableTab === "archived" ? archivedTablesLoading : activeTablesLoading
@@ -789,10 +811,6 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   }
 
   const { isZenMode, toggleZenMode } = React.useContext(ZenModeContext)
-
-  const showTables = mode === "all" || mode === "tables"
-  const showKitchen = mode === "all" || mode === "kitchen"
-  const showBar = mode === "bar"
 
   const handleAdvanceBarTicket = async (id: string, status: BarTicket["status"]) => {
     try {
@@ -1074,40 +1092,68 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
         </Button>
       </div>
       <div className="flex lg:grid lg:grid-cols-4 gap-3 overflow-x-auto lg:overflow-visible no-scrollbar pb-1">
-        {[
-          {
-            label: "Open Tables",
-            value: counts.openTables,
-            helper: "active sessions",
-            icon: Armchair,
-            accent: "text-brand-gold",
-            bg: "bg-brand-gold/8",
-          },
-          {
-            label: "In Queue",
-            value: counts.queuedTickets,
-            helper: "awaiting kitchen",
-            icon: UtensilsCrossed,
-            accent: "text-amber-600 dark:text-amber-400",
-            bg: "bg-amber-500/8",
-          },
-          {
-            label: "Preparing",
-            value: counts.preparingTickets,
-            helper: "in the kitchen",
-            icon: ChefHat,
-            accent: "text-blue-600 dark:text-blue-400",
-            bg: "bg-blue-500/8",
-          },
-          {
-            label: "Ready",
-            value: counts.readyTickets,
-            helper: "ready to serve",
-            icon: Zap,
-            accent: "text-emerald-600 dark:text-emerald-400",
-            bg: "bg-emerald-500/8",
-          },
-        ].map((metric) => {
+        {(showBar
+          ? [
+              {
+                label: "Ordered",
+                value: counts.queuedTickets,
+                helper: "new bar orders",
+                icon: GlassWater,
+                accent: "text-amber-600 dark:text-amber-400",
+                bg: "bg-amber-500/8",
+              },
+              {
+                label: "Making",
+                value: counts.preparingTickets,
+                helper: "being prepared",
+                icon: ChefHat,
+                accent: "text-blue-600 dark:text-blue-400",
+                bg: "bg-blue-500/8",
+              },
+              {
+                label: "Ready",
+                value: counts.readyTickets,
+                helper: "ready to serve",
+                icon: Zap,
+                accent: "text-emerald-600 dark:text-emerald-400",
+                bg: "bg-emerald-500/8",
+              },
+            ]
+          : [
+              {
+                label: "Open Tables",
+                value: counts.openTables,
+                helper: "active sessions",
+                icon: Armchair,
+                accent: "text-brand-gold",
+                bg: "bg-brand-gold/8",
+              },
+              {
+                label: "In Queue",
+                value: counts.queuedTickets,
+                helper: "awaiting kitchen",
+                icon: UtensilsCrossed,
+                accent: "text-amber-600 dark:text-amber-400",
+                bg: "bg-amber-500/8",
+              },
+              {
+                label: "Preparing",
+                value: counts.preparingTickets,
+                helper: "in the kitchen",
+                icon: ChefHat,
+                accent: "text-blue-600 dark:text-blue-400",
+                bg: "bg-blue-500/8",
+              },
+              {
+                label: "Ready",
+                value: counts.readyTickets,
+                helper: "ready to serve",
+                icon: Zap,
+                accent: "text-emerald-600 dark:text-emerald-400",
+                bg: "bg-emerald-500/8",
+              },
+            ]
+        ).map((metric) => {
           const Icon = metric.icon
           return (
             <GlassCard

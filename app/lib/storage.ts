@@ -25,6 +25,14 @@ export const STORAGE_KEYS = {
     RESTAURANT_ZEN_MODE: 'cloove_restaurant_zen_mode',
     /** Last successful /businesses payload (survives rate limits / transient errors) */
     BUSINESSES_CACHE: 'cloove_businesses_cache',
+    /** Business code remembered on shared POS device for sales mode */
+    SALES_MODE_BUSINESS_CODE: 'cloove_sales_mode_business_code',
+    /** Business name corresponding to saved sales mode business code */
+    SALES_MODE_BUSINESS_NAME: 'cloove_sales_mode_business_name',
+    /** Whether the current client session is in sales mode */
+    SALES_MODE_ACTIVE: 'cloove_sales_mode_active',
+    /** Auto-print preference for embedded sales mode POS */
+    SALES_MODE_AUTO_PRINT: 'cloove_sales_mode_auto_print',
 } as const
 
 type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]
@@ -280,5 +288,33 @@ export const storage = {
 
     setRestaurantZenMode(zen: boolean): void {
         this.set(STORAGE_KEYS.RESTAURANT_ZEN_MODE, String(zen))
+    },
+
+    // --- Sales Mode ---
+
+    /** Get the remembered business code for the sales-mode PIN screen */
+    getSalesModeBusinessCode(): string | null {
+        return this.get(STORAGE_KEYS.SALES_MODE_BUSINESS_CODE)
+    },
+
+    /** Save the business code so the shared device skips business code entry on return */
+    setSalesModeBusinessCode(code: string): void {
+        this.set(STORAGE_KEYS.SALES_MODE_BUSINESS_CODE, code)
+    },
+
+    /** Get the remembered business name shown on the PIN entry screen */
+    getSalesModeBusinessName(): string | null {
+        return this.get(STORAGE_KEYS.SALES_MODE_BUSINESS_NAME)
+    },
+
+    /** Save the business name for display on the PIN screen */
+    setSalesModeBusinessName(name: string): void {
+        this.set(STORAGE_KEYS.SALES_MODE_BUSINESS_NAME, name)
+    },
+
+    /** Clear saved business code and name (use when switching businesses) */
+    clearSalesModeDevice(): void {
+        this.remove(STORAGE_KEYS.SALES_MODE_BUSINESS_CODE)
+        this.remove(STORAGE_KEYS.SALES_MODE_BUSINESS_NAME)
     },
 }

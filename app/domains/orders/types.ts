@@ -88,6 +88,7 @@ export interface OrderFilterParams {
     storeId?: string
     storeIds?: string[]
     customerId?: string
+    recordedById?: string
     academicTermId?: string
     serviceModes?: string[]
 }
