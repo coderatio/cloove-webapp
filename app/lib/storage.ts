@@ -40,13 +40,56 @@ type StorageKey = typeof STORAGE_KEYS[keyof typeof STORAGE_KEYS]
 /**
  * Type-safe wrapper for localStorage
  */
+const memoryStorage = new Map<string, string>()
+let localStorageHealthy = true
+
+function safeGetItem(key: string): string | null {
+    if (typeof window === 'undefined') return null
+    if (!localStorageHealthy) return memoryStorage.get(key) ?? null
+    try {
+        const value = localStorage.getItem(key)
+        return value ?? (memoryStorage.get(key) ?? null)
+    } catch {
+        localStorageHealthy = false
+        return memoryStorage.get(key) ?? null
+    }
+}
+
+function safeSetItem(key: string, value: string): void {
+    if (typeof window === 'undefined') return
+    if (!localStorageHealthy) {
+        memoryStorage.set(key, value)
+        return
+    }
+    try {
+        localStorage.setItem(key, value)
+    } catch {
+        localStorageHealthy = false
+        memoryStorage.set(key, value)
+    }
+}
+
+function safeRemoveItem(key: string): void {
+    if (typeof window === 'undefined') return
+    if (!localStorageHealthy) {
+        memoryStorage.delete(key)
+        return
+    }
+    try {
+        localStorage.removeItem(key)
+    } catch {
+        localStorageHealthy = false
+        memoryStorage.delete(key)
+    }
+}
+
 export const storage = {
     /**
      * Get a value from localStorage
      */
     get(key: StorageKey): string | null {
         if (typeof window === 'undefined') return null
-        return localStorage.getItem(key)
+        return safeGetItem(key)
     },
 
     /**
@@ -54,7 +97,7 @@ export const storage = {
      */
     set(key: StorageKey, value: string): void {
         if (typeof window === 'undefined') return
-        localStorage.setItem(key, value)
+        safeSetItem(key, value)
     },
 
     /**
@@ -62,7 +105,25 @@ export const storage = {
      */
     remove(key: StorageKey): void {
         if (typeof window === 'undefined') return
-        localStorage.removeItem(key)
+        safeRemoveItem(key)
+    },
+
+    /**
+     * Raw storage access for non-Cloove keys (safe for private modes).
+     */
+    getRaw(key: string): string | null {
+        if (typeof window === 'undefined') return null
+        return safeGetItem(key)
+    },
+
+    setRaw(key: string, value: string): void {
+        if (typeof window === 'undefined') return
+        safeSetItem(key, value)
+    },
+
+    removeRaw(key: string): void {
+        if (typeof window === 'undefined') return
+        safeRemoveItem(key)
     },
 
     /**

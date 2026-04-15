@@ -2,7 +2,7 @@ import { RestaurantLiveView } from "@/app/domains/restaurant/components/Restaura
 
 export default function SalesModeRestaurantBarPage() {
     return (
-        <div className="p-2 md:p-4">
+        <div className="h-full overflow-auto p-2 md:p-4">
             <RestaurantLiveView mode="bar" />
         </div>
     )

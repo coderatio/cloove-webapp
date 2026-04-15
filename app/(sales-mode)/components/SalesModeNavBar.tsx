@@ -9,6 +9,7 @@ import { useAuth } from "@/app/components/providers/auth-provider"
 import { Button } from "@/app/components/ui/button"
 import { Switch } from "@/app/components/ui/switch"
 import { storage, STORAGE_KEYS } from "@/app/lib/storage"
+import { SalesOutboxBanner } from "./SalesOutboxBanner"
 
 const tabs = [
     { href: "/sales-mode/pos", label: "POS", icon: Receipt },
@@ -80,8 +81,9 @@ export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
                 </div>
             </header>
 
-            <main className="mt-14 mb-16 h-[calc(100vh-7.5rem)] sm:mt-16 sm:h-[calc(100vh-8rem)] overflow-hidden">
-                <div className="h-full min-h-0">{children}</div>
+            <main className="mt-14 mb-16 flex min-h-0 flex-col h-[calc(100vh-7.5rem)] sm:mt-16 sm:h-[calc(100vh-8rem)] overflow-hidden">
+                <SalesOutboxBanner />
+                <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
             </main>
 
             <nav className="fixed bottom-0 inset-x-0 z-40 h-16 border-t border-black/10 dark:border-white/10 grid grid-cols-6 bg-background/95 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">

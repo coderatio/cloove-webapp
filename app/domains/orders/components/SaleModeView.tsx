@@ -18,6 +18,7 @@ import {
     ChevronLeft,
     ChevronRight,
     ChevronDown,
+    SlidersHorizontal,
     User,
     UserPlus,
     X,
@@ -73,6 +74,7 @@ import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { ProductSearchOverlay } from './ProductSearchOverlay'
 import { Product } from '../hooks/useInventory'
 import { useRestaurantTables } from '@/app/domains/restaurant/hooks/useRestaurantOps'
+import { CapacityStepper } from '@/app/domains/restaurant/components/CapacityStepper'
 import { storage, STORAGE_KEYS } from '@/app/lib/storage'
 
 // Stagger variants for the container
@@ -239,7 +241,7 @@ const ProductGrid = React.memo(({
             className="flex-1 overflow-y-auto custom-scrollbar pr-1 lg:pr-2 -mr-1 lg:-mr-2 min-h-0 [scrollbar-gutter:stable] overscroll-contain isolation-auto"
         >
             <div className={cn(
-                "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4 pb-1 lg:pb-2 will-change-scroll"
+                "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4 pb-16 will-change-scroll"
             )}>
                 <AnimatePresence mode="popLayout">
                     {isLoading || !activeBusiness ? (
@@ -361,9 +363,9 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
     const [covers, setCovers] = React.useState(1)
     const [kitchenStation, setKitchenStation] = React.useState('kitchen')
     const [sendToKitchen, setSendToKitchen] = React.useState(true)
-    const [mobileRestaurantDrawerOpen, setMobileRestaurantDrawerOpen] = React.useState(false)
+    const [serviceControlsDrawerOpen, setServiceControlsDrawerOpen] = React.useState(false)
 
-    const mobileRestaurantSummary = React.useMemo(() => {
+    const serviceControlsSummary = React.useMemo(() => {
         if (serviceMode === "TAKEAWAY") {
             return `Takeaway · ${sendToKitchen ? "Kitchen on" : "Kitchen off"}`
         }
@@ -599,13 +601,13 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                 notes: note.trim() || undefined,
                 ...(layoutPreset === "school"
                     ? {
-                          academicTermId:
-                              feeTermChoice === "__default__"
-                                  ? undefined
-                                  : feeTermChoice === "__none__"
+                        academicTermId:
+                            feeTermChoice === "__default__"
+                                ? undefined
+                                : feeTermChoice === "__none__"
                                     ? null
                                     : feeTermChoice,
-                      }
+                    }
                     : {}),
             })
 
@@ -633,14 +635,25 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                 currency: activeBusiness?.currency || 'NGN'
             })
 
-            toast.success('Sale recorded!', {
-                description: `${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${formatCurrency(saleTotal, { currency: activeBusiness?.currency || 'NGN' })}`,
-                duration: 8000,
-                action: {
-                    label: 'Print Receipt',
-                    onClick: () => printReceipt(buildReceiptData(), result?.saleId),
-                }
-            })
+            if (result.offlineQueued) {
+                toast.success('Sale saved offline', {
+                    description: `Will sync when you are back online • ${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${formatCurrency(saleTotal, { currency: activeBusiness?.currency || 'NGN' })}`,
+                    duration: 9000,
+                    action: {
+                        label: 'Print receipt',
+                        onClick: () => printReceipt(buildReceiptData(), result?.saleId),
+                    },
+                })
+            } else {
+                toast.success('Sale recorded!', {
+                    description: `Synced instantly • ${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${formatCurrency(saleTotal, { currency: activeBusiness?.currency || 'NGN' })}`,
+                    duration: 8000,
+                    action: {
+                        label: 'Print Receipt',
+                        onClick: () => printReceipt(buildReceiptData(), result?.saleId),
+                    },
+                })
+            }
 
             if (autoPrint) {
                 printReceipt(buildReceiptData(), result?.saleId)
@@ -689,21 +702,37 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
         setAmountPaid('')
     }
 
-    // Keyboard shortcuts for search and fast checkout
+    // Keyboard shortcuts for search, service controls, and fast checkout
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            const activeEl = document.activeElement as HTMLElement | null
+            const isInput = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA'
+            const isEditable = activeEl?.isContentEditable || activeEl?.getAttribute('role') === 'textbox'
+            const hasModifier = e.metaKey || e.ctrlKey || e.altKey
+
             if (e.key === '/' && !isSearchOpen) {
-                const isInput = document.activeElement?.tagName === 'INPUT' ||
-                    document.activeElement?.tagName === 'TEXTAREA'
-                if (!isInput) {
+                if (!isInput && !isEditable && !hasModifier) {
                     e.preventDefault()
                     setIsSearchOpen(true)
                 }
             }
+
+            if (
+                layoutPreset === "restaurant" &&
+                presetCapabilities.showServiceModeChips &&
+                e.key.toLowerCase() === 'o' &&
+                !isInput &&
+                !isEditable &&
+                !hasModifier &&
+                !e.repeat &&
+                !serviceControlsDrawerOpen
+            ) {
+                e.preventDefault()
+                setServiceControlsDrawerOpen(true)
+            }
+
             if (!presetCapabilities.fastCheckout) return
-            const isInput = document.activeElement?.tagName === 'INPUT' ||
-                document.activeElement?.tagName === 'TEXTAREA'
-            if (isInput) return
+            if (isInput || isEditable || hasModifier) return
             if ((e.key === 'Enter' || e.key.toLowerCase() === 'p') && cart.length > 0 && !isRecording) {
                 e.preventDefault()
                 void handleCheckout()
@@ -715,7 +744,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isSearchOpen, presetCapabilities.fastCheckout, cart.length, isRecording, handleCheckout])
+    }, [isSearchOpen, layoutPreset, presetCapabilities.fastCheckout, presetCapabilities.showServiceModeChips, cart.length, isRecording, handleCheckout, serviceControlsDrawerOpen])
 
     const handleRecallSale = (sale: any) => {
         if (cart.length > 0) {
@@ -747,18 +776,17 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
     }
 
     const renderRestaurantServiceControls = () => (
-        <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-center lg:gap-2.5">
-            {/* Service mode — full-width segmented control on mobile */}
-            <div className="w-full lg:w-auto shrink-0 space-y-2 lg:space-y-0 lg:flex lg:items-center">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground lg:hidden">
+        <div className="flex flex-col gap-4">
+            <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     Order type
                 </p>
-                <div className="flex w-full lg:w-auto items-center gap-1 bg-brand-accent/5 dark:bg-white/5 rounded-2xl p-1 border border-brand-accent/8 dark:border-white/5 lg:shrink-0">
+                <div className="flex w-full items-center gap-1 rounded-2xl border border-brand-accent/8 bg-brand-accent/5 p-1 dark:border-white/5 dark:bg-white/5">
                     <button
                         type="button"
                         onClick={() => setServiceMode('DINE_IN')}
                         className={cn(
-                            "flex flex-1 lg:flex-initial items-center justify-center gap-2 min-h-11 px-3 rounded-xl text-sm font-semibold transition-all duration-200",
+                            "flex flex-1 items-center justify-center gap-2 min-h-11 px-3 rounded-xl text-sm font-semibold transition-all duration-200",
                             serviceMode === 'DINE_IN'
                                 ? "bg-white dark:bg-white/10 text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                                 : "text-muted-foreground hover:text-foreground"
@@ -771,7 +799,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                         type="button"
                         onClick={() => setServiceMode('TAKEAWAY')}
                         className={cn(
-                            "flex flex-1 lg:flex-initial items-center justify-center gap-2 min-h-11 px-3 rounded-xl text-sm font-semibold transition-all duration-200",
+                            "flex flex-1 items-center justify-center gap-2 min-h-11 px-3 rounded-xl text-sm font-semibold transition-all duration-200",
                             serviceMode === 'TAKEAWAY'
                                 ? "bg-white dark:bg-white/10 text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                                 : "text-muted-foreground hover:text-foreground"
@@ -784,9 +812,9 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
             </div>
 
             {serviceMode === "DINE_IN" ? (
-                <div className="flex flex-col gap-3 w-full lg:flex-row lg:flex-wrap lg:items-center lg:gap-2.5 lg:w-auto lg:min-w-0">
-                    <div className="flex flex-col gap-1.5 w-full sm:max-w-md lg:max-w-none lg:w-auto lg:min-w-36">
-                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground lg:hidden">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                             Table
                         </label>
                         <Select value={tableLabel || "__none__"} onValueChange={(v) => setTableLabel(v === "__none__" ? "" : v)}>
@@ -806,8 +834,8 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                         </Select>
                     </div>
                     {(!tableLabel || !restaurantTables.some((t) => t.label === tableLabel)) ? (
-                        <div className="flex flex-col gap-1.5 w-full sm:max-w-xs lg:w-auto">
-                            <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground lg:hidden">
+                        <div className="flex flex-col gap-1.5 w-full">
+                            <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                                 Label
                             </label>
                             <Input
@@ -818,90 +846,16 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                             />
                         </div>
                     ) : null}
-                    <div className="flex lg:hidden flex-row gap-2 items-end w-full min-w-0">
-                        <div className="flex flex-col gap-1.5 shrink-0 w-auto max-w-[min(100%,11rem)]">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                                Covers
-                            </span>
-                            <div className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5 px-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setCovers((v) => Math.max(1, v - 1))}
-                                    className="h-9 w-9 flex items-center justify-center rounded-lg border border-brand-accent/15 dark:border-white/10 bg-white/80 dark:bg-white/5 text-foreground hover:bg-brand-accent/5 active:scale-95 transition-all"
-                                    aria-label="Decrease covers"
-                                >
-                                    <Minus className="h-4 w-4" />
-                                </button>
-                                <span className="text-base font-semibold min-w-9 text-center tabular-nums text-foreground">
-                                    {covers}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => setCovers((v) => v + 1)}
-                                    className="h-9 w-9 flex items-center justify-center rounded-lg border border-brand-accent/15 dark:border-white/10 bg-white/80 dark:bg-white/5 text-foreground hover:bg-brand-accent/5 active:scale-95 transition-all"
-                                    aria-label="Increase covers"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                            <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                                Prep station
-                            </label>
-                            <div className="flex items-center gap-2 min-h-11 px-3 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
-                                <input
-                                    value={kitchenStation}
-                                    onChange={(e) => setKitchenStation(e.target.value)}
-                                    placeholder="kitchen"
-                                    className="min-w-0 w-full text-sm bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="hidden lg:flex flex-row items-center gap-2 w-auto lg:shrink-0">
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground shrink-0 pb-px">
-                            Cov.
-                        </span>
-                        <div className="flex min-h-11 items-center justify-center rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5 px-3">
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setCovers((v) => Math.max(1, v - 1))}
-                                    className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg border border-brand-accent/15 dark:border-white/10 bg-white/80 dark:bg-white/5 text-foreground hover:bg-brand-accent/5 active:scale-95 transition-all"
-                                    aria-label="Decrease covers"
-                                >
-                                    <Minus className="h-4 w-4" />
-                                </button>
-                                <span className="text-lg font-semibold min-w-9 text-center tabular-nums text-foreground">
-                                    {covers}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => setCovers((v) => v + 1)}
-                                    className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg border border-brand-accent/15 dark:border-white/10 bg-white/80 dark:bg-white/5 text-foreground hover:bg-brand-accent/5 active:scale-95 transition-all"
-                                    aria-label="Increase covers"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             ) : null}
 
-            <div className="flex flex-col gap-3 w-full lg:flex-row lg:flex-wrap lg:items-center lg:gap-2.5 lg:w-auto pt-1 border-t border-brand-accent/10 dark:border-white/10 lg:border-0 lg:pt-0">
-                <div
-                    className={cn(
-                        "flex flex-col gap-1.5 flex-1 min-w-0 lg:min-w-44",
-                        serviceMode === "DINE_IN" && "hidden lg:flex"
-                    )}
-                >
-                    <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground lg:hidden">
+            {serviceMode === "DINE_IN" ? (
+                <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                         Prep station
                     </label>
                     <div className="flex items-center gap-2 min-h-11 px-3 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0 hidden lg:inline">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
                             Station
                         </span>
                         <input
@@ -912,25 +866,55 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                         />
                     </div>
                 </div>
-                <div className="flex items-center justify-between gap-3 min-h-11 px-3 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5 lg:shrink-0">
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground lg:hidden">
-                            Send to kitchen
-                        </span>
-                        <span className="text-sm font-medium text-foreground lg:hidden">
-                            {sendToKitchen ? "On" : "Off"}
-                        </span>
-                        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hidden lg:inline">
-                            Kitchen
-                        </span>
+            ) : null}
+            <div className="grid grid-cols-2 gap-3">
+                {serviceMode === "DINE_IN" ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            Covers
+                        </label>
+                        <div className="flex items-center min-h-11">
+                            <CapacityStepper
+                                value={covers}
+                                onChange={setCovers}
+                                className="h-11 px-2"
+                            />
+                        </div>
                     </div>
-                    <Switch checked={sendToKitchen} onCheckedChange={setSendToKitchen} className="scale-100" />
-                </div>
+                ) : null}
+                {serviceMode === "TAKEAWAY" ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            Prep station
+                        </label>
+                        <div className="flex items-center gap-2 min-h-11 px-3 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
+                                Station
+                            </span>
+                            <input
+                                value={kitchenStation}
+                                onChange={(e) => setKitchenStation(e.target.value)}
+                                placeholder="kitchen"
+                                className="min-w-0 flex-1 text-sm bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
+                            />
+                        </div>
+                    </div>
+                ) : null}
+                {(serviceMode === "TAKEAWAY" || serviceMode === "DINE_IN") ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            Send to kitchen
+                        </label>
+                        <div className="flex items-center justify-between gap-3 min-h-11 px-3 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5 w-full">
+                            <span className="text-sm font-medium text-foreground">
+                                {sendToKitchen ? "On" : "Off"}
+                            </span>
+                            <Switch checked={sendToKitchen} onCheckedChange={setSendToKitchen} className="scale-100" />
+                        </div>
+                    </div>
+                ) : null}
             </div>
 
-            <span className="w-full xl:w-auto xl:ml-auto text-[9px] font-semibold uppercase tracking-widest text-muted-foreground hidden md:block md:text-center xl:text-right">
-                Enter/P · Pay · K · Park
-            </span>
         </div>
     )
 
@@ -963,56 +947,56 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                     isLocalMode={isLocalMode}
                     onSearchChange={setLocalSearch}
                 />
-                <div className="flex-1 flex flex-col py-4 pr-4 pl-5 lg:pt-2 lg:px-8 lg:pb-4 space-y-4 lg:space-y-6 min-h-0">
+                <div className="flex-1 flex flex-col pt-4 pr-4 pl-5 pb-0 lg:pt-2 lg:px-4 lg:pb-0 min-h-0">
                     {!embedded && (
-                    <header className="flex items-center justify-between shrink-0">
-                        <div className="flex items-center gap-6">
-                            <Link href="/orders" className="hidden lg:block">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="rounded-2xl h-12 w-12 group border-brand-deep/15 dark:border-white/5 bg-white dark:bg-brand-deep-800 hover:bg-brand-gold/10 dark:hover:bg-brand-deep-900 hover:border-brand-deep-800/15 transition-all duration-500"
-                                >
-                                    <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-                                </Button>
-                            </Link>
-                            <div>
-                                <h2 className="text-3xl lg:text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
-                                <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs lg:text-sm font-sans uppercase tracking-[0.2em] font-black">
-                                    {presetCapabilities.fastCheckout ? "Fast Checkout" : "Catalog"}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            {/* Auto Print Toggle */}
-                            <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-4 lg:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
-                                <span className="text-[10px] lg:text-xs font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest hidden sm:block">Auto Print</span>
-                                <span className="text-[10px] font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest sm:hidden">Print</span>
-                                <Switch checked={autoPrint} onCheckedChange={setAutoPrint} className="scale-75 origin-right" />
+                        <header className="flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-6">
+                                <Link href="/orders" className="hidden lg:block">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="rounded-2xl h-12 w-12 group border-brand-deep/15 dark:border-white/5 bg-white dark:bg-brand-deep-800 hover:bg-brand-gold/10 dark:hover:bg-brand-deep-900 hover:border-brand-deep-800/15 transition-all duration-500"
+                                    >
+                                        <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                                    </Button>
+                                </Link>
+                                <div>
+                                    <h2 className="text-3xl lg:text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
+                                    <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs lg:text-sm font-sans uppercase tracking-[0.2em] font-black">
+                                        {presetCapabilities.fastCheckout ? "Fast Checkout" : "Catalog"}
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="flex lg:hidden items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => setMobileView('cart')}
-                                    className="rounded-2xl h-12 w-12 bg-white/40 dark:bg-white/5 relative"
-                                >
-                                    <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
-                                    {totalItems > 0 && (
-                                        <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[10px] font-black shadow-lg">
-                                            {totalItems}
-                                        </span>
-                                    )}
-                                </Button>
+                            <div className="flex items-center gap-4">
+                                {/* Auto Print Toggle */}
+                                <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-4 lg:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
+                                    <span className="text-[10px] lg:text-xs font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest hidden sm:block">Auto Print</span>
+                                    <span className="text-[10px] font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest sm:hidden">Print</span>
+                                    <Switch checked={autoPrint} onCheckedChange={setAutoPrint} className="scale-75 origin-right" />
+                                </div>
+
+                                <div className="flex lg:hidden items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setMobileView('cart')}
+                                        className="rounded-2xl h-12 w-12 bg-white/40 dark:bg-white/5 relative"
+                                    >
+                                        <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
+                                        {totalItems > 0 && (
+                                            <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[10px] font-black shadow-lg">
+                                                {totalItems}
+                                            </span>
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    </header>
+                        </header>
                     )}
 
                     {/* Filters & Search */}
-                    <div className={cn("flex flex-col lg:flex-row gap-4 lg:items-center", embedded && "pt-2")}>
+                    <div className={cn("flex flex-col lg:flex-row gap-4 lg:items-center pb-4", embedded && "pt-2")}>
                         <div className="w-full lg:w-auto min-w-[320px] flex-none">
                             {/* Desktop: Opens Overlay */}
                             <div
@@ -1049,7 +1033,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                 className={cn(
                                     "rounded-[12px] h-10 px-5 min-w-max transition-all duration-300 text-sm font-medium",
                                     !selectedCategory
-                                            ? "bg-brand-deep dark:bg-white text-white dark:text-brand-deep shadow-xs border-transparent hover:bg-brand-deep hover:text-white dark:hover:bg-white dark:hover:text-brand-deep"
+                                        ? "bg-brand-deep dark:bg-white text-white dark:text-brand-deep shadow-xs border-transparent hover:bg-brand-deep hover:text-white dark:hover:bg-white dark:hover:text-brand-deep"
                                         : "bg-white dark:bg-transparent text-brand-accent/60 dark:text-brand-cream/60 border-brand-accent/10 dark:border-white/10 hover:border-brand-accent/30 dark:hover:border-white/30"
                                 )}
                             >
@@ -1074,11 +1058,11 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                     </div>
                     {layoutPreset === "restaurant" && presetCapabilities.showServiceModeChips ? (
                         <>
-                            <div className="rounded-2xl border border-brand-accent/10 dark:border-white/10 bg-white/60 dark:bg-white/[0.06] shadow-sm overflow-hidden">
+                            <div className="rounded-2xl border border-brand-accent/10 dark:border-white/10 bg-white/60 dark:bg-white/6 shadow-sm overflow-hidden mb-4">
                                 <button
                                     type="button"
-                                    className="flex lg:hidden w-full items-center justify-between gap-3 text-left min-h-13 px-4 py-3 active:bg-brand-accent/5 dark:active:bg-white/5 transition-colors"
-                                    onClick={() => setMobileRestaurantDrawerOpen(true)}
+                                    className="flex w-full items-center justify-between cursor-pointer gap-3 text-left min-h-13 px-4 py-3 active:bg-brand-accent/5 dark:active:bg-white/5 transition-colors"
+                                    onClick={() => setServiceControlsDrawerOpen(true)}
                                     aria-haspopup="dialog"
                                 >
                                     <div className="min-w-0 flex-1">
@@ -1086,16 +1070,19 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                             Order & service
                                         </p>
                                         <p className="text-sm font-medium text-foreground truncate mt-0.5">
-                                            {mobileRestaurantSummary}
+                                            {serviceControlsSummary}
                                         </p>
                                     </div>
-                                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                                    <div className="inline-flex items-center gap-2 rounded-xl border border-brand-accent/15 dark:border-white/10 bg-background/70 px-2.5 py-1.5">
+                                        <SlidersHorizontal className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        <span className="text-xs font-semibold text-foreground">Adjust</span>
+                                        <span className="ml-0.5 rounded-md border border-brand-accent/15 bg-brand-accent/5 px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                                            O
+                                        </span>
+                                    </div>
                                 </button>
-                                <div className="hidden lg:block p-3">
-                                    {renderRestaurantServiceControls()}
-                                </div>
                             </div>
-                            <Drawer open={mobileRestaurantDrawerOpen} onOpenChange={setMobileRestaurantDrawerOpen}>
+                            <Drawer open={serviceControlsDrawerOpen} onOpenChange={setServiceControlsDrawerOpen}>
                                 <DrawerContent className="max-h-[88vh] flex flex-col">
                                     <DrawerStickyHeader className="pb-4">
                                         <DrawerTitle className="text-xl font-serif">Order &amp; service</DrawerTitle>
@@ -1107,6 +1094,9 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                         {renderRestaurantServiceControls()}
                                     </DrawerBody>
                                     <DrawerFooter className="pb-8 pt-2">
+                                        <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground text-center">
+                                            Enter/P · Pay · K · Park
+                                        </p>
                                         <DrawerClose asChild>
                                             <Button variant="base" className="w-full rounded-xl h-11">
                                                 Done
@@ -1134,7 +1124,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
 
                     {/* Pagination Controls - Fixed Bottom */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center lg:justify-center gap-2 lg:gap-4 pt-0.5 pb-1 lg:pb-0 lg:mt-1 shrink-0 relative">
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                             {/* Mobile Back Button */}
                             {!embedded && <div className="absolute left-2 lg:hidden">
                                 <Link href="/orders">
@@ -1148,52 +1138,54 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                 </Link>
                             </div>}
 
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
-                            >
-                                <ChevronLeft className="h-3 w-3 lg:mr-1.5" />
-                                <span className="hidden lg:inline">Previous</span>
-                            </Button>
+                            <div className="inline-flex w-fit items-center gap-2 rounded-[18px] border border-brand-accent/10 bg-transparent px-2 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 dark:shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
+                                >
+                                    <ChevronLeft className="h-3 w-3 lg:mr-1.5" />
+                                    <span className="hidden lg:inline">Previous</span>
+                                </Button>
 
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                                    // Logic to show fewer pages on mobile
-                                    const isVisibleOnMobile = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
-                                    if (!isVisibleOnMobile) return null;
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                        // Logic to show fewer pages on mobile
+                                        const isVisibleOnMobile = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
+                                        if (!isVisibleOnMobile) return null;
 
-                                    return (
-                                        <Button
-                                            key={page}
-                                            variant={currentPage === page ? 'default' : 'ghost'}
-                                            size="sm"
-                                            onClick={() => setCurrentPage(page)}
-                                            className={cn(
-                                                "w-8 h-8 rounded-lg font-semibold transition-all duration-300 text-xs",
-                                                currentPage === page
-                                                    ? "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-xs"
-                                                    : "text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-accent hover:bg-brand-accent/5"
-                                            )}
-                                        >
-                                            {page}
-                                        </Button>
-                                    )
-                                })}
+                                        return (
+                                            <Button
+                                                key={page}
+                                                variant={currentPage === page ? 'default' : 'ghost'}
+                                                size="sm"
+                                                onClick={() => setCurrentPage(page)}
+                                                className={cn(
+                                                    "w-8 h-8 rounded-lg font-semibold transition-all duration-300 text-xs",
+                                                    currentPage === page
+                                                        ? "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-xs"
+                                                        : "text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-accent hover:bg-brand-accent/5"
+                                                )}
+                                            >
+                                                {page}
+                                            </Button>
+                                        )
+                                    })}
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
+                                >
+                                    <span className="hidden lg:inline">Next</span>
+                                    <ChevronRight className="h-3 w-3 lg:ml-1.5" />
+                                </Button>
                             </div>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages}
-                                className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
-                            >
-                                <span className="hidden lg:inline">Next</span>
-                                <ChevronRight className="h-3 w-3 lg:ml-1.5" />
-                            </Button>
                         </div>
                     )}
                 </div>

@@ -15,6 +15,8 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
     const { state, actions } = flow
     const useEmailLink = state.setupVia === "email_link"
     const showOtpForm = state.setupVia === "otp"
+    const useWhatsappOtp = state.setupVia === "whatsapp_otp"
+    const otpChannel = state.isEmail ? "email" : "WhatsApp"
 
     return (
         <motion.div
@@ -37,7 +39,7 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                             <p className="text-xs text-brand-cream/50 leading-relaxed">
                                 We sent a code to your{" "}
                                 <span className="text-brand-cream font-semibold">
-                                    {state.identifier.includes("@") ? "email" : "phone"}
+                                    {otpChannel}
                                 </span>
                                 . Enter it below to continue.
                             </p>
@@ -97,6 +99,24 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                         <p className="text-sm text-brand-cream/70 leading-relaxed max-w-sm mx-auto">
                             Use the verification link we sent to your email to set your password. Check your inbox (and spam), then open the link to continue.
                         </p>
+                    </div>
+                ) : useWhatsappOtp ? (
+                    <div className="text-center mb-6 pt-10">
+                        <div className="h-12 w-12 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold mx-auto mb-4 border border-brand-gold/20">
+                            <Shield className="w-6 h-6" />
+                        </div>
+                        <h2 className="font-serif text-2xl text-brand-gold mb-2">One quick step</h2>
+                        <p className="text-sm text-brand-cream/70 leading-relaxed max-w-sm mx-auto mb-6">
+                            Your number is already verified. Send any message to our WhatsApp bot to open a chat, then come back and tap <span className="text-brand-gold font-semibold">Try again</span> — we&apos;ll send your login code there.
+                        </p>
+                        <Button
+                            onClick={actions.backToIdentifier}
+                            size="lg"
+                            className="w-full h-12 rounded-xl bg-brand-gold text-brand-deep font-semibold hover:bg-brand-gold/90"
+                        >
+                            Try again
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
                     </div>
                 ) : (
                     <div className="text-center mb-6 pt-10">

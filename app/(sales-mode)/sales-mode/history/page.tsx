@@ -86,7 +86,7 @@ export default function SalesModeHistoryPage() {
     const totalPages = meta?.lastPage || 1
 
     return (
-        <div className="h-full overflow-y-auto p-3 md:p-4">
+        <div className="h-full overflow-auto p-3 md:p-4">
             <div className="mx-auto max-w-6xl space-y-4">
                 <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-background/70 backdrop-blur p-4 md:p-5">
                     <div className="flex items-center gap-2 text-brand-accent/70 dark:text-brand-cream/70 text-[11px]">

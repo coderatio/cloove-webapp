@@ -17,8 +17,8 @@ export interface IdentifyResponse {
     authMethod: 'password' | 'pin' | 'setup'
     /** False when OTP generation failed (e.g. cache unavailable) — user should hit Resend */
     otpSent?: boolean
-    /** 'email_link' = web+email: use verify-email link. 'whatsapp_activate' = phone: message bot first. 'otp' = OTP sent to email (e.g. admin). */
-    setupVia?: 'otp' | 'email_link' | 'whatsapp_activate'
+    /** 'email_link' = web+email: use verify-email link. 'whatsapp_activate' = phone not yet verified: message bot first. 'whatsapp_otp' = phone verified, 24h window closed: message bot to open window then retry. 'otp' = OTP sent to email or WhatsApp. */
+    setupVia?: 'otp' | 'email_link' | 'whatsapp_activate' | 'whatsapp_otp'
     /** True when user registered with phone via web, has a password, but phone is not yet verified */
     phoneActivationRequired?: boolean
     emailMasked?: string | null

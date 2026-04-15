@@ -4,7 +4,7 @@ import withSerwistInit from "@serwist/next";
 const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
-  disable: false,
+  disable: process.env.NODE_ENV !== "production",
   additionalPrecacheEntries: [{ url: "/offline", revision: Date.now().toString() }],
 });
 
