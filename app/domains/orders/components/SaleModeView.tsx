@@ -18,6 +18,7 @@ import {
     ChevronLeft,
     ChevronRight,
     ChevronDown,
+    SlidersHorizontal,
     User,
     UserPlus,
     X,
@@ -51,6 +52,16 @@ import { useBusiness } from '@/app/components/BusinessProvider'
 import { format } from 'date-fns'
 import { useQueuedSales, CartItem } from '../hooks/useQueuedSales'
 import { QueuedSalesDrawer } from './QueuedSalesDrawer'
+import {
+    Drawer,
+    DrawerBody,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerStickyHeader,
+    DrawerTitle,
+} from '@/app/components/ui/drawer'
 import { useRecordSale } from '../hooks/useRecordSale'
 import { useInventory } from '../hooks/useInventory'
 import { useCustomers } from '../hooks/useCustomers'
@@ -63,6 +74,8 @@ import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { ProductSearchOverlay } from './ProductSearchOverlay'
 import { Product } from '../hooks/useInventory'
 import { useRestaurantTables } from '@/app/domains/restaurant/hooks/useRestaurantOps'
+import { CapacityStepper } from '@/app/domains/restaurant/components/CapacityStepper'
+import { storage, STORAGE_KEYS } from '@/app/lib/storage'
 
 // Stagger variants for the container
 const containerVariants: Variants = {
@@ -228,7 +241,7 @@ const ProductGrid = React.memo(({
             className="flex-1 overflow-y-auto custom-scrollbar pr-1 lg:pr-2 -mr-1 lg:-mr-2 min-h-0 [scrollbar-gutter:stable] overscroll-contain isolation-auto"
         >
             <div className={cn(
-                "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4 pb-6 will-change-scroll"
+                "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4 pb-16 will-change-scroll"
             )}>
                 <AnimatePresence mode="popLayout">
                     {isLoading || !activeBusiness ? (
@@ -313,7 +326,7 @@ const ProductGrid = React.memo(({
 
 ProductGrid.displayName = 'ProductGrid'
 
-export function SaleModeView() {
+export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
     const router = useRouter()
     const [cart, setCart] = React.useState<CartItem[]>([])
     const [search, setSearch] = React.useState('')
@@ -350,12 +363,49 @@ export function SaleModeView() {
     const [covers, setCovers] = React.useState(1)
     const [kitchenStation, setKitchenStation] = React.useState('kitchen')
     const [sendToKitchen, setSendToKitchen] = React.useState(true)
+    const [serviceControlsDrawerOpen, setServiceControlsDrawerOpen] = React.useState(false)
+
+    const serviceControlsSummary = React.useMemo(() => {
+        if (serviceMode === "TAKEAWAY") {
+            return `Takeaway · ${sendToKitchen ? "Kitchen on" : "Kitchen off"}`
+        }
+        const t = tableLabel.trim()
+        const tablePart = t || "Manual entry"
+        return `Dine-in · ${tablePart} · ${covers} ${covers === 1 ? "cover" : "covers"}`
+    }, [serviceMode, tableLabel, covers, sendToKitchen])
 
     // Queue Sale State
     const { queuedSales, queueSale, removeQueuedSale } = useQueuedSales()
     const [isQueueDrawerOpen, setIsQueueDrawerOpen] = React.useState(false)
 
     const { currency, activeBusiness } = useBusiness()
+    React.useEffect(() => {
+        if (!embedded) return
+        const persisted = storage.get(STORAGE_KEYS.SALES_MODE_AUTO_PRINT)
+        if (persisted === "false") {
+            setAutoPrint(false)
+        } else if (persisted === "true") {
+            setAutoPrint(true)
+        }
+    }, [embedded])
+
+    React.useEffect(() => {
+        if (!embedded) return
+        storage.set(STORAGE_KEYS.SALES_MODE_AUTO_PRINT, String(autoPrint))
+    }, [embedded, autoPrint])
+
+    React.useEffect(() => {
+        if (!embedded) return
+        const onSetAutoPrint = (event: Event) => {
+            const detail = (event as CustomEvent<{ enabled: boolean }>).detail
+            if (typeof detail?.enabled === "boolean") {
+                setAutoPrint(detail.enabled)
+            }
+        }
+        window.addEventListener("sales-mode:set-auto-print", onSetAutoPrint)
+        return () => window.removeEventListener("sales-mode:set-auto-print", onSetAutoPrint)
+    }, [embedded])
+
     const { printReceipt } = useReceiptPrinter()
     const { recordSale, isRecording } = useRecordSale()
     const layoutPreset = useLayoutPresetId()
@@ -551,13 +601,13 @@ export function SaleModeView() {
                 notes: note.trim() || undefined,
                 ...(layoutPreset === "school"
                     ? {
-                          academicTermId:
-                              feeTermChoice === "__default__"
-                                  ? undefined
-                                  : feeTermChoice === "__none__"
+                        academicTermId:
+                            feeTermChoice === "__default__"
+                                ? undefined
+                                : feeTermChoice === "__none__"
                                     ? null
                                     : feeTermChoice,
-                      }
+                    }
                     : {}),
             })
 
@@ -585,14 +635,25 @@ export function SaleModeView() {
                 currency: activeBusiness?.currency || 'NGN'
             })
 
-            toast.success('Sale recorded!', {
-                description: `${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${formatCurrency(saleTotal, { currency: activeBusiness?.currency || 'NGN' })}`,
-                duration: 8000,
-                action: {
-                    label: 'Print Receipt',
-                    onClick: () => printReceipt(buildReceiptData(), result?.saleId),
-                }
-            })
+            if (result.offlineQueued) {
+                toast.success('Sale saved offline', {
+                    description: `Will sync when you are back online • ${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${formatCurrency(saleTotal, { currency: activeBusiness?.currency || 'NGN' })}`,
+                    duration: 9000,
+                    action: {
+                        label: 'Print receipt',
+                        onClick: () => printReceipt(buildReceiptData(), result?.saleId),
+                    },
+                })
+            } else {
+                toast.success('Sale recorded!', {
+                    description: `Synced instantly • ${saleCart.length} item${saleCart.length > 1 ? 's' : ''} • ${formatCurrency(saleTotal, { currency: activeBusiness?.currency || 'NGN' })}`,
+                    duration: 8000,
+                    action: {
+                        label: 'Print Receipt',
+                        onClick: () => printReceipt(buildReceiptData(), result?.saleId),
+                    },
+                })
+            }
 
             if (autoPrint) {
                 printReceipt(buildReceiptData(), result?.saleId)
@@ -641,21 +702,37 @@ export function SaleModeView() {
         setAmountPaid('')
     }
 
-    // Keyboard shortcuts for search and fast checkout
+    // Keyboard shortcuts for search, service controls, and fast checkout
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            const activeEl = document.activeElement as HTMLElement | null
+            const isInput = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA'
+            const isEditable = activeEl?.isContentEditable || activeEl?.getAttribute('role') === 'textbox'
+            const hasModifier = e.metaKey || e.ctrlKey || e.altKey
+
             if (e.key === '/' && !isSearchOpen) {
-                const isInput = document.activeElement?.tagName === 'INPUT' ||
-                    document.activeElement?.tagName === 'TEXTAREA'
-                if (!isInput) {
+                if (!isInput && !isEditable && !hasModifier) {
                     e.preventDefault()
                     setIsSearchOpen(true)
                 }
             }
+
+            if (
+                layoutPreset === "restaurant" &&
+                presetCapabilities.showServiceModeChips &&
+                e.key.toLowerCase() === 'o' &&
+                !isInput &&
+                !isEditable &&
+                !hasModifier &&
+                !e.repeat &&
+                !serviceControlsDrawerOpen
+            ) {
+                e.preventDefault()
+                setServiceControlsDrawerOpen(true)
+            }
+
             if (!presetCapabilities.fastCheckout) return
-            const isInput = document.activeElement?.tagName === 'INPUT' ||
-                document.activeElement?.tagName === 'TEXTAREA'
-            if (isInput) return
+            if (isInput || isEditable || hasModifier) return
             if ((e.key === 'Enter' || e.key.toLowerCase() === 'p') && cart.length > 0 && !isRecording) {
                 e.preventDefault()
                 void handleCheckout()
@@ -667,7 +744,7 @@ export function SaleModeView() {
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isSearchOpen, presetCapabilities.fastCheckout, cart.length, isRecording, handleCheckout])
+    }, [isSearchOpen, layoutPreset, presetCapabilities.fastCheckout, presetCapabilities.showServiceModeChips, cart.length, isRecording, handleCheckout, serviceControlsDrawerOpen])
 
     const handleRecallSale = (sale: any) => {
         if (cart.length > 0) {
@@ -698,8 +775,158 @@ export function SaleModeView() {
         })
     }
 
+    const renderRestaurantServiceControls = () => (
+        <div className="flex flex-col gap-4">
+            <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Order type
+                </p>
+                <div className="flex w-full items-center gap-1 rounded-2xl border border-brand-accent/8 bg-brand-accent/5 p-1 dark:border-white/5 dark:bg-white/5">
+                    <button
+                        type="button"
+                        onClick={() => setServiceMode('DINE_IN')}
+                        className={cn(
+                            "flex flex-1 items-center justify-center gap-2 min-h-11 px-3 rounded-xl text-sm font-semibold transition-all duration-200",
+                            serviceMode === 'DINE_IN'
+                                ? "bg-white dark:bg-white/10 text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                                : "text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <UsersRoundIcon className="h-4 w-4 shrink-0 opacity-80" />
+                        Dine-in
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setServiceMode('TAKEAWAY')}
+                        className={cn(
+                            "flex flex-1 items-center justify-center gap-2 min-h-11 px-3 rounded-xl text-sm font-semibold transition-all duration-200",
+                            serviceMode === 'TAKEAWAY'
+                                ? "bg-white dark:bg-white/10 text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                                : "text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <ArrowBigUpDash className="h-4 w-4 shrink-0 opacity-80" />
+                        Takeaway
+                    </button>
+                </div>
+            </div>
+
+            {serviceMode === "DINE_IN" ? (
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            Table
+                        </label>
+                        <Select value={tableLabel || "__none__"} onValueChange={(v) => setTableLabel(v === "__none__" ? "" : v)}>
+                            <SelectTrigger className="h-11 w-full text-sm bg-white dark:bg-white/5 border-brand-accent/10 dark:border-white/10 rounded-xl">
+                                <SelectValue placeholder="Select table" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="__none__">Manual entry</SelectItem>
+                                {restaurantTables
+                                    .filter((t) => t.isActive)
+                                    .map((t) => (
+                                        <SelectItem key={t.id} value={t.label}>
+                                            {t.label} · {t.capacity} seats
+                                        </SelectItem>
+                                    ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {(!tableLabel || !restaurantTables.some((t) => t.label === tableLabel)) ? (
+                        <div className="flex flex-col gap-1.5 w-full">
+                            <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                                Label
+                            </label>
+                            <Input
+                                value={tableLabel}
+                                onChange={(e) => setTableLabel(e.target.value)}
+                                placeholder="e.g. T12"
+                                className="h-11 w-full text-sm rounded-xl bg-white dark:bg-white/5"
+                            />
+                        </div>
+                    ) : null}
+                </div>
+            ) : null}
+
+            {serviceMode === "DINE_IN" ? (
+                <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                        Prep station
+                    </label>
+                    <div className="flex items-center gap-2 min-h-11 px-3 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
+                            Station
+                        </span>
+                        <input
+                            value={kitchenStation}
+                            onChange={(e) => setKitchenStation(e.target.value)}
+                            placeholder="kitchen"
+                            className="min-w-0 flex-1 text-sm bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
+                        />
+                    </div>
+                </div>
+            ) : null}
+            <div className="grid grid-cols-2 gap-3">
+                {serviceMode === "DINE_IN" ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            Covers
+                        </label>
+                        <div className="flex items-center min-h-11">
+                            <CapacityStepper
+                                value={covers}
+                                onChange={setCovers}
+                                className="h-11 px-2"
+                            />
+                        </div>
+                    </div>
+                ) : null}
+                {serviceMode === "TAKEAWAY" ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            Prep station
+                        </label>
+                        <div className="flex items-center gap-2 min-h-11 px-3 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
+                                Station
+                            </span>
+                            <input
+                                value={kitchenStation}
+                                onChange={(e) => setKitchenStation(e.target.value)}
+                                placeholder="kitchen"
+                                className="min-w-0 flex-1 text-sm bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground"
+                            />
+                        </div>
+                    </div>
+                ) : null}
+                {(serviceMode === "TAKEAWAY" || serviceMode === "DINE_IN") ? (
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                            Send to kitchen
+                        </label>
+                        <div className="flex items-center justify-between gap-3 min-h-11 px-3 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5 w-full">
+                            <span className="text-sm font-medium text-foreground">
+                                {sendToKitchen ? "On" : "Off"}
+                            </span>
+                            <Switch checked={sendToKitchen} onCheckedChange={setSendToKitchen} className="scale-100" />
+                        </div>
+                    </div>
+                ) : null}
+            </div>
+
+        </div>
+    )
+
     return (
-        <div className={cn("fixed inset-0 z-50 flex flex-col lg:flex-row overflow-hidden bg-brand-cream dark:bg-background", mounted && "theme-transition")}>
+        <div
+            className={cn(
+                embedded
+                    ? "relative h-full flex flex-col lg:flex-row overflow-hidden bg-brand-cream dark:bg-background"
+                    : "fixed inset-0 z-50 flex flex-col lg:flex-row overflow-hidden bg-brand-cream dark:bg-background",
+                mounted && "theme-transition"
+            )}
+        >
             {/* Background Decorative Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10 opacity-40 dark:opacity-20">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/10 blur-[120px] animate-float-slow" />
@@ -720,54 +947,56 @@ export function SaleModeView() {
                     isLocalMode={isLocalMode}
                     onSearchChange={setLocalSearch}
                 />
-                <div className="flex-1 flex flex-col p-4 lg:pt-2 lg:px-8 lg:pb-4 space-y-4 lg:space-y-6 min-h-0">
-                    <header className="flex items-center justify-between shrink-0">
-                        <div className="flex items-center gap-6">
-                            <Link href="/orders" className="hidden lg:block">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="rounded-2xl h-12 w-12 group border-brand-deep/15 dark:border-white/5 bg-white dark:bg-brand-deep-800 hover:bg-brand-gold/10 dark:hover:bg-brand-deep-900 hover:border-brand-deep-800/15 transition-all duration-500"
-                                >
-                                    <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-                                </Button>
-                            </Link>
-                            <div>
-                                <h2 className="text-3xl lg:text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
-                                <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs lg:text-sm font-sans uppercase tracking-[0.2em] font-black">
-                                    {presetCapabilities.fastCheckout ? "Fast Checkout" : "Catalog"}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            {/* Auto Print Toggle */}
-                            <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-4 lg:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
-                                <span className="text-[10px] lg:text-xs font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest hidden sm:block">Auto Print</span>
-                                <span className="text-[10px] font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest sm:hidden">Print</span>
-                                <Switch checked={autoPrint} onCheckedChange={setAutoPrint} className="scale-75 origin-right" />
+                <div className="flex-1 flex flex-col pt-4 pr-4 pl-5 pb-0 lg:pt-2 lg:px-4 lg:pb-0 min-h-0">
+                    {!embedded && (
+                        <header className="flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-6">
+                                <Link href="/orders" className="hidden lg:block">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="rounded-2xl h-12 w-12 group border-brand-deep/15 dark:border-white/5 bg-white dark:bg-brand-deep-800 hover:bg-brand-gold/10 dark:hover:bg-brand-deep-900 hover:border-brand-deep-800/15 transition-all duration-500"
+                                    >
+                                        <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                                    </Button>
+                                </Link>
+                                <div>
+                                    <h2 className="text-3xl lg:text-4xl font-serif text-brand-deep dark:text-brand-cream tracking-tighter">Sale Mode</h2>
+                                    <p className="text-brand-accent/60 dark:text-brand-cream/40 text-xs lg:text-sm font-sans uppercase tracking-[0.2em] font-black">
+                                        {presetCapabilities.fastCheckout ? "Fast Checkout" : "Catalog"}
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="flex lg:hidden items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => setMobileView('cart')}
-                                    className="rounded-2xl h-12 w-12 bg-white/40 dark:bg-white/5 relative"
-                                >
-                                    <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
-                                    {totalItems > 0 && (
-                                        <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[10px] font-black shadow-lg">
-                                            {totalItems}
-                                        </span>
-                                    )}
-                                </Button>
+                            <div className="flex items-center gap-4">
+                                {/* Auto Print Toggle */}
+                                <div className="flex items-center gap-2 bg-brand-deep/5 dark:bg-white/5 px-4 lg:px-3 py-1.5 rounded-2xl border border-brand-accent/5 dark:border-white/5 h-12">
+                                    <span className="text-[10px] lg:text-xs font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest hidden sm:block">Auto Print</span>
+                                    <span className="text-[10px] font-bold text-brand-accent/60 dark:text-brand-cream/60 uppercase tracking-widest sm:hidden">Print</span>
+                                    <Switch checked={autoPrint} onCheckedChange={setAutoPrint} className="scale-75 origin-right" />
+                                </div>
+
+                                <div className="flex lg:hidden items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => setMobileView('cart')}
+                                        className="rounded-2xl h-12 w-12 bg-white/40 dark:bg-white/5 relative"
+                                    >
+                                        <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
+                                        {totalItems > 0 && (
+                                            <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[10px] font-black shadow-lg">
+                                                {totalItems}
+                                            </span>
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    </header>
+                        </header>
+                    )}
 
                     {/* Filters & Search */}
-                    <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
+                    <div className={cn("flex flex-col lg:flex-row gap-4 lg:items-center pb-4", embedded && "pt-2")}>
                         <div className="w-full lg:w-auto min-w-[320px] flex-none">
                             {/* Desktop: Opens Overlay */}
                             <div
@@ -804,7 +1033,7 @@ export function SaleModeView() {
                                 className={cn(
                                     "rounded-[12px] h-10 px-5 min-w-max transition-all duration-300 text-sm font-medium",
                                     !selectedCategory
-                                        ? "bg-brand-deep dark:bg-white text-white dark:text-brand-deep shadow-xs border-transparent"
+                                        ? "bg-brand-deep dark:bg-white text-white dark:text-brand-deep shadow-xs border-transparent hover:bg-brand-deep hover:text-white dark:hover:bg-white dark:hover:text-brand-deep"
                                         : "bg-white dark:bg-transparent text-brand-accent/60 dark:text-brand-cream/60 border-brand-accent/10 dark:border-white/10 hover:border-brand-accent/30 dark:hover:border-white/30"
                                 )}
                             >
@@ -818,7 +1047,7 @@ export function SaleModeView() {
                                     className={cn(
                                         "rounded-[12px] h-10 px-5 min-w-max transition-all duration-300 text-sm font-medium",
                                         selectedCategory === cat
-                                            ? "bg-brand-deep dark:bg-white text-white dark:text-brand-deep shadow-xs border-transparent"
+                                            ? "bg-brand-deep dark:bg-white text-white dark:text-brand-deep shadow-xs border-transparent hover:bg-brand-deep hover:text-white dark:hover:bg-white dark:hover:text-brand-deep"
                                             : "bg-white dark:bg-transparent text-brand-accent/60 dark:text-brand-cream/60 border-brand-accent/10 dark:border-white/10 hover:border-brand-accent/30 dark:hover:border-white/30"
                                     )}
                                 >
@@ -828,108 +1057,55 @@ export function SaleModeView() {
                         </div>
                     </div>
                     {layoutPreset === "restaurant" && presetCapabilities.showServiceModeChips ? (
-                        <div className="rounded-2xl border border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 p-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                                {/* Service mode toggle */}
-                                <div className="flex items-center gap-1 bg-brand-accent/5 dark:bg-white/5 rounded-xl p-1 border border-brand-accent/8 dark:border-white/5">
-                                    <button
-                                        type="button"
-                                        onClick={() => setServiceMode('DINE_IN')}
-                                        className={cn(
-                                            "flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-bold transition-all duration-200",
-                                            serviceMode === 'DINE_IN'
-                                                ? "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-cream shadow-sm"
-                                                : "text-brand-accent/50 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream"
-                                        )}
-                                    >
-                                        <UsersRoundIcon className="h-3 w-3" />
-                                        Dine-in
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setServiceMode('TAKEAWAY')}
-                                        className={cn(
-                                            "flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-bold transition-all duration-200",
-                                            serviceMode === 'TAKEAWAY'
-                                                ? "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-cream shadow-sm"
-                                                : "text-brand-accent/50 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream"
-                                        )}
-                                    >
-                                        <ArrowBigUpDash className="h-3 w-3" />
-                                        Takeaway
-                                    </button>
-                                </div>
-
-                                {/* Dine-in options */}
-                                {serviceMode === "DINE_IN" ? (
-                                    <>
-                                        <Select value={tableLabel || "__none__"} onValueChange={(v) => setTableLabel(v === "__none__" ? "" : v)}>
-                                            <SelectTrigger className="h-8 w-40 text-xs bg-white dark:bg-white/5 border-brand-accent/10 dark:border-white/10 rounded-xl">
-                                                <SelectValue placeholder="Select table" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="__none__">Manual entry</SelectItem>
-                                                {restaurantTables
-                                                    .filter((t) => t.isActive)
-                                                    .map((t) => (
-                                                        <SelectItem key={t.id} value={t.label}>
-                                                            {t.label} · {t.capacity} seats
-                                                        </SelectItem>
-                                                    ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {(!tableLabel || !restaurantTables.some((t) => t.label === tableLabel)) ? (
-                                            <Input
-                                                value={tableLabel}
-                                                onChange={(e) => setTableLabel(e.target.value)}
-                                                placeholder="e.g. T12"
-                                                className="h-8 w-28 text-xs rounded-xl bg-white dark:bg-white/5"
-                                            />
-                                        ) : null}
-                                        {/* Covers stepper */}
-                                        <div className="flex items-center gap-1 h-8 px-2 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40 mr-0.5">Cov.</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => setCovers((v) => Math.max(1, v - 1))}
-                                                className="h-5 w-5 flex items-center justify-center text-brand-accent/50 hover:text-brand-deep dark:hover:text-brand-cream rounded transition-colors"
-                                            >
-                                                <Minus className="h-2.5 w-2.5" />
-                                            </button>
-                                            <span className="text-sm font-bold w-5 text-center text-brand-deep dark:text-brand-cream tabular-nums">
-                                                {covers}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => setCovers((v) => v + 1)}
-                                                className="h-5 w-5 flex items-center justify-center text-brand-accent/50 hover:text-brand-deep dark:hover:text-brand-cream rounded transition-colors"
-                                            >
-                                                <Plus className="h-2.5 w-2.5" />
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : null}
-
-                                {/* Kitchen station + toggle */}
-                                <div className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40">Station</span>
-                                    <input
-                                        value={kitchenStation}
-                                        onChange={(e) => setKitchenStation(e.target.value)}
-                                        placeholder="kitchen"
-                                        className="w-20 text-xs bg-transparent border-none outline-none text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/30 dark:placeholder:text-brand-cream/30 font-medium"
-                                    />
-                                </div>
-                                <div className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white dark:bg-white/5">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-brand-accent/50 dark:text-brand-cream/40">Kitchen</span>
-                                    <Switch checked={sendToKitchen} onCheckedChange={setSendToKitchen} className="scale-[0.7] origin-right" />
-                                </div>
-
-                                <span className="ml-auto text-[9px] font-black uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/25 hidden lg:block">
-                                    Enter/P · Pay &nbsp;·&nbsp; K · Park
-                                </span>
+                        <>
+                            <div className="rounded-2xl border border-brand-accent/10 dark:border-white/10 bg-white/60 dark:bg-white/6 shadow-sm overflow-hidden mb-4">
+                                <button
+                                    type="button"
+                                    className="flex w-full items-center justify-between cursor-pointer gap-3 text-left min-h-13 px-4 py-3 active:bg-brand-accent/5 dark:active:bg-white/5 transition-colors"
+                                    onClick={() => setServiceControlsDrawerOpen(true)}
+                                    aria-haspopup="dialog"
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                            Order & service
+                                        </p>
+                                        <p className="text-sm font-medium text-foreground truncate mt-0.5">
+                                            {serviceControlsSummary}
+                                        </p>
+                                    </div>
+                                    <div className="inline-flex items-center gap-2 rounded-xl border border-brand-accent/15 dark:border-white/10 bg-background/70 px-2.5 py-1.5">
+                                        <SlidersHorizontal className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        <span className="text-xs font-semibold text-foreground">Adjust</span>
+                                        <span className="ml-0.5 rounded-md border border-brand-accent/15 bg-brand-accent/5 px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+                                            O
+                                        </span>
+                                    </div>
+                                </button>
                             </div>
-                        </div>
+                            <Drawer open={serviceControlsDrawerOpen} onOpenChange={setServiceControlsDrawerOpen}>
+                                <DrawerContent className="max-h-[88vh] flex flex-col">
+                                    <DrawerStickyHeader className="pb-4">
+                                        <DrawerTitle className="text-xl font-serif">Order &amp; service</DrawerTitle>
+                                        <DrawerDescription>
+                                            Table, covers, prep station, and kitchen routing.
+                                        </DrawerDescription>
+                                    </DrawerStickyHeader>
+                                    <DrawerBody className="pt-2 pb-4">
+                                        {renderRestaurantServiceControls()}
+                                    </DrawerBody>
+                                    <DrawerFooter className="pb-8 pt-2">
+                                        <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground text-center">
+                                            Enter/P · Pay · K · Park
+                                        </p>
+                                        <DrawerClose asChild>
+                                            <Button variant="base" className="w-full rounded-xl h-11">
+                                                Done
+                                            </Button>
+                                        </DrawerClose>
+                                    </DrawerFooter>
+                                </DrawerContent>
+                            </Drawer>
+                        </>
                     ) : null}
                     {/* Product Area: Grid (Scrollable) + Pagination (Fixed) */}
                     <div className="flex-1 min-h-0 flex flex-col gap-4 lg:gap-6 mt-4 lg:mt-0">
@@ -948,9 +1124,9 @@ export function SaleModeView() {
 
                     {/* Pagination Controls - Fixed Bottom */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center lg:justify-center gap-2 lg:gap-4 py-2 lg:pb-0 lg:mt-3 shrink-0 relative">
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                             {/* Mobile Back Button */}
-                            <div className="absolute left-2 lg:hidden">
+                            {!embedded && <div className="absolute left-2 lg:hidden">
                                 <Link href="/orders">
                                     <Button
                                         variant="ghost"
@@ -960,54 +1136,56 @@ export function SaleModeView() {
                                         <ArrowLeft className="h-4 w-4" />
                                     </Button>
                                 </Link>
+                            </div>}
+
+                            <div className="inline-flex w-fit items-center gap-2 rounded-[18px] border border-brand-accent/10 bg-transparent px-2 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-xl dark:border-white/10 dark:shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
+                                >
+                                    <ChevronLeft className="h-3 w-3 lg:mr-1.5" />
+                                    <span className="hidden lg:inline">Previous</span>
+                                </Button>
+
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                        // Logic to show fewer pages on mobile
+                                        const isVisibleOnMobile = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
+                                        if (!isVisibleOnMobile) return null;
+
+                                        return (
+                                            <Button
+                                                key={page}
+                                                variant={currentPage === page ? 'default' : 'ghost'}
+                                                size="sm"
+                                                onClick={() => setCurrentPage(page)}
+                                                className={cn(
+                                                    "w-8 h-8 rounded-lg font-semibold transition-all duration-300 text-xs",
+                                                    currentPage === page
+                                                        ? "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-xs"
+                                                        : "text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-accent hover:bg-brand-accent/5"
+                                                )}
+                                            >
+                                                {page}
+                                            </Button>
+                                        )
+                                    })}
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
+                                >
+                                    <span className="hidden lg:inline">Next</span>
+                                    <ChevronRight className="h-3 w-3 lg:ml-1.5" />
+                                </Button>
                             </div>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
-                            >
-                                <ChevronLeft className="h-3 w-3 lg:mr-1.5" />
-                                <span className="hidden lg:inline">Previous</span>
-                            </Button>
-
-                            <div className="flex items-center gap-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                                    // Logic to show fewer pages on mobile
-                                    const isVisibleOnMobile = Math.abs(currentPage - page) <= 1 || page === 1 || page === totalPages;
-                                    if (!isVisibleOnMobile) return null;
-
-                                    return (
-                                        <Button
-                                            key={page}
-                                            variant={currentPage === page ? 'default' : 'ghost'}
-                                            size="sm"
-                                            onClick={() => setCurrentPage(page)}
-                                            className={cn(
-                                                "w-8 h-8 rounded-lg font-semibold transition-all duration-300 text-xs",
-                                                currentPage === page
-                                                    ? "bg-brand-deep dark:bg-brand-accent border-brand-deep dark:border-brand-accent text-brand-gold shadow-xs"
-                                                    : "text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-accent hover:bg-brand-accent/5"
-                                            )}
-                                        >
-                                            {page}
-                                        </Button>
-                                    )
-                                })}
-                            </div>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages}
-                                className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
-                            >
-                                <span className="hidden lg:inline">Next</span>
-                                <ChevronRight className="h-3 w-3 lg:ml-1.5" />
-                            </Button>
                         </div>
                     )}
                 </div>

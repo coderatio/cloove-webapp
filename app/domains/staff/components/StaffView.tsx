@@ -53,6 +53,8 @@ import { usePermission } from "@/app/hooks/usePermission"
 import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { DepartmentsPanel } from "./DepartmentsPanel"
 import Link from "next/link"
+import { getPresetCapabilities } from "@/app/domains/workspace/nav/preset-capabilities"
+import { SetSalesPinDialog } from "./SetSalesPinDialog"
 
 function StaffSkeletonCard() {
     return (
@@ -76,7 +78,7 @@ export function StaffView() {
     const pageCopy = usePresetPageCopy()
     const layoutPreset = useLayoutPresetId()
     const { canInviteStaff, loading: permissionLoading } = usePermission()
-    const { staff, isLoading, inviteStaff, updateStaff, removeStaff, resendInvite } = useStaff()
+    const { staff, isLoading, inviteStaff, updateStaff, removeStaff, resendInvite, setSalesPin } = useStaff()
 
     // Permissions available for this business's preset, with display metadata
     const presetPermissionKeys = getPermissionsForPreset(layoutPreset).map(String)
@@ -88,6 +90,7 @@ export function StaffView() {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
     const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
+    const [isSalesPinDialogOpen, setIsSalesPinDialogOpen] = useState(false)
 
     // Form State
     const [fullName, setFullName] = useState("")
@@ -107,6 +110,7 @@ export function StaffView() {
         { id: "staff", label: "Staff", icon: UserCog },
         { id: "departments", label: "Departments", icon: Shield },
     ]
+    const salesModeEnabled = getPresetCapabilities(layoutPreset).enableSalesMode
 
     useEffect(() => {
         if (!isDrawerOpen) return
@@ -636,6 +640,16 @@ export function StaffView() {
                                                 Resend Invitation
                                             </Button>
                                         )}
+                                        {salesModeEnabled && editingStaff.status === 'ACTIVE' && (
+                                            <Button
+                                                onClick={() => setIsSalesPinDialogOpen(true)}
+                                                disabled={isSaving}
+                                                variant="outline"
+                                                className="w-full h-12 rounded-xl border-brand-gold/20 text-brand-gold hover:bg-brand-gold/5 font-bold"
+                                            >
+                                                Set Sales PIN
+                                            </Button>
+                                        )}
                                         <Button
                                             onClick={handleRemove}
                                             disabled={isSaving}
@@ -663,6 +677,17 @@ export function StaffView() {
                 variant="destructive"
                 isLoading={isSaving}
             />
+
+            {editingStaff && (
+                <SetSalesPinDialog
+                    open={isSalesPinDialogOpen}
+                    onOpenChange={setIsSalesPinDialogOpen}
+                    staffName={editingStaff.user.fullName}
+                    onSubmit={async (pin) => {
+                        await setSalesPin(editingStaff.userId, pin)
+                    }}
+                />
+            )}
         </PageTransition>
     )
 }

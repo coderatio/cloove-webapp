@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { CalendarIcon } from "lucide-react"
-import { format, subDays } from "date-fns"
+import { endOfDay, format, startOfDay, subDays } from "date-fns"
 import { DateRange } from "react-day-picker"
 
 import { cn } from "@/app/lib/utils"
@@ -21,6 +21,68 @@ import {
     SelectValue,
 } from "@/app/components/ui/select"
 
+const MS_DAY = 24 * 60 * 60 * 1000
+
+/** Built-in quick filters; pick a subset via `quickPresets`. */
+export type DateRangeQuickPreset =
+    | "last24h"
+    | "today"
+    | "yesterday"
+    | "last7"
+    | "last30"
+    | "rolling7d"
+    | "rolling30d"
+    | "thisMonth"
+
+export const DEFAULT_DATE_RANGE_QUICK_PRESETS: DateRangeQuickPreset[] = [
+    "today",
+    "yesterday",
+    "last7",
+    "last30",
+    "thisMonth",
+]
+
+const PRESET_LABELS: Record<DateRangeQuickPreset, string> = {
+    last24h: "Last 24 hours",
+    today: "Today",
+    yesterday: "Yesterday",
+    /** Calendar-style: 6 days back through today (same as legacy dashboard). */
+    last7: "Last 7 days",
+    last30: "Last 30 days",
+    /** Rolling wall-clock window (matches typical “last N days” sales APIs). */
+    rolling7d: "Last 7 days",
+    rolling30d: "Last 30 days",
+    thisMonth: "This month",
+}
+
+function applyQuickPreset(preset: DateRangeQuickPreset): DateRange {
+    const now = new Date()
+    switch (preset) {
+        case "last24h":
+            return { from: new Date(now.getTime() - MS_DAY), to: now }
+        case "today":
+            return { from: startOfDay(now), to: now }
+        case "yesterday": {
+            const y = subDays(now, 1)
+            return { from: startOfDay(y), to: endOfDay(y) }
+        }
+        case "last7":
+            return { from: subDays(now, 6), to: now }
+        case "last30":
+            return { from: subDays(now, 29), to: now }
+        case "rolling7d":
+            return { from: new Date(now.getTime() - 7 * MS_DAY), to: now }
+        case "rolling30d":
+            return { from: new Date(now.getTime() - 30 * MS_DAY), to: now }
+        case "thisMonth": {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+            return { from: startOfMonth, to: now }
+        }
+        default:
+            return { from: now, to: now }
+    }
+}
+
 export interface DateRangeFilterProps {
     date: DateRange | undefined
     setDate: (date: DateRange | undefined) => void
@@ -28,6 +90,10 @@ export interface DateRangeFilterProps {
     buttonClassName?: string
     /** Mobile: icon-only trigger inside a grouped toolbar — full picker unchanged */
     iconOnly?: boolean
+    /** Which quick filters appear in the popover (order preserved). Defaults to dashboard set. */
+    quickPresets?: DateRangeQuickPreset[]
+    /** Placeholder for the quick-filter select */
+    quickFilterPlaceholder?: string
 }
 
 function formatRangeLabel(date: DateRange | undefined): string {
@@ -44,29 +110,11 @@ export function DateRangeFilter({
     setDate,
     buttonClassName,
     iconOnly = false,
+    quickPresets = DEFAULT_DATE_RANGE_QUICK_PRESETS,
+    quickFilterPlaceholder = "Quick filter",
 }: DateRangeFilterProps) {
     const handlePresetChange = (value: string) => {
-        const today = new Date()
-        switch (value) {
-            case "today":
-                setDate({ from: today, to: today })
-                break
-            case "yesterday":
-                const yesterday = subDays(today, 1)
-                setDate({ from: yesterday, to: yesterday })
-                break
-            case "last7":
-                setDate({ from: subDays(today, 6), to: today })
-                break
-            case "last30":
-                setDate({ from: subDays(today, 29), to: today })
-                break
-            case "thisMonth":
-                // Simple implementation for "This Month" - from 1st to today
-                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-                setDate({ from: startOfMonth, to: today })
-                break
-        }
+        setDate(applyQuickPreset(value as DateRangeQuickPreset))
     }
 
     const rangeLabel = formatRangeLabel(date)
@@ -117,14 +165,14 @@ export function DateRangeFilter({
                     <div className="p-3 border-b border-brand-deep/5 dark:border-white/5 bg-brand-green/5 dark:bg-white/5 rounded-t-2xl">
                         <Select onValueChange={handlePresetChange}>
                             <SelectTrigger className="w-full h-9 text-xs cursor-pointer border-brand-accent/10 dark:border-white/10 bg-white/40 dark:bg-black/20 backdrop-blur-sm rounded-xl hover:bg-white/60 dark:hover:bg-black/40 transition-all duration-300">
-                                <SelectValue placeholder="Quick Filter" />
+                                <SelectValue placeholder={quickFilterPlaceholder} />
                             </SelectTrigger>
                             <SelectContent position="popper" className="z-110">
-                                <SelectItem value="today">Today</SelectItem>
-                                <SelectItem value="yesterday">Yesterday</SelectItem>
-                                <SelectItem value="last7">Last 7 Days</SelectItem>
-                                <SelectItem value="last30">Last 30 Days</SelectItem>
-                                <SelectItem value="thisMonth">This Month</SelectItem>
+                                {quickPresets.map((preset) => (
+                                    <SelectItem key={preset} value={preset}>
+                                        {PRESET_LABELS[preset]}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

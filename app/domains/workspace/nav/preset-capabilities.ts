@@ -5,6 +5,8 @@ export interface PresetCapabilities {
   showServiceModeChips: boolean
   requirePaymentMethodBeforeCheckout: boolean
   enableKitchenAndTableBeta: boolean
+  /** Whether this preset supports the Sales Mode PIN login flow */
+  enableSalesMode: boolean
 }
 
 const DEFAULT_CAPABILITIES: PresetCapabilities = {
@@ -12,6 +14,7 @@ const DEFAULT_CAPABILITIES: PresetCapabilities = {
   showServiceModeChips: false,
   requirePaymentMethodBeforeCheckout: true,
   enableKitchenAndTableBeta: false,
+  enableSalesMode: false,
 }
 
 const PRESET_CAPABILITIES: Record<LayoutPresetId, PresetCapabilities> = {
@@ -21,6 +24,7 @@ const PRESET_CAPABILITIES: Record<LayoutPresetId, PresetCapabilities> = {
     showServiceModeChips: true,
     requirePaymentMethodBeforeCheckout: true,
     enableKitchenAndTableBeta: true,
+    enableSalesMode: true,
   },
   retail: {
     ...DEFAULT_CAPABILITIES,

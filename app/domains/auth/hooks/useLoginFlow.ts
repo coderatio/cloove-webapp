@@ -85,7 +85,7 @@ export function useLoginFlow({ callbackUrl = '/', router, onSuccess }: UseLoginF
     const [showPassword, setShowPassword] = useState(false)
     const [isPinLogin, setIsPinLogin] = useState(false)
     const [signupChannel, setSignupChannel] = useState<string | null>(null)
-    const [setupVia, setSetupVia] = useState<'otp' | 'email_link' | 'whatsapp_activate' | null>(null)
+    const [setupVia, setSetupVia] = useState<'otp' | 'email_link' | 'whatsapp_activate' | 'whatsapp_otp' | null>(null)
     const [phoneActivationRequired, setPhoneActivationRequired] = useState(false)
     const [selectedCountry, setSelectedCountry] = useState<CountryDetail | null>(null)
 

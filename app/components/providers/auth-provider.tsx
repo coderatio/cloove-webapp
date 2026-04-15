@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { apiClient } from "@/app/lib/api-client"
-import { storage } from "@/app/lib/storage"
+import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { SessionManager } from "../auth/SessionManager"
 
 export interface UserCountryDetail {
@@ -51,12 +51,17 @@ interface User {
     subscriptionAlert?: SubscriptionAlert | null
     /** ISO timestamp of when the user accepted the current terms. Null means not yet accepted. */
     termsAcceptedAt?: string | null
+    salesMode?: boolean
+    salesModeBusinessId?: string | null
+    role?: string | null
+    permissions?: Record<string, boolean> | null
 }
 
 interface AuthContextType {
     user: User | null
     isLoading: boolean
     logout: () => Promise<void>
+    salesModeLogout: () => Promise<void>
     refreshUser: () => Promise<void>
     updateUserMetadata: () => void
 }
@@ -101,13 +106,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await apiClient.logout(`/login?callbackUrl=${callbackUrl}`)
     }
 
+    const salesModeLogout = async () => {
+        try {
+            await apiClient.post("/security/sales-mode/logout", {})
+        } finally {
+            setUser(null)
+            storage.clear()
+            storage.remove(STORAGE_KEYS.POS_QUEUED_SALES)
+            storage.remove(STORAGE_KEYS.SALES_MODE_ACTIVE)
+            if (typeof window !== 'undefined') {
+                window.location.replace("/sales-mode/login")
+            }
+        }
+    }
+
     const updateUserMetadata = () => {
         // Called when the session manager refreshes the token (cookie rotated server-side).
         // No client-side action needed — the cookie is updated via the Set-Cookie header.
     }
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, logout, refreshUser, updateUserMetadata }}>
+        <AuthContext.Provider
+            value={{ user, isLoading, logout, salesModeLogout, refreshUser, updateUserMetadata }}
+        >
             {children}
         </AuthContext.Provider>
     )

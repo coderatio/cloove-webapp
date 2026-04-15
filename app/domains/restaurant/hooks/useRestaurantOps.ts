@@ -41,13 +41,13 @@ export interface RestaurantTable {
   deletedAt?: string | null
 }
 
-export function useKitchenTickets(options?: { refetchInterval?: number | false }) {
+export function useKitchenTickets(options?: { refetchInterval?: number | false; enabled?: boolean }) {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
   return useQuery({
     queryKey: ["restaurant", "kitchenTickets", businessId],
     queryFn: () => apiClient.get<KitchenTicket[]>("/restaurant/kitchen-tickets"),
-    enabled: !!businessId,
+    enabled: (options?.enabled ?? true) && !!businessId,
     refetchInterval: options?.refetchInterval ?? 5000,
   })
 }
@@ -74,13 +74,16 @@ export function useTableSessions(options?: {
   })
 }
 
-export function useRestaurantTables(status: "active" | "archived" | "all" = "active") {
+export function useRestaurantTables(
+  status: "active" | "archived" | "all" = "active",
+  options?: { enabled?: boolean }
+) {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
   return useQuery({
     queryKey: ["restaurant", "tables", businessId, status],
     queryFn: () => apiClient.get<RestaurantTable[]>("/restaurant/tables", { status }),
-    enabled: !!businessId,
+    enabled: (options?.enabled ?? true) && !!businessId,
     staleTime: 30000,
   })
 }
@@ -132,13 +135,13 @@ export function useRestaurantTableActions() {
   return { createTable, updateTable, deleteTable, restoreTable, permanentDeleteTable }
 }
 
-export function useBarTickets(options?: { refetchInterval?: number | false }) {
+export function useBarTickets(options?: { refetchInterval?: number | false; enabled?: boolean }) {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
   return useQuery({
     queryKey: ["restaurant", "barTickets", businessId],
     queryFn: () => apiClient.get<BarTicket[]>("/restaurant/bar-tickets"),
-    enabled: !!businessId,
+    enabled: (options?.enabled ?? true) && !!businessId,
     refetchInterval: options?.refetchInterval ?? 5000,
   })
 }

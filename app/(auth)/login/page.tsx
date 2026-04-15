@@ -1,10 +1,12 @@
 "use client"
 
 import Image from "next/image"
-import { Loader2, ShieldAlert } from "lucide-react"
+import { Loader2, ShieldAlert, Store } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { LoginSignupLink } from "@/app/domains/auth/components/LoginSignupLink"
+import { Button } from "@/app/components/ui/button"
 
 // 1. Background elements as stable divs to avoid framer-motion SSR mismatches
 function BackgroundDecor() {
@@ -77,6 +79,18 @@ export default function LoginPage() {
                 {/* Hydration-safe content area */}
                 <div className="min-h-[400px]">
                     <LoginFlowWrapper />
+                </div>
+
+                <div className="mt-4">
+                    <Link href="/sales-mode/login" className="block">
+                        <Button
+                            variant="outline"
+                            className="w-full h-12 rounded-xl border-brand-gold/40 text-brand-gold bg-transparent hover:bg-brand-gold/10"
+                        >
+                            <Store className="w-4 h-4 mr-2" />
+                            Sales Mode
+                        </Button>
+                    </Link>
                 </div>
 
                 <LoginSignupLink />

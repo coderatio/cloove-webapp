@@ -6,6 +6,7 @@ import { X, Download } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import Image from "next/image"
+import { storage } from "@/app/lib/storage"
 
 export function InstallBanner() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
@@ -26,7 +27,7 @@ export function InstallBanner() {
             setDeferredPrompt(e)
 
             // Check if user has dismissed it recently (within the last 2 days)
-            const dismissedAt = localStorage.getItem("pwa-banner-dismissed-at")
+            const dismissedAt = storage.getRaw("pwa-banner-dismissed-at")
             const twoDaysInMs = 2 * 24 * 60 * 60 * 1000
             const isDismissedRecently = dismissedAt && (Date.now() - parseInt(dismissedAt) < twoDaysInMs)
 
@@ -42,7 +43,7 @@ export function InstallBanner() {
             setIsVisible(false)
             setDeferredPrompt(null)
             // Clear dismissal so it doesn't haunt them if they ever uninstall and come back
-            localStorage.removeItem("pwa-banner-dismissed-at")
+            storage.removeRaw("pwa-banner-dismissed-at")
         })
 
         return () => window.removeEventListener("beforeinstallprompt", handler)
@@ -59,7 +60,7 @@ export function InstallBanner() {
 
         if (outcome === "accepted") {
             setIsVisible(false)
-            localStorage.removeItem("pwa-banner-dismissed-at")
+            storage.removeRaw("pwa-banner-dismissed-at")
         }
 
         setDeferredPrompt(null)
@@ -67,7 +68,7 @@ export function InstallBanner() {
 
     const handleDismiss = () => {
         setIsVisible(false)
-        localStorage.setItem("pwa-banner-dismissed-at", Date.now().toString())
+        storage.setRaw("pwa-banner-dismissed-at", Date.now().toString())
     }
 
     return (

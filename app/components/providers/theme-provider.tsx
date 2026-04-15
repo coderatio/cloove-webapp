@@ -13,7 +13,7 @@ const DARK_THEME_COLOR = "#061b15"
  * the layout is designed for a standard viewport, not edge-to-edge.
  * Keep in sync with the forcedTheme check below.
  */
-const PUBLIC_ROUTE_PATTERN = /^\/(login|register|staff-invite|verify|onboarding|reset-password|forgot-password|password-reset)(\/.*)?$/
+const PUBLIC_ROUTE_PATTERN = /^\/(login|register|staff-invite|verify|onboarding|reset-password|forgot-password|password-reset|sales-mode\/login)(\/.*)?$/
 
 function ThemeColorSync() {
     const { resolvedTheme } = useTheme()
