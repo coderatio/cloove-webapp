@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { ChefHat, CookingPot, History, LayoutGrid, LogOut, Receipt, Table2 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useAuth } from "@/app/components/providers/auth-provider"
@@ -10,27 +10,26 @@ import { Button } from "@/app/components/ui/button"
 import { Switch } from "@/app/components/ui/switch"
 import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { SalesOutboxBanner } from "./SalesOutboxBanner"
+import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 
 const tabs = [
-    { href: "/sales-mode/pos", label: "POS", icon: Receipt },
-    { href: "/sales-mode/restaurant/live", label: "Live", icon: LayoutGrid },
-    { href: "/sales-mode/restaurant/kitchen", label: "Kitchen", icon: ChefHat },
-    { href: "/sales-mode/restaurant/bar", label: "Bar", icon: CookingPot },
-    { href: "/sales-mode/restaurant/tables", label: "Tables", icon: Table2 },
-    { href: "/sales-mode/history", label: "History", icon: History },
+    { href: "/sales-mode/pos", label: "POS", icon: Receipt, restaurantOnly: false },
+    { href: "/sales-mode/restaurant/live", label: "Live", icon: LayoutGrid, restaurantOnly: true },
+    { href: "/sales-mode/restaurant/kitchen", label: "Kitchen", icon: ChefHat, restaurantOnly: true },
+    { href: "/sales-mode/restaurant/bar", label: "Bar", icon: CookingPot, restaurantOnly: true },
+    { href: "/sales-mode/restaurant/tables", label: "Tables", icon: Table2, restaurantOnly: true },
+    { href: "/sales-mode/history", label: "History", icon: History, restaurantOnly: false },
 ]
 
 export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
+    const router = useRouter()
+    const layoutPreset = useLayoutPresetId()
     const { user, salesModeLogout } = useAuth()
     const businessName = storage.getSalesModeBusinessName() ?? "Business"
-    const [autoPrint, setAutoPrint] = useState(true)
-
-    useEffect(() => {
-        const persisted = storage.get(STORAGE_KEYS.SALES_MODE_AUTO_PRINT)
-        if (persisted === "false") setAutoPrint(false)
-        if (persisted === "true") setAutoPrint(true)
-    }, [])
+    const [autoPrint, setAutoPrint] = useState(() => storage.get(STORAGE_KEYS.SALES_MODE_AUTO_PRINT) !== "false")
+    const isRestaurantPreset = layoutPreset === "restaurant"
+    const visibleTabs = tabs.filter((tab) => isRestaurantPreset || !tab.restaurantOnly)
 
     const toggleAutoPrint = (enabled: boolean) => {
         setAutoPrint(enabled)
@@ -39,6 +38,12 @@ export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
             new CustomEvent("sales-mode:set-auto-print", { detail: { enabled } })
         )
     }
+
+    useEffect(() => {
+        if (isRestaurantPreset) return
+        if (!pathname.startsWith("/sales-mode/restaurant")) return
+        router.replace("/sales-mode/pos")
+    }, [isRestaurantPreset, pathname, router])
 
     return (
         <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col">
@@ -86,8 +91,11 @@ export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
                 <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
             </main>
 
-            <nav className="fixed bottom-0 inset-x-0 z-40 h-16 border-t border-black/10 dark:border-white/10 grid grid-cols-6 bg-background/95 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
-                {tabs.map((tab) => {
+            <nav
+                className="fixed bottom-0 inset-x-0 z-40 h-16 border-t border-black/10 dark:border-white/10 grid bg-background/95 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.08)]"
+                style={{ gridTemplateColumns: `repeat(${visibleTabs.length}, minmax(0, 1fr))` }}
+            >
+                {visibleTabs.map((tab) => {
                     const active = pathname === tab.href
                     const Icon = tab.icon
                     return (

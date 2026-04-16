@@ -996,7 +996,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                     )}
 
                     {/* Filters & Search */}
-                    <div className={cn("flex flex-col lg:flex-row gap-4 lg:items-center pb-4", embedded && "pt-2")}>
+                    <div className={cn("flex flex-col lg:flex-row gap-4 lg:items-center pb-4 pt-2", embedded && "pt-2")}>
                         <div className="w-full lg:w-auto min-w-[320px] flex-none">
                             {/* Desktop: Opens Overlay */}
                             <div
