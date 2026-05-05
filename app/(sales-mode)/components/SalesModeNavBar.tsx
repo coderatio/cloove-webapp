@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ComponentType, type ReactNode } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { ChefHat, CookingPot, History, LayoutGrid, LogOut, Receipt, Table2 } from "lucide-react"
+import { ChefHat, CookingPot, History, LayoutGrid, LogOut, Receipt, RotateCcw, Table2, Users, Package } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { Button } from "@/app/components/ui/button"
@@ -12,24 +12,46 @@ import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { SalesOutboxBanner } from "./SalesOutboxBanner"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 
-const tabs = [
-    { href: "/sales-mode/pos", label: "POS", icon: Receipt, restaurantOnly: false },
-    { href: "/sales-mode/restaurant/live", label: "Live", icon: LayoutGrid, restaurantOnly: true },
-    { href: "/sales-mode/restaurant/kitchen", label: "Kitchen", icon: ChefHat, restaurantOnly: true },
-    { href: "/sales-mode/restaurant/bar", label: "Bar", icon: CookingPot, restaurantOnly: true },
-    { href: "/sales-mode/restaurant/tables", label: "Tables", icon: Table2, restaurantOnly: true },
-    { href: "/sales-mode/history", label: "History", icon: History, restaurantOnly: false },
+type SalesTab = {
+    href: string
+    label: string
+    icon: ComponentType<{ className?: string }>
+}
+
+const RESTAURANT_TABS: SalesTab[] = [
+    { href: "/sales-mode/pos", label: "POS", icon: Receipt },
+    { href: "/sales-mode/restaurant/live", label: "Live", icon: LayoutGrid },
+    { href: "/sales-mode/restaurant/kitchen", label: "Kitchen", icon: ChefHat },
+    { href: "/sales-mode/restaurant/bar", label: "Bar", icon: CookingPot },
+    { href: "/sales-mode/restaurant/tables", label: "Tables", icon: Table2 },
+    { href: "/sales-mode/history", label: "History", icon: History },
 ]
 
-export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
+const RETAIL_TABS: SalesTab[] = [
+    { href: "/sales-mode/pos", label: "POS", icon: Receipt },
+    { href: "/sales-mode/catalog", label: "Catalog", icon: Package },
+    { href: "/sales-mode/customers", label: "Customers", icon: Users },
+    { href: "/sales-mode/returns", label: "Returns", icon: RotateCcw },
+    { href: "/sales-mode/history", label: "History", icon: History },
+]
+
+const DEFAULT_TABS: SalesTab[] = [
+    { href: "/sales-mode/pos", label: "POS", icon: Receipt },
+    { href: "/sales-mode/history", label: "History", icon: History },
+]
+
+export function SalesModeNavBar({ children }: { children: ReactNode }) {
     const pathname = usePathname()
     const router = useRouter()
     const layoutPreset = useLayoutPresetId()
     const { user, salesModeLogout } = useAuth()
     const businessName = storage.getSalesModeBusinessName() ?? "Business"
     const [autoPrint, setAutoPrint] = useState(() => storage.get(STORAGE_KEYS.SALES_MODE_AUTO_PRINT) !== "false")
-    const isRestaurantPreset = layoutPreset === "restaurant"
-    const visibleTabs = tabs.filter((tab) => isRestaurantPreset || !tab.restaurantOnly)
+    const visibleTabs = layoutPreset === "restaurant"
+        ? RESTAURANT_TABS
+        : layoutPreset === "retail"
+            ? RETAIL_TABS
+            : DEFAULT_TABS
 
     const toggleAutoPrint = (enabled: boolean) => {
         setAutoPrint(enabled)
@@ -40,10 +62,16 @@ export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
     }
 
     useEffect(() => {
-        if (isRestaurantPreset) return
-        if (!pathname.startsWith("/sales-mode/restaurant")) return
-        router.replace("/sales-mode/pos")
-    }, [isRestaurantPreset, pathname, router])
+        const isCurrentPathAllowed = visibleTabs.some((tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`))
+        if (isCurrentPathAllowed) return
+        if (pathname.startsWith("/sales-mode/restaurant")) {
+            router.replace("/sales-mode/pos")
+            return
+        }
+        if (pathname.startsWith("/sales-mode/catalog") || pathname.startsWith("/sales-mode/customers") || pathname.startsWith("/sales-mode/returns")) {
+            router.replace("/sales-mode/pos")
+        }
+    }, [pathname, router, visibleTabs])
 
     return (
         <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col">
@@ -96,7 +124,7 @@ export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
                 style={{ gridTemplateColumns: `repeat(${visibleTabs.length}, minmax(0, 1fr))` }}
             >
                 {visibleTabs.map((tab) => {
-                    const active = pathname === tab.href
+                    const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`)
                     const Icon = tab.icon
                     return (
                         <Link
