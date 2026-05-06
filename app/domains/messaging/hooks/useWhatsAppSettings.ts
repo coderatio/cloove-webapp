@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
+import { useBusiness } from "@/app/components/BusinessProvider"
 
 export interface WhatsAppNumber {
   id: string
@@ -35,6 +36,22 @@ export interface WhatsAppNumberStatus extends WhatsAppNumber {
   meta_error?: string
 }
 
+export type AgentProfile = "commerce" | "service"
+
+export interface AgentCapabilitiesSummary {
+  products: boolean
+  cart: boolean
+  orders: boolean
+  debts: boolean
+  promotions: boolean
+  storefrontLink: boolean
+  services: boolean
+  inquiries: boolean
+  booking: boolean
+  qrOrdering: boolean
+  humanHandoff: boolean
+}
+
 export interface GoSettings {
   id?: string
   business_id: string
@@ -54,8 +71,16 @@ export interface GoSettings {
   qr_ordering_enabled: boolean
   human_handoff_enabled: boolean
   show_powered_by_cloove: boolean
+  agent_profile?: AgentProfile
+  capabilities?: AgentCapabilitiesSummary
+  capabilities_overrides?: Partial<AgentCapabilitiesSummary> | null
   created_at?: string
   updated_at?: string | null
+}
+
+export interface UpdateGoSettingsInput extends Partial<GoSettings> {
+  agent_profile?: AgentProfile
+  capabilities?: Partial<AgentCapabilitiesSummary> | null
 }
 
 export interface EmbeddedSignupPayload {
@@ -64,30 +89,51 @@ export interface EmbeddedSignupPayload {
   phone_number_id: string
 }
 
+export type GoSettingsContentField =
+  | "welcome_message"
+  | "fallback_message"
+  | "ai_instructions"
+  | "business_info"
+  | "faq"
+  | "restricted_topics"
+  | "operating_hours"
+  | "delivery_info"
+  | "return_policy"
+
 const QUERY_KEYS = {
-  numbers: ["whatsapp-numbers"] as const,
-  numberStatus: (id: string) => ["whatsapp-numbers", id, "status"] as const,
-  goSettings: ["go-settings"] as const,
+  numbers: (businessId?: string) => ["whatsapp-numbers", businessId].filter(Boolean),
+  numberStatus: (id: string, businessId?: string) =>
+    ["whatsapp-numbers", id, "status", businessId].filter(Boolean),
+  goSettings: (businessId?: string) => ["go-settings", businessId].filter(Boolean),
 }
 
 export function useWhatsAppNumbers() {
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
   return useQuery({
-    queryKey: QUERY_KEYS.numbers,
+    queryKey: QUERY_KEYS.numbers(businessId),
     queryFn: () => apiClient.get<WhatsAppNumber[]>("/whatsapp-numbers"),
+    enabled: !!businessId,
   })
 }
 
 export function useWhatsAppNumberStatus(id: string | null, enabled: boolean) {
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
   return useQuery({
-    queryKey: QUERY_KEYS.numberStatus(id ?? ""),
+    queryKey: QUERY_KEYS.numberStatus(id ?? "", businessId),
     queryFn: () => apiClient.get<WhatsAppNumberStatus>(`/whatsapp-numbers/${id}/status`),
-    enabled: !!id && enabled,
+    enabled: !!id && enabled && !!businessId,
     refetchInterval: enabled ? 10_000 : false,
   })
 }
 
 export function useConnectWhatsAppNumber() {
   const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
 
   return useMutation({
     mutationFn: (payload: EmbeddedSignupPayload) =>
@@ -98,7 +144,7 @@ export function useConnectWhatsAppNumber() {
       ),
     onSuccess: (data) => {
       toast.success(data?.message || "WhatsApp number connected")
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
     },
     onError: () => {
       toast.error("Failed to connect WhatsApp number. Please try again.")
@@ -108,6 +154,8 @@ export function useConnectWhatsAppNumber() {
 
 export function useUpdateWhatsAppNumber() {
   const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
 
   return useMutation({
     mutationFn: ({
@@ -122,7 +170,7 @@ export function useUpdateWhatsAppNumber() {
     }) => apiClient.patch<WhatsAppNumber>(`/whatsapp-numbers/${id}`, body),
     onSuccess: () => {
       toast.success("Credentials updated")
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
     },
     onError: () => {
       toast.error("Failed to update credentials")
@@ -132,13 +180,15 @@ export function useUpdateWhatsAppNumber() {
 
 export function useDisconnectWhatsAppNumber() {
   const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
 
   return useMutation({
     mutationFn: (id: string) =>
       apiClient.post(`/whatsapp-numbers/${id}/disconnect`, {}),
     onSuccess: () => {
       toast.success("WhatsApp number disconnected")
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
     },
     onError: () => {
       toast.error("Failed to disconnect number")
@@ -148,6 +198,8 @@ export function useDisconnectWhatsAppNumber() {
 
 export function useRestoreWhatsAppNumber() {
   const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
 
   return useMutation({
     mutationFn: (id: string) =>
@@ -158,7 +210,7 @@ export function useRestoreWhatsAppNumber() {
       ),
     onSuccess: (data) => {
       toast.success(data?.message || "WhatsApp number restored")
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
     },
     onError: () => {
       toast.error("Failed to restore number")
@@ -168,35 +220,56 @@ export function useRestoreWhatsAppNumber() {
 
 
 export function useGoSettings() {
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
   return useQuery({
-    queryKey: QUERY_KEYS.goSettings,
+    queryKey: QUERY_KEYS.goSettings(businessId),
     queryFn: () => apiClient.get<GoSettings>("/go-settings"),
+    enabled: !!businessId,
   })
 }
 
 export function useUpdateGoSettings() {
   const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
 
   return useMutation({
-    mutationFn: (settings: Partial<GoSettings>) =>
+    mutationFn: (settings: UpdateGoSettingsInput) =>
       apiClient.put<GoSettings>("/go-settings", settings),
     onMutate: async (newSettings) => {
-      const previous = queryClient.getQueryData(QUERY_KEYS.goSettings)
-      queryClient.setQueryData(QUERY_KEYS.goSettings, (old: GoSettings | undefined) => ({
+      const previous = queryClient.getQueryData(QUERY_KEYS.goSettings(businessId))
+      queryClient.setQueryData(QUERY_KEYS.goSettings(businessId), (old: GoSettings | undefined) => ({
         ...old,
         ...newSettings,
       }))
       return { previous }
     },
-    onError: (_err, _vars, context) => {
-      queryClient.setQueryData(QUERY_KEYS.goSettings, context?.previous)
-      toast.error("Failed to update settings")
+    onError: (err: { message?: string }, _vars, context) => {
+      queryClient.setQueryData(QUERY_KEYS.goSettings(businessId), context?.previous)
+      toast.error(err.message ?? "Failed to update settings")
     },
     onSuccess: () => {
       toast.success("Settings updated")
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.goSettings })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.goSettings(businessId) })
+    },
+  })
+}
+
+export function useGenerateGoSettingsContent() {
+  return useMutation({
+    mutationFn: (payload: {
+      field: GoSettingsContentField
+      prompt: string
+      current_value?: string | null
+      store_id?: string | null
+    }) =>
+      apiClient.post<{ content: string }>("/go-settings/generate-content", payload),
+    onError: () => {
+      toast.error("Failed to generate content")
     },
   })
 }

@@ -37,11 +37,14 @@ import {
   useRestoreWhatsAppNumber,
   useGoSettings,
   useUpdateGoSettings,
+  useGenerateGoSettingsContent,
   type WhatsAppNumber,
   type GoSettings,
+  type GoSettingsContentField,
 } from "../hooks/useWhatsAppSettings"
 import { MarkdownEditor } from "@/app/components/ui/markdown-editor"
 import { ConnectWhatsAppForm } from "./ConnectWhatsAppForm"
+import { AgentProfileSection } from "./AgentProfileSection"
 
 interface WhatsAppSettingsProps {
   onDirtyChange?: (isDirty: boolean) => void
@@ -68,6 +71,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
   const { data: numbers, isLoading: numbersLoading } = useWhatsAppNumbers()
   const { data: goSettingsData, isLoading: settingsLoading } = useGoSettings()
   const updateGoSettings = useUpdateGoSettings()
+  const generateContent = useGenerateGoSettingsContent()
   const disconnectNumber = useDisconnectWhatsAppNumber()
 
   const restoreNumber = useRestoreWhatsAppNumber()
@@ -103,6 +107,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     operating_hours: "",
     delivery_info: "",
     return_policy: "",
+    agent_profile: "commerce",
+    capabilities_overrides: null,
   })
 
   const [activeSettingsTab, setActiveSettingsTab] = useState<"general" | "ai">("general")
@@ -133,6 +139,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
         operating_hours: s.operating_hours ?? "",
         delivery_info: s.delivery_info ?? "",
         return_policy: s.return_policy ?? "",
+        agent_profile: s.agent_profile ?? "commerce",
+        capabilities_overrides: s.capabilities_overrides ?? null,
       })
       setIsDirty(false)
       onDirtyChange?.(false)
@@ -141,7 +149,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
   useEffect(() => {
     if (saveTrigger && saveTrigger > 0 && isDirty) {
-      updateGoSettings.mutate(localSettings)
+      const { capabilities_overrides, ...rest } = localSettings
+      updateGoSettings.mutate({
+        ...rest,
+        capabilities: capabilities_overrides ?? null,
+      })
     }
   }, [saveTrigger])
 
@@ -149,6 +161,20 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     setLocalSettings((prev) => ({ ...prev, [key]: value }))
     setIsDirty(true)
     onDirtyChange?.(true)
+  }
+
+  const handleGenerateContent = async (
+    field: GoSettingsContentField,
+    prompt: string,
+    currentValue: string
+  ) => {
+    const result = await generateContent.mutateAsync({
+      field,
+      prompt,
+      current_value: currentValue,
+      store_id: localSettings.store_id ?? null,
+    })
+    return result.content
   }
 
   const handleDisconnect = () => {
@@ -319,7 +345,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                       </Select>
                     </div>
 
-                    <div className="space-y-6 pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 space-y-6">
                       <SettingTextarea
                         label="Welcome Message"
                         placeholder="Sent to customers on their first message"
@@ -327,6 +353,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         onChange={(v) => handleChange("welcome_message", v)}
                         rows={3}
                         markdown
+                        aiField="welcome_message"
+                        onGenerateAI={handleGenerateContent}
                       />
 
                       <SettingTextarea
@@ -336,10 +364,21 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         onChange={(v) => handleChange("fallback_message", v)}
                         rows={2}
                         markdown
+                        aiField="fallback_message"
+                        onGenerateAI={handleGenerateContent}
                       />
                     </div>
                   </SettingsCard>
                 </section>
+
+                <AgentProfileSection
+                  profile={localSettings.agent_profile ?? "commerce"}
+                  overrides={localSettings.capabilities_overrides ?? null}
+                  onProfileChange={(profile) => handleChange("agent_profile", profile)}
+                  onOverridesChange={(overrides) =>
+                    handleChange("capabilities_overrides", overrides)
+                  }
+                />
 
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -390,18 +429,22 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
                     AI Personality
                   </h3>
-                  <SettingsCard className="space-y-6">
-                    <SettingTextarea
-                      label="Custom Instructions"
-                      placeholder="Tell the AI how to behave. E.g. 'Always greet customers by name', 'Recommend our combo deals', 'Upsell drinks with food orders'..."
-                      value={localSettings.ai_instructions ?? ""}
-                      onChange={(v) => handleChange("ai_instructions", v)}
-                      rows={4}
-                      hint="These instructions shape how your AI assistant interacts with customers."
-                      markdown
-                    />
+                  <SettingsCard className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    <div className="pb-6">
+                      <SettingTextarea
+                        label="Custom Instructions"
+                        placeholder="Tell the AI how to behave. E.g. 'Always greet customers by name', 'Recommend our combo deals', 'Upsell drinks with food orders'..."
+                        value={localSettings.ai_instructions ?? ""}
+                        onChange={(v) => handleChange("ai_instructions", v)}
+                        rows={4}
+                        hint="These instructions shape how your AI assistant interacts with customers."
+                        markdown
+                        aiField="ai_instructions"
+                        onGenerateAI={handleGenerateContent}
+                      />
+                    </div>
 
-                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                    <div className="pt-6">
                       <SettingTextarea
                         label="About Your Business"
                         placeholder="Describe what your business does, your story, what makes you unique. The AI will use this to answer customer questions."
@@ -409,6 +452,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         onChange={(v) => handleChange("business_info", v)}
                         rows={4}
                         markdown
+                        aiField="business_info"
+                        onGenerateAI={handleGenerateContent}
                       />
                     </div>
                   </SettingsCard>
@@ -418,8 +463,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
                     Business Knowledge
                   </h3>
-                  <SettingsCard className="space-y-6 divide-y divide-slate-100 dark:divide-slate-800/60">
-                    <div>
+                  <SettingsCard className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    <div className="pb-6">
                       <SettingTextarea
                         label="Operating Hours"
                         placeholder="E.g. 'Monday–Friday: 9am–6pm, Saturday: 10am–4pm, Sunday: Closed'"
@@ -429,7 +474,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                       />
                     </div>
 
-                    <div className="pt-6">
+                    <div className="py-6">
                       <SettingTextarea
                         label="Delivery Information"
                         placeholder="Delivery areas, fees, estimated times, minimum orders..."
@@ -437,10 +482,12 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         onChange={(v) => handleChange("delivery_info", v)}
                         rows={3}
                         markdown
+                        aiField="delivery_info"
+                        onGenerateAI={handleGenerateContent}
                       />
                     </div>
 
-                    <div className="pt-6">
+                    <div className="py-6">
                       <SettingTextarea
                         label="Return & Refund Policy"
                         placeholder="Your return window, conditions, refund process..."
@@ -448,6 +495,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         onChange={(v) => handleChange("return_policy", v)}
                         rows={3}
                         markdown
+                        aiField="return_policy"
+                        onGenerateAI={handleGenerateContent}
                       />
                     </div>
 
@@ -460,6 +509,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         rows={6}
                         hint="Write Q&A pairs so the AI can answer common questions accurately."
                         markdown
+                        aiField="faq"
+                        onGenerateAI={handleGenerateContent}
                       />
                     </div>
                   </SettingsCard>
@@ -478,6 +529,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                       rows={3}
                       hint="The AI will politely decline and redirect if a customer asks about these."
                       markdown
+                      aiField="restricted_topics"
+                      onGenerateAI={handleGenerateContent}
                     />
                   </SettingsCard>
                 </section>
@@ -691,6 +744,8 @@ function SettingTextarea({
   rows = 3,
   hint,
   markdown = false,
+  aiField,
+  onGenerateAI,
 }: {
   label: string
   placeholder: string
@@ -699,6 +754,12 @@ function SettingTextarea({
   rows?: number
   hint?: string
   markdown?: boolean
+  aiField?: GoSettingsContentField
+  onGenerateAI?: (
+    field: GoSettingsContentField,
+    prompt: string,
+    currentValue: string
+  ) => Promise<string>
 }) {
   return (
     <div className="space-y-2 max-w-3xl">
@@ -711,6 +772,11 @@ function SettingTextarea({
           onChange={onChange}
           placeholder={placeholder}
           minHeight={`${rows * 28}px`}
+          onGenerateAI={
+            aiField && onGenerateAI
+              ? (prompt, currentValue) => onGenerateAI(aiField, prompt, currentValue)
+              : undefined
+          }
         />
       ) : (
         <Textarea
