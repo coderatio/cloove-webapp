@@ -69,53 +69,58 @@ function SettingsContent() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 pb-20">
+        <div className="mx-auto max-w-6xl space-y-8 pb-20">
             <ManagementHeader
                 title="Settings"
                 description="Manage your business preferences and personal profile"
             />
 
-            {/* Tab Navigation */}
-            <PersistedTabs
-                tabs={tabs}
-                activeTab={activeTab}
-                defaultTab={tabs[0]?.id || "profile"}
-                onChange={(id) => {
-                    setActiveTab(id as Tab)
-                    setIsDirty(false)
-                }}
-            />
+            <div className="grid gap-6 lg:grid-cols-[220px_1fr] lg:items-start">
+                <div className="lg:sticky lg:top-20">
+                    <PersistedTabs
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        defaultTab={tabs[0]?.id || "profile"}
+                        orientation="vertical"
+                        compact
+                        onChange={(id) => {
+                            setActiveTab(id as Tab)
+                            setIsDirty(false)
+                        }}
+                    />
+                </div>
 
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    {activeTab === "business" && role === 'OWNER' && (
-                        <BusinessSettings
-                            onDirtyChange={setIsDirty}
-                            onSavingChange={setIsSaving}
-                            saveTrigger={saveTrigger}
-                        />
-                    )}
-                    {activeTab === "workspace" && can("MANAGE_BUSINESS_CONFIG") && <WorkspaceSettings />}
-                    {activeTab === "profile" && <ProfileSettings />}
-                    {activeTab === "verification" && role === 'OWNER' && <VerificationSettings />}
-                    {activeTab === "billing" && (role === 'OWNER' || role === 'ACCOUNTANT') && <BillingSettings />}
-                    {activeTab === "security" && <SecuritySettings />}
-                    {activeTab === "printer" && <PrinterSettings />}
-                    {activeTab === "messaging" && role === 'OWNER' && (
-                        <WhatsAppSettings
-                            onDirtyChange={setIsDirty}
-                            onSavingChange={setIsSaving}
-                            saveTrigger={saveTrigger}
-                        />
-                    )}
-                </motion.div>
-            </AnimatePresence>
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {activeTab === "business" && role === 'OWNER' && (
+                            <BusinessSettings
+                                onDirtyChange={setIsDirty}
+                                onSavingChange={setIsSaving}
+                                saveTrigger={saveTrigger}
+                            />
+                        )}
+                        {activeTab === "workspace" && can("MANAGE_BUSINESS_CONFIG") && <WorkspaceSettings />}
+                        {activeTab === "profile" && <ProfileSettings />}
+                        {activeTab === "verification" && role === 'OWNER' && <VerificationSettings />}
+                        {activeTab === "billing" && (role === 'OWNER' || role === 'ACCOUNTANT') && <BillingSettings />}
+                        {activeTab === "security" && <SecuritySettings />}
+                        {activeTab === "printer" && <PrinterSettings />}
+                        {activeTab === "messaging" && role === 'OWNER' && (
+                            <WhatsAppSettings
+                                onDirtyChange={setIsDirty}
+                                onSavingChange={setIsSaving}
+                                saveTrigger={saveTrigger}
+                            />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+            </div>
 
             {/* Common Save Bar */}
             {isDirty && (
@@ -123,7 +128,7 @@ function SettingsContent() {
                     <Button
                         onClick={handleGlobalSave}
                         disabled={isSaving}
-                        className="rounded-full bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 px-8 h-14 shadow-2xl hover:scale-105 transition-all font-bold"
+                        className="h-14 rounded-full bg-brand-deep px-8 font-bold text-brand-gold shadow-2xl transition-all hover:scale-105 hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-white dark:hover:bg-brand-gold/90"
                     >
                         {isSaving ? (
                             <>

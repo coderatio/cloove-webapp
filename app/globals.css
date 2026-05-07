@@ -11,7 +11,7 @@
 @theme {
   --color-cloove-deep: #0b3d2e;
   --color-cloove-green: #125741;
-  --color-cloove-gold: #2a6b58;
+  --color-cloove-gold: #f59e0b;
   --color-cloove-cream: #ffffff;
   --color-cloove-accent: #2f5a4d;
   --color-cloove-muted: #6b7280;
@@ -31,17 +31,17 @@
   --color-brand-deep-950: #02120d;
 
   /* Brand Gold Spectrum */
-  --color-brand-gold-50: #fdfaf0;
-  --color-brand-gold-100: #fbf2d6;
-  --color-brand-gold-200: #f5e4a3;
-  --color-brand-gold-300: #efd36a;
-  --color-brand-gold-400: #e7bd3d;
-  --color-brand-gold-500: #d4af37;
-  --color-brand-gold-600: #b18c2a;
-  --color-brand-gold-700: #8a6a21;
-  --color-brand-gold-800: #6a511c;
-  --color-brand-gold-900: #574319;
-  --color-brand-gold-950: #33260d;
+  --color-brand-gold-50: #fff7ed;
+  --color-brand-gold-100: #ffedd5;
+  --color-brand-gold-200: #fed7aa;
+  --color-brand-gold-300: #fdba74;
+  --color-brand-gold-400: #fb923c;
+  --color-brand-gold-500: #f97316;
+  --color-brand-gold-600: #ea580c;
+  --color-brand-gold-700: #c2410c;
+  --color-brand-gold-800: #9a3412;
+  --color-brand-gold-900: #7c2d12;
+  --color-brand-gold-950: #431407;
 
   /* Brand Green Spectrum (kept for compatibility with existing classes) */
   --color-brand-green-50: #f2f7f5;
@@ -112,9 +112,9 @@
 
   --color-brand-deep: #0b3d2e;
   --color-brand-green: #125741;
-  --color-brand-gold: #2a6b58;
-  --color-brand-gold-light: #3f7b69;
-  --color-brand-gold-bright: #74a395;
+  --color-brand-gold: #f97316;
+  --color-brand-gold-light: #fb923c;
+  --color-brand-gold-bright: #fdba74;
   --color-brand-cream: #ffffff;
   --color-brand-accent: #335b4f;
   --color-brand-emerald: #2b6a58;

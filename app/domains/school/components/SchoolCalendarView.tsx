@@ -48,7 +48,7 @@ export function SchoolCalendarView() {
     if (preset !== "school") {
         return (
             <PageTransition>
-                <div className="max-w-5xl mx-auto space-y-8 pb-24">
+                <div className="max-w-6xl mx-auto space-y-8 pb-24">
                     <motion.div {...sectionMotion} transition={{ duration: 0.35 }}>
                         <ManagementHeader
                             title="School calendar"
@@ -103,7 +103,7 @@ export function SchoolCalendarView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <motion.div {...sectionMotion} transition={{ duration: 0.35 }}>
                     <ManagementHeader
                         title="Years & terms"

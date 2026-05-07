@@ -69,7 +69,7 @@ export function PresetGate({
 
   return (
     <PageTransition>
-      <div className="max-w-5xl mx-auto space-y-6 pb-24">
+      <div className="max-w-6xl mx-auto space-y-6 pb-24">
         {featureLabel && (
           <div>
             <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">

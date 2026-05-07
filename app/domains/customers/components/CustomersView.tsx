@@ -549,7 +549,7 @@ export function CustomersView() {
     if (error) {
         return (
             <PageTransition>
-                <div className="max-w-5xl mx-auto space-y-8 pb-24">
+                <div className="max-w-6xl mx-auto space-y-8 pb-24">
                     <ManagementHeader
                         title={pageCopy.customers.title}
                         description={pageCopy.customers.descriptionWithStore(pageCopy.ordersUi.storeDescriptionFallback)}
@@ -573,7 +573,7 @@ export function CustomersView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title={pageCopy.customers.title}
                     description={pageCopy.customers.descriptionWithStore(

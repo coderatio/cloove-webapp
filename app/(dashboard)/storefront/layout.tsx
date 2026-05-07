@@ -19,7 +19,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-20">
+            <div className="max-w-6xl mx-auto space-y-8 pb-20">
                 {/* Header */}
                 <div className="px-2 pt-4">
                     <h1 className="font-serif text-3xl md:text-4xl text-brand-deep dark:text-brand-cream mb-2">

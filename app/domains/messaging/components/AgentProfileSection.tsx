@@ -145,12 +145,12 @@ function ProfileCard({ active, title, description, onClick }: ProfileCardProps) 
             className={cn(
                 "p-4 rounded-2xl text-left border transition-all",
                 active
-                    ? "bg-brand-deep text-brand-gold-300 border-brand-deep shadow-lg dark:bg-brand-gold dark:text-brand-deep dark:border-brand-gold"
-                    : "bg-white/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-brand-deep/30 dark:hover:border-brand-gold/30"
+                    ? "bg-brand-deep text-brand-gold-300 border-brand-deep shadow-lg dark:bg-emerald-500/20 dark:text-emerald-100 dark:border-emerald-400/30"
+                    : "bg-white/60 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:border-brand-deep/30 dark:hover:border-slate-700"
             )}
         >
             <div className="text-sm font-bold tracking-wide">{title}</div>
-            <div className={cn("text-xs mt-1", active ? "opacity-80" : "text-slate-500 dark:text-slate-400")}>
+            <div className={cn("text-xs mt-1", active ? "text-emerald-100/85" : "text-slate-500 dark:text-slate-300")}>
                 {description}
             </div>
         </button>

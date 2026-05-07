@@ -312,7 +312,7 @@ export function StaffView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8">
+            <div className="max-w-6xl mx-auto space-y-8">
                 <ManagementHeader
                     title={pageCopy.staff.title}
                     description={pageCopy.staff.description}

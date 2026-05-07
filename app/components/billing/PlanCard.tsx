@@ -68,7 +68,7 @@ export function PlanCard({
             isCurrent && "border-brand-deep dark:border-brand-cream bg-brand-deep/5 dark:bg-white/5"
         )}>
             {isRecommended && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-brand-gold text-brand-deep text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gold px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
                     Recommended
                 </div>
             )}

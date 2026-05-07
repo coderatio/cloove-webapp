@@ -623,7 +623,7 @@ export function SchoolFeeToolsView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <motion.div {...sectionMotion} transition={{ duration: 0.35 }}>
                     <ManagementHeader
                         title="Fee presets & links"

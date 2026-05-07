@@ -60,7 +60,7 @@ const STATUS_CONFIG: Record<WhatsAppNumberStatusValue, { label: string; icon: Re
   [WhatsAppNumberStatusValue.PENDING]: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
   [WhatsAppNumberStatusValue.VERIFYING]: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
   [WhatsAppNumberStatusValue.FAILED]: { label: "Failed", icon: XCircle, color: "text-red-600 dark:text-red-400" },
-  [WhatsAppNumberStatusValue.SUSPENDED]: { label: "Disconnected", icon: AlertCircle, color: "text-slate-500 dark:text-slate-400" },
+  [WhatsAppNumberStatusValue.SUSPENDED]: { label: "Disconnected", icon: AlertCircle, color: "text-slate-500 dark:text-slate-300" },
 }
 
 const TONE_OPTIONS = [
@@ -237,12 +237,12 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                     <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                       Connect WhatsApp
                     </h3>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-500 dark:text-slate-300">
                       Sign in with Meta and choose the business number Cloove should manage.
                     </p>
                   </div>
                 </div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-300">
                   Cloove manages your WhatsApp catalog from your products.
                 </p>
               </div>
@@ -291,7 +291,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
             <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
               {[...activeNumber.verification_logs].reverse().map((log, i) => (
                 <div key={i} className="flex gap-4 p-4 text-sm">
-                  <span className="shrink-0 text-slate-500 tabular-nums w-32">
+                  <span className="shrink-0 text-slate-500 dark:text-slate-300 tabular-nums w-32">
                     {new Date(log.timestamp).toLocaleString(undefined, {
                       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                     })}
@@ -370,7 +370,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         disabled
                         className="bg-slate-50 dark:bg-slate-900/50"
                       />
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-slate-500 dark:text-slate-300">
                         Managed on Meta. Update your verified name in your WhatsApp Business settings.
                       </p>
                     </div>
@@ -437,7 +437,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                     Features
                   </h3>
                   <SettingsCard className="space-y-0 divide-y divide-slate-100 dark:divide-slate-800/60 p-0">
-                    <div className="p-6">
+                    <div className="px-3 py-3.5 sm:px-5 sm:py-5">
                       <SettingToggle
                         label="AI Assistant"
                         description="Let AI handle customer conversations automatically."
@@ -445,7 +445,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         onChange={(v) => handleChange("ai_enabled", v)}
                       />
                     </div>
-                    <div className="p-6">
+                    <div className="px-3 py-3.5 sm:px-5 sm:py-5">
                       <SettingToggle
                         label="QR Code Ordering"
                         description="Allow customers to scan a QR code to start ordering."
@@ -453,7 +453,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         onChange={(v) => handleChange("qr_ordering_enabled", v)}
                       />
                     </div>
-                    <div className="p-6">
+                    <div className="px-3 py-3.5 sm:px-5 sm:py-5">
                       <SettingToggle
                         label="Human Handoff"
                         description="Transfer conversations to a human when AI cannot help."
@@ -461,7 +461,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         onChange={(v) => handleChange("human_handoff_enabled", v)}
                       />
                     </div>
-                    <div className="p-6">
+                    <div className="px-3 py-3.5 sm:px-5 sm:py-5">
                       <SettingToggle
                         label='Show "Powered by Cloove"'
                         description="Display Cloove branding in AI responses."
@@ -596,7 +596,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
 function SettingsCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white dark:bg-brand-deep/20 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm p-6 ${className}`}>
+    <div className={`bg-white dark:bg-slate-950/60 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 ${className}`}>
       {children}
     </div>
   )
@@ -658,7 +658,7 @@ function WhatsAppCatalogPanel({
                   </p>
                   <CatalogStatusBadge status={status} />
                 </div>
-                <p className="text-sm leading-6 text-slate-500">
+                <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
                   {summary}
                 </p>
                 {errorMessage ? (
@@ -691,10 +691,10 @@ function WhatsAppCatalogPanel({
 
 function CatalogStatusBadge({ status }: { status: WhatsAppCatalogStatus["sync_status"] }) {
   const styles: Record<WhatsAppCatalogSyncStatus, string> = {
-    [WhatsAppCatalogSyncStatus.PENDING]: "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20",
-    [WhatsAppCatalogSyncStatus.SYNCING]: "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20",
-    [WhatsAppCatalogSyncStatus.SYNCED]: "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20",
-    [WhatsAppCatalogSyncStatus.FAILED]: "bg-red-50 text-red-700 border-red-100 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20",
+    [WhatsAppCatalogSyncStatus.PENDING]: "text-amber-700 dark:text-amber-300",
+    [WhatsAppCatalogSyncStatus.SYNCING]: "text-blue-700 dark:text-blue-300",
+    [WhatsAppCatalogSyncStatus.SYNCED]: "text-emerald-700 dark:text-emerald-300",
+    [WhatsAppCatalogSyncStatus.FAILED]: "text-red-700 dark:text-red-300",
   }
   const labels: Record<WhatsAppCatalogSyncStatus, string> = {
     [WhatsAppCatalogSyncStatus.PENDING]: "Pending",
@@ -702,9 +702,17 @@ function CatalogStatusBadge({ status }: { status: WhatsAppCatalogStatus["sync_st
     [WhatsAppCatalogSyncStatus.SYNCED]: "Synced",
     [WhatsAppCatalogSyncStatus.FAILED]: "Failed",
   }
+  const icons: Record<WhatsAppCatalogSyncStatus, React.ElementType> = {
+    [WhatsAppCatalogSyncStatus.PENDING]: Clock,
+    [WhatsAppCatalogSyncStatus.SYNCING]: Loader2,
+    [WhatsAppCatalogSyncStatus.SYNCED]: CheckCircle2,
+    [WhatsAppCatalogSyncStatus.FAILED]: AlertCircle,
+  }
+  const Icon = icons[status]
 
   return (
-    <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${styles[status]}`}>
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${styles[status]}`}>
+      <Icon className={`h-3.5 w-3.5 ${status === WhatsAppCatalogSyncStatus.SYNCING ? "animate-spin" : ""}`} />
       {labels[status]}
     </span>
   )
@@ -722,12 +730,12 @@ function SettingToggle({
   onChange: (value: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-8">
-      <div className="space-y-1">
+    <div className="flex items-start justify-between gap-2.5 sm:items-center sm:gap-5">
+      <div className="min-w-0 flex-1 space-y-0.5 pr-2">
         <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{label}</span>
-        <p className="text-sm text-slate-500">{description}</p>
+        <p className="text-sm leading-snug text-slate-500 dark:text-slate-300">{description}</p>
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} className="shrink-0" />
     </div>
   )
 }
@@ -754,47 +762,54 @@ function ConnectedNumberCard({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+      <div className="flex flex-col gap-4">
+        <div className="min-w-0 flex items-start gap-3.5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
             <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="min-w-0 space-y-1">
-            <p className="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">
-              {number.phone_number}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                {number.phone_number}
+              </p>
+              <span
+                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                aria-label={config.label}
+                title={config.label}
+              >
+                {isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <StatusIcon className="h-3 w-3" />
+                )}
+              </span>
+            </div>
             {number.display_name && (
-              <p className="truncate text-sm text-slate-500">
+              <p className="truncate text-sm text-slate-500 dark:text-slate-300">
                 {number.display_name}
               </p>
             )}
           </div>
         </div>
-        <div className={`inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium dark:border-slate-700 dark:bg-slate-800 ${config.color}`}>
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <StatusIcon className="h-4 w-4" />
-          )}
-          <span>{config.label}</span>
-        </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <StatusMetric
-          label="Connection"
-          value={isPending ? "Waiting on Meta" : "Managed by Cloove"}
-        />
-        <StatusMetric
-          label="Catalog"
-          value={
-            number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
-              ? "Needs attention"
-              : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.SYNCED
-                ? "Synced"
-                : "Provisioning"
-          }
-        />
+      <div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x sm:divide-slate-200/80 dark:sm:divide-slate-800">
+          <StatusMetric
+            label="Connection"
+            value={isPending ? "Waiting on Meta" : "Managed by Cloove"}
+          />
+          <StatusMetric
+            label="Catalog"
+            value={
+              number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
+                ? "Needs attention"
+                : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.SYNCED
+                  ? "Synced"
+                  : "Provisioning"
+            }
+          />
+        </div>
       </div>
 
       {isPending && (
@@ -812,14 +827,14 @@ function ConnectedNumberCard({
         </div>
       )}
 
-      <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-800/80 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm leading-6 text-slate-500">
+      <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800/80">
+        <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
           Use a fresh Meta connection if you need to switch numbers or grant new permissions.
         </p>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
           <EmbeddedSignupButton
             label="Connect Again"
-            className="h-10 rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             icon={RefreshCw}
           />
           {number.status !== WhatsAppNumberStatusValue.PENDING &&
@@ -829,7 +844,7 @@ function ConnectedNumberCard({
               variant="ghost"
               size="sm"
               onClick={onDisconnectClick}
-              className="h-10 rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+              className="h-10 w-full rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto dark:text-red-400 dark:hover:bg-red-500/10"
             >
               <Unplug className="mr-2 h-4 w-4" />
               Disconnect
@@ -848,12 +863,12 @@ function ConnectedNumberCard({
               Disconnect this number only if you want Cloove to stop handling messages for it.
             </p>
           </div>
-          <div className="flex items-center gap-2 sm:justify-end">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
             <Button
               size="sm"
               variant="ghost"
               onClick={onDisconnectCancel}
-              className="rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+              className="w-full rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
             >
               Cancel
             </Button>
@@ -861,7 +876,7 @@ function ConnectedNumberCard({
               size="sm"
               onClick={onDisconnectConfirm}
               disabled={isDisconnecting}
-              className="rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700"
+              className="w-full rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 sm:w-auto"
             >
               {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
             </Button>
@@ -874,7 +889,7 @@ function ConnectedNumberCard({
 
 function StatusMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/40">
+    <div className="px-4 py-3">
       <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">
         {label}
       </p>
@@ -906,7 +921,7 @@ function SuspendedNumberCard({
               {number.phone_number}
             </p>
             {number.display_name && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-300">
                 {number.display_name}
               </p>
             )}
@@ -994,7 +1009,7 @@ function SettingTextarea({
         />
       )}
       {hint && (
-        <p className="text-sm text-slate-500">{hint}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-300">{hint}</p>
       )}
     </div>
   )

@@ -228,7 +228,7 @@ export function VendorsView() {
     if (error) {
         return (
             <PageTransition>
-                <div className="max-w-5xl mx-auto space-y-8 pb-24">
+                <div className="max-w-6xl mx-auto space-y-8 pb-24">
                     <ManagementHeader
                         title={pageCopy.vendors.title}
                         description={pageCopy.vendors.descriptionShort}
@@ -252,7 +252,7 @@ export function VendorsView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title={pageCopy.vendors.title}
                     description={pageCopy.vendors.descriptionLong}

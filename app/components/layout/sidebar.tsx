@@ -118,10 +118,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
             animate={{ width: isCollapsed ? 68 : 248 }}
             transition={{ type: "tween", duration: 0.05, ease: [0.25, 0.1, 0.25, 1] }}
             className={cn(
-                "fixed bottom-4 left-4 top-4 z-40 hidden flex-col rounded-[24px] border shadow-sm md:flex",
+                "fixed inset-y-0 left-0 z-40 hidden flex-col border-r md:flex",
                 isDark
                     ? "border-border bg-background"
-                    : "border-brand-green-100 bg-brand-green-50/60"
+                    : "border-brand-green-100 bg-brand-green-50/55"
             )}
         >
             <div className={cn(
@@ -129,7 +129,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 !isCollapsed && "overflow-hidden"
             )}>
                 {/* Header: when collapsed stack logo + expand; when expanded logo + label left, collapse right */}
-                <div className={cn("mb-1 p-3", isCollapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between")}>
+                <div className={cn("mb-0.5 p-2.5", isCollapsed ? "flex flex-col items-center gap-1.5" : "flex items-center justify-between")}>
                     <div className="flex items-center gap-3 overflow-hidden min-w-0">
                         <div className="relative h-7 w-7 shrink-0">
                             <Image
@@ -174,12 +174,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </div>
 
                 {/* Store Switcher */}
-                <div className={cn("px-3 pb-5 transition-all", isCollapsed && "px-1.5")}>
+                <div className={cn("px-2.5 pb-3.5 transition-all", isCollapsed && "px-1.5")}>
                     <BusinessSwitcher isCollapsed={isCollapsed} />
                 </div>
 
                 {/* Nav Items Grouped */}
-                <nav className={cn("flex-1 overflow-y-auto scrollbar-hide pb-4", isCollapsed ? "space-y-1.5 px-1.5" : "space-y-4 px-3")}>
+                <nav className={cn("flex-1 overflow-y-auto scrollbar-hide pb-3", isCollapsed ? "space-y-1.5 px-1.5" : "space-y-3 px-2.5")}>
                     {navGroups.map((group, groupIndex) => {
                         const filteredItems = group.items
 
@@ -329,7 +329,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </nav>
 
                 {/* Footer Actions */}
-                <div className="relative mt-auto space-y-3 border-t border-border p-3">
+                <div className="relative mt-auto space-y-2.5 border-t border-border p-2.5">
                     {/* Footer buttons removed from here to be moved inside their own relative containers if needed, but primarily profile menu needs it */}
 
                     {/* Settings Button */}

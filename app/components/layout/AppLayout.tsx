@@ -131,12 +131,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <main
                     className={cn(
                         "relative z-10 min-h-screen transition-all duration-300",
-                        !isAssistantPage && "md:pr-8 md:pt-6 md:pb-8",
-                        zenActive ? "md:pl-8" : isCollapsed ? "md:pl-[120px]" : "md:pl-[320px]"
+                        !isAssistantPage && "md:pr-6 md:pt-6 md:pb-8",
+                        zenActive ? "md:pl-8" : isCollapsed ? "md:pl-[96px]" : "md:pl-[280px]"
                     )}
                 >
                     {!isAssistantPage && (
-                        <div className="max-md:[padding-top:max(0.75rem,var(--subscription-banner-offset,0px))] space-y-4 px-4 md:mx-auto md:max-w-5xl md:px-0 md:pt-0">
+                        <div className="max-md:[padding-top:max(0.75rem,var(--subscription-banner-offset,0px))] space-y-4 px-4 md:mx-auto md:max-w-6xl md:px-0 md:pt-0">
                             {/* Subscription first: fixed mobile bar must sit above verification in the stack */}
                             <SubscriptionAlertBanner />
                             <VerificationAlert />
@@ -218,7 +218,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     {/* Reserve space for fixed mobile header (in-flow when header is md:hidden fixed) */}
                     {!isAssistantPage && <div className="h-14 shrink-0 md:hidden" aria-hidden />}
 
-                    <div className={cn(isAssistantPage ? "p-0" : "px-4 pt-4 md:p-0 pb-24")}>
+                    <div
+                        className={cn(
+                            isAssistantPage ? "p-0" : "px-4 pt-4 pb-24 md:p-0",
+                            !isAssistantPage && !zenActive && "md:mx-auto md:w-full md:max-w-6xl"
+                        )}
+                    >
                         <TermsGate>
                             <BusinessGuard>
                                 <StoreProvider>

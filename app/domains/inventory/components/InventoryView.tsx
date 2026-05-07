@@ -643,7 +643,7 @@ export function InventoryView() {
     const isAllStores = selectedStoreId === 'all-stores'
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title={pageCopy.inventory.title}
                     description={pageCopy.inventory.description}
