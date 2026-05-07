@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
 import {
     ArrowRight,
     Check,
@@ -13,7 +12,6 @@ import {
     X
 } from "lucide-react"
 import { cn } from "@/app/lib/utils"
-import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { CountrySelector, type CountryDetail } from "@/app/components/ui/country-selector"
@@ -35,21 +33,19 @@ interface Category {
 function OnboardingCancelButton({ className }: { className?: string }) {
     const router = useRouter()
     return (
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
-            <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push("/")}
-                className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-xl border border-brand-deep/15 dark:border-brand-cream/25 bg-transparent text-sm font-semibold text-brand-deep dark:text-brand-cream hover:bg-white/10 transition-colors duration-200",
-                    className
-                )}
-                aria-label="Cancel and return to dashboard"
-            >
-                <X className="h-4 w-4 shrink-0" aria-hidden />
-                <span>Cancel</span>
-            </Button>
-        </motion.div>
+        <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/")}
+            className={cn(
+                "flex cursor-pointer items-center gap-2 rounded-2xl border-border bg-card text-sm font-semibold text-foreground hover:bg-muted",
+                className
+            )}
+            aria-label="Cancel and return to dashboard"
+        >
+            <X className="h-4 w-4 shrink-0" aria-hidden />
+            <span>Cancel</span>
+        </Button>
     )
 }
 
@@ -64,7 +60,7 @@ export function OnboardingView() {
     const { data: subData } = useCurrentSubscription()
     const { data: usage, isLoading: isLoadingUsage } = useUsageStats()
     const { data: countriesData, isError: isCountriesError, error: countriesError, refetch: refetchCountries } = useCountries()
-    const countries = countriesData ?? []
+    const countries = useMemo(() => countriesData ?? [], [countriesData])
 
     const [step, setStep] = useState(1)
     const [categories, setCategories] = useState<Category[]>([])
@@ -86,7 +82,7 @@ export function OnboardingView() {
             try {
                 const data = await apiClient.get<Category[]>("/onboarding/categories")
                 setCategories(data)
-            } catch (error) {
+            } catch {
                 toast.error("Failed to load business categories")
             } finally {
                 setIsLoadingCategories(false)
@@ -180,24 +176,11 @@ export function OnboardingView() {
                     : "Business set up successfully!"
             )
             router.push("/")
-        } catch (error: any) {
-            toast.error(error.message || "Failed to set up business")
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Failed to set up business")
         } finally {
             setIsSubmitting(false)
         }
-    }
-
-    const containerVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.6,
-                staggerChildren: 0.1
-            }
-        },
-        exit: { opacity: 0, y: -20 }
     }
 
     const reachedBusinessLimit =
@@ -212,12 +195,12 @@ export function OnboardingView() {
         if (isLoadingUsage) return null // Wait for usage stats to confirm if limit is actually reached
         const currentCount = usage?.businesses ?? businesses?.length ?? 0
         return (
-            <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12">
-                <GlassCard className="max-w-lg w-full p-8 space-y-6 text-center">
-                    <h1 className="font-serif text-2xl sm:text-3xl text-brand-deep dark:text-brand-cream tracking-tight">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 sm:p-10">
+                <div className="w-full max-w-md space-y-5 rounded-[28px] border border-border bg-card p-6 text-center shadow-sm sm:p-8">
+                    <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                         You’ve reached your business limit
                     </h1>
-                    <p className="text-sm text-brand-accent/70 dark:text-brand-cream/70">
+                    <p className="text-sm leading-relaxed text-muted-foreground">
                         Your current plan allows{" "}
                         <span className="font-semibold">
                             {isUnlimited ? "unlimited" : `${maxBusinesses ?? 1}`}
@@ -229,51 +212,40 @@ export function OnboardingView() {
                         <Button
                             variant="outline"
                             onClick={() => router.push("/")}
-                            className="sm:min-w-[140px] rounded-xl!"
+                            className="rounded-2xl border-border bg-card text-foreground hover:bg-muted sm:min-w-[140px]"
                         >
                             Back to dashboard
                         </Button>
                         {role === "OWNER" && (
                             <Button
                                 onClick={() => router.push("/settings?tab=billing")}
-                                className="sm:min-w-[160px] rounded-xl!"
+                                className="rounded-2xl bg-primary text-white hover:bg-primary/92 hover:text-white sm:min-w-[160px]"
                             >
                                 Manage plan
                             </Button>
                         )}
                     </div>
-                </GlassCard>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
-                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-brand-green/20 blur-3xl filter animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-brand-gold/20 blur-3xl filter animate-pulse" />
-            </div>
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-6 sm:p-10">
+            <div className="relative z-10 w-full max-w-2xl space-y-8">
+                <div className="space-y-4 text-center">
+                    <div className="relative mx-auto h-14 w-14 overflow-hidden rounded-2xl border border-border bg-primary p-3">
+                        <Image src="/images/logo-white.png" alt="Cloove" fill className="object-contain p-3" />
+                    </div>
 
-            <div className="relative z-10 w-full max-w-3xl space-y-12">
-                {/* Header */}
-                <div className="text-center space-y-4">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="h-16 w-16 bg-brand-green rounded-2xl p-3 mx-auto shadow-2xl shadow-brand-green/20 mb-6"
-                    >
-                        <Image src="/images/logo-white.png" alt="Cloove" width={40} height={40} className="w-full h-full object-contain" />
-                    </motion.div>
-
-                    <h1 className="font-serif text-3xl sm:text-4xl text-brand-deep dark:text-brand-cream tracking-tight">
+                    <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                         {step === 1
                             ? "What's your business industry?"
                             : step === 2
                             ? "What type of business is this?"
                             : "Let's name your business"}
                     </h1>
-                    <p className="text-brand-accent/60 dark:text-brand-cream/60 text-lg max-w-md mx-auto">
+                    <p className="mx-auto max-w-md text-base leading-relaxed text-muted-foreground">
                         {step === 1
                             ? "Help us tailor your experience by selecting a category."
                             : step === 2
@@ -282,78 +254,51 @@ export function OnboardingView() {
                     </p>
                 </div>
 
-                <AnimatePresence mode="wait">
+                <div className="rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6">
                     {step === 2 ? (
-                        <motion.div
-                            key="step2-type"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="flex justify-center"
-                        >
+                        <div className="flex justify-center">
                             <BusinessTypeSelector value={businessType} onChange={setBusinessType} />
-                        </motion.div>
+                        </div>
                     ) : step === 1 ? (
-                        <motion.div
-                            key="step1"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="flex flex-wrap justify-center gap-3"
-                        >
+                        <div className="flex flex-wrap justify-center gap-3">
                             {isLoadingCategories ? (
                                 Array(6).fill(0).map((_, i) => (
-                                    <div key={i} className="h-11 w-32 rounded-full bg-white/5 animate-pulse" />
+                                    <div key={i} className="h-11 w-32 rounded-2xl bg-muted" />
                                 ))
                             ) : (
                                 categories.map((category) => {
                                     const isSelected = selectedCategory === category.id
                                     return (
-                                        <motion.button
+                                        <button
                                             key={category.id}
                                             type="button"
                                             onClick={() => setSelectedCategory(category.id)}
-                                            whileHover={{ scale: 1.04 }}
-                                            whileTap={{ scale: 0.97 }}
                                             className={cn(
-                                                "relative cursor-pointer rounded-full px-5 py-2.5 text-sm font-semibold border transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/50",
+                                                "cursor-pointer rounded-2xl border px-4 py-2.5 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/25",
                                                 isSelected
-                                                    ? "bg-brand-gold text-brand-deep border-brand-gold shadow-lg shadow-brand-gold/20"
-                                                    : "bg-white dark:bg-white/10 text-brand-deep dark:text-brand-cream border-brand-deep/10 dark:border-white/10 hover:border-brand-gold/40 hover:bg-brand-gold/10"
+                                                    ? "border-primary bg-primary text-white"
+                                                    : "border-border bg-background text-foreground hover:border-primary/25 hover:bg-muted"
                                             )}
                                         >
                                             <span className="flex items-center gap-2">
                                                 {isSelected && (
-                                                    <motion.span
-                                                        initial={{ scale: 0, opacity: 0 }}
-                                                        animate={{ scale: 1, opacity: 1 }}
-                                                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                                                    >
+                                                    <span>
                                                         <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                                                    </motion.span>
+                                                    </span>
                                                 )}
                                                 {category.name}
                                             </span>
-                                        </motion.button>
+                                        </button>
                                     )
                                 })
                             )}
-                        </motion.div>
+                        </div>
                     ) : (
-                        <motion.div
-                            key="step3"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            className="max-w-md mx-auto w-full"
-                        >
-                            <GlassCard allowOverflow className="p-8 space-y-6 border-white/5 shadow-2xl">
+                        <div className="mx-auto w-full max-w-md">
+                            <div className="space-y-5">
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] flex items-center gap-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
                                             <Building2 className="h-3 w-3" />
                                             Business Name
                                         </label>
@@ -362,13 +307,13 @@ export function OnboardingView() {
                                             value={businessName}
                                             onChange={(e) => setBusinessName(e.target.value)}
                                             placeholder="e.g. Martha's Kitchen"
-                                            className="h-14 sm:h-14 px-4 bg-white/5 border-white/10 rounded-2xl focus:ring-brand-gold/20 focus:border-brand-gold/30 text-lg transition-all"
+                                            className="h-12 rounded-2xl border-border bg-background px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary/35 focus:ring-primary/15"
                                             autoFocus
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] flex items-center gap-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
                                             <MapPin className="h-3 w-3" />
                                             Country
                                         </label>
@@ -378,11 +323,11 @@ export function OnboardingView() {
                                                     {countriesError?.message ?? "Failed to load supported countries"}
                                                 </p>
                                                 <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => refetchCountries()}
-                                                    className="border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => refetchCountries()}
+                                                    className="border-red-500/30 text-red-600 hover:bg-red-500/10 dark:text-red-400"
                                                 >
                                                     Retry
                                                 </Button>
@@ -395,17 +340,17 @@ export function OnboardingView() {
                                                 disabled={isSubmitting}
                                                 className="w-full"
                                                 dropdownVariant="light"
-                                                dropdownClassName="bg-brand-cream/95 dark:bg-brand-deep/95 border-brand-green/10 dark:border-white/10"
+                                                dropdownClassName="border-border bg-popover text-popover-foreground"
                                                 triggerRef={countryTriggerRef}
                                             />
                                         )}
                                         {user?.countryDetail && selectedCountry && user.countryDetail.code === selectedCountry.code && (
-                                            <p className="text-[10px] text-brand-cream/50">Default: your account country</p>
+                                            <p className="text-xs text-muted-foreground">Default: your account country</p>
                                         )}
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] flex items-center gap-2">
+                                        <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
                                             Your name
                                         </label>
                                         <Input
@@ -413,20 +358,20 @@ export function OnboardingView() {
                                             value={fullName}
                                             onChange={(e) => setFullName(e.target.value)}
                                             placeholder="Full name of the business owner"
-                                            className="h-14 sm:h-14 px-4 bg-white/5 border-white/10 rounded-2xl focus:ring-brand-gold/20 focus:border-brand-gold/30 transition-all"
+                                            className="h-12 rounded-2xl border-border bg-background px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary/35 focus:ring-primary/15"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="pt-4">
+                                <div>
                                     <Button
                                         onClick={handleSubmit}
                                         disabled={isSubmitting || !selectedCountry || isCountriesError || !canAddBusiness}
-                                        className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 transition-all text-lg shadow-xl shadow-brand-gold/10"
+                                        className="h-12 w-full rounded-2xl bg-primary text-base font-semibold text-white hover:bg-primary/92 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
                                     >
                                         {isSubmitting ? (
                                             <div className="flex items-center gap-2">
-                                                <div className="w-5 h-5 border-2 border-brand-deep/30 border-t-brand-deep rounded-full animate-spin" />
+                                                <div className="h-4 w-4 rounded-full border-2 border-white/35 border-t-white animate-spin" />
                                                 <span>Setting up...</span>
                                             </div>
                                         ) : (
@@ -434,61 +379,54 @@ export function OnboardingView() {
                                         )}
                                     </Button>
                                 </div>
-                            </GlassCard>
-                        </motion.div>
+                            </div>
+                        </div>
                     )}
-                </AnimatePresence>
+                </div>
 
-                {/* Footer: one place for all step navigation (Back, Cancel, dots, Next) */}
                 <nav
-                    className="flex items-center justify-between gap-4 pt-8 sm:pt-12"
+                    className="flex items-center justify-between gap-4"
                     aria-label="Onboarding steps"
                 >
                     <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
                         {step > 1 ? (
-                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    onClick={() => setStep(prev => prev - 1)}
-                                    className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-deep dark:text-brand-cream hover:bg-white/10 transition-colors duration-200 uppercase tracking-wider"
-                                >
-                                    <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
-                                    <span>Back</span>
-                                </Button>
-                            </motion.div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => setStep(prev => prev - 1)}
+                                className="flex cursor-pointer items-center gap-2 rounded-2xl text-sm font-semibold text-foreground hover:bg-muted"
+                            >
+                                <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
+                                <span>Back</span>
+                            </Button>
                         ) : isAddBusinessFlow ? (
                             <OnboardingCancelButton className="px-3 py-2" />
                         ) : (
-                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    onClick={logout}
-                                    className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-deep dark:text-brand-cream hover:bg-white/10 transition-colors duration-200 uppercase tracking-wider"
-                                >
-                                    <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-                                    <span>Logout</span>
-                                </Button>
-                            </motion.div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={logout}
+                                className="flex cursor-pointer items-center gap-2 rounded-2xl text-sm font-semibold text-foreground hover:bg-muted"
+                            >
+                                <LogOut className="h-4 w-4 shrink-0" aria-hidden />
+                                <span>Logout</span>
+                            </Button>
                         )}
                     </div>
                     <div className="flex shrink-0 gap-2" aria-hidden>
-                        <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 1 ? "bg-brand-gold" : "bg-white/10")} />
-                        <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 2 ? "bg-brand-gold" : "bg-white/10")} />
-                        <div className={cn("h-1.5 w-8 rounded-full transition-all duration-500", step === 3 ? "bg-brand-gold" : "bg-white/10")} />
+                        <div className={cn("h-1.5 w-8 rounded-full", step === 1 ? "bg-primary" : "bg-muted")} />
+                        <div className={cn("h-1.5 w-8 rounded-full", step === 2 ? "bg-primary" : "bg-muted")} />
+                        <div className={cn("h-1.5 w-8 rounded-full", step === 3 ? "bg-primary" : "bg-muted")} />
                     </div>
                     <div className="flex min-w-0 shrink-0 justify-end w-24 sm:w-28">
                         {step < 3 ? (
-                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.2 }}>
-                                <Button
-                                    onClick={handleNext}
-                                    className="bg-transparent hover:bg-white/5 text-brand-deep dark:text-brand-cream font-bold group px-4 sm:px-6 h-11 sm:h-12 uppercase tracking-widest text-xs transition-colors duration-200"
-                                >
-                                    Next
-                                    <ArrowRight className="ml-2 h-4 w-4 shrink-0 group-hover:translate-x-0.5 transition-transform duration-200" aria-hidden />
-                                </Button>
-                            </motion.div>
+                            <Button
+                                onClick={handleNext}
+                                className="h-11 rounded-2xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/92 hover:text-white sm:h-12 sm:px-6"
+                            >
+                                Next
+                                <ArrowRight className="ml-2 h-4 w-4 shrink-0" aria-hidden />
+                            </Button>
                         ) : isAddBusinessFlow ? (
                             <OnboardingCancelButton className="px-4 sm:px-6 h-11 sm:h-12" />
                         ) : (

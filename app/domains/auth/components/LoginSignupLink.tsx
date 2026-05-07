@@ -21,9 +21,9 @@ export function LoginSignupLink() {
     if (signupEnabled !== true) return null
 
     return (
-        <p className="mt-8 text-center text-brand-cream/50 text-sm">
+        <p className="mt-5 text-center text-sm text-white/50">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-brand-gold hover:underline">
+            <Link href="/register" className="font-medium text-emerald-300 hover:text-white">
                 Sign up
             </Link>
         </p>

@@ -204,7 +204,7 @@ export function ExpenseFormDrawer({
                             type="submit"
                             form="expense-form"
                             disabled={isSubmitting}
-                            className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl"
+                            className="h-14 flex-1 rounded-2xl font-semibold shadow-sm"
                         >
                             {isSubmitting ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

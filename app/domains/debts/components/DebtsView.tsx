@@ -51,10 +51,10 @@ const STATUS_OPTIONS = [
 ]
 
 const statusConfig: Record<string, { label: string; className: string; statusColor?: "success" | "warning" | "danger" | "neutral" }> = {
-    PENDING: { label: "Pending", className: "bg-brand-gold/10 text-brand-gold border-brand-gold/20", statusColor: "warning" },
-    PARTIAL: { label: "Partial", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20", statusColor: "warning" },
-    PAID: { label: "Paid", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", statusColor: "success" },
-    OVERDUE: { label: "Overdue", className: "bg-rose-500/10 text-rose-500 border-rose-500/20", statusColor: "danger" },
+    PENDING: { label: "Pending", className: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/12 dark:text-amber-200", statusColor: "warning" },
+    PARTIAL: { label: "Partial", className: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/12 dark:text-amber-200", statusColor: "warning" },
+    PAID: { label: "Paid", className: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-400/12 dark:text-emerald-200", statusColor: "success" },
+    OVERDUE: { label: "Overdue", className: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:border-rose-400/25 dark:bg-rose-400/12 dark:text-rose-200", statusColor: "danger" },
 }
 
 function getDebtDisplayStatus(debt: Debt): string {
@@ -169,19 +169,19 @@ export function DebtsView() {
             <div onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-full">
+                        <Button variant="ghost" className="h-8 w-8 rounded-full p-0 hover:bg-muted">
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-brand-deep/5 dark:border-white/5 shadow-2xl">
-                        <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 p-3">
+                    <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-border p-2 shadow-2xl">
+                        <DropdownMenuLabel className="p-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                             Debt Actions
                         </DropdownMenuLabel>
                         <DropdownMenuItem
                             onClick={() => setViewingDebt(item)}
-                            className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                            className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                         >
-                            <div className="h-8 w-8 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                                 <Eye className="w-4 h-4" />
                             </div>
                             <span className="font-medium">View Details</span>
@@ -190,42 +190,42 @@ export function DebtsView() {
                             <>
                                 <DropdownMenuItem
                                     onClick={() => setRepayingDebt(item)}
-                                    className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                                    className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                 >
-                                    <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-200">
                                         <Banknote className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">Record Payment</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => handlePaymentLinkClick(item)}
-                                    className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                                    className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                 >
-                                    <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-200">
                                         <Link2 className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">Payment Link</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
+                                <DropdownMenuSeparator className="my-1 bg-border" />
                                 <DropdownMenuItem
                                     onClick={() => sendReminder(item.id)}
                                     disabled={isSendingReminder}
-                                    className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                                    className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                 >
-                                    <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
                                         <Bell className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">Send Reminder</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-brand-deep/5 my-1" />
-                                <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 p-3 pt-2">
+                                <DropdownMenuSeparator className="my-1 bg-border" />
+                                <DropdownMenuLabel className="p-3 pt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                     Invoice
                                 </DropdownMenuLabel>
                                 <DropdownMenuItem
                                     onClick={() => generateInvoice({ debtId: item.id })}
-                                    className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                                    className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                 >
-                                    <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
                                         <Download className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">{item.invoiceUrl ? "View Invoice" : "Generate Invoice"}</span>
@@ -233,9 +233,9 @@ export function DebtsView() {
                                 {item.customerPhone && (
                                     <DropdownMenuItem
                                         onClick={() => generateInvoice({ debtId: item.id, sendTo: "CUSTOMER" })}
-                                        className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
+                                        className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                     >
-                                        <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
                                             <Send className="w-4 h-4" />
                                         </div>
                                         <span className="font-medium">Send Invoice</span>
@@ -254,7 +254,7 @@ export function DebtsView() {
             key: "customerName",
             header: "Customer",
             render: (_value, item) => (
-                <span className="font-serif font-medium text-base text-brand-deep dark:text-brand-cream">
+                <span className="text-base font-semibold text-foreground">
                     {item.customerName}
                 </span>
             ),
@@ -263,7 +263,7 @@ export function DebtsView() {
             key: "amount",
             header: "Amount",
             render: (_value, item) => (
-                <span className="font-serif text-brand-deep dark:text-brand-cream">
+                <span className="text-foreground">
                     <CurrencyText value={formatCurrency(item.amount, { currency: currencyCode })} />
                 </span>
             ),
@@ -301,7 +301,7 @@ export function DebtsView() {
                     "text-sm",
                     item.dueAt && new Date(item.dueAt) < new Date() && item.status !== "PAID"
                         ? "text-rose-500 font-medium"
-                        : "text-brand-accent/60 dark:text-brand-cream/60"
+                        : "text-muted-foreground"
                 )}>
                     {item.dueAt ? formatDate(item.dueAt, "MMM d, yyyy") : "\u2014"}
                 </span>
@@ -321,19 +321,19 @@ export function DebtsView() {
     if (error) {
         return (
             <PageTransition>
-                <div className="max-w-5xl mx-auto space-y-8 pb-24">
+                <div className="max-w-6xl mx-auto space-y-8 pb-24">
                     <ManagementHeader
                         title={pageCopy.debts.title}
                         description={pageCopy.debts.descriptionShort}
                     />
                     <GlassCard className="p-8 text-center">
-                        <p className="text-brand-deep dark:text-brand-cream mb-4">
+                        <p className="mb-4 text-foreground">
                             {(error as Error).message}
                         </p>
                         <Button
                             variant="outline"
                             onClick={() => window.location.reload()}
-                            className="rounded-2xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
+                            className="rounded-2xl"
                         >
                             Retry
                         </Button>
@@ -345,7 +345,7 @@ export function DebtsView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title={pageCopy.debts.title}
                     description={pageCopy.debts.descriptionLong}
@@ -384,17 +384,17 @@ export function DebtsView() {
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Users className="w-24 h-24" />
                         </div>
-                        <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                             <Users className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-widest">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                 Active Debtors
                             </p>
                             {isStatsLoading ? (
                                 <Skeleton className="h-8 w-12 mt-1" />
                             ) : (
-                                <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                <p className="text-2xl font-semibold text-foreground">
                                     {stats?.activeDebtors ?? 0}
                                 </p>
                             )}
@@ -412,14 +412,14 @@ export function DebtsView() {
                         </div>
                         <div className={cn(
                             "h-12 w-12 rounded-full flex items-center justify-center",
-                            (stats?.overdueCount ?? 0) > 0 ? "bg-rose-500/10 text-rose-500" : "bg-brand-accent/10 text-brand-accent"
+                            (stats?.overdueCount ?? 0) > 0 ? "bg-rose-500/10 text-rose-500" : "bg-muted text-foreground"
                         )}>
                             <Clock className="h-6 w-6" />
                         </div>
                         <div>
                             <p className={cn(
                                 "text-[10px] font-bold uppercase tracking-widest",
-                                (stats?.overdueCount ?? 0) > 0 ? "text-rose-500/60" : "text-brand-accent/40 dark:text-brand-cream/40"
+                                (stats?.overdueCount ?? 0) > 0 ? "text-rose-500/60" : "text-muted-foreground"
                             )}>
                                 Overdue
                             </p>
@@ -429,7 +429,7 @@ export function DebtsView() {
                                 <div className="flex items-center gap-2">
                                     <p className={cn(
                                         "text-2xl font-serif font-medium",
-                                        (stats?.overdueCount ?? 0) > 0 ? "text-rose-500" : "text-brand-deep dark:text-brand-cream"
+                                        (stats?.overdueCount ?? 0) > 0 ? "text-rose-500" : "text-foreground"
                                     )}>
                                         {stats?.overdueCount ?? 0}
                                     </p>
@@ -449,13 +449,13 @@ export function DebtsView() {
                             <TrendingUp className="h-6 w-6" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/70 dark:text-emerald-300">
                                 Collection Rate
                             </p>
                             {isStatsLoading ? (
                                 <Skeleton className="h-8 w-12 mt-1" />
                             ) : (
-                                <p className="text-2xl font-serif font-medium text-emerald-500">
+                                <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-300">
                                     {stats?.collectionRate ?? 0}%
                                 </p>
                             )}
@@ -465,7 +465,7 @@ export function DebtsView() {
 
                 <div className="space-y-6">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
-                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
+                        <p className="ml-1 text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">
                             Debt Records
                         </p>
                         <div className="flex items-center gap-3 font-sans w-full md:w-auto">
@@ -497,12 +497,12 @@ export function DebtsView() {
                     <GlassCard className="p-12 text-center">
                         <div className="flex flex-col items-center space-y-4">
                             <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                <AlertCircle className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
+                                <AlertCircle className="h-10 w-10 text-muted-foreground/50" />
                             </div>
-                            <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                            <h3 className="text-xl font-semibold text-foreground">
                                 No Debt Records
                             </h3>
-                            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 max-w-[300px]">
+                            <p className="max-w-[300px] text-sm text-muted-foreground">
                                 {deferredSearch || selectedFilters.length > 0
                                     ? "No debts match your search or filters."
                                     : "Record a debt to track amounts owed by customers."}
@@ -510,7 +510,7 @@ export function DebtsView() {
                             {!deferredSearch && selectedFilters.length === 0 && (
                                 <Button
                                     onClick={() => setIsAddOpen(true)}
-                                    className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold"
+                                    className="rounded-2xl font-semibold"
                                 >
                                     <AlertCircle className="w-4 h-4 mr-2" />
                                     Record Debt
@@ -530,7 +530,7 @@ export function DebtsView() {
                                     subtitle={<><span>Owed: </span><CurrencyText value={formatCurrency(debt.amount, { currency: currencyCode })} /></>}
                                     meta={debt.dueAt ? `Due: ${formatDate(debt.dueAt, "MMM d, yyyy")}` : undefined}
                                     icon={AlertCircle}
-                                    iconClassName={displayStatus === "OVERDUE" ? "text-rose-500" : "text-brand-deep/40 dark:text-brand-cream/40"}
+                                    iconClassName={displayStatus === "OVERDUE" ? "text-rose-500" : "text-foreground/60"}
                                     status={config.label}
                                     statusColor={config.statusColor}
                                     value={<CurrencyText value={formatCurrency(debt.remainingAmount, { currency: currencyCode })} />}
@@ -543,7 +543,7 @@ export function DebtsView() {
                         })}
                     </div>
                 ) : (
-                    <GlassCard className="overflow-hidden border-brand-deep/5 dark:border-white/5">
+                    <GlassCard className="overflow-hidden border-border">
                         <DataTable
                             columns={columns}
                             data={debts}
@@ -559,12 +559,12 @@ export function DebtsView() {
                             size="sm"
                             disabled={!canPrev || isPending}
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
+                            className="rounded-xl"
                         >
                             <ChevronLeft className="w-4 h-4" />
                             Previous
                         </Button>
-                        <span className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
+                        <span className="text-sm text-muted-foreground">
                             Page {currentPage} of {totalPages}
                         </span>
                         <Button
@@ -572,7 +572,7 @@ export function DebtsView() {
                             size="sm"
                             disabled={!canNext || isPending}
                             onClick={() => setCurrentPage((p) => p + 1)}
-                            className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
+                            className="rounded-xl"
                         >
                             Next
                             <ChevronRight className="w-4 h-4" />
@@ -602,10 +602,10 @@ export function DebtsView() {
                 <Dialog open={paymentLinkConfirmOpen} onOpenChange={setPaymentLinkConfirmOpen}>
                     <DialogContent className="max-w-sm rounded-3xl! p-6 gap-5">
                         <DialogHeader>
-                            <DialogTitle className="font-serif text-lg text-brand-deep dark:text-brand-cream">
+                            <DialogTitle className="text-lg font-semibold text-foreground">
                                 Generate Payment Link
                             </DialogTitle>
-                            <DialogDescription className="text-brand-accent/50 dark:text-white/50 text-sm">
+                            <DialogDescription className="text-sm text-muted-foreground">
                                 Create a payment link for this debt
                                 {paymentLinkDebt ? (
                                     <>
@@ -615,10 +615,10 @@ export function DebtsView() {
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className="flex items-center justify-between gap-3 bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 rounded-2xl p-4">
+                        <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/40 p-4">
                             <div className="space-y-0.5">
-                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">Record as a sale</p>
-                                <p className="text-xs text-brand-accent/40 dark:text-white/40">
+                                <p className="text-sm font-medium text-foreground">Record as a sale</p>
+                                <p className="text-xs text-muted-foreground">
                                     When paid, also create a sale record in your books
                                 </p>
                             </div>
@@ -639,7 +639,7 @@ export function DebtsView() {
                             <Button
                                 onClick={handleConfirmGeneratePaymentLink}
                                 disabled={createPaymentLink.isPending}
-                                className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold gap-2"
+                                className="flex-1 h-12 gap-2 rounded-2xl font-semibold"
                             >
                                 {createPaymentLink.isPending ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />

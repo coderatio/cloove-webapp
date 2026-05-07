@@ -61,17 +61,17 @@ const ActivityEmptyState = () => {
             </div>
 
             <div className="space-y-3">
-                <h4 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">
+                <h4 className="text-2xl font-semibold tracking-tight text-foreground">
                     The Pulse of Potential
                 </h4>
-                <p className="text-sm text-brand-accent/60 dark:text-brand-cream/40 max-w-[280px] leading-relaxed mx-auto">
-                    Your store's narrative is just beginning. Once you record sales or adjust stock, your activity stream will bloom.
+                <p className="mx-auto max-w-[280px] text-sm leading-relaxed text-muted-foreground">
+                    Your store&apos;s narrative is just beginning. Once you record sales or adjust stock, your activity stream will bloom.
                 </p>
 
                 <div className="pt-4">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
                         <div className="w-1 h-1 rounded-full bg-brand-gold animate-pulse" />
-                        <span className="text-[10px] uppercase tracking-widest font-bold text-brand-accent/40 dark:text-brand-cream/40">Awakening System</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Awakening System</span>
                     </div>
                 </div>
             </div>
@@ -83,9 +83,9 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
     return (
         <div className={cn("space-y-4", className)}>
             <div className="flex items-center justify-between px-2">
-                <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream font-medium">Recent Activity</h3>
+                <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
                 {activities.length > 0 && (
-                    <Link href="/activity" className="flex items-center gap-1 text-xs font-semibold text-brand-accent/60 hover:text-brand-green dark:text-brand-cream/60 dark:hover:text-brand-gold transition-colors">
+                    <Link href="/activity" className="flex items-center gap-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">
                         <span>View all</span>
                         <ArrowRight className="w-4 h-4" />
                     </Link>
@@ -94,17 +94,17 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
 
             <GlassCard className="rounded-[32px] p-2 space-y-1 overflow-hidden">
                 {activities.length > 0 ? (
-                    activities.map((item, index) => {
+                    activities.map((item) => {
                         const Content = (
                             <div className="flex items-center gap-4 p-3 hover:bg-white/60 dark:hover:bg-white/5 hover:translate-x-1 rounded-2xl transition-all group cursor-pointer">
                                 <ActivityIcon type={item.type} />
 
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors">
+                                    <p className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-foreground">
                                         {item.description}
                                     </p>
-                                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 truncate">
-                                        {item.customer && <span className="text-brand-accent/60 dark:text-brand-cream/80 font-medium">{item.customer} • </span>}
+                                    <p className="truncate text-xs text-muted-foreground">
+                                        {item.customer && <span className="font-medium text-foreground/80">{item.customer} • </span>}
                                         {item.timeAgo}
                                     </p>
                                 </div>
@@ -117,12 +117,12 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
                                                 ? "text-brand-green dark:text-brand-gold"
                                                 : item.type === 'withdrawal' || item.type === 'debt'
                                                   ? "text-rose-600 dark:text-rose-400"
-                                                  : "text-brand-deep dark:text-brand-cream"
+                                                  : "text-foreground"
                                         )}>
                                             <CurrencyText value={`${item.type === 'withdrawal' || item.type === 'debt' ? '-' : item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? '+' : ''}${item.amount}`} />
                                         </div>
                                     )}
-                                    <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold/30 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors shrink-0" />
+                                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-foreground/80" />
                                 </div>
                             </div>
                         )

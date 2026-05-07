@@ -1,7 +1,7 @@
 "use client"
 
 import { GlassCard } from "../ui/glass-card"
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts"
 import { Package, AlertTriangle } from "lucide-react"
 
 interface InventoryPulseProps {
@@ -23,7 +23,6 @@ interface InventoryPulseProps {
 export function InventoryPulse({
     totalItems,
     lowStockItems,
-    className,
     title = "Inventory Health",
     itemsLabelSuffix = "Items",
     lowStockLine = "Low Stock",
@@ -43,12 +42,12 @@ export function InventoryPulse({
         <GlassCard className="p-6 md:p-8 flex flex-col justify-between h-full relative overflow-hidden group">
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                    <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full">
+                    <div className="rounded-full bg-primary/10 p-2 text-primary">
                         <Package className="w-4 h-4" />
                     </div>
-                    <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream tracking-wide">{title}</span>
+                    <span className="text-sm font-semibold tracking-wide text-foreground">{title}</span>
                 </div>
-                <span className="text-xs font-bold bg-brand-deep/5 dark:bg-white/10 px-2 py-1 rounded-full text-brand-deep dark:text-brand-cream">
+                <span className="rounded-full bg-muted px-2 py-1 text-xs font-bold text-foreground">
                     {totalItems} {itemsLabelSuffix}
                 </span>
             </div>
@@ -74,7 +73,7 @@ export function InventoryPulse({
                         </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex items-center justify-center flex-col">
-                        <span className="text-xs font-bold text-brand-deep dark:text-brand-cream">{healthPercentage}%</span>
+                        <span className="text-xs font-bold text-foreground">{healthPercentage}%</span>
                     </div>
                 </div>
 
@@ -87,14 +86,14 @@ export function InventoryPulse({
                                     {lowStockItems} {lowStockLine}
                                 </span>
                             </div>
-                            <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60 leading-tight">
+                            <p className="text-xs leading-tight text-muted-foreground">
                                 {lowStockHint}
                             </p>
                         </div>
                     ) : (
                         <div className="space-y-1">
-                            <p className="text-sm font-bold text-brand-green dark:text-brand-gold">{fullyStockedLabel}</p>
-                            <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60 leading-tight">
+                            <p className="text-sm font-bold text-foreground">{fullyStockedLabel}</p>
+                            <p className="text-xs leading-tight text-muted-foreground">
                                 {healthyHint}
                             </p>
                         </div>

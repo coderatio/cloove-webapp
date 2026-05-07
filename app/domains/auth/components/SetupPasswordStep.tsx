@@ -1,8 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { Lock, Sparkles, Shield, CheckCircle2, Eye, EyeOff } from "lucide-react"
-import { motion } from "framer-motion"
+import { Lock, Shield, CheckCircle2, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { LoginBackButton } from "./LoginBackButton"
@@ -42,11 +41,11 @@ function PasswordStrengthBar({ password }: { password: string }) {
                 {[1, 2, 3].map((bar) => (
                     <div
                         key={bar}
-                        className={`h-1 flex-1 rounded-full transition-all duration-500 ${bar <= config.bars ? config.color : 'bg-white/10'}`}
+                        className={`h-1 flex-1 rounded-full ${bar <= config.bars ? config.color : 'bg-white/10'}`}
                     />
                 ))}
             </div>
-            <p className={`text-[10px] font-bold uppercase tracking-widest ml-0.5 transition-colors ${strength === 'weak' ? 'text-red-400' : strength === 'medium' ? 'text-brand-gold' : 'text-emerald-400'}`}>
+            <p className={`text-[10px] font-semibold uppercase tracking-widest ml-0.5 ${strength === 'weak' ? 'text-red-400' : strength === 'medium' ? 'text-emerald-300' : 'text-emerald-400'}`}>
                 {config.label}
             </p>
         </div>
@@ -66,40 +65,27 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
     const isValid = state.newPassword.length >= 8 && passwordsMatch
 
     return (
-        <motion.div
-            key="setup"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        >
-            <GlassCard className="p-8 border-brand-gold/20 bg-brand-gold/5 shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
-                    <Sparkles className="w-24 h-24 text-brand-gold" />
-                </div>
-
-                {/* Back button */}
+            <GlassCard className="relative overflow-visible rounded-[28px] border-white/10 bg-white/[0.045] p-5 shadow-sm">
                 <LoginBackButton onClick={actions.backToOtp} />
 
-                <div className="text-center mb-8 pt-10">
-                    <div className="h-12 w-12 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold mx-auto mb-4 border border-brand-gold/20">
+                <div className="mb-6 pt-10 text-center">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
                         <Shield className="w-6 h-6" />
                     </div>
-                    <h2 className="font-serif text-2xl text-brand-gold mb-2">Secure Your Account</h2>
-                    <p className="text-xs text-brand-cream/40 leading-relaxed uppercase tracking-widest font-bold">
+                    <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">Secure your account</h2>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-white/40">
                         Set a dashboard password to continue
                     </p>
                 </div>
 
-                <form onSubmit={actions.handleSetupSubmit} className="space-y-6">
+                <form onSubmit={actions.handleSetupSubmit} className="space-y-5">
                     <div className="space-y-4">
-                        {/* New password */}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold ml-1">
+                            <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55">
                                 New Password
                             </label>
                             <div className="relative group">
-                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-cream/60 group-focus-within:text-brand-gold transition-colors">
+                                <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
                                     <Lock className="w-4 h-4" />
                                 </div>
                                 <input
@@ -111,27 +97,25 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                                     placeholder="At least 8 characters"
                                     value={state.newPassword}
                                     onChange={(e) => actions.setNewPassword(e.target.value)}
-                                    className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-12 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all"
+                                    className="h-14 w-full rounded-2xl border border-white/12 bg-white/[0.04] py-0 pl-12 pr-12 text-white outline-none placeholder:text-white/35 focus:border-white/25 focus:bg-white/[0.06]"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => actions.setShowPassword(!state.showPassword)}
-                                    className="absolute cursor-pointer inset-y-0 right-4 flex items-center text-brand-cream/30 hover:text-brand-gold transition-colors"
+                                    className="absolute inset-y-0 right-4 flex cursor-pointer items-center text-white/35 hover:text-white/70"
                                 >
                                     {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
-                            {/* Real-time strength indicator */}
                             <PasswordStrengthBar password={state.newPassword} />
                         </div>
 
-                        {/* Confirm password */}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold ml-1">
+                            <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55">
                                 Confirm Password
                             </label>
                             <div className="relative group">
-                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-cream/60 group-focus-within:text-brand-gold transition-colors">
+                                <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
                                     <CheckCircle2 className="w-4 h-4" />
                                 </div>
                                 <input
@@ -141,17 +125,16 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                                     placeholder="Repeat password"
                                     value={state.confirmPassword}
                                     onChange={(e) => actions.setConfirmPassword(e.target.value)}
-                                    className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-12 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all"
+                                    className="h-14 w-full rounded-2xl border border-white/12 bg-white/[0.04] py-0 pl-12 pr-12 text-white outline-none placeholder:text-white/35 focus:border-white/25 focus:bg-white/[0.06]"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => actions.setShowPassword(!state.showPassword)}
-                                    className="absolute cursor-pointer inset-y-0 right-4 flex items-center text-brand-cream/30 hover:text-brand-gold transition-colors"
+                                    className="absolute inset-y-0 right-4 flex cursor-pointer items-center text-white/35 hover:text-white/70"
                                 >
                                     {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
-                            {/* Mismatch hint */}
                             {state.confirmPassword && !passwordsMatch ? (
                                 <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest ml-0.5">
                                     Passwords don&apos;t match
@@ -163,12 +146,11 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                     <Button
                         type="submit"
                         disabled={state.isLoading || !isValid}
-                        className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base hover:bg-brand-gold/90 transition-all shadow-xl shadow-brand-gold/10"
+                        className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45"
                     >
                         {state.isLoading ? "Setting up..." : "Create Password & Enter"}
                     </Button>
                 </form>
             </GlassCard>
-        </motion.div>
     )
 }

@@ -30,11 +30,11 @@ function ChartTooltip({
     return (
         <div className="rounded-xl border border-brand-deep/10 dark:border-white/10 bg-white/95 dark:bg-brand-deep/95 px-3 py-2 shadow-lg backdrop-blur-sm">
             {label != null && (
-                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-accent/60 dark:text-brand-cream/60">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     {label}
                 </p>
             )}
-            <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+            <p className="text-sm font-semibold text-foreground">
                 <CurrencyText value={formatCurrency(value, { currency: currencyCode })} />
             </p>
         </div>
@@ -43,13 +43,13 @@ function ChartTooltip({
 
 export function SalesVelocity({ data, total, currencyCode = "NGN", className }: SalesVelocityProps) {
     return (
-        <GlassCard className="p-6 md:p-8 flex flex-col h-full relative overflow-hidden">
+        <GlassCard className={`p-6 md:p-8 flex flex-col h-full relative overflow-hidden ${className ?? ""}`}>
             <div className="mb-6 z-10">
-                <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream tracking-wide flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                <span className="text-sm font-semibold text-foreground tracking-wide flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
                     Sales Velocity
                 </span>
-                <h3 className="text-2xl font-serif text-brand-deep dark:text-brand-cream font-medium mt-1">
+                <h3 className="mt-1 text-2xl font-semibold text-foreground">
                     <CurrencyText value={total} />
                 </h3>
             </div>

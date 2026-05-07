@@ -294,7 +294,7 @@ export function ActivityView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-20">
+            <div className="max-w-6xl mx-auto space-y-8 pb-20">
                 <ManagementHeader
                     title={pageCopy.activity.title}
                     description={pageCopy.activity.description}

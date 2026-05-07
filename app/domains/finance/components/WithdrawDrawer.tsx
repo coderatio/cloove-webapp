@@ -331,7 +331,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                             <Button
                                 onClick={() => setStep("destination_selection")}
                                 disabled={!amount || !!amountError}
-                                className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold-400 dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-3xl shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50"
+                                className="w-full h-18 bg-brand-deep text-brand-cream dark:bg-brand-gold-400 dark:text-brand-deep font-black uppercase tracking-[0.2em] text-xs rounded-3xl shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50"
                             >
                                 Choose Withdrawal Account
                             </Button>
@@ -512,7 +512,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                         <DrawerFooter className="p-6 md:p-8 space-y-4 dark:bg-transparent">
                             <Button
                                 onClick={() => setIsPinOpen(true)}
-                                className="w-full h-18 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
+                                className="w-full h-18 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
                             >
                                 Confirm & Execute
                             </Button>

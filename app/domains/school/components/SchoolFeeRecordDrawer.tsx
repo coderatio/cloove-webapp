@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import {
     Search,
     GraduationCap,
@@ -33,7 +32,6 @@ import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
 import { MoneyInput } from "@/app/components/ui/money-input"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { Badge } from "@/app/components/ui/badge"
 import { Textarea } from "@/app/components/ui/textarea"
 import {
     Select,
@@ -121,7 +119,7 @@ function StepDots({ current }: { current: Step }) {
                 <div
                     key={s}
                     className={cn(
-                        "h-1.5 rounded-full transition-all duration-300",
+                        "h-1.5 rounded-full",
                         s === current
                             ? "w-5 bg-brand-gold"
                             : steps.indexOf(current) > i
@@ -205,7 +203,7 @@ function StudentStep({
                                         onAdHocName("")
                                     }}
                                     className={cn(
-                                        "w-full h-auto whitespace-normal justify-start flex items-center gap-3 rounded-2xl px-4 py-3 text-left transition-all duration-200",
+                                        "w-full h-auto whitespace-normal justify-start flex items-center gap-3 rounded-2xl px-4 py-3 text-left",
                                         isSelected
                                             ? "bg-brand-gold/10 border border-brand-gold/30 ring-1 ring-brand-gold/20"
                                             : "border border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/20 hover:bg-brand-gold/5"
@@ -215,7 +213,7 @@ function StudentStep({
                                         className={cn(
                                             "h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold",
                                             isSelected
-                                                ? "bg-brand-gold text-brand-deep"
+                                                ? "bg-brand-gold text-white"
                                                 : "bg-brand-deep/8 dark:bg-white/8 text-brand-deep dark:text-brand-cream"
                                         )}
                                     >
@@ -240,7 +238,7 @@ function StudentStep({
                     })}
                     {customers.length === 0 && search && (
                         <li className="py-6 text-center text-sm text-brand-deep/50 dark:text-brand-cream/50">
-                            No match for "{search}"
+                            No match for &quot;{search}&quot;
                         </li>
                     )}
                 </ul>
@@ -359,7 +357,7 @@ function FeesStep({
                                     variant="ghost"
                                     onClick={() => onToggleTemplate(t)}
                                     className={cn(
-                                        "group relative h-auto whitespace-normal w-full flex items-start justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-200",
+                                        "group relative h-auto whitespace-normal w-full flex items-start justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left",
                                         isSelected
                                             ? "bg-brand-gold/8 border-brand-gold/35 shadow-sm shadow-brand-gold/10"
                                             : "border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/25 hover:bg-brand-gold/4"
@@ -367,7 +365,7 @@ function FeesStep({
                                 >
                                     <div className="min-w-0 flex-1">
                                         <p className={cn(
-                                            "text-sm font-semibold transition-colors",
+                                            "text-sm font-semibold",
                                             isSelected ? "text-brand-deep dark:text-brand-cream" : "text-brand-deep/80 dark:text-brand-cream/80"
                                         )}>
                                             {t.label}
@@ -378,7 +376,7 @@ function FeesStep({
                                             </p>
                                         ) : null}
                                         <p className={cn(
-                                            "text-sm font-bold mt-1.5 transition-colors",
+                                            "text-sm font-bold mt-1.5",
                                             isSelected ? "text-brand-gold" : "text-brand-deep/60 dark:text-brand-cream/60"
                                         )}>
                                             <CurrencyText value={formatCurrency(t.amount, { currency })} />
@@ -386,12 +384,12 @@ function FeesStep({
                                     </div>
                                     {/* Checkbox */}
                                     <div className={cn(
-                                        "h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 border-2 transition-all duration-200",
+                                        "h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 border-2",
                                         isSelected
-                                            ? "bg-brand-gold border-brand-gold scale-110"
+                                            ? "bg-brand-gold border-brand-gold"
                                             : "border-brand-deep/20 dark:border-white/15 group-hover:border-brand-gold/40"
                                     )}>
-                                        {isSelected && <Check className="h-2.5 w-2.5 text-brand-deep" strokeWidth={3} />}
+                                        {isSelected && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
                                     </div>
                                 </Button>
                             )
@@ -401,31 +399,18 @@ function FeesStep({
             )}
 
             {/* Custom fee inline form */}
-            <AnimatePresence initial={false}>
-                {showCustomForm ? (
-                    <motion.div
-                        key="custom-form"
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.18 }}
-                        className="rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/[0.02] dark:bg-white/[0.02] overflow-hidden"
-                    >
+            {showCustomForm ? (
+                <div className="rounded-2xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/[0.02] dark:bg-white/[0.02] overflow-hidden">
                         {/* Header row */}
                         <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
                             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-deep/40 dark:text-brand-cream/40">
                                 Custom fee
                             </p>
                             {lastAdded && (
-                                <motion.span
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"
-                                >
+                                <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                                     <CheckCircle2 className="h-3 w-3" />
-                                    "{lastAdded}" added
-                                </motion.span>
+                                    &quot;{lastAdded}&quot; added
+                                </span>
                             )}
                         </div>
 
@@ -481,28 +466,20 @@ function FeesStep({
                                 Add line
                             </Button>
                         </div>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="custom-trigger"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                    >
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => setShowCustomForm(true)}
-                            className="w-full h-auto whitespace-normal justify-start flex items-center gap-3 rounded-2xl border border-dashed border-brand-deep/15 dark:border-white/15 px-4 py-3 text-sm text-brand-deep/50 dark:text-brand-cream/50 hover:border-brand-gold/30 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-gold/4 group"
-                        >
-                            <div className="h-7 w-7 rounded-full border border-dashed border-brand-deep/15 dark:border-white/15 group-hover:border-brand-gold/40 group-hover:bg-brand-gold/8 flex items-center justify-center transition-all">
-                                <Plus className="h-3.5 w-3.5" />
-                            </div>
-                            <span className="font-medium">Add custom fee</span>
-                        </Button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                </div>
+            ) : (
+                <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowCustomForm(true)}
+                    className="w-full h-auto whitespace-normal justify-start flex items-center gap-3 rounded-2xl border border-dashed border-brand-deep/15 dark:border-white/15 px-4 py-3 text-sm text-brand-deep/50 dark:text-brand-cream/50 hover:border-brand-gold/30 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-gold/4 group"
+                >
+                    <div className="h-7 w-7 rounded-full border border-dashed border-brand-deep/15 dark:border-white/15 group-hover:border-brand-gold/40 group-hover:bg-brand-gold/8 flex items-center justify-center">
+                        <Plus className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="font-medium">Add custom fee</span>
+                </Button>
+            )}
 
             {/* Custom items already added */}
             {feeItems.filter((f) => f.isCustom).length > 0 && (
@@ -528,7 +505,7 @@ function FeesStep({
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 rounded-lg text-brand-deep/30 dark:text-brand-cream/30 hover:text-destructive hover:bg-destructive/8 transition-colors"
+                                        className="h-7 w-7 rounded-lg text-brand-deep/30 dark:text-brand-cream/30 hover:text-destructive hover:bg-destructive/8"
                                         onClick={() => onRemoveItem(f.key)}
                                         aria-label={`Remove ${f.label}`}
                                     >
@@ -542,10 +519,7 @@ function FeesStep({
 
             {/* Running total */}
             {feeItems.length > 0 && (
-                <motion.div
-                    layout
-                    className="flex items-center justify-between rounded-2xl bg-linear-to-r from-brand-gold/8 to-brand-gold/4 border border-brand-gold/15 px-5 py-3.5"
-                >
+                <div className="flex items-center justify-between rounded-2xl bg-linear-to-r from-brand-gold/8 to-brand-gold/4 border border-brand-gold/15 px-5 py-3.5">
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-deep/40 dark:text-brand-cream/40">
                             Total
@@ -557,7 +531,7 @@ function FeesStep({
                     <span className="text-xl font-bold font-serif text-brand-deep dark:text-brand-cream tabular-nums">
                         <CurrencyText value={formatCurrency(total, { currency })} />
                     </span>
-                </motion.div>
+                </div>
             )}
 
         </div>
@@ -674,9 +648,9 @@ function PaymentStep({
                                 variant="ghost"
                                 onClick={() => onPaymentMethod(m.value)}
                                 className={cn(
-                                    "h-auto whitespace-normal flex flex-col items-center gap-2 rounded-2xl border px-3 py-3 relative transition-all duration-200",
+                                    "h-auto whitespace-normal flex flex-col items-center gap-2 rounded-2xl border px-3 py-3 relative",
                                     isSelected
-                                        ? "bg-brand-gold/10 border-brand-gold/40 ring-1 ring-brand-gold/20 scale-[1.02] shadow-md"
+                                        ? "bg-brand-gold/10 border-brand-gold/40 ring-1 ring-brand-gold/20 shadow-sm"
                                         : "border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/20 hover:bg-brand-gold/5"
                                 )}
                             >
@@ -1064,82 +1038,52 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                 </DrawerStickyHeader>
 
                 <DrawerBody className="overflow-y-auto">
-                    <AnimatePresence mode="wait">
-                        {step === "student" && (
-                            <motion.div
-                                key="student"
-                                initial={{ opacity: 0, x: 16 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -16 }}
-                            >
-                                <StudentStep
-                                    selectedCustomer={selectedCustomer}
-                                    onSelectCustomer={setSelectedCustomer}
-                                    adHocName={adHocName}
-                                    onAdHocName={setAdHocName}
-                                />
-                            </motion.div>
-                        )}
+                    {step === "student" && (
+                        <StudentStep
+                            selectedCustomer={selectedCustomer}
+                            onSelectCustomer={setSelectedCustomer}
+                            adHocName={adHocName}
+                            onAdHocName={setAdHocName}
+                        />
+                    )}
 
-                        {step === "fees" && (
-                            <motion.div
-                                key="fees"
-                                initial={{ opacity: 0, x: 16 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -16 }}
-                            >
-                                <FeesStep
-                                    templates={feeTemplates}
-                                    feeItems={feeItems}
-                                    onToggleTemplate={handleToggleTemplate}
-                                    onAddCustom={handleAddCustom}
-                                    onRemoveItem={handleRemoveItem}
-                                    currency={currency}
-                                    currencySymbol={currencySymbol}
-                                />
-                            </motion.div>
-                        )}
+                    {step === "fees" && (
+                        <FeesStep
+                            templates={feeTemplates}
+                            feeItems={feeItems}
+                            onToggleTemplate={handleToggleTemplate}
+                            onAddCustom={handleAddCustom}
+                            onRemoveItem={handleRemoveItem}
+                            currency={currency}
+                            currencySymbol={currencySymbol}
+                        />
+                    )}
 
-                        {step === "payment" && (
-                            <motion.div
-                                key="payment"
-                                initial={{ opacity: 0, x: 16 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -16 }}
-                            >
-                                <PaymentStep
-                                    feeItems={feeItems}
-                                    termId={termId}
-                                    onTermId={setTermId}
-                                    paymentMethod={paymentMethod}
-                                    onPaymentMethod={setPaymentMethod}
-                                    amountPaid={amountPaid}
-                                    onAmountPaid={setAmountPaid}
-                                    notes={notes}
-                                    onNotes={setNotes}
-                                    currency={currency}
-                                    currencySymbol={currencySymbol}
-                                />
-                            </motion.div>
-                        )}
+                    {step === "payment" && (
+                        <PaymentStep
+                            feeItems={feeItems}
+                            termId={termId}
+                            onTermId={setTermId}
+                            paymentMethod={paymentMethod}
+                            onPaymentMethod={setPaymentMethod}
+                            amountPaid={amountPaid}
+                            onAmountPaid={setAmountPaid}
+                            notes={notes}
+                            onNotes={setNotes}
+                            currency={currency}
+                            currencySymbol={currencySymbol}
+                        />
+                    )}
 
-                        {step === "success" && successInfo && (
-                            <motion.div
-                                key="success"
-                                initial={{ opacity: 0, scale: 0.97 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0 }}
-                            >
-                                <SuccessStep
-                                    info={successInfo}
-                                    customerName={customerName}
-                                    currency={currency}
-                                    onRecordAnother={reset}
-                                    onClose={() => onOpenChange(false)}
-                                />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {step === "success" && successInfo && (
+                        <SuccessStep
+                            info={successInfo}
+                            customerName={customerName}
+                            currency={currency}
+                            onRecordAnother={reset}
+                            onClose={() => onOpenChange(false)}
+                        />
+                    )}
                 </DrawerBody>
 
                 {step === "student" && (

@@ -20,6 +20,7 @@ import { usePermission } from "@/app/hooks/usePermission"
 import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 import { useCurrentSubscription, useUsageStats } from "@/app/domains/business/hooks/useBilling"
 import Link from "next/link"
+import { useTheme } from "next-themes"
 
 export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }) {
     const {
@@ -46,6 +47,8 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
     const triggerRef = React.useRef<HTMLButtonElement>(null)
     const isDesktop = useMediaQuery("(min-width: 768px)")
     const router = useRouter()
+    const { resolvedTheme } = useTheme()
+    const isDark = resolvedTheme === "dark"
 
     React.useEffect(() => {
         if (!open || !triggerRef.current) return
@@ -72,15 +75,23 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
         <>
             <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
             <div
-                className="fixed z-50 min-w-[200px] overflow-hidden rounded-2xl border border-white/10 bg-brand-deep-900/90 dark:bg-black/95 p-1 pb-2 px-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95"
+                className={cn(
+                    "fixed z-50 min-w-[200px] overflow-hidden rounded-2xl px-2 pt-1 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95",
+                    isDark
+                        ? "border border-white/10 bg-[#101513]/95"
+                        : "border border-brand-green-100 bg-white/96 shadow-lg"
+                )}
                 style={
                     isCollapsed
                         ? { left: triggerRect.right + 8, top: triggerRect.top, minWidth: 200 }
                         : { left: triggerRect.left, top: triggerRect.bottom + 8, width: triggerRect.width, minWidth: 200 }
                 }
             >
-                <div className="px-2 py-2 text-[10px] uppercase tracking-widest font-bold text-white/30 border-b border-white/5 mb-1">Your Businesses</div>
-                <div className="space-y-0.5 max-h-[200px] overflow-y-auto">
+                <div className={cn(
+                    "mb-1 border-b px-2 py-2 text-[10px] font-bold uppercase tracking-widest",
+                    isDark ? "border-white/8 text-white/35" : "border-brand-green-100 text-muted-foreground"
+                )}>Your Businesses</div>
+                <div className="max-h-[220px] space-y-0.5 overflow-y-auto pb-2">
                     {businesses.map((business) => (
                         (() => {
                             const isLocked = !isBusinessSelectable(business)
@@ -93,41 +104,36 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                 setOpen(false)
                             }}
                             className={cn(
-                                "relative flex w-full select-none items-center rounded-xl px-2 py-2.5 text-sm font-medium outline-none transition-all text-brand-cream",
-                                isLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-white/10",
-                                activeBusiness?.id === business.id && "bg-white/10 text-brand-gold"
+                                "relative flex w-full select-none items-center rounded-xl px-2 py-2.5 text-sm font-medium outline-none transition-all",
+                                isDark ? "text-brand-cream" : "text-foreground",
+                                isLocked ? "cursor-not-allowed opacity-50" : isDark ? "cursor-pointer hover:bg-white/6" : "cursor-pointer hover:bg-brand-green-50",
+                                activeBusiness?.id === business.id && (isDark ? "bg-primary/15 text-white" : "bg-brand-green-50 text-foreground")
                             )}
                         >
-                            <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0 bg-brand-gold/10">
+                            <div className={cn(
+                                "mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0",
+                                isDark ? "bg-primary/18 text-primary-foreground" : "bg-brand-green-100 text-brand-green-800"
+                            )}>
                                 <LayoutGrid className="h-3.5 w-3.5" />
                             </div>
                             <div className="flex-1 text-left overflow-hidden">
                                 <span className="block truncate">{business.name}</span>
                                 <span
                                     onClick={(e) => copySlug(e, business.code)}
-                                    className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-white/40 hover:text-white/70 cursor-copy transition-colors"
+                                    className={cn(
+                                        "inline-flex cursor-copy items-center gap-1 text-[10px] uppercase tracking-wider transition-colors",
+                                        isDark ? "text-white/40 hover:text-white/75" : "text-muted-foreground hover:text-foreground"
+                                    )}
                                 >
                                     {copiedSlug === business.code ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
                                     {business.code}
                                 </span>
                             </div>
-                            {activeBusiness?.id === business.id && <Check className="ml-auto h-4 w-4 text-brand-gold" />}
+                            {activeBusiness?.id === business.id && <Check className={cn("ml-auto h-4 w-4", isDark ? "text-primary-foreground" : "text-foreground")} />}
                         </button>
                             )
                         })()
                     ))}
-                    {canAddBusiness && (
-                        <button
-                            type="button"
-                            onClick={handleAddBusiness}
-                            className="relative flex w-full cursor-pointer select-none items-center rounded-lg px-2 py-2.5 text-sm font-medium outline-none transition-all hover:bg-white/10 text-brand-gold/90 border border-dashed border-white/20 mt-1"
-                        >
-                            <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0 bg-brand-gold/20">
-                                <Plus className="h-3.5 w-3.5" />
-                            </div>
-                            <span className="flex-1 text-left">Add business</span>
-                        </button>
-                    )}
                     {isMultiBusinessRestricted && businesses.length > 1 && (
                         <div className="mt-2 rounded-lg border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
                             Free plan allows only your first business.{" "}
@@ -141,6 +147,31 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                         </div>
                     )}
                 </div>
+                {canAddBusiness && (
+                    <div className={cn(
+                        "mt-auto border-t px-1 py-2",
+                        isDark ? "border-white/8 bg-black/10" : "border-brand-green-100 bg-white/80"
+                    )}>
+                        <button
+                            type="button"
+                            onClick={handleAddBusiness}
+                            className={cn(
+                                "relative flex w-full cursor-pointer select-none items-center rounded-xl border border-dashed px-2.5 py-2.5 text-sm font-medium outline-none transition-all",
+                                isDark
+                                    ? "border-white/12 bg-white/4 text-white hover:bg-white/8"
+                                    : "border-brand-green-200 bg-brand-green-50/70 text-foreground hover:bg-brand-green-50"
+                            )}
+                        >
+                            <div className={cn(
+                                "mr-2 flex h-7 w-7 items-center justify-center rounded-md shrink-0",
+                                isDark ? "bg-primary/18 text-primary-foreground" : "bg-brand-green-100 text-brand-green-800"
+                            )}>
+                                <Plus className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="flex-1 text-left">Add business</span>
+                        </button>
+                    </div>
+                )}
             </div>
         </>
     )
@@ -155,20 +186,29 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                         setOpen(!open)
                     }}
                     className={cn(
-                        "flex cursor-pointer w-full items-center gap-2 rounded-[14px] border border-white/10 bg-white/5 p-2 transition-colors hover:bg-white/10 text-brand-cream",
-                        isCollapsed && "justify-center border-0 bg-transparent hover:bg-transparent p-0"
+                        "flex w-full cursor-pointer items-center gap-2 rounded-[14px] border p-2 transition-colors",
+                        isDark
+                            ? "border-white/10 bg-white/5 text-brand-cream hover:bg-white/10"
+                            : "border-brand-green-100 bg-white text-foreground hover:bg-brand-green-50",
+                        isCollapsed && "justify-center border-0 bg-transparent p-0 hover:bg-transparent"
                     )}
                 >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-gold text-brand-deep shadow-lg shadow-black/20">
+                    <div className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
+                        isDark ? "bg-primary/20 text-primary-foreground shadow-black/20" : "bg-brand-green-100 text-brand-green-800"
+                    )}>
                         <LayoutGrid className="h-4 w-4" />
                     </div>
                     {!isCollapsed && (
                         <>
                             <div className="flex flex-1 flex-col items-start overflow-hidden text-left">
-                                <span className="text-[10px] uppercase tracking-wider font-bold text-brand-cream/40 leading-none mb-1">Business</span>
+                                <span className={cn(
+                                    "mb-1 text-[10px] font-bold uppercase leading-none tracking-wider",
+                                    isDark ? "text-brand-cream/40" : "text-muted-foreground"
+                                )}>Business</span>
                                 <span className="truncate text-sm font-bold leading-none">{activeBusiness?.name || 'Select Business'}</span>
                             </div>
-                            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                            <ChevronsUpDown className={cn("h-4 w-4 shrink-0", isDark ? "opacity-50" : "text-muted-foreground")} />
                         </>
                     )}
                 </button>
@@ -181,8 +221,8 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
     return (
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-                <button className="flex cursor-pointer items-center gap-2 rounded-full border border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 px-3 py-1.5 text-sm font-medium backdrop-blur-sm text-brand-deep dark:text-brand-cream ring-1 ring-black/5 dark:ring-white/5 shadow-sm">
-                    <LayoutGrid className="h-3.5 w-3.5 text-brand-deep/60 dark:text-brand-cream/60" />
+                <button className="flex cursor-pointer items-center gap-2 rounded-full border border-border bg-white/50 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-black/5 backdrop-blur-sm dark:bg-white/5 dark:text-brand-cream dark:ring-white/5">
+                    <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground dark:text-primary-foreground" />
                     <span className="max-w-[100px] truncate">{activeBusiness?.name || 'Select Business'}</span>
                     <ChevronsUpDown className="h-3 w-3 opacity-40 dark:opacity-50" />
                 </button>
@@ -210,14 +250,14 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                     activeBusiness?.id === business.id && "bg-black/5 dark:bg-white/5 ring-1 ring-brand-gold/20"
                                 )}
                             >
-                                <div className="h-12 w-12 rounded-xl bg-brand-gold flex items-center justify-center text-brand-deep shadow-lg">
+                                <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary-foreground shadow-lg">
                                     <LayoutGrid className="h-6 w-6" />
                                 </div>
                                 <div className="flex-1 text-left">
-                                    <h3 className="font-bold text-brand-deep dark:text-brand-cream">{business.name}</h3>
+                                    <h3 className="font-bold text-foreground dark:text-brand-cream">{business.name}</h3>
                                     <p
                                         onClick={(e) => copySlug(e, business.code)}
-                                        className="inline-flex items-center gap-1 text-xs text-brand-deep/50 dark:text-brand-cream/50 uppercase tracking-wider hover:text-brand-deep/80 dark:hover:text-brand-cream/80 cursor-copy transition-colors"
+                                        className="inline-flex cursor-copy items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground dark:text-brand-cream/50 dark:hover:text-brand-cream/80"
                                     >
                                         {copiedSlug === business.code ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                                         {business.code}
@@ -242,7 +282,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                     <Plus className="h-6 w-6" />
                                 </div>
                                 <div className="flex-1 text-left">
-                                    <h3 className="font-bold text-brand-deep dark:text-brand-cream">Add business</h3>
+                                    <h3 className="font-bold text-foreground dark:text-brand-cream">Add business</h3>
                                 </div>
                             </button>
                         )}
@@ -268,7 +308,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                 </div>
                 <div className="p-4 bg-brand-deep/5 dark:bg-white/5 border-t border-brand-deep/5 dark:border-white/5 mt-auto">
                     <DrawerClose asChild>
-                        <Button className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold">Close</Button>
+                        <Button className="h-14 w-full rounded-2xl font-bold">Close</Button>
                     </DrawerClose>
                 </div>
             </DrawerContent>

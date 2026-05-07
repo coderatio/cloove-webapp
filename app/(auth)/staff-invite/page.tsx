@@ -10,7 +10,6 @@ import { apiClient } from "@/app/lib/api-client"
 import { storage } from "@/app/lib/storage"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { toast } from "sonner"
-import { motion, AnimatePresence } from "framer-motion"
 
 type InviteStatus = 'loading' | 'pending' | 'setup_password' | 'active' | 'wrong_account' | 'error'
 
@@ -20,6 +19,29 @@ interface InviteData {
     invitedName?: string
     invitedUserId?: string
     hasPassword?: boolean
+}
+
+interface StaffInvitationStatusResponse {
+    business?: { name?: string }
+    user?: { email?: string; fullName?: string }
+    userId?: string
+    hasPassword?: boolean
+    status?: string
+}
+
+interface StaffInvitationAcceptResponse {
+    membership?: { businessId?: string }
+}
+
+function getErrorInfo(err: unknown): { message: string; statusCode?: number } {
+    if (err instanceof Error) {
+        const maybeStatus = (err as { statusCode?: unknown }).statusCode
+        return {
+            message: err.message,
+            statusCode: typeof maybeStatus === 'number' ? maybeStatus : undefined,
+        }
+    }
+    return { message: "An unexpected error occurred" }
 }
 
 function getPasswordStrength(password: string): { level: 'weak' | 'good' | 'strong'; score: number } {
@@ -76,7 +98,7 @@ export default function StaffInvitePage() {
 
         async function checkStatus() {
             try {
-                const res = await apiClient.get<any>(`/staff/invitation/status?token=${token}`)
+                const res = await apiClient.get<StaffInvitationStatusResponse>(`/staff/invitation/status?token=${token}`)
                 if (res) {
                     setInviteData({
                         businessName: res.business?.name || "the business",
@@ -124,14 +146,14 @@ export default function StaffInvitePage() {
             await refreshUser()
             setStatus('active')
             toast.success("Invitation accepted successfully")
-        } catch (err: any) {
-            const message = err.message || "Failed to accept invitation"
+        } catch (err: unknown) {
+            const { message, statusCode } = getErrorInfo(err)
             // Detect "wrong account" error from backend
-            if (err.statusCode === 403) {
+            if (statusCode === 403) {
                 setStatus('wrong_account')
             } else {
                 toast.error(message)
-                if (err.statusCode === 400 || err.statusCode === 404) {
+                if (statusCode === 400 || statusCode === 404) {
                     setStatus('error')
                 }
             }
@@ -145,7 +167,7 @@ export default function StaffInvitePage() {
 
         setIsSettingUp(true)
         try {
-            const res = await apiClient.post<any>('/staff/invitation/accept-with-setup', {
+            const res = await apiClient.post<StaffInvitationAcceptResponse>('/staff/invitation/accept-with-setup', {
                 token,
                 password,
             })
@@ -158,10 +180,10 @@ export default function StaffInvitePage() {
             await refreshUser()
             setStatus('active')
             toast.success("Welcome! Your account is ready.")
-        } catch (err: any) {
-            const message = err.message || "Failed to set up your account"
+        } catch (err: unknown) {
+            const { message, statusCode } = getErrorInfo(err)
             toast.error(message)
-            if (err.statusCode === 400 && message.includes('already has a password')) {
+            if (statusCode === 400 && message.includes('already has a password')) {
                 // User already has a password — redirect to login flow
                 const returnUrl = `/staff-invite?token=${token}`
                 router.push(`/login?callbackUrl=${encodeURIComponent(returnUrl)}`)
@@ -180,21 +202,12 @@ export default function StaffInvitePage() {
 
     if (status === 'loading') {
         return (
-            <div className="min-h-dvh flex flex-col items-center justify-center bg-brand-deep-950 gap-4">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="relative w-24 h-24"
-                >
-                    <div className="absolute inset-0 rounded-full border-t-2 border-brand-gold animate-spin" />
-                    <div className="absolute inset-4 rounded-full border-b-2 border-brand-green/30 animate-spin-slow" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-12 h-12 relative">
-                            <Image src="/images/logo-white.png" alt="Cloove" fill className="object-contain opacity-50" />
-                        </div>
-                    </div>
-                </motion.div>
-                <p className="text-brand-cream/40 text-sm font-medium tracking-widest uppercase animate-pulse">
+            <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-brand-deep-950">
+                <div className="relative h-12 w-12">
+                    <Image src="/images/logo-white.png" alt="Cloove" fill className="object-contain opacity-80" />
+                </div>
+                <Loader2 className="h-5 w-5 animate-spin text-emerald-300" />
+                <p className="text-sm font-medium uppercase tracking-widest text-white/40">
                     Verifying secure link...
                 </p>
             </div>
@@ -202,53 +215,28 @@ export default function StaffInvitePage() {
     }
 
     return (
-        <div className="min-h-dvh w-full flex flex-col items-center justify-center p-4 relative overflow-hidden bg-brand-deep-950">
-            {/* Background Decor */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                <div className="absolute -top-[10%] -right-[10%] w-[60%] h-[60%] rounded-full bg-brand-gold/5 blur-[120px]" />
-                <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] rounded-full bg-brand-green/10 blur-[120px]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-30 pointer-events-none"
-                    style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-            </div>
-
-            <div className="w-full max-w-lg relative z-10 flex flex-col items-center">
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="flex flex-col items-center mb-12"
-                >
-                    <div className="relative h-14 w-14 mb-4">
+        <div className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-brand-deep-950 px-4 py-8">
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,rgba(18,87,65,0.28),transparent_42%),linear-gradient(180deg,#061a14_0%,#03100c_100%)]" />
+            <div className="relative z-10 flex w-full max-w-[520px] flex-col items-center">
+                <div className="mb-6 flex flex-col items-center">
+                    <div className="relative mb-3 h-11 w-11">
                         <Image src="/images/logo-white.png" alt="Cloove" fill className="object-contain" priority />
                     </div>
-                </motion.div>
+                </div>
 
-                <AnimatePresence mode="wait">
                     {status === 'pending' ? (
-                        <motion.div
-                            key="pending"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="w-full"
-                        >
-                            <GlassCard className="p-8 md:p-12 border-white/5 bg-white/3 backdrop-blur-3xl relative overflow-hidden group shadow-2xl shadow-black/40">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-brand-gold/10 transition-colors duration-700" />
-
+                        <div className="w-full">
+                            <GlassCard className="relative overflow-hidden rounded-[28px] border-white/10 bg-white/[0.045] p-6 shadow-sm md:p-8">
                                 <div className="space-y-10 text-center relative z-10">
                                     <div className="space-y-4">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 border border-brand-gold/20 mb-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
-                                            <span className="text-[10px] font-bold text-brand-gold uppercase tracking-wider">Join The Team</span>
+                                        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">
+                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300/80">Join the team</span>
                                         </div>
-                                        <h1 className="text-3xl md:text-4xl font-serif text-brand-cream leading-tight">
-                                            You&apos;ve been invited to join <br />
-                                            <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-gold to-brand-gold/50 font-bold">
-                                                {inviteData?.businessName}
-                                            </span>
+                                        <h1 className="text-2xl font-semibold leading-tight tracking-tight text-white md:text-3xl">
+                                            You&apos;ve been invited to join {inviteData?.businessName}
                                         </h1>
                                         {inviteData?.invitedEmail && (
-                                            <div className="flex items-center justify-center gap-2 text-brand-cream/40 text-sm">
+                                            <div className="flex items-center justify-center gap-2 text-sm text-white/45">
                                                 <Mail className="w-4 h-4" />
                                                 <span>Invitation sent to {inviteData.invitedEmail}</span>
                                             </div>
@@ -256,19 +244,19 @@ export default function StaffInvitePage() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                                        <div className="p-5 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/8 transition-colors group/item">
-                                            <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 flex items-center justify-center mb-3 group-hover/item:scale-110 transition-transform">
-                                                <ShieldCheck className="w-5 h-5 text-brand-gold" />
+                                        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+                                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/20">
+                                                <ShieldCheck className="w-5 h-5 text-emerald-300" />
                                             </div>
-                                            <h3 className="text-sm font-bold text-brand-cream mb-1">Secure Access</h3>
-                                            <p className="text-xs text-brand-cream/40 leading-relaxed">Enterprise-grade security protecting your business account.</p>
+                                            <h3 className="mb-1 text-sm font-semibold text-white">Secure access</h3>
+                                            <p className="text-xs leading-relaxed text-white/45">Your access is tied to this invitation and business.</p>
                                         </div>
-                                        <div className="p-5 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/8 transition-colors group/item">
-                                            <div className="w-10 h-10 rounded-2xl bg-brand-green/10 flex items-center justify-center mb-3 group-hover/item:scale-110 transition-transform">
-                                                <Briefcase className="w-5 h-5 text-brand-green" />
+                                        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+                                            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/20">
+                                                <Briefcase className="w-5 h-5 text-emerald-300" />
                                             </div>
-                                            <h3 className="text-sm font-bold text-brand-cream mb-1">Smart Management</h3>
-                                            <p className="text-xs text-brand-cream/40 leading-relaxed">Leverage powerful AI tools to track sales and inventory.</p>
+                                            <h3 className="mb-1 text-sm font-semibold text-white">Business workspace</h3>
+                                            <p className="text-xs leading-relaxed text-white/45">After accepting, you&apos;ll continue into the workspace.</p>
                                         </div>
                                     </div>
 
@@ -276,10 +264,10 @@ export default function StaffInvitePage() {
                                         <Button
                                             onClick={handleAccept}
                                             disabled={isAccepting}
-                                            className="w-full h-16 rounded-4xl bg-brand-gold text-brand-deep font-bold text-lg hover:bg-white transition-all duration-300 shadow-2xl shadow-brand-gold/20 flex items-center justify-center gap-3 active:scale-95 hover:text-brand-deep"
+                                            className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white disabled:opacity-45"
                                         >
                                             {isAccepting ? (
-                                                <Loader2 className="w-6 h-6 animate-spin" />
+                                                <Loader2 className="h-5 w-5 animate-spin" />
                                             ) : inviteData?.hasPassword === false ? (
                                                 <>Set Up Account &amp; Join <ArrowRight className="w-5 h-5" /></>
                                             ) : !isLoggedIn ? (
@@ -288,43 +276,35 @@ export default function StaffInvitePage() {
                                                 <>Accept &amp; Join Team <ArrowRight className="w-5 h-5" /></>
                                             )}
                                         </Button>
-                                        <p className="text-[10px] text-brand-cream/20 text-center uppercase tracking-widest font-bold">
+                                        <p className="text-center text-[10px] font-semibold uppercase tracking-widest text-white/25">
                                             By joining, you agree to the Cloove Terms of Service
                                         </p>
                                     </div>
                                 </div>
                             </GlassCard>
-                        </motion.div>
+                        </div>
 
                     ) : status === 'setup_password' ? (
-                        <motion.div
-                            key="setup_password"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="w-full"
-                        >
-                            <GlassCard className="p-8 md:p-12 border-white/5 bg-white/3 backdrop-blur-3xl relative overflow-hidden group shadow-2xl shadow-black/40">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-brand-gold/10 transition-colors duration-700" />
-
+                        <div className="w-full">
+                            <GlassCard className="relative overflow-hidden rounded-[28px] border-white/10 bg-white/[0.045] p-6 shadow-sm md:p-8">
                                 <div className="space-y-8 relative z-10">
                                     <div className="text-center space-y-3">
-                                        <div className="mx-auto w-16 h-16 rounded-full bg-brand-gold/10 flex items-center justify-center border border-brand-gold/20 mb-4">
-                                            <Lock className="w-8 h-8 text-brand-gold" />
+                                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                                            <Lock className="h-6 w-6 text-emerald-300" />
                                         </div>
-                                        <h1 className="text-2xl md:text-3xl font-serif text-brand-cream leading-tight">
-                                            Create Your Password
+                                        <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
+                                            Create your password
                                         </h1>
-                                        <p className="text-brand-cream/50 text-sm max-w-xs mx-auto">
+                                        <p className="mx-auto max-w-xs text-sm text-white/55">
                                             Set up a password to secure your account and join{' '}
-                                            <span className="text-brand-gold font-semibold">{inviteData?.businessName}</span>.
+                                            <span className="font-semibold text-emerald-300">{inviteData?.businessName}</span>.
                                         </p>
                                     </div>
 
                                     <div className="space-y-5">
                                         {/* Password field */}
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-brand-cream/60 uppercase tracking-wider">
+                                            <label className="text-xs font-semibold uppercase tracking-wider text-white/55">
                                                 New Password
                                             </label>
                                             <div className="relative">
@@ -333,12 +313,12 @@ export default function StaffInvitePage() {
                                                     value={password}
                                                     onChange={(e) => setPassword(e.target.value)}
                                                     placeholder="Min. 8 characters"
-                                                    className="w-full h-14 rounded-2xl bg-white/5 border border-white/10 px-4 pr-12 text-brand-cream placeholder:text-brand-cream/20 focus:outline-none focus:border-brand-gold/40 focus:ring-1 focus:ring-brand-gold/20 transition-all"
+                                                    className="h-14 w-full rounded-2xl border border-white/12 bg-white/[0.04] px-4 pr-12 text-white placeholder:text-white/35 focus:border-white/25 focus:outline-none"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-cream/30 hover:text-brand-cream/60 transition-colors"
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70"
                                                 >
                                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                 </button>
@@ -351,7 +331,7 @@ export default function StaffInvitePage() {
                                                         {[1, 2, 3].map((i) => (
                                                             <div
                                                                 key={i}
-                                                                className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                                                                className={`h-1 flex-1 rounded-full ${
                                                                     i <= (passwordStrength.level === 'weak' ? 1 : passwordStrength.level === 'good' ? 2 : 3)
                                                                         ? strengthColors[passwordStrength.level]
                                                                         : 'bg-white/10'
@@ -372,7 +352,7 @@ export default function StaffInvitePage() {
 
                                         {/* Confirm password field */}
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-brand-cream/60 uppercase tracking-wider">
+                                            <label className="text-xs font-semibold uppercase tracking-wider text-white/55">
                                                 Confirm Password
                                             </label>
                                             <div className="relative">
@@ -381,12 +361,12 @@ export default function StaffInvitePage() {
                                                     value={confirmPassword}
                                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                                     placeholder="Re-enter your password"
-                                                    className="w-full h-14 rounded-2xl bg-white/5 border border-white/10 px-4 pr-12 text-brand-cream placeholder:text-brand-cream/20 focus:outline-none focus:border-brand-gold/40 focus:ring-1 focus:ring-brand-gold/20 transition-all"
+                                                    className="h-14 w-full rounded-2xl border border-white/12 bg-white/[0.04] px-4 pr-12 text-white placeholder:text-white/35 focus:border-white/25 focus:outline-none"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-cream/30 hover:text-brand-cream/60 transition-colors"
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70"
                                                 >
                                                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                 </button>
@@ -403,42 +383,37 @@ export default function StaffInvitePage() {
                                         <Button
                                             onClick={handlePasswordSetup}
                                             disabled={!canSubmitPassword || isSettingUp}
-                                            className="w-full h-16 rounded-4xl bg-brand-gold text-brand-deep font-bold text-lg hover:bg-white transition-all duration-300 shadow-2xl shadow-brand-gold/20 flex items-center justify-center gap-3 active:scale-95 hover:text-brand-deep disabled:opacity-40 disabled:cursor-not-allowed"
+                                            className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
                                         >
                                             {isSettingUp ? (
-                                                <Loader2 className="w-6 h-6 animate-spin" />
+                                                <Loader2 className="h-5 w-5 animate-spin" />
                                             ) : (
                                                 <>Create Password &amp; Join <ArrowRight className="w-5 h-5" /></>
                                             )}
                                         </Button>
                                         <button
                                             onClick={() => setStatus('pending')}
-                                            className="w-full text-center text-sm text-brand-cream/30 hover:text-brand-cream/50 transition-colors py-2"
+                                            className="w-full py-2 text-center text-sm text-white/40 hover:text-white/70"
                                         >
                                             Back
                                         </button>
                                     </div>
                                 </div>
                             </GlassCard>
-                        </motion.div>
+                        </div>
 
                     ) : status === 'wrong_account' ? (
-                        <motion.div
-                            key="wrong_account"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full"
-                        >
-                            <GlassCard className="p-8 md:p-12 border-brand-gold/10 bg-white/3 backdrop-blur-3xl text-center space-y-8 shadow-2xl shadow-black/40">
-                                <div className="mx-auto w-20 h-20 rounded-full bg-brand-gold/10 flex items-center justify-center border border-brand-gold/20">
-                                    <UserCircle className="w-10 h-10 text-brand-gold" />
+                        <div className="w-full">
+                            <GlassCard className="space-y-6 rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm md:p-8">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                                    <UserCircle className="h-6 w-6 text-emerald-300" />
                                 </div>
 
                                 <div className="space-y-3">
-                                    <h1 className="text-2xl font-serif text-brand-cream">Different Account Detected</h1>
-                                    <p className="text-brand-cream/50 leading-relaxed max-w-xs mx-auto text-sm">
+                                    <h1 className="text-2xl font-semibold tracking-tight text-white">Different account detected</h1>
+                                    <p className="mx-auto max-w-xs text-sm leading-relaxed text-white/55">
                                         This invitation was sent to{' '}
-                                        <span className="text-brand-gold font-semibold">
+                                        <span className="font-semibold text-emerald-300">
                                             {inviteData?.invitedName || inviteData?.invitedEmail || 'another user'}
                                         </span>.
                                         You&apos;re currently logged in with a different account.
@@ -448,7 +423,7 @@ export default function StaffInvitePage() {
                                 <div className="space-y-3">
                                     <Button
                                         onClick={handleSwitchAccount}
-                                        className="w-full h-14 rounded-4xl bg-brand-gold text-brand-deep font-bold text-base hover:bg-white transition-all duration-300 shadow-xl shadow-brand-gold/20 flex items-center justify-center gap-3 active:scale-95 hover:text-brand-deep"
+                                        className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white"
                                     >
                                         <LogOut className="w-5 h-5" />
                                         Switch Account &amp; Accept
@@ -456,108 +431,72 @@ export default function StaffInvitePage() {
                                     <Button
                                         onClick={() => router.push('/')}
                                         variant="outline"
-                                        className="w-full h-14 rounded-4xl border-white/5 bg-white/5 text-brand-cream font-bold hover:bg-white/10 transition-all hover:text-brand-cream/60"
+                                        className="h-12 w-full rounded-2xl border-white/10 bg-white/[0.04] font-semibold text-white/70 hover:bg-white/[0.07] hover:text-white"
                                     >
                                         Back to Dashboard
                                     </Button>
                                 </div>
 
-                                <p className="text-[10px] text-brand-cream/20 uppercase tracking-widest font-bold">
+                                <p className="text-[10px] font-semibold uppercase tracking-widest text-white/25">
                                     You&apos;ll be logged out and can sign in with the correct account
                                 </p>
                             </GlassCard>
-                        </motion.div>
+                        </div>
 
                     ) : status === 'active' ? (
-                        <motion.div
-                            key="active"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full text-center"
-                        >
-                            <GlassCard className="p-12 border-brand-green/20 bg-brand-green/2 backdrop-blur-3xl relative overflow-hidden shadow-2xl shadow-black/40">
-                                <div className="absolute flex justify-center inset-0 pointer-events-none opacity-20">
-                                    <div className="w-full h-full bg-[radial-gradient(circle_at_center,var(--brand-green)_0%,transparent_70%)]" />
-                                </div>
-
+                        <div className="w-full text-center">
+                            <GlassCard className="relative overflow-hidden rounded-[28px] border-white/10 bg-white/[0.045] p-8 shadow-sm">
                                 <div className="relative z-10 space-y-8">
-                                    <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ type: "spring", stiffness: 200, damping: 12 }}
-                                        className="mx-auto w-24 h-24 rounded-full bg-brand-green/10 flex items-center justify-center border border-brand-green/20"
-                                    >
-                                        <CheckCircle2 className="w-12 h-12 text-brand-green" />
-                                    </motion.div>
+                                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-300/10">
+                                        <CheckCircle2 className="h-7 w-7 text-emerald-300" />
+                                    </div>
 
                                     <div className="space-y-3">
-                                        <h1 className="text-4xl font-serif text-brand-cream">Welcome Aboard!</h1>
-                                        <p className="text-brand-cream/60 max-w-xs mx-auto text-lg leading-relaxed">
-                                            You are now a member of <span className="text-brand-gold font-bold">{inviteData?.businessName}</span>.
+                                        <h1 className="text-3xl font-semibold tracking-tight text-white">Welcome aboard</h1>
+                                        <p className="mx-auto max-w-xs text-base leading-relaxed text-white/60">
+                                            You are now a member of <span className="font-semibold text-emerald-300">{inviteData?.businessName}</span>.
                                         </p>
                                     </div>
 
                                     <Button
                                         onClick={() => router.push('/')}
-                                        className="w-full h-16 rounded-4xl bg-brand-cream text-brand-deep font-bold text-lg hover:bg-white transition-all duration-300 flex items-center justify-center gap-2 group hover:text-brand-cream/60"
+                                        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white"
                                     >
                                         Proceed to Dashboard
-                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        <ArrowRight className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </GlassCard>
-                        </motion.div>
+                        </div>
                     ) : (
-                        <motion.div
-                            key="error"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full"
-                        >
-                            <GlassCard className="p-12 border-white/5 bg-white/3 backdrop-blur-3xl text-center space-y-8 shadow-2xl shadow-black/40">
-                                <div className="mx-auto w-20 h-20 rounded-full bg-red-500/5 flex items-center justify-center border border-red-500/10">
-                                    <Info className="w-10 h-10 text-red-500/60" />
+                        <div className="w-full">
+                            <GlassCard className="space-y-6 rounded-[28px] border-white/10 bg-white/[0.045] p-8 text-center shadow-sm">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-red-400/10 bg-red-400/10">
+                                    <Info className="h-6 w-6 text-red-300" />
                                 </div>
                                 <div className="space-y-3">
-                                    <h1 className="text-2xl font-serif text-brand-cream">Invitation Expired</h1>
-                                    <p className="text-brand-cream/40 leading-relaxed max-w-xs mx-auto">
+                                    <h1 className="text-2xl font-semibold tracking-tight text-white">Invitation expired</h1>
+                                    <p className="mx-auto max-w-xs leading-relaxed text-white/50">
                                         This invitation link is invalid or has expired for security reasons. Please ask the business owner to resend the invite.
                                     </p>
                                 </div>
                                 <Button
                                     onClick={() => router.push('/login')}
                                     variant="outline"
-                                    className="w-full h-16 rounded-4xl border-white/5 bg-white/5 text-brand-cream font-bold hover:bg-white/10 transition-all hover:text-brand-cream/60"
+                                    className="h-12 w-full rounded-2xl border-white/10 bg-white/[0.04] font-semibold text-white/70 hover:bg-white/[0.07] hover:text-white"
                                 >
                                     Back to Login
                                 </Button>
                             </GlassCard>
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
-
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8 }}
-                    className="mt-12 flex flex-col items-center gap-6"
-                >
+                <div className="mt-8 flex flex-col items-center gap-4">
                     <div className="h-px w-24 bg-linear-to-r from-transparent via-brand-cream/10 to-transparent" />
-                    <p className="text-[10px] text-center text-brand-cream/20 uppercase tracking-[0.4em] font-medium">
-                        Powered by Cloove AI Intelligence
+                    <p className="text-center text-[10px] font-medium uppercase tracking-[0.28em] text-white/20">
+                        Powered by Cloove
                     </p>
-                </motion.div>
+                </div>
             </div>
-
-            <style jsx global>{`
-                @keyframes spin-slow {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-                .animate-spin-slow {
-                    animation: spin-slow 3s linear infinite;
-                }
-            `}</style>
         </div>
     )
 }

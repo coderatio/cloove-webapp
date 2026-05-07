@@ -296,7 +296,7 @@ export function PaymentLinksView() {
     if (error) {
         return (
             <PageTransition>
-                <div className="max-w-5xl mx-auto space-y-8 pb-24">
+                <div className="max-w-6xl mx-auto space-y-8 pb-24">
                     <ManagementHeader
                         title={pageCopy.paymentLinks.title}
                         description={pageCopy.paymentLinks.descriptionShort}
@@ -320,7 +320,7 @@ export function PaymentLinksView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title={pageCopy.paymentLinks.title}
                     description={pageCopy.paymentLinks.descriptionLong}

@@ -84,13 +84,13 @@ export function StoreContextSelector({ value, onChange, className, compact = fal
                             )}
                         >
                             {!compact && (
-                                <span className="mb-0.5 truncate text-[10px] font-bold uppercase leading-none tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
+                                <span className="mb-0.5 truncate text-[10px] font-bold uppercase leading-none tracking-widest text-muted-foreground">
                                     Viewing
                                 </span>
                             )}
                             <span
                                 className={cn(
-                                    "truncate font-bold text-brand-deep dark:text-brand-cream",
+                                    "truncate font-bold text-foreground",
                                     compact ? "text-[11px] leading-tight" : "text-xs leading-none"
                                 )}
                             >

@@ -2,7 +2,6 @@
 
 import { useState, Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { motion } from "framer-motion"
 import { toast } from "sonner"
 import Image from "next/image"
 import { Loader2, AlertCircle } from "lucide-react"
@@ -44,19 +43,19 @@ function SelectBusinessTypeContent() {
 
     if (!isLoading && role !== 'OWNER') {
         return (
-            <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden text-center">
+            <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-6 text-center sm:p-10">
                 <div className="relative z-10 w-full max-w-md">
-                    <div className="bg-white/40 dark:bg-white/3 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-brand-deep/5 space-y-6">
-                        <div className="h-16 w-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <div className="space-y-6 rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10">
                             <AlertCircle className="h-8 w-8 text-red-500" />
                         </div>
-                        <h2 className="font-serif text-2xl text-brand-deep dark:text-brand-cream">Setup Incomplete</h2>
-                        <p className="text-brand-accent/60 dark:text-brand-cream/60">
-                            This business setup hasn't been completed yet. Please contact the business owner to finalize the configuration.
+                        <h2 className="text-2xl font-semibold tracking-tight text-foreground">Setup incomplete</h2>
+                        <p className="text-muted-foreground">
+                            This business setup hasn&apos;t been completed yet. Please contact the business owner to finalize the configuration.
                         </p>
                         <Button
                             onClick={() => router.push('/')}
-                            className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            className="h-12 w-full rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white"
                         >
                             Back to Dashboard
                         </Button>
@@ -67,48 +66,10 @@ function SelectBusinessTypeContent() {
     }
 
     return (
-        <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-            {/* Academic Luxury Background */}
-            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-                {/* Texture Overlay */}
-                <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[url('/images/noise.png')] mix-blend-overlay" />
-
-                {/* Subtle Grid */}
-                <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.1]"
-                    style={{ backgroundImage: 'radial-gradient(var(--brand-gold) 0.5px, transparent 0.5px)', backgroundSize: '32px 32px' }} />
-
-                {/* Ambient Intelligence Blobs */}
-                <motion.div
-                    animate={{
-                        scale: [1, 1.2, 1],
-                        x: [0, 50, 0],
-                        y: [0, -30, 0]
-                    }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] rounded-full bg-brand-green/20 blur-[120px] filter"
-                />
-                <motion.div
-                    animate={{
-                        scale: [1, 1.1, 1],
-                        x: [0, -40, 0],
-                        y: [0, 60, 0]
-                    }}
-                    transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                    className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-brand-gold/15 blur-[100px] filter"
-                />
-            </div>
-
-            <div className="relative z-10 w-full max-w-2xl flex flex-col items-center space-y-12">
-                <div className="text-center space-y-8 max-w-lg">
-                    {/* Perspective Logo */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -20, rotateX: 30 }}
-                        animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="relative group cursor-default"
-                    >
-                        <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full scale-50 group-hover:scale-100 transition-transform duration-700" />
-                        <div className="relative h-16 w-16 bg-brand-green rounded-2xl p-3 mx-auto shadow-2xl shadow-brand-green/30 overflow-hidden ring-1 ring-white/10">
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-6 sm:p-10">
+            <div className="relative z-10 flex w-full max-w-2xl flex-col items-center space-y-8">
+                <div className="max-w-lg space-y-5 text-center">
+                        <div className="relative mx-auto h-14 w-14 overflow-hidden rounded-2xl border border-border bg-primary p-3">
                             <Image
                                 src="/images/logo-white.png"
                                 alt="Cloove"
@@ -116,50 +77,29 @@ function SelectBusinessTypeContent() {
                                 className="object-contain p-3"
                             />
                         </div>
-                    </motion.div>
 
                     <div className="space-y-4">
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="font-serif text-5xl sm:text-6xl text-brand-deep dark:text-brand-cream tracking-tight leading-tight"
-                        >
-                            Business <span className="text-brand-deep/40 dark:text-brand-cream/30">Identity</span>
-                        </motion.h1>
+                        <h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
+                            Business identity
+                        </h1>
 
-                        <motion.p
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-brand-accent/70 dark:text-brand-cream/60 text-lg leading-relaxed font-sans"
-                        >
-                            To provide an experience tailored to your unique journey, we first need to understand the scale of your operation.
-                        </motion.p>
+                        <p className="text-base leading-relaxed text-muted-foreground">
+                            Choose the business type that best matches your operation.
+                        </p>
                     </div>
                 </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.6 }}
-                    className="w-full"
-                >
-                    <div className="bg-white/40 dark:bg-white/3 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-brand-deep/5">
+                <div className="w-full">
+                    <div className="rounded-[28px] border border-border bg-card p-5 shadow-sm sm:p-6">
                         <BusinessTypeSelector value={businessType} onChange={setBusinessType} />
                     </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 }}
-                    className="flex flex-col items-center gap-6"
-                >
+                <div className="flex flex-col items-center gap-4">
                     <Button
                         onClick={handleSubmit}
                         disabled={!businessType || isSubmitting}
-                        className="h-16 rounded-4xl px-16 bg-brand-deep text-brand-gold hover:bg-brand-deep/95 hover:scale-[1.02] active:scale-[0.98] dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 font-bold text-base shadow-2xl shadow-brand-deep/20 dark:shadow-brand-gold/10 transition-all duration-300 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed group"
+                        className="h-12 rounded-2xl bg-primary px-10 text-base font-semibold text-white hover:bg-primary/92 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
                     >
                         {isSubmitting ? (
                             <div className="flex items-center gap-3">
@@ -169,20 +109,11 @@ function SelectBusinessTypeContent() {
                         ) : (
                             <div className="flex items-center gap-2">
                                 <span className="tracking-wide text-lg">Continue</span>
-                                <motion.span
-                                    animate={{ x: [0, 5, 0] }}
-                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                >
-                                    →
-                                </motion.span>
+                                <span>→</span>
                             </div>
                         )}
                     </Button>
-
-                    {/* <p className="text-[10px] uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/30 font-bold">
-                        Secure Encryption Active
-                    </p> */}
-                </motion.div>
+                </div>
             </div>
         </div>
     )

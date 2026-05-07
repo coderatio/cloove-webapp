@@ -3,7 +3,6 @@
 import { useBusiness, type Business } from "@/app/components/BusinessProvider"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { useRouter, useSearchParams } from "next/navigation"
-import { motion } from "framer-motion"
 import { LayoutGrid, ArrowRight, LogOut, Lock, Sparkles } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -40,52 +39,29 @@ function SelectBusinessContent() {
     if (isLoading) return null
 
     return (
-        <div className="min-h-screen bg-background dark:bg-background flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-20">
-                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-brand-green/20 blur-3xl filter animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-brand-gold/20 blur-3xl filter animate-pulse" />
-            </div>
-
-            <div className="relative z-10 w-full max-w-2xl space-y-12">
-                <div className="text-center space-y-4">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="relative h-20 w-20 bg-brand-green rounded-[2.5rem] p-4 mx-auto shadow-2xl shadow-brand-green/20 mb-8 overflow-hidden"
-                    >
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-6 sm:p-10">
+            <div className="relative z-10 w-full max-w-xl space-y-8">
+                <div className="space-y-3 text-center">
+                    <div className="relative mx-auto mb-5 h-14 w-14 overflow-hidden rounded-2xl border border-border bg-primary p-3">
                         <Image
                             src="/images/logo-white.png"
                             alt="Cloove"
                             fill
                             className="object-contain p-4"
                         />
-                    </motion.div>
+                    </div>
 
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="font-serif text-4xl sm:text-5xl text-brand-deep dark:text-brand-cream tracking-tight"
-                    >
+                    <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                         Welcome back
-                    </motion.h1>
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="text-brand-accent/60 dark:text-brand-cream/60 text-lg max-w-md mx-auto"
-                    >
+                    </h1>
+                    <p className="mx-auto max-w-md text-base text-muted-foreground">
                         Select a business to continue to your dashboard.
-                    </motion.p>
+                    </p>
                 </div>
 
                 {/* Plan restriction banner */}
                 {isMultiBusinessRestricted && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400"
-                    >
+                    <div className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-700 dark:text-amber-400">
                         <Lock className="h-4 w-4 shrink-0 mt-0.5" />
                         <div className="space-y-1 min-w-0">
                             <p className="text-sm font-bold">Multiple businesses require a paid plan</p>
@@ -105,18 +81,18 @@ function SelectBusinessContent() {
                                 to access all your businesses.
                             </p>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
 
                 <div className="grid gap-6">
                     {businesses.length === 0 && businessesLoadFailed ? (
-                        <GlassCard className="p-12 text-center space-y-6">
-                            <div className="h-16 w-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <LayoutGrid className="h-8 w-8 text-amber-600/80 dark:text-amber-400/80" />
+                        <GlassCard className="space-y-5 rounded-[28px] border-border bg-card p-6 text-center shadow-sm sm:p-8">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10">
+                                <LayoutGrid className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                             </div>
                             <div className="space-y-2">
-                                <h3 className="text-xl font-bold text-brand-deep dark:text-brand-cream">Couldn&apos;t load businesses</h3>
-                                <p className="text-brand-accent/60 dark:text-brand-cream/60 text-sm max-w-sm mx-auto">
+                                <h3 className="text-xl font-semibold text-foreground">Couldn&apos;t load businesses</h3>
+                                <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
                                     The server may be busy or limiting requests. Your session is still active — try again in a few seconds.
                                 </p>
                             </div>
@@ -124,37 +100,32 @@ function SelectBusinessContent() {
                                 type="button"
                                 disabled={isRefreshing}
                                 onClick={() => void refreshBusinesses()}
-                                className="h-14 rounded-2xl px-12 bg-brand-gold text-brand-deep font-bold hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60"
+                                className="h-12 rounded-2xl bg-primary px-8 font-semibold text-white hover:bg-primary/92 hover:text-white disabled:opacity-60"
                             >
                                 {isRefreshing ? 'Retrying…' : 'Try again'}
                             </Button>
                         </GlassCard>
                     ) : businesses.length === 0 ? (
-                        <GlassCard className="p-12 text-center space-y-6">
-                            <div className="h-16 w-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <LayoutGrid className="h-8 w-8 text-brand-cream/20" />
+                        <GlassCard className="space-y-5 rounded-[28px] border-border bg-card p-6 text-center shadow-sm sm:p-8">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+                                <LayoutGrid className="h-6 w-6 text-primary" />
                             </div>
                             <div className="space-y-2">
-                                <h3 className="text-xl font-bold text-brand-cream">No businesses found</h3>
-                                <p className="text-brand-cream/60">It looks like you haven&apos;t created any businesses yet.</p>
+                                <h3 className="text-xl font-semibold text-foreground">No businesses found</h3>
+                                <p className="text-sm text-muted-foreground">It looks like you haven&apos;t created any businesses yet.</p>
                             </div>
                             <Button
                                 onClick={() => router.push('/onboarding')}
-                                className="h-14 rounded-2xl px-12 bg-brand-gold text-brand-deep font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                className="h-12 rounded-2xl bg-primary px-8 font-semibold text-white hover:bg-primary/92 hover:text-white"
                             >
                                 Create your first Business
                             </Button>
                         </GlassCard>
                     ) : (
-                        businesses.map((business: Business, index: number) => {
+                        businesses.map((business: Business) => {
                             const locked = !isBusinessSelectable(business)
                             return (
-                                <motion.div
-                                    key={business.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: index * 0.1 }}
-                                >
+                                <div key={business.id}>
                                     <button
                                         onClick={() => handleSelect(business)}
                                         disabled={locked}
@@ -164,16 +135,16 @@ function SelectBusinessContent() {
                                         )}
                                     >
                                         <GlassCard className={cn(
-                                            "p-4 sm:p-6 flex items-center gap-4 sm:gap-6 transition-all duration-300 border-white/5",
-                                            !locked && "group-hover:bg-white/10 group-hover:scale-[1.01] active:scale-[0.99]",
+                                            "flex items-center gap-4 rounded-[24px] border-border bg-card p-4 sm:gap-5 sm:p-5",
+                                            !locked && "group-hover:bg-muted/50",
                                             locked && "opacity-50 grayscale",
-                                            activeBusiness?.id === business.id && "bg-white/10 border-brand-gold/30 ring-1 ring-brand-gold/10"
+                                            activeBusiness?.id === business.id && "border-primary/25 bg-primary/8 ring-1 ring-primary/10"
                                         )}>
                                             <div className={cn(
                                                 "h-12 w-12 sm:h-16 sm:w-16 shrink-0 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-inner border border-white/5",
                                                 locked
                                                     ? "bg-white/5"
-                                                    : "bg-linear-to-br from-brand-gold/20 to-brand-gold/5 text-brand-gold"
+                                                    : "bg-primary/10 text-primary"
                                             )}>
                                                 {locked
                                                     ? <Lock className="h-5 w-5 sm:h-6 sm:w-6 text-white/30" />
@@ -182,25 +153,25 @@ function SelectBusinessContent() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h3 className={cn(
-                                                    "text-base sm:text-xl font-bold transition-colors truncate",
+                                                    "truncate text-base font-semibold sm:text-lg",
                                                     locked
-                                                        ? "text-brand-cream/40"
-                                                        : "text-brand-deep dark:text-brand-cream group-hover:text-brand-gold"
+                                                        ? "text-muted-foreground"
+                                                        : "text-foreground"
                                                 )}>
                                                     {business.name}
                                                 </h3>
                                                 <p className={cn(
                                                     "font-medium uppercase tracking-widest text-[10px] mt-1 truncate",
-                                                    locked ? "text-brand-cream/20" : "text-brand-accent/50 dark:text-brand-cream/40"
+                                                    locked ? "text-muted-foreground/50" : "text-muted-foreground"
                                                 )}>
                                                     {locked ? "Upgrade required" : `Managed Business • ${business.currency}`}
                                                 </p>
                                             </div>
                                             <div className={cn(
-                                                "h-8 w-8 sm:h-12 sm:w-12 shrink-0 rounded-full border flex items-center justify-center transition-all",
+                                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border sm:h-10 sm:w-10",
                                                 locked
-                                                    ? "border-white/5 text-white/10"
-                                                    : "border-brand-gold/30 sm:border-white/10 dark:sm:border-transparent text-brand-gold sm:text-brand-cream/20 dark:sm:text-transparent sm:group-hover:text-brand-gold sm:group-hover:border-brand-gold/30"
+                                                    ? "border-border text-muted-foreground/40"
+                                                    : "border-primary/20 text-primary"
                                             )}>
                                                 {locked
                                                     ? <Sparkles className="h-4 w-4" />
@@ -209,7 +180,7 @@ function SelectBusinessContent() {
                                             </div>
                                         </GlassCard>
                                     </button>
-                                </motion.div>
+                                </div>
                             )
                         })
                     )}

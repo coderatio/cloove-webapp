@@ -12,7 +12,7 @@ export function LoginBackButton({ onClick, label = "Back" }: LoginBackButtonProp
         <button
             type="button"
             onClick={onClick}
-            className="absolute cursor-pointer top-6 left-6 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-brand-cream/50 hover:text-brand-gold hover:border-brand-gold/30 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest z-20"
+            className="absolute left-5 top-5 z-20 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/55 hover:bg-white/[0.07] hover:text-white"
         >
             <ArrowLeft className="w-3 h-3" />
             {label}

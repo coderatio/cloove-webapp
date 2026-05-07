@@ -34,8 +34,8 @@ export function Switch({ checked, defaultChecked, onCheckedChange, disabled, cla
         <div
             onClick={toggle}
             className={cn(
-                "w-12 h-7 bg-brand-deep/10 dark:bg-white/10 rounded-full p-1 cursor-pointer transition-colors relative",
-                isOn && "bg-brand-green dark:bg-brand-gold",
+                "relative h-7 w-12 cursor-pointer rounded-full border border-slate-300 bg-slate-200 p-1 transition-colors dark:border-slate-700 dark:bg-slate-800",
+                isOn && "border-brand-gold bg-brand-gold dark:border-brand-gold dark:bg-brand-gold",
                 disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
@@ -45,8 +45,7 @@ export function Switch({ checked, defaultChecked, onCheckedChange, disabled, cla
                 animate={{ x: isOn ? 20 : 0 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 className={cn(
-                    "w-5 h-5 bg-white rounded-full shadow-sm",
-                    isOn && "dark:bg-brand-deep"
+                    "h-5 w-5 rounded-full bg-white shadow-sm"
                 )}
             />
         </div>

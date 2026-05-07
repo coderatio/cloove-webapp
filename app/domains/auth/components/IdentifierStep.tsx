@@ -2,7 +2,6 @@
 
 import { useRef } from "react"
 import { Mail, Phone, ArrowRight } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { CountrySelector } from "@/app/components/ui/country-selector"
@@ -28,42 +27,24 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
     const showCountry = !state.identifier || /^[+\d\s\-()]*$/.test(state.identifier)
 
     return (
-        <motion.div
-            key="identifier"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-            <GlassCard allowOverflow className="p-8 border-white/10 shadow-2xl bg-white/5">
-                <form onSubmit={actions.handleIdentifierSubmit} className="space-y-6">
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold ml-1">
+            <GlassCard allowOverflow className="rounded-[28px] border-white/10 bg-white/[0.045] p-5 shadow-sm">
+                <form onSubmit={actions.handleIdentifierSubmit} className="space-y-5">
+                    <div className="space-y-2.5">
+                        <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55">
                             Phone or Email
                         </label>
-                        <div className="flex">
-                            <AnimatePresence mode="wait">
+                        <div className="flex gap-2">
                                 {showCountry && (
-                                    <motion.div
-                                        key="country-selector"
-                                        initial={{ width: 0, opacity: 0, marginRight: 0 }}
-                                        animate={{ width: "auto", opacity: 1, marginRight: 8 }}
-                                        exit={{ width: 0, opacity: 0, marginRight: 0 }}
-                                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                                        style={{ overflow: "hidden" }}
-                                    >
                                         <CountrySelector
                                             countries={state.countries}
                                             selectedCountry={state.selectedCountry}
                                             onSelect={handleCountrySelect}
                                             disabled={state.isLoading || state.isLoadingCountries}
                                         />
-                                    </motion.div>
                                 )}
-                            </AnimatePresence>
 
                             <div className="relative group flex-1">
-                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-cream/60 group-focus-within:text-brand-gold transition-colors">
+                                <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
                                     {state.isEmail ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
                                 </div>
                                 <input
@@ -75,11 +56,11 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                                     placeholder={state.isPhone && state.selectedCountry ? `+${state.selectedCountry.phoneCode} ...` : (state.isEmail ? "email@example.com" : "Phone or Email")}
                                     value={state.identifier}
                                     onChange={(e) => actions.setIdentifier(e.target.value)}
-                                    className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-4 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all text-base"
+                                    className="h-14 w-full rounded-2xl border border-white/12 bg-white/[0.04] py-0 pl-12 pr-4 text-base text-white outline-none placeholder:text-white/35 focus:border-white/25 focus:bg-white/[0.06]"
                                 />
                             </div>
                         </div>
-                        <p className="text-[10px] text-brand-cream/60 ml-1">
+                        <p className="ml-1 text-xs text-white/45">
                             Register via WhatsApp? Use your phone number to start.
                         </p>
                     </div>
@@ -87,13 +68,12 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                     <Button
                         type="submit"
                         disabled={state.isLoading || state.isLoadingCountries || state.countries.length === 0 || !state.identifier || (!state.isEmail && !state.isPhone)}
-                        className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base hover:bg-brand-gold/90 transition-all shadow-xl shadow-brand-gold/10 group"
+                        className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45 [&_svg]:text-white"
                     >
                         {state.isLoading ? "Checking..." : state.isLoadingCountries || state.countries.length === 0 ? "Loading..." : "Continue"}
-                        <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 </form>
             </GlassCard>
-        </motion.div>
     )
 }

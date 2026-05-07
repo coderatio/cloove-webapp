@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Loader2, CheckCircle2, XCircle, ArrowRight } from "lucide-react"
 import { useVerifyPayment } from "../../domains/business/hooks/useBilling"
@@ -12,20 +11,20 @@ import { toast } from "sonner"
 export default function SubscriptionVerifyPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const verifyPayment = useVerifyPayment()
+    const { mutate: verifyPayment } = useVerifyPayment()
     const { refreshUser } = useAuth()
-    const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying")
 
     const transaction_id = searchParams.get("transaction_id")
     const tx_ref = searchParams.get("tx_ref")
+    const hasVerificationParams = Boolean(transaction_id && tx_ref)
+
+    const [status, setStatus] = useState<"verifying" | "success" | "error">(
+        hasVerificationParams ? "verifying" : "error"
+    )
 
     useEffect(() => {
-        if (!transaction_id || !tx_ref) {
-            setStatus("error")
-            return
-        }
-
-        verifyPayment.mutate(
+        if (!transaction_id || !tx_ref) return
+        verifyPayment(
             { transaction_id, tx_ref },
             {
                 onSuccess: async (data) => {
@@ -38,25 +37,25 @@ export default function SubscriptionVerifyPage() {
                         toast.error(data.message || "Verification failed")
                     }
                 },
-                onError: (error: any) => {
+                onError: (error: unknown) => {
                     setStatus("error")
-                    toast.error(error.message || "An error occurred during verification")
+                    toast.error(error instanceof Error ? error.message : "An error occurred during verification")
                 }
             }
         )
-    }, [transaction_id, tx_ref])
+    }, [transaction_id, tx_ref, refreshUser, verifyPayment])
 
     return (
-        <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex items-center justify-center p-4">
-            <GlassCard className="max-w-md w-full p-8 text-center space-y-6">
+        <div className="flex min-h-screen items-center justify-center bg-background p-6">
+            <div className="w-full max-w-md space-y-6 rounded-[28px] border border-border bg-card p-6 text-center shadow-sm sm:p-8">
                 {status === "verifying" && (
                     <>
                         <div className="flex justify-center">
-                            <Loader2 className="w-12 h-12 text-brand-gold animate-spin" />
+                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
                         </div>
                         <div className="space-y-2">
-                            <h1 className="text-2xl font-serif text-brand-deep dark:text-brand-cream">Verifying Payment</h1>
-                            <p className="text-sm text-brand-deep/60 dark:text-brand-cream/60">
+                            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Verifying payment</h1>
+                            <p className="text-sm text-muted-foreground">
                                 Please wait while we confirm your transaction...
                             </p>
                         </div>
@@ -66,16 +65,16 @@ export default function SubscriptionVerifyPage() {
                 {status === "success" && (
                     <>
                         <div className="flex justify-center">
-                            <CheckCircle2 className="w-16 h-16 text-emerald-500" />
+                            <CheckCircle2 className="h-12 w-12 text-emerald-500" />
                         </div>
                         <div className="space-y-2">
-                            <h1 className="text-2xl font-serif text-brand-deep dark:text-brand-cream">Payment Successful!</h1>
-                            <p className="text-sm text-brand-deep/60 dark:text-brand-cream/60">
+                            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Payment successful</h1>
+                            <p className="text-sm text-muted-foreground">
                                 Your subscription has been activated. Welcome to the next level of Cloove.
                             </p>
                         </div>
                         <Button
-                            className="w-full h-12 rounded-xl font-bold bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep"
+                            className="h-12 w-full rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white"
                             onClick={() => router.push("/settings?tab=billing")}
                         >
                             Go to Billing
@@ -87,17 +86,17 @@ export default function SubscriptionVerifyPage() {
                 {status === "error" && (
                     <>
                         <div className="flex justify-center">
-                            <XCircle className="w-16 h-16 text-red-500" />
+                            <XCircle className="h-12 w-12 text-red-500" />
                         </div>
                         <div className="space-y-2">
-                            <h1 className="text-2xl font-serif text-brand-deep dark:text-brand-cream">Verification Failed</h1>
-                            <p className="text-sm text-brand-deep/60 dark:text-brand-cream/60">
-                                We couldn't verify your payment. If you believe this is an error, please contact support.
+                            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Verification failed</h1>
+                            <p className="text-sm text-muted-foreground">
+                                We couldn&apos;t verify your payment. If you believe this is an error, please contact support.
                             </p>
                         </div>
                         <div className="space-y-3 pt-4">
                             <Button
-                                className="w-full h-12 rounded-xl font-bold"
+                                className="h-12 w-full rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white"
                                 onClick={() => router.push("/settings?tab=billing")}
                             >
                                 Back to Billing
@@ -105,7 +104,7 @@ export default function SubscriptionVerifyPage() {
                         </div>
                     </>
                 )}
-            </GlassCard>
+            </div>
         </div>
     )
 }

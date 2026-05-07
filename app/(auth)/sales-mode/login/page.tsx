@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import Image from "next/image"
 import { AlertTriangle, ArrowLeft, Delete, Loader2 } from "lucide-react"
 import { useSalesModeLogin } from "@/app/domains/auth/hooks/useSalesModeLogin"
@@ -26,7 +26,6 @@ export default function SalesModeLoginPage() {
         changeBusinessCode,
     } = useSalesModeLogin()
 
-    const maskedPin = useMemo(() => "•".repeat(pin.length), [pin])
     const businessLookupRef = useRef(false)
     const lastSubmittedBusinessCodeRef = useRef<string | null>(null)
 
@@ -66,16 +65,16 @@ export default function SalesModeLoginPage() {
         setPin(pin.slice(0, -1))
     }
 
-    const submitPin = async () => {
+    const submitPin = useCallback(async () => {
         if (safePin.length !== SALES_PIN_LENGTH || isLoading) return
         await loginWithPin(safePin)
-    }
+    }, [isLoading, loginWithPin, safePin])
 
     useEffect(() => {
         if (step === "pin" && safePin.length === SALES_PIN_LENGTH && !isLoading) {
             void submitPin()
         }
-    }, [step, safePin, isLoading])
+    }, [step, safePin, isLoading, submitPin])
 
     const appendBusinessDigit = (digit: string) => {
         if (isLoading || safeBusinessCode.length >= BUSINESS_CODE_LENGTH) return
@@ -96,7 +95,7 @@ export default function SalesModeLoginPage() {
         setBusinessCode("")
     }
 
-    const submitBusinessCode = async () => {
+    const submitBusinessCode = useCallback(async () => {
         if (
             step !== "business-code" ||
             safeBusinessCode.length !== BUSINESS_CODE_LENGTH ||
@@ -111,7 +110,7 @@ export default function SalesModeLoginPage() {
         businessLookupRef.current = true
         await lookupBusiness(safeBusinessCode)
         businessLookupRef.current = false
-    }
+    }, [isLoading, lookupBusiness, safeBusinessCode, step])
 
     useEffect(() => {
         if (
@@ -122,7 +121,7 @@ export default function SalesModeLoginPage() {
         ) {
             void submitBusinessCode()
         }
-    }, [step, safeBusinessCode, isLoading])
+    }, [step, safeBusinessCode, isLoading, submitBusinessCode])
 
     useEffect(() => {
         const handlePaste = (event: ClipboardEvent) => {
@@ -148,13 +147,13 @@ export default function SalesModeLoginPage() {
     }, [step, setBusinessCode, setPin])
 
     return (
-        <div className="min-h-dvh w-full flex items-center justify-center p-4 bg-brand-deep-950">
+        <div className="flex min-h-dvh w-full items-center justify-center bg-brand-deep-950 px-4 py-8">
             <div className={step === "pin" ? "w-full max-w-5xl" : "w-full max-w-md"}>
                 <GlassCard
                     className={
                         step === "pin"
-                            ? "relative border-white/10 bg-white/5 shadow-2xl shadow-black/20 overflow-hidden"
-                            : "p-6 md:p-8 border-white/10 bg-white/5 space-y-6 shadow-2xl shadow-black/20"
+                            ? "relative overflow-hidden rounded-[28px] border-white/10 bg-white/[0.045] shadow-sm"
+                            : "space-y-6 rounded-[28px] border-white/10 bg-white/[0.045] p-5 shadow-sm md:p-6"
                     }
                 >
                     {step === "pin" && (
@@ -167,14 +166,14 @@ export default function SalesModeLoginPage() {
                     {step === "business-code" ? (
                         <>
                             <div className="text-center">
-                                <h1 className="font-serif text-3xl text-brand-cream">Sales Mode</h1>
-                                <p className="text-sm text-brand-cream/60 mt-2">Enter your business code</p>
+                                <h1 className="text-2xl font-semibold tracking-tight text-white">Sales Mode</h1>
+                                <p className="mt-2 text-sm text-white/55">Enter your business code</p>
                             </div>
                             <div className="space-y-5">
                                 <button
                                     type="button"
                                     onClick={() => void submitBusinessCode()}
-                                    className="w-full h-14 rounded-2xl bg-black/20 border border-white/20 text-brand-cream flex items-center justify-center"
+                                    className="flex h-14 w-full items-center justify-center rounded-2xl border border-white/12 bg-white/[0.04] text-white"
                                 >
                                     {renderPinSlots(safeBusinessCode.length, BUSINESS_CODE_LENGTH)}
                                 </button>
@@ -186,7 +185,7 @@ export default function SalesModeLoginPage() {
                                             type="button"
                                             variant="outline"
                                             onClick={() => appendBusinessDigit(digit)}
-                                            className="h-16 rounded-2xl border-white/20 bg-white/5 text-brand-cream text-lg font-semibold hover:bg-white/15 hover:text-brand-cream"
+                                            className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-lg font-semibold text-white hover:bg-white/[0.08] hover:text-white"
                                         >
                                             {digit}
                                         </Button>
@@ -195,7 +194,7 @@ export default function SalesModeLoginPage() {
                                         type="button"
                                         variant="outline"
                                         onClick={clearBusinessCode}
-                                        className="h-16 rounded-2xl border-white/20 bg-white/5 text-brand-cream hover:bg-white/15 hover:text-brand-cream"
+                                        className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white"
                                     >
                                         Clear
                                     </Button>
@@ -203,7 +202,7 @@ export default function SalesModeLoginPage() {
                                         type="button"
                                         variant="outline"
                                         onClick={() => appendBusinessDigit("0")}
-                                        className="h-16 rounded-2xl border-white/20 bg-white/5 text-brand-cream text-lg font-semibold hover:bg-white/15 hover:text-brand-cream"
+                                        className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-lg font-semibold text-white hover:bg-white/[0.08] hover:text-white"
                                     >
                                         0
                                     </Button>
@@ -211,12 +210,12 @@ export default function SalesModeLoginPage() {
                                         type="button"
                                         variant="outline"
                                         onClick={businessBackspace}
-                                        className="h-16 rounded-2xl border-white/20 bg-white/5 text-brand-cream hover:bg-white/15 hover:text-brand-cream"
+                                        className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white"
                                     >
                                         <Delete className="w-4 h-4" />
                                     </Button>
                                 </div>
-                                <p className="text-center text-[11px] text-brand-cream/60">
+                                <p className="text-center text-[11px] text-white/50">
                                     Business code is 8 digits. Continue starts automatically.
                                 </p>
                                 {error && (
@@ -229,7 +228,7 @@ export default function SalesModeLoginPage() {
                                     </div>
                                 )}
                                 {isLoading && (
-                                    <div className="flex items-center justify-center text-brand-gold text-sm gap-2">
+                                    <div className="flex items-center justify-center gap-2 text-sm text-emerald-300">
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         Validating business...
                                     </div>
@@ -237,14 +236,10 @@ export default function SalesModeLoginPage() {
                             </div>
                         </>
                     ) : (
-                        <div className="grid lg:grid-cols-[0.42fr_0.58fr] min-h-[560px] h-full items-stretch">
-                            <div className="relative h-full p-8 lg:p-10 border-b lg:border-b-0 border-white/10 bg-linear-to-b from-brand-gold/10 via-white/0 to-transparent">
-                                <div className="absolute inset-0 pointer-events-none opacity-40">
-                                    <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-brand-gold/20 blur-3xl" />
-                                    <div className="absolute -bottom-16 -right-10 h-52 w-52 rounded-full bg-brand-green/20 blur-3xl" />
-                                </div>
+                        <div className="grid min-h-[520px] h-full items-stretch lg:grid-cols-[0.42fr_0.58fr]">
+                            <div className="relative h-full border-b border-white/10 bg-white/[0.025] p-7 lg:border-b-0 lg:p-9">
                                 <div className="relative z-10 h-full flex flex-col">
-                                    <div className="h-12 w-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-6">
+                                    <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
                                         <Image
                                             src="/images/logo-white.png"
                                             alt="Business logo"
@@ -253,20 +248,20 @@ export default function SalesModeLoginPage() {
                                             className="object-contain"
                                         />
                                     </div>
-                                    <p className="text-[10px] uppercase tracking-[0.2em] text-brand-gold/80 font-bold">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
                                         Active Business
                                     </p>
-                                    <h2 className="mt-2 text-2xl lg:text-3xl font-serif text-brand-cream leading-tight">
+                                    <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-tight text-white lg:text-3xl">
                                         {businessInfo?.businessName ?? "Business"}
                                     </h2>
-                                    <p className="text-sm text-brand-cream/60 mt-3">
+                                    <p className="mt-3 text-sm text-white/55">
                                         Shared device mode is active. Enter staff PIN to continue selling.
                                     </p>
                                     <div className="mt-auto pt-6">
                                         <button
                                             type="button"
                                             onClick={changeBusinessCode}
-                                            className="text-sm text-brand-gold hover:text-brand-gold/80 underline underline-offset-4"
+                                            className="text-sm text-emerald-300/75 underline underline-offset-4 hover:text-white"
                                         >
                                             Change business
                                         </button>
@@ -275,15 +270,15 @@ export default function SalesModeLoginPage() {
                             </div>
 
                             <div className="h-full p-8 lg:p-10 flex flex-col justify-center">
-                                <div className="text-center mb-6">
-                                    <h1 className="font-serif text-3xl text-brand-cream">Sales Mode</h1>
-                                    <p className="text-sm text-brand-cream/60 mt-2">Enter staff PIN</p>
+                                <div className="mb-6 text-center">
+                                    <h1 className="text-2xl font-semibold tracking-tight text-white">Sales Mode</h1>
+                                    <p className="mt-2 text-sm text-white/55">Enter staff PIN</p>
                                 </div>
                                 <div className="space-y-5">
                                     <button
                                         type="button"
                                         onClick={submitPin}
-                                        className="w-full h-12 rounded-xl bg-white/10 border border-white/20 text-brand-cream flex items-center justify-center"
+                                        className="flex h-12 w-full items-center justify-center rounded-2xl border border-white/12 bg-white/[0.04] text-white"
                                     >
                                         {renderPinSlots(safePin.length, SALES_PIN_LENGTH)}
                                     </button>
@@ -295,7 +290,7 @@ export default function SalesModeLoginPage() {
                                                 type="button"
                                                 variant="outline"
                                                 onClick={() => appendDigit(digit)}
-                                                className="h-14 rounded-xl border-white/20 text-brand-cream hover:bg-white/15 hover:text-brand-cream"
+                                                className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08] hover:text-white"
                                             >
                                                 {digit}
                                             </Button>
@@ -303,7 +298,7 @@ export default function SalesModeLoginPage() {
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            className="h-14 rounded-xl border-white/20 text-brand-cream hover:bg-white/15 hover:text-brand-cream"
+                                            className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white"
                                             disabled
                                         >
                                             .
@@ -312,7 +307,7 @@ export default function SalesModeLoginPage() {
                                             type="button"
                                             variant="outline"
                                             onClick={() => appendDigit("0")}
-                                            className="h-14 rounded-xl border-white/20 text-brand-cream hover:bg-white/15 hover:text-brand-cream"
+                                            className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08] hover:text-white"
                                         >
                                             0
                                         </Button>
@@ -320,12 +315,12 @@ export default function SalesModeLoginPage() {
                                             type="button"
                                             variant="outline"
                                             onClick={backspace}
-                                            className="h-14 rounded-xl border-white/20 text-brand-cream hover:bg-white/15 hover:text-brand-cream"
+                                            className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white"
                                         >
                                             <Delete className="w-4 h-4" />
                                         </Button>
                                     </div>
-                                    <p className="text-center text-[11px] text-brand-cream/60">
+                                    <p className="text-center text-[11px] text-white/50">
                                         Enter your access code to login.
                                     </p>
                                     {error && (
@@ -343,7 +338,7 @@ export default function SalesModeLoginPage() {
                     )}
 
                     <div className={step === "pin" ? "px-6 pb-6" : ""}>
-                        <Link href="/login" className="inline-flex items-center text-xs text-brand-gold/80 hover:text-brand-gold">
+                        <Link href="/login" className="inline-flex items-center text-xs text-emerald-300/75 hover:text-white">
                             <ArrowLeft className="w-3 h-3 mr-1.5" />
                             Back to Login
                         </Link>

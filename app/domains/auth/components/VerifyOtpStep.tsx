@@ -1,7 +1,6 @@
 "use client"
 
 import { MessageSquare, ArrowRight, Shield } from "lucide-react"
-import { motion } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { LoginBackButton } from "./LoginBackButton"
@@ -19,26 +18,19 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
     const otpChannel = state.isEmail ? "email" : "WhatsApp"
 
     return (
-        <motion.div
-            key="verify-otp"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-            <GlassCard className="p-8 border-brand-gold/20 bg-brand-gold/5 shadow-2xl relative overflow-visible">
+            <GlassCard className="relative overflow-visible rounded-[28px] border-white/10 bg-white/[0.045] p-5 shadow-sm">
                 <LoginBackButton onClick={actions.backToIdentifier} />
 
                 {showOtpForm ? (
                     <>
-                        <div className="text-center mb-8 pt-10">
-                            <div className="h-12 w-12 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold mx-auto mb-4 border border-brand-gold/20">
+                        <div className="mb-6 pt-10 text-center">
+                            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
                                 <Shield className="w-6 h-6" />
                             </div>
-                            <h2 className="font-serif text-2xl text-brand-gold mb-2">Verify Your Identity</h2>
-                            <p className="text-xs text-brand-cream/50 leading-relaxed">
+                            <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">Verify your identity</h2>
+                            <p className="text-xs leading-relaxed text-white/50">
                                 We sent a code to your{" "}
-                                <span className="text-brand-cream font-semibold">
+                                <span className="font-semibold text-white">
                                     {otpChannel}
                                 </span>
                                 . Enter it below to continue.
@@ -47,11 +39,11 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
 
                         <form onSubmit={actions.handleOtpSubmit} className="space-y-6">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold ml-1">
+                                <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55">
                                     Verification Code
                                 </label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-cream/60 group-focus-within:text-brand-gold transition-colors">
+                                    <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
                                         <MessageSquare className="w-4 h-4" />
                                     </div>
                                     <input
@@ -64,16 +56,16 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                                         value={state.otp}
                                         onChange={(e) => actions.setOtp(e.target.value.replace(/\D/g, ""))}
                                         onFocus={(e) => e.target.select()}
-                                        className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-4 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all text-center tracking-[0.5em] font-bold text-lg"
+                                        className="h-14 w-full rounded-2xl border border-white/12 bg-white/[0.04] py-0 pl-12 pr-4 text-center text-lg font-bold tracking-[0.5em] text-white outline-none placeholder:text-white/35 focus:border-white/25 focus:bg-white/[0.06]"
                                     />
                                 </div>
-                                <p className="text-[10px] text-brand-cream/40 text-center leading-relaxed">
+                                <p className="text-center text-[10px] leading-relaxed text-white/40">
                                     Didn&apos;t receive a code?{" "}
                                     <button
                                         type="button"
                                         disabled={state.isLoading}
                                         onClick={() => actions.resendOtp()}
-                                        className="text-brand-gold/70 hover:text-brand-gold underline underline-offset-2 transition-colors disabled:opacity-40"
+                                        className="text-emerald-300/70 underline underline-offset-2 hover:text-white disabled:opacity-40"
                                     >
                                         Resend
                                     </button>
@@ -83,53 +75,52 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                             <Button
                                 type="submit"
                                 disabled={state.isLoading || state.otp.length < 4}
-                                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base hover:bg-brand-gold/90 transition-all shadow-xl shadow-brand-gold/10 group"
+                                className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45 [&_svg]:text-white"
                             >
                                 {state.isLoading ? "Verifying..." : "Confirm & Continue"}
-                                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                                <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                         </form>
                     </>
                 ) : useEmailLink ? (
-                    <div className="text-center mb-6 pt-10">
-                        <div className="h-12 w-12 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold mx-auto mb-4 border border-brand-gold/20">
+                    <div className="mb-6 pt-10 text-center">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
                             <Shield className="w-6 h-6" />
                         </div>
-                        <h2 className="font-serif text-2xl text-brand-gold mb-2">Set your password</h2>
-                        <p className="text-sm text-brand-cream/70 leading-relaxed max-w-sm mx-auto">
+                        <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">Set your password</h2>
+                        <p className="mx-auto max-w-sm text-sm leading-relaxed text-white/60">
                             Use the verification link we sent to your email to set your password. Check your inbox (and spam), then open the link to continue.
                         </p>
                     </div>
                 ) : useWhatsappOtp ? (
-                    <div className="text-center mb-6 pt-10">
-                        <div className="h-12 w-12 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold mx-auto mb-4 border border-brand-gold/20">
+                    <div className="mb-6 pt-10 text-center">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
                             <Shield className="w-6 h-6" />
                         </div>
-                        <h2 className="font-serif text-2xl text-brand-gold mb-2">One quick step</h2>
-                        <p className="text-sm text-brand-cream/70 leading-relaxed max-w-sm mx-auto mb-6">
-                            Your number is already verified. Send any message to our WhatsApp bot to open a chat, then come back and tap <span className="text-brand-gold font-semibold">Try again</span> — we&apos;ll send your login code there.
+                        <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">One quick step</h2>
+                        <p className="mx-auto mb-6 max-w-sm text-sm leading-relaxed text-white/60">
+                            Your number is already verified. Send any message to our WhatsApp bot to open a chat, then come back and tap <span className="font-semibold text-emerald-300">Try again</span> — we&apos;ll send your login code there.
                         </p>
                         <Button
                             onClick={actions.backToIdentifier}
                             size="lg"
-                            className="w-full h-12 rounded-xl bg-brand-gold text-brand-deep font-semibold hover:bg-brand-gold/90"
+                            className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white"
                         >
                             Try again
                             <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                     </div>
                 ) : (
-                    <div className="text-center mb-6 pt-10">
-                        <div className="h-12 w-12 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold mx-auto mb-4 border border-brand-gold/20">
+                    <div className="mb-6 pt-10 text-center">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
                             <Shield className="w-6 h-6" />
                         </div>
-                        <h2 className="font-serif text-2xl text-brand-gold mb-2">Activate your number</h2>
-                        <p className="text-sm text-brand-cream/70 leading-relaxed max-w-sm mx-auto">
+                        <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">Activate your number</h2>
+                        <p className="mx-auto max-w-sm text-sm leading-relaxed text-white/60">
                             Send a WhatsApp message to our bot to activate your phone number. Once you&apos;ve done that, return here and log in with your phone number.
                         </p>
                     </div>
                 )}
             </GlassCard>
-        </motion.div>
     )
 }

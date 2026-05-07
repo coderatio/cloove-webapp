@@ -1,17 +1,24 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
-import { ChefHat, CookingPot, History, LayoutGrid, LogOut, Receipt, Table2 } from "lucide-react"
+import { useEffect, useState, type ComponentType, type ReactNode } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { ChefHat, CookingPot, History, LayoutGrid, LogOut, Receipt, RotateCcw, Table2, Users, Package } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { Button } from "@/app/components/ui/button"
 import { Switch } from "@/app/components/ui/switch"
 import { storage, STORAGE_KEYS } from "@/app/lib/storage"
 import { SalesOutboxBanner } from "./SalesOutboxBanner"
+import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 
-const tabs = [
+type SalesTab = {
+    href: string
+    label: string
+    icon: ComponentType<{ className?: string }>
+}
+
+const RESTAURANT_TABS: SalesTab[] = [
     { href: "/sales-mode/pos", label: "POS", icon: Receipt },
     { href: "/sales-mode/restaurant/live", label: "Live", icon: LayoutGrid },
     { href: "/sales-mode/restaurant/kitchen", label: "Kitchen", icon: ChefHat },
@@ -20,17 +27,31 @@ const tabs = [
     { href: "/sales-mode/history", label: "History", icon: History },
 ]
 
-export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
+const RETAIL_TABS: SalesTab[] = [
+    { href: "/sales-mode/pos", label: "POS", icon: Receipt },
+    { href: "/sales-mode/catalog", label: "Catalog", icon: Package },
+    { href: "/sales-mode/customers", label: "Customers", icon: Users },
+    { href: "/sales-mode/returns", label: "Returns", icon: RotateCcw },
+    { href: "/sales-mode/history", label: "History", icon: History },
+]
+
+const DEFAULT_TABS: SalesTab[] = [
+    { href: "/sales-mode/pos", label: "POS", icon: Receipt },
+    { href: "/sales-mode/history", label: "History", icon: History },
+]
+
+export function SalesModeNavBar({ children }: { children: ReactNode }) {
     const pathname = usePathname()
+    const router = useRouter()
+    const layoutPreset = useLayoutPresetId()
     const { user, salesModeLogout } = useAuth()
     const businessName = storage.getSalesModeBusinessName() ?? "Business"
-    const [autoPrint, setAutoPrint] = useState(true)
-
-    useEffect(() => {
-        const persisted = storage.get(STORAGE_KEYS.SALES_MODE_AUTO_PRINT)
-        if (persisted === "false") setAutoPrint(false)
-        if (persisted === "true") setAutoPrint(true)
-    }, [])
+    const [autoPrint, setAutoPrint] = useState(() => storage.get(STORAGE_KEYS.SALES_MODE_AUTO_PRINT) !== "false")
+    const visibleTabs = layoutPreset === "restaurant"
+        ? RESTAURANT_TABS
+        : layoutPreset === "retail"
+            ? RETAIL_TABS
+            : DEFAULT_TABS
 
     const toggleAutoPrint = (enabled: boolean) => {
         setAutoPrint(enabled)
@@ -39,6 +60,18 @@ export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
             new CustomEvent("sales-mode:set-auto-print", { detail: { enabled } })
         )
     }
+
+    useEffect(() => {
+        const isCurrentPathAllowed = visibleTabs.some((tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`))
+        if (isCurrentPathAllowed) return
+        if (pathname.startsWith("/sales-mode/restaurant")) {
+            router.replace("/sales-mode/pos")
+            return
+        }
+        if (pathname.startsWith("/sales-mode/catalog") || pathname.startsWith("/sales-mode/customers") || pathname.startsWith("/sales-mode/returns")) {
+            router.replace("/sales-mode/pos")
+        }
+    }, [pathname, router, visibleTabs])
 
     return (
         <div className="min-h-screen bg-brand-cream dark:bg-brand-deep flex flex-col">
@@ -86,9 +119,12 @@ export function SalesModeNavBar({ children }: { children: React.ReactNode }) {
                 <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
             </main>
 
-            <nav className="fixed bottom-0 inset-x-0 z-40 h-16 border-t border-black/10 dark:border-white/10 grid grid-cols-6 bg-background/95 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.08)]">
-                {tabs.map((tab) => {
-                    const active = pathname === tab.href
+            <nav
+                className="fixed bottom-0 inset-x-0 z-40 h-16 border-t border-black/10 dark:border-white/10 grid bg-background/95 backdrop-blur-xl shadow-[0_-8px_24px_rgba(0,0,0,0.08)]"
+                style={{ gridTemplateColumns: `repeat(${visibleTabs.length}, minmax(0, 1fr))` }}
+            >
+                {visibleTabs.map((tab) => {
+                    const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`)
                     const Icon = tab.icon
                     return (
                         <Link

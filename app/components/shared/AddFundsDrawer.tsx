@@ -559,7 +559,7 @@ function EmailMissingView({ onGoToProfile }: { onGoToProfile: () => void }) {
                             <div className={cn(
                                 "w-7 h-7 rounded-full flex items-center justify-center shrink-0 border text-xs font-bold",
                                 step.active
-                                    ? "bg-brand-gold border-brand-gold text-brand-deep"
+                                    ? "bg-brand-gold border-brand-gold text-white"
                                     : "bg-transparent border-brand-deep/10 dark:border-white/10 text-brand-accent/30 dark:text-brand-cream/30"
                             )}>
                                 {i + 1}

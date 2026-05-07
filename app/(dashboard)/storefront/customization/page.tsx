@@ -473,7 +473,7 @@ export default function StorefrontCustomization() {
 
             {/* Sticky save bar */}
             <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-brand-deep/10 dark:border-white/10 bg-white/95 dark:bg-brand-deep/95 backdrop-blur-md py-4 px-4 safe-area-pb">
-                <div className="max-w-5xl mx-auto flex justify-end">
+                <div className="max-w-6xl mx-auto flex justify-end">
                     <Button
                         onClick={() => {
                             const fullTheme: StorefrontThemeData = {

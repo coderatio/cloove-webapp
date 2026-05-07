@@ -69,41 +69,41 @@ export function PresetGate({
 
   return (
     <PageTransition>
-      <div className="max-w-5xl mx-auto space-y-6 pb-24">
+      <div className="max-w-6xl mx-auto space-y-6 pb-24">
         {featureLabel && (
           <div>
-            <p className="text-[10px] uppercase tracking-[0.25em] font-black text-brand-accent/40 dark:text-brand-cream/40 mb-1.5">
+            <p className="mb-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">
               {presetDef.title}
             </p>
-            <h1 className="text-3xl md:text-4xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
               {featureLabel}
             </h1>
-            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 mt-1.5 max-w-xl">
+            <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
               {featureLabel} are available when your workspace uses the {presetDef.title} layout.
             </p>
           </div>
         )}
 
         <GlassCard className="overflow-hidden border-brand-gold/15 bg-linear-to-br from-white/60 to-brand-gold/[0.04] dark:from-white/[0.06] dark:to-brand-gold/[0.03]">
-          <div className="border-b border-brand-deep/5 px-4 py-4 dark:border-white/10 md:px-6 md:py-5">
+          <div className="border-b border-border px-4 py-4 md:px-6 md:py-5">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold">
                 {resolvedIcon}
               </div>
               <div className="min-w-0">
-                <h2 className="font-serif text-lg text-brand-deep dark:text-brand-cream">
+                <h2 className="text-lg font-semibold text-foreground">
                   {resolvedTitle}
                 </h2>
-                <p className="mt-1 text-sm text-brand-deep/65 dark:text-brand-cream/65 max-w-xl">
+                <p className="mt-1 max-w-xl text-sm text-muted-foreground">
                   {resolvedDescription}
                 </p>
               </div>
             </div>
           </div>
           <div className="px-4 py-5 md:px-6 md:py-6 space-y-4">
-            <p className="text-sm text-brand-deep/80 dark:text-brand-cream/85 leading-relaxed">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Go to{" "}
-              <strong className="font-medium text-brand-deep dark:text-brand-cream">
+              <strong className="font-medium text-foreground">
                 Settings → Workspace
               </strong>{" "}
               and choose <strong>{presetDef.title}</strong>.

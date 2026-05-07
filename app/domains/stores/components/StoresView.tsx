@@ -107,7 +107,7 @@ export function StoresView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-10">
+            <div className="max-w-6xl mx-auto space-y-8 pb-10">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
@@ -342,7 +342,7 @@ export function StoresView() {
                                 <DrawerClose asChild>
                                     <Button variant="outline" className="flex-1 rounded-2xl h-14">Cancel</Button>
                                 </DrawerClose>
-                                <Button type="submit" form="store-form" className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
+                                <Button type="submit" form="store-form" className="h-14 flex-1 rounded-2xl font-semibold shadow-sm">
                                     {editingStore ? "Save Changes" : "Create Store"}
                                 </Button>
                             </div>

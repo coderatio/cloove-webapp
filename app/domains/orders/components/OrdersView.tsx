@@ -486,7 +486,7 @@ export function OrdersView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title={pageCopy.orders.title}
                     description={pageCopy.orders.descriptionWithStore(
@@ -495,7 +495,7 @@ export function OrdersView() {
                     extraActions={
                         layoutPreset === "school" ? (
                             <Button
-                                className="hidden md:flex rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
+                                className="hidden h-11 rounded-full bg-primary px-5 font-semibold text-white shadow-sm transition-colors hover:bg-primary/92 hover:text-white md:flex [&_svg]:text-white"
                                 onClick={() => setSchoolFeeDrawerOpen(true)}
                             >
                                 <ShoppingBag className="w-4 h-4 mr-2" />
@@ -504,7 +504,7 @@ export function OrdersView() {
                         ) : (
                             <Link href="/orders/sale" className="hidden md:block">
                                 <Button
-                                    className="rounded-full bg-brand-gold text-brand-deep hover:bg-brand-gold/90 hover:scale-105 transition-all shadow-xl h-12 px-7 font-serif font-semibold tracking-wide animate-pulse-glow"
+                                    className="h-11 rounded-full bg-primary px-5 font-semibold text-white shadow-sm transition-colors hover:bg-primary/92 hover:text-white [&_svg]:text-white"
                                 >
                                     <ShoppingBag className="w-4 h-4 mr-2" />
                                     {oui.recordSale}
@@ -754,18 +754,18 @@ export function OrdersView() {
                         {layoutPreset === "school" ? (
                             <Button
                                 size="icon"
-                                className="h-16 w-16 rounded-full bg-brand-gold text-brand-deep shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-brand-cream dark:border-brand-deep animate-pulse-glow"
+                                className="h-14 w-14 rounded-full bg-primary text-white shadow-lg transition-colors hover:bg-primary/92 hover:text-white active:bg-primary/90 [&_svg]:text-white"
                                 onClick={() => setSchoolFeeDrawerOpen(true)}
                             >
-                                <ShoppingBag className="w-7 h-7" />
+                                <ShoppingBag className="h-6 w-6" />
                             </Button>
                         ) : (
                             <Link href="/orders/sale">
                                 <Button
                                     size="icon"
-                                    className="h-16 w-16 rounded-full bg-brand-gold text-brand-deep shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-brand-cream dark:border-brand-deep animate-pulse-glow"
+                                    className="h-14 w-14 rounded-full bg-primary text-white shadow-lg transition-colors hover:bg-primary/92 hover:text-white active:bg-primary/90 [&_svg]:text-white"
                                 >
-                                    <ShoppingBag className="w-7 h-7" />
+                                    <ShoppingBag className="h-6 w-6" />
                                 </Button>
                             </Link>
                         )}

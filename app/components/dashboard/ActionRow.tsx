@@ -25,26 +25,26 @@ export function ActionRow({ items, className }: ActionRowProps) {
                 <div key={`${item.label}-${index}`}>
                     <Link href={item.href} className="block h-full">
                         <GlassCard className={cn(
-                            "rounded-[32px] p-4 md:p-5 h-full transition-all group",
-                            item.type === 'urgent' && "border-danger/20 hover:border-danger/40 dark:bg-red-500/5",
-                            item.type === 'warning' && "border-warning/20 hover:border-warning/40 dark:bg-amber-500/5",
-                            item.type === 'info' && "border-brand-deep/10 hover:border-brand-green/15",
+                            "h-full rounded-3xl p-4 md:p-5",
+                            item.type === 'urgent' && "border-red-200 dark:border-red-900/40",
+                            item.type === 'warning' && "border-amber-200 dark:border-amber-900/40",
+                            item.type === 'info' && "border-border",
                             className
                         )} hoverEffect>
                             <div className="flex items-start justify-between mb-3">
                                 <span className={cn(
-                                    "p-2 rounded-xl",
-                                    item.type === 'urgent' && "bg-danger/10 text-danger dark:bg-danger/20 dark:text-red-400",
-                                    item.type === 'warning' && "bg-warning/10 text-warning dark:bg-warning/20 dark:text-amber-400",
-                                    item.type === 'info' && "bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream"
+                                    "rounded-xl border p-2",
+                                    item.type === 'urgent' && "border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300",
+                                    item.type === 'warning' && "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300",
+                                    item.type === 'info' && "border-border bg-muted text-foreground"
                                 )}>
                                     {item.icon || <AlertCircle className="w-4 h-4" />}
                                 </span>
-                                <span className="font-serif text-2xl font-medium text-brand-deep dark:text-brand-cream">
+                                <span className="text-2xl font-semibold tracking-tight text-foreground">
                                     {item.count}
                                 </span>
                             </div>
-                            <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground dark:text-brand-cream/70 dark:group-hover:text-brand-cream transition-colors">
+                            <p className="text-sm font-medium text-muted-foreground">
                                 {item.label}
                             </p>
                         </GlassCard>

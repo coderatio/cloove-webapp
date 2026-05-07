@@ -485,7 +485,7 @@ export function FinanceView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-24">
+            <div className="max-w-6xl mx-auto space-y-8 pb-24">
                 <ManagementHeader
                     title={pageCopy.finance.title}
                     description={pageCopy.finance.descriptionWithStore(selectedStoreName)}
@@ -550,7 +550,7 @@ export function FinanceView() {
                                 </div>
 
                                 <div className="relative z-10 flex gap-4">
-                                    <Button onClick={() => setIsWithdrawOpen(true)} className="flex-1 h-12 sm:h-16 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
+                                    <Button onClick={() => setIsWithdrawOpen(true)} className="flex-1 h-12 sm:h-16 rounded-2xl bg-brand-deep text-brand-cream dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
                                         <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
                                         Withdraw
                                     </Button>

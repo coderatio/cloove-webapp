@@ -65,13 +65,13 @@ export function RecordRepaymentDrawer({
                 <DrawerBody>
                     <form id="record-repayment-form" onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-6">
                         {debt && (
-                            <div className="p-4 rounded-2xl bg-brand-deep/2 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 space-y-2">
-                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                            <div className="space-y-2 rounded-2xl border border-border bg-muted/30 p-4">
+                                <p className="text-sm font-medium text-foreground">
                                     {debt.customerName}
                                 </p>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs text-brand-accent/40 dark:text-brand-cream/40">Outstanding Balance</span>
-                                    <span className="font-serif font-medium text-rose-500">
+                                    <span className="text-xs text-muted-foreground">Outstanding Balance</span>
+                                    <span className="font-medium text-rose-500">
                                         <CurrencyText value={formatCurrency(debt.remainingAmount, { currency: currencyCode })} />
                                     </span>
                                 </div>
@@ -79,7 +79,7 @@ export function RecordRepaymentDrawer({
                         )}
 
                         <div className="space-y-3">
-                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1 block">
+                            <label className="ml-1 block text-xs font-bold uppercase tracking-widest text-muted-foreground">
                                 Payment Amount
                             </label>
                             <MoneyInput
@@ -92,7 +92,7 @@ export function RecordRepaymentDrawer({
                                 className="h-14 rounded-2xl"
                                 required
                             />
-                            <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 ml-1">
+                            <p className="ml-1 text-xs text-muted-foreground">
                                 Maximum: <CurrencyText value={formatCurrency(maxAmount, { currency: currencyCode })} />
                             </p>
                         </div>
@@ -105,7 +105,7 @@ export function RecordRepaymentDrawer({
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="flex-1 rounded-2xl h-14 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
+                                className="h-14 flex-1 rounded-2xl"
                             >
                                 Cancel
                             </Button>
@@ -114,7 +114,7 @@ export function RecordRepaymentDrawer({
                             type="submit"
                             form="record-repayment-form"
                             disabled={isSubmitting || amount <= 0}
-                            className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl"
+                            className="h-14 flex-1 rounded-2xl font-semibold shadow-sm"
                         >
                             {isSubmitting ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

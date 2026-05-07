@@ -50,7 +50,7 @@ export function SchoolDashboardModule({ pageCopy }: { pageCopy: PresetPageCopy }
                 ]}
             />
             <div className="mt-4 rounded-xl border border-brand-gold/20 bg-brand-gold/5 px-3 py-3 dark:bg-brand-gold/10">
-                <p className="text-sm text-brand-deep/85 dark:text-brand-cream/90">
+                <p className="text-sm text-foreground">
                     <strong>Term rhythm:</strong> use <strong>Fees & sales</strong> for payments and{" "}
                     <strong>Students & parents</strong> as your single directory—filters and search help you chase
                     balances without mixing classes.

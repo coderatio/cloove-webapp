@@ -132,7 +132,7 @@ export function DateRangeFilter({
                         className={cn(
                             iconOnly
                                 ? "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-brand-accent/15 bg-white/70 p-0 dark:border-white/15 dark:bg-white/10 hover:bg-white dark:hover:bg-white/15"
-                                : "w-auto md:min-w-[260px] justify-start text-left font-medium rounded-2xl h-12 border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300 shadow-sm hover:shadow-md text-brand-deep/80 dark:text-brand-cream/80 px-3 md:px-4 text-[10px] md:text-sm",
+                                : "w-auto md:min-w-[260px] justify-start rounded-2xl h-12 border-brand-accent/10 bg-white/50 px-3 text-left text-[10px] font-medium text-foreground shadow-sm transition-all duration-300 hover:border-brand-accent/20 hover:bg-white/80 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:hover:border-white/20 dark:hover:bg-white/10 md:px-4 md:text-sm",
                             !date && !iconOnly && "text-muted-foreground",
                             buttonClassName
                         )}
@@ -140,24 +140,24 @@ export function DateRangeFilter({
                         <CalendarIcon
                             className={cn(
                                 iconOnly
-                                    ? "h-4 w-4 text-brand-deep/70 dark:text-brand-cream/80"
-                                    : "mr-1.5 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4 text-brand-accent/40"
+                                    ? "h-4 w-4 text-foreground/70"
+                                    : "mr-1.5 h-3.5 w-3.5 text-muted-foreground md:mr-2 md:h-4 md:w-4"
                             )}
                         />
                         {!iconOnly &&
                             (date?.from ? (
                                 date.to ? (
-                                    <span className="text-brand-deep dark:text-brand-cream">
+                                    <span className="text-foreground">
                                         {format(date.from, "LLL dd, y")} -{" "}
                                         {format(date.to, "LLL dd, y")}
                                     </span>
                                 ) : (
-                                    <span className="text-brand-deep dark:text-brand-cream">
+                                    <span className="text-foreground">
                                         {format(date.from, "LLL dd, y")}
                                     </span>
                                 )
                             ) : (
-                                <span className="text-brand-accent/60">Pick a date range</span>
+                                <span className="text-muted-foreground">Pick a date range</span>
                             ))}
                     </Button>
                 </PopoverTrigger>

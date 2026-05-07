@@ -1,0 +1,1016 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Input } from "@/app/components/ui/input"
+import { Switch } from "@/app/components/ui/switch"
+import { Button } from "@/app/components/ui/button"
+import { Textarea } from "@/app/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select"
+import {
+  Loader2,
+  Phone,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  XCircle,
+  Unplug,
+  RotateCcw,
+  MessageSquare,
+  Bot,
+  Shield,
+  Briefcase,
+  PackageCheck,
+  RefreshCw,
+} from "lucide-react"
+import {
+  useWhatsAppNumbers,
+  useWhatsAppNumberStatus,
+  useDisconnectWhatsAppNumber,
+  useRestoreWhatsAppNumber,
+  useGoSettings,
+  useUpdateGoSettings,
+  useGenerateGoSettingsContent,
+  useWhatsAppCatalogStatus,
+  useSyncWhatsAppCatalog,
+  type WhatsAppNumber,
+  type WhatsAppCatalogStatus,
+  type GoSettings,
+  type GoSettingsContentField,
+  WhatsAppNumberStatusValue,
+  WhatsAppCatalogSyncStatus,
+} from "../hooks/useWhatsAppSettings"
+import { MarkdownEditor } from "@/app/components/ui/markdown-editor"
+import { EmbeddedSignupButton } from "./EmbeddedSignupButton"
+import { AgentProfileSection } from "./AgentProfileSection"
+
+interface WhatsAppSettingsProps {
+  onDirtyChange?: (isDirty: boolean) => void
+  onSavingChange?: (isSaving: boolean) => void
+  saveTrigger?: number
+}
+
+const STATUS_CONFIG: Record<WhatsAppNumberStatusValue, { label: string; icon: React.ElementType; color: string }> = {
+  [WhatsAppNumberStatusValue.ACTIVE]: { label: "Connected", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400" },
+  [WhatsAppNumberStatusValue.PENDING]: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
+  [WhatsAppNumberStatusValue.VERIFYING]: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
+  [WhatsAppNumberStatusValue.FAILED]: { label: "Failed", icon: XCircle, color: "text-red-600 dark:text-red-400" },
+  [WhatsAppNumberStatusValue.SUSPENDED]: { label: "Disconnected", icon: AlertCircle, color: "text-slate-500 dark:text-slate-300" },
+}
+
+const TONE_OPTIONS = [
+  { value: "professional", label: "Professional" },
+  { value: "friendly", label: "Friendly" },
+  { value: "formal", label: "Formal" },
+  { value: "casual", label: "Casual" },
+]
+
+export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }: WhatsAppSettingsProps) {
+  const { data: numbers, isLoading: numbersLoading } = useWhatsAppNumbers()
+  const { data: goSettingsData, isLoading: settingsLoading } = useGoSettings()
+  const updateGoSettings = useUpdateGoSettings()
+  const generateContent = useGenerateGoSettingsContent()
+  const disconnectNumber = useDisconnectWhatsAppNumber()
+
+  const restoreNumber = useRestoreWhatsAppNumber()
+
+  const activeNumber = (numbers as WhatsAppNumber[] | undefined)?.find(
+    (n) =>
+      n.status === WhatsAppNumberStatusValue.ACTIVE ||
+      n.status === WhatsAppNumberStatusValue.PENDING ||
+      n.status === WhatsAppNumberStatusValue.VERIFYING
+  )
+
+  const suspendedNumber = !activeNumber
+    ? (numbers as WhatsAppNumber[] | undefined)?.find(
+        (n) => n.status === WhatsAppNumberStatusValue.SUSPENDED
+      )
+    : undefined
+
+  const isPending =
+    activeNumber?.status === WhatsAppNumberStatusValue.PENDING ||
+    activeNumber?.status === WhatsAppNumberStatusValue.VERIFYING
+  const { data: catalogStatus } = useWhatsAppCatalogStatus(activeNumber ?? null)
+  const syncCatalog = useSyncWhatsAppCatalog()
+  const effectiveCatalogStatus =
+    catalogStatus ??
+    (activeNumber?.catalog_bootstrap_status
+      ? {
+          id: "catalog-bootstrap",
+          business_id: activeNumber.business_id,
+          whatsapp_number_id: activeNumber.id,
+          waba_id: activeNumber.waba_id ?? "",
+          meta_catalog_id: "",
+          sync_status: activeNumber.catalog_bootstrap_status,
+          last_synced_at: null,
+          last_error: activeNumber.catalog_bootstrap_error,
+          synced_products_count: 0,
+          products_count: 0,
+        }
+      : null)
+
+  useWhatsAppNumberStatus(activeNumber?.id ?? null, isPending)
+
+  const [localSettings, setLocalSettings] = useState<Partial<GoSettings>>({
+    display_name: "",
+    welcome_message: "",
+    fallback_message: "",
+    tone: "professional",
+    ai_enabled: true,
+    qr_ordering_enabled: false,
+    human_handoff_enabled: false,
+    show_powered_by_cloove: true,
+    ai_instructions: "",
+    business_info: "",
+    faq: "",
+    restricted_topics: "",
+    operating_hours: "",
+    delivery_info: "",
+    return_policy: "",
+    agent_profile: "commerce",
+    capabilities_overrides: null,
+  })
+
+  const [activeSettingsTab, setActiveSettingsTab] = useState<"general" | "ai">("general")
+
+  const [isDirty, setIsDirty] = useState(false)
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
+
+  useEffect(() => {
+    onSavingChange?.(updateGoSettings.isPending)
+  }, [updateGoSettings.isPending, onSavingChange])
+
+  useEffect(() => {
+    if (goSettingsData) {
+      const s = goSettingsData as GoSettings
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalSettings({
+        display_name: s.display_name ?? "",
+        welcome_message: s.welcome_message ?? "",
+        fallback_message: s.fallback_message ?? "",
+        tone: s.tone ?? "professional",
+        ai_enabled: s.ai_enabled ?? true,
+        qr_ordering_enabled: s.qr_ordering_enabled ?? false,
+        human_handoff_enabled: s.human_handoff_enabled ?? false,
+        show_powered_by_cloove: s.show_powered_by_cloove ?? true,
+        ai_instructions: s.ai_instructions ?? "",
+        business_info: s.business_info ?? "",
+        faq: s.faq ?? "",
+        restricted_topics: s.restricted_topics ?? "",
+        operating_hours: s.operating_hours ?? "",
+        delivery_info: s.delivery_info ?? "",
+        return_policy: s.return_policy ?? "",
+        agent_profile: s.agent_profile ?? "commerce",
+        capabilities_overrides: s.capabilities_overrides ?? null,
+      })
+      setIsDirty(false)
+      onDirtyChange?.(false)
+    }
+  }, [goSettingsData, onDirtyChange])
+
+  useEffect(() => {
+    if (saveTrigger && saveTrigger > 0 && isDirty) {
+      const { capabilities_overrides, ...rest } = localSettings
+      updateGoSettings.mutate({
+        ...rest,
+        capabilities: capabilities_overrides ?? null,
+      })
+    }
+  }, [saveTrigger])
+
+  const handleChange = (key: keyof GoSettings, value: unknown) => {
+    setLocalSettings((prev) => ({ ...prev, [key]: value }))
+    setIsDirty(true)
+    onDirtyChange?.(true)
+  }
+
+  const handleGenerateContent = async (
+    field: GoSettingsContentField,
+    prompt: string,
+    currentValue: string
+  ) => {
+    const result = await generateContent.mutateAsync({
+      field,
+      prompt,
+      current_value: currentValue,
+      store_id: localSettings.store_id ?? null,
+    })
+    return result.content
+  }
+
+  const handleDisconnect = () => {
+    if (!activeNumber) return
+    disconnectNumber.mutate(activeNumber.id)
+    setShowDisconnectConfirm(false)
+  }
+
+  if (numbersLoading || settingsLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-4xl space-y-8 pb-16">
+      {/* Connection Status Section */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+          Connection Status
+        </h2>
+
+        {!activeNumber && !suspendedNumber ? (
+          <SettingsCard>
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                    <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                      Connect WhatsApp
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-300">
+                      Sign in with Meta and choose the business number Cloove should manage.
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-300">
+                  Cloove manages your WhatsApp catalog from your products.
+                </p>
+              </div>
+              <EmbeddedSignupButton />
+            </div>
+          </SettingsCard>
+        ) : activeNumber ? (
+          <SettingsCard>
+            <ConnectedNumberCard
+              number={activeNumber}
+              isPending={isPending}
+              showDisconnectConfirm={showDisconnectConfirm}
+              onDisconnectClick={() => setShowDisconnectConfirm(true)}
+              onDisconnectConfirm={handleDisconnect}
+              onDisconnectCancel={() => setShowDisconnectConfirm(false)}
+              isDisconnecting={disconnectNumber.isPending}
+            />
+          </SettingsCard>
+        ) : suspendedNumber ? (
+          <SettingsCard>
+            <SuspendedNumberCard
+              number={suspendedNumber}
+              onRestore={() => restoreNumber.mutate(suspendedNumber.id)}
+              isRestoring={restoreNumber.isPending}
+            />
+          </SettingsCard>
+        ) : null}
+      </section>
+
+      {activeNumber && (
+        <WhatsAppCatalogPanel
+          catalog={effectiveCatalogStatus}
+          number={activeNumber}
+          isSyncing={syncCatalog.isPending}
+          onSync={() => syncCatalog.mutate()}
+        />
+      )}
+
+      {/* Verification logs — show when not active */}
+      {activeNumber && activeNumber.status !== WhatsAppNumberStatusValue.ACTIVE && activeNumber.verification_logs.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+            Verification Log
+          </h2>
+          <SettingsCard className="p-0">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
+              {[...activeNumber.verification_logs].reverse().map((log, i) => (
+                <div key={i} className="flex gap-4 p-4 text-sm">
+                  <span className="shrink-0 text-slate-500 dark:text-slate-300 tabular-nums w-32">
+                    {new Date(log.timestamp).toLocaleString(undefined, {
+                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    })}
+                  </span>
+                  <span
+                    className={`shrink-0 w-24 font-medium ${log.outcome === "active"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : log.outcome === "failed" || log.outcome === "unreachable"
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-amber-600 dark:text-amber-400"
+                      }`}
+                  >
+                    {log.outcome}
+                  </span>
+                  <span className="text-slate-700 dark:text-slate-300">
+                    {log.message}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </SettingsCard>
+        </section>
+      )}
+
+      {/* Settings tabs — only show when number is active */}
+      {activeNumber && activeNumber.status === WhatsAppNumberStatusValue.ACTIVE && (
+        <div className="pt-4">
+          <div className="flex gap-6 border-b border-slate-200 dark:border-slate-800">
+            <button
+              onClick={() => setActiveSettingsTab("general")}
+              className={`pb-3 text-sm font-medium transition-colors relative ${activeSettingsTab === "general"
+                ? "text-brand-deep dark:text-brand-cream"
+                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+            >
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                General Settings
+              </div>
+              {activeSettingsTab === "general" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveSettingsTab("ai")}
+              className={`pb-3 text-sm font-medium transition-colors relative ${activeSettingsTab === "ai"
+                ? "text-brand-deep dark:text-brand-cream"
+                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+            >
+              <div className="flex items-center gap-2">
+                <Bot className="w-4 h-4" />
+                AI Assistant
+              </div>
+              {activeSettingsTab === "ai" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
+              )}
+            </button>
+          </div>
+
+          <div className="mt-8">
+            {activeSettingsTab === "general" && (
+              <div className="space-y-8">
+                <section className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-slate-400" />
+                    Branding & Messaging
+                  </h3>
+                  <SettingsCard className="space-y-6">
+                    <div className="space-y-2 max-w-xl">
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Display Name
+                      </label>
+                      <Input
+                        value={activeNumber?.display_name ?? ""}
+                        disabled
+                        className="bg-slate-50 dark:bg-slate-900/50"
+                      />
+                      <p className="text-sm text-slate-500 dark:text-slate-300">
+                        Managed on Meta. Update your verified name in your WhatsApp Business settings.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 max-w-xl">
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Conversation Tone
+                      </label>
+                      <Select
+                        value={localSettings.tone ?? "professional"}
+                        onValueChange={(v) => handleChange("tone", v)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TONE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 space-y-6">
+                      <SettingTextarea
+                        label="Welcome Message"
+                        placeholder="Sent to customers on their first message"
+                        value={localSettings.welcome_message ?? ""}
+                        onChange={(v) => handleChange("welcome_message", v)}
+                        rows={3}
+                        markdown
+                        aiField="welcome_message"
+                        onGenerateAI={handleGenerateContent}
+                      />
+
+                      <SettingTextarea
+                        label="Fallback Message"
+                        placeholder="Sent when AI is disabled or unavailable"
+                        value={localSettings.fallback_message ?? ""}
+                        onChange={(v) => handleChange("fallback_message", v)}
+                        rows={2}
+                        markdown
+                        aiField="fallback_message"
+                        onGenerateAI={handleGenerateContent}
+                      />
+                    </div>
+                  </SettingsCard>
+                </section>
+
+                <AgentProfileSection
+                  profile={localSettings.agent_profile ?? "commerce"}
+                  overrides={localSettings.capabilities_overrides ?? null}
+                  onProfileChange={(profile) => handleChange("agent_profile", profile)}
+                  onOverridesChange={(overrides) =>
+                    handleChange("capabilities_overrides", overrides)
+                  }
+                />
+
+                <section className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-slate-400" />
+                    Features
+                  </h3>
+                  <SettingsCard className="space-y-0 divide-y divide-slate-100 dark:divide-slate-800/60 p-0">
+                    <div className="px-3 py-3.5 sm:px-5 sm:py-5">
+                      <SettingToggle
+                        label="AI Assistant"
+                        description="Let AI handle customer conversations automatically."
+                        checked={localSettings.ai_enabled ?? true}
+                        onChange={(v) => handleChange("ai_enabled", v)}
+                      />
+                    </div>
+                    <div className="px-3 py-3.5 sm:px-5 sm:py-5">
+                      <SettingToggle
+                        label="QR Code Ordering"
+                        description="Allow customers to scan a QR code to start ordering."
+                        checked={localSettings.qr_ordering_enabled ?? false}
+                        onChange={(v) => handleChange("qr_ordering_enabled", v)}
+                      />
+                    </div>
+                    <div className="px-3 py-3.5 sm:px-5 sm:py-5">
+                      <SettingToggle
+                        label="Human Handoff"
+                        description="Transfer conversations to a human when AI cannot help."
+                        checked={localSettings.human_handoff_enabled ?? false}
+                        onChange={(v) => handleChange("human_handoff_enabled", v)}
+                      />
+                    </div>
+                    <div className="px-3 py-3.5 sm:px-5 sm:py-5">
+                      <SettingToggle
+                        label='Show "Powered by Cloove"'
+                        description="Display Cloove branding in AI responses."
+                        checked={localSettings.show_powered_by_cloove ?? true}
+                        onChange={(v) => handleChange("show_powered_by_cloove", v)}
+                      />
+                    </div>
+                  </SettingsCard>
+                </section>
+              </div>
+            )}
+
+            {activeSettingsTab === "ai" && (
+              <div className="space-y-8">
+                <section className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                    AI Personality
+                  </h3>
+                  <SettingsCard className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    <div className="pb-6">
+                      <SettingTextarea
+                        label="Custom Instructions"
+                        placeholder="Tell the AI how to behave. E.g. 'Always greet customers by name', 'Recommend our combo deals', 'Upsell drinks with food orders'..."
+                        value={localSettings.ai_instructions ?? ""}
+                        onChange={(v) => handleChange("ai_instructions", v)}
+                        rows={4}
+                        hint="These instructions shape how your AI assistant interacts with customers."
+                        markdown
+                        aiField="ai_instructions"
+                        onGenerateAI={handleGenerateContent}
+                      />
+                    </div>
+
+                    <div className="pt-6">
+                      <SettingTextarea
+                        label="About Your Business"
+                        placeholder="Describe what your business does, your story, what makes you unique. The AI will use this to answer customer questions."
+                        value={localSettings.business_info ?? ""}
+                        onChange={(v) => handleChange("business_info", v)}
+                        rows={4}
+                        markdown
+                        aiField="business_info"
+                        onGenerateAI={handleGenerateContent}
+                      />
+                    </div>
+                  </SettingsCard>
+                </section>
+
+                <section className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                    Business Knowledge
+                  </h3>
+                  <SettingsCard className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    <div className="pb-6">
+                      <SettingTextarea
+                        label="Operating Hours"
+                        placeholder="E.g. 'Monday–Friday: 9am–6pm, Saturday: 10am–4pm, Sunday: Closed'"
+                        value={localSettings.operating_hours ?? ""}
+                        onChange={(v) => handleChange("operating_hours", v)}
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="py-6">
+                      <SettingTextarea
+                        label="Delivery Information"
+                        placeholder="Delivery areas, fees, estimated times, minimum orders..."
+                        value={localSettings.delivery_info ?? ""}
+                        onChange={(v) => handleChange("delivery_info", v)}
+                        rows={3}
+                        markdown
+                        aiField="delivery_info"
+                        onGenerateAI={handleGenerateContent}
+                      />
+                    </div>
+
+                    <div className="py-6">
+                      <SettingTextarea
+                        label="Return & Refund Policy"
+                        placeholder="Your return window, conditions, refund process..."
+                        value={localSettings.return_policy ?? ""}
+                        onChange={(v) => handleChange("return_policy", v)}
+                        rows={3}
+                        markdown
+                        aiField="return_policy"
+                        onGenerateAI={handleGenerateContent}
+                      />
+                    </div>
+
+                    <div className="pt-6">
+                      <SettingTextarea
+                        label="Frequently Asked Questions"
+                        placeholder="Q: Do you offer gift wrapping? A: Yes, we offer complimentary gift wrapping on all orders."
+                        value={localSettings.faq ?? ""}
+                        onChange={(v) => handleChange("faq", v)}
+                        rows={6}
+                        hint="Write Q&A pairs so the AI can answer common questions accurately."
+                        markdown
+                        aiField="faq"
+                        onGenerateAI={handleGenerateContent}
+                      />
+                    </div>
+                  </SettingsCard>
+                </section>
+
+                <section className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                    Restrictions
+                  </h3>
+                  <SettingsCard>
+                    <SettingTextarea
+                      label="Restricted Topics"
+                      placeholder="Topics the AI should never discuss. E.g. 'competitor pricing', 'internal staff issues', 'wholesale rates'..."
+                      value={localSettings.restricted_topics ?? ""}
+                      onChange={(v) => handleChange("restricted_topics", v)}
+                      rows={3}
+                      hint="The AI will politely decline and redirect if a customer asks about these."
+                      markdown
+                      aiField="restricted_topics"
+                      onGenerateAI={handleGenerateContent}
+                    />
+                  </SettingsCard>
+                </section>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SettingsCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`bg-white dark:bg-slate-950/60 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 ${className}`}>
+      {children}
+    </div>
+  )
+}
+
+function WhatsAppCatalogPanel({
+  catalog,
+  number,
+  isSyncing,
+  onSync,
+}: {
+  catalog: WhatsAppCatalogStatus | null
+  number: WhatsAppNumber
+  isSyncing: boolean
+  onSync: () => void
+}) {
+  const status = catalog?.sync_status ?? WhatsAppCatalogSyncStatus.PENDING
+  const isFailed = status === WhatsAppCatalogSyncStatus.FAILED
+  const isProvisioning =
+    number.status === WhatsAppNumberStatusValue.PENDING ||
+    number.status === WhatsAppNumberStatusValue.VERIFYING
+  const isRunning =
+    isSyncing ||
+    status === WhatsAppCatalogSyncStatus.SYNCING ||
+    (status === WhatsAppCatalogSyncStatus.PENDING && isProvisioning)
+  const lastSynced = catalog?.last_synced_at
+    ? new Date(catalog.last_synced_at).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Not synced yet"
+  const summary = catalog
+    ? `${catalog.synced_products_count} of ${catalog.products_count} products synced. Last sync: ${lastSynced}.`
+    : isProvisioning
+      ? "Catalog setup will begin after Meta finishes provisioning your number."
+      : "Catalog setup is ready. Start sync once Meta permissions are in place."
+  const errorMessage =
+    (isFailed && catalog?.last_error) || number.catalog_bootstrap_error
+  const canSync = !isProvisioning && !isRunning
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+        WhatsApp Catalog
+      </h2>
+      <SettingsCard>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+              <PackageCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="min-w-0 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">
+                    Cloove Product Catalog
+                  </p>
+                  <CatalogStatusBadge status={status} />
+                </div>
+                <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
+                  {summary}
+                </p>
+                {errorMessage ? (
+                  <div className="rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+                    {errorMessage}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant={isFailed ? "default" : "outline"}
+            onClick={onSync}
+            disabled={!canSync}
+            className="shrink-0 rounded-full px-5"
+          >
+            {isRunning ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {isFailed ? "Retry" : "Sync Now"}
+          </Button>
+        </div>
+      </SettingsCard>
+    </section>
+  )
+}
+
+function CatalogStatusBadge({ status }: { status: WhatsAppCatalogStatus["sync_status"] }) {
+  const styles: Record<WhatsAppCatalogSyncStatus, string> = {
+    [WhatsAppCatalogSyncStatus.PENDING]: "text-amber-700 dark:text-amber-300",
+    [WhatsAppCatalogSyncStatus.SYNCING]: "text-blue-700 dark:text-blue-300",
+    [WhatsAppCatalogSyncStatus.SYNCED]: "text-emerald-700 dark:text-emerald-300",
+    [WhatsAppCatalogSyncStatus.FAILED]: "text-red-700 dark:text-red-300",
+  }
+  const labels: Record<WhatsAppCatalogSyncStatus, string> = {
+    [WhatsAppCatalogSyncStatus.PENDING]: "Pending",
+    [WhatsAppCatalogSyncStatus.SYNCING]: "Syncing",
+    [WhatsAppCatalogSyncStatus.SYNCED]: "Synced",
+    [WhatsAppCatalogSyncStatus.FAILED]: "Failed",
+  }
+  const icons: Record<WhatsAppCatalogSyncStatus, React.ElementType> = {
+    [WhatsAppCatalogSyncStatus.PENDING]: Clock,
+    [WhatsAppCatalogSyncStatus.SYNCING]: Loader2,
+    [WhatsAppCatalogSyncStatus.SYNCED]: CheckCircle2,
+    [WhatsAppCatalogSyncStatus.FAILED]: AlertCircle,
+  }
+  const Icon = icons[status]
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${styles[status]}`}>
+      <Icon className={`h-3.5 w-3.5 ${status === WhatsAppCatalogSyncStatus.SYNCING ? "animate-spin" : ""}`} />
+      {labels[status]}
+    </span>
+  )
+}
+
+function SettingToggle({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string
+  description: string
+  checked: boolean
+  onChange: (value: boolean) => void
+}) {
+  return (
+    <div className="flex items-start justify-between gap-2.5 sm:items-center sm:gap-5">
+      <div className="min-w-0 flex-1 space-y-0.5 pr-2">
+        <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{label}</span>
+        <p className="text-sm leading-snug text-slate-500 dark:text-slate-300">{description}</p>
+      </div>
+      <Switch checked={checked} onCheckedChange={onChange} className="shrink-0" />
+    </div>
+  )
+}
+
+function ConnectedNumberCard({
+  number,
+  isPending,
+  showDisconnectConfirm,
+  onDisconnectClick,
+  onDisconnectConfirm,
+  onDisconnectCancel,
+  isDisconnecting,
+}: {
+  number: WhatsAppNumber
+  isPending: boolean
+  showDisconnectConfirm: boolean
+  onDisconnectClick: () => void
+  onDisconnectConfirm: () => void
+  onDisconnectCancel: () => void
+  isDisconnecting: boolean
+}) {
+  const config = STATUS_CONFIG[number.status] ?? STATUS_CONFIG[WhatsAppNumberStatusValue.FAILED]
+  const StatusIcon = config.icon
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-col gap-4">
+        <div className="min-w-0 flex items-start gap-3.5">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+            <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <div className="min-w-0 space-y-1">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
+                {number.phone_number}
+              </p>
+              <span
+                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                aria-label={config.label}
+                title={config.label}
+              >
+                {isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <StatusIcon className="h-3 w-3" />
+                )}
+              </span>
+            </div>
+            {number.display_name && (
+              <p className="truncate text-sm text-slate-500 dark:text-slate-300">
+                {number.display_name}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x sm:divide-slate-200/80 dark:sm:divide-slate-800">
+          <StatusMetric
+            label="Connection"
+            value={isPending ? "Waiting on Meta" : "Managed by Cloove"}
+          />
+          <StatusMetric
+            label="Catalog"
+            value={
+              number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
+                ? "Needs attention"
+                : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.SYNCED
+                  ? "Synced"
+                  : "Provisioning"
+            }
+          />
+        </div>
+      </div>
+
+      {isPending && (
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+          We’re waiting for Meta to finish provisioning this number. Catalog sync stays paused until that completes.
+        </div>
+      )}
+
+      {number.status === WhatsAppNumberStatusValue.FAILED && (
+        <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+          <p className="text-sm leading-6 text-red-800 dark:text-red-300">
+            Verification failed. Check the logs below and reconnect with Meta after fixing the issue.
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800/80">
+        <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
+          Use a fresh Meta connection if you need to switch numbers or grant new permissions.
+        </p>
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
+          <EmbeddedSignupButton
+            label="Connect Again"
+            className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            icon={RefreshCw}
+          />
+          {number.status !== WhatsAppNumberStatusValue.PENDING &&
+          number.status !== WhatsAppNumberStatusValue.VERIFYING &&
+          !showDisconnectConfirm ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDisconnectClick}
+              className="h-10 w-full rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto dark:text-red-400 dark:hover:bg-red-500/10"
+            >
+              <Unplug className="mr-2 h-4 w-4" />
+              Disconnect
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      {number.status !== WhatsAppNumberStatusValue.PENDING &&
+      number.status !== WhatsAppNumberStatusValue.VERIFYING &&
+      showDisconnectConfirm && (
+        <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+            <p className="text-sm leading-6 text-red-800 dark:text-red-300">
+              Disconnect this number only if you want Cloove to stop handling messages for it.
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onDisconnectCancel}
+              className="w-full rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={onDisconnectConfirm}
+              disabled={isDisconnecting}
+              className="w-full rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 sm:w-auto"
+            >
+              {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StatusMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="px-4 py-3">
+      <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+        {value}
+      </p>
+    </div>
+  )
+}
+
+function SuspendedNumberCard({
+  number,
+  onRestore,
+  isRestoring,
+}: {
+  number: WhatsAppNumber
+  onRestore: () => void
+  isRestoring: boolean
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
+            <Phone className="w-5 h-5 text-slate-400" />
+          </div>
+          <div>
+            <p className="font-semibold text-slate-900 dark:text-slate-100 text-lg">
+              {number.phone_number}
+            </p>
+            {number.display_name && (
+              <p className="text-sm text-slate-500 dark:text-slate-300">
+                {number.display_name}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-sm font-medium">Disconnected</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 mt-4">
+        <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+        <p className="text-sm text-amber-800 dark:text-amber-300 flex-1">
+          This number is disconnected. Reconnect to resume AI messaging.
+        </p>
+        <Button
+          onClick={onRestore}
+          disabled={isRestoring}
+          className="bg-brand-deep text-brand-cream hover:bg-brand-deep/90 shadow-sm shrink-0"
+        >
+          {isRestoring ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reconnect
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function SettingTextarea({
+  label,
+  placeholder,
+  value,
+  onChange,
+  rows = 3,
+  hint,
+  markdown = false,
+  aiField,
+  onGenerateAI,
+}: {
+  label: string
+  placeholder: string
+  value: string
+  onChange: (value: string) => void
+  rows?: number
+  hint?: string
+  markdown?: boolean
+  aiField?: GoSettingsContentField
+  onGenerateAI?: (
+    field: GoSettingsContentField,
+    prompt: string,
+    currentValue: string
+  ) => Promise<string>
+}) {
+  return (
+    <div className="space-y-2 max-w-3xl">
+      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+        {label}
+      </label>
+      {markdown ? (
+        <MarkdownEditor
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          minHeight={`${rows * 28}px`}
+          onGenerateAI={
+            aiField && onGenerateAI
+              ? (prompt, currentValue) => onGenerateAI(aiField, prompt, currentValue)
+              : undefined
+          }
+        />
+      ) : (
+        <Textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={rows}
+          className="bg-white dark:bg-slate-900/50"
+        />
+      )}
+      {hint && (
+        <p className="text-sm text-slate-500 dark:text-slate-300">{hint}</p>
+      )}
+    </div>
+  )
+}

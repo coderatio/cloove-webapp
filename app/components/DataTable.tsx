@@ -54,14 +54,14 @@ export default function DataTable<T extends { id: string | number }>({
 
     if (data.length === 0 && !isLoading) {
         return (
-            <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center py-20 px-8 text-center">
-                <div className="w-16 h-16 rounded-full bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent/20 mb-4">
-                    <ChevronRight className="w-8 h-8 opacity-100 dark:text-brand-cream/20" />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card px-8 py-20 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground/40">
+                    <ChevronRight className="h-8 w-8 opacity-100" />
                 </div>
-                <h3 className="font-serif text-xl font-medium text-brand-deep dark:text-brand-cream opacity-50 mb-2">
+                <h3 className="mb-2 text-xl font-semibold text-foreground/70">
                     {emptyMessage}
                 </h3>
-                <p className="text-sm text-brand-accent/30 dark:text-brand-cream/40 max-w-xs">
+                <p className="max-w-xs text-sm text-muted-foreground">
                     When you start recording entries, your data will be elegantly presented here.
                 </p>
             </div>
@@ -84,6 +84,7 @@ export default function DataTable<T extends { id: string | number }>({
                                     style={col.width ? { width: col.width } : undefined}
                                     className={cn(
                                         "text-left text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-6 py-4 border-b border-brand-deep/5 dark:border-white/5 whitespace-nowrap",
+                                        "border-b border-border px-6 py-4 text-left text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-muted-foreground",
                                         !col.width && "min-w-[120px]",
                                         col.headerClassName
                                     )}
@@ -92,17 +93,17 @@ export default function DataTable<T extends { id: string | number }>({
                                 </th>
                             ))}
                             {onRowClick && (
-                                <th className="border-b border-brand-deep/5 dark:border-white/5 w-12 px-6 py-4"></th>
+                                <th className="w-12 border-b border-border px-6 py-4"></th>
                             )}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-brand-deep/5 dark:divide-white/5">
+                    <tbody className="divide-y divide-border">
                         {isLoading ? (
                             Array.from({ length: pageSize === 10 ? 5 : pageSize }).map((_, i) => (
                                 <tr key={i}>
                                     {columns.map((col) => (
                                         <td key={String(col.key)} className="px-6 py-5">
-                                            <div className="h-4 bg-brand-deep/5 dark:bg-white/5 rounded animate-pulse w-full max-w-[150px]" />
+                                            <div className="h-4 w-full max-w-[150px] animate-pulse rounded bg-muted" />
                                         </td>
                                     ))}
                                     {onRowClick && <td className="pl-4 pr-6 py-5" />}
@@ -115,7 +116,7 @@ export default function DataTable<T extends { id: string | number }>({
                                     onClick={() => onRowClick?.(row)}
                                     className={cn(
                                         "group transition-all duration-200",
-                                        onRowClick && "cursor-pointer hover:bg-brand-green/5 dark:hover:bg-brand-gold/5"
+                                        onRowClick && "cursor-pointer hover:bg-muted/60"
                                     )}
                                 >
                                     {columns.map((col) => (
@@ -123,7 +124,7 @@ export default function DataTable<T extends { id: string | number }>({
                                             key={String(col.key)}
                                             style={col.width ? { width: col.width } : undefined}
                                             className={cn(
-                                                "px-6 py-5 text-sm text-brand-deep dark:text-brand-cream whitespace-nowrap overflow-hidden text-ellipsis",
+                                                "overflow-hidden px-6 py-5 text-ellipsis whitespace-nowrap text-sm text-foreground",
                                                 col.cellClassName
                                             )}
                                         >
@@ -135,7 +136,7 @@ export default function DataTable<T extends { id: string | number }>({
                                     ))}
                                     {onRowClick && (
                                         <td className="px-6 py-5 text-right w-12">
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/40 group-hover:text-brand-green dark:group-hover:text-brand-gold transition-colors inline-block" />
+                                            <ChevronRight className="inline-block h-4 w-4 text-muted-foreground/50 transition-colors group-hover:text-foreground/80" />
                                         </td>
                                     )}
                                 </tr>
@@ -147,12 +148,12 @@ export default function DataTable<T extends { id: string | number }>({
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="px-6 py-4 flex items-center justify-between border-t border-brand-deep/5 dark:border-white/5 bg-brand-cream/10 dark:bg-white/5">
-                    <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 font-medium">
-                        Showing <span className="text-brand-deep dark:text-brand-cream">
+                <div className="flex items-center justify-between border-t border-border bg-muted/25 px-6 py-4">
+                    <p className="text-xs font-medium text-muted-foreground">
+                        Showing <span className="text-foreground">
                             {manualPagination ? (currentPage - 1) * pageSize + 1 : startIndex + 1}-
                             {manualPagination ? (currentPage - 1) * pageSize + data.length : Math.min(startIndex + pageSize, data.length)}
-                        </span> of <span className="text-brand-deep dark:text-brand-cream">{manualPagination?.total ?? data.length}</span>
+                        </span> of <span className="text-foreground">{manualPagination?.total ?? data.length}</span>
                     </p>
                     <div className="flex items-center gap-2">
                         <Button
@@ -160,9 +161,9 @@ export default function DataTable<T extends { id: string | number }>({
                             size="sm"
                             disabled={currentPage === 1}
                             onClick={() => setCurrentPage(currentPage - 1)}
-                            className="h-8 w-8 p-0 rounded-lg border-brand-deep/5 dark:border-white/10"
+                            className="h-8 w-8 rounded-lg p-0"
                         >
-                            <ChevronLeft className="h-4 w-4 dark:text-brand-gold" />
+                            <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <div className="flex items-center gap-1 mx-2">
                             {Array.from({ length: totalPages }).map((_, i) => (
@@ -172,8 +173,8 @@ export default function DataTable<T extends { id: string | number }>({
                                     className={cn(
                                         "w-2 h-2 rounded-full transition-all duration-300",
                                         currentPage === i + 1
-                                            ? "bg-brand-green w-4 dark:bg-brand-gold"
-                                            : "bg-brand-accent/20 dark:bg-white/10 hover:bg-brand-accent/40"
+                                            ? "w-4 bg-primary"
+                                            : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
                                     )}
                                 />
                             ))}
@@ -183,9 +184,9 @@ export default function DataTable<T extends { id: string | number }>({
                             size="sm"
                             disabled={currentPage === totalPages}
                             onClick={() => setCurrentPage(currentPage + 1)}
-                            className="h-8 w-8 p-0 rounded-lg border-brand-deep/5 dark:border-white/10"
+                            className="h-8 w-8 rounded-lg p-0"
                         >
-                            <ChevronRight className="h-4 w-4 dark:text-brand-gold" />
+                            <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
@@ -193,5 +194,4 @@ export default function DataTable<T extends { id: string | number }>({
         </div>
     )
 }
-
 

@@ -137,7 +137,7 @@ export function ReferralsView() {
     if (statsError) {
         return (
             <PageTransition>
-                <div className="max-w-5xl mx-auto space-y-8 pb-20">
+                <div className="max-w-6xl mx-auto space-y-8 pb-20">
                     <ManagementHeader title="Refer & Earn" description="Invite other businesses to Cloove and earn commissions." />
                     <GlassCard className="p-8 text-center">
                         <p className="text-brand-deep/70 dark:text-brand-cream/70">{(statsError as Error).message}</p>
@@ -149,7 +149,7 @@ export function ReferralsView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-20">
+            <div className="max-w-6xl mx-auto space-y-8 pb-20">
                 <ManagementHeader
                     title="Refer & Earn"
                     description="Invite other businesses to Cloove and earn commissions."

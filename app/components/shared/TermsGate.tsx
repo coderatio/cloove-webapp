@@ -125,7 +125,7 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
                                         : "border-brand-deep/20 bg-brand-deep/4 group-hover:border-brand-deep/40 dark:border-white/20 dark:bg-white/5 dark:group-hover:border-brand-gold/40"
                                 )}>
                                     {accepted && (
-                                        <svg className="size-3 text-brand-deep" viewBox="0 0 12 12" fill="none" aria-hidden>
+                                        <svg className="size-3 text-white" viewBox="0 0 12 12" fill="none" aria-hidden>
                                             <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
                                     )}

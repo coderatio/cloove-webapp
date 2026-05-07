@@ -3,7 +3,7 @@ import Image from "next/image"
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import {
     ChevronRight,
     ChevronDown,
@@ -36,7 +36,8 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname()
-    const { theme, setTheme } = useTheme()
+    const { theme, setTheme, resolvedTheme } = useTheme()
+    const isDark = resolvedTheme === "dark"
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
     const { navGroups } = useWorkspaceNav()
     const { features } = useBusiness()
@@ -111,36 +112,35 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         )
     }
 
-    return (
+        return (
         <motion.aside
             initial={false}
-            animate={{ width: isCollapsed ? 80 : 280 }}
+            animate={{ width: isCollapsed ? 68 : 248 }}
             transition={{ type: "tween", duration: 0.05, ease: [0.25, 0.1, 0.25, 1] }}
-            className="fixed left-4 top-4 bottom-4 z-40 hidden md:flex flex-col rounded-[20px] bg-brand-deep dark:bg-[#050a08] shadow-2xl border border-white/5"
+            className={cn(
+                "fixed inset-y-0 left-0 z-40 hidden flex-col border-r md:flex",
+                isDark
+                    ? "border-border bg-background"
+                    : "border-brand-green-100 bg-brand-green-50/55"
+            )}
         >
-            {/* Background Texture/Gradient for depth */}
-            <div className="absolute inset-0 pointer-events-none opacity-50">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 blur-[80px] rounded-full mix-blend-overlay" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/10 blur-[60px] rounded-full" />
-            </div>
-
             <div className={cn(
-                "relative z-10 flex flex-col h-full text-brand-cream",
+                "relative z-10 flex h-full flex-col text-foreground",
                 !isCollapsed && "overflow-hidden"
             )}>
                 {/* Header: when collapsed stack logo + expand; when expanded logo + label left, collapse right */}
-                <div className={cn("p-4 mb-2", isCollapsed ? "flex flex-col items-center gap-3" : "flex items-center justify-between")}>
+                <div className={cn("mb-0.5 p-2.5", isCollapsed ? "flex flex-col items-center gap-1.5" : "flex items-center justify-between")}>
                     <div className="flex items-center gap-3 overflow-hidden min-w-0">
-                        <div className="relative h-8 w-8 shrink-0">
+                        <div className="relative h-7 w-7 shrink-0">
                             <Image
-                                src="/images/logo-white.png"
+                                src={isDark ? "/images/logo-white.png" : "/images/logo-green.png"}
                                 alt="Cloove"
                                 fill
                                 className="object-contain"
                             />
                         </div>
                         {!isCollapsed && (
-                            <span className="font-serif text-2xl font-medium tracking-tight whitespace-nowrap text-brand-cream">
+                            <span className="whitespace-nowrap text-lg font-semibold text-foreground">
                                 Cloove
                             </span>
                         )}
@@ -152,7 +152,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setIsCollapsed(!isCollapsed)}
-                                    className="h-8 w-8 shrink-0 rounded-xl text-brand-cream/80 hover:text-brand-cream hover:bg-white/10 transition-colors"
+                                    className="h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                                     aria-label="Expand sidebar"
                                 >
                                     <PanelRightOpen className="h-5 w-5" />
@@ -165,7 +165,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                             variant="ghost"
                             size="icon"
                             onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="h-8 w-8 shrink-0 rounded-xl text-brand-cream/50 hover:text-brand-cream hover:bg-white/10 transition-colors"
+                            className="h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                             aria-label="Collapse sidebar"
                         >
                             <PanelRightClose className="h-5 w-5" />
@@ -174,12 +174,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </div>
 
                 {/* Store Switcher */}
-                <div className={cn("px-4 pb-8 transition-all", isCollapsed && "px-2")}>
+                <div className={cn("px-2.5 pb-3.5 transition-all", isCollapsed && "px-1.5")}>
                     <BusinessSwitcher isCollapsed={isCollapsed} />
                 </div>
 
                 {/* Nav Items Grouped */}
-                <nav className={cn("flex-1 overflow-y-auto scrollbar-hide pb-6", isCollapsed ? "space-y-2 px-2" : "space-y-6 px-4")}>
+                <nav className={cn("flex-1 overflow-y-auto scrollbar-hide pb-3", isCollapsed ? "space-y-1.5 px-1.5" : "space-y-3 px-2.5")}>
                     {navGroups.map((group, groupIndex) => {
                         const filteredItems = group.items
 
@@ -188,7 +188,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         return (
                             <div key={group.key} className="space-y-1">
                                 {!isCollapsed && (
-                                    <h3 className="px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-brand-cream/50 mb-3">
+                                    <h3 className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                                         {group.label}
                                     </h3>
                                 )}
@@ -206,11 +206,11 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                     <TooltipTrigger asChild>
                                                         <div
                                                             className={cn(
-                                                                "group relative flex items-center rounded-xl transition-all duration-200",
-                                                                isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-4 py-3",
+                                                                "group relative flex items-center rounded-xl transition-colors duration-150",
+                                                                isCollapsed ? "mx-auto h-10 w-10 justify-center" : "gap-3 px-3 py-2.5",
                                                                 (isActive || isChildActive)
-                                                                    ? "bg-white/10 text-brand-gold-light shadow-sm backdrop-blur-sm"
-                                                                    : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                                                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                                             )}
                                                         >
                                                             <Link
@@ -222,13 +222,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                             >
                                                                 <item.icon
                                                                     className={cn(
-                                                                        "h-5 w-5 shrink-0 transition-colors",
-                                                                        (isActive || isChildActive) ? "text-brand-gold-light" : "text-brand-cream/70 group-hover:text-brand-cream"
+                                                                        "h-4.5 w-4.5 shrink-0 transition-colors",
+                                                                        (isActive || isChildActive) ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
                                                                     )}
                                                                 />
 
                                                                 {!isCollapsed && (
-                                                                    <span className="whitespace-nowrap">{item.label}</span>
+                                                                    <span className="whitespace-nowrap text-sm font-medium">{item.label}</span>
                                                                 )}
                                                             </Link>
 
@@ -237,7 +237,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                     variant="ghost"
                                                                     size="icon"
                                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleExpanded(item.href) }}
-                                                                    className="h-7 w-7 rounded-lg hover:bg-white/10 transition-all shrink-0 text-brand-cream/40 hover:text-brand-gold-light"
+                                                                    className="h-6 w-6 shrink-0 rounded-md text-muted-foreground transition-colors hover:bg-background/10 hover:text-inherit"
                                                                 >
                                                                     <ChevronDown className={cn(
                                                                         "h-3.5 w-3.5 transition-transform duration-300",
@@ -247,7 +247,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                             )}
 
                                                             {(isActive || isChildActive) && !isCollapsed && (
-                                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-brand-gold-light rounded-r-full" />
+                                                                <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground/60" />
                                                             )}
                                                         </div>
                                                     </TooltipTrigger>
@@ -256,14 +256,14 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                             <span>{item.label}</span>
                                                             {filteredChildren && filteredChildren.length > 0 && (
                                                                 <>
-                                                                    <div className="h-px bg-white/10 my-1" />
+                                                                    <div className="my-1 h-px bg-border" />
                                                                     {filteredChildren.map(child => (
-                                                                        <Link
-                                                                            key={child.href}
-                                                                            href={child.href}
-                                                                            className={cn(
-                                                                                "text-xs py-1 px-1 rounded hover:bg-white/10 transition-colors",
-                                                                                pathname.startsWith(child.href) ? "text-brand-gold-light font-medium" : ""
+                                                                            <Link
+                                                                                key={child.href}
+                                                                                href={child.href}
+                                                                                className={cn(
+                                                                                "rounded px-1 py-1 text-xs transition-colors hover:bg-muted",
+                                                                                pathname.startsWith(child.href) ? "font-medium text-foreground" : "text-muted-foreground"
                                                                             )}
                                                                         >
                                                                             {child.label}
@@ -278,9 +278,9 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                 {/* Submenu Children */}
                                                 {hasChildren && !isCollapsed && isExpanded && filteredChildren && filteredChildren.length > 0 && (
                                                     <div className="overflow-hidden">
-                                                        <div className="relative ml-[16px] pl-4 py-1 space-y-1">
+                                                        <div className="relative ml-3.5 space-y-1 py-1">
                                                             {/* Vertical Connection Line */}
-                                                            <div className="absolute left-0 top-0 bottom-0 w-px bg-white/20" />
+                                                            <div className="absolute bottom-3 left-[8px] top-3 w-px bg-border" />
 
                                                             {filteredChildren.map(child => {
                                                                 const isChildItemActive = pathname === child.href || pathname.startsWith(child.href)
@@ -289,25 +289,26 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                                         key={child.href}
                                                                         href={child.href}
                                                                         className={cn(
-                                                                            "group/sub relative flex items-center gap-3 py-2 rounded-xl text-sm transition-all duration-200",
+                                                                            "group/sub relative grid min-h-9 grid-cols-[16px_16px_minmax(0,1fr)] items-center gap-3 rounded-xl py-1.5 text-sm transition-colors duration-150",
                                                                             isChildItemActive
-                                                                                ? "text-brand-gold-light"
-                                                                                : "text-brand-cream/50 hover:text-brand-gold-light"
+                                                                                ? "text-foreground"
+                                                                                : "text-muted-foreground hover:text-foreground"
                                                                         )}
                                                                     >
-                                                                        {/* Active Indicator Dot */}
-                                                                        <div className={cn(
-                                                                            "absolute -left-[19px] w-1.5 h-1.5 rounded-full transition-all duration-300",
+                                                                        <span className="relative flex h-full items-center justify-center" aria-hidden>
+                                                                            <span className={cn(
+                                                                            "h-1.5 w-1.5 rounded-full transition-colors duration-150",
                                                                             isChildItemActive
-                                                                                ? "bg-brand-gold-light ring-4 ring-brand-gold-light/20"
-                                                                                : "bg-white/10 group-hover/sub:bg-white/30"
+                                                                                ? "bg-foreground ring-4 ring-foreground/10"
+                                                                                : "bg-border group-hover/sub:bg-foreground/30"
                                                                         )} />
+                                                                        </span>
 
                                                                         <child.icon className={cn(
                                                                             "h-4 w-4 shrink-0 transition-colors",
-                                                                            isChildItemActive ? "text-brand-gold-light" : "text-brand-cream/40 group-hover/sub:text-brand-cream"
+                                                                            isChildItemActive ? "text-foreground" : "text-muted-foreground group-hover/sub:text-foreground"
                                                                         )} />
-                                                                        <span className="font-medium">{child.label}</span>
+                                                                        <span className="min-w-0 truncate font-medium">{child.label}</span>
                                                                     </Link>
                                                                 )
                                                             })}
@@ -320,7 +321,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                 </div>
                                 {/* Divider for grouped look when collapsed */}
                                 {isCollapsed && groupIndex < navGroups.length - 1 && (
-                                    <div className="mx-3 my-2 h-px bg-white/5" />
+                                    <div className="mx-2 my-2 h-px bg-border" />
                                 )}
                             </div>
                         )
@@ -328,25 +329,25 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </nav>
 
                 {/* Footer Actions */}
-                <div className="mt-auto p-4 border-t border-white/10 space-y-4 relative">
+                <div className="relative mt-auto space-y-2.5 border-t border-border p-2.5">
                     {/* Footer buttons removed from here to be moved inside their own relative containers if needed, but primarily profile menu needs it */}
 
                     {/* Settings Button */}
                     <Link
                         href="/settings"
-                        className={cn(
-                            "flex items-center rounded-xl transition-all duration-200 mb-2",
-                            isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-3 py-2 text-sm font-medium",
-                            pathname === "/settings" || pathname.startsWith("/settings/")
-                                ? "bg-white/10 text-brand-gold-light"
-                                : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                            className={cn(
+                                "mb-2 flex items-center rounded-xl transition-colors duration-150",
+                                isCollapsed ? "mx-auto h-10 w-10 justify-center" : "gap-3 px-3 py-2 text-sm font-medium",
+                                pathname === "/settings" || pathname.startsWith("/settings/")
+                                ? "bg-muted text-foreground"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                     >
                         <Settings className={cn(
                             "h-5 w-5 shrink-0",
                             pathname === "/settings" || pathname.startsWith("/settings/")
-                                ? "text-brand-gold-light"
-                                : "text-brand-cream/70"
+                                ? "text-foreground"
+                                : "text-muted-foreground"
                         )} />
                         {!isCollapsed && <span className="whitespace-nowrap">Settings</span>}
                     </Link>
@@ -356,14 +357,14 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         <Link
                             href="/referrals"
                             className={cn(
-                                "flex items-center rounded-xl transition-all duration-200 mb-2",
-                                isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 px-3 py-2 text-sm font-medium",
+                                "mb-2 flex items-center rounded-xl transition-colors duration-150",
+                                isCollapsed ? "mx-auto h-10 w-10 justify-center" : "gap-3 px-3 py-2 text-sm font-medium",
                                 pathname === "/referrals"
-                                    ? "bg-brand-gold-light/10 text-brand-gold-light"
-                                    : "text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                                    ? "bg-muted text-foreground"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                         >
-                            <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-brand-gold-light" : "text-brand-cream/70")} />
+                            <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-foreground" : "text-muted-foreground")} />
                             {!isCollapsed && <span className="whitespace-nowrap">Refer & Earn</span>}
                         </Link>
                     )}
@@ -382,7 +383,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                         className={cn(
-                                            "absolute z-50 bottom-full mb-3 bg-brand-deep-600 dark:bg-brand-deep-800 backdrop-blur-xl border border-white/10 rounded-2xl p-1 shadow-2xl min-w-[200px]",
+                                            "absolute z-50 bottom-full mb-3 min-w-[200px] rounded-2xl border border-border bg-background p-1 shadow-lg",
                                             isCollapsed ? "left-0" : "left-0 right-0"
                                         )}
                                     >
@@ -390,7 +391,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                             <Link
                                                 href="/settings"
                                                 onClick={() => setIsMenuOpen(false)}
-                                                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-cream/70 hover:text-brand-cream hover:bg-white/5 transition-all"
+                                                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                             >
                                                 <Settings className="h-4 w-4" />
                                                 Settings
@@ -400,18 +401,18 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                                                     setTheme(theme === "dark" ? "light" : "dark")
                                                     setIsMenuOpen(false)
                                                 }}
-                                                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-cream/70 hover:text-brand-cream hover:bg-white/5 transition-all text-left w-full"
+                                                className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                             >
                                                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                                                 {theme === "dark" ? "Light Mode" : "Dark Mode"}
                                             </button>
-                                            <div className="h-px bg-white/5 mx-2 my-1" />
+                                            <div className="mx-2 my-1 h-px bg-border" />
                                             <button
                                                 onClick={() => {
                                                     setIsMenuOpen(false)
                                                     handleLogout()
                                                 }}
-                                                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-left w-full"
+                                                className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
                                             >
                                                 <LogOut className="h-4 w-4" />
                                                 Log Out
@@ -425,22 +426,22 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className={cn(
-                                "group flex cursor-pointer items-center gap-3 w-full rounded-2xl bg-black/20 p-2 border border-white/5 transition-all hover:bg-white/5 hover:border-white/10 text-left active:scale-[0.98]",
-                                isCollapsed && "justify-center p-1 bg-transparent border-0"
+                                "group flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-border bg-muted/40 p-2 text-left transition-colors hover:bg-muted",
+                                isCollapsed && "justify-center border-0 bg-transparent p-1"
                             )}
                         >
-                            <div className="h-9 w-9 shrink-0 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 text-brand-deep flex items-center justify-center font-bold text-xs shadow-lg uppercase">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-background text-[11px] font-semibold uppercase text-foreground">
                                 {userInitials}
                             </div>
                             {!isCollapsed && (
                                 <>
                                     <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-                                        <span className="text-xs font-bold truncate text-brand-cream">{user?.fullName}</span>
-                                        <span className="text-[10px] text-brand-cream/50 truncate font-medium capitalize">{role?.toLowerCase().replace('_', ' ') || 'User'}</span>
+                                        <span className="truncate text-xs font-semibold text-foreground">{user?.fullName}</span>
+                                        <span className="truncate text-[10px] font-medium capitalize text-muted-foreground">{role?.toLowerCase().replace('_', ' ') || 'User'}</span>
                                     </div>
                                     <ChevronRight className={cn(
-                                        "h-4 w-4 shrink-0 text-brand-cream/30 transition-transform duration-300",
-                                        isMenuOpen && "rotate-90 text-brand-gold-bright"
+                                        "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300",
+                                        isMenuOpen && "rotate-90 text-foreground"
                                     )} />
                                 </>
                             )}

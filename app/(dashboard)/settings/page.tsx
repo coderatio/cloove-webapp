@@ -13,6 +13,7 @@ import {
     Loader2,
     Printer,
     LayoutTemplate,
+    MessageSquare,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BillingSettings } from "@/app/domains/business/components/BillingSettings"
@@ -26,8 +27,9 @@ import { PersistedTabs, TabItem } from "@/app/components/shared/PersistedTabs"
 import { usePermission } from "@/app/hooks/usePermission"
 import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
 import { WorkspaceSettings } from "@/app/domains/workspace/components/WorkspaceSettings"
+import { WhatsAppSettings } from "@/app/domains/messaging/components/WhatsAppSettings"
 
-type Tab = "business" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace"
+type Tab = "business" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace" | "messaging"
 
 function SettingsContent() {
     const { role, can } = usePermission()
@@ -38,6 +40,7 @@ function SettingsContent() {
     const allTabs: (TabItem & { id: Tab })[] = [
         { id: "business", label: "Business", icon: Building2 },
         { id: "workspace", label: "Workspace", icon: LayoutTemplate },
+        { id: "messaging", label: "WhatsApp", icon: MessageSquare },
         { id: "profile", label: "My Profile", icon: User },
         { id: "verification", label: "Verification", icon: ShieldCheck },
         { id: "billing", label: "Billing", icon: CreditCard },
@@ -49,6 +52,7 @@ function SettingsContent() {
     const tabs = allTabs.filter(tab => {
         if (tab.id === "profile" || tab.id === "security" || tab.id === "printer") return true
         if (tab.id === "workspace") return can("MANAGE_BUSINESS_CONFIG")
+        if (tab.id === "messaging") return role === 'OWNER'
         if (role === 'OWNER') return true
         if (tab.id === "billing" && role === 'ACCOUNTANT') return true
         return false
@@ -65,46 +69,58 @@ function SettingsContent() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 pb-20">
+        <div className="mx-auto max-w-6xl space-y-8 pb-20">
             <ManagementHeader
                 title="Settings"
                 description="Manage your business preferences and personal profile"
             />
 
-            {/* Tab Navigation */}
-            <PersistedTabs
-                tabs={tabs}
-                activeTab={activeTab}
-                defaultTab={tabs[0]?.id || "profile"}
-                onChange={(id) => {
-                    setActiveTab(id as Tab)
-                    setIsDirty(false)
-                }}
-            />
+            <div className="grid gap-6 lg:grid-cols-[220px_1fr] lg:items-start">
+                <div className="lg:sticky lg:top-20">
+                    <PersistedTabs
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        defaultTab={tabs[0]?.id || "profile"}
+                        orientation="vertical"
+                        compact
+                        onChange={(id) => {
+                            setActiveTab(id as Tab)
+                            setIsDirty(false)
+                        }}
+                    />
+                </div>
 
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={activeTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    {activeTab === "business" && role === 'OWNER' && (
-                        <BusinessSettings
-                            onDirtyChange={setIsDirty}
-                            onSavingChange={setIsSaving}
-                            saveTrigger={saveTrigger}
-                        />
-                    )}
-                    {activeTab === "workspace" && can("MANAGE_BUSINESS_CONFIG") && <WorkspaceSettings />}
-                    {activeTab === "profile" && <ProfileSettings />}
-                    {activeTab === "verification" && role === 'OWNER' && <VerificationSettings />}
-                    {activeTab === "billing" && (role === 'OWNER' || role === 'ACCOUNTANT') && <BillingSettings />}
-                    {activeTab === "security" && <SecuritySettings />}
-                    {activeTab === "printer" && <PrinterSettings />}
-                </motion.div>
-            </AnimatePresence>
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {activeTab === "business" && role === 'OWNER' && (
+                            <BusinessSettings
+                                onDirtyChange={setIsDirty}
+                                onSavingChange={setIsSaving}
+                                saveTrigger={saveTrigger}
+                            />
+                        )}
+                        {activeTab === "workspace" && can("MANAGE_BUSINESS_CONFIG") && <WorkspaceSettings />}
+                        {activeTab === "profile" && <ProfileSettings />}
+                        {activeTab === "verification" && role === 'OWNER' && <VerificationSettings />}
+                        {activeTab === "billing" && (role === 'OWNER' || role === 'ACCOUNTANT') && <BillingSettings />}
+                        {activeTab === "security" && <SecuritySettings />}
+                        {activeTab === "printer" && <PrinterSettings />}
+                        {activeTab === "messaging" && role === 'OWNER' && (
+                            <WhatsAppSettings
+                                onDirtyChange={setIsDirty}
+                                onSavingChange={setIsSaving}
+                                saveTrigger={saveTrigger}
+                            />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+            </div>
 
             {/* Common Save Bar */}
             {isDirty && (
@@ -112,7 +128,7 @@ function SettingsContent() {
                     <Button
                         onClick={handleGlobalSave}
                         disabled={isSaving}
-                        className="rounded-full bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 px-8 h-14 shadow-2xl hover:scale-105 transition-all font-bold"
+                        className="h-14 rounded-full bg-brand-deep px-8 font-bold text-brand-gold shadow-2xl transition-all hover:scale-105 hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-white dark:hover:bg-brand-gold/90"
                     >
                         {isSaving ? (
                             <>
