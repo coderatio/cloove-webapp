@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useCallback, useState } from "react"
+import { type ElementType, useEffect, useRef, useState } from "react"
 import { Button } from "@/app/components/ui/button"
 import { Loader2, MessageSquare } from "lucide-react"
 import { useConnectWhatsAppNumber } from "../hooks/useWhatsAppSettings"
-
-const META_APP_ID = process.env.NEXT_PUBLIC_META_APP_ID
-const CONFIG_ID = process.env.NEXT_PUBLIC_EMBEDDED_SIGNUP_CONFIG_ID
+import { toast } from "sonner"
+import { useBusiness } from "@/app/components/BusinessProvider"
 
 declare global {
   interface Window {
@@ -21,20 +20,89 @@ declare global {
   }
 }
 
-export function EmbeddedSignupButton() {
+interface EmbeddedSignupRuntimeConfig {
+  appId: string
+  configId: string
+  isConfigured: boolean
+  error: string | null
+}
+
+interface EmbeddedSignupButtonProps {
+  label?: string
+  connectingLabel?: string
+  className?: string
+  icon?: ElementType
+}
+
+const WA_SIGNUP_LOG_PREFIX = "[WhatsApp Embedded Signup]"
+
+export function EmbeddedSignupButton({
+  label = "Connect WhatsApp Number",
+  connectingLabel = "Connecting…",
+  className,
+  icon: Icon = MessageSquare,
+}: EmbeddedSignupButtonProps) {
   const connectNumber = useConnectWhatsAppNumber()
+  const { activeBusiness } = useBusiness()
   const [sdkReady, setSdkReady] = useState(false)
+  const [runtimeConfig, setRuntimeConfig] = useState<EmbeddedSignupRuntimeConfig | null>(null)
+  const [authCode, setAuthCode] = useState<string | null>(null)
+  const hasSubmittedRef = useRef(false)
   const [sessionData, setSessionData] = useState<{
+    meta_business_id?: string
+    catalog_id?: string
+    catalog_name?: string
     phone_number_id?: string
     waba_id?: string
   } | null>(null)
 
   useEffect(() => {
-    if (!META_APP_ID) return
+    let cancelled = false
+
+    const loadConfig = async () => {
+      try {
+        const response = await fetch("/api/meta/embedded-signup-config", {
+          cache: "no-store",
+        })
+        const data = (await response.json()) as EmbeddedSignupRuntimeConfig
+        console.info(`${WA_SIGNUP_LOG_PREFIX} runtime config loaded`, {
+          appIdPresent: Boolean(data.appId),
+          configIdPresent: Boolean(data.configId),
+          isConfigured: data.isConfigured,
+          error: data.error,
+        })
+        if (!cancelled) {
+          setRuntimeConfig(data)
+        }
+      } catch {
+        console.error(`${WA_SIGNUP_LOG_PREFIX} failed to load runtime config`)
+        if (!cancelled) {
+          setRuntimeConfig({
+            appId: "",
+            configId: "",
+            isConfigured: false,
+            error: "Failed to load Meta Embedded Signup configuration.",
+          })
+        }
+      }
+    }
+
+    loadConfig()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!runtimeConfig?.appId) return
 
     window.fbAsyncInit = () => {
+      console.info(`${WA_SIGNUP_LOG_PREFIX} Meta SDK initialized`, {
+        appId: runtimeConfig.appId,
+      })
       window.FB?.init({
-        appId: META_APP_ID,
+        appId: runtimeConfig.appId,
         autoLogAppEvents: true,
         xfbml: true,
         version: "v21.0",
@@ -43,7 +111,8 @@ export function EmbeddedSignupButton() {
     }
 
     if (document.getElementById("facebook-jssdk")) {
-      if (window.FB) setSdkReady(true)
+      if (window.FB) queueMicrotask(() => setSdkReady(true))
+      console.info(`${WA_SIGNUP_LOG_PREFIX} Meta SDK script already present`)
       return
     }
 
@@ -53,7 +122,7 @@ export function EmbeddedSignupButton() {
     script.async = true
     script.defer = true
     document.body.appendChild(script)
-  }, [])
+  }, [runtimeConfig?.appId])
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -64,10 +133,31 @@ export function EmbeddedSignupButton() {
         return
       }
 
-      if (event.data?.type === "WA_EMBEDDED_SIGNUP") {
-        const data = event.data.data
+      console.info(`${WA_SIGNUP_LOG_PREFIX} received postMessage`, {
+        origin: event.origin,
+        rawType: typeof event.data,
+        rawData: event.data,
+      })
+
+      const payload =
+        typeof event.data === "string"
+          ? (() => {
+              try {
+                return JSON.parse(event.data)
+              } catch {
+                return null
+              }
+            })()
+          : event.data
+
+      if (payload?.type === "WA_EMBEDDED_SIGNUP") {
+        const data = payload.data
+        console.info(`${WA_SIGNUP_LOG_PREFIX} parsed signup payload`, data)
         if (data?.phone_number_id && data?.waba_id) {
           setSessionData({
+            meta_business_id: data.business_id,
+            catalog_id: data.catalog_id,
+            catalog_name: data.catalog_name,
             phone_number_id: data.phone_number_id,
             waba_id: data.waba_id,
           })
@@ -79,54 +169,144 @@ export function EmbeddedSignupButton() {
     return () => window.removeEventListener("message", handler)
   }, [])
 
-  const handleClick = useCallback(() => {
-    if (!window.FB || !CONFIG_ID) return
+  useEffect(() => {
+    if (!authCode || !activeBusiness?.id || !sessionData?.phone_number_id || !sessionData?.waba_id) {
+      return
+    }
 
-    window.FB.login(
-      (response) => {
-        const code = response.authResponse?.code
-        if (!code) return
+    if (hasSubmittedRef.current || connectNumber.isPending) {
+      return
+    }
 
-        if (sessionData?.phone_number_id && sessionData?.waba_id) {
-          connectNumber.mutate({
-            code,
-            phone_number_id: sessionData.phone_number_id,
-            waba_id: sessionData.waba_id,
-          })
-        }
+    console.info(`${WA_SIGNUP_LOG_PREFIX} ready to complete signup`, {
+      businessId: activeBusiness.id,
+      metaBusinessId: sessionData.meta_business_id,
+      phoneNumberId: sessionData.phone_number_id,
+      wabaId: sessionData.waba_id,
+      hasCatalogId: Boolean(sessionData.catalog_id),
+      hasAuthCode: Boolean(authCode),
+    })
+
+    hasSubmittedRef.current = true
+    connectNumber.mutate(
+      {
+        business_id: activeBusiness.id,
+        code: authCode,
+        meta_business_id: sessionData.meta_business_id,
+        phone_number_id: sessionData.phone_number_id,
+        waba_id: sessionData.waba_id,
+        catalog_id: sessionData.catalog_id,
+        catalog_name: sessionData.catalog_name,
       },
       {
-        config_id: CONFIG_ID,
-        response_type: "code",
-        override_default_response_type: true,
-        extras: {
-          setup: {},
-          featureType: "",
-          sessionInfoVersion: 2,
+        onSuccess: (response) => {
+          console.info(`${WA_SIGNUP_LOG_PREFIX} connect API succeeded`, response)
+        },
+        onError: () => {
+          console.error(`${WA_SIGNUP_LOG_PREFIX} connect API failed`)
+          hasSubmittedRef.current = false
         },
       }
     )
-  }, [sessionData, connectNumber])
+  }, [authCode, activeBusiness?.id, connectNumber, sessionData])
 
-  const isConfigured = !!META_APP_ID && !!CONFIG_ID
+  useEffect(() => {
+    if (!authCode) return
+
+    const timeout = window.setTimeout(() => {
+      if (!sessionData?.phone_number_id || !sessionData?.waba_id) {
+        console.error(`${WA_SIGNUP_LOG_PREFIX} timed out waiting for Meta session payload`, {
+          authCodePresent: Boolean(authCode),
+          sessionData,
+        })
+        toast.error("Meta did not return the WhatsApp account details needed to finish setup.")
+        setAuthCode(null)
+        hasSubmittedRef.current = false
+      }
+    }, 8000)
+
+    return () => window.clearTimeout(timeout)
+  }, [authCode, sessionData?.phone_number_id, sessionData?.waba_id])
+
+  const isConfigured = !!runtimeConfig?.isConfigured
 
   return (
-    <Button
-      onClick={handleClick}
-      disabled={!isConfigured || !sdkReady || connectNumber.isPending}
-      className="bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 rounded-full px-6 h-12"
-    >
-      {connectNumber.isPending ? (
-        <>
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          Connecting...
-        </>
-      ) : (
-        <>
-          <MessageSquare className="w-4 h-4 mr-2" />
-          Connect WhatsApp Number
-        </>
-      )}
-    </Button>
+    <div className="space-y-2">
+      <Button
+        onClick={() => {
+          if (!runtimeConfig?.isConfigured || !runtimeConfig.configId) {
+            console.error(`${WA_SIGNUP_LOG_PREFIX} blocked launch because config is invalid`, runtimeConfig)
+            toast.error(runtimeConfig?.error || "Meta Embedded Signup is not configured.")
+            return
+          }
+
+          if (!activeBusiness?.id) {
+            console.error(`${WA_SIGNUP_LOG_PREFIX} blocked launch because no active business is selected`)
+            toast.error("Select a business before connecting WhatsApp.")
+            return
+          }
+
+          if (!window.FB) {
+            console.error(`${WA_SIGNUP_LOG_PREFIX} blocked launch because Meta SDK is not ready`)
+            toast.error("Meta SDK is still loading. Try again.")
+            return
+          }
+
+          console.info(`${WA_SIGNUP_LOG_PREFIX} launching Meta signup`, {
+            activeBusinessId: activeBusiness.id,
+            configId: runtimeConfig.configId,
+          })
+
+          setAuthCode(null)
+          hasSubmittedRef.current = false
+          setSessionData(null)
+
+          window.FB.login(
+            (response) => {
+              console.info(`${WA_SIGNUP_LOG_PREFIX} FB.login callback fired`, response)
+              const code = response.authResponse?.code
+              if (!code) {
+                console.error(`${WA_SIGNUP_LOG_PREFIX} Meta signup returned no auth code`, response)
+                toast.error("Meta signup did not return an authorization code.")
+                return
+              }
+
+              console.info(`${WA_SIGNUP_LOG_PREFIX} auth code received`)
+              setAuthCode(code)
+            },
+            {
+              config_id: runtimeConfig.configId,
+              response_type: "code",
+              override_default_response_type: true,
+              extras: {
+                setup: {},
+                featureType: "",
+                sessionInfoVersion: 2,
+              },
+            }
+          )
+        }}
+        disabled={!isConfigured || !sdkReady || connectNumber.isPending || !activeBusiness?.id}
+        className={
+          className ??
+          "bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 rounded-full px-6 h-12"
+        }
+      >
+        {connectNumber.isPending ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            {connectingLabel}
+          </>
+        ) : (
+          <>
+            <Icon className="w-4 h-4 mr-2" />
+            {label}
+          </>
+        )}
+      </Button>
+      {!isConfigured && runtimeConfig?.error ? (
+        <p className="text-sm text-red-600 dark:text-red-400">{runtimeConfig.error}</p>
+      ) : null}
+    </div>
   )
 }

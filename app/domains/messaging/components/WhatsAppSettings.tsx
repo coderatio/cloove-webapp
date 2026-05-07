@@ -21,29 +21,32 @@ import {
   XCircle,
   Unplug,
   RotateCcw,
-  Eye,
-  EyeOff,
-  Save,
   MessageSquare,
   Bot,
   Shield,
-  Briefcase
+  Briefcase,
+  PackageCheck,
+  RefreshCw,
 } from "lucide-react"
 import {
   useWhatsAppNumbers,
   useWhatsAppNumberStatus,
-  useUpdateWhatsAppNumber,
   useDisconnectWhatsAppNumber,
   useRestoreWhatsAppNumber,
   useGoSettings,
   useUpdateGoSettings,
   useGenerateGoSettingsContent,
+  useWhatsAppCatalogStatus,
+  useSyncWhatsAppCatalog,
   type WhatsAppNumber,
+  type WhatsAppCatalogStatus,
   type GoSettings,
   type GoSettingsContentField,
+  WhatsAppNumberStatusValue,
+  WhatsAppCatalogSyncStatus,
 } from "../hooks/useWhatsAppSettings"
 import { MarkdownEditor } from "@/app/components/ui/markdown-editor"
-import { ConnectWhatsAppForm } from "./ConnectWhatsAppForm"
+import { EmbeddedSignupButton } from "./EmbeddedSignupButton"
 import { AgentProfileSection } from "./AgentProfileSection"
 
 interface WhatsAppSettingsProps {
@@ -52,12 +55,12 @@ interface WhatsAppSettingsProps {
   saveTrigger?: number
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  active: { label: "Connected", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400" },
-  pending: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
-  verifying: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
-  failed: { label: "Failed", icon: XCircle, color: "text-red-600 dark:text-red-400" },
-  suspended: { label: "Disconnected", icon: AlertCircle, color: "text-slate-500 dark:text-slate-400" },
+const STATUS_CONFIG: Record<WhatsAppNumberStatusValue, { label: string; icon: React.ElementType; color: string }> = {
+  [WhatsAppNumberStatusValue.ACTIVE]: { label: "Connected", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400" },
+  [WhatsAppNumberStatusValue.PENDING]: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
+  [WhatsAppNumberStatusValue.VERIFYING]: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
+  [WhatsAppNumberStatusValue.FAILED]: { label: "Failed", icon: XCircle, color: "text-red-600 dark:text-red-400" },
+  [WhatsAppNumberStatusValue.SUSPENDED]: { label: "Disconnected", icon: AlertCircle, color: "text-slate-500 dark:text-slate-400" },
 }
 
 const TONE_OPTIONS = [
@@ -77,19 +80,41 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
   const restoreNumber = useRestoreWhatsAppNumber()
 
   const activeNumber = (numbers as WhatsAppNumber[] | undefined)?.find(
-    (n) => n.status === "active" || n.status === "pending" || n.status === "verifying"
+    (n) =>
+      n.status === WhatsAppNumberStatusValue.ACTIVE ||
+      n.status === WhatsAppNumberStatusValue.PENDING ||
+      n.status === WhatsAppNumberStatusValue.VERIFYING
   )
 
   const suspendedNumber = !activeNumber
-    ? (numbers as WhatsAppNumber[] | undefined)?.find((n) => n.status === "suspended")
+    ? (numbers as WhatsAppNumber[] | undefined)?.find(
+        (n) => n.status === WhatsAppNumberStatusValue.SUSPENDED
+      )
     : undefined
 
-  const isPending = activeNumber?.status === "pending" || activeNumber?.status === "verifying"
+  const isPending =
+    activeNumber?.status === WhatsAppNumberStatusValue.PENDING ||
+    activeNumber?.status === WhatsAppNumberStatusValue.VERIFYING
+  const { data: catalogStatus } = useWhatsAppCatalogStatus(activeNumber ?? null)
+  const syncCatalog = useSyncWhatsAppCatalog()
+  const effectiveCatalogStatus =
+    catalogStatus ??
+    (activeNumber?.catalog_bootstrap_status
+      ? {
+          id: "catalog-bootstrap",
+          business_id: activeNumber.business_id,
+          whatsapp_number_id: activeNumber.id,
+          waba_id: activeNumber.waba_id ?? "",
+          meta_catalog_id: "",
+          sync_status: activeNumber.catalog_bootstrap_status,
+          last_synced_at: null,
+          last_error: activeNumber.catalog_bootstrap_error,
+          synced_products_count: 0,
+          products_count: 0,
+        }
+      : null)
 
-  const { data: statusData } = useWhatsAppNumberStatus(
-    activeNumber?.id ?? null,
-    isPending
-  )
+  useWhatsAppNumberStatus(activeNumber?.id ?? null, isPending)
 
   const [localSettings, setLocalSettings] = useState<Partial<GoSettings>>({
     display_name: "",
@@ -123,6 +148,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
   useEffect(() => {
     if (goSettingsData) {
       const s = goSettingsData as GoSettings
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalSettings({
         display_name: s.display_name ?? "",
         welcome_message: s.welcome_message ?? "",
@@ -200,12 +226,33 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
         </h2>
 
         {!activeNumber && !suspendedNumber ? (
-          <ConnectWhatsAppForm />
+          <SettingsCard>
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                    <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                      Connect WhatsApp
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      Sign in with Meta and choose the business number Cloove should manage.
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-500">
+                  Cloove manages your WhatsApp catalog from your products.
+                </p>
+              </div>
+              <EmbeddedSignupButton />
+            </div>
+          </SettingsCard>
         ) : activeNumber ? (
           <SettingsCard>
             <ConnectedNumberCard
               number={activeNumber}
-              statusData={statusData}
               isPending={isPending}
               showDisconnectConfirm={showDisconnectConfirm}
               onDisconnectClick={() => setShowDisconnectConfirm(true)}
@@ -225,13 +272,17 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
         ) : null}
       </section>
 
-      {/* Credential editing — show when not yet active so user can fix issues */}
-      {activeNumber && activeNumber.status !== "active" && (
-        <CredentialEditor number={activeNumber} />
+      {activeNumber && (
+        <WhatsAppCatalogPanel
+          catalog={effectiveCatalogStatus}
+          number={activeNumber}
+          isSyncing={syncCatalog.isPending}
+          onSync={() => syncCatalog.mutate()}
+        />
       )}
 
       {/* Verification logs — show when not active */}
-      {activeNumber && activeNumber.status !== "active" && activeNumber.verification_logs.length > 0 && (
+      {activeNumber && activeNumber.status !== WhatsAppNumberStatusValue.ACTIVE && activeNumber.verification_logs.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
             Verification Log
@@ -266,7 +317,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
       )}
 
       {/* Settings tabs — only show when number is active */}
-      {activeNumber && activeNumber.status === "active" && (
+      {activeNumber && activeNumber.status === WhatsAppNumberStatusValue.ACTIVE && (
         <div className="pt-4">
           <div className="flex gap-6 border-b border-slate-200 dark:border-slate-800">
             <button
@@ -551,6 +602,114 @@ function SettingsCard({ children, className = "" }: { children: React.ReactNode;
   )
 }
 
+function WhatsAppCatalogPanel({
+  catalog,
+  number,
+  isSyncing,
+  onSync,
+}: {
+  catalog: WhatsAppCatalogStatus | null
+  number: WhatsAppNumber
+  isSyncing: boolean
+  onSync: () => void
+}) {
+  const status = catalog?.sync_status ?? WhatsAppCatalogSyncStatus.PENDING
+  const isFailed = status === WhatsAppCatalogSyncStatus.FAILED
+  const isProvisioning =
+    number.status === WhatsAppNumberStatusValue.PENDING ||
+    number.status === WhatsAppNumberStatusValue.VERIFYING
+  const isRunning =
+    isSyncing ||
+    status === WhatsAppCatalogSyncStatus.SYNCING ||
+    (status === WhatsAppCatalogSyncStatus.PENDING && isProvisioning)
+  const lastSynced = catalog?.last_synced_at
+    ? new Date(catalog.last_synced_at).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Not synced yet"
+  const summary = catalog
+    ? `${catalog.synced_products_count} of ${catalog.products_count} products synced. Last sync: ${lastSynced}.`
+    : isProvisioning
+      ? "Catalog setup will begin after Meta finishes provisioning your number."
+      : "Catalog setup is ready. Start sync once Meta permissions are in place."
+  const errorMessage =
+    (isFailed && catalog?.last_error) || number.catalog_bootstrap_error
+  const canSync = !isProvisioning && !isRunning
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+        WhatsApp Catalog
+      </h2>
+      <SettingsCard>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+              <PackageCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="min-w-0 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-slate-900 dark:text-slate-100">
+                    Cloove Product Catalog
+                  </p>
+                  <CatalogStatusBadge status={status} />
+                </div>
+                <p className="text-sm leading-6 text-slate-500">
+                  {summary}
+                </p>
+                {errorMessage ? (
+                  <div className="rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+                    {errorMessage}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant={isFailed ? "default" : "outline"}
+            onClick={onSync}
+            disabled={!canSync}
+            className="shrink-0 rounded-full px-5"
+          >
+            {isRunning ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {isFailed ? "Retry" : "Sync Now"}
+          </Button>
+        </div>
+      </SettingsCard>
+    </section>
+  )
+}
+
+function CatalogStatusBadge({ status }: { status: WhatsAppCatalogStatus["sync_status"] }) {
+  const styles: Record<WhatsAppCatalogSyncStatus, string> = {
+    [WhatsAppCatalogSyncStatus.PENDING]: "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20",
+    [WhatsAppCatalogSyncStatus.SYNCING]: "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20",
+    [WhatsAppCatalogSyncStatus.SYNCED]: "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20",
+    [WhatsAppCatalogSyncStatus.FAILED]: "bg-red-50 text-red-700 border-red-100 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20",
+  }
+  const labels: Record<WhatsAppCatalogSyncStatus, string> = {
+    [WhatsAppCatalogSyncStatus.PENDING]: "Pending",
+    [WhatsAppCatalogSyncStatus.SYNCING]: "Syncing",
+    [WhatsAppCatalogSyncStatus.SYNCED]: "Synced",
+    [WhatsAppCatalogSyncStatus.FAILED]: "Failed",
+  }
+
+  return (
+    <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${styles[status]}`}>
+      {labels[status]}
+    </span>
+  )
+}
+
 function SettingToggle({
   label,
   description,
@@ -575,7 +734,6 @@ function SettingToggle({
 
 function ConnectedNumberCard({
   number,
-  statusData,
   isPending,
   showDisconnectConfirm,
   onDisconnectClick,
@@ -584,7 +742,6 @@ function ConnectedNumberCard({
   isDisconnecting,
 }: {
   number: WhatsAppNumber
-  statusData: unknown
   isPending: boolean
   showDisconnectConfirm: boolean
   onDisconnectClick: () => void
@@ -592,89 +749,138 @@ function ConnectedNumberCard({
   onDisconnectCancel: () => void
   isDisconnecting: boolean
 }) {
-  const config = STATUS_CONFIG[number.status] ?? STATUS_CONFIG.failed
+  const config = STATUS_CONFIG[number.status] ?? STATUS_CONFIG[WhatsAppNumberStatusValue.FAILED]
   const StatusIcon = config.icon
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center border border-emerald-100 dark:border-emerald-500/20">
-            <Phone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+    <div className="space-y-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+            <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div>
-            <p className="font-semibold text-slate-900 dark:text-slate-100 text-lg">
+          <div className="min-w-0 space-y-1">
+            <p className="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">
               {number.phone_number}
             </p>
             {number.display_name && (
-              <p className="text-sm text-slate-500">
+              <p className="truncate text-sm text-slate-500">
                 {number.display_name}
               </p>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {number.status !== "pending" && number.status !== "verifying" && !showDisconnectConfirm && (
+        <div className={`inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium dark:border-slate-700 dark:bg-slate-800 ${config.color}`}>
+          {isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <StatusIcon className="h-4 w-4" />
+          )}
+          <span>{config.label}</span>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <StatusMetric
+          label="Connection"
+          value={isPending ? "Waiting on Meta" : "Managed by Cloove"}
+        />
+        <StatusMetric
+          label="Catalog"
+          value={
+            number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
+              ? "Needs attention"
+              : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.SYNCED
+                ? "Synced"
+                : "Provisioning"
+          }
+        />
+      </div>
+
+      {isPending && (
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+          We’re waiting for Meta to finish provisioning this number. Catalog sync stays paused until that completes.
+        </div>
+      )}
+
+      {number.status === WhatsAppNumberStatusValue.FAILED && (
+        <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+          <p className="text-sm leading-6 text-red-800 dark:text-red-300">
+            Verification failed. Check the logs below and reconnect with Meta after fixing the issue.
+          </p>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-800/80 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm leading-6 text-slate-500">
+          Use a fresh Meta connection if you need to switch numbers or grant new permissions.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <EmbeddedSignupButton
+            label="Connect Again"
+            className="h-10 rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            icon={RefreshCw}
+          />
+          {number.status !== WhatsAppNumberStatusValue.PENDING &&
+          number.status !== WhatsAppNumberStatusValue.VERIFYING &&
+          !showDisconnectConfirm ? (
             <Button
               variant="ghost"
               size="sm"
               onClick={onDisconnectClick}
-              className="text-red-600 rounded-full hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10 h-8 px-3"
+              className="h-10 rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
             >
-              <Unplug className="w-4 h-4 mr-2" />
+              <Unplug className="mr-2 h-4 w-4" />
               Disconnect
             </Button>
-          )}
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 ${config.color}`}>
-            {isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <StatusIcon className="w-4 h-4" />
-            )}
-            <span className="text-sm font-medium">{config.label}</span>
-          </div>
+          ) : null}
         </div>
       </div>
 
-      {isPending && (
-        <p className="text-sm text-slate-500 mt-2">
-          We&apos;re verifying your number with Meta. This usually takes a few minutes.
-        </p>
-      )}
-
-      {number.status === "failed" && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 mt-4">
-          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
-          <p className="text-sm text-red-800 dark:text-red-300">
-            Verification failed. Check the logs below and update your credentials if needed.
-          </p>
+      {number.status !== WhatsAppNumberStatusValue.PENDING &&
+      number.status !== WhatsAppNumberStatusValue.VERIFYING &&
+      showDisconnectConfirm && (
+        <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+            <p className="text-sm leading-6 text-red-800 dark:text-red-300">
+              Disconnect this number only if you want Cloove to stop handling messages for it.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 sm:justify-end">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onDisconnectCancel}
+              className="rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={onDisconnectConfirm}
+              disabled={isDisconnecting}
+              className="rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700"
+            >
+              {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
+            </Button>
+          </div>
         </div>
       )}
+    </div>
+  )
+}
 
-      {number.status !== "pending" && number.status !== "verifying" && showDisconnectConfirm && (
-        <div className="flex items-center gap-3 p-4 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 mt-4">
-          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
-          <p className="text-sm text-red-800 dark:text-red-300 flex-1">
-            Are you sure? Customers won&apos;t be able to message this number through Cloove.
-          </p>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onDisconnectCancel}
-            className="text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-300 dark:hover:text-white"
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={onDisconnectConfirm}
-            disabled={isDisconnecting}
-            className="bg-red-600 hover:bg-red-700 text-white shadow-sm"
-          >
-            {isDisconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Disconnect"}
-          </Button>
-        </div>
-      )}
+function StatusMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/40">
+      <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+        {value}
+      </p>
     </div>
   )
 }
@@ -791,135 +997,5 @@ function SettingTextarea({
         <p className="text-sm text-slate-500">{hint}</p>
       )}
     </div>
-  )
-}
-
-function CredentialEditor({ number }: { number: WhatsAppNumber }) {
-  const updateNumber = useUpdateWhatsAppNumber()
-  const [accessToken, setAccessToken] = useState("")
-  const [appSecret, setAppSecret] = useState("")
-  const [webhookVerifyToken, setWebhookVerifyToken] = useState("")
-  const [showToken, setShowToken] = useState(false)
-  const [showSecret, setShowSecret] = useState(false)
-  const [showVerifyToken, setShowVerifyToken] = useState(false)
-
-  const hasChanges = accessToken.trim() || appSecret.trim() || webhookVerifyToken.trim()
-
-  const handleSave = () => {
-    const body: Record<string, string> = {}
-    if (accessToken.trim()) body.access_token = accessToken.trim()
-    if (appSecret.trim()) body.app_secret = appSecret.trim()
-    if (webhookVerifyToken.trim()) body.webhook_verify_token = webhookVerifyToken.trim()
-
-    if (Object.keys(body).length === 0) return
-
-    updateNumber.mutate(
-      { id: number.id, ...body },
-      {
-        onSuccess: () => {
-          setAccessToken("")
-          setAppSecret("")
-          setWebhookVerifyToken("")
-        },
-      }
-    )
-  }
-
-  return (
-    <section className="space-y-4">
-      <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
-        Update Credentials
-      </h2>
-      <SettingsCard className="space-y-6">
-        <p className="text-sm text-slate-500 max-w-2xl">
-          If verification is failing, you can update your credentials here. Leave fields empty to keep
-          the current value.
-        </p>
-
-        <div className="space-y-5 max-w-xl">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Access Token
-            </label>
-            <div className="relative">
-              <Textarea
-                value={showToken ? accessToken : accessToken ? "••••••••••" : ""}
-                onChange={(e) => setAccessToken(e.target.value)}
-                onFocus={() => setShowToken(true)}
-                placeholder="Paste new token to replace current"
-                rows={2}
-                className="pr-10 resize-none font-mono text-sm bg-white dark:bg-slate-900/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowToken(!showToken)}
-                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              App Secret
-            </label>
-            <div className="relative">
-              <Input
-                type={showSecret ? "text" : "password"}
-                value={appSecret}
-                onChange={(e) => setAppSecret(e.target.value)}
-                placeholder="Paste new secret to replace current"
-                className="pr-10 bg-white dark:bg-slate-900/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowSecret(!showSecret)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Webhook Verify Token
-            </label>
-            <div className="relative">
-              <Input
-                type={showVerifyToken ? "text" : "password"}
-                value={webhookVerifyToken}
-                onChange={(e) => setWebhookVerifyToken(e.target.value)}
-                placeholder="Paste new verify token to replace current"
-                className="pr-10 bg-white dark:bg-slate-900/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowVerifyToken(!showVerifyToken)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                {showVerifyToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-4">
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges || updateNumber.isPending}
-            className="bg-brand-deep text-brand-cream hover:bg-brand-deep/90 shadow-sm"
-          >
-            {updateNumber.isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            Update Credentials
-          </Button>
-        </div>
-      </SettingsCard>
-    </section>
   )
 }

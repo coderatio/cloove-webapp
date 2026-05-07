@@ -3,6 +3,14 @@ import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 import { useBusiness } from "@/app/components/BusinessProvider"
 
+export enum WhatsAppNumberStatusValue {
+  PENDING = "pending",
+  VERIFYING = "verifying",
+  ACTIVE = "active",
+  SUSPENDED = "suspended",
+  FAILED = "failed",
+}
+
 export interface WhatsAppNumber {
   id: string
   business_id: string
@@ -12,7 +20,7 @@ export interface WhatsAppNumber {
   phone_number_id: string
   waba_id: string | null
   has_verify_token: boolean
-  status: "pending" | "verifying" | "active" | "suspended" | "failed"
+  status: WhatsAppNumberStatusValue
   verification_logs: Array<{
     timestamp: string
     attempt: number
@@ -23,6 +31,9 @@ export interface WhatsAppNumber {
   }>
   is_default: boolean
   display_name: string | null
+  catalog_bootstrap_status: WhatsAppCatalogSyncStatus | null
+  catalog_bootstrap_error: string | null
+  catalog_bootstrap_failed_at: string | null
   created_at: string
   updated_at: string | null
 }
@@ -84,9 +95,33 @@ export interface UpdateGoSettingsInput extends Omit<Partial<GoSettings>, "capabi
 }
 
 export interface EmbeddedSignupPayload {
+  business_id: string
   code: string
+  meta_business_id?: string
   waba_id: string
   phone_number_id: string
+  catalog_id?: string
+  catalog_name?: string
+}
+
+export enum WhatsAppCatalogSyncStatus {
+  PENDING = "pending",
+  SYNCING = "syncing",
+  SYNCED = "synced",
+  FAILED = "failed",
+}
+
+export interface WhatsAppCatalogStatus {
+  id: string
+  business_id: string
+  whatsapp_number_id: string
+  waba_id: string
+  meta_catalog_id: string
+  sync_status: WhatsAppCatalogSyncStatus
+  last_synced_at: string | null
+  last_error: string | null
+  synced_products_count: number
+  products_count: number
 }
 
 export type GoSettingsContentField =
@@ -104,6 +139,7 @@ const QUERY_KEYS = {
   numbers: (businessId?: string) => ["whatsapp-numbers", businessId].filter(Boolean),
   numberStatus: (id: string, businessId?: string) =>
     ["whatsapp-numbers", id, "status", businessId].filter(Boolean),
+  catalog: (businessId?: string) => ["whatsapp-catalog", businessId].filter(Boolean),
   goSettings: (businessId?: string) => ["go-settings", businessId].filter(Boolean),
 }
 
@@ -126,7 +162,19 @@ export function useWhatsAppNumberStatus(id: string | null, enabled: boolean) {
     queryKey: QUERY_KEYS.numberStatus(id ?? "", businessId),
     queryFn: () => apiClient.get<WhatsAppNumberStatus>(`/whatsapp-numbers/${id}/status`),
     enabled: !!id && enabled && !!businessId,
-    refetchInterval: enabled ? 10_000 : false,
+    refetchInterval: (query) => {
+      const data = query.state.data as WhatsAppNumberStatus | undefined
+      const shouldKeepPolling =
+        enabled &&
+        (data?.status === WhatsAppNumberStatusValue.PENDING ||
+          data?.status === WhatsAppNumberStatusValue.VERIFYING)
+
+      return shouldKeepPolling ? 10_000 : false
+    },
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
   })
 }
 
@@ -145,9 +193,57 @@ export function useConnectWhatsAppNumber() {
     onSuccess: (data) => {
       toast.success(data?.message || "WhatsApp number connected")
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.catalog(businessId) })
     },
     onError: () => {
       toast.error("Failed to connect WhatsApp number. Please try again.")
+    },
+  })
+}
+
+export function useWhatsAppCatalogStatus(number: WhatsAppNumber | null) {
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+  const enabled = !!number && !!businessId
+  const isProvisioning =
+    number?.status === WhatsAppNumberStatusValue.PENDING ||
+    number?.status === WhatsAppNumberStatusValue.VERIFYING
+
+  return useQuery({
+    queryKey: QUERY_KEYS.catalog(businessId),
+    queryFn: () => apiClient.get<WhatsAppCatalogStatus | null>("/whatsapp-numbers/catalog"),
+    enabled,
+    refetchInterval: (query) => {
+      const data = query.state.data as WhatsAppCatalogStatus | null | undefined
+      const status = data?.sync_status
+      const shouldKeepPolling =
+        isProvisioning ||
+        status === WhatsAppCatalogSyncStatus.PENDING ||
+        status === WhatsAppCatalogSyncStatus.SYNCING
+
+      return shouldKeepPolling ? 15_000 : false
+    },
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
+  })
+}
+
+export function useSyncWhatsAppCatalog() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<{ message: string }>("/whatsapp-numbers/catalog/sync", {}, { fullResponse: true }),
+    onSuccess: (data) => {
+      toast.success(data?.message || "Catalog sync queued")
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.catalog(businessId) })
+    },
+    onError: () => {
+      toast.error("Failed to queue catalog sync")
     },
   })
 }
