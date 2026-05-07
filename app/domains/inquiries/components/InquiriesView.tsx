@@ -5,6 +5,7 @@ import dynamic from "next/dynamic"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import DataTable, { type Column } from "@/app/components/DataTable"
+import type { FilterGroup } from "@/app/components/shared/FilterPopover"
 import {
     useInquiries,
     type ConsultationInquiry,
@@ -127,17 +128,16 @@ export function InquiriesView() {
         },
     ]
 
-    const filterGroups = [
+    const filterGroups: FilterGroup[] = [
         {
-            id: "status",
-            label: "Status",
+            title: "Status",
             options: [
-                { id: "ALL", label: "All" },
-                { id: "new", label: "New" },
-                { id: "qualifying", label: "Qualifying" },
-                { id: "scheduled", label: "Scheduled" },
-                { id: "won", label: "Won" },
-                { id: "lost", label: "Lost" },
+                { value: "ALL", label: "All" },
+                { value: "new", label: "New" },
+                { value: "qualifying", label: "Qualifying" },
+                { value: "scheduled", label: "Scheduled" },
+                { value: "won", label: "Won" },
+                { value: "lost", label: "Lost" },
             ],
         },
     ]

@@ -29,10 +29,10 @@ interface DebtDetailDrawerProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-    PENDING: { label: "Pending", className: "bg-brand-gold/10 text-brand-gold border-brand-gold/20" },
-    PARTIAL: { label: "Partial", className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
-    PAID: { label: "Paid", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
-    OVERDUE: { label: "Overdue", className: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
+    PENDING: { label: "Pending", className: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/12 dark:text-amber-200" },
+    PARTIAL: { label: "Partial", className: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/12 dark:text-amber-200" },
+    PAID: { label: "Paid", className: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/25 dark:bg-emerald-400/12 dark:text-emerald-200" },
+    OVERDUE: { label: "Overdue", className: "border-rose-500/25 bg-rose-500/10 text-rose-700 dark:border-rose-400/25 dark:bg-rose-400/12 dark:text-rose-200" },
 }
 
 export function DebtDetailDrawer({
@@ -83,16 +83,16 @@ export function DebtDetailDrawer({
                         {/* Customer Info */}
                         <GlassCard className="p-5 space-y-3 rounded-3xl before:rounded-3xl">
                             <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                     Customer
                                 </p>
                                 <span className={cn("px-2.5 py-1 rounded-full text-xs font-medium border", isOverdue ? statusConfig.OVERDUE.className : config.className)}>
                                     {isOverdue ? "Overdue" : config.label}
                                 </span>
                             </div>
-                            <p className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream">{debt.customerName}</p>
+                            <p className="text-lg font-semibold text-foreground">{debt.customerName}</p>
                             {debt.customerPhone && (
-                                <a href={`tel:${debt.customerPhone}`} className="flex items-center gap-2 text-sm text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-green transition-colors">
+                                <a href={`tel:${debt.customerPhone}`} className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
                                     <Phone className="w-4 h-4" />
                                     {debt.customerPhone}
                                 </a>
@@ -102,10 +102,10 @@ export function DebtDetailDrawer({
                         {/* Amount Summary */}
                         <div className="grid grid-cols-2 gap-3">
                             <GlassCard className="p-4 rounded-3xl before:rounded-3xl">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                     Original Amount
                                 </p>
-                                <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream mt-1">
+                                <p className="mt-1 text-xl font-semibold text-foreground">
                                     <CurrencyText value={formatCurrency(debt.amount, { currency: currencyCode })} />
                                 </p>
                             </GlassCard>
@@ -124,9 +124,9 @@ export function DebtDetailDrawer({
                                 "flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm",
                                 isOverdue
                                     ? "bg-rose-500/5 text-rose-500 font-medium"
-                                    : "text-brand-accent/60 dark:text-brand-cream/60"
+                                    : "text-muted-foreground"
                             )}>
-                                <Clock className={cn("w-4 h-4 shrink-0", isOverdue ? "text-rose-500" : "text-brand-accent/30 dark:text-brand-cream/30")} />
+                                <Clock className={cn("w-4 h-4 shrink-0", isOverdue ? "text-rose-500" : "text-muted-foreground/70")} />
                                 Due {formatDate(debt.dueAt, "MMM d, yyyy")}
                                 {isOverdue && " — Overdue"}
                             </div>
@@ -135,7 +135,7 @@ export function DebtDetailDrawer({
                         {/* Invoice Actions */}
                         {debt.status !== "PAID" && (
                             <div className="space-y-3">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">
+                                <p className="ml-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                     Invoice
                                 </p>
                                 <div className="flex gap-3">
@@ -143,7 +143,7 @@ export function DebtDetailDrawer({
                                         variant="outline"
                                         onClick={handleGenerateInvoice}
                                         disabled={isGeneratingInvoice}
-                                        className="flex-1 rounded-2xl h-12 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
+                                        className="h-12 flex-1 rounded-2xl"
                                     >
                                         {invoiceAction === "generate" ? (
                                             <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -157,7 +157,7 @@ export function DebtDetailDrawer({
                                             variant="outline"
                                             onClick={handleSendInvoice}
                                             disabled={isGeneratingInvoice}
-                                            className="flex-1 rounded-2xl h-12 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
+                                            className="h-12 flex-1 rounded-2xl"
                                         >
                                             {invoiceAction === "send" ? (
                                                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -173,23 +173,23 @@ export function DebtDetailDrawer({
 
                         {/* Repayment History */}
                         <div className="space-y-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">
+                            <p className="ml-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                                 Repayment History
                             </p>
                             {isLoading ? (
                                 <div className="flex items-center justify-center py-8">
-                                    <Loader2 className="w-5 h-5 animate-spin text-brand-accent/40" />
+                                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                                 </div>
                             ) : !detail?.repayments?.length ? (
                                 <GlassCard className="p-8 text-center space-y-3 rounded-3xl before:rounded-3xl">
-                                    <div className="mx-auto h-12 w-12 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                        <Banknote className="w-6 h-6 text-brand-accent/20 dark:text-brand-cream/20" />
+                                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                        <Banknote className="h-6 w-6 text-muted-foreground/60" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">
+                                        <p className="text-sm font-medium text-muted-foreground">
                                             No repayments yet
                                         </p>
-                                        <p className="text-xs text-brand-accent/30 dark:text-brand-cream/30 mt-1">
+                                        <p className="mt-1 text-xs text-muted-foreground">
                                             Payments will appear here once recorded.
                                         </p>
                                     </div>
@@ -202,8 +202,8 @@ export function DebtDetailDrawer({
                                                 <Banknote className="w-4 h-4 text-emerald-500" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">Payment Received</p>
-                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">
+                                                <p className="text-sm font-medium text-foreground">Payment Received</p>
+                                                <p className="text-xs text-muted-foreground">
                                                     {formatDate(repayment.createdAt, "MMM d, yyyy 'at' h:mm a")}
                                                 </p>
                                             </div>
@@ -226,7 +226,7 @@ export function DebtDetailDrawer({
                                     onOpenChange(false)
                                     onRecordPayment(debt)
                                 }}
-                                className="w-full rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl"
+                                className="h-14 w-full rounded-2xl font-semibold shadow-sm"
                             >
                                 <Banknote className="w-5 h-5 mr-2" />
                                 Record Payment
@@ -239,7 +239,7 @@ export function DebtDetailDrawer({
                                         onGeneratePaymentLink(debt)
                                     }}
                                     disabled={isGeneratingPaymentLink}
-                                    className="w-full rounded-2xl h-12 border-brand-gold/20 text-brand-gold hover:bg-brand-gold/5 dark:border-brand-gold/20 dark:text-brand-gold"
+                                    className="h-12 w-full rounded-2xl border-emerald-500/25 bg-emerald-500/5 text-emerald-700 hover:bg-emerald-500/10 dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-200"
                                 >
                                     {isGeneratingPaymentLink ? (
                                         <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -253,7 +253,7 @@ export function DebtDetailDrawer({
                                 variant="outline"
                                 onClick={() => sendReminder(debt.id)}
                                 disabled={isSendingReminder}
-                                className="w-full rounded-2xl h-12 border-brand-deep/5 dark:border-white/5 dark:text-brand-cream"
+                                className="h-12 w-full rounded-2xl"
                             >
                                 {isSendingReminder ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />

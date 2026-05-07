@@ -14,10 +14,7 @@ import { useCountries } from "@/app/hooks/useCountries"
 import type { CountryDetail } from "@/app/components/ui/country-selector"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
-import { motion, AnimatePresence } from "framer-motion"
-import { Briefcase, Users, ShieldCheck, Zap, Globe, Sparkle } from "lucide-react"
-
-const NOISE_BG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+import { Briefcase, Users, ShieldCheck, Zap, Globe, Sparkle, type LucideIcon } from "lucide-react"
 
 const BOT_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER?.replace(/\D/g, "") ?? ""
 const BOT_DISPLAY = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER ?? ""
@@ -31,38 +28,8 @@ function RegisterBackdrop() {
     return (
         <>
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                <div
-                    className="absolute inset-0 opacity-[0.45]"
-                    style={{
-                        background:
-                            "radial-gradient(ellipse 120% 80% at 100% 0%, rgba(212, 175, 55, 0.15) 0%, transparent 55%), radial-gradient(ellipse 90% 70% at 0% 100%, rgba(11, 61, 46, 0.4) 0%, transparent 50%), linear-gradient(165deg, var(--color-brand-deep-primary) 0%, #031510 45%, var(--color-brand-deep-secondary) 100%)",
-                    }}
-                />
-                <motion.div 
-                    animate={{ 
-                        scale: [1, 1.1, 1],
-                        opacity: [0.08, 0.12, 0.08]
-                    }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -top-1/4 -right-1/4 w-[85%] h-[85%] rounded-full bg-brand-gold blur-[120px]" 
-                />
-                <motion.div 
-                    animate={{ 
-                        scale: [1, 1.2, 1],
-                        opacity: [0.2, 0.3, 0.2]
-                    }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -bottom-1/4 -left-1/4 w-[75%] h-[75%] rounded-full bg-brand-accent/30 blur-[110px]" 
-                />
-                <div
-                    className="absolute top-[18%] left-[8%] w-px h-32 bg-linear-to-b from-brand-gold/40 to-transparent opacity-40 hidden lg:block"
-                    aria-hidden
-                />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(18,87,65,0.28),transparent_42%),linear-gradient(180deg,#061a14_0%,#03100c_100%)]" />
             </div>
-            <div
-                className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-1"
-                style={{ backgroundImage: NOISE_BG }}
-            />
         </>
     )
 }
@@ -72,7 +39,6 @@ export function RegisterView() {
     const [signupEnabled, setSignupEnabled] = useState<boolean | null>(null)
     const [identifierType, setIdentifierType] = useState<"email" | "phone">("email")
     const [firstName, setFirstName] = useState("")
-    const [middleName, setMiddleName] = useState("")
     const [lastName, setLastName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -122,7 +88,6 @@ export function RegisterView() {
             const payload: Record<string, unknown> = {
                 identifierType,
                 firstName: firstName.trim(),
-                middleName: middleName.trim() || undefined,
                 lastName: lastName.trim() || undefined,
                 intendedRole: intendedRole!,
             }
@@ -159,7 +124,7 @@ export function RegisterView() {
         return (
             <div className="min-h-dvh w-full flex flex-col items-center justify-center p-6 relative overflow-hidden bg-brand-deep-950">
                 <RegisterBackdrop />
-                <div className="relative z-10 flex flex-col items-center gap-4 animate-in fade-in duration-500">
+                <div className="relative z-10 flex flex-col items-center gap-4">
                     <div className="relative h-12 w-12 opacity-90">
                         <Image src="/images/logo-white.png" alt="Cloove" fill className="object-contain" priority />
                     </div>
@@ -176,7 +141,7 @@ export function RegisterView() {
         return (
             <div className="min-h-dvh w-full flex flex-col items-center justify-center p-6 relative overflow-hidden bg-brand-deep-950">
                 <RegisterBackdrop />
-                <GlassCard className="relative z-10 p-10 max-w-md text-center border-white/10 animate-in fade-in zoom-in-95 duration-500 shadow-2xl shadow-black/30">
+                <GlassCard className="relative z-10 max-w-md rounded-[28px] border-white/10 bg-white/[0.045] p-8 text-center shadow-sm">
                     <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
                         <Sparkles className="h-5 w-5 text-brand-gold/80" aria-hidden />
                     </div>
@@ -189,7 +154,7 @@ export function RegisterView() {
                     <Link href="/login">
                         <Button
                             variant="outline"
-                            className="border-brand-gold/35 text-brand-cream hover:bg-brand-gold/10 hover:border-brand-gold/50 transition-all duration-300"
+                            className="rounded-2xl border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.07] hover:text-white"
                         >
                             Back to login
                         </Button>
@@ -202,97 +167,67 @@ export function RegisterView() {
     if (success) {
         const isEmail = success.channel === "email"
         return (
-            <div className="min-h-dvh w-full flex flex-col items-center justify-center p-6 bg-brand-deep-950 relative overflow-hidden">
+            <div className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-brand-deep-950 p-6">
                 <RegisterBackdrop />
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="relative z-10 w-full max-w-lg"
-                >
-                    <GlassCard className="p-10 sm:p-14 border-brand-gold/20 shadow-[0_32px_80px_rgba(0,0,0,0.6)] backdrop-blur-3xl text-center bg-white/[0.03]">
-                        <div className="flex justify-center mb-10">
-                            <div className="relative">
-                                <motion.div 
-                                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                                    transition={{ duration: 3, repeat: Infinity }}
-                                    className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full"
-                                />
-                                <div className="relative size-24 rounded-[2rem] bg-brand-gold/10 border border-brand-gold/25 flex items-center justify-center overflow-hidden">
-                                    <AnimatePresence mode="wait">
-                                        <motion.div
-                                            key={isEmail ? "mail" : "check"}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                        >
-                                            {isEmail ? 
-                                                <Mail className="size-10 text-brand-gold" /> : 
-                                                <CheckCircle2 className="size-10 text-brand-gold" />
-                                            }
-                                        </motion.div>
-                                    </AnimatePresence>
-                                </div>
+                <div className="relative z-10 w-full max-w-[480px]">
+                    <GlassCard className="rounded-[28px] border-white/10 bg-white/[0.045] p-8 text-center shadow-sm sm:p-10">
+                        <div className="mb-8 flex justify-center">
+                            <div className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                                {isEmail ? (
+                                    <Mail className="size-8 text-emerald-300" />
+                                ) : (
+                                    <CheckCircle2 className="size-8 text-emerald-300" />
+                                )}
                             </div>
                         </div>
 
                         <div className="space-y-4 mb-10">
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                                className="text-[10px] font-bold uppercase tracking-[0.5em] text-brand-gold"
-                            >
-                                {isEmail ? "Transmission Sent" : "One step left"}
-                            </motion.p>
-                            <h2 className="font-serif text-[2.5rem] leading-[1.1] text-brand-cream tracking-tight">
-                                {isEmail ? <>Check your <span className="italic font-normal text-brand-gold/90">inbox.</span></> : <>Message our <span className="italic font-normal text-brand-gold/90">bot.</span></>}
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/45">
+                                {isEmail ? "Email sent" : "One step left"}
+                            </p>
+                            <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white">
+                                {isEmail ? "Check your inbox." : "Message our bot."}
                             </h2>
-                            <p className="text-brand-cream/60 leading-relaxed max-w-sm mx-auto font-sans">
+                            <p className="mx-auto max-w-sm leading-relaxed text-white/60">
                                 {success.message}
                             </p>
                         </div>
 
                         {!isEmail && WHATSAPP_URL && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 }}
-                                className="mb-6 space-y-3"
-                            >
+                            <div className="mb-6 space-y-3">
                                 <a
                                     href={WHATSAPP_URL}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-between gap-3 w-full px-5 py-4 rounded-2xl bg-brand-gold/8 border border-brand-gold/20 hover:bg-brand-gold/12 hover:border-brand-gold/35 transition-all duration-200 group"
+                                    className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 hover:bg-white/[0.07]"
                                 >
                                     <div className="text-left">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/55 mb-0.5">
+                                        <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-white/45">
                                             WhatsApp bot number
                                         </p>
-                                        <p className="text-lg font-semibold text-brand-cream tracking-wide">
+                                        <p className="text-lg font-semibold tracking-wide text-white">
                                             {BOT_DISPLAY}
                                         </p>
                                     </div>
-                                    <ExternalLink className="w-4 h-4 text-brand-gold/50 group-hover:text-brand-gold transition-colors shrink-0" />
+                                    <ExternalLink className="h-4 w-4 shrink-0 text-white/45" />
                                 </a>
                                 <Button
                                     asChild
-                                    className="w-full h-14 rounded-2xl bg-[#25D366] text-white font-bold hover:bg-[#22c55e] transition-all duration-300 shadow-2xl shadow-black/20"
+                                    className="h-12 w-full rounded-2xl bg-[#25D366] font-semibold text-white hover:bg-[#22c55e]"
                                 >
                                     <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
                                         <MessageCircle className="size-5 mr-2" />
                                         Open in WhatsApp
                                     </a>
                                 </Button>
-                            </motion.div>
+                            </div>
                         )}
 
                         <Button
                             asChild
                             className={isEmail
-                                ? "w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 transition-all duration-300 shadow-2xl shadow-brand-gold/20"
-                                : "w-full h-12 rounded-2xl bg-white/5 border border-white/10 text-brand-cream/70 font-semibold hover:bg-white/8 hover:text-brand-cream transition-all duration-300"
+                                ? "h-12 w-full rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white"
+                                : "h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] font-semibold text-white/70 hover:bg-white/[0.07] hover:text-white"
                             }
                         >
                             <Link href="/login" className="flex items-center gap-2 justify-center">
@@ -301,81 +236,62 @@ export function RegisterView() {
                             </Link>
                         </Button>
                     </GlassCard>
-                </motion.div>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-dvh w-full relative overflow-hidden bg-brand-deep-950 flex flex-col selection:bg-brand-gold/30">
+        <div className="relative flex min-h-dvh w-full flex-col overflow-hidden bg-brand-deep-950 selection:bg-brand-gold/30">
             <RegisterBackdrop />
 
-            <div className="relative z-10 flex-1 flex flex-col justify-center px-4 pt-10 pb-14 sm:px-8 lg:px-14 lg:py-12">
-                <div className="mx-auto w-full max-w-6xl">
-                    <AnimatePresence mode="wait">
+            <div className="relative z-10 flex flex-1 flex-col justify-center px-4 py-8 sm:px-8 lg:px-12">
+                <div className="mx-auto w-full max-w-5xl">
                         {step === 0 ? (
-                            <motion.div
-                                key="role-selection"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                                className="grid gap-12 lg:grid-cols-[1fr_minmax(400px,680px)] lg:items-center"
-                            >
-                                <header className="space-y-8">
+                            <div className="grid gap-8 lg:grid-cols-[0.9fr_minmax(360px,620px)] lg:items-center">
+                                <header className="space-y-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="relative h-14 w-14 ring-1 ring-brand-gold/30 ring-offset-4 ring-offset-brand-deep-950 rounded-2xl bg-brand-deep-900 overflow-hidden group">
+                                        <div className="relative h-11 w-11 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04]">
                                             <Image
                                                 src="/images/logo-white.png"
                                                 alt="Cloove"
                                                 fill
-                                                className="object-contain p-2 transition-transform duration-700 group-hover:scale-110"
+                                                className="object-contain p-2"
                                                 priority
                                             />
                                         </div>
-                                        <div className="h-px w-24 bg-linear-to-r from-brand-gold/50 to-transparent" />
                                     </div>
 
-                                    <div className="space-y-5">
-                                        <motion.p 
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: 0.2 }}
-                                            className="text-[11px] font-bold uppercase tracking-[0.5em] text-brand-gold"
-                                        >
-                                            Intelligent Operations
-                                        </motion.p>
-                                        <h1 className="font-serif text-[3.25rem] leading-[1.05] md:text-6xl lg:text-7xl text-brand-cream font-medium tracking-tight">
-                                            Choose your <br />
-                                            <span className="italic font-normal text-brand-gold/90">vanguard.</span>
+                                    <div className="space-y-4">
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300/70">
+                                            Get started
+                                        </p>
+                                        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white md:text-5xl">
+                                            Choose your role.
                                         </h1>
-                                        <p className="text-brand-cream/60 text-lg leading-relaxed max-w-md font-sans">
-                                            Select the role that fits your mission. Whether running a business or scaling 
-                                            the field, Cloove provides the intelligent edge.
+                                        <p className="max-w-md text-base leading-relaxed text-white/60">
+                                            Set up the right workspace for your operation. Keep the flow focused and complete the basics in a few steps.
                                         </p>
                                     </div>
 
                                     <div className="flex flex-wrap gap-3">
                                         {[
-                                            { icon: Globe, text: "Global Reach" },
-                                            { icon: ShieldCheck, text: "Enterprise Security" },
-                                            { icon: Zap, text: "Real-time Intelligence" }
-                                        ].map((feat, i) => (
-                                            <motion.div 
+                                            { icon: Globe, text: "Global reach" },
+                                            { icon: ShieldCheck, text: "Secure access" },
+                                            { icon: Zap, text: "Fast setup" }
+                                        ].map((feat) => (
+                                            <div
                                                 key={feat.text}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.4 + i * 0.1 }}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] text-brand-cream/70 uppercase tracking-widest font-semibold"
+                                                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/60"
                                             >
-                                                <feat.icon className="size-3 text-brand-gold" />
+                                                <feat.icon className="size-3 text-emerald-300/70" />
                                                 {feat.text}
-                                            </motion.div>
+                                            </div>
                                         ))}
                                     </div>
                                 </header>
 
-                                <div className="grid sm:grid-cols-2 gap-6">
+                                <div className="grid gap-4 sm:grid-cols-2">
                                     <RoleCard
                                         title="Business Owner"
                                         description="Run your commerce with quiet confidence. Manage inventory, sales, and analytics from one premium dashboard."
@@ -396,50 +312,40 @@ export function RegisterView() {
                                         }}
                                     />
                                 </div>
-                            </motion.div>
+                            </div>
                         ) : (
-                            <motion.div
-                                key="registration-form"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="grid gap-8 lg:gap-16 lg:grid-cols-[1fr_minmax(300px,440px)] lg:items-center"
-                            >
-                                <header className="max-w-xl space-y-8">
+                            <div className="grid gap-8 lg:grid-cols-[0.9fr_minmax(300px,440px)] lg:items-center">
+                                <header className="max-w-xl space-y-6">
                                     <button 
                                         onClick={() => setStep(0)}
-                                        className="text-brand-gold/65 hover:text-brand-gold flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-bold transition-colors group"
+                                        className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300/70 hover:text-white"
                                     >
-                                        <ArrowRight className="size-3 rotate-180 transition-transform group-hover:-translate-x-1" />
+                                        <ArrowRight className="size-3 rotate-180" />
                                         Back to selection
                                     </button>
                                     
                                     <div className="space-y-4">
-                                        <p className="text-[11px] font-bold uppercase tracking-[0.45em] text-brand-gold">
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300/70">
                                             {intendedRole === "field_agent" ? "Agent Onboarding" : "Merchant Entry"}
                                         </p>
-                                        <h1 className="font-serif text-[3rem] leading-[1] sm:text-5xl lg:text-6xl text-brand-cream font-medium tracking-tight">
-                                            {intendedRole === "field_agent" ? (
-                                                <>Become a <span className="italic font-normal text-brand-gold/90 text-[2.8rem] sm:text-[3.2rem] lg:text-[4rem]">partner.</span></>
-                                            ) : (
-                                                <>Claim your <span className="italic font-normal text-brand-gold/90 text-[2.8rem] sm:text-[3.2rem] lg:text-[4rem]">workspace.</span></>
-                                            )}
+                                        <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
+                                            {intendedRole === "field_agent" ? "Create your agent profile." : "Create your workspace."}
                                         </h1>
-                                        <p className="text-brand-cream/60 text-lg leading-relaxed max-w-sm">
+                                        <p className="max-w-sm text-base leading-relaxed text-white/60">
                                             {intendedRole === "field_agent" 
-                                                ? "Join the force driving commerce across the continent. Verify once, earn forever." 
-                                                : "Join teams who run operations with quiet confidence—verification stays lightweight."}
+                                                ? "Join the field team and start onboarding businesses." 
+                                                : "Set up your account and continue to business setup."}
                                         </p>
                                     </div>
 
-                                    <div className="hidden lg:flex items-center gap-6 p-6 rounded-3xl bg-brand-gold/5 border border-brand-gold/15 backdrop-blur-sm">
-                                        <div className="size-12 rounded-2xl bg-brand-gold/20 flex items-center justify-center shrink-0">
-                                            <Sparkle className="size-6 text-brand-gold animate-pulse" />
+                                    <div className="hidden items-center gap-4 rounded-[24px] border border-white/10 bg-white/[0.04] p-5 lg:flex">
+                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/20">
+                                            <Sparkle className="size-5 text-emerald-300" />
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="text-sm font-semibold text-brand-cream">Elite Access</p>
-                                            <p className="text-xs text-brand-cream/50 leading-relaxed">
-                                                You're registering as a <span className="text-brand-gold">{intendedRole?.replace('_', ' ')}</span>.
+                                            <p className="text-sm font-semibold text-white">Selected role</p>
+                                            <p className="text-xs leading-relaxed text-white/50">
+                                                You&apos;re registering as a <span className="text-emerald-300">{intendedRole?.replace('_', ' ')}</span>.
                                             </p>
                                         </div>
                                     </div>
@@ -448,18 +354,18 @@ export function RegisterView() {
                                 <div className="relative">
                                     <GlassCard
                                         allowOverflow
-                                        className="p-8 sm:p-10 border-white/10 shadow-2xl bg-white/5 backdrop-blur-3xl relative overflow-visible ring-1 ring-white/5"
+                                        className="relative overflow-visible rounded-[28px] border-white/10 bg-white/[0.045] p-5 shadow-sm sm:p-6"
                                     >
-                                        <div className="mb-8">
-                                            <h2 className="font-serif text-2xl text-brand-cream tracking-tight">Create account</h2>
-                                            <p className="text-brand-cream/50 text-[10px] mt-2 uppercase tracking-[0.25em] font-bold">
-                                                Secure Identity Gateway
+                                        <div className="mb-6">
+                                            <h2 className="text-2xl font-semibold tracking-tight text-white">Create account</h2>
+                                            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
+                                                Secure access
                                             </p>
                                         </div>
 
                                         <form onSubmit={handleSubmit} className="space-y-6">
                                             <div
-                                                className="flex rounded-2xl bg-black/20 border border-white/5 p-1 gap-1"
+                                                className="flex gap-1 rounded-2xl border border-white/10 bg-white/[0.03] p-1"
                                                 role="tablist"
                                             >
                                                 <Button
@@ -467,10 +373,10 @@ export function RegisterView() {
                                                     variant="ghost"
                                                     onClick={() => setIdentifierType("email")}
                                                     className={cn(
-                                                        "flex-1 gap-2 py-3 rounded-xl h-auto font-medium transition-all duration-300",
+                                                        "h-auto flex-1 gap-2 rounded-xl py-3 font-medium",
                                                         identifierType === "email"
-                                                            ? "bg-brand-gold/15 text-brand-gold border border-brand-gold/25 shadow-2xl shadow-brand-gold/10"
-                                                            : "text-brand-cream/45 hover:text-brand-cream hover:bg-white/5"
+                                                            ? "border border-white/10 bg-primary text-white"
+                                                            : "text-white/45 hover:bg-white/[0.05] hover:text-white"
                                                     )}
                                                 >
                                                     <Mail className="size-3.5" />
@@ -481,10 +387,10 @@ export function RegisterView() {
                                                     variant="ghost"
                                                     onClick={() => setIdentifierType("phone")}
                                                     className={cn(
-                                                        "flex-1 gap-2 py-3 rounded-xl h-auto font-medium transition-all duration-300",
+                                                        "h-auto flex-1 gap-2 rounded-xl py-3 font-medium",
                                                         identifierType === "phone"
-                                                            ? "bg-brand-gold/15 text-brand-gold border border-brand-gold/25 shadow-2xl shadow-brand-gold/10"
-                                                            : "text-brand-cream/45 hover:text-brand-cream hover:bg-white/5"
+                                                            ? "border border-white/10 bg-primary text-white"
+                                                            : "text-white/45 hover:bg-white/[0.05] hover:text-white"
                                                     )}
                                                 >
                                                     <Phone className="size-3.5" />
@@ -494,26 +400,26 @@ export function RegisterView() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/55">
                                                         First name
                                                     </Label>
                                                     <Input
                                                         required
                                                         value={firstName}
                                                         onChange={(e) => setFirstName(e.target.value)}
-                                                        className="bg-white/5 border-white/10 text-brand-cream focus:border-brand-gold/50 h-12 md:h-13"
+                                                        className="h-12 border-white/12 bg-white/[0.04] text-white placeholder:text-white/35 focus:border-white/25"
                                                         placeholder="Jane"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/55">
                                                         Last name
                                                     </Label>
                                                     <Input
                                                         required
                                                         value={lastName}
                                                         onChange={(e) => setLastName(e.target.value)}
-                                                        className="bg-white/5 border-white/10 text-brand-cream focus:border-brand-gold/50 h-12 md:h-13"
+                                                        className="h-12 border-white/12 bg-white/[0.04] text-white placeholder:text-white/35 focus:border-white/25"
                                                         placeholder="Doe"
                                                     />
                                                 </div>
@@ -522,7 +428,7 @@ export function RegisterView() {
                                             {identifierType === "email" ? (
                                                 <div className="space-y-4">
                                                     <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/55">
                                                             Email Address
                                                         </Label>
                                                         <Input
@@ -530,12 +436,12 @@ export function RegisterView() {
                                                             required
                                                             value={email}
                                                             onChange={(e) => setEmail(e.target.value)}
-                                                            className="bg-white/5 border-white/10 text-brand-cream focus:border-brand-gold/50 h-12 md:h-13"
+                                                            className="h-12 border-white/12 bg-white/[0.04] text-white placeholder:text-white/35 focus:border-white/25"
                                                             placeholder="jane@company.com"
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                        <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/55">
                                                             Country
                                                         </Label>
                                                         <CountrySelector
@@ -544,16 +450,16 @@ export function RegisterView() {
                                                             onSelect={setCountry}
                                                             disabled={isSubmitting}
                                                             showName
-                                                            triggerClassName="h-12 md:h-13 w-full rounded-xl border-white/10 bg-white/5 text-brand-cream hover:bg-white/10"
+                                                            triggerClassName="h-12 w-full rounded-xl border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.07]"
                                                         />
                                                     </div>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-2">
-                                                    <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                    <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/55">
                                                         Phone number
                                                     </Label>
-                                                    <div className="flex h-12 md:h-13 rounded-xl border border-white/10 bg-white/5 focus-within:ring-1 focus-within:ring-brand-gold/50 overflow-hidden">
+                                                    <div className="flex h-12 overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] focus-within:border-white/25">
                                                         <CountrySelector
                                                             countries={countries}
                                                             selectedCountry={country}
@@ -567,7 +473,7 @@ export function RegisterView() {
                                                             required
                                                             value={phone}
                                                             onChange={(e) => setPhone(e.target.value)}
-                                                            className="border-0 bg-transparent focus-visible:ring-0 flex-1"
+                                                            className="flex-1 border-0 bg-transparent text-white placeholder:text-white/35 focus-visible:ring-0"
                                                             placeholder={country ? `${country.phoneCode} …` : "Phone"}
                                                         />
                                                     </div>
@@ -575,7 +481,7 @@ export function RegisterView() {
                                             )}
 
                                             <div className="space-y-2">
-                                                <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/50">
+                                                <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/55">
                                                     Security Password
                                                 </Label>
                                                 <div className="relative">
@@ -583,13 +489,13 @@ export function RegisterView() {
                                                         type={showPassword ? "text" : "password"}
                                                         value={password}
                                                         onChange={(e) => setPassword(e.target.value)}
-                                                        className="bg-white/5 border-white/10 text-brand-cream focus:border-brand-gold/50 h-12 md:h-13 pr-10"
+                                                        className="h-12 border-white/12 bg-white/[0.04] pr-10 text-white placeholder:text-white/35 focus:border-white/25"
                                                         placeholder="••••••••"
                                                     />
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowPassword(!showPassword)}
-                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-cream/30 hover:text-brand-gold transition-colors"
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70"
                                                     >
                                                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                                                     </button>
@@ -605,26 +511,26 @@ export function RegisterView() {
                                                         className="sr-only peer"
                                                     />
                                                     <div className={cn(
-                                                        "size-5 rounded-md border transition-all duration-200 flex items-center justify-center",
+                                                        "size-5 rounded-md border flex items-center justify-center",
                                                         termsAccepted
-                                                            ? "bg-brand-gold border-brand-gold"
-                                                            : "bg-white/5 border-white/20 group-hover:border-brand-gold/40"
+                                                            ? "border-primary bg-primary"
+                                                            : "border-white/20 bg-white/[0.04] group-hover:border-white/35"
                                                     )}>
                                                         {termsAccepted && (
-                                                            <svg className="size-3 text-brand-deep" viewBox="0 0 12 12" fill="none">
+                                                            <svg className="size-3 text-white" viewBox="0 0 12 12" fill="none">
                                                                 <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                                             </svg>
                                                         )}
                                                     </div>
                                                 </div>
-                                                <span className="text-xs text-brand-cream/50 leading-relaxed group-hover:text-brand-cream/70 transition-colors">
+                                                <span className="text-xs leading-relaxed text-white/50 group-hover:text-white/70">
                                                     I agree to the{" "}
                                                     <a
                                                         href="https://clooveai.com/terms"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="text-brand-gold/80 hover:text-brand-gold underline underline-offset-2 transition-colors"
+                                                        className="text-emerald-300/80 underline underline-offset-2 hover:text-white"
                                                     >
                                                         Terms of Service
                                                     </a>
@@ -634,7 +540,7 @@ export function RegisterView() {
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="text-brand-gold/80 hover:text-brand-gold underline underline-offset-2 transition-colors"
+                                                        className="text-emerald-300/80 underline underline-offset-2 hover:text-white"
                                                     >
                                                         Privacy Policy
                                                     </a>
@@ -644,13 +550,13 @@ export function RegisterView() {
                                             <Button
                                                 type="submit"
                                                 disabled={isSubmitting || !termsAccepted}
-                                                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 shadow-2xl shadow-brand-gold/10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                                className="h-12 w-full rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
                                             >
                                                 {isSubmitting ? (
                                                     <Loader2 className="animate-spin size-5" />
                                                 ) : (
                                                     <span className="flex items-center gap-2">
-                                                        Initiate Access
+                                                        Continue
                                                         <ArrowRight className="size-4" />
                                                     </span>
                                                 )}
@@ -658,16 +564,15 @@ export function RegisterView() {
                                         </form>
                                     </GlassCard>
                                     
-                                    <p className="mt-8 text-center text-brand-cream/40 text-sm">
+                                    <p className="mt-5 text-center text-sm text-white/45">
                                         Already a member?{" "}
-                                        <Link href="/login" className="text-brand-gold/80 hover:text-brand-gold font-medium transition-colors">
+                                        <Link href="/login" className="font-medium text-emerald-300/80 hover:text-white">
                                             Log in
                                         </Link>
                                     </p>
                                 </div>
-                            </motion.div>
+                            </div>
                         )}
-                    </AnimatePresence>
                 </div>
             </div>
         </div>
@@ -677,7 +582,7 @@ export function RegisterView() {
 interface RoleCardProps {
     title: string
     description: string
-    icon: any
+    icon: LucideIcon
     onClick: () => void
     badge?: string
 }
@@ -686,31 +591,31 @@ function RoleCard({ title, description, icon: Icon, onClick, badge }: RoleCardPr
     return (
         <button
             onClick={onClick}
-            className="group relative flex flex-col items-start text-left p-8 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-3xl transition-all duration-500 hover:bg-brand-gold/[0.03] hover:border-brand-gold/30 hover:scale-[1.03] hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden"
+            className="group relative flex flex-col items-start overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.045] p-6 text-left hover:bg-white/[0.07]"
         >
-            <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <ArrowRight className="size-6 text-brand-gold -rotate-45" />
+            <div className="absolute right-5 top-5">
+                <ArrowRight className="size-4 -rotate-45 text-white/35" />
             </div>
 
             {badge && (
-                <div className="absolute top-6 right-6 px-3 py-1 rounded-full bg-brand-gold/15 border border-brand-gold/25 text-[9px] font-bold text-brand-gold uppercase tracking-widest">
+                <div className="absolute right-10 top-5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-widest text-emerald-300/80">
                     {badge}
                 </div>
             )}
 
-            <div className="mb-8 size-14 rounded-2xl bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center group-hover:bg-brand-gold group-hover:scale-110 transition-all duration-500">
-                <Icon className="size-7 text-brand-gold group-hover:text-brand-deep transition-colors duration-500" />
+            <div className="mb-6 flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-primary/20">
+                <Icon className="size-6 text-emerald-300" />
             </div>
 
-            <h3 className="font-serif text-2xl text-brand-cream mb-3 group-hover:text-brand-gold transition-colors duration-500">
+            <h3 className="mb-3 text-xl font-semibold tracking-tight text-white">
                 {title}
             </h3>
-            <p className="text-brand-cream/50 text-sm leading-relaxed font-sans group-hover:text-brand-cream/70 transition-colors duration-500">
+            <p className="text-sm leading-relaxed text-white/55">
                 {description}
             </p>
 
-            <div className="mt-8 pt-6 border-t border-white/5 w-full">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold/60 group-hover:text-brand-gold transition-colors">
+            <div className="mt-6 w-full border-t border-white/10 pt-5">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-300/70">
                     Get started
                 </span>
             </div>

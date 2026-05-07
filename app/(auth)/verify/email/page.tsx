@@ -80,7 +80,7 @@ function VerifyEmailContent() {
             .finally(() => { if (!cancelled) setInitializing(false) })
 
         return () => { cancelled = true }
-    }, [token])
+    }, [token, refreshUser])
 
     const handleVerify = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -107,23 +107,23 @@ function VerifyEmailContent() {
 
     if (initializing) {
         return (
-            <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-brand-deep-950">
-                <Loader2 className="w-10 h-10 animate-spin text-brand-gold" />
+            <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-deep-950 p-4">
+                <Loader2 className="h-6 w-6 animate-spin text-emerald-300" />
             </div>
         )
     }
 
     if (invalid) {
         return (
-            <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-brand-deep-950">
-                <GlassCard className="p-8 w-full max-w-md text-center border-white/10 bg-white/5 shadow-2xl shadow-black/20">
-                    <AlertCircle className="w-14 h-14 text-brand-gold/80 mx-auto mb-4" aria-hidden />
-                    <h1 className="font-serif text-2xl text-brand-cream mb-2">Invalid or expired link</h1>
-                    <p className="text-brand-cream/70 text-sm mb-6">
+            <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-deep-950 p-4">
+                <GlassCard className="w-full max-w-[420px] rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
+                    <AlertCircle className="mx-auto mb-4 h-10 w-10 text-red-300" aria-hidden />
+                    <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Invalid or expired link</h1>
+                    <p className="mb-6 text-sm text-white/60">
                         This verification link is invalid or has expired. Request a new one from the app.
                     </p>
                     <Link href="/login">
-                        <Button className="w-full min-w-[180px] h-12 rounded-xl bg-brand-gold text-brand-deep font-semibold hover:bg-brand-gold/90 shadow-lg shadow-brand-gold/20 transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                        <Button className="h-12 w-full min-w-[180px] rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white">
                             Go to login
                         </Button>
                     </Link>
@@ -134,15 +134,15 @@ function VerifyEmailContent() {
 
     if (success) {
         return (
-            <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-brand-deep-950">
-                <GlassCard className="p-8 w-full max-w-md text-center border-white/10 bg-white/5 shadow-2xl shadow-black/20">
-                    <CheckCircle2 className="w-14 h-14 text-brand-gold mx-auto mb-4" />
-                    <h1 className="font-serif text-2xl text-brand-cream mb-2">Email verified</h1>
-                    <p className="text-brand-cream/70 text-sm mb-6">
+            <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-deep-950 p-4">
+                <GlassCard className="w-full max-w-[420px] rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
+                    <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-emerald-300" />
+                    <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Email verified</h1>
+                    <p className="mb-6 text-sm text-white/60">
                         You can now log in to your dashboard.
                     </p>
                     <Link href="/login">
-                        <Button className="w-full min-w-[180px] h-12 rounded-xl bg-brand-gold text-brand-deep font-semibold hover:bg-brand-gold/90 shadow-lg shadow-brand-gold/20 transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                        <Button className="h-12 w-full min-w-[180px] rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white">
                             Log in
                         </Button>
                     </Link>
@@ -152,19 +152,19 @@ function VerifyEmailContent() {
     }
 
     return (
-        <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-brand-deep-950">
-            <GlassCard className="p-8 w-full max-w-md text-center border-white/10 bg-white/5 shadow-2xl shadow-black/20">
-                <Mail className="w-14 h-14 text-brand-gold mx-auto mb-4" />
-                <h1 className="font-serif text-2xl text-brand-cream mb-2">Verify your email</h1>
+        <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-deep-950 p-4">
+            <GlassCard className="w-full max-w-[420px] rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
+                <Mail className="mx-auto mb-4 h-10 w-10 text-emerald-300" />
+                <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Verify your email</h1>
                 {emailMasked ? (
-                    <p className="text-brand-cream/70 text-sm mb-6">Verifying {emailMasked}</p>
+                    <p className="mb-6 text-sm text-white/60">Verifying {emailMasked}</p>
                 ) : (
                     <div className="mb-6" />
                 )}
                 <form onSubmit={handleVerify} className="space-y-4">
                     {!hasPassword && (
                         <div className="space-y-1.5 text-left">
-                            <Label className="text-[10px] font-bold uppercase tracking-widest text-brand-cream/80">
+                            <Label className="text-[10px] font-semibold uppercase tracking-widest text-white/55">
                                 Set your password
                             </Label>
                             <div className="relative">
@@ -174,7 +174,7 @@ function VerifyEmailContent() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     minLength={6}
-                                    className="h-12 sm:h-12 pr-10 bg-white/10 border-white/20 text-brand-cream placeholder:text-white/40 focus-visible:ring-brand-gold/40 dark:bg-white/10 dark:border-white/20"
+                                    className="h-12 pr-10 border-white/12 bg-white/[0.04] text-white placeholder:text-white/35 focus-visible:ring-white/20 dark:border-white/12 dark:bg-white/[0.04] sm:h-12"
                                     placeholder="Min 6 characters"
                                 />
                                 <Button
@@ -182,7 +182,7 @@ function VerifyEmailContent() {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setShowPassword((p) => !p)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-brand-cream/60 hover:text-brand-cream hover:bg-transparent transition-colors"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-white/55 hover:bg-transparent hover:text-white"
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
                                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -193,7 +193,7 @@ function VerifyEmailContent() {
                     <Button
                         type="submit"
                         disabled={loading}
-                        className="w-full min-w-[180px] h-12 rounded-xl bg-brand-gold text-brand-deep font-semibold hover:bg-brand-gold/90 shadow-lg shadow-brand-gold/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                        className="h-12 w-full min-w-[180px] rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white disabled:opacity-45"
                     >
                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify email"}
                     </Button>
@@ -207,8 +207,8 @@ export default function VerifyEmailPage() {
     return (
         <Suspense
             fallback={
-                <div className="min-h-dvh flex items-center justify-center bg-brand-deep-950">
-                    <Loader2 className="w-10 h-10 animate-spin text-brand-gold" />
+                <div className="flex min-h-dvh items-center justify-center bg-brand-deep-950">
+                    <Loader2 className="h-6 w-6 animate-spin text-emerald-300" />
                 </div>
             }
         >

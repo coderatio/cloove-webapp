@@ -78,7 +78,7 @@ export interface GoSettings {
   updated_at?: string | null
 }
 
-export interface UpdateGoSettingsInput extends Partial<GoSettings> {
+export interface UpdateGoSettingsInput extends Omit<Partial<GoSettings>, "capabilities"> {
   agent_profile?: AgentProfile
   capabilities?: Partial<AgentCapabilitiesSummary> | null
 }

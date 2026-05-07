@@ -30,16 +30,16 @@ export function ModuleShell({ icon: Icon, title, subtitle, children, footerMarkd
                         <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                        <h2 className="font-serif text-lg text-brand-deep dark:text-brand-cream">{title}</h2>
+                        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
                         {subtitle ? (
-                            <p className="mt-0.5 text-sm text-brand-deep/65 dark:text-brand-cream/65">{subtitle}</p>
+                            <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
                         ) : null}
                     </div>
                 </div>
             </div>
             <div className="px-4 py-4 md:px-5 md:py-5">{children}</div>
             {footerMarkdown?.trim() ? (
-                <div className="border-t border-brand-deep/5 px-4 py-3 text-xs leading-relaxed text-brand-deep/75 dark:border-white/10 dark:text-brand-cream/75 md:px-5">
+                <div className="border-t border-brand-deep/5 px-4 py-3 text-xs leading-relaxed text-muted-foreground dark:border-white/10 md:px-5">
                     <Markdown content={footerMarkdown} />
                 </div>
             ) : null}

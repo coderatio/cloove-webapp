@@ -18,13 +18,11 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import { Settings, LogOut, Sun, Moon } from "lucide-react"
 import { toast } from "sonner"
-import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { BusinessGuard } from "../shared/BusinessGuard"
 import { VerificationAlert } from "../shared/VerificationAlert"
 import { SubscriptionAlertBanner } from "../shared/SubscriptionAlertBanner"
 import { TermsGate } from "../shared/TermsGate"
-import { apiClient } from "@/app/lib/api-client"
 import { useAuth } from "../providers/auth-provider"
 import { usePermission } from "@/app/hooks/usePermission"
 import { StoreProvider } from "../../domains/stores/providers/StoreProvider"
@@ -55,7 +53,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         }
         setIsZenMode(storage.getRestaurantZenMode())
         setMounted(true)
-    }, [])
+    }, [isTablet])
 
     // 2. Responsive behavior: Handle screen size changes after mount
     React.useEffect(() => {
@@ -125,12 +123,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     return (
         <ZenModeContext.Provider value={{ isZenMode, toggleZenMode }}>
-        <div className="min-h-screen bg-brand-cream dark:bg-background text-foreground transition-colors duration-300">
-            {/* Background Gradient Mesh (Optional "Premium" touch) */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-40 dark:opacity-10">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/5 blur-3xl filter" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-brand-gold/10 blur-3xl filter" />
-            </div>
+        <div className="min-h-screen bg-background text-foreground">
 
             <MobileNavProvider>
                 {!zenActive && <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />}
@@ -151,9 +144,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     )}
                     {/* Mobile header: fixed (sticky breaks when a sibling uses position:fixed, e.g. subscription bar) */}
                     {!isAssistantPage && (
-                        <div className="fixed left-0 right-0 top-[var(--subscription-banner-offset,0px)] z-30 flex items-center justify-between border-b border-white/10 bg-background/60 px-4 py-3 backdrop-blur-xl dark:border-white/5 md:hidden">
+                        <div className="fixed left-0 right-0 top-[var(--subscription-banner-offset,0px)] z-30 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
                             <div className="flex items-center gap-2">
-                                <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green text-brand-cream shadow-sm overflow-hidden">
+                                <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-primary/12 bg-primary text-primary-foreground">
                                     <Image
                                         src="/images/logo-white.png"
                                         alt="Cloove"
@@ -168,34 +161,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             <div className="relative">
                                 <button
                                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                                    className="h-8 w-8 rounded-full bg-linear-to-br from-brand-gold to-yellow-600 text-brand-deep flex items-center justify-center font-bold text-[10px] shadow-lg uppercase border border-white/20"
+                                    className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted text-[10px] font-semibold uppercase text-foreground"
                                 >
                                     {userInitials}
                                 </button>
-                                <AnimatePresence>
-                                    {isProfileMenuOpen && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-40"
-                                                onClick={() => setIsProfileMenuOpen(false)}
-                                            />
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                                className="absolute z-50 top-full right-0 mt-2 bg-brand-deep/95 dark:bg-black/95 backdrop-blur-xl border border-white/10 rounded-2xl p-1 shadow-2xl min-w-[180px]"
-                                            >
-                                                <div className="flex flex-col gap-0.5">
-                                                    <div className="px-3 py-2 border-b border-white/5 mb-1">
-                                                        <p className="text-xs font-bold text-brand-cream truncate">{user?.fullName}</p>
-                                                        <p className="text-[10px] text-brand-cream/50 truncate font-medium capitalize">
+                                {isProfileMenuOpen && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-40"
+                                            onClick={() => setIsProfileMenuOpen(false)}
+                                        />
+                                        <div className="absolute right-0 top-full z-50 mt-2 min-w-[180px] rounded-2xl border border-border bg-background p-1 shadow-lg">
+                                            <div className="flex flex-col gap-0.5">
+                                                    <div className="mb-1 border-b border-border px-3 py-2">
+                                                        <p className="truncate text-xs font-semibold text-foreground">{user?.fullName}</p>
+                                                        <p className="truncate text-[10px] font-medium capitalize text-muted-foreground">
                                                             {role?.toLowerCase().replace('_', ' ') || 'User'}
                                                         </p>
                                                     </div>
                                                     <Link
                                                         href="/settings"
                                                         onClick={() => setIsProfileMenuOpen(false)}
-                                                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-brand-cream/70 hover:text-brand-cream hover:bg-white/5 transition-all"
+                                                        className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     >
                                                         <Settings className="h-3.5 w-3.5" />
                                                         Settings
@@ -205,27 +192,26 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                                             setTheme(theme === "dark" ? "light" : "dark")
                                                             setIsProfileMenuOpen(false)
                                                         }}
-                                                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-brand-cream/70 hover:text-brand-cream hover:bg-white/5 transition-all w-full text-left"
+                                                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     >
                                                         {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
                                                         {theme === "dark" ? "Light Mode" : "Dark Mode"}
                                                     </button>
-                                                    <div className="h-px bg-white/5 mx-2 my-1" />
+                                                    <div className="mx-2 my-1 h-px bg-border" />
                                                     <button
                                                         onClick={() => {
                                                             setIsProfileMenuOpen(false)
                                                             handleLogout()
                                                         }}
-                                                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full text-left"
+                                                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
                                                     >
                                                         <LogOut className="h-3.5 w-3.5" />
                                                         Log Out
                                                     </button>
                                                 </div>
-                                            </motion.div>
-                                        </>
-                                    )}
-                                </AnimatePresence>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}

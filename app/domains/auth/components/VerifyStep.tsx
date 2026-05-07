@@ -1,7 +1,6 @@
 "use client"
 
 import { Lock, Shield, Eye, EyeOff, ArrowRight, MessageCircle, ExternalLink } from "lucide-react"
-import { motion } from "framer-motion"
 import Link from "next/link"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -22,74 +21,42 @@ export function VerifyStep({ flow }: VerifyStepProps) {
 
     if (state.phoneActivationRequired) {
         return (
-            <motion.div
-                key="verify-activate"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-                <GlassCard className="p-8 sm:p-10 text-center border-white/10 bg-white/5 shadow-2xl shadow-black/20">
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.1, duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-                        className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-gold/20 text-brand-gold"
-                    >
+                <GlassCard className="rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm sm:p-8">
+                    <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-emerald-200">
                         <MessageCircle className="h-7 w-7" aria-hidden />
-                    </motion.div>
-                    <motion.h1
-                        className="font-serif text-2xl sm:text-3xl text-brand-cream font-medium tracking-tight mb-2"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.15, duration: 0.25 }}
-                    >
+                    </div>
+                    <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">
                         Activate your number
-                    </motion.h1>
-                    <motion.p
-                        className="text-brand-cream/80 text-sm sm:text-base mb-6 max-w-sm mx-auto leading-relaxed"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2, duration: 0.25 }}
-                    >
+                    </h1>
+                    <p className="mx-auto mb-6 max-w-sm text-sm leading-relaxed text-white/60">
                         Send a message to our WhatsApp bot to activate your phone number, then come back here to log in.
-                    </motion.p>
+                    </p>
                     {WHATSAPP_URL && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.24, duration: 0.25 }}
-                            className="mb-6"
-                        >
+                        <div className="mb-6">
                             <a
                                 href={WHATSAPP_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-3 w-full justify-between px-5 py-3.5 rounded-2xl bg-brand-gold/10 border border-brand-gold/25 hover:bg-brand-gold/15 hover:border-brand-gold/40 transition-all duration-200 group"
+                                className="inline-flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 hover:bg-white/[0.07]"
                             >
                                 <div className="text-left">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-gold/60 mb-0.5">
+                                    <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-white/45">
                                         WhatsApp bot number
                                     </p>
-                                    <p className="text-base font-semibold text-brand-cream tracking-wide">
+                                    <p className="text-base font-semibold tracking-wide text-white">
                                         {BOT_DISPLAY}
                                     </p>
                                 </div>
-                                <ExternalLink className="w-4 h-4 text-brand-gold/60 group-hover:text-brand-gold transition-colors shrink-0" />
+                                <ExternalLink className="h-4 w-4 shrink-0 text-white/45" />
                             </a>
-                        </motion.div>
+                        </div>
                     )}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.28, duration: 0.25 }}
-                        className="space-y-3"
-                    >
+                    <div className="space-y-3">
                         {WHATSAPP_URL && (
                             <Button
                                 asChild
                                 size="lg"
-                                className="w-full h-12 rounded-xl bg-[#25D366] text-white font-semibold hover:bg-[#22c55e] shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                                className="h-12 w-full rounded-2xl bg-[#25D366] text-white font-semibold hover:bg-[#22c55e]"
                             >
                                 <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
                                     <MessageCircle className="w-4 h-4 mr-2" />
@@ -101,42 +68,34 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                             onClick={actions.backToIdentifier}
                             variant="ghost"
                             size="lg"
-                            className="w-full h-12 rounded-xl text-brand-cream/70 hover:text-brand-cream hover:bg-white/5"
+                            className="h-12 w-full rounded-2xl text-white/60 hover:bg-white/[0.06] hover:text-white"
                         >
                             Back to login
                             <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
-                    </motion.div>
+                    </div>
                 </GlassCard>
-            </motion.div>
         )
     }
 
     return (
-        <motion.div
-            key="verify"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-            <GlassCard className="p-8 border-white/10 shadow-2xl relative overflow-visible bg-white/5">
+            <GlassCard className="relative overflow-visible rounded-[28px] border-white/10 bg-white/[0.045] p-5 shadow-sm">
                 <LoginBackButton onClick={actions.backToIdentifier} />
 
-                <form onSubmit={actions.handleVerifySubmit} className="space-y-6 pt-10">
+                <form onSubmit={actions.handleVerifySubmit} className="space-y-5 pt-10">
                     <div className="space-y-3">
                         <div className="flex items-center justify-between ml-1">
-                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">
+                            <label className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/55">
                                 {state.isPinLogin ? "Transaction PIN" : "Password"}
                             </label>
                             {state.isPinLogin ? (
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-gold/10 text-brand-gold text-[9px] font-bold uppercase border border-brand-gold/20">
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase text-white/55">
                                     <Shield className="w-3 h-3" /> WhatsApp PIN Login
                                 </span>
                             ) : null}
                         </div>
                         <div className="relative group">
-                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-brand-cream/60 group-focus-within:text-brand-gold transition-colors">
+                            <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
                                 <Lock className="w-4 h-4" />
                             </div>
                             <input
@@ -156,14 +115,14 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                                         : actions.setPassword(e.target.value)
                                 }
                                 className={cn(
-                                    "w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-12 text-brand-cream placeholder:text-white/40 outline-none focus:border-brand-gold/40 focus:bg-white/10 transition-all text-base tracking-widest",
+                                    "h-14 w-full rounded-2xl border border-white/12 bg-white/[0.04] py-0 pl-12 pr-12 text-base tracking-widest text-white outline-none placeholder:text-white/35 focus:border-white/25 focus:bg-white/[0.06]",
                                     state.isPinLogin && "text-center tracking-[1em] pl-4 font-bold"
                                 )}
                             />
                             <button
                                 type="button"
                                 onClick={() => actions.setShowPassword(!state.showPassword)}
-                                className="absolute cursor-pointer inset-y-0 right-4 flex items-center text-brand-cream/30 hover:text-brand-gold transition-colors"
+                                className="absolute inset-y-0 right-4 flex cursor-pointer items-center text-white/35 hover:text-white/70"
                             >
                                 {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
@@ -176,7 +135,7 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                             <div className="flex justify-end pr-1">
                                 <Link
                                     href="/forgot-password"
-                                    className="text-[11px] font-medium text-brand-gold/60 hover:text-brand-gold transition-colors"
+                                    className="text-[11px] font-medium text-emerald-300/70 hover:text-white"
                                 >
                                     Forgot password?
                                 </Link>
@@ -187,13 +146,12 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                     <Button
                         type="submit"
                         disabled={state.isLoading || (state.isPinLogin ? state.pin.length < 4 : !state.password)}
-                        className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base hover:bg-brand-gold/90 transition-all shadow-xl shadow-brand-gold/10 group"
+                        className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45 [&_svg]:text-white"
                     >
                         {state.isLoading ? "Verifying..." : "Verify & Login"}
-                        <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 </form>
             </GlassCard>
-        </motion.div>
     )
 }

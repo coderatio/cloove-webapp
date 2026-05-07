@@ -212,7 +212,7 @@ export function ProfileSettings() {
                         <Button
                             onClick={handleSave}
                             disabled={updateProfile.isPending}
-                            className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                            className="h-14 w-full rounded-2xl text-lg font-semibold shadow-sm"
                         >
                             {updateProfile.isPending ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

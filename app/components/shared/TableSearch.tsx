@@ -20,14 +20,14 @@ export function TableSearch({
     return (
         <div className={cn("relative group flex-1 md:min-w-[300px] min-w-0", className)}>
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search className="w-4 h-4 text-brand-accent/70 dark:text-brand-cream/70 group-focus-within:text-brand-deep/60 dark:group-focus-within:text-brand-cream transition-colors" />
+                <Search className="w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
             </div>
             <input
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/40 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all placeholder:text-brand-accent/60 dark:placeholder:text-brand-cream/60 text-brand-deep dark:text-brand-cream text-sm font-medium"
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3 pl-10 text-sm font-medium text-foreground transition-all placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/15"
             />
         </div>
     )

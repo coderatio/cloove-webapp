@@ -6,20 +6,16 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   CLOOVE DESIGN SYSTEM
-   Philosophy: Calm, Intelligent, Trustworthy. Invisible Power.
-   ───────────────────────────────────────────────────────────────────────────── */
+/* Minimal system tokens for the app shell. Keep the palette quiet and functional. */
 
 @theme {
-  /* Brand Colors */
-  --color-cloove-deep: #0a3d31;
-  --color-cloove-green: #0b3d2e;
-  --color-cloove-gold: #d4af37;
-  --color-cloove-cream: #fdfcf8;
-  --color-cloove-accent: #1e4d3f;
-  --color-cloove-muted: #4a7c6a;
-  --color-cloove-border: #e8e4dc;
+  --color-cloove-deep: #0b3d2e;
+  --color-cloove-green: #125741;
+  --color-cloove-gold: #2a6b58;
+  --color-cloove-cream: #ffffff;
+  --color-cloove-accent: #2f5a4d;
+  --color-cloove-muted: #6b7280;
+  --color-cloove-border: #dde7e2;
 
   /* Brand Deep Spectrum */
   --color-brand-deep-50: #e6eeec;
@@ -47,45 +43,43 @@
   --color-brand-gold-900: #574319;
   --color-brand-gold-950: #33260d;
 
-  /* Brand Green Spectrum (Emerald-leaning) */
-  --color-brand-green-50: #ecfdf5;
-  --color-brand-green-100: #d1fae5;
-  --color-brand-green-200: #a7f3d0;
-  --color-brand-green-300: #6ee7b7;
-  --color-brand-green-400: #34d399;
-  --color-brand-green-500: #10b981;
-  --color-brand-green-600: #059669;
-  --color-brand-green-700: #047857;
-  --color-brand-green-800: #065f46;
-  --color-brand-green-900: #064e3b;
-  --color-brand-green-950: #022c22;
+  /* Brand Green Spectrum (kept for compatibility with existing classes) */
+  --color-brand-green-50: #f2f7f5;
+  --color-brand-green-100: #e1ece7;
+  --color-brand-green-200: #c2d8d0;
+  --color-brand-green-300: #97bcaf;
+  --color-brand-green-400: #699d8d;
+  --color-brand-green-500: #3f7b69;
+  --color-brand-green-600: #2d6452;
+  --color-brand-green-700: #1f4f42;
+  --color-brand-green-800: #125741;
+  --color-brand-green-900: #0b3d2e;
+  --color-brand-green-950: #0b1f1a;
 
-  /* Semantic Colors */
-  --color-success: #16a34a;
-  --color-warning: #ca8a04;
-  --color-danger: #dc2626;
+  --color-success: #166534;
+  --color-warning: #92400e;
+  --color-danger: #b91c1c;
 
   /* Text Colors */
-  --color-text-primary: #1f2937;
-  --color-text-secondary: #475569;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
   --color-text-muted: #6b7280;
 
   /* Surface Colors */
   --color-surface: #ffffff;
-  --color-surface-alt: #f8f6f2;
-  --color-surface-hover: #f0ede6;
+  --color-surface-alt: #f5f8f7;
+  --color-surface-hover: #edf3f0;
 
   /* Fonts — reference next/font's loaded variables so the browser always resolves
      to the actual @font-face name rather than a bare string with no matching
      @font-face when next/font is active. */
-  --font-serif: var(--font-dm-serif-display), var(--font-dm-sans), ui-serif, Georgia, serif;
+  --font-serif: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-dm-mono), ui-monospace, 'Cascadia Code', monospace;
 
-  /* Shadows - subtle, not loud */
-  --shadow-sm: 0 1px 2px rgba(10, 61, 49, 0.04);
-  --shadow-md: 0 4px 12px rgba(10, 61, 49, 0.06);
-  --shadow-lg: 0 8px 24px rgba(10, 61, 49, 0.08);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 16px 32px rgba(15, 23, 42, 0.08);
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -108,133 +102,63 @@
   --color-primary-foreground: var(--color-cloove-cream);
   --color-muted: var(--color-surface-alt);
   --color-muted-foreground: var(--color-text-muted);
+  --color-card: rgba(255, 255, 255, 0.92);
+  --color-card-foreground: var(--foreground);
   --color-accent: var(--color-cloove-accent);
   --color-accent-foreground: var(--color-cloove-cream);
   --color-border: var(--color-cloove-border);
   --color-input: var(--color-cloove-border);
   --color-ring: var(--color-cloove-green);
 
-  /* Website Brand Tokens Port */
-  --color-brand-deep: #0a3d31;
-  --color-brand-green: #0b3d2e;
-  --color-brand-gold: #d4af37;
-  --color-brand-gold-light: #e7bd3d;
-  --color-brand-gold-bright: #efd36a;
-  --color-brand-cream: #fdfcf8;
-  --color-brand-accent: #1e4d3f;
-  --color-brand-emerald: #10b981;
-  --color-brand-emerald-light: #34d399;
-
-  /* Ported Animations & Keyframes */
-  --animate-spin-slow: spin 8s linear infinite;
-  --animate-float: custom-float 6s ease-in-out infinite;
-  --animate-slide-in: slideIn 0.3s ease-out;
-  --animate-pulse-glow: pulse-glow 2s infinite;
-
-  @keyframes custom-float {
-
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-15px);
-    }
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes pulse-glow {
-
-    0%,
-    100% {
-      box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-    }
-
-    50% {
-      box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
-    }
-  }
+  --color-brand-deep: #0b3d2e;
+  --color-brand-green: #125741;
+  --color-brand-gold: #2a6b58;
+  --color-brand-gold-light: #3f7b69;
+  --color-brand-gold-bright: #74a395;
+  --color-brand-cream: #ffffff;
+  --color-brand-accent: #335b4f;
+  --color-brand-emerald: #2b6a58;
+  --color-brand-emerald-light: #4e8373;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
    BASE STYLES
    ───────────────────────────────────────────────────────────────────────────── */
 
-@keyframes float-slow {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate(40px, -30px) scale(1.1);
-  }
-}
-
-@keyframes float-slower {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1.05);
-  }
-
-  50% {
-    transform: translate(-50px, 40px) scale(0.95);
-  }
-}
-
-.animate-float-slow {
-  animation: float-slow 20s linear infinite;
-}
-
-.animate-float-slower {
-  animation: float-slower 25s linear infinite;
-}
-
 :root {
-  --background: var(--color-cloove-cream);
-  --background-dark: #0f241c;
+  --background: #f6f8f7;
+  --background-dark: #09090b;
   --foreground: var(--color-text-primary);
 }
 
 body {
   font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
 }
 
 .dark {
   --background: var(--background-dark);
-  --foreground: var(--color-cloove-cream);
+  --foreground: #f5f5f5;
 
-  /* Semantic Overrides for Dark Mode - True Dark Palette */
-  --color-surface: var(--background-dark);
-  --color-surface-alt: #121b18;
-  --color-surface-hover: #182420;
+  --color-surface: #0f1715;
+  --color-surface-alt: #15211d;
+  --color-surface-hover: #1b2b25;
 
-  --color-text-primary: var(--color-cloove-cream);
-  --color-text-secondary: #94a3a1;
-  --color-text-muted: #647471;
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
 
-  --color-cloove-border: rgba(255, 255, 255, 0.06);
-  --color-input: rgba(255, 255, 255, 0.06);
+  --color-cloove-border: rgba(146, 184, 171, 0.16);
+  --color-input: rgba(146, 184, 171, 0.16);
 
   /* Shadcn/UI mapping updates */
   --color-border: var(--color-cloove-border);
   --color-input: var(--color-input);
   --color-muted: var(--color-surface-alt);
   --color-muted-foreground: var(--color-text-muted);
+  --color-card: rgba(18, 24, 22, 0.92);
+  --color-card-foreground: var(--foreground);
 }
 
 /* Next.js dev overlay portal: give it proper dimensions so it doesn't report 0×0 */
@@ -279,23 +203,23 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0;
   line-height: 1.2;
 }
 
 .heading-display {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 2rem;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 
 .heading-section {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 1.25rem;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--color-text-primary);
 }
 

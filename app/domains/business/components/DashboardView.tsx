@@ -3,7 +3,6 @@
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { ALL_STORES_ID } from "@/app/domains/stores/data/storesMocks"
 import { PageTransition } from "@/app/components/layout/page-transition"
-import { motion } from "framer-motion"
 import { DashboardHero } from "@/app/components/dashboard/DashboardHero"
 import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
 import { ActionRow } from "@/app/components/dashboard/ActionRow"
@@ -83,26 +82,21 @@ export function DashboardView() {
 
     return (
         <PageTransition>
-            <div className="max-w-5xl mx-auto space-y-8 pb-20">
+            <div className="mx-auto max-w-6xl space-y-8 pb-20">
                 <header className="pt-1">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between"
-                    >
+                    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         {/* Mobile: one row — greeting + grouped filters (store + icon date) */}
                         <div className="flex w-full min-w-0 items-center justify-between gap-2 md:hidden">
                             <div className="min-w-0 flex-1 pr-1">
-                                <p className="text-[10px] font-medium capitalize leading-none text-brand-accent/80 dark:text-brand-cream/80">
+                                <p className="text-[11px] font-medium capitalize leading-none text-muted-foreground">
                                     Welcome,
                                 </p>
-                                <h1 className="mt-0.5 truncate font-serif text-xl leading-tight tracking-tight text-brand-deep dark:text-brand-cream">
+                                <h1 className="mt-1 truncate text-2xl font-semibold leading-tight tracking-tight text-foreground">
                                     {ownerName}
                                 </h1>
                             </div>
                             <div
-                                className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-brand-accent/15 bg-white/60 p-0.5 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
+                                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-background p-1 shadow-sm"
                                 role="toolbar"
                                 aria-label="Dashboard filters"
                             >
@@ -110,10 +104,10 @@ export function DashboardView() {
                                     compact
                                     value={storeId}
                                     onChange={setStoreId}
-                                    className="max-w-[118px] border-0 bg-transparent shadow-none dark:bg-transparent"
+                                    className="max-w-[118px] border-0 bg-transparent shadow-none"
                                 />
                                 <span
-                                    className="mx-0.5 h-6 w-px shrink-0 bg-brand-deep/10 dark:bg-white/15"
+                                    className="mx-0.5 h-6 w-px shrink-0 bg-border"
                                     aria-hidden
                                 />
                                 <DateRangeFilter
@@ -128,10 +122,10 @@ export function DashboardView() {
 
                         {/* Desktop */}
                         <div className="hidden min-w-0 md:block">
-                            <p className="mb-1 text-sm font-medium capitalize text-brand-accent/80 dark:text-brand-cream/80">
+                            <p className="mb-1 text-sm font-medium capitalize text-muted-foreground">
                                 {getTimeBasedGreeting()}
                             </p>
-                            <h1 className="font-serif text-4xl text-brand-deep dark:text-brand-cream">
+                            <h1 className="text-4xl font-semibold tracking-tight text-foreground">
                                 {ownerName}
                             </h1>
                         </div>
@@ -139,7 +133,7 @@ export function DashboardView() {
                             <StoreContextSelector
                                 value={storeId}
                                 onChange={setStoreId}
-                                className="w-[180px] sm:w-[200px] shadow-sm border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 hover:border-brand-accent/20 dark:hover:border-white/20 transition-all duration-300"
+                                className="w-[180px] sm:w-[200px] border-border bg-background shadow-sm"
                             />
                             <DateRangeFilter
                                 date={date}
@@ -148,7 +142,7 @@ export function DashboardView() {
                                 buttonClassName="rounded-full"
                             />
                         </div>
-                    </motion.div>
+                    </div>
                 </header>
 
                 <section>
@@ -167,7 +161,7 @@ export function DashboardView() {
                     <PresetDashboardModules />
                 </section>
 
-                <section className={`grid grid-cols-1 ${can("VIEW_SALES") && can("VIEW_PRODUCTS") ? "md:grid-cols-2" : ""} gap-6`}>
+                <section className={`grid grid-cols-1 gap-6 ${can("VIEW_SALES") && can("VIEW_PRODUCTS") ? "md:grid-cols-2" : ""}`}>
                     <Can permission="VIEW_SALES">
                         <SalesVelocity
                             data={velocityData}
@@ -177,10 +171,10 @@ export function DashboardView() {
                     </Can>
                     <Can permission="VIEW_PRODUCTS">
                         {inventoryLoading ? (
-                            <div className="rounded-2xl border border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 p-6 animate-pulse">
-                                <div className="h-4 w-32 bg-brand-accent/10 dark:bg-white/10 rounded mb-4" />
-                                <div className="h-8 w-24 bg-brand-accent/10 dark:bg-white/10 rounded mb-2" />
-                                <div className="h-4 w-48 bg-brand-accent/10 dark:bg-white/10 rounded" />
+                            <div className="rounded-3xl border border-border bg-background p-6">
+                                <div className="mb-4 h-4 w-32 rounded bg-muted" />
+                                <div className="mb-2 h-8 w-24 rounded bg-muted" />
+                                <div className="h-4 w-48 rounded bg-muted" />
                             </div>
                         ) : (
                             <InventoryPulse
@@ -212,7 +206,7 @@ export function DashboardView() {
                     })
                     return filtered.length > 0 ? (
                         <section>
-                            <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream mb-4 px-2">
+                            <h3 className="mb-4 px-1 text-lg font-semibold tracking-tight text-foreground">
                                 {pageCopy.dashboard.needsAttentionTitle}
                             </h3>
                             <ActionRow items={filtered} />
@@ -222,16 +216,16 @@ export function DashboardView() {
 
                 <section>
                     {activitiesLoading ? (
-                        <div className="space-y-3 animate-pulse">
-                            <div className="h-5 w-40 bg-brand-accent/10 dark:bg-white/10 rounded mb-4" />
+                        <div className="space-y-3">
+                            <div className="mb-4 h-5 w-40 rounded bg-muted" />
                             {[...Array(3)].map((_, i) => (
-                                <div key={i} className="rounded-xl border border-brand-accent/10 dark:border-white/10 bg-white/50 dark:bg-white/5 p-4 flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-full bg-brand-accent/10 dark:bg-white/10" />
+                                <div key={i} className="flex items-center gap-4 rounded-2xl border border-border bg-background p-4">
+                                    <div className="h-10 w-10 rounded-full bg-muted" />
                                     <div className="flex-1 space-y-2">
-                                        <div className="h-4 w-48 bg-brand-accent/10 dark:bg-white/10 rounded" />
-                                        <div className="h-3 w-24 bg-brand-accent/10 dark:bg-white/10 rounded" />
+                                        <div className="h-4 w-48 rounded bg-muted" />
+                                        <div className="h-3 w-24 rounded bg-muted" />
                                     </div>
-                                    <div className="h-4 w-16 bg-brand-accent/10 dark:bg-white/10 rounded" />
+                                    <div className="h-4 w-16 rounded bg-muted" />
                                 </div>
                             ))}
                         </div>

@@ -618,7 +618,7 @@ export function StaffView() {
                                     <Button
                                         onClick={handleSave}
                                         disabled={isSaving || !fullName || !phoneNumber}
-                                        className="flex-2 h-12 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 font-bold px-8 shadow-xl hover:scale-[1.02] transition-all"
+                                        className="flex-2 h-12 rounded-xl px-8 font-semibold shadow-sm"
                                     >
                                         {isSaving ? (
                                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -635,7 +635,7 @@ export function StaffView() {
                                                 onClick={handleResendInvite}
                                                 disabled={isSaving}
                                                 variant="outline"
-                                                className="w-full h-12 rounded-xl text-brand-gold border-brand-gold/20 hover:bg-brand-gold/5 font-bold"
+                                                className="h-12 w-full rounded-xl border-amber-500/25 bg-amber-500/5 font-semibold text-amber-700 hover:bg-amber-500/10 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
                                             >
                                                 Resend Invitation
                                             </Button>
@@ -645,7 +645,7 @@ export function StaffView() {
                                                 onClick={() => setIsSalesPinDialogOpen(true)}
                                                 disabled={isSaving}
                                                 variant="outline"
-                                                className="w-full h-12 rounded-xl border-brand-gold/20 text-brand-gold hover:bg-brand-gold/5 font-bold"
+                                                className="h-12 w-full rounded-xl border-amber-500/25 bg-amber-500/5 font-semibold text-amber-700 hover:bg-amber-500/10 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
                                             >
                                                 Set Sales PIN
                                             </Button>

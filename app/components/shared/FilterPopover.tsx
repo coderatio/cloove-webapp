@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Filter, X, Check } from "lucide-react"
+import { Filter, Check } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Button } from "../ui/button"
 import { useIsMobile } from "@/app/hooks/useMediaQuery"
@@ -57,7 +57,6 @@ export function FilterPopover({
     const [isOpen, setIsOpen] = React.useState(false)
 
     const toggleOption = (groupIdx: number, value: string) => {
-        const groupOptions = groups[groupIdx].options.map(o => o.value)
         const isCurrentlySelected = selectedValues.includes(value)
 
         let newSelectedValues: string[]
@@ -80,9 +79,9 @@ export function FilterPopover({
             className={cn(
                 "rounded-2xl h-12 w-12 p-0 shrink-0 bg-white border-brand-deep/8 dark:border-brand-gold/20 dark:bg-brand-deep/20 transition-all duration-300 relative",
                 isOpen
-                    ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep border-transparent shadow-lg"
-                    : "text-brand-accent/90 dark:text-brand-cream/90 hover:bg-brand-deep/5 dark:hover:bg-white/5",
-                activeCount > 0 && !isOpen && "border-brand-green/30 dark:border-brand-gold/30 bg-brand-green/5 dark:bg-brand-gold/5"
+                    ? "border-primary/20 bg-primary/12 text-foreground shadow-sm"
+                    : "border-border bg-background text-foreground hover:bg-muted",
+                activeCount > 0 && !isOpen && "border-primary/25 bg-primary/8"
             )}
         >
             <Filter className={cn("w-4 h-4 transition-transform", isOpen && "scale-110")} />
@@ -96,11 +95,11 @@ export function FilterPopover({
         <Button
             variant="outline"
             className={cn(
-                "rounded-2xl h-[46px] w-full bg-white border-brand-deep/8 dark:border-brand-gold/20 dark:bg-brand-deep/20 px-4 transition-all duration-300",
+                "h-[46px] w-full rounded-2xl border border-border bg-background px-4 transition-all duration-300",
                 isOpen
-                    ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep border-transparent shadow-lg"
-                    : "text-brand-accent/90 dark:text-brand-cream/90 hover:bg-brand-deep/5 dark:hover:bg-white/5",
-                activeCount > 0 && !isOpen && "border-brand-green/30 dark:border-brand-gold/30 bg-brand-green/5 dark:bg-brand-gold/5"
+                    ? "border-primary/20 bg-primary/12 text-foreground shadow-sm"
+                    : "border-border bg-background text-foreground hover:bg-muted",
+                activeCount > 0 && !isOpen && "border-primary/25 bg-primary/8"
             )}
         >
             <Filter className={cn("w-4 h-4 mr-2 transition-transform", isOpen && "scale-110")} />
@@ -117,7 +116,7 @@ export function FilterPopover({
         <div className="space-y-6">
             {groups.map((group, groupIdx) => (
                 <div key={groupIdx} className="space-y-3">
-                    <h4 className="px-2 text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 dark:text-white/50">
+                    <h4 className="px-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         {group.title}
                     </h4>
                     <div className="grid grid-cols-1 gap-1">
@@ -131,12 +130,12 @@ export function FilterPopover({
                                     className={cn(
                                         "w-full flex items-center justify-between px-3 py-2.5 h-auto rounded-xl transition-all duration-200 group text-left font-normal",
                                         isSelected
-                                            ? "bg-brand-green/10 dark:bg-brand-gold/10 text-brand-deep dark:text-brand-gold hover:bg-brand-green/15 dark:hover:bg-brand-gold/15"
-                                            : "text-brand-accent/60 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5"
+                                            ? "border border-primary/15 bg-primary/10 text-foreground hover:bg-primary/12"
+                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                     )}
                                 >
                                     <span className="text-sm font-medium">{option.label}</span>
-                                    {isSelected && <Check className="w-3.5 h-3.5" />}
+                                    {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
                                 </Button>
                             )
                         })}
@@ -160,7 +159,7 @@ export function FilterPopover({
                                 <Button
                                     variant="ghost"
                                     onClick={onClear}
-                                    className="h-auto p-0 text-[10px] font-bold text-rose-500/80 dark:text-rose-400 hover:text-rose-500 bg-transparent hover:bg-transparent uppercase tracking-widest"
+                                    className="h-auto bg-transparent p-0 text-[10px] font-bold uppercase tracking-widest text-rose-500/80 hover:bg-transparent hover:text-rose-500 dark:text-rose-400"
                                 >
                                     Clear All
                                 </Button>
@@ -173,7 +172,7 @@ export function FilterPopover({
                     <DrawerFooter>
                         <DrawerClose asChild>
                             <Button
-                                className="w-full rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-sm h-12 shadow-lg"
+                                className="h-12 w-full rounded-xl text-sm font-semibold shadow-sm"
                             >
                                 Done
                             </Button>
@@ -194,11 +193,11 @@ export function FilterPopover({
                 sideOffset={12}
                 avoidCollisions
                 collisionPadding={10}
-                className="w-80 p-0 rounded-[32px] flex flex-col overflow-hidden bg-white dark:bg-brand-deep border-brand-deep/5 dark:border-white/10 shadow-2xl z-50 transition-all duration-200 max-h-(--radix-popover-content-available-height)"
+                className="z-50 flex max-h-(--radix-popover-content-available-height) w-80 flex-col overflow-hidden rounded-[32px] border border-border bg-background p-0 shadow-2xl transition-all duration-200"
             >
                 {/* Header */}
-                <div className="px-6 py-4 flex items-center justify-between border-b border-brand-deep/5 dark:border-white/5 shrink-0">
-                    <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/70 dark:text-brand-cream/80">Select Filters</span>
+                <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Select Filters</span>
                 </div>
 
                 {/* Content */}
@@ -207,7 +206,7 @@ export function FilterPopover({
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-brand-cream/10 dark:bg-white/5 border-t border-brand-deep/5 dark:border-white/5 shrink-0">
+                <div className="shrink-0 border-t border-border bg-muted/30 p-4">
                     <div className="flex items-center gap-2">
                         {activeCount > 0 && (
                             <Button
@@ -216,7 +215,7 @@ export function FilterPopover({
                                     e.stopPropagation()
                                     onClear()
                                 }}
-                                className="flex-1 rounded-xl text-rose-500/80 dark:text-rose-400 hover:text-rose-500 bg-rose-500/5 hover:bg-rose-500/10 dark:hover:bg-rose-500/10 dark:bg-rose-500/5 font-bold text-[10px] h-10 uppercase tracking-widest"
+                                className="h-10 flex-1 rounded-xl bg-rose-500/5 text-[10px] font-bold uppercase tracking-widest text-rose-500/80 hover:bg-rose-500/10 hover:text-rose-500 dark:text-rose-400"
                             >
                                 Reset
                             </Button>
@@ -224,7 +223,7 @@ export function FilterPopover({
                         <Button
                             onClick={() => setIsOpen(false)}
                             className={cn(
-                                "rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold text-[10px] h-10 shadow-lg uppercase tracking-widest",
+                                "h-10 rounded-xl text-[10px] font-semibold uppercase tracking-widest shadow-sm",
                                 activeCount > 0 ? "flex-[1.5]" : "w-full"
                             )}
                         >

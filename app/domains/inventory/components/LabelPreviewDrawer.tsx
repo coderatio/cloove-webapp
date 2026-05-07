@@ -516,7 +516,7 @@ export function LabelPreviewDrawer({
                                                 <div className={cn(
                                                     "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
                                                     template === key
-                                                        ? "bg-brand-gold text-brand-deep"
+                                                        ? "bg-brand-gold text-white"
                                                         : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40"
                                                 )}>
                                                     {tmpl.icon}
@@ -643,7 +643,7 @@ export function LabelPreviewDrawer({
                                                             className={cn(
                                                                 "w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all cursor-pointer",
                                                                 isSelected
-                                                                    ? "bg-brand-gold border-brand-gold text-brand-deep"
+                                                                    ? "bg-brand-gold border-brand-gold text-white"
                                                                     : "border-brand-deep/15 dark:border-white/15"
                                                             )}
                                                         >

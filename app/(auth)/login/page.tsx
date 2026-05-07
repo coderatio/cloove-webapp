@@ -12,8 +12,7 @@ import { Button } from "@/app/components/ui/button"
 function BackgroundDecor() {
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-            <div className="absolute -top-1/4 -right-1/4 w-[80%] h-[80%] rounded-full bg-brand-gold/10 blur-[100px] animate-float-slow" />
-            <div className="absolute -bottom-1/4 -left-1/4 w-[70%] h-[70%] rounded-full bg-brand-green/15 blur-[100px] animate-float-slower" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(18,87,65,0.28),transparent_42%),linear-gradient(180deg,#061a14_0%,#03100c_100%)]" />
         </div>
     )
 }
@@ -23,8 +22,8 @@ const LoginFlowWrapper = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-[400px] flex items-center justify-center text-brand-cream/20 bg-white/5 rounded-3xl border border-white/10">
-                <Loader2 className="w-8 h-8 animate-spin" />
+            <div className="flex h-64 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] text-white/40">
+                <Loader2 className="h-5 w-5 animate-spin" />
             </div>
         )
     }
@@ -35,21 +34,14 @@ export default function LoginPage() {
     const isSessionExpired = searchParams.get('reason') === 'session_expired'
 
     return (
-        <div className="min-h-dvh w-full flex flex-col items-center justify-center p-4 relative overflow-hidden bg-brand-deep-950">
+        <div className="relative flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden bg-brand-deep-950 px-4 py-8">
             <BackgroundDecor />
-
-            {/* Noise Overlay */}
-            <div
-                className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay z-1"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
-            />
-
-            <div className="w-full max-w-md relative z-10">
+            <div className="relative z-10 w-full max-w-[420px]">
                 {isSessionExpired && (
-                    <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3">
                         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                         <div>
-                            <p className="text-sm font-semibold text-amber-300">Session expired</p>
+                            <p className="text-sm font-semibold text-amber-200">Session expired</p>
                             <p className="mt-0.5 text-xs text-amber-300/70">
                                 You were logged out due to inactivity. Please sign in again to continue.
                             </p>
@@ -57,9 +49,8 @@ export default function LoginPage() {
                     </div>
                 )}
 
-                {/* Logo Section */}
-                <div className="flex flex-col items-center mb-12">
-                    <div className="relative h-16 w-16 mb-4">
+                <div className="mb-6 flex flex-col items-center">
+                    <div className="relative mb-3 h-11 w-11">
                         <Image
                             src="/images/logo-white.png"
                             alt="Cloove"
@@ -68,24 +59,23 @@ export default function LoginPage() {
                             priority
                         />
                     </div>
-                    <h1 className="font-serif text-3xl md:text-4xl text-brand-cream font-medium tracking-tight text-center">
-                        Welcome Back
+                    <h1 className="text-center text-2xl font-semibold tracking-tight text-white">
+                        Welcome back
                     </h1>
-                    <p className="text-brand-cream/60 text-md mt-1 tracking-wide font-medium text-center">
-                        Your calm AI-powered business partner
+                    <p className="mt-1 text-center text-sm text-white/55">
+                        Sign in to continue to Cloove.
                     </p>
                 </div>
 
-                {/* Hydration-safe content area */}
-                <div className="min-h-[400px]">
+                <div>
                     <LoginFlowWrapper />
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-3">
                     <Link href="/sales-mode/login" className="block">
                         <Button
                             variant="outline"
-                            className="w-full h-12 rounded-xl border-brand-gold/40 text-brand-gold bg-transparent hover:bg-brand-gold/10"
+                            className="h-11 w-full rounded-2xl border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.06] hover:text-white"
                         >
                             <Store className="w-4 h-4 mr-2" />
                             Sales Mode
@@ -94,10 +84,6 @@ export default function LoginPage() {
                 </div>
 
                 <LoginSignupLink />
-
-                <p className="mt-6 text-center text-[10px] text-brand-cream/30 uppercase tracking-[0.3em] font-medium">
-                    Cloove AI &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span>
-                </p>
             </div>
         </div>
     )

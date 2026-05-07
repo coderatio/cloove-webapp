@@ -23,7 +23,7 @@ export function QuickLinkRow({ items, className }: { items: QuickLinkItem[]; cla
                 <li key={item.href + item.label}>
                     <Link
                         href={item.href}
-                        className="group flex items-center justify-between gap-2 rounded-xl border border-brand-deep/8 bg-white/50 px-3 py-2.5 text-sm font-medium text-brand-deep transition-colors hover:border-brand-gold/30 hover:bg-brand-gold/5 dark:border-white/10 dark:bg-white/5 dark:text-brand-cream dark:hover:bg-white/10"
+                        className="group flex items-center justify-between gap-2 rounded-xl border border-brand-deep/8 bg-white/50 px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-brand-gold/30 hover:bg-brand-gold/5 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                     >
                         <span className="flex min-w-0 items-center gap-2">
                             <item.icon className="h-4 w-4 shrink-0 text-brand-gold opacity-80" />

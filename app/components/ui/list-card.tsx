@@ -37,10 +37,10 @@ export function ListCard({
     delay = 0
 }: ListCardProps) {
     const statusStyles = {
-        success: "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold border-brand-green/10 dark:border-brand-gold/10",
-        warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-brand-gold/70 border-amber-200 dark:border-amber-800/30",
-        danger: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/30",
-        neutral: "bg-brand-deep/5 text-brand-deep/60 dark:bg-white/5 dark:text-brand-cream/60 border-brand-deep/5 dark:border-white/5",
+        success: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/12 dark:text-emerald-200",
+        warning: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/12 dark:text-amber-200",
+        danger: "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/12 dark:text-rose-200",
+        neutral: "border-border bg-muted/60 text-muted-foreground",
     }
 
     return (
@@ -51,13 +51,13 @@ export function ListCard({
             whileTap={{ scale: 0.98 }}
             onClick={onClick}
             className={cn(
-                "relative overflow-hidden rounded-3xl border border-brand-deep/10 bg-white/60 dark:bg-white/5 p-4 shadow-sm backdrop-blur-md transition-all hover:bg-white/80 dark:hover:bg-white/10 group",
+                "group relative overflow-hidden rounded-3xl border border-border bg-card p-4 shadow-sm backdrop-blur-md transition-all hover:bg-muted/20",
                 onClick && "cursor-pointer"
             )}
         >
             <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4 flex-1 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 flex items-center justify-center overflow-hidden shrink-0 relative">
+                    <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted">
                         {image ? (
                             <Image
                                 src={image}
@@ -66,16 +66,16 @@ export function ListCard({
                                 className="object-cover"
                             />
                         ) : Icon ? (
-                            <Icon className={cn("w-6 h-6", iconClassName || "text-brand-deep/60 dark:text-brand-gold")} />
+                            <Icon className={cn("h-6 w-6", iconClassName || "text-foreground/60")} />
                         ) : (
-                            <Package className="w-6 h-6 text-brand-deep/20 dark:text-white/20" />
+                            <Package className="h-6 w-6 text-muted-foreground/40" />
                         )}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-brand-deep dark:text-brand-cream truncate leading-tight">{title}</h3>
-                        {subtitle && <p className="text-[12px] text-brand-accent/60 dark:text-brand-cream/60 mt-1 truncate font-medium">{subtitle}</p>}
-                        {meta && <div className="mt-2 text-[10px] font-mono text-brand-accent/40 dark:text-brand-cream/40 flex items-center gap-2 uppercase tracking-tight">
+                        <h3 className="truncate leading-tight text-foreground font-semibold">{title}</h3>
+                        {subtitle && <p className="mt-1 truncate text-[12px] font-medium text-muted-foreground">{subtitle}</p>}
+                        {meta && <div className="mt-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-tight text-muted-foreground">
                             {meta}
                         </div>}
                     </div>
@@ -93,8 +93,8 @@ export function ListCard({
 
                     {value && (
                         <div className="text-right mt-1">
-                            <div className="font-serif text-lg font-medium text-foreground dark:text-brand-cream leading-none">{value}</div>
-                            {valueLabel && <div className="text-[10px] text-muted-foreground dark:text-brand-cream/40 mt-0.5">{valueLabel}</div>}
+                            <div className="text-lg font-semibold leading-none text-foreground">{value}</div>
+                            {valueLabel && <div className="mt-0.5 text-[10px] text-muted-foreground">{valueLabel}</div>}
                         </div>
                     )}
                 </div>

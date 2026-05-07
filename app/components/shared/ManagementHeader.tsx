@@ -42,14 +42,14 @@ export function ManagementHeader({
 }: ManagementHeaderProps) {
     const isMobile = useIsMobile()
     return (
-        <div className={cn("space-y-6", className)}>
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className={cn("space-y-5", className)}>
+            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                    <h1 className="font-serif text-3xl md:text-5xl font-medium text-brand-deep dark:text-brand-cream mb-2">
+                    <h1 className="mb-2 text-3xl font-semibold tracking-tight text-foreground md:text-[2.5rem]">
                         {title}
                     </h1>
                     {description && (
-                        <p className="text-brand-accent/60 dark:text-brand-cream/60 max-w-lg">
+                        <p className="max-w-2xl text-base text-muted-foreground">
                             {description}
                         </p>
                     )}
@@ -63,11 +63,11 @@ export function ManagementHeader({
                         <Button
                             onClick={onAddClick}
                             className={cn(
-                                "rounded-full bg-brand-deep text-brand-gold-300 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg h-12 px-6",
+                                "h-11 rounded-full px-5 font-semibold text-white shadow-sm transition-colors hover:text-white [&_svg]:text-white",
                                 mobileFloatingAction && isMobile && "fixed top-15 right-6 z-50 h-14 w-14 p-0 md:static md:h-12 md:w-auto md:px-6 md:rounded-full shadow-2xl md:shadow-lg"
                             )}
                         >
-                            <Plus className={cn("w-4 h-4", mobileFloatingAction && isMobile && "md:mr-2 w-6 h-6 md:w-4 md:h-4")} />
+                            <Plus className={cn("mr-2 h-4 w-4", mobileFloatingAction && isMobile && "m-0 h-6 w-6 md:mr-2 md:h-4 md:w-4")} />
                             <span className={cn(mobileFloatingAction && isMobile && "hidden md:inline")}>{addButtonLabel}</span>
                         </Button>
                     )}
@@ -78,14 +78,14 @@ export function ManagementHeader({
                 <div className="flex items-center gap-3">
                     <div className="relative flex-1 group">
                         <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                            <Search className="w-4 h-4 text-brand-accent/70 group-focus-within:text-brand-green dark:text-brand-gold dark:group-focus-within:text-brand-gold transition-colors" />
+                            <Search className="w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
                         </div>
                         <input
                             type="text"
                             value={searchValue}
                             onChange={(e) => onSearchChange(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/40 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all placeholder:text-brand-accent/60 text-brand-deep dark:text-brand-cream"
+                            className="w-full rounded-2xl border border-border bg-background pl-10 pr-4 py-3 text-foreground transition-all placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/15"
                         />
                     </div>
                     {filterGroups && onFilterSelectionChange && onFilterClear && (

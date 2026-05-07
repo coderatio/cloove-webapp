@@ -216,7 +216,7 @@ export function ServiceFormDrawer({
                     <Button
                         onClick={handleSubmit}
                         disabled={!canSubmit}
-                        className="bg-brand-deep text-brand-gold-300 dark:bg-brand-gold dark:text-brand-deep"
+                        className="font-semibold"
                     >
                         {submitting ? "Saving..." : isEditing ? "Save changes" : "Add service"}
                     </Button>

@@ -4,7 +4,7 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { usePermission } from "@/app/hooks/usePermission"
 import { QuickLinkRow } from "./QuickLinkRow"
-import { ScanBarcode, ShoppingBag, Package, Pill, Users, GraduationCap, UtensilsCrossed, Banknote, CalendarRange } from "lucide-react"
+import { ScanBarcode, Package, Pill, Users, GraduationCap, UtensilsCrossed, Banknote, CalendarRange } from "lucide-react"
 
 /**
  * Secondary preset module on the orders workspace: fast paths without replacing the main table.
@@ -50,7 +50,7 @@ export function PresetOrdersQuickStrip() {
 
   return (
     <GlassCard className="border-brand-gold/15 bg-white/40 p-4 dark:bg-white/4 rounded-3xl before:rounded-3xl">
-      <p className="mb-3 text-xs font-bold uppercase tracking-wider text-brand-deep/45 dark:text-brand-cream/45">
+      <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         Preset shortcuts
       </p>
       <QuickLinkRow items={items} className="grid-cols-1! sm:grid-cols-3!" />

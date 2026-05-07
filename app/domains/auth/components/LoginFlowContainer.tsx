@@ -1,7 +1,6 @@
 "use client"
 
 import { Suspense } from "react"
-import { AnimatePresence } from "framer-motion"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useLoginFlow } from "@/app/domains/auth/hooks/useLoginFlow"
 import { IdentifierStep } from "@/app/domains/auth/components/IdentifierStep"
@@ -22,21 +21,21 @@ export function LoginFlowContainer() {
     const { state } = flow
 
     return (
-        <AnimatePresence mode="wait" initial={false}>
+        <>
             {state.step === 'identifier' ? <IdentifierStep key="identifier" flow={flow} /> : null}
             {state.step === 'verify' ? <VerifyStep key="verify" flow={flow} /> : null}
             {state.step === 'verify-otp' ? <VerifyOtpStep key="verify-otp" flow={flow} /> : null}
             {state.step === 'setup-password' ? <SetupPasswordStep key="setup" flow={flow} /> : null}
             {state.step === 'success' ? <SuccessStep key="success" /> : null}
-        </AnimatePresence>
+        </>
     )
 }
 
 export function LoginFlowWrapper() {
     return (
         <Suspense fallback={
-            <div className="h-[400px] flex items-center justify-center text-brand-cream/20 bg-white/5 rounded-3xl border border-white/10">
-                <Loader2 className="w-8 h-8 animate-spin" />
+            <div className="flex h-64 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] text-white/40">
+                <Loader2 className="h-5 w-5 animate-spin" />
             </div>
         }>
             <LoginFlowContainer />

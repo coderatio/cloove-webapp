@@ -59,7 +59,7 @@ export function MobileNav() {
             >
                 <button
                     onClick={() => setIsMenuOpen(true)}
-                    className="size-9 rounded-full bg-brand-deep/80 backdrop-blur-xl border border-brand-gold/20 shadow-xl flex items-center justify-center text-brand-gold active:scale-95"
+                    className="flex size-9 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm active:scale-95"
                 >
                     <LayoutGrid className="size-4" />
                 </button>
@@ -84,7 +84,7 @@ export function MobileNav() {
                             </div>
                         )}
 
-                        <div className="relative h-16 w-full flex items-center px-2 rounded-full border border-white/10 bg-brand-deep/95 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                        <div className="relative flex h-16 w-full items-center rounded-full border border-border bg-background/95 px-2 shadow-lg backdrop-blur">
 
                             {/* Prominent Assistant Button */}
                             <div className="absolute left-1/2 -top-6 -translate-x-1/2">
@@ -92,17 +92,13 @@ export function MobileNav() {
                                     href="/assistant"
                                     onClick={() => isAssistantPage && setIsMenuOpen(false)}
                                     className={cn(
-                                        "flex h-16 w-16 items-center justify-center rounded-full shadow-2xl transition-all active:scale-90 ring-4 ring-brand-deep/50",
+                                        "flex h-16 w-16 items-center justify-center rounded-full border border-primary/12 bg-primary text-primary-foreground shadow-md transition-transform active:scale-90",
                                         pathname === "/assistant"
-                                            ? "bg-brand-gold text-brand-deep scale-110"
-                                            : "bg-brand-gold text-brand-deep hover:scale-105"
+                                            ? "scale-105"
+                                            : "hover:scale-105"
                                     )}
                                 >
-                                    <Sparkles className="h-7 w-7 fill-current/10" strokeWidth={2.5} />
-                                    {/* Pulse effect if on other pages */}
-                                    {pathname !== "/assistant" && (
-                                        <div className="absolute inset-0 rounded-full bg-brand-gold animate-ping opacity-20 pointer-events-none" />
-                                    )}
+                                    <Sparkles className="h-7 w-7" strokeWidth={2.2} />
                                 </Link>
                             </div>
 
@@ -123,7 +119,7 @@ export function MobileNav() {
                                                 className={cn(
                                                     "flex flex-col items-center gap-1 transition-colors",
                                                     (item.permission && !can(item.permission)) ? "hidden" : "",
-                                                    isActive ? "text-brand-gold" : "text-white/40"
+                                                    isActive ? "text-foreground" : "text-muted-foreground"
                                                 )}
                                             >
                                                 <item.icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
@@ -144,7 +140,7 @@ export function MobileNav() {
                                                 className={cn(
                                                     "flex flex-col items-center gap-1 transition-colors",
                                                     (item.permission && !can(item.permission)) ? "hidden" : "",
-                                                    isActive ? "text-brand-gold" : "text-white/40"
+                                                    isActive ? "text-foreground" : "text-muted-foreground"
                                                 )}
                                             >
                                                 <item.icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
@@ -156,7 +152,7 @@ export function MobileNav() {
                                     {/* More Menu Switcher */}
                                     <button
                                         onClick={() => setIsMoreOpen(true)}
-                                        className="flex flex-col items-center gap-1 text-white/40"
+                                        className="flex flex-col items-center gap-1 text-muted-foreground"
                                     >
                                         <Menu className="h-5 w-5" />
                                         <span className="text-[9px] font-bold uppercase tracking-tighter">More</span>
@@ -207,13 +203,13 @@ export function MobileNav() {
                                         className={cn(
                                             "flex items-center gap-4 rounded-[20px] p-4 transition-all duration-200 active:scale-95 border",
                                             pathname === submenuParent.href
-                                                ? "bg-brand-gold/10 text-brand-gold border-brand-gold/30"
-                                                : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80 border-brand-deep/5 dark:border-white/5"
+                                                ? "border-brand-green-200 bg-brand-green-50 text-foreground dark:border-brand-green-800/40 dark:bg-brand-green-950/30 dark:text-brand-cream"
+                                                : "border-border bg-zinc-50 text-foreground dark:border-white/5 dark:bg-white/5 dark:text-brand-cream/80"
                                         )}
                                     >
                                         <div className={cn(
                                             "flex h-10 w-10 items-center justify-center rounded-xl",
-                                            pathname === submenuParent.href ? "bg-brand-gold text-brand-deep" : "bg-white dark:bg-white/10 shadow-sm"
+                                            pathname === submenuParent.href ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
                                         )}>
                                             <submenuParent.icon className="h-5 w-5" strokeWidth={2} />
                                         </div>
@@ -230,13 +226,13 @@ export function MobileNav() {
                                                 className={cn(
                                                     "flex items-center gap-4 rounded-[20px] p-4 transition-all duration-200 active:scale-95 border",
                                                     pathname.startsWith(child.href)
-                                                        ? "bg-brand-gold/10 text-brand-gold border-brand-gold/30"
-                                                        : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80 border-brand-deep/5 dark:border-white/5"
+                                                        ? "border-brand-green-200 bg-brand-green-50 text-foreground dark:border-brand-green-800/40 dark:bg-brand-green-950/30 dark:text-brand-cream"
+                                                        : "border-border bg-zinc-50 text-foreground dark:border-white/5 dark:bg-white/5 dark:text-brand-cream/80"
                                                 )}
                                             >
                                                 <div className={cn(
                                                     "flex h-10 w-10 items-center justify-center rounded-xl",
-                                                    pathname.startsWith(child.href) ? "bg-brand-gold text-brand-deep" : "bg-white dark:bg-white/10 shadow-sm"
+                                                    pathname.startsWith(child.href) ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
                                                 )}>
                                                     <child.icon className="h-5 w-5" strokeWidth={2} />
                                                 </div>
@@ -263,12 +259,12 @@ export function MobileNav() {
                                                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 blur-3xl rounded-full -mr-10 -mt-10" />
 
                                                 <div className="relative z-10 flex items-center gap-4">
-                                                    <div className="h-12 w-12 rounded-2xl bg-brand-gold flex items-center justify-center shadow-lg text-brand-deep shrink-0">
+                                                    <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shrink-0">
                                                         <Gift className="h-6 w-6" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="font-serif text-lg font-medium text-brand-gold">Refer & Earn</h4>
-                                                        <p className="text-xs text-brand-cream/60">Get 10% commission per referral</p>
+                                                        <h4 className="text-lg font-semibold text-foreground dark:text-brand-cream">Refer & Earn</h4>
+                                                        <p className="text-xs text-muted-foreground dark:text-brand-cream/60">Get 10% commission per referral</p>
                                                     </div>
                                                 </div>
                                             </Link>
@@ -294,19 +290,19 @@ export function MobileNav() {
                                                     className={cn(
                                                         "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95 text-left border",
                                                         pathname === item.href
-                                                            ? "bg-brand-gold/10 text-brand-gold border-brand-gold/30"
-                                                            : "bg-zinc-50 dark:bg-white/5 text-brand-deep dark:text-brand-cream/80 border-brand-deep/5 dark:border-white/5"
+                                                            ? "border-brand-green-200 bg-brand-green-50 text-foreground dark:border-brand-green-800/40 dark:bg-brand-green-950/30 dark:text-brand-cream"
+                                                            : "border-border bg-zinc-50 text-foreground dark:border-white/5 dark:bg-white/5 dark:text-brand-cream/80"
                                                     )}
                                                 >
                                                     <div className={cn(
                                                         "flex h-10 w-10 items-center justify-center rounded-xl shrink-0",
-                                                        pathname === item.href ? "bg-brand-gold text-brand-deep" : "bg-white dark:bg-white/10 shadow-sm"
+                                                        pathname === item.href ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
                                                     )}>
                                                         <item.icon className="h-5 w-5" strokeWidth={2} />
                                                     </div>
                                                     <span className="font-semibold flex-1">{item.label}</span>
                                                     {hasChildren && (
-                                                        <ChevronRight className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/30 shrink-0" />
+                                                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground dark:text-brand-cream/30" />
                                                     )}
                                                 </button>
                                             )

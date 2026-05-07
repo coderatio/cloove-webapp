@@ -6,23 +6,23 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/app/lib/utils"
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
+    "inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
     {
         variants: {
             variant: {
-                default: "bg-primary text-primary-foreground hover:bg-primary/90",
+                default: "bg-primary text-primary-foreground hover:bg-primary/92",
                 destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-                outline: "border border-brand-accent/10 dark:border-brand-gold/20 bg-transparent hover:bg-brand-green/5 dark:hover:bg-brand-gold/5 hover:text-brand-green dark:hover:text-brand-gold hover:border-brand-green/20 dark:hover:border-brand-gold/30 transition-all duration-300",
+                outline: "border border-border bg-background text-foreground hover:bg-muted",
                 secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-                ghost: "bg-transparent hover:bg-brand-green/5 dark:hover:bg-brand-gold/5 hover:text-brand-green dark:hover:text-brand-gold transition-all duration-300",
+                ghost: "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
                 link: "text-primary underline-offset-4 hover:underline",
-                glass: "bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-foreground shadow-sm",
-                base: "bg-brand-green/5 dark:bg-brand-gold/5 text-brand-deep dark:text-brand-gold border border-brand-green/10 dark:border-brand-gold/20 hover:bg-brand-green/10 dark:hover:bg-brand-gold/10 transition-all duration-300",
+                glass: "border border-border bg-background/90 text-foreground shadow-sm hover:bg-muted",
+                base: "border border-border bg-muted/50 text-foreground hover:bg-muted",
             },
             size: {
                 default: "h-10 px-4 py-2",
-                sm: "h-9 rounded-md px-3",
-                lg: "h-11 rounded-md px-8",
+                sm: "h-9 px-3.5",
+                lg: "h-11 px-8",
                 icon: "h-10 w-10",
             },
         },
