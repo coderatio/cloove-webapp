@@ -227,8 +227,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
         {!activeNumber && !suspendedNumber ? (
           <SettingsCard>
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-2">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+              <div className="space-y-2 sm:max-w-xl">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
                     <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -246,7 +246,9 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                   Cloove manages your WhatsApp catalog from your products.
                 </p>
               </div>
-              <EmbeddedSignupButton />
+              <div className="w-full sm:w-auto sm:min-w-[300px]">
+                <EmbeddedSignupButton />
+              </div>
             </div>
           </SettingsCard>
         ) : activeNumber ? (
