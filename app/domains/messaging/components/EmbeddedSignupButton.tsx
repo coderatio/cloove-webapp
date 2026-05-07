@@ -231,7 +231,7 @@ export function EmbeddedSignupButton({
   const isConfigured = !!runtimeConfig?.isConfigured
 
   return (
-    <div className="space-y-2">
+    <div className="w-full space-y-2">
       <Button
         onClick={() => {
           if (!runtimeConfig?.isConfigured || !runtimeConfig.configId) {
@@ -286,10 +286,10 @@ export function EmbeddedSignupButton({
             }
           )
         }}
-        disabled={!isConfigured || !sdkReady || connectNumber.isPending || !activeBusiness?.id}
+        disabled={connectNumber.isPending || !activeBusiness?.id}
         className={
           className ??
-          "bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 rounded-full px-6 h-12"
+          "h-12 w-full rounded-full bg-brand-deep px-6 text-brand-gold-300 hover:bg-brand-deep/90 hover:text-brand-gold-200 dark:bg-brand-gold dark:text-white dark:hover:bg-brand-gold/90 sm:w-auto"
         }
       >
         {connectNumber.isPending ? (
@@ -305,7 +305,9 @@ export function EmbeddedSignupButton({
         )}
       </Button>
       {!isConfigured && runtimeConfig?.error ? (
-        <p className="text-sm text-red-600 dark:text-red-400">{runtimeConfig.error}</p>
+        <p className="rounded-xl border border-red-200 bg-red-50/80 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+          {runtimeConfig.error}
+        </p>
       ) : null}
     </div>
   )
