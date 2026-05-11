@@ -85,7 +85,7 @@ function ActivityRow({
                             className={cn(
                                 "text-sm font-bold whitespace-nowrap tabular-nums",
                                 (item.type === "sale" || item.type === "payment" || item.type === "deposit")
-                                    ? "text-brand-green dark:text-brand-gold"
+                                    ? "text-brand-green dark:text-emerald-300"
                                     : (item.type === "withdrawal" || item.type === "debt")
                                       ? "text-rose-600 dark:text-rose-400"
                                       : "text-brand-deep dark:text-brand-cream"
@@ -166,7 +166,7 @@ function ActivityTable({
                                         className={cn(
                                             "text-sm font-bold tabular-nums",
                                             (item.type === "sale" || item.type === "payment" || item.type === "deposit")
-                                                ? "text-brand-green dark:text-brand-gold"
+                                                ? "text-brand-green dark:text-emerald-300"
                                                 : (item.type === "withdrawal" || item.type === "debt")
                                                   ? "text-rose-600 dark:text-rose-400"
                                                   : "text-brand-deep dark:text-brand-cream"

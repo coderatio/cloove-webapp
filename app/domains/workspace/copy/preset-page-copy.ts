@@ -161,6 +161,16 @@ export interface InventoryUiCopy {
         totalUnits: string
         products: string
         inventoryValue: string
+        /** Stat card: primary heading */
+        catalogSyncTitle: string
+        /** Popover: listed section heading */
+        catalogListedBreakdown: string
+        /** Popover: pending section heading (when pending > 0) */
+        catalogPendingBreakdown: string
+        /** Shown under headline when there are pending syncs */
+        catalogSyncPendingHint: string
+        catalogPendingWhitelabel: string
+        catalogPendingGlobal: string
     }
     whisperLowStock: (lowCount: number) => string
     whisperHealthy: string
@@ -481,6 +491,12 @@ const DEFAULT_PAGE_COPY: PresetPageCopy = {
             totalUnits: "Total Units",
             products: "Products",
             inventoryValue: "Inventory Value",
+            catalogSyncTitle: "Catalogs",
+            catalogListedBreakdown: "Listed by catalog",
+            catalogPendingBreakdown: "Pending sync",
+            catalogSyncPendingHint: "Some eligible products still need a successful Meta sync.",
+            catalogPendingWhitelabel: "White-label",
+            catalogPendingGlobal: "Global",
         },
         whisperLowStock: (n: number) =>
             `You have **${n} items** critically low on stock. Consider restocking soon to avoid losing sales.`,
@@ -640,6 +656,7 @@ const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
         },
         inventoryUi: {
             stats: {
+                ...DEFAULT_PAGE_COPY.inventoryUi.stats,
                 totalUnits: "Total units",
                 products: "Menu items",
                 inventoryValue: "Stock value",
@@ -744,6 +761,7 @@ const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
         },
         inventoryUi: {
             stats: {
+                ...DEFAULT_PAGE_COPY.inventoryUi.stats,
                 totalUnits: "Units on hand",
                 products: "SKUs",
                 inventoryValue: "Retail value",
@@ -908,6 +926,7 @@ const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
         },
         inventoryUi: {
             stats: {
+                ...DEFAULT_PAGE_COPY.inventoryUi.stats,
                 totalUnits: "Total units",
                 products: "SKU lines",
                 inventoryValue: "Stock value",
@@ -1118,6 +1137,7 @@ const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
         },
         inventoryUi: {
             stats: {
+                ...DEFAULT_PAGE_COPY.inventoryUi.stats,
                 totalUnits: "Total units",
                 products: "Resource lines",
                 inventoryValue: "Stock value",

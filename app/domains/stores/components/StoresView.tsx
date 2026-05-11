@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { motion } from "framer-motion"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -11,8 +12,11 @@ import {
     Settings2,
     Store as StoreIcon,
     ChevronRight,
+    LocateFixed,
+    Loader2,
 } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
+import { Input } from "@/app/components/ui/input"
 import { ActivityStream } from "@/app/components/dashboard/ActivityStream"
 import { TableSearch } from "@/app/components/shared/TableSearch"
 import {
@@ -30,6 +34,9 @@ import {
     useStoreActivities,
 } from "@/app/domains/stores/providers/StoreProvider"
 
+const FIELD_LABEL =
+    "block text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-0.5"
+
 export function StoresView() {
     const { stores, addStore, updateStore, deleteStore } = useStores()
     const { activeBusiness } = useBusiness()
@@ -41,60 +48,135 @@ export function StoresView() {
     // Form states
     const [newName, setNewName] = useState("")
     const [newLocation, setNewLocation] = useState("")
+    const [newLatitude, setNewLatitude] = useState("")
+    const [newLongitude, setNewLongitude] = useState("")
     const [managerName, setManagerName] = useState("")
     const [managerPhone, setManagerPhone] = useState("")
     const [managerEmail, setManagerEmail] = useState("")
     const [contactEmail, setContactEmail] = useState("")
     const [contactPhone, setContactPhone] = useState("")
+    const [isCapturingLocation, setIsCapturingLocation] = useState(false)
+
+    const parseOptionalCoord = (
+        raw: string,
+        min: number,
+        max: number
+    ): { ok: true; value: number | null } | { ok: false } => {
+        const t = raw.trim()
+        if (!t) return { ok: true, value: null }
+        const n = Number(t)
+        if (!Number.isFinite(n) || n < min || n > max) return { ok: false }
+        return { ok: true, value: n }
+    }
 
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault()
-        if (newName.trim()) {
-            addStore({
-                name: newName,
-                location: newLocation,
-                managerName,
-                managerPhone,
-                managerEmail,
-                contactEmail,
-                contactPhone
-            })
-            resetForm()
-            setIsAddOpen(false)
+        if (!newName.trim()) return
+        const lat = parseOptionalCoord(newLatitude, -90, 90)
+        const lng = parseOptionalCoord(newLongitude, -180, 180)
+        if (!lat.ok) {
+            toast.error("Latitude must be a number between -90 and 90, or leave blank.")
+            return
         }
+        if (!lng.ok) {
+            toast.error("Longitude must be a number between -180 and 180, or leave blank.")
+            return
+        }
+        addStore({
+            name: newName,
+            location: newLocation || null,
+            latitude: lat.value,
+            longitude: lng.value,
+            managerName,
+            managerPhone,
+            managerEmail,
+            contactEmail,
+            contactPhone
+        })
+        resetForm()
+        setIsAddOpen(false)
     }
 
     const resetForm = () => {
         setNewName("")
         setNewLocation("")
+        setNewLatitude("")
+        setNewLongitude("")
         setManagerName("")
         setManagerPhone("")
         setManagerEmail("")
         setContactEmail("")
         setContactPhone("")
+        setIsCapturingLocation(false)
+    }
+
+    const captureCurrentLocation = () => {
+        if (typeof navigator === "undefined" || !navigator.geolocation) {
+            toast.error("Location is not available in this browser.")
+            return
+        }
+        setIsCapturingLocation(true)
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setNewLatitude(String(pos.coords.latitude))
+                setNewLongitude(String(pos.coords.longitude))
+                setIsCapturingLocation(false)
+                toast.success("Current location applied to coordinates.")
+            },
+            (err) => {
+                setIsCapturingLocation(false)
+                if (err.code === err.PERMISSION_DENIED) {
+                    toast.error("Location permission denied. Allow location access for this site and try again.")
+                } else if (err.code === err.POSITION_UNAVAILABLE) {
+                    toast.error("Could not determine your position. Try again or enter coordinates manually.")
+                } else if (err.code === err.TIMEOUT) {
+                    toast.error("Location request timed out. Try again.")
+                } else {
+                    toast.error("Could not read your location.")
+                }
+            },
+            { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 }
+        )
     }
 
     const handleUpdate = (e: React.FormEvent) => {
         e.preventDefault()
-        if (editingStore && newName.trim()) {
-            updateStore(editingStore.id, {
-                name: newName,
-                location: newLocation,
-                managerName,
-                managerPhone,
-                managerEmail,
-                contactEmail,
-                contactPhone
-            })
-            setEditingStore(null)
-            resetForm()
+        if (!editingStore || !newName.trim()) return
+        const lat = parseOptionalCoord(newLatitude, -90, 90)
+        const lng = parseOptionalCoord(newLongitude, -180, 180)
+        if (!lat.ok) {
+            toast.error("Latitude must be a number between -90 and 90, or leave blank.")
+            return
         }
+        if (!lng.ok) {
+            toast.error("Longitude must be a number between -180 and 180, or leave blank.")
+            return
+        }
+        updateStore(editingStore.id, {
+            name: newName,
+            location: newLocation || null,
+            latitude: lat.value,
+            longitude: lng.value,
+            managerName,
+            managerPhone,
+            managerEmail,
+            contactEmail,
+            contactPhone
+        })
+        setEditingStore(null)
+        resetForm()
     }
 
     const openEdit = (store: any) => {
         setEditingStore(store)
         setNewName(store.name)
         setNewLocation(store.location || "")
+        setNewLatitude(
+            store.latitude != null && store.latitude !== "" ? String(store.latitude) : ""
+        )
+        setNewLongitude(
+            store.longitude != null && store.longitude !== "" ? String(store.longitude) : ""
+        )
         setManagerName(store.managerName || "")
         setManagerPhone(store.managerPhone || "")
         setManagerEmail(store.managerEmail || "")
@@ -154,9 +236,18 @@ export function StoresView() {
                                             <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                                                 {store.name}
                                             </h3>
-                                            <div className="flex items-center gap-1.5 text-xs text-brand-accent/60 dark:text-brand-cream/60">
-                                                <MapPin className="w-3 h-3" />
-                                                <span>{store.location || "Location not set"}</span>
+                                            <div className="flex flex-col gap-0.5 text-xs text-brand-accent/60 dark:text-brand-cream/60">
+                                                <div className="flex items-center gap-1.5">
+                                                    <MapPin className="w-3 h-3 shrink-0" />
+                                                    <span>{store.location || "Location not set"}</span>
+                                                </div>
+                                                {store.latitude != null &&
+                                                    store.longitude != null && (
+                                                        <span className="ml-4 tabular-nums opacity-90">
+                                                            {Number(store.latitude).toFixed(5)},{" "}
+                                                            {Number(store.longitude).toFixed(5)}
+                                                        </span>
+                                                    )}
                                             </div>
                                         </div>
                                     </div>
@@ -247,75 +338,128 @@ export function StoresView() {
                         </DrawerStickyHeader>
 
                         <DrawerBody className="pb-6">
-                            <form id="store-form" onSubmit={editingStore ? handleUpdate : handleAdd} className="space-y-6 max-w-lg mx-auto">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Store Name</label>
-                                    <input
+                            <form id="store-form" onSubmit={editingStore ? handleUpdate : handleAdd} className="space-y-5 max-w-lg mx-auto">
+                                <div className="space-y-1.5">
+                                    <label className={FIELD_LABEL}>Store name</label>
+                                    <Input
                                         autoFocus
                                         value={newName}
                                         onChange={(e) => setNewName(e.target.value)}
-                                        placeholder="e.g. Victoria Island Branch"
-                                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Location</label>
-                                    <input
-                                        value={newLocation}
-                                        onChange={(e) => setNewLocation(e.target.value)}
-                                        placeholder="e.g. 15 Admiralty Way, Lekki"
-                                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                        placeholder="e.g. Victoria Island branch"
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Name</label>
-                                        <input
+                                <div className="rounded-2xl border border-brand-deep/8 dark:border-white/10 bg-white/55 dark:bg-white/[0.04] p-4 space-y-4">
+                                    <div className="space-y-1.5">
+                                        <label className={FIELD_LABEL}>Street address</label>
+                                        <Input
+                                            value={newLocation}
+                                            onChange={(e) => setNewLocation(e.target.value)}
+                                            placeholder="Number, street, area, city"
+                                        />
+                                    </div>
+
+                                    <div className="h-px w-full bg-brand-deep/[0.07] dark:bg-white/[0.08]" />
+
+                                    <div className="space-y-2.5">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="shrink-0 text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-0.5">
+                                                    Lat / long
+                                                </span>
+                                                <span className="shrink-0 rounded-md border border-brand-accent/12 dark:border-white/12 bg-brand-deep/[0.03] dark:bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-brand-accent/45 dark:text-brand-cream/45">
+                                                    Optional
+                                                </span>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                disabled={isCapturingLocation}
+                                                onClick={captureCurrentLocation}
+                                                className="h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-[10px] font-bold uppercase tracking-wider text-brand-deep/75 dark:text-brand-cream/75 hover:bg-brand-deep/[0.06] dark:hover:bg-white/10"
+                                            >
+                                                {isCapturingLocation ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                                                ) : (
+                                                    <LocateFixed className="h-3.5 w-3.5" aria-hidden />
+                                                )}
+                                                {isCapturingLocation ? "Fixing…" : "Use device"}
+                                            </Button>
+                                        </div>
+                                        <p className="text-[11px] leading-snug text-brand-accent/48 dark:text-brand-cream/42 px-0.5">
+                                            For maps and catalog. Paste from Google Maps or capture GPS from this device.
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1.5 min-w-0">
+                                                <label className={FIELD_LABEL}>Latitude</label>
+                                                <Input
+                                                    inputMode="decimal"
+                                                    value={newLatitude}
+                                                    onChange={(e) => setNewLatitude(e.target.value)}
+                                                    placeholder="9.0571"
+                                                    className="tabular-nums text-sm"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5 min-w-0">
+                                                <label className={FIELD_LABEL}>Longitude</label>
+                                                <Input
+                                                    inputMode="decimal"
+                                                    value={newLongitude}
+                                                    onChange={(e) => setNewLongitude(e.target.value)}
+                                                    placeholder="7.4613"
+                                                    className="tabular-nums text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <label className={FIELD_LABEL}>Manager name</label>
+                                        <Input
                                             value={managerName}
                                             onChange={(e) => setManagerName(e.target.value)}
-                                            placeholder="Assign a manager"
-                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                            placeholder="Full name"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Phone</label>
-                                        <input
+                                    <div className="space-y-1.5">
+                                        <label className={FIELD_LABEL}>Manager phone</label>
+                                        <Input
                                             value={managerPhone}
                                             onChange={(e) => setManagerPhone(e.target.value)}
-                                            placeholder="Manager contact #"
-                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                            placeholder="Phone number"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Manager Email</label>
-                                    <input
+                                <div className="space-y-1.5">
+                                    <label className={FIELD_LABEL}>Manager email</label>
+                                    <Input
+                                        type="email"
                                         value={managerEmail}
                                         onChange={(e) => setManagerEmail(e.target.value)}
                                         placeholder="manager@example.com"
-                                        className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-brand-deep/5 dark:border-white/5">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Contact Email</label>
-                                        <input
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-brand-deep/6 dark:border-white/8">
+                                    <div className="space-y-1.5">
+                                        <label className={FIELD_LABEL}>Store contact email</label>
+                                        <Input
+                                            type="email"
                                             value={contactEmail}
                                             onChange={(e) => setContactEmail(e.target.value)}
-                                            placeholder="Store email"
-                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                            placeholder="branch@example.com"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Contact Phone</label>
-                                        <input
+                                    <div className="space-y-1.5">
+                                        <label className={FIELD_LABEL}>Store contact phone</label>
+                                        <Input
                                             value={contactPhone}
                                             onChange={(e) => setContactPhone(e.target.value)}
-                                            placeholder="Secondary contact"
-                                            className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green/30 transition-all text-brand-deep dark:text-brand-cream"
+                                            placeholder="Alternate line"
                                         />
                                     </div>
                                 </div>
@@ -386,6 +530,16 @@ export function StoresView() {
                                             <span className="text-brand-accent/60">Branch Address</span>
                                             <span className="font-medium text-brand-deep dark:text-brand-cream">{viewingActivities?.location || "Not set"}</span>
                                         </div>
+                                        {viewingActivities?.latitude != null &&
+                                            viewingActivities?.longitude != null && (
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-brand-accent/60">Coordinates</span>
+                                                    <span className="font-medium text-brand-deep dark:text-brand-cream tabular-nums">
+                                                        {Number(viewingActivities.latitude).toFixed(5)},{" "}
+                                                        {Number(viewingActivities.longitude).toFixed(5)}
+                                                    </span>
+                                                </div>
+                                            )}
                                         {viewingActivities?.managerName && (
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-brand-accent/60">Manager</span>

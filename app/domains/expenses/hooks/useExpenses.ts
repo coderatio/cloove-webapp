@@ -44,13 +44,30 @@ export interface UpdateExpensePayload {
     date?: string
 }
 
+export interface ExpenseBreakdownItem {
+    key: string
+    amount: number
+    count: number
+}
+
+export interface ExpenseBreakdownData {
+    totalAmount: number
+    totalCount: number
+    categoryBreakdown: ExpenseBreakdownItem[]
+    vendorBreakdown: ExpenseBreakdownItem[]
+    startDate: string | null
+    endDate: string | null
+}
+
 const PAGE_SIZE = 20
 
 export function useExpenses(
     page: number = 1,
     limit: number = PAGE_SIZE,
     search?: string,
-    category?: string
+    category?: string,
+    startDate?: string,
+    endDate?: string
 ) {
     const queryClient = useQueryClient()
     const { activeBusiness } = useBusiness()
@@ -62,6 +79,8 @@ export function useExpenses(
     }
     if (search?.trim()) params.search = search.trim()
     if (category) params.category = category
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
 
     const {
         data: response,
@@ -69,7 +88,7 @@ export function useExpenses(
         isFetching,
         error,
     } = useQuery<ApiResponse<ExpenseApi[]>>({
-        queryKey: ["expenses", businessId, page, limit, search, category],
+        queryKey: ["expenses", businessId, page, limit, search, category, startDate, endDate],
         queryFn: () =>
             apiClient.get<ApiResponse<ExpenseApi[]>>("/expenses", params, {
                 fullResponse: true,
@@ -142,11 +161,29 @@ export function useExpenseStats() {
         totalThisMonth: number
         todaySpending: number
         avgDaily: number
-        topCategory: string | null
+        overallTotalExpenses: number
+        totalRecords: number
+        firstExpenseDate: string | null
     }>>({
         queryKey: ["expenses-stats", businessId],
         queryFn: () =>
             apiClient.get("/expenses/stats", undefined, { fullResponse: true }),
+        enabled: !!businessId,
+    })
+}
+
+export function useExpenseBreakdown(startDate?: string, endDate?: string, vendor?: string) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const params: Record<string, string> = {}
+    if (startDate) params.startDate = startDate
+    if (endDate) params.endDate = endDate
+    if (vendor?.trim()) params.vendor = vendor.trim()
+
+    return useQuery<ApiResponse<ExpenseBreakdownData>>({
+        queryKey: ["expenses-breakdown", businessId, startDate, endDate, vendor?.trim() ?? ""],
+        queryFn: () => apiClient.get("/expenses/breakdown", params, { fullResponse: true }),
         enabled: !!businessId,
     })
 }

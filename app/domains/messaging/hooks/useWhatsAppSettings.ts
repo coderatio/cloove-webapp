@@ -31,6 +31,9 @@ export interface WhatsAppNumber {
   }>
   is_default: boolean
   display_name: string | null
+  connection_mode: "embedded" | "manual"
+  meta_business_id: string | null
+  selected_catalog_id: string | null
   catalog_bootstrap_status: WhatsAppCatalogSyncStatus | null
   catalog_bootstrap_error: string | null
   catalog_bootstrap_failed_at: string | null
@@ -63,6 +66,30 @@ export interface AgentCapabilitiesSummary {
   humanHandoff: boolean
 }
 
+export type RestaurantOrderStage = "queued" | "preparing" | "ready" | "served"
+
+export interface OrderNotificationMessage {
+  enabled: boolean
+  body: string
+}
+
+export interface OrderNotificationPreset {
+  id: string
+  label: string
+  body: string
+}
+
+export interface OrderNotificationsSettings {
+  version: number
+  enabled: boolean
+  restaurant: {
+    enabled: boolean
+    auto_send_on_stage_change: boolean
+    stage_messages: Record<RestaurantOrderStage, OrderNotificationMessage>
+    manual_presets: OrderNotificationPreset[]
+  }
+}
+
 export interface GoSettings {
   id?: string
   business_id: string
@@ -85,6 +112,7 @@ export interface GoSettings {
   agent_profile?: AgentProfile
   capabilities?: AgentCapabilitiesSummary
   capabilities_overrides?: Partial<AgentCapabilitiesSummary> | null
+  order_notifications?: OrderNotificationsSettings | null
   created_at?: string
   updated_at?: string | null
 }
@@ -102,6 +130,19 @@ export interface EmbeddedSignupPayload {
   phone_number_id: string
   catalog_id?: string
   catalog_name?: string
+}
+
+export interface ManualConnectPayload {
+  phone_number?: string
+  phone_number_id?: string
+  waba_id?: string
+  meta_business_id?: string
+  access_token?: string
+  app_secret?: string
+  catalog_id?: string
+  catalog_name?: string
+  display_name?: string | null
+  store_id?: string | null
 }
 
 export enum WhatsAppCatalogSyncStatus {
@@ -201,6 +242,34 @@ export function useConnectWhatsAppNumber() {
   })
 }
 
+export function useManualConnectWhatsAppNumber() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useMutation({
+    mutationFn: (payload: ManualConnectPayload) =>
+      apiClient.post<{ message: string; warning?: string | null; data: WhatsAppNumber }>(
+        "/whatsapp-numbers/manual-connect",
+        payload,
+        { fullResponse: true }
+      ),
+    onSuccess: (data) => {
+      toast.success("WhatsApp saved.")
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.catalog(businessId) })
+      if (data?.data?.id) {
+        window.setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numberStatus(data.data.id, businessId) })
+        }, 2500)
+      }
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to connect WhatsApp number")
+    },
+  })
+}
+
 export function useWhatsAppCatalogStatus(number: WhatsAppNumber | null) {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
@@ -237,13 +306,46 @@ export function useSyncWhatsAppCatalog() {
 
   return useMutation({
     mutationFn: () =>
-      apiClient.post<{ message: string }>("/whatsapp-numbers/catalog/sync", {}, { fullResponse: true }),
+      apiClient.post<{
+        message: string
+        data?: { queued: boolean; reason?: string; message?: string }
+      }>("/whatsapp-numbers/catalog/sync", {}, { fullResponse: true }),
     onSuccess: (data) => {
-      toast.success(data?.message || "Catalog sync queued")
+      if (data?.data?.queued === false) {
+        toast.error("Catalog sync failed. Check the card for details.")
+      } else {
+        toast.success("Catalog sync started.")
+      }
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.catalog(businessId) })
     },
     onError: () => {
-      toast.error("Failed to queue catalog sync")
+      toast.error("Could not start catalog sync.")
+    },
+  })
+}
+
+export function useResyncWhatsAppConfig() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<{
+        message: string
+        data?: { appCallbackConfigured: boolean; configured: number; failed: number }
+      }>("/whatsapp-numbers/webhook/setup", {}, { fullResponse: true }),
+    onSuccess: (data) => {
+      if (data?.data?.failed && data.data.failed > 0) {
+        toast.error("Config resynced with issues. Review status.")
+      } else {
+        toast.success("Config resynced.")
+      }
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.catalog(businessId) })
+    },
+    onError: () => {
+      toast.error("Could not resync config.")
     },
   })
 }

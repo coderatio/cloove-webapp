@@ -27,6 +27,7 @@ import {
   Briefcase,
   PackageCheck,
   RefreshCw,
+  Bell,
 } from "lucide-react"
 import {
   useWhatsAppNumbers,
@@ -38,21 +39,34 @@ import {
   useGenerateGoSettingsContent,
   useWhatsAppCatalogStatus,
   useSyncWhatsAppCatalog,
+  useResyncWhatsAppConfig,
   type WhatsAppNumber,
   type WhatsAppCatalogStatus,
   type GoSettings,
   type GoSettingsContentField,
+  type OrderNotificationsSettings,
+  type RestaurantOrderStage,
   WhatsAppNumberStatusValue,
   WhatsAppCatalogSyncStatus,
 } from "../hooks/useWhatsAppSettings"
 import { MarkdownEditor } from "@/app/components/ui/markdown-editor"
 import { EmbeddedSignupButton } from "./EmbeddedSignupButton"
+import { ConnectWhatsAppForm } from "./ConnectWhatsAppForm"
 import { AgentProfileSection } from "./AgentProfileSection"
+import { WhatsAppNotificationMessageInput } from "./WhatsAppNotificationMessageInput"
+import { useBusiness } from "@/app/components/BusinessProvider"
+import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 
 interface WhatsAppSettingsProps {
   onDirtyChange?: (isDirty: boolean) => void
   onSavingChange?: (isSaving: boolean) => void
   saveTrigger?: number
+}
+
+interface EmbeddedSignupRuntimeConfig {
+  embeddedEnabled: boolean
+  isConfigured: boolean
+  error: string | null
 }
 
 const STATUS_CONFIG: Record<WhatsAppNumberStatusValue, { label: string; icon: React.ElementType; color: string }> = {
@@ -69,6 +83,85 @@ const TONE_OPTIONS = [
   { value: "formal", label: "Formal" },
   { value: "casual", label: "Casual" },
 ]
+
+const ORDER_STAGE_LABELS: Record<RestaurantOrderStage, string> = {
+  queued: "Queued",
+  preparing: "Preparing",
+  ready: "Ready",
+  served: "Served",
+}
+
+/** Shown under each stage title—what this auto-message is for, not raw placeholder tokens */
+const ORDER_STAGE_MESSAGE_HINTS: Record<RestaurantOrderStage, string> = {
+  queued:
+    "Sent when an order is accepted and waiting in the kitchen queue—confirm it landed and set expectations for what happens next.",
+  preparing:
+    "Sent when the kitchen starts working on the order—reassure the guest that prep is underway.",
+  ready:
+    "Sent when the order is ready for pickup or handoff—tell them how or where to collect if that helps.",
+  served:
+    "Sent when the order is marked finished or served—thank the guest or close the loop politely.",
+}
+
+const DEFAULT_ORDER_NOTIFICATIONS: OrderNotificationsSettings = {
+  version: 1,
+  enabled: false,
+  restaurant: {
+    enabled: true,
+    auto_send_on_stage_change: true,
+    stage_messages: {
+      queued: {
+        enabled: true,
+        body: "Hi {customerName}, your order #{orderCode} has been received and sent to the kitchen.",
+      },
+      preparing: {
+        enabled: true,
+        body: "Good news, your order #{orderCode} is now being prepared.",
+      },
+      ready: {
+        enabled: true,
+        body: "Your order #{orderCode} is ready. Please collect it when convenient.",
+      },
+      served: {
+        enabled: false,
+        body: "Your order #{orderCode} has been served. Thank you for choosing {businessName}.",
+      },
+    },
+    manual_presets: [
+      {
+        id: "checking_in",
+        label: "Checking in",
+        body: "Hi {customerName}, we are checking on your order #{orderCode} and will update you shortly.",
+      },
+      {
+        id: "ready_reminder",
+        label: "Ready reminder",
+        body: "Hi {customerName}, your order #{orderCode} is ready for pickup.",
+      },
+    ],
+  },
+}
+
+function mergeOrderNotifications(
+  settings?: OrderNotificationsSettings | null
+): OrderNotificationsSettings {
+  if (!settings) return DEFAULT_ORDER_NOTIFICATIONS
+
+  return {
+    ...DEFAULT_ORDER_NOTIFICATIONS,
+    ...settings,
+    restaurant: {
+      ...DEFAULT_ORDER_NOTIFICATIONS.restaurant,
+      ...settings.restaurant,
+      stage_messages: {
+        ...DEFAULT_ORDER_NOTIFICATIONS.restaurant.stage_messages,
+        ...settings.restaurant?.stage_messages,
+      },
+      manual_presets:
+        settings.restaurant?.manual_presets ?? DEFAULT_ORDER_NOTIFICATIONS.restaurant.manual_presets,
+    },
+  }
+}
 
 export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }: WhatsAppSettingsProps) {
   const { data: numbers, isLoading: numbersLoading } = useWhatsAppNumbers()
@@ -88,8 +181,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
   const suspendedNumber = !activeNumber
     ? (numbers as WhatsAppNumber[] | undefined)?.find(
-        (n) => n.status === WhatsAppNumberStatusValue.SUSPENDED
-      )
+      (n) => n.status === WhatsAppNumberStatusValue.SUSPENDED
+    )
     : undefined
 
   const isPending =
@@ -97,24 +190,28 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     activeNumber?.status === WhatsAppNumberStatusValue.VERIFYING
   const { data: catalogStatus } = useWhatsAppCatalogStatus(activeNumber ?? null)
   const syncCatalog = useSyncWhatsAppCatalog()
+  const resyncConfig = useResyncWhatsAppConfig()
   const effectiveCatalogStatus =
     catalogStatus ??
     (activeNumber?.catalog_bootstrap_status
       ? {
-          id: "catalog-bootstrap",
-          business_id: activeNumber.business_id,
-          whatsapp_number_id: activeNumber.id,
-          waba_id: activeNumber.waba_id ?? "",
-          meta_catalog_id: "",
-          sync_status: activeNumber.catalog_bootstrap_status,
-          last_synced_at: null,
-          last_error: activeNumber.catalog_bootstrap_error,
-          synced_products_count: 0,
-          products_count: 0,
-        }
+        id: "catalog-bootstrap",
+        business_id: activeNumber.business_id,
+        whatsapp_number_id: activeNumber.id,
+        waba_id: activeNumber.waba_id ?? "",
+        meta_catalog_id: "",
+        sync_status: activeNumber.catalog_bootstrap_status,
+        last_synced_at: null,
+        last_error: activeNumber.catalog_bootstrap_error,
+        synced_products_count: 0,
+        products_count: 0,
+      }
       : null)
 
   useWhatsAppNumberStatus(activeNumber?.id ?? null, isPending)
+
+  const layoutPresetId = useLayoutPresetId()
+  const showOrderNotificationsTab = layoutPresetId === "restaurant"
 
   const [localSettings, setLocalSettings] = useState<Partial<GoSettings>>({
     display_name: "",
@@ -134,9 +231,24 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     return_policy: "",
     agent_profile: "commerce",
     capabilities_overrides: null,
+    order_notifications: DEFAULT_ORDER_NOTIFICATIONS,
   })
 
-  const [activeSettingsTab, setActiveSettingsTab] = useState<"general" | "ai">("general")
+  const [activeSettingsTab, setActiveSettingsTab] = useState<"general" | "notifications" | "ai">("general")
+  const [showManualConnect, setShowManualConnect] = useState(false)
+  const resolvedSettingsTab: "general" | "notifications" | "ai" =
+    !showOrderNotificationsTab && activeSettingsTab === "notifications"
+      ? "general"
+      : activeSettingsTab
+  const [manualConnectAlert, setManualConnectAlert] = useState<{
+    tone: "success" | "warning"
+    message: string
+  } | null>(null)
+  const [embeddedConfig, setEmbeddedConfig] = useState<EmbeddedSignupRuntimeConfig>({
+    embeddedEnabled: false,
+    isConfigured: false,
+    error: null,
+  })
 
   const [isDirty, setIsDirty] = useState(false)
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
@@ -167,6 +279,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
         return_policy: s.return_policy ?? "",
         agent_profile: s.agent_profile ?? "commerce",
         capabilities_overrides: s.capabilities_overrides ?? null,
+        order_notifications: mergeOrderNotifications(s.order_notifications),
       })
       setIsDirty(false)
       onDirtyChange?.(false)
@@ -182,6 +295,36 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
       })
     }
   }, [saveTrigger])
+
+  useEffect(() => {
+    let cancelled = false
+    const loadEmbeddedConfig = async () => {
+      try {
+        const response = await fetch("/api/meta/embedded-signup-config", { cache: "no-store" })
+        const data = (await response.json()) as EmbeddedSignupRuntimeConfig
+        if (!cancelled) {
+          setEmbeddedConfig({
+            embeddedEnabled: data.embeddedEnabled !== false,
+            isConfigured: data.isConfigured === true,
+            error: data.error ?? null,
+          })
+        }
+      } catch {
+        if (!cancelled) {
+          setEmbeddedConfig({
+            embeddedEnabled: true,
+            isConfigured: false,
+            error: "Could not load embedded signup configuration.",
+          })
+        }
+      }
+    }
+
+    loadEmbeddedConfig()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const handleChange = (key: keyof GoSettings, value: unknown) => {
     setLocalSettings((prev) => ({ ...prev, [key]: value }))
@@ -246,21 +389,64 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                   Cloove manages your WhatsApp catalog from your products.
                 </p>
               </div>
-              <div className="w-full sm:w-auto sm:min-w-[300px]">
-                <EmbeddedSignupButton />
+              <div className="w-full space-y-2 sm:w-auto sm:min-w-[320px]">
+                {embeddedConfig.embeddedEnabled ? (
+                  <>
+                    <EmbeddedSignupButton />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-11 w-full rounded-full"
+                      onClick={() => setShowManualConnect((prev) => !prev)}
+                    >
+                      {showManualConnect ? "Hide manual setup" : "Connect manually"}
+                    </Button>
+                    {!embeddedConfig.isConfigured && embeddedConfig.error ? (
+                      <p className="text-xs text-amber-700 dark:text-amber-300">
+                        {embeddedConfig.error} You can still connect manually below.
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-slate-300">
+                    Embedded Meta form is disabled. Use manual setup below.
+                  </p>
+                )}
               </div>
             </div>
+            {(!embeddedConfig.embeddedEnabled || showManualConnect) && (
+              <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/60">
+                <ConnectWhatsAppForm
+                  onSuccess={({ warning }) => {
+                    setShowManualConnect(false)
+                    setManualConnectAlert({
+                      tone: warning ? "warning" : "success",
+                      message: warning || "WhatsApp connection saved successfully.",
+                    })
+                  }}
+                />
+              </div>
+            )}
           </SettingsCard>
         ) : activeNumber ? (
           <SettingsCard>
             <ConnectedNumberCard
               number={activeNumber}
+              catalog={effectiveCatalogStatus}
               isPending={isPending}
               showDisconnectConfirm={showDisconnectConfirm}
               onDisconnectClick={() => setShowDisconnectConfirm(true)}
               onDisconnectConfirm={handleDisconnect}
               onDisconnectCancel={() => setShowDisconnectConfirm(false)}
               isDisconnecting={disconnectNumber.isPending}
+              isResyncingConfig={resyncConfig.isPending}
+              onResyncConfig={() => resyncConfig.mutate()}
+              onManualReconnectSuccess={({ warning }) =>
+                setManualConnectAlert({
+                  tone: warning ? "warning" : "success",
+                  message: warning || "WhatsApp connection saved successfully.",
+                })
+              }
             />
           </SettingsCard>
         ) : suspendedNumber ? (
@@ -269,8 +455,25 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
               number={suspendedNumber}
               onRestore={() => restoreNumber.mutate(suspendedNumber.id)}
               isRestoring={restoreNumber.isPending}
+              onManualReconnectSuccess={({ warning }) =>
+                setManualConnectAlert({
+                  tone: warning ? "warning" : "success",
+                  message: warning || "WhatsApp connection saved successfully.",
+                })
+              }
             />
           </SettingsCard>
+        ) : null}
+
+        {manualConnectAlert ? (
+          <div
+            className={`rounded-2xl border px-4 py-3 text-sm leading-6 ${manualConnectAlert.tone === "warning"
+                ? "border-amber-100 bg-amber-50/80 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
+                : "border-emerald-100 bg-emerald-50/80 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+              }`}
+          >
+            {manualConnectAlert.message}
+          </div>
         ) : null}
       </section>
 
@@ -321,10 +524,10 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
       {/* Settings tabs — only show when number is active */}
       {activeNumber && activeNumber.status === WhatsAppNumberStatusValue.ACTIVE && (
         <div className="pt-4">
-          <div className="flex gap-6 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-slate-200 dark:border-slate-800">
             <button
               onClick={() => setActiveSettingsTab("general")}
-              className={`pb-3 text-sm font-medium transition-colors relative ${activeSettingsTab === "general"
+              className={`pb-3 text-sm font-medium transition-colors relative ${resolvedSettingsTab === "general"
                 ? "text-brand-deep dark:text-brand-cream"
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
@@ -333,13 +536,30 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                 <MessageSquare className="w-4 h-4" />
                 General Settings
               </div>
-              {activeSettingsTab === "general" && (
+              {resolvedSettingsTab === "general" && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
               )}
             </button>
+            {showOrderNotificationsTab && (
+              <button
+                onClick={() => setActiveSettingsTab("notifications")}
+                className={`pb-3 text-sm font-medium transition-colors relative ${resolvedSettingsTab === "notifications"
+                  ? "text-brand-deep dark:text-brand-cream"
+                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                  }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Bell className="w-4 h-4" />
+                  Order notifications
+                </div>
+                {resolvedSettingsTab === "notifications" && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
+                )}
+              </button>
+            )}
             <button
               onClick={() => setActiveSettingsTab("ai")}
-              className={`pb-3 text-sm font-medium transition-colors relative ${activeSettingsTab === "ai"
+              className={`pb-3 text-sm font-medium transition-colors relative ${resolvedSettingsTab === "ai"
                 ? "text-brand-deep dark:text-brand-cream"
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
@@ -348,14 +568,14 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                 <Bot className="w-4 h-4" />
                 AI Assistant
               </div>
-              {activeSettingsTab === "ai" && (
+              {resolvedSettingsTab === "ai" && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
               )}
             </button>
           </div>
 
           <div className="mt-8">
-            {activeSettingsTab === "general" && (
+            {resolvedSettingsTab === "general" && (
               <div className="space-y-8">
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -476,7 +696,16 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
               </div>
             )}
 
-            {activeSettingsTab === "ai" && (
+            {resolvedSettingsTab === "notifications" && (
+              <div className="space-y-8">
+                <OrderNotificationsCard
+                  settings={mergeOrderNotifications(localSettings.order_notifications)}
+                  onChange={(settings) => handleChange("order_notifications", settings)}
+                />
+              </div>
+            )}
+
+            {resolvedSettingsTab === "ai" && (
               <div className="space-y-8">
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
@@ -604,6 +833,150 @@ function SettingsCard({ children, className = "" }: { children: React.ReactNode;
   )
 }
 
+function OrderNotificationsCard({
+  settings,
+  onChange,
+}: {
+  settings: OrderNotificationsSettings
+  onChange: (settings: OrderNotificationsSettings) => void
+}) {
+  const stages = Object.keys(ORDER_STAGE_LABELS) as RestaurantOrderStage[]
+  const update = (next: Partial<OrderNotificationsSettings>) => onChange({ ...settings, ...next })
+  const updateRestaurant = (next: Partial<OrderNotificationsSettings["restaurant"]>) =>
+    onChange({ ...settings, restaurant: { ...settings.restaurant, ...next } })
+  const updateStage = (
+    stage: RestaurantOrderStage,
+    next: Partial<OrderNotificationsSettings["restaurant"]["stage_messages"][RestaurantOrderStage]>
+  ) =>
+    updateRestaurant({
+      stage_messages: {
+        ...settings.restaurant.stage_messages,
+        [stage]: { ...settings.restaurant.stage_messages[stage], ...next },
+      },
+    })
+  const updatePreset = (id: string, field: "label" | "body", value: string) =>
+    updateRestaurant({
+      manual_presets: settings.restaurant.manual_presets.map((preset) =>
+        preset.id === id ? { ...preset, [field]: value } : preset
+      ),
+    })
+
+  const { businessName } = useBusiness()
+
+  return (
+    <section className="space-y-4">
+      <h3 className="flex items-center gap-2 text-lg font-medium text-slate-900 dark:text-slate-100">
+        <MessageSquare className="h-5 w-5 text-slate-400" />
+        Order Notifications
+      </h3>
+      <SettingsCard className="space-y-6">
+        <SettingToggle
+          label="Restaurant order updates"
+          description="Send short WhatsApp updates when kitchen orders move through stages."
+          checked={settings.enabled}
+          onChange={(enabled) => update({ enabled })}
+        />
+
+        <div className="border-t border-slate-100 pt-5 dark:border-slate-800/60">
+          <SettingToggle
+            label="Auto-send stage changes"
+            description="Kitchen movement stays fast; WhatsApp message will be sent automatically."
+            checked={settings.restaurant.auto_send_on_stage_change}
+            onChange={(auto_send_on_stage_change) =>
+              updateRestaurant({ auto_send_on_stage_change })
+            }
+          />
+        </div>
+
+        <div className="grid gap-3">
+          {stages.map((stage) => {
+            const message = settings.restaurant.stage_messages[stage]
+            return (
+              <div
+                key={stage}
+                className="rounded-2xl border border-slate-100 p-4 dark:border-slate-800/70"
+              >
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1 pr-1">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      {ORDER_STAGE_LABELS[stage]}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                      {ORDER_STAGE_MESSAGE_HINTS[stage]} Use the braces button in the message toolbar or type{" "}
+                      <kbd className="rounded border border-slate-200 bg-slate-50 px-1 font-mono text-[10px] text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        {"{"}
+                      </kbd>{" "}
+                      to drop in names, totals, and other order details automatically.
+                    </p>
+                  </div>
+                  <div className="shrink-0 pt-0.5">
+                    <Switch
+                      checked={message.enabled}
+                      onCheckedChange={(enabled) => updateStage(stage, { enabled })}
+                    />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <WhatsAppNotificationMessageInput
+                    id={`order-notification-stage-${stage}`}
+                    value={message.body}
+                    onChange={(body) => updateStage(stage, { body })}
+                    previewVariableContext={{
+                      ...(businessName.trim() ? { businessName: businessName.trim() } : {}),
+                      stage: ORDER_STAGE_LABELS[stage],
+                    }}
+                    placeholder="Write the message sent for this stage…"
+                    minHeight={120}
+                    showDefaultFooter={false}
+                    className="border-slate-200 bg-white/95 dark:border-slate-800/80 dark:bg-slate-900/50"
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="border-t border-slate-100 pt-5 dark:border-slate-800/60">
+          <div className="mb-3">
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Manual quick messages
+            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-300">
+              Staff can pick one from an order or kitchen card, edit it, then send.
+            </p>
+          </div>
+          <div className="grid gap-3">
+            {settings.restaurant.manual_presets.map((preset) => (
+              <div
+                key={preset.id}
+                className="grid gap-2 rounded-2xl border border-slate-100 p-4 dark:border-slate-800/70"
+              >
+                <Input
+                  value={preset.label}
+                  onChange={(event) => updatePreset(preset.id, "label", event.target.value)}
+                  className="bg-white dark:bg-slate-900/50"
+                />
+                <WhatsAppNotificationMessageInput
+                  id={`order-notification-preset-${preset.id}`}
+                  value={preset.body}
+                  onChange={(body) => updatePreset(preset.id, "body", body)}
+                  previewVariableContext={
+                    businessName.trim() ? { businessName: businessName.trim() } : undefined
+                  }
+                  placeholder="Preset message body…"
+                  minHeight={120}
+                  showDefaultFooter={false}
+                  className="border-slate-200 bg-white/95 dark:border-slate-800/80 dark:bg-slate-900/50"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </SettingsCard>
+    </section>
+  )
+}
+
 function WhatsAppCatalogPanel({
   catalog,
   number,
@@ -626,19 +999,22 @@ function WhatsAppCatalogPanel({
     (status === WhatsAppCatalogSyncStatus.PENDING && isProvisioning)
   const lastSynced = catalog?.last_synced_at
     ? new Date(catalog.last_synced_at).toLocaleString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "Not synced yet"
   const summary = catalog
     ? `${catalog.synced_products_count} of ${catalog.products_count} products synced. Last sync: ${lastSynced}.`
     : isProvisioning
       ? "Catalog setup will begin after Meta finishes provisioning your number."
       : "Catalog setup is ready. Start sync once Meta permissions are in place."
+  const hasCatalog = !!catalog
+  const shouldShowBootstrapError = !hasCatalog || status === WhatsAppCatalogSyncStatus.FAILED
   const errorMessage =
-    (isFailed && catalog?.last_error) || number.catalog_bootstrap_error
+    (isFailed && catalog?.last_error) ||
+    (shouldShowBootstrapError ? number.catalog_bootstrap_error : null)
   const canSync = !isProvisioning && !isRunning
 
   return (
@@ -651,7 +1027,7 @@ function WhatsAppCatalogPanel({
           <div className="min-w-0 flex-1">
             <div className="flex gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-              <PackageCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <PackageCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="min-w-0 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -744,23 +1120,43 @@ function SettingToggle({
 
 function ConnectedNumberCard({
   number,
+  catalog,
   isPending,
   showDisconnectConfirm,
   onDisconnectClick,
   onDisconnectConfirm,
   onDisconnectCancel,
   isDisconnecting,
+  isResyncingConfig,
+  onResyncConfig,
+  onManualReconnectSuccess,
 }: {
   number: WhatsAppNumber
+  catalog: WhatsAppCatalogStatus | null
   isPending: boolean
   showDisconnectConfirm: boolean
   onDisconnectClick: () => void
   onDisconnectConfirm: () => void
   onDisconnectCancel: () => void
   isDisconnecting: boolean
+  isResyncingConfig: boolean
+  onResyncConfig: () => void
+  onManualReconnectSuccess: (payload: { warning?: string | null }) => void
 }) {
+  const [showManualReconnect, setShowManualReconnect] = useState(false)
   const config = STATUS_CONFIG[number.status] ?? STATUS_CONFIG[WhatsAppNumberStatusValue.FAILED]
   const StatusIcon = config.icon
+  const catalogValue = catalog
+    ? catalog.sync_status === WhatsAppCatalogSyncStatus.FAILED
+      ? "Needs attention"
+      : catalog.sync_status === WhatsAppCatalogSyncStatus.SYNCED
+        ? "Synced"
+        : "Provisioning"
+    : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
+      ? "Needs attention"
+      : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.SYNCED
+        ? "Synced"
+        : "Provisioning"
 
   return (
     <div className="space-y-5">
@@ -803,13 +1199,7 @@ function ConnectedNumberCard({
           />
           <StatusMetric
             label="Catalog"
-            value={
-              number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
-                ? "Needs attention"
-                : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.SYNCED
-                  ? "Synced"
-                  : "Provisioning"
-            }
+            value={catalogValue}
           />
         </div>
       </div>
@@ -831,17 +1221,45 @@ function ConnectedNumberCard({
 
       <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800/80">
         <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
-          Use a fresh Meta connection if you need to switch numbers or grant new permissions.
+          {number.connection_mode === "embedded"
+            ? "Use a fresh Meta connection if you need to switch numbers or grant new permissions."
+            : "Update config to change only the IDs or credentials you want."}
         </p>
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
-          <EmbeddedSignupButton
-            label="Connect Again"
-            className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-            icon={RefreshCw}
-          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onResyncConfig}
+            disabled={isResyncingConfig}
+            className="h-10 w-full justify-center rounded-full sm:w-auto"
+          >
+            {isResyncingConfig ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            Resync Config
+          </Button>
+          {number.connection_mode === "manual" ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowManualReconnect((prev) => !prev)}
+              className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              {showManualReconnect ? "Hide config form" : "Update Config"}
+            </Button>
+          ) : (
+            <EmbeddedSignupButton
+              label="Connect Again"
+              className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              icon={RefreshCw}
+            />
+          )}
           {number.status !== WhatsAppNumberStatusValue.PENDING &&
-          number.status !== WhatsAppNumberStatusValue.VERIFYING &&
-          !showDisconnectConfirm ? (
+            number.status !== WhatsAppNumberStatusValue.VERIFYING &&
+            !showDisconnectConfirm ? (
             <Button
               variant="ghost"
               size="sm"
@@ -853,38 +1271,50 @@ function ConnectedNumberCard({
             </Button>
           ) : null}
         </div>
+        {number.connection_mode === "manual" && showManualReconnect ? (
+          <div className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+            <ConnectWhatsAppForm
+              mode="update"
+              initialNumber={number}
+              onSuccess={({ warning }) => {
+                setShowManualReconnect(false)
+                onManualReconnectSuccess({ warning })
+              }}
+            />
+          </div>
+        ) : null}
       </div>
 
       {number.status !== WhatsAppNumberStatusValue.PENDING &&
-      number.status !== WhatsAppNumberStatusValue.VERIFYING &&
-      showDisconnectConfirm && (
-        <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 flex-1 items-start gap-3">
-            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
-            <p className="text-sm leading-6 text-red-800 dark:text-red-300">
-              Disconnect this number only if you want Cloove to stop handling messages for it.
-            </p>
+        number.status !== WhatsAppNumberStatusValue.VERIFYING &&
+        showDisconnectConfirm && (
+          <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+              <p className="text-sm leading-6 text-red-800 dark:text-red-300">
+                Disconnect this number only if you want Cloove to stop handling messages for it.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onDisconnectCancel}
+                className="w-full rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={onDisconnectConfirm}
+                disabled={isDisconnecting}
+                className="w-full rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 sm:w-auto"
+              >
+                {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
+              </Button>
+            </div>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={onDisconnectCancel}
-              className="w-full rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={onDisconnectConfirm}
-              disabled={isDisconnecting}
-              className="w-full rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 sm:w-auto"
-            >
-              {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
     </div>
   )
 }
@@ -906,11 +1336,15 @@ function SuspendedNumberCard({
   number,
   onRestore,
   isRestoring,
+  onManualReconnectSuccess,
 }: {
   number: WhatsAppNumber
   onRestore: () => void
   isRestoring: boolean
+  onManualReconnectSuccess: (payload: { warning?: string | null }) => void
 }) {
+  const [showManualReconnect, setShowManualReconnect] = useState(false)
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -940,21 +1374,49 @@ function SuspendedNumberCard({
         <p className="text-sm text-amber-800 dark:text-amber-300 flex-1">
           This number is disconnected. Reconnect to resume AI messaging.
         </p>
-        <Button
-          onClick={onRestore}
-          disabled={isRestoring}
-          className="bg-brand-deep text-brand-cream hover:bg-brand-deep/90 shadow-sm shrink-0"
-        >
-          {isRestoring ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+        <div className="flex shrink-0 gap-2">
+          {number.connection_mode === "embedded" ? (
+            <EmbeddedSignupButton
+              label="Reconnect"
+              className="h-10 rounded-full bg-brand-deep px-4 text-brand-cream hover:bg-brand-deep/90"
+              icon={RotateCcw}
+            />
           ) : (
-            <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowManualReconnect((prev) => !prev)}
+              className="h-10 rounded-full"
+            >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Reconnect
-            </>
+              {showManualReconnect ? "Hide config form" : "Update config"}
+            </Button>
           )}
-        </Button>
+          <Button
+            onClick={onRestore}
+            disabled={isRestoring}
+            className="bg-brand-deep text-brand-cream hover:bg-brand-deep/90 shadow-sm"
+          >
+            {isRestoring ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              "Restore"
+            )}
+          </Button>
+        </div>
       </div>
+      {number.connection_mode !== "embedded" && showManualReconnect ? (
+        <div className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+          <ConnectWhatsAppForm
+            mode="update"
+            initialNumber={number}
+            onSuccess={({ warning }) => {
+              setShowManualReconnect(false)
+              onManualReconnectSuccess({ warning })
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

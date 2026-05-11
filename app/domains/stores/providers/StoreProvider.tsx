@@ -12,6 +12,8 @@ export interface Store {
     businessId: string
     name: string
     location: string | null
+    latitude?: number | null
+    longitude?: number | null
     managerName: string | null
     managerPhone: string | null
     managerEmail: string | null

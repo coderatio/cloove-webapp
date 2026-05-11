@@ -1,3 +1,4 @@
+import { useCallback } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient, ApiResponse } from "@/app/lib/api-client"
 import { toast } from "sonner"
@@ -26,6 +27,36 @@ export function useInventory(
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
+    /** Forces refetch so catalog sync/remove updates badges immediately (global staleTime is 60s). */
+    const refreshProductLists = useCallback(async () => {
+        if (!businessId) return
+        await queryClient.refetchQueries({
+            predicate: (query) =>
+                Array.isArray(query.queryKey) &&
+                query.queryKey[0] === "products" &&
+                query.queryKey[1] === businessId,
+        })
+    }, [businessId, queryClient])
+
+    /**
+     * White-label catalog sync enqueues a queue job — DB/catalog badges update after the worker runs.
+     * Global sync writes synchronously; short follow-ups still help if list aggregation lags slightly.
+     */
+    const scheduleCatalogSyncFollowUpRefetches = useCallback(
+        (scope: "whitelabel" | "global") => {
+            const delaysMs =
+                scope === "whitelabel"
+                    ? [2500, 6000, 12000, 25000]
+                    : [1200, 3500]
+            delaysMs.forEach((ms) => {
+                setTimeout(() => {
+                    void refreshProductLists()
+                }, ms)
+            })
+        },
+        [refreshProductLists]
+    )
+
     const params: Record<string, string> = {
         page: String(page),
         limit: String(limit),
@@ -45,9 +76,9 @@ export function useInventory(
 
     const createProductMutation = useMutation({
         mutationFn: (data: any) => apiClient.post('/products', data),
-        onSuccess: (data: any) => {
+        onSuccess: async (data: any) => {
             toast.success(data.message || "Product added successfully")
-            queryClient.invalidateQueries({ queryKey: ['products', businessId] })
+            await refreshProductLists()
         },
         onError: (error: any) => {
             toast.error(error.message || "Failed to add product")
@@ -57,9 +88,9 @@ export function useInventory(
     const updateProductMutation = useMutation({
         mutationFn: ({ id, data }: { id: string, data: any }) =>
             apiClient.patch(`/products/${id}`, data),
-        onSuccess: (data: any) => {
+        onSuccess: async (data: any) => {
             toast.success(data.message || "Product updated successfully")
-            queryClient.invalidateQueries({ queryKey: ['products', businessId] })
+            await refreshProductLists()
         },
         onError: (error: any) => {
             toast.error(error.message || "Failed to update product")
@@ -68,14 +99,66 @@ export function useInventory(
 
     const deleteProductMutation = useMutation({
         mutationFn: (id: string) => apiClient.delete(`/products/${id}`),
-        onSuccess: (data: any) => {
+        onSuccess: async (data: any) => {
             toast.success(data.message || "Product deleted successfully")
-            queryClient.invalidateQueries({ queryKey: ['products', businessId] })
+            await refreshProductLists()
         },
         onError: (error: any) => {
             toast.error(error.message || "Failed to delete product")
         }
     })
+
+    const syncProductCatalogMutation = useMutation({
+        mutationFn: ({ id, scope }: { id: string, scope: 'whitelabel' | 'global', productName?: string }) =>
+            apiClient.post(`/products/${id}/catalog/sync`, { scope }),
+        onSuccess: (_data, variables) => {
+            scheduleCatalogSyncFollowUpRefetches(variables.scope)
+        },
+        onSettled: async () => {
+            await refreshProductLists()
+        },
+    })
+
+    const removeProductFromCatalogMutation = useMutation({
+        mutationFn: ({ id, scope }: { id: string; scope: 'whitelabel' | 'global' | 'all' }) =>
+            apiClient.post(`/products/${id}/remove-from-catalog`, { scope }),
+        onSettled: async () => {
+            await refreshProductLists()
+        },
+    })
+
+    const syncProductCatalog = async (input: { id: string, scope: 'whitelabel' | 'global', productName?: string }) => {
+        const scopeLabel = input.scope === 'global' ? 'global' : 'white-label'
+        const name = input.productName?.trim() ? `"${input.productName.trim()}"` : 'product'
+        const promise = syncProductCatalogMutation.mutateAsync(input)
+        await toast.promise(promise, {
+            loading: `Syncing ${scopeLabel} catalog for ${name}...`,
+            success: (data: any) => data?.message || `${name} synced to ${scopeLabel} catalog`,
+            error: (error: any) => error?.message || `Failed to sync ${name} to ${scopeLabel} catalog`
+        })
+        return await promise
+    }
+
+    const removeProductFromCatalog = async (
+        id: string,
+        productName: string | undefined,
+        scope: 'whitelabel' | 'global' | 'all'
+    ) => {
+        const name = productName?.trim() ? `"${productName.trim()}"` : 'product'
+        const scopePhrase =
+            scope === 'global'
+                ? 'global catalog'
+                : scope === 'whitelabel'
+                  ? 'white-label catalog'
+                  : 'WhatsApp catalogs'
+        const promise = removeProductFromCatalogMutation.mutateAsync({ id, scope })
+        await toast.promise(promise, {
+            loading: `Removing ${name} from ${scopePhrase}...`,
+            success: (data: any) => data?.message || `${name} removed from ${scopePhrase}`,
+            error: (error: any) => error?.message || `Failed to remove ${name} from ${scopePhrase}`,
+        })
+        return await promise
+    }
 
     return {
         products: response?.data || [],
@@ -89,6 +172,20 @@ export function useInventory(
         error,
         createProduct: createProductMutation.mutateAsync,
         updateProduct: updateProductMutation.mutateAsync,
-        deleteProduct: deleteProductMutation.mutateAsync
+        deleteProduct: deleteProductMutation.mutateAsync,
+        syncProductCatalog,
+        syncingCatalogState: syncProductCatalogMutation.isPending
+            ? {
+                productId: syncProductCatalogMutation.variables?.id ?? null,
+                scope: syncProductCatalogMutation.variables?.scope ?? null
+            }
+            : { productId: null, scope: null },
+        removeProductFromCatalog,
+        removingFromCatalogState: removeProductFromCatalogMutation.isPending
+            ? {
+                  productId: removeProductFromCatalogMutation.variables?.id ?? null,
+                  scope: removeProductFromCatalogMutation.variables?.scope ?? null,
+              }
+            : { productId: null, scope: null },
     }
 }

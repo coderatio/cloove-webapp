@@ -18,13 +18,14 @@ import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCo
 interface OrderActionMenuProps {
     order: Order
     onViewDetails: (order: Order) => void
-    onUpdateStatus: (id: string, status: OrderStatus) => Promise<any>
-    onRequery: (id: string) => Promise<any>
-    onGenerateReceipt: (id: string) => Promise<any>
+    onUpdateStatus: (id: string, status: OrderStatus) => Promise<unknown>
+    onRequery: (id: string) => Promise<unknown>
+    onGenerateReceipt: (id: string) => Promise<unknown>
     onPrintReceipt: (order: Order) => void
     onRecordPayment: (order: Order) => void
     onGeneratePaymentLink?: (order: Order) => void
-    onAdvanceKitchen?: (ticketId: string, status: 'queued' | 'preparing' | 'ready' | 'served') => Promise<any>
+    onAdvanceKitchen?: (ticketId: string, status: 'queued' | 'preparing' | 'ready' | 'served') => Promise<unknown>
+    onSendToKitchen?: (order: Order) => void
 }
 
 export function OrderActionMenu({
@@ -37,6 +38,7 @@ export function OrderActionMenu({
     onRecordPayment,
     onGeneratePaymentLink,
     onAdvanceKitchen,
+    onSendToKitchen,
 }: OrderActionMenuProps) {
     const layoutPresetId = useLayoutPresetId()
     const [isProcessing, setIsProcessing] = useState(false)
@@ -66,14 +68,22 @@ export function OrderActionMenu({
     const hasBalance = computedRemaining > 0
     const isPayable = hasBalance && order.status !== 'CANCELLED' && order.status !== 'REFUNDED'
 
-    const handleAction = async (actionName: string, label: string, fn: () => Promise<any>) => {
+    const responseMessage = (value: unknown, fallback: string) =>
+        typeof value === 'object' && value !== null && 'message' in value && typeof value.message === 'string'
+            ? value.message
+            : fallback
+
+    const errorMessage = (value: unknown, fallback: string) =>
+        value instanceof Error ? value.message : responseMessage(value, fallback)
+
+    const handleAction = async (actionName: string, label: string, fn: () => Promise<unknown>) => {
         setIsProcessing(true)
         setActiveAction(actionName)
 
         toast.promise(fn(), {
             loading: `Processing ${label.toLowerCase()}...`,
-            success: (data: any) => data?.message || `${label} successful`,
-            error: (err: any) => err?.message || `Failed to ${label.toLowerCase()}`,
+            success: (data) => responseMessage(data, `${label} successful`),
+            error: (err) => errorMessage(err, `Failed to ${label.toLowerCase()}`),
             finally: () => {
                 setIsProcessing(false)
                 setActiveAction(null)
@@ -135,7 +145,7 @@ export function OrderActionMenu({
                     <DropdownMenuItem
                         onSelect={(e) => {
                             e.preventDefault()
-                            handleAction('paid', 'Mark as Paid', () => onUpdateStatus(order.id, 'COMPLETED' as any))
+                            handleAction('paid', 'Mark as Paid', () => onUpdateStatus(order.id, 'COMPLETED'))
                         }}
                         className="gap-3 rounded-xl py-2.5 focus:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 cursor-pointer"
                         disabled={isProcessing}
@@ -205,13 +215,33 @@ export function OrderActionMenu({
                     </>
                 )}
 
+                {layoutPresetId === "restaurant" && onSendToKitchen && !order.kitchenTicketId && (
+                    <>
+                        <DropdownMenuSeparator className="bg-brand-deep/5 dark:bg-white/5 my-1" />
+                        <DropdownMenuItem
+                            onSelect={(e) => {
+                                e.preventDefault()
+                            onSendToKitchen(order)
+                            }}
+                            className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer"
+                            disabled={isProcessing}
+                        >
+                            {activeAction === 'send-kitchen'
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : <ChefHat className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
+                            }
+                            <span className="font-medium text-sm">Send to Kitchen</span>
+                        </DropdownMenuItem>
+                    </>
+                )}
+
                 {(order.status === 'PENDING' || (order.status === 'COMPLETED' && !order.isAutomated)) && (
                     <>
                         <DropdownMenuSeparator className="bg-brand-deep/5 dark:bg-white/5 my-1" />
                         <DropdownMenuItem
                             onSelect={(e) => {
                                 e.preventDefault()
-                                handleAction('cancel', `Cancel ${recordLabel}`, () => onUpdateStatus(order.id, 'CANCELLED' as any))
+                                handleAction('cancel', `Cancel ${recordLabel}`, () => onUpdateStatus(order.id, 'CANCELLED'))
                             }}
                             className="gap-3 rounded-xl py-2.5 focus:bg-red-500/10 text-red-600 dark:text-red-400 cursor-pointer"
                             disabled={isProcessing}

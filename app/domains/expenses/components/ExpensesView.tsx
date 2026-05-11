@@ -6,7 +6,7 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { Banknote, TrendingDown, Calculator, Tag, Trash2, Loader2, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Receipt } from "lucide-react"
+import { Banknote, TrendingDown, Calculator, Trash2, Loader2, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Receipt, CalendarIcon } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -18,17 +18,34 @@ import { FilterPopover } from "@/app/components/shared/FilterPopover"
 import { TableSearch } from "@/app/components/shared/TableSearch"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { Skeleton } from "@/app/components/ui/skeleton"
-import { useExpenses, useExpenseStats, type Expense } from "../hooks/useExpenses"
+import { useExpenses, useExpenseStats, useExpenseBreakdown, type Expense } from "../hooks/useExpenses"
 import { ExpenseFormDrawer } from "./ExpenseFormDrawer"
 import { EXPENSE_CATEGORIES, getCategoryConfig } from "../utils/categoryColors"
+import { Calendar } from "@/app/components/ui/calendar"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/app/components/ui/popover"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu"
+import {
+    Drawer,
+    DrawerContent,
+    DrawerStickyHeader,
+    DrawerTitle,
+    DrawerDescription,
+    DrawerBody,
+    DrawerFooter,
+    DrawerClose,
+} from "@/app/components/ui/drawer"
 
 const PAGE_SIZE = 20
+const BREAKDOWN_PREVIEW_LIMIT = 5
 
 export function ExpensesView() {
     const isMobile = useIsMobile()
@@ -39,12 +56,29 @@ export function ExpensesView() {
     const deferredSearch = React.useDeferredValue(search)
     const [currentPage, setCurrentPage] = React.useState(1)
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
+    const [vendorSearch, setVendorSearch] = React.useState("")
+    const deferredVendorSearch = React.useDeferredValue(vendorSearch)
     const [isAddOpen, setIsAddOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<Expense | null>(null)
     const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
     const [itemToDelete, setItemToDelete] = React.useState<Expense | null>(null)
+    const [isBreakdownDrawerOpen, setIsBreakdownDrawerOpen] = React.useState(false)
+    const [breakdownDrawerType, setBreakdownDrawerType] = React.useState<"category" | "vendor">("category")
 
     const selectedCategory = selectedFilters.length === 1 ? selectedFilters[0] : undefined
+    const today = React.useMemo(() => new Date(), [])
+    const defaultStartDate = React.useMemo(() => {
+        const d = new Date(today.getFullYear(), today.getMonth(), 1)
+        return d.toISOString().slice(0, 10)
+    }, [today])
+    const defaultEndDate = React.useMemo(() => today.toISOString().slice(0, 10), [today])
+    const [breakdownStartDate, setBreakdownStartDate] = React.useState(defaultStartDate)
+    const [breakdownEndDate, setBreakdownEndDate] = React.useState(defaultEndDate)
+    const [hasAutoRangeInitialized, setHasAutoRangeInitialized] = React.useState(false)
+    const startDateValue = breakdownStartDate ? new Date(`${breakdownStartDate}T00:00:00`) : undefined
+    const endDateValue = breakdownEndDate ? new Date(`${breakdownEndDate}T00:00:00`) : undefined
+
+    const toDateInput = React.useCallback((value: Date) => value.toISOString().slice(0, 10), [])
 
     const {
         expenses,
@@ -57,10 +91,38 @@ export function ExpensesView() {
         isCreating,
         isUpdating,
         isDeleting,
-    } = useExpenses(currentPage, PAGE_SIZE, deferredSearch, selectedCategory)
+    } = useExpenses(
+        currentPage,
+        PAGE_SIZE,
+        deferredSearch,
+        selectedCategory,
+        breakdownStartDate || undefined,
+        breakdownEndDate || undefined
+    )
 
     const { data: statsData, isLoading: isStatsLoading } = useExpenseStats()
     const stats = statsData?.data
+    const { data: breakdownData, isLoading: isBreakdownLoading } = useExpenseBreakdown(
+        breakdownStartDate || undefined,
+        breakdownEndDate || undefined,
+        deferredVendorSearch
+    )
+    const breakdown = breakdownData?.data
+    const categoryBreakdown = breakdown?.categoryBreakdown ?? []
+    const vendorBreakdown = breakdown?.vendorBreakdown ?? []
+    const breakdownTotalAmount = breakdown?.totalAmount ?? 0
+    const categoryPreview = categoryBreakdown.slice(0, BREAKDOWN_PREVIEW_LIMIT)
+    const vendorPreview = vendorBreakdown.slice(0, BREAKDOWN_PREVIEW_LIMIT)
+    const categoryOthers = categoryBreakdown.slice(BREAKDOWN_PREVIEW_LIMIT).reduce(
+        (acc, item) => ({ amount: acc.amount + item.amount, count: acc.count + item.count }),
+        { amount: 0, count: 0 }
+    )
+    const vendorOthers = vendorBreakdown.slice(BREAKDOWN_PREVIEW_LIMIT).reduce(
+        (acc, item) => ({ amount: acc.amount + item.amount, count: acc.count + item.count }),
+        { amount: 0, count: 0 }
+    )
+    const breakdownDrawerItems = breakdownDrawerType === "category" ? categoryBreakdown : vendorBreakdown
+    const shouldUseFullHistoryRange = (stats?.totalRecords ?? 0) > 0 && (stats?.totalRecords ?? 0) < 200
 
     const filterGroups = [
         {
@@ -68,6 +130,37 @@ export function ExpensesView() {
             options: EXPENSE_CATEGORIES.map((c) => ({ label: c.label, value: c.value })),
         },
     ]
+
+    React.useEffect(() => {
+        setCurrentPage(1)
+    }, [deferredSearch, selectedCategory, breakdownStartDate, breakdownEndDate])
+
+    React.useEffect(() => {
+        if (!meta?.currentPage) return
+        if (meta.currentPage !== currentPage) {
+            setCurrentPage(meta.currentPage)
+        }
+    }, [meta?.currentPage, currentPage])
+
+    React.useEffect(() => {
+        if (!stats || hasAutoRangeInitialized) return
+
+        if (shouldUseFullHistoryRange && stats.firstExpenseDate) {
+            setBreakdownStartDate(stats.firstExpenseDate)
+            setBreakdownEndDate(defaultEndDate)
+        } else {
+            setBreakdownStartDate(defaultStartDate)
+            setBreakdownEndDate(defaultEndDate)
+        }
+
+        setHasAutoRangeInitialized(true)
+    }, [
+        stats,
+        shouldUseFullHistoryRange,
+        hasAutoRangeInitialized,
+        defaultEndDate,
+        defaultStartDate,
+    ])
 
     const handleAdd = async (data: any) => {
         await createExpense(data)
@@ -107,6 +200,7 @@ export function ExpensesView() {
                         <span className="font-medium">Edit</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
+                        disabled={isDeleting}
                         onClick={() => {
                             setItemToDelete(item)
                             setConfirmDeleteOpen(true)
@@ -276,20 +370,20 @@ export function ExpensesView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Tag className="w-24 h-24" />
+                            <Banknote className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                            <Tag className="h-6 w-6" />
+                            <Banknote className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-indigo-500/60 uppercase tracking-widest">
-                                Top Category
+                                Overall Total
                             </p>
                             {isStatsLoading ? (
                                 <Skeleton className="h-8 w-16 mt-1" />
                             ) : (
-                                <p className="text-lg font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                    {stats?.topCategory ? getCategoryConfig(stats.topCategory).label : "None"}
+                                <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
+                                    <CurrencyText value={formatCurrency(stats?.overallTotalExpenses ?? 0, { currency: currencyCode })} />
                                 </p>
                             )}
                         </div>
@@ -297,6 +391,247 @@ export function ExpensesView() {
                 </div>
 
                 <div className="space-y-6">
+                    <GlassCard className="p-5 sm:p-6 space-y-5 rounded-3xl before:rounded-3xl">
+                        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40">
+                                    Expense Insights
+                                </p>
+                                <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 mt-1">
+                                    Breakdown by category and vendor/description for a selected period.
+                                </p>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setBreakdownStartDate(defaultStartDate)
+                                    setBreakdownEndDate(defaultEndDate)
+                                    setVendorSearch("")
+                                }}
+                                className="rounded-xl w-full sm:w-auto dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
+                            >
+                                Reset Period
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className={cn(
+                                            "h-12 rounded-2xl justify-start text-left font-normal bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/10 text-brand-deep dark:text-brand-cream px-4",
+                                            !startDateValue && "text-brand-accent/40 dark:text-brand-cream/40"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 opacity-40" />
+                                        {startDateValue ? formatDate(startDateValue, "MMM d, yyyy") : "Start date"}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={startDateValue}
+                                        onSelect={(date) => {
+                                            if (!date) return
+                                            const nextStart = toDateInput(date)
+                                            setBreakdownStartDate(nextStart)
+                                            if (breakdownEndDate && breakdownEndDate < nextStart) {
+                                                setBreakdownEndDate(nextStart)
+                                            }
+                                        }}
+                                        disabled={endDateValue ? { after: endDateValue } : undefined}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className={cn(
+                                            "h-12 rounded-2xl justify-start text-left font-normal bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/10 text-brand-deep dark:text-brand-cream px-4",
+                                            !endDateValue && "text-brand-accent/40 dark:text-brand-cream/40"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 opacity-40" />
+                                        {endDateValue ? formatDate(endDateValue, "MMM d, yyyy") : "End date"}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={endDateValue}
+                                        onSelect={(date) => {
+                                            if (!date) return
+                                            const nextEnd = toDateInput(date)
+                                            setBreakdownEndDate(nextEnd)
+                                            if (breakdownStartDate && breakdownStartDate > nextEnd) {
+                                                setBreakdownStartDate(nextEnd)
+                                            }
+                                        }}
+                                        disabled={startDateValue ? { before: startDateValue } : undefined}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+
+                            <input
+                                type="text"
+                                value={vendorSearch}
+                                onChange={(e) => setVendorSearch(e.target.value)}
+                                placeholder="Filter vendor/description..."
+                                className="h-12 rounded-2xl border border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-brand-deep dark:text-brand-cream placeholder:text-brand-accent/40 dark:placeholder:text-brand-cream/40 focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+                            />
+                        </div>
+
+                        {isBreakdownLoading ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <Skeleton className="h-44 rounded-2xl" />
+                                <Skeleton className="h-44 rounded-2xl" />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div className="rounded-2xl border border-brand-deep/5 dark:border-white/5 p-4 bg-white/70 dark:bg-white/5">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
+                                            Category Breakdown
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60">
+                                                {breakdown?.totalCount ?? 0} records
+                                            </p>
+                                            {categoryBreakdown.length > BREAKDOWN_PREVIEW_LIMIT && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setBreakdownDrawerType("category")
+                                                        setIsBreakdownDrawerOpen(true)
+                                                    }}
+                                                    className="h-7 px-2 rounded-lg text-[10px] text-brand-accent/70 dark:text-brand-cream/70"
+                                                >
+                                                    View all
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {categoryBreakdown.length === 0 ? (
+                                            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">No category data for this period.</p>
+                                        ) : (
+                                            categoryPreview.map((item) => {
+                                                const category = getCategoryConfig(item.key)
+                                                const percent = breakdownTotalAmount > 0 ? Math.round((item.amount / breakdownTotalAmount) * 100) : 0
+                                                return (
+                                                    <div key={item.key} className="flex items-center gap-3">
+                                                        <span className={cn("px-2.5 py-1 rounded-full text-[10px] font-semibold border shrink-0", category.color)}>
+                                                            {category.label}
+                                                        </span>
+                                                        <div className="h-2 flex-1 rounded-full bg-brand-deep/5 dark:bg-white/10 overflow-hidden">
+                                                            <div className="h-full bg-brand-gold" style={{ width: `${Math.min(percent, 100)}%` }} />
+                                                        </div>
+                                                        <span className="text-xs text-brand-deep dark:text-brand-cream min-w-[96px] text-right">
+                                                            <CurrencyText value={formatCurrency(item.amount, { currency: currencyCode, notation: "compact" })} />
+                                                        </span>
+                                                    </div>
+                                                )
+                                            })
+                                        )}
+                                        {categoryOthers.count > 0 && (
+                                            <div className="flex items-center gap-3">
+                                                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold border shrink-0 bg-brand-deep/5 dark:bg-white/10 text-brand-accent/70 dark:text-brand-cream/70 border-brand-deep/10 dark:border-white/10">
+                                                    Others ({categoryBreakdown.length - BREAKDOWN_PREVIEW_LIMIT})
+                                                </span>
+                                                <div className="h-2 flex-1 rounded-full bg-brand-deep/5 dark:bg-white/10 overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-brand-accent/35 dark:bg-brand-cream/35"
+                                                        style={{
+                                                            width: `${Math.min(
+                                                                100,
+                                                                breakdownTotalAmount > 0
+                                                                    ? Math.round((categoryOthers.amount / breakdownTotalAmount) * 100)
+                                                                    : 0
+                                                            )}%`,
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span className="text-xs text-brand-deep dark:text-brand-cream min-w-[96px] text-right">
+                                                    <CurrencyText value={formatCurrency(categoryOthers.amount, { currency: currencyCode, notation: "compact" })} />
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-brand-deep/5 dark:border-white/5 p-4 bg-white/70 dark:bg-white/5">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
+                                            Vendor / Description
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60">
+                                                Top spenders
+                                            </p>
+                                            {vendorBreakdown.length > BREAKDOWN_PREVIEW_LIMIT && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setBreakdownDrawerType("vendor")
+                                                        setIsBreakdownDrawerOpen(true)
+                                                    }}
+                                                    className="h-7 px-2 rounded-lg text-[10px] text-brand-accent/70 dark:text-brand-cream/70"
+                                                >
+                                                    View all
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {vendorBreakdown.length === 0 ? (
+                                            <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">No vendor/description data for this period.</p>
+                                        ) : (
+                                            vendorPreview.map((item) => {
+                                                const percent = breakdownTotalAmount > 0 ? Math.round((item.amount / breakdownTotalAmount) * 100) : 0
+                                                return (
+                                                    <div key={item.key} className="flex items-center gap-3">
+                                                        <span className="text-xs text-brand-deep dark:text-brand-cream truncate flex-1" title={item.key}>
+                                                            {item.key}
+                                                        </span>
+                                                        <span className="text-[10px] text-brand-accent/60 dark:text-brand-cream/60 w-10 text-right">
+                                                            {percent}%
+                                                        </span>
+                                                        <span className="text-xs text-brand-deep dark:text-brand-cream min-w-[96px] text-right">
+                                                            <CurrencyText value={formatCurrency(item.amount, { currency: currencyCode, notation: "compact" })} />
+                                                        </span>
+                                                    </div>
+                                                )
+                                            })
+                                        )}
+                                        {vendorOthers.count > 0 && (
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xs text-brand-accent/70 dark:text-brand-cream/70 truncate flex-1">
+                                                    Others ({vendorBreakdown.length - BREAKDOWN_PREVIEW_LIMIT})
+                                                </span>
+                                                <span className="text-[10px] text-brand-accent/60 dark:text-brand-cream/60 w-10 text-right">
+                                                    {breakdownTotalAmount > 0 ? Math.round((vendorOthers.amount / breakdownTotalAmount) * 100) : 0}%
+                                                </span>
+                                                <span className="text-xs text-brand-deep dark:text-brand-cream min-w-[96px] text-right">
+                                                    <CurrencyText value={formatCurrency(vendorOthers.amount, { currency: currencyCode, notation: "compact" })} />
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </GlassCard>
+
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/40 ml-1">
                             Expense Records
@@ -312,12 +647,30 @@ export function ExpensesView() {
                                 <FilterPopover
                                     groups={filterGroups}
                                     selectedValues={selectedFilters}
-                                    onSelectionChange={setSelectedFilters}
+                                    onSelectionChange={(values) => {
+                                        const latest = values[values.length - 1]
+                                        setSelectedFilters(latest ? [latest] : [])
+                                    }}
                                     onClear={() => setSelectedFilters([])}
                                 />
                             </div>
                         </div>
                     </div>
+                    {(deferredSearch || selectedCategory) && (
+                        <div className="flex justify-end">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setSearch("")
+                                    setSelectedFilters([])
+                                }}
+                                className="h-8 rounded-xl text-brand-accent/70 dark:text-brand-cream/70"
+                            >
+                                Clear search & filters
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {isPending && !expenses.length ? (
@@ -340,6 +693,18 @@ export function ExpensesView() {
                                     ? "No expenses match your search or filters."
                                     : "Record an expense to track your business spending."}
                             </p>
+                            {(deferredSearch || selectedFilters.length > 0) && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setSearch("")
+                                        setSelectedFilters([])
+                                    }}
+                                    className="rounded-2xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
+                                >
+                                    Clear filters
+                                </Button>
+                            )}
                             {!deferredSearch && selectedFilters.length === 0 && (
                                 <Button
                                     onClick={() => setIsAddOpen(true)}
@@ -436,7 +801,57 @@ export function ExpensesView() {
                     description={`Are you sure you want to delete this expense? This action cannot be undone.`}
                     confirmText="Delete Expense"
                     variant="destructive"
+                    isLoading={isDeleting}
                 />
+
+                <Drawer open={isBreakdownDrawerOpen} onOpenChange={setIsBreakdownDrawerOpen}>
+                    <DrawerContent>
+                        <DrawerStickyHeader>
+                            <DrawerTitle>
+                                {breakdownDrawerType === "category" ? "All Categories" : "All Vendors / Descriptions"}
+                            </DrawerTitle>
+                            <DrawerDescription>
+                                {breakdownDrawerItems.length} items in this period
+                            </DrawerDescription>
+                        </DrawerStickyHeader>
+                        <DrawerBody>
+                            <div className="max-w-2xl mx-auto w-full space-y-2">
+                                {breakdownDrawerItems.map((item) => {
+                                    const percent = breakdownTotalAmount > 0 ? Math.round((item.amount / breakdownTotalAmount) * 100) : 0
+                                    return (
+                                        <div key={`${breakdownDrawerType}-${item.key}`} className="rounded-2xl border border-brand-deep/5 dark:border-white/5 p-3 bg-white/70 dark:bg-white/5 flex items-center gap-3">
+                                            {breakdownDrawerType === "category" ? (
+                                                <span className={cn("px-2.5 py-1 rounded-full text-[10px] font-semibold border shrink-0", getCategoryConfig(item.key).color)}>
+                                                    {getCategoryConfig(item.key).label}
+                                                </span>
+                                            ) : (
+                                                <span className="text-sm text-brand-deep dark:text-brand-cream truncate flex-1" title={item.key}>
+                                                    {item.key}
+                                                </span>
+                                            )}
+                                            {breakdownDrawerType === "category" && (
+                                                <span className="text-sm text-brand-deep dark:text-brand-cream truncate flex-1" title={item.key}>
+                                                    {item.key}
+                                                </span>
+                                            )}
+                                            <span className="text-[10px] text-brand-accent/60 dark:text-brand-cream/60 w-10 text-right">
+                                                {percent}%
+                                            </span>
+                                            <span className="text-xs text-brand-deep dark:text-brand-cream min-w-[110px] text-right">
+                                                <CurrencyText value={formatCurrency(item.amount, { currency: currencyCode, notation: "compact" })} />
+                                            </span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </DrawerBody>
+                        <DrawerFooter>
+                            <DrawerClose asChild>
+                                <Button className="h-12 rounded-xl font-semibold">Done</Button>
+                            </DrawerClose>
+                        </DrawerFooter>
+                    </DrawerContent>
+                </Drawer>
             </div>
         </PageTransition>
     )
