@@ -61,15 +61,15 @@ import {
 } from '../hooks/useFinance'
 import { useSettings, useUpdateBusinessSettings } from '@/app/domains/business/hooks/useBusinessSettings'
 import { Skeleton } from '@/app/components/ui/skeleton'
-import { Badge } from '@/app/components/ui/badge'
-
+import { getTransactionStatusLabel } from '@/app/domains/finance/lib/transaction_status_labels'
 const WALLET_BALANCE_NUMERIC = 0
 
 const STATUS_FILTER_OPTIONS = [
-    { label: "Cleared", value: "Cleared" },
-    { label: "Pending", value: "Pending" },
-    { label: "Processing", value: "Processing" },
-    { label: "Failed", value: "Failed" },
+    { label: getTransactionStatusLabel('Cleared'), value: "Cleared" },
+    { label: getTransactionStatusLabel('Pending'), value: "Pending" },
+    { label: getTransactionStatusLabel('Processing'), value: "Processing" },
+    { label: getTransactionStatusLabel('Failed'), value: "Failed" },
+    { label: getTransactionStatusLabel('Cancelled'), value: "Cancelled" },
 ] as const
 
 const TYPE_FILTER_OPTIONS = [
@@ -120,9 +120,29 @@ function resolveEntityPurpose(row: any): EntityResolution {
         }
     }
 
-    // ── Fee → "Withdrawal Fee" + parent withdrawal short-ref ────────────────
+    // ── Fee → branch by feeType (storefront/checkout payment, wallet deposit, withdrawal) ──
     if (method === 'fee') {
         const desc = String(row.customer || '')
+        const feeType = String(meta.feeType || '')
+
+        if (feeType === 'virtual_account_deposit_fee') {
+            const saleRef = row.sale?.shortCode || meta.saleShortCode || null
+            const isCheckout = typeof meta.paymentLinkId === 'string' && meta.paymentLinkId.length > 0
+            return {
+                primary: isCheckout ? 'Checkout Payment Fee' : 'Order Payment Fee',
+                secondary: saleRef ? `For Sale #${saleRef}` : null,
+            }
+        }
+
+        if (feeType === 'wallet_virtual_account_deposit_fee') {
+            const payerName = meta.payer?.name || meta.payerName || null
+            return {
+                primary: 'Wallet Deposit Fee',
+                secondary: payerName ? `From ${payerName}` : null,
+            }
+        }
+
+        // Withdrawal fee fallback — original behaviour, scoped to actual withdrawals
         const parentRef: string | null =
             meta.withdrawalReference ||
             meta.originalReference ||
@@ -337,18 +357,22 @@ export function FinanceView() {
         {
             key: 'type',
             header: '',
-            width: '48px',
-            cellClassName: 'pl-6 pr-0 py-5 shrink-0 w-[48px]',
-            headerClassName: 'pl-6 pr-0 py-4 w-[48px]',
+            width: '64px',
+            cellClassName: 'pl-6 pr-0 py-5 shrink-0 w-[64px] align-middle',
+            headerClassName: 'pl-6 pr-0 py-4 w-[64px]',
             render: (_: string, row: TransactionRow) => {
                 const isCredit = row.type === 'Credit'
                 const Icon = isCredit ? ArrowDownRight : ArrowUpRight
                 return (
-                    <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                        isCredit ? "bg-brand-green/10 dark:bg-brand-green-600/10 text-brand-green dark:text-brand-green-600" : "bg-rose-500/10 dark:bg-rose-500/5 text-rose-500"
-                    )}>
-                        <Icon className="w-4 h-4" />
+                    <div
+                        className={cn(
+                            "relative w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                            isCredit
+                                ? "bg-emerald-500/8 text-emerald-600 ring-1 ring-inset ring-emerald-500/15 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20"
+                                : "bg-rose-500/8 text-rose-600 ring-1 ring-inset ring-rose-500/15 dark:bg-rose-400/10 dark:text-rose-300 dark:ring-rose-400/20"
+                        )}
+                    >
+                        <Icon className="w-[18px] h-[18px]" strokeWidth={2.25} />
                     </div>
                 )
             }
@@ -356,26 +380,42 @@ export function FinanceView() {
         {
             key: 'customer',
             header: 'Entity / Purpose',
-            width: '320px',
-            cellClassName: 'max-w-[320px] min-w-0',
+            width: '340px',
+            cellClassName: 'max-w-[340px] min-w-0 align-middle',
             render: (_value: string, row: any) => {
-                const { label, variant } = getTransactionCategory(row.method)
+                const { label } = getTransactionCategory(row.method)
                 const entity = resolveEntityPurpose(row)
                 const fullRef = String(row.reference ?? row.id ?? '')
                 return (
-                    <div className="flex flex-col gap-0.5 min-w-0 overflow-hidden">
+                    <div className="flex flex-col gap-1 min-w-0 overflow-hidden py-0.5">
+                        <span
+                            className="font-semibold text-[14px] leading-tight text-brand-deep dark:text-brand-cream truncate"
+                            title={entity.primary}
+                        >
+                            {entity.primary}
+                        </span>
                         <div className="flex items-center gap-2 overflow-hidden">
-                            <span className="font-medium text-brand-deep dark:text-brand-cream truncate flex-1 min-w-0" title={entity.primary}>
-                                {entity.primary}
+                            <span
+                                className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-deep/45 dark:text-brand-cream/45 shrink-0"
+                            >
+                                {label}
                             </span>
-                            <Badge variant={variant} className="shrink-0 text-[9px] px-1.5 py-0.5 font-bold uppercase tracking-wider">{label}</Badge>
+                            {entity.secondary && (
+                                <>
+                                    <span className="h-1 w-1 rounded-full bg-brand-deep/15 dark:bg-brand-cream/15 shrink-0" />
+                                    <span
+                                        className="text-[12px] text-brand-deep/60 dark:text-brand-cream/55 truncate min-w-0"
+                                        title={entity.secondary}
+                                    >
+                                        {entity.secondary}
+                                    </span>
+                                </>
+                            )}
                         </div>
-                        {entity.secondary && (
-                            <span className="text-[11px] text-brand-deep/60 dark:text-brand-cream/60 truncate block min-w-0" title={entity.secondary}>
-                                {entity.secondary}
-                            </span>
-                        )}
-                        <span className="font-mono text-[10px] text-brand-accent/40 dark:text-brand-cream/40 truncate block min-w-0" title={fullRef}>
+                        <span
+                            className="font-mono text-[10px] tracking-tight text-brand-accent/35 dark:text-brand-cream/30 truncate block min-w-0 opacity-70 group-hover:opacity-100 transition-opacity"
+                            title={fullRef}
+                        >
                             {fullRef}
                         </span>
                     </div>
@@ -385,19 +425,25 @@ export function FinanceView() {
         {
             key: 'amount',
             header: 'Amount',
+            cellClassName: 'align-middle',
             render: (_: string, row: TransactionRow) => {
                 const num = (row as any).amountNumeric ?? (typeof (row as any).amount === 'number' ? (row as any).amount : parseCurrencyToNumber((row as any).amount))
                 const formatted = formatCurrency(num, { currency: currencyCode })
+                const isCredit = row.type === 'Credit'
                 return (
-                    <div className="flex flex-col items-start">
-                        <span className={cn(
-                            "font-serif font-medium text-base",
-                            row.type === 'Credit' ? "text-brand-green dark:text-brand-gold" : "text-rose-600 dark:text-rose-400"
-                        )}>
-                            <CurrencyText value={`${row.type === 'Credit' ? '+' : '-'}${formatted}`} />
+                    <div className="flex flex-col items-start gap-0.5">
+                        <span
+                            className={cn(
+                                "font-serif font-semibold text-[17px] leading-none tabular-nums tracking-tight",
+                                isCredit
+                                    ? "text-emerald-700 dark:text-emerald-300"
+                                    : "text-rose-700 dark:text-rose-300"
+                            )}
+                        >
+                            <CurrencyText value={`${isCredit ? '+' : '−'}${formatted}`} />
                         </span>
-                        <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 font-medium uppercase tracking-tighter">
-                            {row.type === 'Credit' ? 'Inbound' : 'Outbound'}
+                        <span className="text-[10px] font-medium uppercase tracking-widest text-brand-accent/35 dark:text-brand-cream/30">
+                            {isCredit ? 'Inbound' : 'Outbound'}
                         </span>
                     </div>
                 )
@@ -406,37 +452,49 @@ export function FinanceView() {
         {
             key: 'status',
             header: 'Status',
+            cellClassName: 'align-middle',
             render: (value: string, row: TransactionRow) => {
                 const statusLabel = value ?? (row as any).status ?? '—'
                 const isCleared = statusLabel === 'Cleared'
                 const isFailed = statusLabel === 'Failed'
                 const isProcessing = statusLabel === 'Processing'
-                const icon = isCleared ? (
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
-                ) : isFailed ? (
-                    <XCircle className="w-3 h-3 text-red-500 dark:text-red-400" />
-                ) : isProcessing ? (
-                    <Loader2 className="w-3 h-3 text-amber-500 dark:text-amber-400 animate-spin" />
-                ) : (
-                    <Clock className="w-3 h-3 text-amber-500 dark:text-amber-400 animate-pulse" />
-                )
-                const colorClass = isCleared
-                    ? "text-emerald-600 dark:text-emerald-400"
+                const isPending = statusLabel === 'Pending'
+                const isCancelled = statusLabel === 'Cancelled'
+                const tone = isCleared
+                    ? {
+                        bg: 'bg-emerald-500/8 dark:bg-emerald-400/10',
+                        text: 'text-emerald-700 dark:text-emerald-300',
+                        dot: 'bg-emerald-500 dark:bg-emerald-400',
+                    }
                     : isFailed
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-amber-600 dark:text-amber-400"
-
-                const bgClass = isCleared
-                    ? "bg-emerald-500/10 dark:bg-emerald-400/10"
-                    : isFailed
-                        ? "bg-red-600/5 dark:bg-red-400/5"
-                        : "bg-amber-600/5 dark:bg-amber-400/5"
-
+                        ? {
+                            bg: 'bg-rose-500/8 dark:bg-rose-400/10',
+                            text: 'text-rose-700 dark:text-rose-300',
+                            dot: 'bg-rose-500 dark:bg-rose-400',
+                        }
+                        : isCancelled
+                            ? {
+                                bg: 'bg-slate-500/10 dark:bg-slate-400/10',
+                                text: 'text-slate-700 dark:text-slate-300',
+                                dot: 'bg-slate-500 dark:bg-slate-400',
+                            }
+                            : {
+                                bg: 'bg-amber-500/8 dark:bg-amber-400/10',
+                                text: 'text-amber-700 dark:text-amber-300',
+                                dot: 'bg-amber-500 dark:bg-amber-400',
+                            }
+                const shouldPulse = isProcessing || isPending
                 return (
-                    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10", colorClass, bgClass)}>
-                        {icon}
-                        <span className="text-[10px] font-bold uppercase tracking-wider">
-                            {statusLabel}
+                    <div className={cn("inline-flex items-center gap-1.5 px-2.5 min-h-7 rounded-full", tone.bg, tone.text)}>
+                        <span
+                            className={cn(
+                                "h-1.5 w-1.5 rounded-full shrink-0",
+                                tone.dot,
+                                shouldPulse && "animate-pulse"
+                            )}
+                        />
+                        <span className="text-[11px] font-medium leading-tight tracking-normal max-w-56">
+                            {getTransactionStatusLabel(statusLabel)}
                         </span>
                     </div>
                 )
@@ -445,6 +503,7 @@ export function FinanceView() {
         {
             key: 'date',
             header: 'Date',
+            cellClassName: 'align-middle',
             render: (_value: string, row: any) => {
                 // fullDate = "Apr 02, 2026 • 03:45 PM" from API
                 // createdAt = ISO string fallback
@@ -464,11 +523,11 @@ export function FinanceView() {
                 })()
                 return (
                     <div className="flex flex-col gap-0.5">
-                        <span className="text-xs font-medium text-brand-deep dark:text-brand-cream tabular-nums whitespace-nowrap">
+                        <span className="text-[13px] font-medium text-brand-deep dark:text-brand-cream tabular-nums whitespace-nowrap leading-tight">
                             {dateStr}
                         </span>
                         {timeStr && (
-                            <span className="text-[10px] text-brand-accent/50 dark:text-brand-cream/40 tabular-nums whitespace-nowrap">
+                            <span className="text-[11px] text-brand-accent/40 dark:text-brand-cream/35 tabular-nums whitespace-nowrap leading-tight">
                                 {timeStr}
                             </span>
                         )}
@@ -594,7 +653,7 @@ export function FinanceView() {
                                             {isFetching ? <Skeleton className="h-6 w-6 rounded" /> : <Clock className="h-6 w-6" />}
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] mb-1">Pending Clear</p>
+                                            <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] mb-1">Awaiting confirmation</p>
                                             {isFetching ? <Skeleton className="h-8 w-20 mt-1" /> : <p className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">{pendingReconciliation} items</p>}
                                         </div>
                                     </GlassCard>
@@ -733,8 +792,16 @@ export function FinanceView() {
                                                     <span className="truncate">{fullRef}</span>
                                                 </>
                                             }
-                                            status={tx.status}
-                                            statusColor={tx.status === 'Cleared' ? 'success' : tx.status === 'Failed' ? 'danger' : 'warning'}
+                                            status={getTransactionStatusLabel(tx.status)}
+                                            statusColor={
+                                                tx.status === 'Cleared'
+                                                    ? 'success'
+                                                    : tx.status === 'Failed'
+                                                        ? 'danger'
+                                                        : tx.status === 'Cancelled'
+                                                            ? 'neutral'
+                                                            : 'warning'
+                                            }
                                             value={<CurrencyText value={`${isCredit ? '+' : '-'}${formatCurrency(num, { currency: currencyCode })}`} />}
                                             valueLabel={isCredit ? 'Inbound' : 'Outbound'}
                                             delay={index * 0.05}

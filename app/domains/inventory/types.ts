@@ -17,6 +17,19 @@ export interface StoreInventory {
     }
 }
 
+/** Per-variant value for a `ProductOption` axis declared on the parent product. */
+export interface VariantOptionValue {
+    name: string
+    value: string
+}
+
+/** Shopify-style variant axis declared on the product. */
+export interface ProductOption {
+    name: string
+    position: number
+    values: string[]
+}
+
 export interface ProductVariant {
     id: string
     productId: string
@@ -25,6 +38,7 @@ export interface ProductVariant {
     barcode: string | null
     price: number | null
     inventories: StoreInventory[]
+    optionValues?: VariantOptionValue[] | null
 }
 
 export interface ProductCategoryRef {
@@ -50,6 +64,7 @@ export interface Product {
     images: ProductImage[]
     variants: ProductVariant[]
     product_variants?: ProductVariant[]
+    productOptions?: ProductOption[] | null
     stores?: { id: string, name: string }[]
     catalogSync?: {
         whitelabel: {

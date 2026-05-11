@@ -2,13 +2,12 @@
 
 import * as React from 'react'
 import Image from "next/image"
-import { motion, AnimatePresence } from "framer-motion"
 import DataTable, { type Column } from '@/app/components/DataTable'
 import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight, Barcode, RefreshCw, PackageX, ListTree } from 'lucide-react'
+import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight, Barcode, RefreshCw, PackageX, ListTree, Layers, ChevronRight as ChevronRightIcon } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import {
     Select,
@@ -66,6 +65,15 @@ import { Markdown } from '@/app/components/ui/markdown'
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover"
 import { ProductViewDrawer } from './ProductViewDrawer'
 import { LabelPreviewDrawer } from './LabelPreviewDrawer'
+import {
+    VariantsAndOptionsSheet,
+    newVariantKey,
+    variantDisplayNameFromOptions,
+    type FormStoreInventoryLine,
+    type FormVariantOptionValue,
+    type FormVariantRow,
+    type FormProductOption,
+} from './VariantsAndOptionsSheet'
 
 const PER_PAGE = 10
 
@@ -78,23 +86,6 @@ const STATUS_FILTER_OPTIONS = [
 interface ProductListMeta {
     currentPage: number
     totalPages: number
-}
-
-/** Store line inside a variant form row */
-interface FormStoreInventoryLine {
-    storeId: string
-    stockQuantity: number
-}
-
-/** Variant row in add/edit product form */
-interface FormVariantRow {
-    id?: string
-    name: string
-    sku: string
-    barcode: string
-    price: string
-    stockQuantity: number
-    storeInventory?: FormStoreInventoryLine[]
 }
 
 interface ProductFormState {
@@ -111,6 +102,29 @@ interface ProductFormState {
     imageUrls: string[]
     storeIds: string[]
     variants: FormVariantRow[]
+    productOptions: FormProductOption[]
+}
+
+function serializeProductOptions(options: FormProductOption[]): FormProductOption[] | undefined {
+    const cleaned = options
+        .map((opt, idx) => ({
+            name: (opt.name || '').trim(),
+            position: opt.position ?? idx + 1,
+            values: Array.from(
+                new Set((opt.values || []).map((v) => v.trim()).filter((v) => v.length > 0))
+            ),
+        }))
+        .filter((opt) => opt.name.length > 0)
+    return cleaned.length > 0 ? cleaned : undefined
+}
+
+function serializeVariantOptionValues(values: FormVariantOptionValue[]): FormVariantOptionValue[] {
+    return values
+        .map((entry) => ({
+            name: (entry.name || '').trim(),
+            value: (entry.value || '').trim(),
+        }))
+        .filter((entry) => entry.name.length > 0 && entry.value.length > 0)
 }
 
 /** Legacy/snake_case inventory rows from some API payloads */
@@ -141,67 +155,6 @@ function legacyInvStoreName(inv: LegacyInventoryRow): string {
 
 /** DataTable row includes phantom `actions` column key */
 type InventoryTableRow = InventoryItem & { actions?: undefined }
-
-interface StoreStockMapping {
-    storeId: string
-    stockQuantity: number | string
-}
-
-function StoreStockInputs({
-    storeIds,
-    stocks,
-    onChange
-}: {
-    storeIds: string[],
-    stocks: StoreStockMapping[],
-    onChange: (stocks: StoreStockMapping[]) => void
-}) {
-    const { stores } = useStores()
-    const selectedStores = stores.filter(s => storeIds.includes(s.id))
-
-    if (selectedStores.length <= 1) return null
-
-    return (
-        <div className="space-y-4 p-4 rounded-2xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 px-1">Stock per Store</label>
-            <div className="grid grid-cols-1 gap-3">
-                {selectedStores.map(store => {
-                    const found = stocks.find(s => s.storeId === store.id)
-                    const currentStock = found?.stockQuantity !== undefined ? found.stockQuantity : 0
-                    return (
-                        <div key={store.id} className="flex items-center justify-between gap-4">
-                            <span className="text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 truncate max-w-[150px]">{store.name}</span>
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={currentStock}
-                                onChange={(e) => {
-                                    const rawValue = e.target.value.replace(/[^0-9]/g, '')
-                                    const val = rawValue === '' ? '' : parseInt(rawValue)
-
-                                    let newStocks: StoreStockMapping[]
-                                    const exists = stocks.some(s => s.storeId === store.id)
-
-                                    if (exists) {
-                                        newStocks = stocks.map(s =>
-                                            s.storeId === store.id ? { ...s, stockQuantity: val } : s
-                                        )
-                                    } else {
-                                        newStocks = [...stocks, { storeId: store.id, stockQuantity: val }]
-                                    }
-
-                                    onChange(newStocks)
-                                }}
-                                className="w-24 px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 text-xs focus:outline-none focus:ring-2 focus:ring-brand-green/20"
-                            />
-                        </div>
-                    )
-                })}
-            </div>
-        </div>
-    )
-}
 
 export function InventoryView() {
     const isMobile = useIsMobile()
@@ -297,10 +250,12 @@ export function InventoryView() {
         imageUrls: [],
         storeIds: [],
         variants: [],
+        productOptions: [],
     }
 
     // Form states
     const [formData, setFormData] = React.useState<ProductFormState>(INITIAL_FORM_STATE)
+    const [isVariantsSheetOpen, setIsVariantsSheetOpen] = React.useState(false)
 
     const pageMeta = meta as ProductListMeta | undefined
 
@@ -434,6 +389,11 @@ export function InventoryView() {
     const prepareFormData = (item: InventoryItem): ProductFormState => {
         const raw = item.raw
         const variantsSource = raw.variants ?? raw.product_variants ?? []
+        const productOptions: FormProductOption[] = (raw.productOptions ?? []).map((opt, idx) => ({
+            name: opt.name,
+            position: opt.position ?? idx + 1,
+            values: Array.from(new Set((opt.values ?? []).filter(Boolean))),
+        }))
         return {
             product: item.product,
             description: raw.description || '',
@@ -447,7 +407,9 @@ export function InventoryView() {
             reorderLevel: raw.reorderLevel != null ? String(raw.reorderLevel) : '',
             imageUrls: raw.images?.map((img) => img.url) || [],
             storeIds: raw.stores?.map((s) => s.id) || [],
-            variants: variantsSource.map((v) => ({
+            productOptions,
+            variants: variantsSource.map((v): FormVariantRow => ({
+                _key: v.id || newVariantKey(),
                 id: v.id,
                 name: v.name || 'Standard',
                 sku: v.sku || '',
@@ -459,7 +421,20 @@ export function InventoryView() {
                     storeId: inv.storeId,
                     stockQuantity: inv.stockQuantity,
                 })) || [],
-            })) || [{ name: 'Standard', sku: '', barcode: '', price: item.numericPrice.toString(), stockQuantity: 0, storeInventory: [] }]
+                optionValues: (v.optionValues ?? []).map((entry) => ({
+                    name: entry.name,
+                    value: entry.value,
+                })),
+            })) || [{
+                _key: newVariantKey(),
+                name: 'Standard',
+                sku: '',
+                barcode: '',
+                price: item.numericPrice.toString(),
+                stockQuantity: 0,
+                storeInventory: [],
+                optionValues: [],
+            }]
         }
     }
 
@@ -495,6 +470,16 @@ export function InventoryView() {
         [catalogScopeHasSyncedItems]
     )
 
+    /** Match Catalog column: ineligible products (N/A) must not get removal actions. */
+    const productCanRemoveFromCatalog = React.useCallback(
+        (item: InventoryItem) => {
+            const el = item.catalogEligibility
+            if (el && !el.available) return false
+            return productHasAnySyncedCatalogItems(item)
+        },
+        [productHasAnySyncedCatalogItems]
+    )
+
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSubmitting(true)
@@ -512,17 +497,23 @@ export function InventoryView() {
                 reorderLevel: formData.reorderLevel ? parseInt(formData.reorderLevel, 10) : undefined,
                 imageUrls: formData.imageUrls,
                 storeIds: formData.storeIds,
+                productOptions: serializeProductOptions(formData.productOptions),
                 variants: formData.variants.map(v => {
+                    const { _key: _omit, ...rest } = v
                     // Final sum check before submission
                     const total = (v.storeInventory || [])
                         .filter((s: FormStoreInventoryLine) => formData.storeIds.includes(s.storeId))
                         .reduce((sum: number, s: FormStoreInventoryLine) => sum + (Number(s.stockQuantity) || 0), 0)
 
+                    const cleanOptionValues = serializeVariantOptionValues(v.optionValues)
+                    const derivedName = variantDisplayNameFromOptions(cleanOptionValues)
                     return {
-                        ...v,
+                        ...rest,
+                        name: derivedName || v.name,
                         price: parseFloat(v.price) || 0,
                         stockQuantity: formData.storeIds.length > 1 ? total : (Number(v.stockQuantity) || 0),
-                        storeInventory: v.storeInventory?.map((s: FormStoreInventoryLine) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 }))
+                        storeInventory: v.storeInventory?.map((s: FormStoreInventoryLine) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 })),
+                        optionValues: cleanOptionValues,
                     }
                 })
             })
@@ -555,17 +546,23 @@ export function InventoryView() {
                     reorderLevel: formData.reorderLevel ? parseInt(formData.reorderLevel, 10) : null,
                     imageUrls: formData.imageUrls,
                     storeIds: formData.storeIds,
+                    productOptions: serializeProductOptions(formData.productOptions),
                     variants: formData.variants.map(v => {
+                        const { _key: _omit, ...rest } = v
                         // Final sum check before submission
                         const total = (v.storeInventory || [])
                             .filter((s: FormStoreInventoryLine) => formData.storeIds.includes(s.storeId))
                             .reduce((sum: number, s: FormStoreInventoryLine) => sum + (Number(s.stockQuantity) || 0), 0)
 
+                        const cleanOptionValues = serializeVariantOptionValues(v.optionValues)
+                        const derivedName = variantDisplayNameFromOptions(cleanOptionValues)
                         return {
-                            ...v,
+                            ...rest,
+                            name: derivedName || v.name,
                             price: parseFloat(v.price) || 0,
                             stockQuantity: formData.storeIds.length > 1 ? total : (Number(v.stockQuantity) || 0),
-                            storeInventory: v.storeInventory?.map((s: FormStoreInventoryLine) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 }))
+                            storeInventory: v.storeInventory?.map((s: FormStoreInventoryLine) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 })),
+                            optionValues: cleanOptionValues,
                         }
                     })
                 }
@@ -771,7 +768,7 @@ export function InventoryView() {
                                     const duplicated = {
                                         ...data,
                                         product: `${data.product} (Copy)`,
-                                        variants: data.variants.map((v) => ({ ...v, id: undefined, sku: '', barcode: '' }))
+                                        variants: data.variants.map((v) => ({ ...v, _key: newVariantKey(), id: undefined, sku: '', barcode: '' }))
                                     }
                                     setFormData(duplicated)
                                     setIsAddDrawerOpen(true)
@@ -823,7 +820,7 @@ export function InventoryView() {
                                     </DropdownMenuItem>
                                 </DropdownMenuSubContent>
                             </DropdownMenuSub>
-                            {canManageProducts && productHasAnySyncedCatalogItems(item) ? (
+                            {canManageProducts && productCanRemoveFromCatalog(item) ? (
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger
                                         disabled={removingFromCatalogState.productId === item.id}
@@ -919,7 +916,7 @@ export function InventoryView() {
                         setFormData({
                             ...INITIAL_FORM_STATE,
                             storeIds: defaultStore ? [defaultStore.id] : [],
-                            variants: [{ name: 'Standard', sku: '', barcode: '', price: '', stockQuantity: 0, storeInventory: [] }]
+                            variants: [{ _key: newVariantKey(), name: 'Standard', sku: '', barcode: '', price: '', stockQuantity: 0, storeInventory: [], optionValues: [] }]
                         })
                         setIsAddDrawerOpen(true)
                     }}
@@ -987,96 +984,96 @@ export function InventoryView() {
                     </GlassCard>
 
                     {showCatalogPendingCard ? (
-                    <GlassCard
-                        className={cn(
-                            "p-5 flex items-center gap-4 relative overflow-hidden group",
-                            catalogPendingTotal > 0
-                                ? "border-brand-green/20 dark:border-emerald-500/25"
-                                : "border-brand-deep/8 dark:border-white/8"
-                        )}
-                    >
-                        <div className="absolute right-0 top-0 p-3 opacity-[0.06] group-hover:opacity-[0.1] transition-opacity pointer-events-none">
-                            <ListTree className="w-24 h-24 text-brand-green dark:text-emerald-400/30" />
-                        </div>
-                        <div
+                        <GlassCard
                             className={cn(
-                                "relative z-1 h-12 w-12 shrink-0 rounded-full flex items-center justify-center",
+                                "p-5 flex items-center gap-4 relative overflow-hidden group",
                                 catalogPendingTotal > 0
-                                    ? "bg-brand-green/12 dark:bg-emerald-500/15 text-brand-green dark:text-emerald-300"
-                                    : "bg-brand-accent/10 dark:bg-white/5 text-brand-deep dark:text-brand-cream"
+                                    ? "border-brand-green/20 dark:border-emerald-500/25"
+                                    : "border-brand-deep/8 dark:border-white/8"
                             )}
                         >
-                            {isFetching ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                                <RefreshCw className="h-6 w-6" />
-                            )}
-                        </div>
-                        <div className="relative z-1 flex-1 min-w-0">
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="absolute -top-1 right-0 h-9 w-9 rounded-full text-brand-deep/45 hover:text-brand-green hover:bg-brand-green/10 dark:text-brand-cream/45 dark:hover:bg-white/10 dark:hover:text-brand-gold"
-                                        aria-label={`${iui.stats.catalogListedBreakdown}${catalogPendingTotal > 0 ? ` · ${iui.stats.catalogPendingBreakdown}` : ''}`}
-                                    >
-                                        <ListTree className="h-4 w-4" />
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent align="end" sideOffset={8} className="w-80 p-0 overflow-hidden rounded-2xl">
-                                    <div className="px-4 py-3 border-b border-brand-deep/5 dark:border-white/10 bg-brand-deep/2 dark:bg-white/3">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/45 dark:text-brand-cream/45">
-                                            {iui.stats.catalogListedBreakdown}
-                                        </p>
-                                    </div>
-                                    <div className="p-4 space-y-4">
-                                        <div className="flex items-center justify-between gap-4">
-                                            <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingWhitelabel}</span>
-                                            <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogListedWl}</span>
+                            <div className="absolute right-0 top-0 p-3 opacity-[0.06] group-hover:opacity-[0.1] transition-opacity pointer-events-none">
+                                <ListTree className="w-24 h-24 text-brand-green dark:text-emerald-400/30" />
+                            </div>
+                            <div
+                                className={cn(
+                                    "relative z-1 h-12 w-12 shrink-0 rounded-full flex items-center justify-center",
+                                    catalogPendingTotal > 0
+                                        ? "bg-brand-green/12 dark:bg-emerald-500/15 text-brand-green dark:text-emerald-300"
+                                        : "bg-brand-accent/10 dark:bg-white/5 text-brand-deep dark:text-brand-cream"
+                                )}
+                            >
+                                {isFetching ? (
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                    <RefreshCw className="h-6 w-6" />
+                                )}
+                            </div>
+                            <div className="relative z-1 flex-1 min-w-0">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute -top-1 right-0 h-9 w-9 rounded-full text-brand-deep/45 hover:text-brand-green hover:bg-brand-green/10 dark:text-brand-cream/45 dark:hover:bg-white/10 dark:hover:text-brand-gold"
+                                            aria-label={`${iui.stats.catalogListedBreakdown}${catalogPendingTotal > 0 ? ` · ${iui.stats.catalogPendingBreakdown}` : ''}`}
+                                        >
+                                            <ListTree className="h-4 w-4" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent align="end" sideOffset={8} className="w-80 p-0 overflow-hidden rounded-2xl">
+                                        <div className="px-4 py-3 border-b border-brand-deep/5 dark:border-white/10 bg-brand-deep/2 dark:bg-white/3">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/45 dark:text-brand-cream/45">
+                                                {iui.stats.catalogListedBreakdown}
+                                            </p>
                                         </div>
-                                        <div className="flex items-center justify-between gap-4">
-                                            <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingGlobal}</span>
-                                            <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogListedGl}</span>
-                                        </div>
-                                        {catalogPendingTotal > 0 ? (
-                                            <div className="border-t border-brand-deep/8 dark:border-white/10 pt-4 space-y-3">
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/45 dark:text-brand-cream/45">
-                                                    {iui.stats.catalogPendingBreakdown}
-                                                </p>
-                                                <div className="flex items-center justify-between gap-4">
-                                                    <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingWhitelabel}</span>
-                                                    <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogPendingWhitelabel}</span>
-                                                </div>
-                                                <div className="flex items-center justify-between gap-4">
-                                                    <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingGlobal}</span>
-                                                    <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogPendingGlobal}</span>
-                                                </div>
+                                        <div className="p-4 space-y-4">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingWhitelabel}</span>
+                                                <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogListedWl}</span>
                                             </div>
-                                        ) : null}
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent/50 dark:text-brand-cream/55 pr-11">
-                                {iui.stats.catalogSyncTitle}
-                            </p>
-                            {isFetching ? (
-                                <Skeleton className="h-9 w-14 mt-2" />
-                            ) : (
-                                <>
-                                    <p className="mt-2 text-3xl font-serif font-medium text-brand-deep dark:text-brand-cream tabular-nums leading-none">
-                                        {catalogListedUnique}
-                                    </p>
-                                    {catalogPendingTotal > 0 ? (
-                                        <p className="mt-2 text-xs leading-relaxed text-brand-accent/50 dark:text-brand-cream/45 max-w-60">
-                                            {iui.stats.catalogSyncPendingHint}
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingGlobal}</span>
+                                                <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogListedGl}</span>
+                                            </div>
+                                            {catalogPendingTotal > 0 ? (
+                                                <div className="border-t border-brand-deep/8 dark:border-white/10 pt-4 space-y-3">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/45 dark:text-brand-cream/45">
+                                                        {iui.stats.catalogPendingBreakdown}
+                                                    </p>
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingWhitelabel}</span>
+                                                        <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogPendingWhitelabel}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingGlobal}</span>
+                                                        <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogPendingGlobal}</span>
+                                                    </div>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent/50 dark:text-brand-cream/55 pr-11">
+                                    {iui.stats.catalogSyncTitle}
+                                </p>
+                                {isFetching ? (
+                                    <Skeleton className="h-9 w-14 mt-2" />
+                                ) : (
+                                    <>
+                                        <p className="mt-2 text-3xl font-serif font-medium text-brand-deep dark:text-brand-cream tabular-nums leading-none">
+                                            {catalogListedUnique}
                                         </p>
-                                    ) : null}
-                                </>
-                            )}
-                        </div>
-                    </GlassCard>
+                                        {catalogPendingTotal > 0 ? (
+                                            <p className="mt-2 text-xs leading-relaxed text-brand-accent/50 dark:text-brand-cream/45 max-w-60">
+                                                {iui.stats.catalogSyncPendingHint}
+                                            </p>
+                                        ) : null}
+                                    </>
+                                )}
+                            </div>
+                        </GlassCard>
                     ) : null}
                 </div>
 
@@ -1179,7 +1176,7 @@ export function InventoryView() {
                                                             const duplicated = {
                                                                 ...data,
                                                                 product: `${data.product} (Copy)`,
-                                                                variants: data.variants.map((v) => ({ ...v, id: undefined, sku: '', barcode: '' }))
+                                                                variants: data.variants.map((v) => ({ ...v, _key: newVariantKey(), id: undefined, sku: '', barcode: '' }))
                                                             }
                                                             setFormData(duplicated)
                                                             setIsAddDrawerOpen(true)
@@ -1233,7 +1230,7 @@ export function InventoryView() {
                                                             </DropdownMenuItem>
                                                         </DropdownMenuSubContent>
                                                     </DropdownMenuSub>
-                                                    {canManageProducts && productHasAnySyncedCatalogItems(item) ? (
+                                                    {canManageProducts && productCanRemoveFromCatalog(item) ? (
                                                         <DropdownMenuSub>
                                                             <DropdownMenuSubTrigger
                                                                 disabled={removingFromCatalogState.productId === item.id}
@@ -1473,7 +1470,7 @@ export function InventoryView() {
                                             <AlertTriangle className="w-3 h-3" />
                                             Inventory & Tracking
                                         </h3>
-                                        <GlassCard className="p-6 bg-white/50 dark:bg-white/5 border-none space-y-6">
+                                        <GlassCard className="p-6 bg-white dark:bg-white/5 border-brand-deep/8 dark:border-white/10 space-y-6">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Barcode</label>
                                                 <input
@@ -1597,213 +1594,65 @@ export function InventoryView() {
                                         </div>
                                     </div>
 
-                                    {/* Section: Variants & Specific Inventory */}
-                                    <div className="space-y-6 pt-4">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                                <Plus className="w-3 h-3" />
-                                                Inventory & Variants
-                                            </h3>
-                                            <Button
-                                                type="button"
-                                                onClick={() => setFormData({
-                                                    ...formData,
-                                                    variants: [...formData.variants, { name: '', sku: '', barcode: '', price: formData.price, stockQuantity: 0, storeInventory: [] }]
-                                                })}
-                                                variant="ghost"
-                                                className="text-[10px] h-8 font-bold uppercase tracking-widest text-brand-gold hover:bg-brand-gold/5 px-4 rounded-full transition-all"
-                                            >
-                                                <Plus className="w-3.5 h-3.5 mr-1" />
-                                                Add Variant
-                                            </Button>
-                                        </div>
-
-                                        <AnimatePresence mode="popLayout">
-                                            {formData.variants.length > 0 && (
-                                                <div className="space-y-6">
-                                                    {formData.variants.map((variant, index) => (
-                                                        <motion.div
-                                                            key={index}
-                                                            layout
-                                                            initial={{ opacity: 0, y: 20 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, scale: 0.95 }}
-                                                            className="relative group"
-                                                        >
-                                                            <GlassCard allowOverflow className="p-6 bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/5 space-y-5 transition-all hover:border-brand-gold/20">
-                                                                {formData.variants.length > 1 && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const newVariants = [...formData.variants]
-                                                                            newVariants.splice(index, 1)
-                                                                            setFormData({ ...formData, variants: newVariants })
-                                                                        }}
-                                                                        className="absolute cursor-pointer -top-2 -right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:scale-110 z-10"
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                )}
-
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Variant Name</label>
-                                                                        <input
-                                                                            placeholder="e.g. Extra Large"
-                                                                            value={variant.name}
-                                                                            onChange={(e) => {
-                                                                                const v = [...formData.variants]
-                                                                                v[index].name = e.target.value
-                                                                                setFormData({ ...formData, variants: v })
-                                                                            }}
-                                                                            className="text-sm w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 transition-all"
-                                                                        />
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">SKU (Optional)</label>
-                                                                        <input
-                                                                            placeholder="V-SKU-001"
-                                                                            value={variant.sku}
-                                                                            onChange={(e) => {
-                                                                                const v = [...formData.variants]
-                                                                                v[index].sku = e.target.value
-                                                                                setFormData({ ...formData, variants: v })
-                                                                            }}
-                                                                            className="text-xs w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 font-mono transition-all"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="grid grid-cols-1 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <div className="flex items-center justify-between ml-1">
-                                                                            <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30">Barcode (Optional)</label>
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    const v = [...formData.variants]
-                                                                                    v[index].barcode = autoGenerateBarcode(v[index].id || Math.random().toString(36).substring(7), barcodeFormat)
-                                                                                    setFormData({ ...formData, variants: v })
-                                                                                }}
-                                                                                className="text-[9px] font-bold text-brand-gold hover:text-brand-gold/80 transition-colors flex items-center gap-1"
-                                                                            >
-                                                                                <Sparkles className="w-3 h-3" />
-                                                                                Auto-Generate
-                                                                            </button>
-                                                                        </div>
-                                                                        <input
-                                                                            placeholder="Variant Barcode"
-                                                                            value={variant.barcode || ''}
-                                                                            onChange={(e) => {
-                                                                                const v = [...formData.variants]
-                                                                                v[index].barcode = e.target.value
-                                                                                setFormData({ ...formData, variants: v })
-                                                                            }}
-                                                                            className="text-xs w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 font-mono transition-all"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Stock Level</label>
-                                                                        <div className="relative">
-                                                                            <input
-                                                                                type="text"
-                                                                                inputMode="numeric"
-                                                                                pattern="[0-9]*"
-                                                                                placeholder="0"
-                                                                                readOnly={formData.storeIds.length > 1}
-                                                                                value={(() => {
-                                                                                    if (formData.storeIds.length > 1) {
-                                                                                        return (variant.storeInventory || [])
-                                                                                            .filter((s: FormStoreInventoryLine) => formData.storeIds.includes(s.storeId))
-                                                                                            .reduce((sum: number, s: FormStoreInventoryLine) => sum + (Number(s.stockQuantity) || 0), 0)
-                                                                                    }
-                                                                                    return variant.stockQuantity || 0
-                                                                                })()}
-                                                                                onChange={(e) => {
-                                                                                    const rawValue = e.target.value.replace(/[^0-9]/g, '')
-                                                                                    const val = rawValue === '' ? 0 : parseInt(rawValue)
-
-                                                                                    setFormData(prev => {
-                                                                                        const newVariants = [...prev.variants]
-                                                                                        const v = { ...newVariants[index] }
-                                                                                        v.stockQuantity = val
-
-                                                                                        if (prev.storeIds.length === 1) {
-                                                                                            const storeId = prev.storeIds[0]
-                                                                                            const inv = [...(v.storeInventory || [])]
-                                                                                            const sIdx = inv.findIndex(s => s.storeId === storeId)
-                                                                                            if (sIdx > -1) {
-                                                                                                inv[sIdx] = { ...inv[sIdx], stockQuantity: val }
-                                                                                            } else {
-                                                                                                inv.push({ storeId, stockQuantity: val })
-                                                                                            }
-                                                                                            v.storeInventory = inv
-                                                                                        }
-
-                                                                                        newVariants[index] = v
-                                                                                        return { ...prev, variants: newVariants }
-                                                                                    })
-                                                                                }}
-                                                                                className={cn(
-                                                                                    "text-sm w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 transition-all font-bold",
-                                                                                    formData.storeIds.length > 1 && "bg-brand-deep/5 dark:bg-white/5 cursor-not-allowed text-brand-deep/40 dark:text-brand-cream/40"
-                                                                                )}
-                                                                            />
-                                                                            {formData.storeIds.length > 1 && (
-                                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2" title="Calculated from stores">
-                                                                                    <Loader2 className="w-3 h-3 text-brand-gold" />
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Variant Price</label>
-                                                                        <MoneyInput
-                                                                            currencySymbol={currency}
-                                                                            className="h-12 text-sm"
-                                                                            value={variant.price}
-                                                                            onChange={(val) => {
-                                                                                const v = [...formData.variants]
-                                                                                v[index].price = val?.toString() || ''
-                                                                                setFormData({ ...formData, variants: v })
-                                                                            }}
-                                                                            placeholder="0"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-
-                                                                <StoreStockInputs
-                                                                    storeIds={formData.storeIds}
-                                                                    stocks={variant.storeInventory || []}
-                                                                    onChange={(stocks) => {
-                                                                        const normalized: FormStoreInventoryLine[] = stocks.map((s) => ({
-                                                                            storeId: s.storeId,
-                                                                            stockQuantity: Number(s.stockQuantity) || 0,
-                                                                        }))
-                                                                        const total = normalized
-                                                                            .filter((s) => formData.storeIds.includes(s.storeId))
-                                                                            .reduce((sum, s) => sum + s.stockQuantity, 0)
-
-                                                                        setFormData((prev) => {
-                                                                            const newVariants = [...prev.variants]
-                                                                            newVariants[index] = {
-                                                                                ...newVariants[index],
-                                                                                storeInventory: normalized,
-                                                                                stockQuantity: total,
-                                                                            }
-                                                                            return { ...prev, variants: newVariants }
-                                                                        })
-                                                                    }}
-                                                                />
-                                                            </GlassCard>
-                                                        </motion.div>
-                                                    ))}
+                                    {/* Section: Variants & Options (opens in side sheet / drawer) */}
+                                    <div className="space-y-4 pt-4">
+                                        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
+                                            <Layers className="w-3 h-3" />
+                                            Variants & Options
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (formData.variants.length === 0) {
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        variants: [
+                                                            {
+                                                                _key: newVariantKey(),
+                                                                name: '',
+                                                                sku: '',
+                                                                barcode: '',
+                                                                price: prev.price,
+                                                                stockQuantity: 0,
+                                                                storeInventory: [],
+                                                                optionValues: prev.productOptions.map((opt) => ({ name: opt.name, value: '' })),
+                                                            },
+                                                        ],
+                                                    }))
+                                                }
+                                                setIsVariantsSheetOpen(true)
+                                            }}
+                                            className="w-full text-left rounded-2xl border border-brand-deep/5 dark:border-white/5 bg-white dark:bg-white/5 hover:border-brand-gold/30 hover:bg-brand-gold/2 transition-all p-5 flex items-center gap-4 group"
+                                        >
+                                            <div className="shrink-0 w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                                                <Layers className="w-5 h-5" strokeWidth={2.25} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                                                        {formData.variants.length === 0
+                                                            ? 'Add variants & options'
+                                                            : 'Manage variants & options'}
+                                                    </span>
                                                 </div>
-                                            )}
-                                        </AnimatePresence>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <Badge variant="default">
+                                                        {formData.productOptions.length}{' '}
+                                                        {formData.productOptions.length === 1 ? 'option' : 'options'}
+                                                    </Badge>
+                                                    <Badge variant="default">
+                                                        {formData.variants.length}{' '}
+                                                        {formData.variants.length === 1 ? 'variant' : 'variants'}
+                                                    </Badge>
+                                                    {formData.productOptions.length > 0 && (
+                                                        <span className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 truncate">
+                                                            {formData.productOptions.map((o) => o.name).filter(Boolean).join(' · ')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <ChevronRightIcon className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30 shrink-0 group-hover:text-brand-gold transition-colors" />
+                                        </button>
                                     </div>
 
                                     {/* Action Buttons */}
@@ -1847,6 +1696,21 @@ export function InventoryView() {
                             </DrawerFooter>
                         </DrawerContent>
                     </Drawer>
+                    <VariantsAndOptionsSheet
+                        open={isVariantsSheetOpen}
+                        onOpenChange={setIsVariantsSheetOpen}
+                        productOptions={formData.productOptions}
+                        variants={formData.variants}
+                        storeIds={formData.storeIds}
+                        productBasePrice={formData.price}
+                        currencySymbol={currency}
+                        currencyCode={currencyCode}
+                        barcodeFormat={barcodeFormat}
+                        autoGenerateBarcode={autoGenerateBarcode}
+                        onChange={({ productOptions, variants }) =>
+                            setFormData((prev) => ({ ...prev, productOptions, variants }))
+                        }
+                    />
                     <ManageCategoriesDrawer open={isCategoriesDrawerOpen} onOpenChange={setIsCategoriesDrawerOpen} />
                     <BulkUploadDrawer
                         isOpen={isBulkUploadOpen}
@@ -1887,11 +1751,10 @@ export function InventoryView() {
                         }
                         description={
                             catalogRemoveConfirm
-                                ? `You are about to remove "${catalogRemoveConfirm.item.product}" from the ${
-                                      catalogRemoveConfirm.scope === 'global'
-                                          ? 'global marketplace'
-                                          : 'white-label'
-                                  } WhatsApp catalog. Matching items will be deleted from Meta. Automatic catalog sync for this product turns off only when it is no longer listed in any WhatsApp catalog for your business.`
+                                ? `You are about to remove "${catalogRemoveConfirm.item.product}" from the ${catalogRemoveConfirm.scope === 'global'
+                                    ? 'global marketplace'
+                                    : 'white-label'
+                                } WhatsApp catalog. Matching items will be deleted from Meta. Automatic catalog sync for this product turns off only when it is no longer listed in any WhatsApp catalog for your business.`
                                 : ''
                         }
                         confirmText="Remove from catalog"

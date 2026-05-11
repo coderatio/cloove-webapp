@@ -19,6 +19,7 @@ export interface WhatsAppNumber {
   phone_number: string
   phone_number_id: string
   waba_id: string | null
+  app_id: string | null
   has_verify_token: boolean
   status: WhatsAppNumberStatusValue
   verification_logs: Array<{
@@ -139,6 +140,7 @@ export interface ManualConnectPayload {
   meta_business_id?: string
   access_token?: string
   app_secret?: string
+  app_id?: string
   catalog_id?: string
   catalog_name?: string
   display_name?: string | null
@@ -363,6 +365,7 @@ export function useUpdateWhatsAppNumber() {
       id: string
       access_token?: string
       app_secret?: string
+      app_id?: string
       webhook_verify_token?: string
       display_name?: string
     }) => apiClient.patch<WhatsAppNumber>(`/whatsapp-numbers/${id}`, body),
@@ -412,6 +415,25 @@ export function useRestoreWhatsAppNumber() {
     },
     onError: () => {
       toast.error("Failed to restore number")
+    },
+  })
+}
+
+export function useDeleteWhatsAppNumber() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient.delete<{ message?: string }>(`/whatsapp-numbers/${id}`, { fullResponse: true }),
+    onSuccess: (data) => {
+      toast.success(data?.message || "WhatsApp number deleted")
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.catalog(businessId) })
+    },
+    onError: () => {
+      toast.error("Failed to delete number")
     },
   })
 }

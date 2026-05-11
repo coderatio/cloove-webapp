@@ -5,7 +5,7 @@ export interface FinanceTransactionMock {
     amount: string
     amountNumeric: number
     customer: string
-    status: 'Cleared' | 'Pending' | 'Failed' | 'Processing'
+    status: 'Cleared' | 'Pending' | 'Failed' | 'Processing' | 'Cancelled'
     date: string
     dateLabel?: string
     fullDate?: string

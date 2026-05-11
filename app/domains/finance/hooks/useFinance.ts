@@ -33,7 +33,7 @@ export interface FinanceTransactionRow {
     type: 'Credit' | 'Debit'
     amount: number
     customer: string
-    status: 'Cleared' | 'Pending' | 'Failed' | 'Processing'
+    status: 'Cleared' | 'Pending' | 'Failed' | 'Processing' | 'Cancelled'
     date: string
     dateLabel?: string
     fullDate?: string

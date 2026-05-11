@@ -31,7 +31,7 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <DrawerPrimitive.Overlay
         ref={ref}
-        className={cn("fixed inset-0 z-50 bg-black/45 backdrop-blur-[1px]", className)}
+        className={cn("fixed inset-0 z-50 bg-black/45", className)}
         {...props}
     />
 ))
@@ -46,8 +46,9 @@ const DrawerContent = React.forwardRef<
         <DrawerPrimitive.Content
             ref={ref}
             className={cn(
-                "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[96vh] flex-col rounded-t-[28px] border border-slate-200 bg-white outline-none focus:outline-none focus:ring-0 dark:border-slate-800 dark:bg-slate-950/80",
+                "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[96vh] flex-col rounded-t-[28px] border border-slate-200 bg-white outline-none focus:outline-none focus:ring-0 dark:border-slate-800 dark:bg-slate-950",
                 "mx-auto w-full sm:max-w-lg md:max-w-xl", // Compact desktop drawers
+                "contain-[layout_paint]",
                 className
             )}
             {...props}
@@ -66,7 +67,7 @@ const DrawerStickyHeader = ({
 }: React.HTMLAttributes<HTMLDivElement> & { showClose?: boolean }) => (
     <div
         className={cn(
-            "relative z-20 shrink-0 rounded-t-[28px] border-b border-slate-200 bg-white/85 p-5 pb-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/70 sm:p-6 sm:pb-4",
+            "relative z-20 shrink-0 rounded-t-[28px] border-b border-slate-200 bg-white p-5 pb-3 dark:border-slate-800 dark:bg-slate-950 sm:p-6 sm:pb-4",
             className
         )}
         {...props}
@@ -99,14 +100,18 @@ const DrawerHeader = ({
 )
 DrawerHeader.displayName = "DrawerHeader"
 
-const DrawerBody = ({
-    className,
-    ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-    <div
-        className={cn("flex-1 overflow-y-auto p-4 sm:p-6", className)}
-        {...props}
-    />
+const DrawerBody = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+    ({ className, ...props }, ref) => (
+        <div
+            ref={ref}
+            className={cn(
+                "flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6",
+                "contain-content will-change-scroll [-webkit-overflow-scrolling:touch] transform-gpu",
+                className
+            )}
+            {...props}
+        />
+    )
 )
 DrawerBody.displayName = "DrawerBody"
 
@@ -115,7 +120,7 @@ const DrawerFooter = ({
     ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
     <div
-        className={cn("shrink-0 flex flex-col gap-2 border-t border-slate-200 bg-white/60 p-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/60 sm:p-6", className)}
+        className={cn("shrink-0 flex flex-col gap-2 border-t border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 sm:p-6", className)}
         {...props}
     />
 )

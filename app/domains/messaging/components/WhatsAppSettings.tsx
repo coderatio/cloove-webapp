@@ -28,12 +28,14 @@ import {
   PackageCheck,
   RefreshCw,
   Bell,
+  Plus,
 } from "lucide-react"
 import {
   useWhatsAppNumbers,
   useWhatsAppNumberStatus,
   useDisconnectWhatsAppNumber,
   useRestoreWhatsAppNumber,
+  useDeleteWhatsAppNumber,
   useGoSettings,
   useUpdateGoSettings,
   useGenerateGoSettingsContent,
@@ -56,6 +58,7 @@ import { AgentProfileSection } from "./AgentProfileSection"
 import { WhatsAppNotificationMessageInput } from "./WhatsAppNotificationMessageInput"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
+import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 
 interface WhatsAppSettingsProps {
   onDirtyChange?: (isDirty: boolean) => void
@@ -171,44 +174,47 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
   const disconnectNumber = useDisconnectWhatsAppNumber()
 
   const restoreNumber = useRestoreWhatsAppNumber()
+  const deleteNumber = useDeleteWhatsAppNumber()
 
-  const activeNumber = (numbers as WhatsAppNumber[] | undefined)?.find(
+  const allNumbers = (numbers as WhatsAppNumber[] | undefined) ?? []
+  const livingNumbers = allNumbers.filter(
     (n) =>
       n.status === WhatsAppNumberStatusValue.ACTIVE ||
       n.status === WhatsAppNumberStatusValue.PENDING ||
-      n.status === WhatsAppNumberStatusValue.VERIFYING
+      n.status === WhatsAppNumberStatusValue.VERIFYING ||
+      n.status === WhatsAppNumberStatusValue.FAILED
+  )
+  const suspendedNumbers = allNumbers.filter(
+    (n) => n.status === WhatsAppNumberStatusValue.SUSPENDED
   )
 
-  const suspendedNumber = !activeNumber
-    ? (numbers as WhatsAppNumber[] | undefined)?.find(
-      (n) => n.status === WhatsAppNumberStatusValue.SUSPENDED
-    )
-    : undefined
+  const primaryActiveNumber =
+    livingNumbers.find(
+      (n) => n.status === WhatsAppNumberStatusValue.ACTIVE && n.is_default
+    ) ??
+    livingNumbers.find((n) => n.status === WhatsAppNumberStatusValue.ACTIVE) ??
+    livingNumbers[0] ??
+    null
 
-  const isPending =
-    activeNumber?.status === WhatsAppNumberStatusValue.PENDING ||
-    activeNumber?.status === WhatsAppNumberStatusValue.VERIFYING
-  const { data: catalogStatus } = useWhatsAppCatalogStatus(activeNumber ?? null)
+  const { data: catalogStatus } = useWhatsAppCatalogStatus(primaryActiveNumber ?? null)
   const syncCatalog = useSyncWhatsAppCatalog()
   const resyncConfig = useResyncWhatsAppConfig()
   const effectiveCatalogStatus =
     catalogStatus ??
-    (activeNumber?.catalog_bootstrap_status
+    (primaryActiveNumber?.catalog_bootstrap_status
       ? {
         id: "catalog-bootstrap",
-        business_id: activeNumber.business_id,
-        whatsapp_number_id: activeNumber.id,
-        waba_id: activeNumber.waba_id ?? "",
+        business_id: primaryActiveNumber.business_id,
+        whatsapp_number_id: primaryActiveNumber.id,
+        waba_id: primaryActiveNumber.waba_id ?? "",
         meta_catalog_id: "",
-        sync_status: activeNumber.catalog_bootstrap_status,
+        sync_status: primaryActiveNumber.catalog_bootstrap_status,
         last_synced_at: null,
-        last_error: activeNumber.catalog_bootstrap_error,
+        last_error: primaryActiveNumber.catalog_bootstrap_error,
         synced_products_count: 0,
         products_count: 0,
       }
       : null)
-
-  useWhatsAppNumberStatus(activeNumber?.id ?? null, isPending)
 
   const layoutPresetId = useLayoutPresetId()
   const showOrderNotificationsTab = layoutPresetId === "restaurant"
@@ -251,7 +257,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
   })
 
   const [isDirty, setIsDirty] = useState(false)
-  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
+  const [showAddAnother, setShowAddAnother] = useState(false)
 
   useEffect(() => {
     onSavingChange?.(updateGoSettings.isPending)
@@ -346,11 +352,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     return result.content
   }
 
-  const handleDisconnect = () => {
-    if (!activeNumber) return
-    disconnectNumber.mutate(activeNumber.id)
-    setShowDisconnectConfirm(false)
-  }
+  const handleManualReconnectSuccess = ({ warning }: { warning?: string | null }) =>
+    setManualConnectAlert({
+      tone: warning ? "warning" : "success",
+      message: warning || "WhatsApp connection saved successfully.",
+    })
 
   if (numbersLoading || settingsLoading) {
     return (
@@ -364,11 +370,30 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     <div className="max-w-4xl space-y-8 pb-16">
       {/* Connection Status Section */}
       <section className="space-y-4">
-        <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
-          Connection Status
-        </h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+            Connection Status
+          </h2>
+          {livingNumbers.length + suspendedNumbers.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => resyncConfig.mutate()}
+              disabled={resyncConfig.isPending}
+              className="rounded-full"
+            >
+              {resyncConfig.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Resync All
+            </Button>
+          )}
+        </div>
 
-        {!activeNumber && !suspendedNumber ? (
+        {livingNumbers.length === 0 && suspendedNumbers.length === 0 ? (
           <SettingsCard>
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
               <div className="space-y-2 sm:max-w-xl">
@@ -419,51 +444,82 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                 <ConnectWhatsAppForm
                   onSuccess={({ warning }) => {
                     setShowManualConnect(false)
-                    setManualConnectAlert({
-                      tone: warning ? "warning" : "success",
-                      message: warning || "WhatsApp connection saved successfully.",
-                    })
+                    handleManualReconnectSuccess({ warning })
                   }}
                 />
               </div>
             )}
           </SettingsCard>
-        ) : activeNumber ? (
-          <SettingsCard>
-            <ConnectedNumberCard
-              number={activeNumber}
-              catalog={effectiveCatalogStatus}
-              isPending={isPending}
-              showDisconnectConfirm={showDisconnectConfirm}
-              onDisconnectClick={() => setShowDisconnectConfirm(true)}
-              onDisconnectConfirm={handleDisconnect}
-              onDisconnectCancel={() => setShowDisconnectConfirm(false)}
-              isDisconnecting={disconnectNumber.isPending}
-              isResyncingConfig={resyncConfig.isPending}
-              onResyncConfig={() => resyncConfig.mutate()}
-              onManualReconnectSuccess={({ warning }) =>
-                setManualConnectAlert({
-                  tone: warning ? "warning" : "success",
-                  message: warning || "WhatsApp connection saved successfully.",
-                })
-              }
-            />
-          </SettingsCard>
-        ) : suspendedNumber ? (
-          <SettingsCard>
-            <SuspendedNumberCard
-              number={suspendedNumber}
-              onRestore={() => restoreNumber.mutate(suspendedNumber.id)}
-              isRestoring={restoreNumber.isPending}
-              onManualReconnectSuccess={({ warning }) =>
-                setManualConnectAlert({
-                  tone: warning ? "warning" : "success",
-                  message: warning || "WhatsApp connection saved successfully.",
-                })
-              }
-            />
-          </SettingsCard>
-        ) : null}
+        ) : (
+          <>
+            {livingNumbers.map((number) => (
+              <SettingsCard key={number.id}>
+                <NumberStatusPoller number={number} />
+                <ConnectedNumberCard
+                  number={number}
+                  onDisconnect={() => disconnectNumber.mutate(number.id)}
+                  isDisconnecting={
+                    disconnectNumber.isPending && disconnectNumber.variables === number.id
+                  }
+                  onManualReconnectSuccess={handleManualReconnectSuccess}
+                />
+              </SettingsCard>
+            ))}
+            {suspendedNumbers.map((number) => (
+              <SettingsCard key={number.id}>
+                <SuspendedNumberCard
+                  number={number}
+                  onRestore={() => restoreNumber.mutate(number.id)}
+                  isRestoring={
+                    restoreNumber.isPending && restoreNumber.variables === number.id
+                  }
+                  onDelete={() => deleteNumber.mutate(number.id)}
+                  isDeleting={
+                    deleteNumber.isPending && deleteNumber.variables === number.id
+                  }
+                  onManualReconnectSuccess={handleManualReconnectSuccess}
+                />
+              </SettingsCard>
+            ))}
+
+            <SettingsCard className="bg-slate-50/60 dark:bg-slate-900/40">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                <div className="space-y-1 sm:max-w-xl">
+                  <h3 className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
+                    <Plus className="h-4 w-4" />
+                    Add another number
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-300">
+                    Connect an additional WhatsApp number to this business.
+                  </p>
+                </div>
+                <div className="w-full space-y-2 sm:w-auto sm:min-w-[280px]">
+                  {embeddedConfig.embeddedEnabled && (
+                    <EmbeddedSignupButton label="Connect with Meta" />
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 w-full rounded-full"
+                    onClick={() => setShowAddAnother((prev) => !prev)}
+                  >
+                    {showAddAnother ? "Hide manual form" : "Connect manually"}
+                  </Button>
+                </div>
+              </div>
+              {showAddAnother && (
+                <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/60">
+                  <ConnectWhatsAppForm
+                    onSuccess={({ warning }) => {
+                      setShowAddAnother(false)
+                      handleManualReconnectSuccess({ warning })
+                    }}
+                  />
+                </div>
+              )}
+            </SettingsCard>
+          </>
+        )}
 
         {manualConnectAlert ? (
           <div
@@ -477,52 +533,17 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
         ) : null}
       </section>
 
-      {activeNumber && (
+      {primaryActiveNumber && (
         <WhatsAppCatalogPanel
           catalog={effectiveCatalogStatus}
-          number={activeNumber}
+          number={primaryActiveNumber}
           isSyncing={syncCatalog.isPending}
           onSync={() => syncCatalog.mutate()}
         />
       )}
 
-      {/* Verification logs — show when not active */}
-      {activeNumber && activeNumber.status !== WhatsAppNumberStatusValue.ACTIVE && activeNumber.verification_logs.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
-            Verification Log
-          </h2>
-          <SettingsCard className="p-0">
-            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
-              {[...activeNumber.verification_logs].reverse().map((log, i) => (
-                <div key={i} className="flex gap-4 p-4 text-sm">
-                  <span className="shrink-0 text-slate-500 dark:text-slate-300 tabular-nums w-32">
-                    {new Date(log.timestamp).toLocaleString(undefined, {
-                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    })}
-                  </span>
-                  <span
-                    className={`shrink-0 w-24 font-medium ${log.outcome === "active"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : log.outcome === "failed" || log.outcome === "unreachable"
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-amber-600 dark:text-amber-400"
-                      }`}
-                  >
-                    {log.outcome}
-                  </span>
-                  <span className="text-slate-700 dark:text-slate-300">
-                    {log.message}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </SettingsCard>
-        </section>
-      )}
-
-      {/* Settings tabs — only show when number is active */}
-      {activeNumber && activeNumber.status === WhatsAppNumberStatusValue.ACTIVE && (
+      {/* Settings tabs — only show when a primary active number exists */}
+      {primaryActiveNumber && primaryActiveNumber.status === WhatsAppNumberStatusValue.ACTIVE && (
         <div className="pt-4">
           <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-slate-200 dark:border-slate-800">
             <button
@@ -588,7 +609,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         Display Name
                       </label>
                       <Input
-                        value={activeNumber?.display_name ?? ""}
+                        value={primaryActiveNumber?.display_name ?? ""}
                         disabled
                         className="bg-slate-50 dark:bg-slate-900/50"
                       />
@@ -831,6 +852,14 @@ function SettingsCard({ children, className = "" }: { children: React.ReactNode;
       {children}
     </div>
   )
+}
+
+function NumberStatusPoller({ number }: { number: WhatsAppNumber }) {
+  const enabled =
+    number.status === WhatsAppNumberStatusValue.PENDING ||
+    number.status === WhatsAppNumberStatusValue.VERIFYING
+  useWhatsAppNumberStatus(number.id, enabled)
+  return null
 }
 
 function OrderNotificationsCard({
@@ -1120,39 +1149,25 @@ function SettingToggle({
 
 function ConnectedNumberCard({
   number,
-  catalog,
-  isPending,
-  showDisconnectConfirm,
-  onDisconnectClick,
-  onDisconnectConfirm,
-  onDisconnectCancel,
+  onDisconnect,
   isDisconnecting,
-  isResyncingConfig,
-  onResyncConfig,
   onManualReconnectSuccess,
 }: {
   number: WhatsAppNumber
-  catalog: WhatsAppCatalogStatus | null
-  isPending: boolean
-  showDisconnectConfirm: boolean
-  onDisconnectClick: () => void
-  onDisconnectConfirm: () => void
-  onDisconnectCancel: () => void
+  onDisconnect: () => void
   isDisconnecting: boolean
-  isResyncingConfig: boolean
-  onResyncConfig: () => void
   onManualReconnectSuccess: (payload: { warning?: string | null }) => void
 }) {
   const [showManualReconnect, setShowManualReconnect] = useState(false)
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
+  const [showLogs, setShowLogs] = useState(false)
+  const isPending =
+    number.status === WhatsAppNumberStatusValue.PENDING ||
+    number.status === WhatsAppNumberStatusValue.VERIFYING
   const config = STATUS_CONFIG[number.status] ?? STATUS_CONFIG[WhatsAppNumberStatusValue.FAILED]
   const StatusIcon = config.icon
-  const catalogValue = catalog
-    ? catalog.sync_status === WhatsAppCatalogSyncStatus.FAILED
-      ? "Needs attention"
-      : catalog.sync_status === WhatsAppCatalogSyncStatus.SYNCED
-        ? "Synced"
-        : "Provisioning"
-    : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
+  const catalogValue =
+    number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
       ? "Needs attention"
       : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.SYNCED
         ? "Synced"
@@ -1166,7 +1181,7 @@ function ConnectedNumberCard({
             <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="min-w-0 space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
                 {number.phone_number}
               </p>
@@ -1181,12 +1196,24 @@ function ConnectedNumberCard({
                   <StatusIcon className="h-3 w-3" />
                 )}
               </span>
+              {number.is_default && (
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  Default
+                </span>
+              )}
+              <span className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                {number.connection_mode === "embedded" ? "Embedded" : "Manual"}
+              </span>
             </div>
             {number.display_name && (
               <p className="truncate text-sm text-slate-500 dark:text-slate-300">
                 {number.display_name}
               </p>
             )}
+            <p className="truncate font-mono text-xs text-slate-400 dark:text-slate-500">
+              ID: {number.phone_number_id}
+              {number.waba_id ? ` · WABA: ${number.waba_id}` : ""}
+            </p>
           </div>
         </div>
       </div>
@@ -1226,20 +1253,6 @@ function ConnectedNumberCard({
             : "Update config to change only the IDs or credentials you want."}
         </p>
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onResyncConfig}
-            disabled={isResyncingConfig}
-            className="h-10 w-full justify-center rounded-full sm:w-auto"
-          >
-            {isResyncingConfig ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Resync Config
-          </Button>
           {number.connection_mode === "manual" ? (
             <Button
               type="button"
@@ -1257,14 +1270,25 @@ function ConnectedNumberCard({
               icon={RefreshCw}
             />
           )}
+          {number.verification_logs.length > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowLogs((prev) => !prev)}
+              className="h-10 w-full rounded-full px-4 text-slate-600 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
+            >
+              {showLogs ? "Hide logs" : `View logs (${number.verification_logs.length})`}
+            </Button>
+          )}
           {number.status !== WhatsAppNumberStatusValue.PENDING &&
             number.status !== WhatsAppNumberStatusValue.VERIFYING &&
             !showDisconnectConfirm ? (
             <Button
               variant="ghost"
               size="sm"
-              onClick={onDisconnectClick}
-              className="h-10 w-full rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto dark:text-red-400 dark:hover:bg-red-500/10"
+              onClick={() => setShowDisconnectConfirm(true)}
+              className="h-10 w-full rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto sm:ml-auto dark:text-red-400 dark:hover:bg-red-500/10"
             >
               <Unplug className="mr-2 h-4 w-4" />
               Disconnect
@@ -1283,6 +1307,36 @@ function ConnectedNumberCard({
             />
           </div>
         ) : null}
+        {showLogs && number.verification_logs.length > 0 ? (
+          <div className="mt-3 max-h-64 overflow-y-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              {[...number.verification_logs].reverse().map((log, i) => (
+                <div key={i} className="flex gap-4 p-3 text-sm">
+                  <span className="w-32 shrink-0 tabular-nums text-slate-500 dark:text-slate-300">
+                    {new Date(log.timestamp).toLocaleString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <span
+                    className={`w-24 shrink-0 font-medium ${
+                      log.outcome === "active"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : log.outcome === "failed" || log.outcome === "unreachable"
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-amber-600 dark:text-amber-400"
+                    }`}
+                  >
+                    {log.outcome}
+                  </span>
+                  <span className="text-slate-700 dark:text-slate-300">{log.message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {number.status !== WhatsAppNumberStatusValue.PENDING &&
@@ -1299,14 +1353,17 @@ function ConnectedNumberCard({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={onDisconnectCancel}
+                onClick={() => setShowDisconnectConfirm(false)}
                 className="w-full rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
               >
                 Cancel
               </Button>
               <Button
                 size="sm"
-                onClick={onDisconnectConfirm}
+                onClick={() => {
+                  setShowDisconnectConfirm(false)
+                  onDisconnect()
+                }}
                 disabled={isDisconnecting}
                 className="w-full rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 sm:w-auto"
               >
@@ -1336,14 +1393,19 @@ function SuspendedNumberCard({
   number,
   onRestore,
   isRestoring,
+  onDelete,
+  isDeleting,
   onManualReconnectSuccess,
 }: {
   number: WhatsAppNumber
   onRestore: () => void
   isRestoring: boolean
+  onDelete: () => void
+  isDeleting: boolean
   onManualReconnectSuccess: (payload: { warning?: string | null }) => void
 }) {
   const [showManualReconnect, setShowManualReconnect] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   return (
     <div className="space-y-4">
@@ -1403,6 +1465,14 @@ function SuspendedNumberCard({
               "Restore"
             )}
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
+          >
+            Delete
+          </Button>
         </div>
       </div>
       {number.connection_mode !== "embedded" && showManualReconnect ? (
@@ -1417,6 +1487,15 @@ function SuspendedNumberCard({
           />
         </div>
       ) : null}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={onDelete}
+        title="Delete disconnected number?"
+        description="This removes this WhatsApp number from Cloove. You can reconnect it later if needed."
+        confirmText="Delete Number"
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

@@ -12,6 +12,7 @@ interface FormState {
   phone_number_id: string
   meta_business_id: string
   waba_id: string
+  app_id: string
   access_token: string
   app_secret: string
   catalog_id: string
@@ -28,6 +29,7 @@ const INITIAL_STATE: FormState = {
   phone_number_id: "",
   meta_business_id: "",
   waba_id: "",
+  app_id: "",
   access_token: "",
   app_secret: "",
   catalog_id: "",
@@ -44,6 +46,7 @@ export function ConnectWhatsAppForm({
     phone_number_id: initialNumber?.phone_number_id ?? "",
     meta_business_id: initialNumber?.meta_business_id ?? "",
     waba_id: initialNumber?.waba_id ?? "",
+    app_id: initialNumber?.app_id ?? "",
     access_token: "",
     app_secret: "",
     catalog_id: initialNumber?.selected_catalog_id ?? "",
@@ -60,6 +63,7 @@ export function ConnectWhatsAppForm({
       phone_number_id: form.phone_number_id.trim(),
       waba_id: form.waba_id.trim(),
       meta_business_id: form.meta_business_id.trim(),
+      app_id: form.app_id.trim(),
       access_token: form.access_token.trim(),
       app_secret: form.app_secret.trim(),
       catalog_id: form.catalog_id.trim(),
@@ -71,9 +75,11 @@ export function ConnectWhatsAppForm({
         !trimmed.phone_number_id ||
         !trimmed.waba_id ||
         !trimmed.meta_business_id ||
-        !trimmed.access_token)
+        !trimmed.app_id ||
+        !trimmed.access_token ||
+        !trimmed.app_secret)
     ) {
-      toast.error("Phone Number, Phone Number ID, WABA ID, Meta Business ID, and Access Token are required.")
+      toast.error("Phone Number, Phone Number ID, WABA ID, Meta Business ID, App ID, App Secret, and Access Token are required.")
       return
     }
 
@@ -83,6 +89,7 @@ export function ConnectWhatsAppForm({
       !trimmed.phone_number_id &&
       !trimmed.waba_id &&
       !trimmed.meta_business_id &&
+      !trimmed.app_id &&
       !trimmed.access_token &&
       !trimmed.app_secret &&
       !trimmed.catalog_id
@@ -97,6 +104,7 @@ export function ConnectWhatsAppForm({
         ...(trimmed.phone_number_id ? { phone_number_id: trimmed.phone_number_id } : {}),
         ...(trimmed.waba_id ? { waba_id: trimmed.waba_id } : {}),
         ...(trimmed.meta_business_id ? { meta_business_id: trimmed.meta_business_id } : {}),
+        ...(trimmed.app_id ? { app_id: trimmed.app_id } : {}),
         ...(trimmed.access_token ? { access_token: trimmed.access_token } : {}),
         ...(trimmed.app_secret ? { app_secret: trimmed.app_secret } : {}),
         ...(trimmed.catalog_id ? { catalog_id: trimmed.catalog_id } : {}),
@@ -159,6 +167,15 @@ export function ConnectWhatsAppForm({
           </FormField>
         </div>
 
+        <FormField label="App ID" required={!isUpdateMode}>
+          <Input
+            value={form.app_id}
+            onChange={(e) => handleChange("app_id", e.target.value)}
+            placeholder="Meta App ID that issued the access token"
+            className="bg-white dark:bg-slate-900/50"
+          />
+        </FormField>
+
         <FormField
           label={isUpdateMode ? "Access Token (optional)" : "Permanent Access Token"}
           required={!isUpdateMode}
@@ -181,13 +198,16 @@ export function ConnectWhatsAppForm({
           </div>
         </FormField>
 
-        <FormField label="App Secret">
+        <FormField
+          label={isUpdateMode ? "App Secret (optional)" : "App Secret"}
+          required={!isUpdateMode}
+        >
           <div className="relative">
             <Input
               type={showAppSecret ? "text" : "password"}
               value={form.app_secret}
               onChange={(e) => handleChange("app_secret", e.target.value)}
-              placeholder="Enter app secret only if changing it"
+              placeholder={isUpdateMode ? "Enter app secret only if changing it" : "Used to configure your Meta App webhook"}
               className="pr-10 bg-white font-mono text-sm dark:bg-slate-900/50"
             />
             <button
