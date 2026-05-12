@@ -156,8 +156,10 @@ export interface WhatsAppCatalogStatus {
   sync_status: WhatsAppCatalogSyncStatus
   last_synced_at: string | null
   last_error: string | null
-  synced_products_count: number
   products_count: number
+  synced_products_count: number
+  variants_count: number
+  synced_variants_count: number
 }
 
 export type GoSettingsContentField =

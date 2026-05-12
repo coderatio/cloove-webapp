@@ -1039,7 +1039,7 @@ function WhatsAppCatalogPanel({
     })
     : "Not synced yet"
   const summary = catalog
-    ? `${catalog.synced_products_count} of ${catalog.products_count} products synced. Last sync: ${lastSynced}.`
+    ? buildCatalogSummary(catalog, lastSynced)
     : isProvisioning
       ? "Catalog setup will begin after Meta finishes provisioning your number."
       : "Catalog setup is ready. Start sync once Meta permissions are in place."
@@ -1098,6 +1098,15 @@ function WhatsAppCatalogPanel({
       </SettingsCard>
     </section>
   )
+}
+
+function buildCatalogSummary(catalog: WhatsAppCatalogStatus, lastSynced: string): string {
+  const productsPart = `${catalog.synced_products_count} of ${catalog.products_count} products synced`
+  const variantsPart =
+    catalog.variants_count > 0
+      ? ` · ${catalog.synced_variants_count} of ${catalog.variants_count} variants`
+      : ""
+  return `${productsPart}${variantsPart}. Last sync: ${lastSynced}.`
 }
 
 function CatalogStatusBadge({ status }: { status: WhatsAppCatalogStatus["sync_status"] }) {
@@ -1189,8 +1198,10 @@ function ConnectedNumberCard({
           sync_status: number.catalog_bootstrap_status,
           last_synced_at: null,
           last_error: number.catalog_bootstrap_error,
-          synced_products_count: 0,
           products_count: 0,
+          synced_products_count: 0,
+          variants_count: 0,
+          synced_variants_count: 0,
         }
       : null)
   const catalogValue = effectiveCatalog
