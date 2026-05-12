@@ -29,6 +29,8 @@ import {
   RefreshCw,
   Bell,
   Plus,
+  ChevronDown,
+  Plug,
 } from "lucide-react"
 import {
   useWhatsAppNumbers,
@@ -39,8 +41,8 @@ import {
   useGoSettings,
   useUpdateGoSettings,
   useGenerateGoSettingsContent,
-  useWhatsAppCatalogStatus,
-  useSyncWhatsAppCatalog,
+  useWhatsAppNumberCatalogStatus,
+  useSyncWhatsAppNumberCatalog,
   useResyncWhatsAppConfig,
   type WhatsAppNumber,
   type WhatsAppCatalogStatus,
@@ -196,25 +198,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     livingNumbers[0] ??
     null
 
-  const { data: catalogStatus } = useWhatsAppCatalogStatus(primaryActiveNumber ?? null)
-  const syncCatalog = useSyncWhatsAppCatalog()
   const resyncConfig = useResyncWhatsAppConfig()
-  const effectiveCatalogStatus =
-    catalogStatus ??
-    (primaryActiveNumber?.catalog_bootstrap_status
-      ? {
-        id: "catalog-bootstrap",
-        business_id: primaryActiveNumber.business_id,
-        whatsapp_number_id: primaryActiveNumber.id,
-        waba_id: primaryActiveNumber.waba_id ?? "",
-        meta_catalog_id: "",
-        sync_status: primaryActiveNumber.catalog_bootstrap_status,
-        last_synced_at: null,
-        last_error: primaryActiveNumber.catalog_bootstrap_error,
-        synced_products_count: 0,
-        products_count: 0,
-      }
-      : null)
+  const syncNumberCatalog = useSyncWhatsAppNumberCatalog()
 
   const layoutPresetId = useLayoutPresetId()
   const showOrderNotificationsTab = layoutPresetId === "restaurant"
@@ -240,9 +225,10 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     order_notifications: DEFAULT_ORDER_NOTIFICATIONS,
   })
 
-  const [activeSettingsTab, setActiveSettingsTab] = useState<"general" | "notifications" | "ai">("general")
+  type SettingsTab = "connections" | "general" | "notifications" | "ai"
+  const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>("connections")
   const [showManualConnect, setShowManualConnect] = useState(false)
-  const resolvedSettingsTab: "general" | "notifications" | "ai" =
+  const resolvedSettingsTab: SettingsTab =
     !showOrderNotificationsTab && activeSettingsTab === "notifications"
       ? "general"
       : activeSettingsTab
@@ -366,237 +352,255 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     )
   }
 
-  return (
-    <div className="max-w-4xl space-y-8 pb-16">
-      {/* Connection Status Section */}
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
-            Connection Status
-          </h2>
-          {livingNumbers.length + suspendedNumbers.length > 0 && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => resyncConfig.mutate()}
-              disabled={resyncConfig.isPending}
-              className="rounded-full"
-            >
-              {resyncConfig.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="mr-2 h-4 w-4" />
-              )}
-              Resync All
-            </Button>
-          )}
-        </div>
+  const isGeneralAvailable =
+    !!primaryActiveNumber && primaryActiveNumber.status === WhatsAppNumberStatusValue.ACTIVE
+  const tabBorder =
+    "pb-3 text-sm font-medium transition-colors relative shrink-0 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
 
-        {livingNumbers.length === 0 && suspendedNumbers.length === 0 ? (
-          <SettingsCard>
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-              <div className="space-y-2 sm:max-w-xl">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-                    <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                      Connect WhatsApp
-                    </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-300">
-                      Sign in with Meta and choose the business number Cloove should manage.
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-500 dark:text-slate-300">
-                  Cloove manages your WhatsApp catalog from your products.
-                </p>
-              </div>
-              <div className="w-full space-y-2 sm:w-auto sm:min-w-[320px]">
-                {embeddedConfig.embeddedEnabled ? (
-                  <>
-                    <EmbeddedSignupButton />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="h-11 w-full rounded-full"
-                      onClick={() => setShowManualConnect((prev) => !prev)}
-                    >
-                      {showManualConnect ? "Hide manual setup" : "Connect manually"}
-                    </Button>
-                    {!embeddedConfig.isConfigured && embeddedConfig.error ? (
-                      <p className="text-xs text-amber-700 dark:text-amber-300">
-                        {embeddedConfig.error} You can still connect manually below.
-                      </p>
-                    ) : null}
-                  </>
-                ) : (
-                  <p className="text-sm text-slate-500 dark:text-slate-300">
-                    Embedded Meta form is disabled. Use manual setup below.
-                  </p>
-                )}
-              </div>
+  return (
+    <div className="min-w-0 max-w-4xl space-y-6 pb-16">
+      <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+10rem)] z-10 -mx-4 border-b border-slate-200 bg-background/85 backdrop-blur supports-backdrop-filter:bg-background/70 md:top-26 md:mx-0 dark:border-slate-800">
+       <div className="scrollbar-none flex min-w-0 flex-nowrap gap-x-6 overflow-x-auto px-4 pt-2 md:px-0">
+        <button
+          onClick={() => setActiveSettingsTab("connections")}
+          className={`${tabBorder} ${
+            resolvedSettingsTab === "connections"
+              ? "text-brand-deep dark:text-brand-cream"
+              : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Plug className="w-4 h-4" />
+            Connections
+          </div>
+          {resolvedSettingsTab === "connections" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
+          )}
+        </button>
+        <button
+          onClick={() => isGeneralAvailable && setActiveSettingsTab("general")}
+          disabled={!isGeneralAvailable}
+          className={`${tabBorder} ${
+            resolvedSettingsTab === "general"
+              ? "text-brand-deep dark:text-brand-cream"
+              : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            General Settings
+          </div>
+          {resolvedSettingsTab === "general" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
+          )}
+        </button>
+        {showOrderNotificationsTab && (
+          <button
+            onClick={() => isGeneralAvailable && setActiveSettingsTab("notifications")}
+            disabled={!isGeneralAvailable}
+            className={`${tabBorder} ${
+              resolvedSettingsTab === "notifications"
+                ? "text-brand-deep dark:text-brand-cream"
+                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              Order notifications
             </div>
-            {(!embeddedConfig.embeddedEnabled || showManualConnect) && (
-              <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/60">
-                <ConnectWhatsAppForm
-                  onSuccess={({ warning }) => {
-                    setShowManualConnect(false)
-                    handleManualReconnectSuccess({ warning })
-                  }}
-                />
+            {resolvedSettingsTab === "notifications" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
+            )}
+          </button>
+        )}
+        <button
+          onClick={() => isGeneralAvailable && setActiveSettingsTab("ai")}
+          disabled={!isGeneralAvailable}
+          className={`${tabBorder} ${
+            resolvedSettingsTab === "ai"
+              ? "text-brand-deep dark:text-brand-cream"
+              : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Bot className="w-4 h-4" />
+            AI Assistant
+          </div>
+          {resolvedSettingsTab === "ai" && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
+          )}
+        </button>
+       </div>
+      </div>
+
+      <div className="mt-6">
+        {resolvedSettingsTab === "connections" && (
+          <div className="space-y-4">
+            {livingNumbers.length + suspendedNumbers.length > 0 && (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => resyncConfig.mutate()}
+                  disabled={resyncConfig.isPending}
+                  className="rounded-full"
+                >
+                  {resyncConfig.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                  )}
+                  Resync All
+                </Button>
               </div>
             )}
-          </SettingsCard>
-        ) : (
-          <>
-            {livingNumbers.map((number) => (
-              <SettingsCard key={number.id}>
-                <NumberStatusPoller number={number} />
-                <ConnectedNumberCard
-                  number={number}
-                  onDisconnect={() => disconnectNumber.mutate(number.id)}
-                  isDisconnecting={
-                    disconnectNumber.isPending && disconnectNumber.variables === number.id
-                  }
-                  onManualReconnectSuccess={handleManualReconnectSuccess}
-                />
-              </SettingsCard>
-            ))}
-            {suspendedNumbers.map((number) => (
-              <SettingsCard key={number.id}>
-                <SuspendedNumberCard
-                  number={number}
-                  onRestore={() => restoreNumber.mutate(number.id)}
-                  isRestoring={
-                    restoreNumber.isPending && restoreNumber.variables === number.id
-                  }
-                  onDelete={() => deleteNumber.mutate(number.id)}
-                  isDeleting={
-                    deleteNumber.isPending && deleteNumber.variables === number.id
-                  }
-                  onManualReconnectSuccess={handleManualReconnectSuccess}
-                />
-              </SettingsCard>
-            ))}
 
-            <SettingsCard className="bg-slate-50/60 dark:bg-slate-900/40">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-                <div className="space-y-1 sm:max-w-xl">
-                  <h3 className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
-                    <Plus className="h-4 w-4" />
-                    Add another number
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-300">
-                    Connect an additional WhatsApp number to this business.
-                  </p>
+            {livingNumbers.length === 0 && suspendedNumbers.length === 0 ? (
+              <SettingsCard>
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                  <div className="space-y-2 sm:max-w-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                        <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                          Connect WhatsApp
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-300">
+                          Sign in with Meta and choose the business number Cloove should manage.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="w-full space-y-2 sm:w-auto sm:min-w-[280px]">
-                  {embeddedConfig.embeddedEnabled && (
-                    <EmbeddedSignupButton label="Connect with Meta" />
+                <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                  {embeddedConfig.embeddedEnabled ? (
+                    <>
+                      <div className="sm:flex-1">
+                        <EmbeddedSignupButton />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 rounded-full sm:flex-1"
+                        onClick={() => setShowManualConnect((prev) => !prev)}
+                      >
+                        {showManualConnect ? "Hide manual setup" : "Connect manually"}
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="text-sm text-slate-500 dark:text-slate-300">
+                      Embedded Meta form is disabled. Use manual setup below.
+                    </p>
                   )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-11 w-full rounded-full"
-                    onClick={() => setShowAddAnother((prev) => !prev)}
-                  >
-                    {showAddAnother ? "Hide manual form" : "Connect manually"}
-                  </Button>
                 </div>
-              </div>
-              {showAddAnother && (
-                <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/60">
-                  <ConnectWhatsAppForm
-                    onSuccess={({ warning }) => {
-                      setShowAddAnother(false)
-                      handleManualReconnectSuccess({ warning })
-                    }}
+                {!embeddedConfig.isConfigured && embeddedConfig.error ? (
+                  <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                    {embeddedConfig.error} You can still connect manually below.
+                  </p>
+                ) : null}
+                {(!embeddedConfig.embeddedEnabled || showManualConnect) && (
+                  <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/60">
+                    <ConnectWhatsAppForm
+                      onSuccess={({ warning }) => {
+                        setShowManualConnect(false)
+                        handleManualReconnectSuccess({ warning })
+                      }}
+                    />
+                  </div>
+                )}
+              </SettingsCard>
+            ) : (
+              <>
+                {livingNumbers.map((number) => (
+                  <div key={number.id}>
+                    <NumberStatusPoller number={number} />
+                    <ConnectedNumberCard
+                      number={number}
+                      onDisconnect={() => disconnectNumber.mutate(number.id)}
+                      isDisconnecting={
+                        disconnectNumber.isPending && disconnectNumber.variables === number.id
+                      }
+                      onSyncCatalog={() => syncNumberCatalog.mutate(number.id)}
+                      isSyncingCatalog={
+                        syncNumberCatalog.isPending && syncNumberCatalog.variables === number.id
+                      }
+                      onManualReconnectSuccess={handleManualReconnectSuccess}
+                    />
+                  </div>
+                ))}
+                {suspendedNumbers.map((number) => (
+                  <SuspendedNumberCard
+                    key={number.id}
+                    number={number}
+                    onRestore={() => restoreNumber.mutate(number.id)}
+                    isRestoring={
+                      restoreNumber.isPending && restoreNumber.variables === number.id
+                    }
+                    onDelete={() => deleteNumber.mutate(number.id)}
+                    isDeleting={
+                      deleteNumber.isPending && deleteNumber.variables === number.id
+                    }
+                    onManualReconnectSuccess={handleManualReconnectSuccess}
                   />
-                </div>
-              )}
-            </SettingsCard>
-          </>
+                ))}
+
+                <SettingsCard className="bg-slate-50/60 dark:bg-slate-900/40">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                    <div className="space-y-1">
+                      <h3 className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
+                        <Plus className="h-4 w-4" />
+                        Add another number
+                      </h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-300">
+                        Connect an additional WhatsApp number to this business.
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                      {embeddedConfig.embeddedEnabled && (
+                        <EmbeddedSignupButton label="Connect with Meta" />
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 rounded-full"
+                        onClick={() => setShowAddAnother((prev) => !prev)}
+                      >
+                        {showAddAnother ? "Hide form" : "Connect manually"}
+                      </Button>
+                    </div>
+                  </div>
+                  {showAddAnother && (
+                    <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/60">
+                      <ConnectWhatsAppForm
+                        onSuccess={({ warning }) => {
+                          setShowAddAnother(false)
+                          handleManualReconnectSuccess({ warning })
+                        }}
+                      />
+                    </div>
+                  )}
+                </SettingsCard>
+              </>
+            )}
+
+            {manualConnectAlert ? (
+              <div
+                className={`rounded-2xl border px-4 py-3 text-sm leading-6 ${
+                  manualConnectAlert.tone === "warning"
+                    ? "border-amber-100 bg-amber-50/80 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
+                    : "border-emerald-100 bg-emerald-50/80 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+                }`}
+              >
+                {manualConnectAlert.message}
+              </div>
+            ) : null}
+          </div>
         )}
 
-        {manualConnectAlert ? (
-          <div
-            className={`rounded-2xl border px-4 py-3 text-sm leading-6 ${manualConnectAlert.tone === "warning"
-                ? "border-amber-100 bg-amber-50/80 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
-                : "border-emerald-100 bg-emerald-50/80 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
-              }`}
-          >
-            {manualConnectAlert.message}
-          </div>
-        ) : null}
-      </section>
-
-      {primaryActiveNumber && (
-        <WhatsAppCatalogPanel
-          catalog={effectiveCatalogStatus}
-          number={primaryActiveNumber}
-          isSyncing={syncCatalog.isPending}
-          onSync={() => syncCatalog.mutate()}
-        />
-      )}
-
-      {/* Settings tabs — only show when a primary active number exists */}
-      {primaryActiveNumber && primaryActiveNumber.status === WhatsAppNumberStatusValue.ACTIVE && (
-        <div className="pt-4">
-          <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-slate-200 dark:border-slate-800">
-            <button
-              onClick={() => setActiveSettingsTab("general")}
-              className={`pb-3 text-sm font-medium transition-colors relative ${resolvedSettingsTab === "general"
-                ? "text-brand-deep dark:text-brand-cream"
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                }`}
-            >
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" />
-                General Settings
-              </div>
-              {resolvedSettingsTab === "general" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
-              )}
-            </button>
-            {showOrderNotificationsTab && (
-              <button
-                onClick={() => setActiveSettingsTab("notifications")}
-                className={`pb-3 text-sm font-medium transition-colors relative ${resolvedSettingsTab === "notifications"
-                  ? "text-brand-deep dark:text-brand-cream"
-                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                  }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Bell className="w-4 h-4" />
-                  Order notifications
-                </div>
-                {resolvedSettingsTab === "notifications" && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
-                )}
-              </button>
-            )}
-            <button
-              onClick={() => setActiveSettingsTab("ai")}
-              className={`pb-3 text-sm font-medium transition-colors relative ${resolvedSettingsTab === "ai"
-                ? "text-brand-deep dark:text-brand-cream"
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                }`}
-            >
-              <div className="flex items-center gap-2">
-                <Bot className="w-4 h-4" />
-                AI Assistant
-              </div>
-              {resolvedSettingsTab === "ai" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
-              )}
-            </button>
-          </div>
-
-          <div className="mt-8">
-            {resolvedSettingsTab === "general" && (
+        {resolvedSettingsTab === "general" && isGeneralAvailable && (
               <div className="space-y-8">
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -717,16 +721,16 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
               </div>
             )}
 
-            {resolvedSettingsTab === "notifications" && (
-              <div className="space-y-8">
-                <OrderNotificationsCard
-                  settings={mergeOrderNotifications(localSettings.order_notifications)}
-                  onChange={(settings) => handleChange("order_notifications", settings)}
-                />
-              </div>
-            )}
+        {resolvedSettingsTab === "notifications" && isGeneralAvailable && (
+          <div className="space-y-8">
+            <OrderNotificationsCard
+              settings={mergeOrderNotifications(localSettings.order_notifications)}
+              onChange={(settings) => handleChange("order_notifications", settings)}
+            />
+          </div>
+        )}
 
-            {resolvedSettingsTab === "ai" && (
+        {resolvedSettingsTab === "ai" && isGeneralAvailable && (
               <div className="space-y-8">
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
@@ -837,11 +841,9 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                     />
                   </SettingsCard>
                 </section>
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
@@ -1151,227 +1153,266 @@ function ConnectedNumberCard({
   number,
   onDisconnect,
   isDisconnecting,
+  onSyncCatalog,
+  isSyncingCatalog,
   onManualReconnectSuccess,
 }: {
   number: WhatsAppNumber
   onDisconnect: () => void
   isDisconnecting: boolean
+  onSyncCatalog: () => void
+  isSyncingCatalog: boolean
   onManualReconnectSuccess: (payload: { warning?: string | null }) => void
 }) {
+  const [isOpen, setIsOpen] = useState(false)
   const [showManualReconnect, setShowManualReconnect] = useState(false)
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
   const [showLogs, setShowLogs] = useState(false)
+  const { data: catalog } = useWhatsAppNumberCatalogStatus(number)
   const isPending =
     number.status === WhatsAppNumberStatusValue.PENDING ||
     number.status === WhatsAppNumberStatusValue.VERIFYING
   const config = STATUS_CONFIG[number.status] ?? STATUS_CONFIG[WhatsAppNumberStatusValue.FAILED]
   const StatusIcon = config.icon
-  const catalogValue =
-    number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.FAILED
+  const effectiveCatalog =
+    catalog ??
+    (number.catalog_bootstrap_status
+      ? {
+          id: "catalog-bootstrap",
+          business_id: number.business_id,
+          whatsapp_number_id: number.id,
+          waba_id: number.waba_id ?? "",
+          meta_catalog_id: "",
+          sync_status: number.catalog_bootstrap_status,
+          last_synced_at: null,
+          last_error: number.catalog_bootstrap_error,
+          synced_products_count: 0,
+          products_count: 0,
+        }
+      : null)
+  const catalogValue = effectiveCatalog
+    ? effectiveCatalog.sync_status === WhatsAppCatalogSyncStatus.FAILED
       ? "Needs attention"
-      : number.catalog_bootstrap_status === WhatsAppCatalogSyncStatus.SYNCED
+      : effectiveCatalog.sync_status === WhatsAppCatalogSyncStatus.SYNCED
         ? "Synced"
         : "Provisioning"
+    : "Not connected"
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-4">
-        <div className="min-w-0 flex items-start gap-3.5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-            <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div className="min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">
-                {number.phone_number}
-              </p>
-              <span
-                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
-                aria-label={config.label}
-                title={config.label}
-              >
-                {isPending ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <StatusIcon className="h-3 w-3" />
-                )}
-              </span>
-              {number.is_default && (
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  Default
-                </span>
-              )}
-              <span className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                {number.connection_mode === "embedded" ? "Embedded" : "Manual"}
-              </span>
-            </div>
-            {number.display_name && (
-              <p className="truncate text-sm text-slate-500 dark:text-slate-300">
-                {number.display_name}
-              </p>
-            )}
-            <p className="truncate font-mono text-xs text-slate-400 dark:text-slate-500">
-              ID: {number.phone_number_id}
-              {number.waba_id ? ` · WABA: ${number.waba_id}` : ""}
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex w-full items-center gap-3 p-5 text-left hover:bg-slate-50/60 dark:hover:bg-slate-900/40"
+        aria-expanded={isOpen}
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+          <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
+              {number.phone_number}
             </p>
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${config.color} bg-slate-100 dark:bg-slate-800`}
+              title={config.label}
+            >
+              {isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <StatusIcon className="h-3 w-3" />
+              )}
+              {config.label}
+            </span>
+            {number.is_default && (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                Default
+              </span>
+            )}
+            <span className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              {number.connection_mode === "embedded" ? "Embedded" : "Manual"}
+            </span>
           </div>
+          {number.display_name && (
+            <p className="truncate text-sm text-slate-500 dark:text-slate-300">
+              {number.display_name}
+            </p>
+          )}
         </div>
-      </div>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
 
-      <div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x sm:divide-slate-200/80 dark:sm:divide-slate-800">
-          <StatusMetric
-            label="Connection"
-            value={isPending ? "Waiting on Meta" : "Managed by Cloove"}
-          />
-          <StatusMetric
-            label="Catalog"
-            value={catalogValue}
-          />
-        </div>
-      </div>
-
-      {isPending && (
-        <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
-          We’re waiting for Meta to finish provisioning this number. Catalog sync stays paused until that completes.
-        </div>
-      )}
-
-      {number.status === WhatsAppNumberStatusValue.FAILED && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
-          <p className="text-sm leading-6 text-red-800 dark:text-red-300">
-            Verification failed. Check the logs below and reconnect with Meta after fixing the issue.
+      {isOpen && (
+        <div className="space-y-5 border-t border-slate-100 p-5 dark:border-slate-800/80">
+          <p className="font-mono text-xs text-slate-400 dark:text-slate-500">
+            Phone Number ID: {number.phone_number_id}
+            {number.waba_id ? ` · WABA: ${number.waba_id}` : ""}
+            {number.app_id ? ` · App: ${number.app_id}` : ""}
           </p>
-        </div>
-      )}
 
-      <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800/80">
-        <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
-          {number.connection_mode === "embedded"
-            ? "Use a fresh Meta connection if you need to switch numbers or grant new permissions."
-            : "Update config to change only the IDs or credentials you want."}
-        </p>
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-start">
-          {number.connection_mode === "manual" ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowManualReconnect((prev) => !prev)}
-              className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              {showManualReconnect ? "Hide config form" : "Update Config"}
-            </Button>
-          ) : (
-            <EmbeddedSignupButton
-              label="Connect Again"
-              className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-              icon={RefreshCw}
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:divide-x sm:divide-slate-200/80 dark:sm:divide-slate-800">
+            <StatusMetric
+              label="Connection"
+              value={isPending ? "Waiting on Meta" : "Managed by Cloove"}
             />
-          )}
-          {number.verification_logs.length > 0 && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowLogs((prev) => !prev)}
-              className="h-10 w-full rounded-full px-4 text-slate-600 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
-            >
-              {showLogs ? "Hide logs" : `View logs (${number.verification_logs.length})`}
-            </Button>
-          )}
-          {number.status !== WhatsAppNumberStatusValue.PENDING &&
-            number.status !== WhatsAppNumberStatusValue.VERIFYING &&
-            !showDisconnectConfirm ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDisconnectConfirm(true)}
-              className="h-10 w-full rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-auto sm:ml-auto dark:text-red-400 dark:hover:bg-red-500/10"
-            >
-              <Unplug className="mr-2 h-4 w-4" />
-              Disconnect
-            </Button>
-          ) : null}
-        </div>
-        {number.connection_mode === "manual" && showManualReconnect ? (
-          <div className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
-            <ConnectWhatsAppForm
-              mode="update"
-              initialNumber={number}
-              onSuccess={({ warning }) => {
-                setShowManualReconnect(false)
-                onManualReconnectSuccess({ warning })
-              }}
-            />
+            <StatusMetric label="Catalog" value={catalogValue} />
           </div>
-        ) : null}
-        {showLogs && number.verification_logs.length > 0 ? (
-          <div className="mt-3 max-h-64 overflow-y-auto rounded-2xl border border-slate-100 dark:border-slate-800">
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {[...number.verification_logs].reverse().map((log, i) => (
-                <div key={i} className="flex gap-4 p-3 text-sm">
-                  <span className="w-32 shrink-0 tabular-nums text-slate-500 dark:text-slate-300">
-                    {new Date(log.timestamp).toLocaleString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  <span
-                    className={`w-24 shrink-0 font-medium ${
-                      log.outcome === "active"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : log.outcome === "failed" || log.outcome === "unreachable"
-                          ? "text-red-600 dark:text-red-400"
-                          : "text-amber-600 dark:text-amber-400"
-                    }`}
-                  >
-                    {log.outcome}
-                  </span>
-                  <span className="text-slate-700 dark:text-slate-300">{log.message}</span>
-                </div>
-              ))}
+
+          {isPending && (
+            <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+              We’re waiting for Meta to finish provisioning this number. Catalog sync stays paused until that completes.
             </div>
-          </div>
-        ) : null}
-      </div>
+          )}
 
-      {number.status !== WhatsAppNumberStatusValue.PENDING &&
-        number.status !== WhatsAppNumberStatusValue.VERIFYING &&
-        showDisconnectConfirm && (
-          <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10 sm:flex-row sm:items-center">
-            <div className="flex min-w-0 flex-1 items-start gap-3">
+          {number.status === WhatsAppNumberStatusValue.FAILED && (
+            <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
               <p className="text-sm leading-6 text-red-800 dark:text-red-300">
-                Disconnect this number only if you want Cloove to stop handling messages for it.
+                Verification failed. Check the logs below and reconnect with Meta after fixing the issue.
               </p>
             </div>
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowDisconnectConfirm(false)}
-                className="w-full rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setShowDisconnectConfirm(false)
-                  onDisconnect()
-                }}
-                disabled={isDisconnecting}
-                className="w-full rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 sm:w-auto"
-              >
-                {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
-              </Button>
+          )}
+
+          <div className="space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800/80">
+            <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
+              {number.connection_mode === "embedded"
+                ? "Use a fresh Meta connection if you need to switch numbers or grant new permissions."
+                : "Update config to change only the IDs or credentials you want."}
+            </p>
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+              {number.connection_mode === "manual" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowManualReconnect((prev) => !prev)}
+                  className="h-10 w-full justify-center rounded-full sm:w-auto"
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  {showManualReconnect ? "Hide config form" : "Update Config"}
+                </Button>
+              ) : (
+                <EmbeddedSignupButton
+                  label="Connect Again"
+                  className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+                  icon={RefreshCw}
+                />
+              )}
+              {number.verification_logs.length > 0 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowLogs((prev) => !prev)}
+                  className="h-10 w-full rounded-full px-4 text-slate-600 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
+                >
+                  {showLogs ? "Hide logs" : `Logs (${number.verification_logs.length})`}
+                </Button>
+              )}
+              {number.status !== WhatsAppNumberStatusValue.PENDING &&
+                number.status !== WhatsAppNumberStatusValue.VERIFYING &&
+                !showDisconnectConfirm ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDisconnectConfirm(true)}
+                  className="h-10 w-full rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 sm:ml-auto sm:w-auto dark:text-red-400 dark:hover:bg-red-500/10"
+                >
+                  <Unplug className="mr-2 h-4 w-4" />
+                  Disconnect
+                </Button>
+              ) : null}
             </div>
+            {number.connection_mode === "manual" && showManualReconnect ? (
+              <div className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+                <ConnectWhatsAppForm
+                  mode="update"
+                  initialNumber={number}
+                  onSuccess={({ warning }) => {
+                    setShowManualReconnect(false)
+                    onManualReconnectSuccess({ warning })
+                  }}
+                />
+              </div>
+            ) : null}
+            {showLogs && number.verification_logs.length > 0 ? (
+              <div className="mt-3 max-h-64 overflow-y-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {[...number.verification_logs].reverse().map((log, i) => (
+                    <div key={i} className="flex gap-4 p-3 text-sm">
+                      <span className="w-32 shrink-0 tabular-nums text-slate-500 dark:text-slate-300">
+                        {new Date(log.timestamp).toLocaleString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <span
+                        className={`w-24 shrink-0 font-medium ${
+                          log.outcome === "active"
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : log.outcome === "failed" || log.outcome === "unreachable"
+                              ? "text-red-600 dark:text-red-400"
+                              : "text-amber-600 dark:text-amber-400"
+                        }`}
+                      >
+                        {log.outcome}
+                      </span>
+                      <span className="text-slate-700 dark:text-slate-300">{log.message}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
-        )}
+
+          {number.status !== WhatsAppNumberStatusValue.PENDING &&
+            number.status !== WhatsAppNumberStatusValue.VERIFYING &&
+            showDisconnectConfirm && (
+              <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10 sm:flex-row sm:items-center">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+                  <p className="text-sm leading-6 text-red-800 dark:text-red-300">
+                    Disconnect this number only if you want Cloove to stop handling messages for it.
+                  </p>
+                </div>
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:justify-start">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowDisconnectConfirm(false)}
+                    className="w-full rounded-full text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setShowDisconnectConfirm(false)
+                      onDisconnect()
+                    }}
+                    disabled={isDisconnecting}
+                    className="w-full rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 sm:w-auto"
+                  >
+                    {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+          <div className="border-t border-slate-100 pt-5 dark:border-slate-800/80">
+            <WhatsAppCatalogPanel
+              catalog={effectiveCatalog}
+              number={number}
+              isSyncing={isSyncingCatalog}
+              onSync={onSyncCatalog}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1404,89 +1445,101 @@ function SuspendedNumberCard({
   isDeleting: boolean
   onManualReconnectSuccess: (payload: { warning?: string | null }) => void
 }) {
+  const [isOpen, setIsOpen] = useState(false)
   const [showManualReconnect, setShowManualReconnect] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700">
-            <Phone className="w-5 h-5 text-slate-400" />
-          </div>
-          <div>
-            <p className="font-semibold text-slate-900 dark:text-slate-100 text-lg">
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex w-full items-center gap-3 p-5 text-left hover:bg-slate-50/60 dark:hover:bg-slate-900/40"
+        aria-expanded={isOpen}
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+          <Phone className="h-5 w-5 text-slate-400" />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
               {number.phone_number}
             </p>
-            {number.display_name && (
-              <p className="text-sm text-slate-500 dark:text-slate-300">
-                {number.display_name}
-              </p>
-            )}
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <AlertCircle className="h-3 w-3" />
+              Disconnected
+            </span>
+            <span className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              {number.connection_mode === "embedded" ? "Embedded" : "Manual"}
+            </span>
           </div>
+          {number.display_name && (
+            <p className="truncate text-sm text-slate-500 dark:text-slate-300">
+              {number.display_name}
+            </p>
+          )}
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400">
-          <AlertCircle className="w-4 h-4" />
-          <span className="text-sm font-medium">Disconnected</span>
-        </div>
-      </div>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
 
-      <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 mt-4">
-        <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-        <p className="text-sm text-amber-800 dark:text-amber-300 flex-1">
-          This number is disconnected. Reconnect to resume AI messaging.
-        </p>
-        <div className="flex shrink-0 gap-2">
-          {number.connection_mode === "embedded" ? (
-            <EmbeddedSignupButton
-              label="Reconnect"
-              className="h-10 rounded-full bg-brand-deep px-4 text-brand-cream hover:bg-brand-deep/90"
-              icon={RotateCcw}
-            />
-          ) : (
+      {isOpen && (
+        <div className="space-y-4 border-t border-slate-100 p-5 dark:border-slate-800/80">
+          <div className="flex flex-col gap-3 rounded-lg border border-amber-100 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10 sm:flex-row sm:items-center">
+            <AlertCircle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <p className="flex-1 text-sm text-amber-800 dark:text-amber-300">
+              This number is disconnected. Reconnect to resume AI messaging.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            {number.connection_mode === "embedded" ? (
+              <EmbeddedSignupButton
+                label="Reconnect"
+                className="h-10 rounded-full bg-brand-deep px-4 text-brand-cream hover:bg-brand-deep/90"
+                icon={RotateCcw}
+              />
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowManualReconnect((prev) => !prev)}
+                className="h-10 rounded-full"
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                {showManualReconnect ? "Hide config form" : "Update config"}
+              </Button>
+            )}
+            <Button
+              onClick={onRestore}
+              disabled={isRestoring}
+              className="h-10 rounded-full bg-brand-deep text-brand-cream shadow-sm hover:bg-brand-deep/90"
+            >
+              {isRestoring ? <Loader2 className="h-4 w-4 animate-spin" /> : "Restore"}
+            </Button>
             <Button
               type="button"
-              variant="outline"
-              onClick={() => setShowManualReconnect((prev) => !prev)}
-              className="h-10 rounded-full"
+              variant="ghost"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="h-10 rounded-full text-red-600 hover:bg-red-50 hover:text-red-700 sm:ml-auto dark:text-red-400 dark:hover:bg-red-500/10"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              {showManualReconnect ? "Hide config form" : "Update config"}
+              Delete
             </Button>
-          )}
-          <Button
-            onClick={onRestore}
-            disabled={isRestoring}
-            className="bg-brand-deep text-brand-cream hover:bg-brand-deep/90 shadow-sm"
-          >
-            {isRestoring ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              "Restore"
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setShowDeleteConfirm(true)}
-            className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
-          >
-            Delete
-          </Button>
+          </div>
+          {number.connection_mode !== "embedded" && showManualReconnect ? (
+            <div className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+              <ConnectWhatsAppForm
+                mode="update"
+                initialNumber={number}
+                onSuccess={({ warning }) => {
+                  setShowManualReconnect(false)
+                  onManualReconnectSuccess({ warning })
+                }}
+              />
+            </div>
+          ) : null}
         </div>
-      </div>
-      {number.connection_mode !== "embedded" && showManualReconnect ? (
-        <div className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
-          <ConnectWhatsAppForm
-            mode="update"
-            initialNumber={number}
-            onSuccess={({ warning }) => {
-              setShowManualReconnect(false)
-              onManualReconnectSuccess({ warning })
-            }}
-          />
-        </div>
-      ) : null}
+      )}
       <ConfirmDialog
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}

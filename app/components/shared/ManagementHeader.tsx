@@ -54,24 +54,26 @@ export function ManagementHeader({
                         </p>
                     )}
                 </div>
-                <div className={cn(
-                    "items-center gap-3",
-                    mobileFloatingAction && isMobile ? "mt-4 md:mt-0 w-full block" : "flex"
-                )}>
-                    {extraActions}
-                    {addButtonLabel && onAddClick && (
-                        <Button
-                            onClick={onAddClick}
-                            className={cn(
-                                "h-11 rounded-full px-5 font-semibold text-white shadow-sm transition-colors hover:text-white [&_svg]:text-white",
-                                mobileFloatingAction && isMobile && "fixed top-15 right-6 z-50 h-14 w-14 p-0 md:static md:h-12 md:w-auto md:px-6 md:rounded-full shadow-2xl md:shadow-lg"
-                            )}
-                        >
-                            <Plus className={cn("mr-2 h-4 w-4", mobileFloatingAction && isMobile && "m-0 h-6 w-6 md:mr-2 md:h-4 md:w-4")} />
-                            <span className={cn(mobileFloatingAction && isMobile && "hidden md:inline")}>{addButtonLabel}</span>
-                        </Button>
-                    )}
-                </div>
+                {(extraActions || (addButtonLabel && onAddClick)) && (
+                    <div className={cn(
+                        "items-center gap-3",
+                        mobileFloatingAction && isMobile ? "mt-4 md:mt-0 w-full block" : "flex"
+                    )}>
+                        {extraActions}
+                        {addButtonLabel && onAddClick && (
+                            <Button
+                                onClick={onAddClick}
+                                className={cn(
+                                    "h-11 rounded-full px-5 font-semibold text-white shadow-sm transition-colors hover:text-white [&_svg]:text-white",
+                                    mobileFloatingAction && isMobile && "fixed top-15 right-6 z-50 h-14 w-14 p-0 md:static md:h-12 md:w-auto md:px-6 md:rounded-full shadow-2xl md:shadow-lg"
+                                )}
+                            >
+                                <Plus className={cn("mr-2 h-4 w-4", mobileFloatingAction && isMobile && "m-0 h-6 w-6 md:mr-2 md:h-4 md:w-4")} />
+                                <span className={cn(mobileFloatingAction && isMobile && "hidden md:inline")}>{addButtonLabel}</span>
+                            </Button>
+                        )}
+                    </div>
+                )}
             </div>
 
             {searchValue !== undefined && onSearchChange && (

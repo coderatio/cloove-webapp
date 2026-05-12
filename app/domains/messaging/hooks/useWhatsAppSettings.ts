@@ -301,6 +301,64 @@ export function useWhatsAppCatalogStatus(number: WhatsAppNumber | null) {
   })
 }
 
+export function useWhatsAppNumberCatalogStatus(number: WhatsAppNumber | null) {
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+  const enabled = !!number && !!businessId
+  const isProvisioning =
+    number?.status === WhatsAppNumberStatusValue.PENDING ||
+    number?.status === WhatsAppNumberStatusValue.VERIFYING
+  const numberId = number?.id ?? ""
+
+  return useQuery({
+    queryKey: ["whatsapp-numbers", numberId, "catalog", businessId].filter(Boolean),
+    queryFn: () =>
+      apiClient.get<WhatsAppCatalogStatus | null>(`/whatsapp-numbers/${numberId}/catalog`),
+    enabled,
+    refetchInterval: (query) => {
+      const data = query.state.data as WhatsAppCatalogStatus | null | undefined
+      const status = data?.sync_status
+      const shouldKeepPolling =
+        isProvisioning ||
+        status === WhatsAppCatalogSyncStatus.PENDING ||
+        status === WhatsAppCatalogSyncStatus.SYNCING
+
+      return shouldKeepPolling ? 15_000 : false
+    },
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
+  })
+}
+
+export function useSyncWhatsAppNumberCatalog() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useMutation({
+    mutationFn: (numberId: string) =>
+      apiClient.post<{
+        message: string
+        data?: { queued: boolean; reason?: string; message?: string }
+      }>(`/whatsapp-numbers/${numberId}/catalog/sync`, {}, { fullResponse: true }),
+    onSuccess: (data, numberId) => {
+      if (data?.data?.queued === false) {
+        toast.error("Catalog sync failed. Check the card for details.")
+      } else {
+        toast.success("Catalog sync started.")
+      }
+      queryClient.invalidateQueries({
+        queryKey: ["whatsapp-numbers", numberId, "catalog", businessId].filter(Boolean),
+      })
+    },
+    onError: () => {
+      toast.error("Could not start catalog sync.")
+    },
+  })
+}
+
 export function useSyncWhatsAppCatalog() {
   const queryClient = useQueryClient()
   const { activeBusiness } = useBusiness()
