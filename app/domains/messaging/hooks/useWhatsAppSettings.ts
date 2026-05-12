@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -22,14 +22,7 @@ export interface WhatsAppNumber {
   app_id: string | null
   has_verify_token: boolean
   status: WhatsAppNumberStatusValue
-  verification_logs: Array<{
-    timestamp: string
-    attempt: number
-    source: string
-    outcome: string
-    meta_status: string | null
-    message: string
-  }>
+  verification_logs_count: number
   is_default: boolean
   display_name: string | null
   connection_mode: "embedded" | "manual"
@@ -194,16 +187,28 @@ export function useWhatsAppNumbers() {
     queryKey: QUERY_KEYS.numbers(businessId),
     queryFn: () => apiClient.get<WhatsAppNumber[]>("/whatsapp-numbers"),
     enabled: !!businessId,
+    // Webhooks and background polling update the row server-side; pulling
+    // on focus ensures the user sees Meta-driven status changes the
+    // moment they return to the tab.
+    refetchOnWindowFocus: true,
   })
 }
 
 export function useWhatsAppNumberStatus(id: string | null, enabled: boolean) {
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
+  const queryClient = useQueryClient()
 
   return useQuery({
     queryKey: QUERY_KEYS.numberStatus(id ?? "", businessId),
-    queryFn: () => apiClient.get<WhatsAppNumberStatus>(`/whatsapp-numbers/${id}/status`),
+    queryFn: async () => {
+      const data = await apiClient.get<WhatsAppNumberStatus>(`/whatsapp-numbers/${id}/status`)
+      // The status endpoint persists transitions server-side, so refresh
+      // the list whenever a poll completes — that's how a card flips from
+      // "Verifying..." to "Connected" without a page reload.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
+      return data
+    },
     enabled: !!id && enabled && !!businessId,
     refetchInterval: (query) => {
       const data = query.state.data as WhatsAppNumberStatus | undefined
@@ -218,6 +223,65 @@ export function useWhatsAppNumberStatus(id: string | null, enabled: boolean) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: 1,
+  })
+}
+
+export interface VerificationLogEntry {
+  id: string
+  timestamp: string
+  attempt: number
+  source: string
+  outcome: string
+  meta_status: string | null
+  code_verification_status: string | null
+  quality_rating: string | null
+  message: string
+  metadata: Record<string, unknown> | null
+}
+
+interface VerificationLogsPage {
+  entries: VerificationLogEntry[]
+  next_cursor: string | null
+}
+
+const VERIFICATION_LOG_PAGE_SIZE = 25
+
+export function useWhatsAppNumberVerificationLogs(numberId: string | null, enabled: boolean) {
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useInfiniteQuery({
+    queryKey: ["whatsapp-numbers", numberId, "verification-logs", businessId].filter(Boolean),
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({ pageParam }) => {
+      const params = new URLSearchParams({ limit: String(VERIFICATION_LOG_PAGE_SIZE) })
+      if (pageParam) params.set("before", pageParam)
+      return apiClient.get<VerificationLogsPage>(
+        `/whatsapp-numbers/${numberId}/verification-logs?${params.toString()}`
+      )
+    },
+    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+    enabled: !!numberId && enabled && !!businessId,
+    refetchOnWindowFocus: false,
+  })
+}
+
+export function useCheckWhatsAppNumberStatus() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient.get<WhatsAppNumberStatus>(`/whatsapp-numbers/${id}/status`),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numberStatus(id, businessId) })
+      toast.success("Status refreshed from Meta")
+    },
+    onError: () => {
+      toast.error("Could not refresh status. Check your access token.")
+    },
   })
 }
 

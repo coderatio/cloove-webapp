@@ -35,6 +35,7 @@ import {
 import {
   useWhatsAppNumbers,
   useWhatsAppNumberStatus,
+  useCheckWhatsAppNumberStatus,
   useDisconnectWhatsAppNumber,
   useRestoreWhatsAppNumber,
   useDeleteWhatsAppNumber,
@@ -56,6 +57,7 @@ import {
 import { MarkdownEditor } from "@/app/components/ui/markdown-editor"
 import { EmbeddedSignupButton } from "./EmbeddedSignupButton"
 import { ConnectWhatsAppForm } from "./ConnectWhatsAppForm"
+import { WhatsAppNumberLogsSheet } from "./WhatsAppNumberLogsSheet"
 import { AgentProfileSection } from "./AgentProfileSection"
 import { WhatsAppNotificationMessageInput } from "./WhatsAppNotificationMessageInput"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -1167,8 +1169,9 @@ function ConnectedNumberCard({
   const [isOpen, setIsOpen] = useState(false)
   const [showManualReconnect, setShowManualReconnect] = useState(false)
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
-  const [showLogs, setShowLogs] = useState(false)
+  const [logsOpen, setLogsOpen] = useState(false)
   const { data: catalog } = useWhatsAppNumberCatalogStatus(number)
+  const checkStatus = useCheckWhatsAppNumberStatus()
   const isPending =
     number.status === WhatsAppNumberStatusValue.PENDING ||
     number.status === WhatsAppNumberStatusValue.VERIFYING
@@ -1283,6 +1286,20 @@ function ConnectedNumberCard({
                 : "Update config to change only the IDs or credentials you want."}
             </p>
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => checkStatus.mutate(number.id)}
+                disabled={checkStatus.isPending && checkStatus.variables === number.id}
+                className="h-10 w-full justify-center rounded-full sm:w-auto"
+              >
+                {checkStatus.isPending && checkStatus.variables === number.id ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                Check status
+              </Button>
               {number.connection_mode === "manual" ? (
                 <Button
                   type="button"
@@ -1300,15 +1317,15 @@ function ConnectedNumberCard({
                   icon={RefreshCw}
                 />
               )}
-              {number.verification_logs.length > 0 && (
+              {number.verification_logs_count > 0 && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowLogs((prev) => !prev)}
+                  onClick={() => setLogsOpen(true)}
                   className="h-10 w-full rounded-full px-4 text-slate-600 hover:text-slate-900 sm:w-auto dark:text-slate-300 dark:hover:text-white"
                 >
-                  {showLogs ? "Hide logs" : `Logs (${number.verification_logs.length})`}
+                  Logs ({number.verification_logs_count})
                 </Button>
               )}
               {number.status !== WhatsAppNumberStatusValue.PENDING &&
@@ -1337,37 +1354,13 @@ function ConnectedNumberCard({
                 />
               </div>
             ) : null}
-            {showLogs && number.verification_logs.length > 0 ? (
-              <div className="mt-3 max-h-64 overflow-y-auto rounded-2xl border border-slate-100 dark:border-slate-800">
-                <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {[...number.verification_logs].reverse().map((log, i) => (
-                    <div key={i} className="flex gap-4 p-3 text-sm">
-                      <span className="w-32 shrink-0 tabular-nums text-slate-500 dark:text-slate-300">
-                        {new Date(log.timestamp).toLocaleString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                      <span
-                        className={`w-24 shrink-0 font-medium ${
-                          log.outcome === "active"
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : log.outcome === "failed" || log.outcome === "unreachable"
-                              ? "text-red-600 dark:text-red-400"
-                              : "text-amber-600 dark:text-amber-400"
-                        }`}
-                      >
-                        {log.outcome}
-                      </span>
-                      <span className="text-slate-700 dark:text-slate-300">{log.message}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </div>
+
+          <WhatsAppNumberLogsSheet
+            open={logsOpen}
+            onOpenChange={setLogsOpen}
+            number={number}
+          />
 
           {number.status !== WhatsAppNumberStatusValue.PENDING &&
             number.status !== WhatsAppNumberStatusValue.VERIFYING &&
