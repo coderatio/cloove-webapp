@@ -2,70 +2,127 @@
 
 import { useState } from "react"
 import { Input } from "@/app/components/ui/input"
-import { Textarea } from "@/app/components/ui/textarea"
 import { Button } from "@/app/components/ui/button"
-import { Loader2, Eye, EyeOff, Phone, RefreshCw, MessageCircle } from "lucide-react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@/app/lib/api-client"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
-import { SetupGuideDrawer } from "./SetupGuideDrawer"
-import type { WhatsAppNumber } from "../hooks/useWhatsAppSettings"
+import { useManualConnectWhatsAppNumber, type WhatsAppNumber } from "../hooks/useWhatsAppSettings"
 
 interface FormState {
+  phone_number: string
   phone_number_id: string
+  meta_business_id: string
   waba_id: string
+  app_id: string
   access_token: string
   app_secret: string
-  phone_number: string
-  webhook_verify_token: string
+  catalog_id: string
+}
+
+interface ConnectWhatsAppFormProps {
+  mode?: "connect" | "update"
+  initialNumber?: WhatsAppNumber | null
+  onSuccess?: (payload: { message: string; warning?: string | null }) => void
 }
 
 const INITIAL_STATE: FormState = {
+  phone_number: "",
   phone_number_id: "",
+  meta_business_id: "",
   waba_id: "",
+  app_id: "",
   access_token: "",
   app_secret: "",
-  phone_number: "",
-  webhook_verify_token: "",
+  catalog_id: "",
 }
 
-export function ConnectWhatsAppForm() {
-  const queryClient = useQueryClient()
-  const [form, setForm] = useState<FormState>(INITIAL_STATE)
-  const [showToken, setShowToken] = useState(false)
-  const [showSecret, setShowSecret] = useState(false)
-  const [showVerifyToken, setShowVerifyToken] = useState(false)
-
-  const connectMutation = useMutation({
-    mutationFn: (data: FormState) =>
-      apiClient.post<WhatsAppNumber>("/whatsapp-numbers", {
-        phone_number_id: data.phone_number_id,
-        waba_id: data.waba_id,
-        access_token: data.access_token,
-        app_secret: data.app_secret,
-        phone_number: data.phone_number,
-        webhook_verify_token: data.webhook_verify_token,
-        provider: "meta",
-      }),
-    onSuccess: () => {
-      toast.success("WhatsApp number connected! Verifying with Meta...")
-      queryClient.invalidateQueries({ queryKey: ["whatsapp-numbers"] })
-      setForm(INITIAL_STATE)
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || "Failed to connect. Please check your credentials.")
-    },
+export function ConnectWhatsAppForm({
+  mode = "connect",
+  initialNumber = null,
+  onSuccess,
+}: ConnectWhatsAppFormProps) {
+  const connectMutation = useManualConnectWhatsAppNumber()
+  const [form, setForm] = useState<FormState>({
+    phone_number: initialNumber?.phone_number ?? "",
+    phone_number_id: initialNumber?.phone_number_id ?? "",
+    meta_business_id: initialNumber?.meta_business_id ?? "",
+    waba_id: initialNumber?.waba_id ?? "",
+    app_id: initialNumber?.app_id ?? "",
+    access_token: "",
+    app_secret: "",
+    catalog_id: initialNumber?.selected_catalog_id ?? "",
   })
+  const [showToken, setShowToken] = useState(false)
+  const [showAppSecret, setShowAppSecret] = useState(false)
+  const isUpdateMode = mode === "update"
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!form.phone_number_id || !form.access_token || !form.app_secret || !form.phone_number || !form.webhook_verify_token) {
-      toast.error("Please fill in all required fields.")
+    const trimmed = {
+      phone_number: form.phone_number.trim(),
+      phone_number_id: form.phone_number_id.trim(),
+      waba_id: form.waba_id.trim(),
+      meta_business_id: form.meta_business_id.trim(),
+      app_id: form.app_id.trim(),
+      access_token: form.access_token.trim(),
+      app_secret: form.app_secret.trim(),
+      catalog_id: form.catalog_id.trim(),
+    }
+
+    if (
+      !isUpdateMode &&
+      (!trimmed.phone_number ||
+        !trimmed.phone_number_id ||
+        !trimmed.waba_id ||
+        !trimmed.meta_business_id ||
+        !trimmed.app_id ||
+        !trimmed.access_token ||
+        !trimmed.app_secret)
+    ) {
+      toast.error("Phone Number, Phone Number ID, WABA ID, Meta Business ID, App ID, App Secret, and Access Token are required.")
       return
     }
 
-    connectMutation.mutate(form)
+    if (
+      isUpdateMode &&
+      !trimmed.phone_number &&
+      !trimmed.phone_number_id &&
+      !trimmed.waba_id &&
+      !trimmed.meta_business_id &&
+      !trimmed.app_id &&
+      !trimmed.access_token &&
+      !trimmed.app_secret &&
+      !trimmed.catalog_id
+    ) {
+      toast.error("Add at least one field to update.")
+      return
+    }
+
+    connectMutation.mutate(
+      {
+        ...(trimmed.phone_number ? { phone_number: trimmed.phone_number } : {}),
+        ...(trimmed.phone_number_id ? { phone_number_id: trimmed.phone_number_id } : {}),
+        ...(trimmed.waba_id ? { waba_id: trimmed.waba_id } : {}),
+        ...(trimmed.meta_business_id ? { meta_business_id: trimmed.meta_business_id } : {}),
+        ...(trimmed.app_id ? { app_id: trimmed.app_id } : {}),
+        ...(trimmed.access_token ? { access_token: trimmed.access_token } : {}),
+        ...(trimmed.app_secret ? { app_secret: trimmed.app_secret } : {}),
+        ...(trimmed.catalog_id ? { catalog_id: trimmed.catalog_id } : {}),
+      },
+      {
+        onSuccess: (response) => {
+          setForm((prev) =>
+            isUpdateMode
+              ? { ...prev, access_token: "", app_secret: "", catalog_id: prev.catalog_id }
+              : INITIAL_STATE
+          )
+          onSuccess?.({
+            message: response?.message || "WhatsApp saved.",
+            warning: response?.warning ?? null,
+          })
+        },
+      }
+    )
   }
 
   const handleChange = (key: keyof FormState, value: string) => {
@@ -73,28 +130,10 @@ export function ConnectWhatsAppForm() {
   }
 
   return (
-    <div className="bg-white dark:bg-brand-deep/20 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
-      <div className="px-8 py-10 border-b border-slate-100 dark:border-white/5 text-center flex flex-col items-center">
-        <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-100 dark:border-emerald-500/20">
-          <MessageCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-        </div>
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
-          Connect your WhatsApp number
-        </h3>
-        <p className="text-sm text-slate-500 max-w-md mx-auto mb-6">
-          Let your customers order directly from your own WhatsApp Business number.
-          Set up your Meta app, then paste your credentials below.
-        </p>
-        <SetupGuideDrawer />
-      </div>
-
-      <div className="p-8 bg-slate-50/50 dark:bg-transparent">
-        <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
-          <FormField
-            label="Phone Number"
-            description="Your WhatsApp Business number in international format (e.g. +234...)"
-            required
-          >
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/60">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <FormField label="Phone Number" required={!isUpdateMode}>
             <Input
               value={form.phone_number}
               onChange={(e) => handleChange("phone_number", e.target.value)}
@@ -102,149 +141,119 @@ export function ConnectWhatsAppForm() {
               className="bg-white dark:bg-slate-900/50"
             />
           </FormField>
+          <FormField label="Phone Number ID" required={!isUpdateMode}>
+            <Input
+              value={form.phone_number_id}
+              onChange={(e) => handleChange("phone_number_id", e.target.value)}
+              placeholder="106540352242922"
+              className="bg-white dark:bg-slate-900/50"
+            />
+          </FormField>
+          <FormField label="WABA ID" required={!isUpdateMode}>
+            <Input
+              value={form.waba_id}
+              onChange={(e) => handleChange("waba_id", e.target.value)}
+              placeholder="2031294951050226"
+              className="bg-white dark:bg-slate-900/50"
+            />
+          </FormField>
+          <FormField label="Meta Business ID" required={!isUpdateMode}>
+            <Input
+              value={form.meta_business_id}
+              onChange={(e) => handleChange("meta_business_id", e.target.value)}
+              placeholder="123456789012345"
+              className="bg-white dark:bg-slate-900/50"
+            />
+          </FormField>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <FormField
-              label="Phone Number ID"
-              description="Found in WhatsApp → API Setup"
-              required
-            >
-              <Input
-                value={form.phone_number_id}
-                onChange={(e) => handleChange("phone_number_id", e.target.value)}
-                placeholder="e.g. 106540352242922"
-                className="bg-white dark:bg-slate-900/50"
-              />
-            </FormField>
+        <FormField label="App ID" required={!isUpdateMode}>
+          <Input
+            value={form.app_id}
+            onChange={(e) => handleChange("app_id", e.target.value)}
+            placeholder="Meta App ID that issued the access token"
+            className="bg-white dark:bg-slate-900/50"
+          />
+        </FormField>
 
-            <FormField
-              label="WhatsApp Business Account ID"
-              description="Found in WhatsApp → API Setup"
+        <FormField
+          label={isUpdateMode ? "Access Token (optional)" : "Permanent Access Token"}
+          required={!isUpdateMode}
+        >
+          <div className="relative">
+            <Input
+              type={showToken ? "text" : "password"}
+              value={form.access_token}
+              onChange={(e) => handleChange("access_token", e.target.value)}
+              placeholder="EAAQ..."
+              className="pr-10 bg-white font-mono text-sm dark:bg-slate-900/50"
+            />
+            <button
+              type="button"
+              onClick={() => setShowToken(!showToken)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
-              <Input
-                value={form.waba_id}
-                onChange={(e) => handleChange("waba_id", e.target.value)}
-                placeholder="e.g. 2031294951050226"
-                className="bg-white dark:bg-slate-900/50"
-              />
-            </FormField>
+              {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
+        </FormField>
 
-          <FormField
-            label="Access Token"
-            description="A permanent System User token with whatsapp_business_messaging permission"
-            required
-          >
-            <div className="relative">
-              <Textarea
-                value={showToken ? form.access_token : form.access_token ? "••••••••••••••••••••" : ""}
-                onChange={(e) => handleChange("access_token", e.target.value)}
-                onFocus={() => setShowToken(true)}
-                placeholder="EAAQ..."
-                rows={3}
-                className="pr-10 resize-none font-mono text-sm bg-white dark:bg-slate-900/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowToken(!showToken)}
-                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </FormField>
-
-          <FormField
-            label="App Secret"
-            description="Found in Settings → Basic in your Meta app dashboard"
-            required
-          >
-            <div className="relative">
-              <Input
-                type={showSecret ? "text" : "password"}
-                value={form.app_secret}
-                onChange={(e) => handleChange("app_secret", e.target.value)}
-                placeholder="Your app secret"
-                className="pr-10 bg-white dark:bg-slate-900/50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowSecret(!showSecret)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </FormField>
-
-          <FormField
-            label="Webhook Verify Token"
-            description="Used when configuring the webhook URL. Generate one and save it — it won't be shown again."
-            required
-          >
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Input
-                  type={showVerifyToken ? "text" : "password"}
-                  value={form.webhook_verify_token}
-                  onChange={(e) => handleChange("webhook_verify_token", e.target.value)}
-                  placeholder="e.g. my-cloove-verify-token"
-                  className="pr-10 font-mono text-sm bg-white dark:bg-slate-900/50"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowVerifyToken(!showVerifyToken)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  {showVerifyToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  const token = crypto.randomUUID().replace(/-/g, "").slice(0, 32)
-                  handleChange("webhook_verify_token", token)
-                  setShowVerifyToken(true)
-                }}
-                className="shrink-0 shadow-sm"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Generate
-              </Button>
-            </div>
-          </FormField>
-
-          <div className="pt-6 border-t border-slate-200 dark:border-white/10">
-            <Button
-              type="submit"
-              disabled={connectMutation.isPending}
-              className="w-full bg-brand-deep text-brand-cream hover:bg-brand-deep/90 shadow-sm h-11 text-base font-medium"
+        <FormField
+          label={isUpdateMode ? "App Secret (optional)" : "App Secret"}
+          required={!isUpdateMode}
+        >
+          <div className="relative">
+            <Input
+              type={showAppSecret ? "text" : "password"}
+              value={form.app_secret}
+              onChange={(e) => handleChange("app_secret", e.target.value)}
+              placeholder={isUpdateMode ? "Enter app secret only if changing it" : "Used to configure your Meta App webhook"}
+              className="pr-10 bg-white font-mono text-sm dark:bg-slate-900/50"
+            />
+            <button
+              type="button"
+              onClick={() => setShowAppSecret(!showAppSecret)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
-              {connectMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                "Connect WhatsApp Number"
-              )}
-            </Button>
+              {showAppSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
-        </form>
-      </div>
+        </FormField>
+
+        <FormField label="Catalog ID (optional)">
+          <Input
+            value={form.catalog_id}
+            onChange={(e) => handleChange("catalog_id", e.target.value)}
+            placeholder="Leave empty to auto-create catalog"
+            className="bg-white dark:bg-slate-900/50"
+          />
+        </FormField>
+
+        <Button
+          type="submit"
+          disabled={connectMutation.isPending}
+          className="h-10 w-full rounded-full bg-brand-deep text-brand-cream hover:bg-brand-deep/90"
+        >
+          {connectMutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {isUpdateMode ? "Updating..." : "Connecting..."}
+            </>
+          ) : (
+            isUpdateMode ? "Update Config" : "Connect Manually"
+          )}
+        </Button>
+      </form>
     </div>
   )
 }
 
 function FormField({
   label,
-  description,
   required,
   children,
 }: {
   label: string
-  description?: string
   required?: boolean
   children: React.ReactNode
 }) {
@@ -255,9 +264,6 @@ function FormField({
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {children}
-      {description && (
-        <p className="text-sm text-slate-500 leading-relaxed">{description}</p>
-      )}
     </div>
   )
 }

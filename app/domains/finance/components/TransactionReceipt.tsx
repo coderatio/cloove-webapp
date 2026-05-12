@@ -7,6 +7,7 @@ import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import type { FinanceTransactionRow } from "@/app/domains/finance/hooks/useFinance"
+import { getTransactionStatusLabel } from "@/app/domains/finance/lib/transaction_status_labels"
 
 interface TransactionReceiptProps {
     transaction: FinanceTransactionRow
@@ -57,11 +58,13 @@ export const TransactionReceipt = React.forwardRef<HTMLDivElement, TransactionRe
                                 "h-20 w-20 rounded-3xl flex items-center justify-center shadow-lg transform rotate-3",
                                 status === "Cleared" ? "bg-emerald-500 text-white shadow-emerald-500/20" :
                                     status === "Failed" ? "bg-rose-500 text-white shadow-rose-500/20" :
-                                        "bg-amber-500 text-white shadow-amber-500/20"
+                                        status === "Cancelled" ? "bg-slate-500 text-white shadow-slate-500/20" :
+                                            "bg-amber-500 text-white shadow-amber-500/20"
                             )}>
                                 {status === "Cleared" ? <CheckCircle2 className="w-10 h-10" /> :
                                     status === "Failed" ? <XCircle className="w-10 h-10" /> :
-                                        <Clock className="w-10 h-10" />}
+                                        status === "Cancelled" ? <XCircle className="w-10 h-10 opacity-90" /> :
+                                            <Clock className="w-10 h-10" />}
                             </div>
                             <div className="text-center">
                                 <div className={cn(
@@ -82,8 +85,8 @@ export const TransactionReceipt = React.forwardRef<HTMLDivElement, TransactionRe
 
                         {/* Details List */}
                         <div className="space-y-5">
-                            <DetailRow label="Status" value={status === "Cleared" ? "Successful" : status} statusColor={
-                                status === "Cleared" ? "emerald" : status === "Failed" ? "rose" : "amber"
+                            <DetailRow label="Status" value={getTransactionStatusLabel(status)} statusColor={
+                                status === "Cleared" ? "emerald" : status === "Failed" ? "rose" : status === "Cancelled" ? "slate" : "amber"
                             } />
                             <DetailRow label="Transaction Type" value={tx.method} />
                             <DetailRow label="Reference ID" value={tx.reference} isMono />
@@ -124,7 +127,7 @@ export const TransactionReceipt = React.forwardRef<HTMLDivElement, TransactionRe
     }
 )
 
-function DetailRow({ label, value, isMono = false, statusColor }: { label: string; value: React.ReactNode; isMono?: boolean; statusColor?: "emerald" | "rose" | "amber" }) {
+function DetailRow({ label, value, isMono = false, statusColor }: { label: string; value: React.ReactNode; isMono?: boolean; statusColor?: "emerald" | "rose" | "amber" | "slate" }) {
     return (
         <div className="space-y-1">
             <p className="text-[10px] font-bold text-brand-accent/40 uppercase tracking-widest">
@@ -136,6 +139,7 @@ function DetailRow({ label, value, isMono = false, statusColor }: { label: strin
                 statusColor === "emerald" && "text-emerald-600 font-bold",
                 statusColor === "rose" && "text-rose-600 font-bold",
                 statusColor === "amber" && "text-amber-600 font-bold",
+                statusColor === "slate" && "text-slate-600 font-bold",
             )}>
                 {value}
             </p>

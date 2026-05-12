@@ -4,6 +4,7 @@ import * as React from "react"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Input } from "@/app/components/ui/input"
+import { WhatsAppNotificationMessageInput } from "@/app/domains/messaging/components/WhatsAppNotificationMessageInput"
 import {
   Drawer,
   DrawerContent,
@@ -38,6 +39,7 @@ import {
   type RestaurantTable,
 } from "../hooks/useRestaurantOps"
 import { useRecordSale } from "@/app/domains/orders/hooks/useRecordSale"
+import { useGoSettings } from "@/app/domains/messaging/hooks/useWhatsAppSettings"
 import { QuickProductPicker, type PickedItem } from "@/app/components/shared/QuickProductPicker"
 import { cn } from "@/app/lib/utils"
 import { CapacityStepper } from "@/app/domains/restaurant/components/CapacityStepper"
@@ -65,11 +67,26 @@ import {
   ChevronRight,
   Maximize2,
   Minimize2,
+  MessageSquare,
+  Loader2,
 } from "lucide-react"
 import { ZenModeContext } from "@/app/components/layout/AppLayout"
 import { formatCurrency } from "@/app/lib/formatters"
+import { useBusiness } from "@/app/components/BusinessProvider"
 
 const KITCHEN_FLOW: KitchenTicket["status"][] = ["queued", "preparing", "ready", "served"]
+const DEFAULT_MANUAL_PRESETS = [
+  {
+    id: "checking_in",
+    label: "Checking in",
+    body: "Hi {customerName}, we are checking on your order #{orderCode} and will update you shortly.",
+  },
+  {
+    id: "ready_reminder",
+    label: "Ready reminder",
+    body: "Hi {customerName}, your order #{orderCode} is ready for pickup.",
+  },
+]
 
 const STATUS_CONFIG: Record<
   KitchenTicket["status"],
@@ -302,10 +319,12 @@ const BarTicketCard = React.memo(function BarTicketCard({
 const KitchenTicketCard = React.memo(function KitchenTicketCard({
   ticket,
   onAdvance,
+  onMessage,
   isPending,
 }: {
   ticket: KitchenTicket
   onAdvance: (id: string, status: KitchenTicket["status"]) => void
+  onMessage: (ticket: KitchenTicket) => void
   isPending: boolean
 }) {
   const idx = KITCHEN_FLOW.indexOf(ticket.status)
@@ -326,7 +345,21 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
             #{ticket.saleId?.slice(0, 8) ?? "N/A"}
           </p>
         </div>
-        <ElapsedBadge createdAt={ticket.createdAt} status={ticket.status} />
+        <div className="flex items-center gap-1">
+          {ticket.saleId && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 rounded-lg text-brand-accent/40 hover:text-brand-accent/80 dark:text-brand-cream/40 dark:hover:text-brand-cream/80"
+              onClick={() => onMessage(ticket)}
+              disabled={isPending}
+              title="Send WhatsApp message"
+            >
+              <MessageSquare className="h-3 w-3" />
+            </Button>
+          )}
+          <ElapsedBadge createdAt={ticket.createdAt} status={ticket.status} />
+        </div>
       </div>
 
       <div className="flex gap-1.5">
@@ -656,6 +689,12 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const { data: activeTables = [], isLoading: activeTablesLoading } = useRestaurantTables("active", {
     enabled: showTables,
   })
+  const { data: goSettings } = useGoSettings()
+  const { businessName } = useBusiness()
+  const manualPresets =
+    goSettings?.order_notifications?.restaurant.manual_presets?.length
+      ? goSettings.order_notifications.restaurant.manual_presets
+      : DEFAULT_MANUAL_PRESETS
   const { data: archivedTables = [], isLoading: archivedTablesLoading } =
     useRestaurantTables("archived", {
       enabled: showTables,
@@ -670,6 +709,34 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const [editCapacity, setEditCapacity] = React.useState(4)
   const [tableTab, setTableTab] = React.useState("active")
   const [sessionTab, setSessionTab] = React.useState<"active" | "closed">("active")
+  const [messagingTicket, setMessagingTicket] = React.useState<KitchenTicket | null>(null)
+  const [messageBody, setMessageBody] = React.useState("")
+  /** Keeps the template tab highlighted while the user edits away from an exact preset body match */
+  const [activeMessagePresetId, setActiveMessagePresetId] = React.useState<string | null>(null)
+  const messagePresetMatch = React.useMemo(() => {
+    const trimmed = messageBody.trim()
+    if (!trimmed) return null
+    return manualPresets.find((p) => p.body.trim() === trimmed) ?? null
+  }, [messageBody, manualPresets])
+
+  React.useEffect(() => {
+    if (messagePresetMatch) setActiveMessagePresetId(messagePresetMatch.id)
+  }, [messagePresetMatch])
+
+  const kitchenWhatsAppPreviewContext = React.useMemo(() => {
+    if (!messagingTicket) return undefined
+    const salePrefix = messagingTicket.saleId?.slice(0, 8)
+    const ctx: Record<string, string | undefined> = {
+      stage: STATUS_CONFIG[messagingTicket.status].label,
+    }
+    const customer = messagingTicket.customerName?.trim()
+    if (customer) ctx.customerName = customer
+    if (salePrefix) ctx.orderCode = salePrefix
+    const biz = businessName.trim()
+    if (biz) ctx.businessName = biz
+    return ctx
+  }, [messagingTicket, businessName])
+
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -733,9 +800,52 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   }
 
   const handleAdvanceTicket = React.useCallback(
-    (id: string, status: KitchenTicket["status"]) => kitchenAction.mutate({ id, status }),
-    [kitchenAction]
+    (id: string, status: KitchenTicket["status"]) =>
+      kitchenAction.advance.mutate(
+        { id, status },
+        {
+          onSuccess: (data) => {
+            const notification = data?.notification
+            if (notification?.status === "sent") {
+              toast.success(
+                `Moved to ${STATUS_CONFIG[status].label}. WhatsApp sent${notification.customerName ? ` to ${notification.customerName}` : ""}.`
+              )
+            } else if (notification?.reason && notification.reason !== "auto_send_disabled") {
+              toast.message(`Moved to ${STATUS_CONFIG[status].label}. WhatsApp not sent.`)
+            }
+          },
+        }
+      ),
+    [kitchenAction.advance]
   )
+  const openMessageDrawer = React.useCallback(
+    (ticket: KitchenTicket) => {
+      setMessagingTicket(ticket)
+      const first = manualPresets[0]
+      setMessageBody(first?.body ?? "")
+      setActiveMessagePresetId(first?.id ?? null)
+    },
+    [manualPresets]
+  )
+  const closeMessageDrawer = React.useCallback(() => {
+    setMessagingTicket(null)
+    setMessageBody("")
+    setActiveMessagePresetId(null)
+  }, [])
+  const handleSendTicketMessage = async () => {
+    if (!messagingTicket) return
+    try {
+      await kitchenAction.sendMessage.mutateAsync({
+        id: messagingTicket.id,
+        body: messageBody,
+        ...(messagePresetMatch ? { presetId: messagePresetMatch.id } : {}),
+      })
+      toast.success("WhatsApp message sent")
+      closeMessageDrawer()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send WhatsApp message")
+    }
+  }
   const handleCloseSession = React.useCallback(
     (id: string) => tableAction.mutate(id),
     [tableAction]
@@ -1443,6 +1553,87 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
         </div>
       )}
 
+      <Drawer open={!!messagingTicket} onOpenChange={(open) => !open && closeMessageDrawer()}>
+        <DrawerContent className="max-w-lg">
+          <DrawerStickyHeader>
+            <DrawerTitle>Send WhatsApp update</DrawerTitle>
+            <DrawerDescription>
+              {messagingTicket?.customerName
+                ? `Message ${messagingTicket.customerName} about this kitchen order.`
+                : "Send a quick update for this kitchen order."}
+            </DrawerDescription>
+          </DrawerStickyHeader>
+          <DrawerBody className="space-y-4 pt-2">
+            <p className="text-[11px] leading-relaxed text-brand-accent/50 dark:text-brand-cream/45">
+              <span className="text-brand-accent/40 dark:text-brand-cream/35">Order </span>
+              <span className="font-mono tabular-nums text-brand-accent/65 dark:text-brand-cream/55">
+                #{messagingTicket?.saleId?.slice(0, 8) ?? "—"}
+              </span>
+              <span className="mx-2 text-brand-accent/35 dark:text-brand-cream/30">·</span>
+              <span>{messagingTicket ? STATUS_CONFIG[messagingTicket.status].label : "—"}</span>
+            </p>
+
+            <div className="overflow-hidden rounded-2xl border border-brand-deep/10 bg-brand-deep/4 shadow-sm dark:border-white/10 dark:bg-white/4">
+              <div
+                role="tablist"
+                aria-label="Quick message template"
+                className="flex gap-1 p-1.5"
+              >
+                {manualPresets.map((preset) => {
+                  const selected = activeMessagePresetId === preset.id
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      className={cn(
+                        "min-w-0 flex-1 rounded-xl px-2 py-2.5 text-center text-[11px] font-semibold leading-tight tracking-tight transition-all",
+                        selected
+                          ? "bg-white text-brand-deep shadow-sm ring-1 ring-brand-deep/8 dark:bg-brand-deep-800 dark:text-brand-cream dark:ring-white/10"
+                          : "text-brand-accent/70 hover:bg-white/70 hover:text-brand-deep dark:text-brand-cream/50 dark:hover:bg-white/8 dark:hover:text-brand-cream"
+                      )}
+                      onClick={() => {
+                        setActiveMessagePresetId(preset.id)
+                        setMessageBody(preset.body)
+                      }}
+                    >
+                      {preset.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="mx-1.5 mb-1.5 mt-0 p-1.5">
+                <WhatsAppNotificationMessageInput
+                  value={messageBody}
+                  onChange={setMessageBody}
+                  previewVariableContext={kitchenWhatsAppPreviewContext}
+                  placeholder="Type a short update for the customer"
+                  minHeight={120}
+                  className="border-brand-deep/8 bg-white/95 dark:border-white/10 dark:bg-brand-deep-950/70"
+                />
+              </div>
+            </div>
+          </DrawerBody>
+          <DrawerFooter className="flex-row flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={closeMessageDrawer} disabled={kitchenAction.sendMessage.isPending}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendTicketMessage}
+              disabled={!messageBody.trim() || kitchenAction.sendMessage.isPending}
+            >
+              {kitchenAction.sendMessage.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <MessageSquare className="mr-2 h-4 w-4" />
+              )}
+              Send
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
       {/* Kitchen Board */}
       {showKitchen && (
         <GlassCard className="p-4 rounded-[1.8rem]">
@@ -1528,7 +1719,8 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                             key={ticket.id}
                             ticket={ticket}
                             onAdvance={handleAdvanceTicket}
-                            isPending={kitchenAction.isPending}
+                            onMessage={openMessageDrawer}
+                            isPending={kitchenAction.advance.isPending}
                           />
                         ))
                       )}

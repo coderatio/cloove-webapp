@@ -114,7 +114,7 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
                                         <div className={cn(
                                             "text-sm font-bold whitespace-nowrap",
                                             item.type === 'sale' || item.type === 'payment' || item.type === 'deposit'
-                                                ? "text-brand-green dark:text-brand-gold"
+                                                ? "text-brand-green dark:text-emerald-300"
                                                 : item.type === 'withdrawal' || item.type === 'debt'
                                                   ? "text-rose-600 dark:text-rose-400"
                                                   : "text-foreground"

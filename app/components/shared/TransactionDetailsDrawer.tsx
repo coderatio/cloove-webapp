@@ -15,6 +15,7 @@ import {
     Share2,
     FileText,
     Image as ImageIcon,
+    Ban,
 } from "lucide-react"
 import { toast } from "sonner"
 import { toPng } from "html-to-image"
@@ -45,6 +46,7 @@ import { VisuallyHidden } from "@/app/components/ui/visually-hidden"
 import { Badge } from "@/app/components/ui/badge"
 import { Skeleton } from "@/app/components/ui/skeleton"
 import type { FinanceTransactionRow } from "@/app/domains/finance/hooks/useFinance"
+import { getTransactionStatusLabel } from "@/app/domains/finance/lib/transaction_status_labels"
 
 export type TransactionDetailsTransaction = FinanceTransactionRow | (Omit<FinanceTransactionRow, 'amount' | 'storeId'> & { amount: string | number; amountNumeric?: number; storeId?: string | null })
 
@@ -60,31 +62,19 @@ export interface TransactionDetailsDrawerProps {
     onApproveManually?: () => void
 }
 
-const statusDisplay = (status: string) => {
-    switch (status) {
-        case "Cleared":
-            return "Completed successfully"
-        case "Failed":
-            return "Transaction failed"
-        case "Processing":
-            return "Processing payment"
-        case "Pending":
-        default:
-            return "Awaiting confirmation"
-    }
-}
-
 const verificationLabel = (status: string) => {
     switch (status) {
         case "Cleared":
-            return "Fully Verified"
+            return "Confirmed"
         case "Failed":
-            return "Declined"
+            return "Didn't go through"
         case "Processing":
-            return "In Progress"
+            return "Almost done"
+        case "Cancelled":
+            return "No longer active"
         case "Pending":
         default:
-            return "Awaiting"
+            return "Not confirmed yet"
     }
 }
 
@@ -102,6 +92,7 @@ export function TransactionDetailsDrawer({
     const tx = transaction
     const status = (tx?.status ?? "") as string
     const isPendingOrProcessing = status === "Pending" || status === "Processing"
+    const isCancelled = status === "Cancelled"
     const amountValue = tx ? (typeof tx.amount === "number" ? tx.amount : ((tx as any).amountNumeric ?? 0)) : 0
 
     const { activeBusiness } = useBusiness()
@@ -259,7 +250,8 @@ export function TransactionDetailsDrawer({
                                         "p-1.5 rounded-[2rem] border transition-all duration-500",
                                         status === "Cleared" && "bg-emerald-500/5 border-emerald-500/10",
                                         isPendingOrProcessing && "bg-amber-500/5 border-amber-500/10",
-                                        status === "Failed" && "bg-rose-500/5 border-rose-500/10"
+                                        status === "Failed" && "bg-rose-500/5 border-rose-500/10",
+                                        isCancelled && "bg-slate-500/5 border-slate-500/15 dark:bg-slate-400/5 dark:border-slate-400/15"
                                     )}
                                 >
                                     <div className="rounded-[1.5rem] bg-white dark:bg-brand-deep/40">
@@ -273,7 +265,9 @@ export function TransactionDetailsDrawer({
                                                     isPendingOrProcessing &&
                                                     "bg-amber-500 text-white shadow-amber-500/20",
                                                     status === "Failed" &&
-                                                    "bg-rose-500 text-white shadow-rose-500/20"
+                                                    "bg-rose-500 text-white shadow-rose-500/20",
+                                                    isCancelled &&
+                                                    "bg-slate-500 text-white shadow-slate-500/20 dark:bg-slate-600"
                                                 )}
                                             >
                                                 {status === "Cleared" && (
@@ -290,7 +284,10 @@ export function TransactionDetailsDrawer({
                                                 {status === "Failed" && (
                                                     <XCircle className="w-7 h-7" />
                                                 )}
-                                                {!status || (!["Cleared", "Pending", "Processing", "Failed"].includes(status)) && (
+                                                {isCancelled && (
+                                                    <Ban className="w-7 h-7" />
+                                                )}
+                                                {!status || (!["Cleared", "Pending", "Processing", "Failed", "Cancelled"].includes(status)) && (
                                                     <Clock className="w-7 h-7 opacity-70" />
                                                 )}
                                             </div>
@@ -299,7 +296,7 @@ export function TransactionDetailsDrawer({
                                                     Payment Status
                                                 </p>
                                                 <p className="font-bold text-xl text-brand-deep dark:text-brand-cream">
-                                                    {status || "—"}
+                                                    {getTransactionStatusLabel(status)}
                                                 </p>
                                             </div>
                                         </div>
@@ -417,7 +414,7 @@ export function TransactionDetailsDrawer({
                                                         {tx?.fullDate ?? tx?.date}
                                                     </p>
                                                     <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 mt-1">
-                                                        {tx?.dateLabel ?? tx?.date} • {statusDisplay(status)}
+                                                        {tx?.dateLabel ?? tx?.date} • {getTransactionStatusLabel(status)}
                                                     </p>
                                                 </div>
                                             </div>

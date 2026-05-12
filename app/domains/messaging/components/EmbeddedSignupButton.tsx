@@ -23,6 +23,7 @@ declare global {
 interface EmbeddedSignupRuntimeConfig {
   appId: string
   configId: string
+  embeddedEnabled?: boolean
   isConfigured: boolean
   error: string | null
 }
@@ -65,12 +66,6 @@ export function EmbeddedSignupButton({
           cache: "no-store",
         })
         const data = (await response.json()) as EmbeddedSignupRuntimeConfig
-        console.info(`${WA_SIGNUP_LOG_PREFIX} runtime config loaded`, {
-          appIdPresent: Boolean(data.appId),
-          configIdPresent: Boolean(data.configId),
-          isConfigured: data.isConfigured,
-          error: data.error,
-        })
         if (!cancelled) {
           setRuntimeConfig(data)
         }
@@ -98,9 +93,6 @@ export function EmbeddedSignupButton({
     if (!runtimeConfig?.appId) return
 
     window.fbAsyncInit = () => {
-      console.info(`${WA_SIGNUP_LOG_PREFIX} Meta SDK initialized`, {
-        appId: runtimeConfig.appId,
-      })
       window.FB?.init({
         appId: runtimeConfig.appId,
         autoLogAppEvents: true,
@@ -228,6 +220,7 @@ export function EmbeddedSignupButton({
     return () => window.clearTimeout(timeout)
   }, [authCode, sessionData?.phone_number_id, sessionData?.waba_id])
 
+  const isEmbeddedEnabled = runtimeConfig?.embeddedEnabled !== false
   const isConfigured = !!runtimeConfig?.isConfigured
 
   return (
@@ -286,7 +279,7 @@ export function EmbeddedSignupButton({
             }
           )
         }}
-        disabled={connectNumber.isPending || !activeBusiness?.id}
+        disabled={connectNumber.isPending || !activeBusiness?.id || !isEmbeddedEnabled}
         className={
           className ??
           "h-12 w-full rounded-full bg-brand-deep px-6 text-brand-gold-300 hover:bg-brand-deep/90 hover:text-brand-gold-200 dark:bg-brand-gold dark:text-white dark:hover:bg-brand-gold/90 sm:w-auto"
@@ -304,6 +297,11 @@ export function EmbeddedSignupButton({
           </>
         )}
       </Button>
+      {!isEmbeddedEnabled ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          Embedded Meta signup is disabled in configuration.
+        </p>
+      ) : null}
       {!isConfigured && runtimeConfig?.error ? (
         <p className="rounded-xl border border-red-200 bg-red-50/80 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
           {runtimeConfig.error}

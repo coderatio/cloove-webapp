@@ -2,13 +2,12 @@
 
 import * as React from 'react'
 import Image from "next/image"
-import { motion, AnimatePresence } from "framer-motion"
-import DataTable from '@/app/components/DataTable'
+import DataTable, { type Column } from '@/app/components/DataTable'
 import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight, Barcode } from 'lucide-react'
+import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight, Barcode, RefreshCw, PackageX, ListTree, Layers, ChevronRight as ChevronRightIcon } from 'lucide-react'
 import { cn } from '@/app/lib/utils'
 import {
     Select,
@@ -22,6 +21,9 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/app/components/ui/dropdown-menu"
@@ -29,6 +31,7 @@ import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
 import { InsightWhisper } from '@/app/components/dashboard/InsightWhisper'
 import { Skeleton } from '@/app/components/ui/skeleton'
 import { useBusiness } from '@/app/components/BusinessProvider'
+import { usePermission } from '@/app/hooks/usePermission'
 import { usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { useStores } from '@/app/domains/stores/providers/StoreProvider'
 import { Button } from '@/app/components/ui/button'
@@ -46,7 +49,7 @@ import {
 } from "@/app/components/ui/drawer"
 import { useInventory, type ProductFilterParams } from '../hooks/useInventory'
 import { useProductCategories } from '../hooks/useProductCategories'
-import { Product, InventoryItem, InventoryStats } from '../types'
+import { Product, InventoryItem, ProductVariant, StoreInventory } from '../types'
 import { Badge } from '@/app/components/ui/badge'
 import { useBarcodeGenerator, type BarcodeFormat } from '../hooks/useBarcodeGenerator'
 import { MoneyInput } from '@/app/components/ui/money-input'
@@ -59,8 +62,18 @@ import { BulkUploadDrawer } from './BulkUploadDrawer'
 import { ManageCategoriesDrawer } from './ManageCategoriesDrawer'
 import { ConfirmDialog } from '@/app/components/shared/ConfirmDialog'
 import { Markdown } from '@/app/components/ui/markdown'
+import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover"
 import { ProductViewDrawer } from './ProductViewDrawer'
 import { LabelPreviewDrawer } from './LabelPreviewDrawer'
+import {
+    VariantsAndOptionsSheet,
+    newVariantKey,
+    variantDisplayNameFromOptions,
+    type FormStoreInventoryLine,
+    type FormVariantOptionValue,
+    type FormVariantRow,
+    type FormProductOption,
+} from './VariantsAndOptionsSheet'
 
 const PER_PAGE = 10
 
@@ -68,74 +81,90 @@ const STATUS_FILTER_OPTIONS = [
     { label: "In Stock", value: "In Stock" },
     { label: "Low Stock", value: "Low Stock" },
 ] as const
-interface StoreStockMapping {
-    storeId: string
-    stockQuantity: number | string
+
+/** API pagination meta for product lists */
+interface ProductListMeta {
+    currentPage: number
+    totalPages: number
 }
 
-function StoreStockInputs({
-    storeIds,
-    stocks,
-    onChange
-}: {
-    storeIds: string[],
-    stocks: StoreStockMapping[],
-    onChange: (stocks: StoreStockMapping[]) => void
-}) {
-    const { stores } = useStores()
-    const selectedStores = stores.filter(s => storeIds.includes(s.id))
-
-    if (selectedStores.length <= 1) return null
-
-    return (
-        <div className="space-y-4 p-4 rounded-2xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 px-1">Stock per Store</label>
-            <div className="grid grid-cols-1 gap-3">
-                {selectedStores.map(store => {
-                    const found = stocks.find(s => s.storeId === store.id)
-                    const currentStock = found?.stockQuantity !== undefined ? found.stockQuantity : 0
-                    return (
-                        <div key={store.id} className="flex items-center justify-between gap-4">
-                            <span className="text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 truncate max-w-[150px]">{store.name}</span>
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                value={currentStock}
-                                onChange={(e) => {
-                                    const rawValue = e.target.value.replace(/[^0-9]/g, '')
-                                    const val = rawValue === '' ? '' : parseInt(rawValue)
-
-                                    let newStocks: StoreStockMapping[]
-                                    const exists = stocks.some(s => s.storeId === store.id)
-
-                                    if (exists) {
-                                        newStocks = stocks.map(s =>
-                                            s.storeId === store.id ? { ...s, stockQuantity: val } : s
-                                        )
-                                    } else {
-                                        newStocks = [...stocks, { storeId: store.id, stockQuantity: val }]
-                                    }
-
-                                    onChange(newStocks)
-                                }}
-                                className="w-24 px-4 py-2 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 text-xs focus:outline-none focus:ring-2 focus:ring-brand-green/20"
-                            />
-                        </div>
-                    )
-                })}
-            </div>
-        </div>
-    )
+interface ProductFormState {
+    product: string
+    description: string
+    price: string
+    categoryId: string
+    costPrice: string
+    barcode: string
+    unit: string
+    isActive: boolean
+    catalogSyncEnabled: boolean
+    reorderLevel: string
+    imageUrls: string[]
+    storeIds: string[]
+    variants: FormVariantRow[]
+    productOptions: FormProductOption[]
 }
+
+function serializeProductOptions(options: FormProductOption[]): FormProductOption[] | undefined {
+    const cleaned = options
+        .map((opt, idx) => ({
+            name: (opt.name || '').trim(),
+            position: opt.position ?? idx + 1,
+            values: Array.from(
+                new Set((opt.values || []).map((v) => v.trim()).filter((v) => v.length > 0))
+            ),
+        }))
+        .filter((opt) => opt.name.length > 0)
+    return cleaned.length > 0 ? cleaned : undefined
+}
+
+function serializeVariantOptionValues(values: FormVariantOptionValue[]): FormVariantOptionValue[] {
+    return values
+        .map((entry) => ({
+            name: (entry.name || '').trim(),
+            value: (entry.value || '').trim(),
+        }))
+        .filter((entry) => entry.name.length > 0 && entry.value.length > 0)
+}
+
+/** Legacy/snake_case inventory rows from some API payloads */
+type LegacyInventoryRow = Partial<Pick<StoreInventory, 'storeId' | 'stockQuantity'>> & {
+    store_id?: string
+    stock_quantity?: number
+    store?: StoreInventory['store']
+    store_name?: string
+}
+
+function variantInventoryRows(v: ProductVariant): LegacyInventoryRow[] {
+    const ext = v as ProductVariant & { variant_inventories?: LegacyInventoryRow[] }
+    if (v.inventories?.length) return v.inventories
+    return ext.variant_inventories ?? []
+}
+
+function legacyInvStoreId(inv: LegacyInventoryRow): string {
+    return inv.storeId ?? inv.store_id ?? ''
+}
+
+function legacyInvStock(inv: LegacyInventoryRow): number {
+    return Number(inv.stockQuantity ?? inv.stock_quantity ?? 0)
+}
+
+function legacyInvStoreName(inv: LegacyInventoryRow): string {
+    return inv.store?.name ?? inv.store_name ?? 'Store'
+}
+
+/** DataTable row includes phantom `actions` column key */
+type InventoryTableRow = InventoryItem & { actions?: undefined }
 
 export function InventoryView() {
     const isMobile = useIsMobile()
     const { currency, activeBusiness } = useBusiness()
+    const { can } = usePermission()
+    const canManageProducts = can('MANAGE_PRODUCTS')
     const pageCopy = usePresetPageCopy()
     const iui = pageCopy.inventoryUi
     const currencyCode = activeBusiness?.currency || 'NGN'
-    const { stores, currentStore } = useStores()
+    const { stores } = useStores()
     const [selectedStoreId, setSelectedStoreId] = React.useState<string>('all-stores')
     const [currentPage, setCurrentPage] = React.useState(1)
     const pageSize = PER_PAGE
@@ -151,7 +180,7 @@ export function InventoryView() {
     const [isLabelDrawerOpen, setIsLabelDrawerOpen] = React.useState(false)
     const [labelDrawerProducts, setLabelDrawerProducts] = React.useState<InventoryItem[]>([])
     const { autoGenerateBarcode } = useBarcodeGenerator()
-    const [barcodeFormat, setBarcodeFormat] = React.useState<BarcodeFormat>('CODE128')
+    const [barcodeFormat] = React.useState<BarcodeFormat>('CODE128')
 
     const serverFilters = React.useMemo<ProductFilterParams>(() => {
         const status = selectedFilters.filter((f) =>
@@ -180,7 +209,7 @@ export function InventoryView() {
         setCurrentPage(1)
     }, [selectedStoreId, deferredSearch, filterSortKey])
 
-    const { products, meta, summary, isLoading, isFetching, createProduct, updateProduct, deleteProduct } = useInventory(
+    const { products, meta, summary, isFetching, createProduct, updateProduct, deleteProduct, syncProductCatalog, syncingCatalogState, removeProductFromCatalog, removingFromCatalogState } = useInventory(
         selectedStoreId !== 'all-stores' ? selectedStoreId : undefined,
         currentPage,
         pageSize,
@@ -196,30 +225,39 @@ export function InventoryView() {
     const [isAddDrawerOpen, setIsAddDrawerOpen] = React.useState(false)
     const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false)
     const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = React.useState(false)
-    const [editingItem, setEditingItem] = React.useState<any>(null)
-    const [viewItem, setViewItem] = React.useState<any>(null)
+    const [editingItem, setEditingItem] = React.useState<InventoryItem | null>(null)
+    const [viewItem, setViewItem] = React.useState<InventoryItem | null>(null)
     const [isViewDrawerOpen, setIsViewDrawerOpen] = React.useState(false)
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
-    const [itemToDelete, setItemToDelete] = React.useState<any>(null)
+    const [itemToDelete, setItemToDelete] = React.useState<InventoryItem | null>(null)
+    const [catalogRemoveConfirm, setCatalogRemoveConfirm] = React.useState<null | {
+        item: InventoryItem
+        scope: 'whitelabel' | 'global'
+    }>(null)
 
-    const INITIAL_FORM_STATE = {
+    const INITIAL_FORM_STATE: ProductFormState = {
         product: '',
         description: '',
         price: '',
-        categoryId: '' as string,
-        costPrice: '' as string,
-        barcode: '' as string,
-        unit: '' as string,
-        isActive: true as boolean,
-        reorderLevel: '' as string,
-        imageUrls: [] as string[],
-        storeIds: [] as string[],
-        variants: [] as any[]
+        categoryId: '',
+        costPrice: '',
+        barcode: '',
+        unit: '',
+        isActive: true,
+        catalogSyncEnabled: true,
+        reorderLevel: '',
+        imageUrls: [],
+        storeIds: [],
+        variants: [],
+        productOptions: [],
     }
 
     // Form states
-    const [formData, setFormData] = React.useState(INITIAL_FORM_STATE)
+    const [formData, setFormData] = React.useState<ProductFormState>(INITIAL_FORM_STATE)
+    const [isVariantsSheetOpen, setIsVariantsSheetOpen] = React.useState(false)
+
+    const pageMeta = meta as ProductListMeta | undefined
 
     // Map backend products to view-friendly inventory items
     const inventory = React.useMemo(() => {
@@ -228,17 +266,16 @@ export function InventoryView() {
         return products.map((p: Product) => {
             let globalStock = 0
             let localStock = 0
-            const variants = p.variants || (p as any).product_variants || []
+            const variants = p.variants ?? p.product_variants ?? []
             const storeBreakdown: Record<string, number> = {}
 
             const perStoreStock: Record<string, number> = {}
 
-            variants.forEach((v: any) => {
-                const inventories = v.inventories || (v as any).variant_inventories || []
-                inventories.forEach((inv: any) => {
-                    const invStoreId = inv.storeId || (inv as any).store_id
-                    const storeName = inv.store?.name || (inv as any).store_name || 'Store'
-                    const stockQuantity = Number(inv.stockQuantity !== undefined ? inv.stockQuantity : (inv as any).stock_quantity || 0)
+            variants.forEach((v) => {
+                variantInventoryRows(v).forEach((inv) => {
+                    const invStoreId = legacyInvStoreId(inv)
+                    const storeName = legacyInvStoreName(inv)
+                    const stockQuantity = legacyInvStock(inv)
 
                     globalStock += stockQuantity
                     perStoreStock[invStoreId] = (perStoreStock[invStoreId] || 0) + stockQuantity
@@ -254,7 +291,7 @@ export function InventoryView() {
             })
 
             const threshold = summary?.lowStockThreshold || 5
-            const assignedStores: { id: string }[] = (p as any).stores || []
+            const assignedStores = p.stores ?? []
             let status: string
 
             if (selectedStoreId === 'all-stores') {
@@ -273,6 +310,8 @@ export function InventoryView() {
                 }
             }
 
+            const primaryImage = p.images?.find((img) => img.isPrimary)?.url ?? p.images?.[0]?.url
+
             return {
                 id: p.id,
                 product: p.name,
@@ -282,38 +321,50 @@ export function InventoryView() {
                 price: formatCurrency(p.basePrice || 0, { currency: currencyCode }),
                 numericPrice: p.basePrice || 0,
                 variantsCount: variants.length,
-                availableIn: assignedStores.map((s: any) => s.name),
+                availableIn: assignedStores.map((s) => s.name),
                 status,
-                category: (p as any).category?.name ?? (p as any).category ?? 'General',
-                image: (p as any).images?.find((img: any) => img.isPrimary)?.url || (p as any).images?.[0]?.url,
+                category: p.category?.name ?? 'General',
+                image: primaryImage,
+                catalogSync: p.catalogSync || null,
+                catalogEligibility: p.catalogEligibility || null,
                 raw: p
             }
         })
-    }, [products, currentStore, currencyCode, selectedStoreId, summary?.lowStockThreshold])
+    }, [products, currencyCode, selectedStoreId, summary?.lowStockThreshold])
 
-    const filterGroups = [
-        {
-            key: 'storeId',
-            title: 'Stores',
-            options: storeFilterOptions as { label: string; value: string }[]
-        },
-        {
-            key: 'status',
-            title: 'Status',
-            options: [...STATUS_FILTER_OPTIONS]
-        },
-        {
-            key: 'categoryId',
-            title: 'Category',
-            options: categoryOptions
-        }
-    ]
+    const filterGroups = React.useMemo(
+        () => [
+            {
+                key: 'storeId' as const,
+                title: 'Stores',
+                options: storeFilterOptions as { label: string; value: string }[]
+            },
+            {
+                key: 'status' as const,
+                title: 'Status',
+                options: [...STATUS_FILTER_OPTIONS]
+            },
+            {
+                key: 'categoryId' as const,
+                title: 'Category',
+                options: categoryOptions
+            }
+        ],
+        [storeFilterOptions, categoryOptions]
+    )
 
     // Aggregated stats from backend summary
     const lowStockItems = summary?.lowStockItems || 0
     const totalInventoryValue = summary?.totalValue || 0
     const totalProducts = summary?.totalProducts || 0
     const totalStockUnits = summary?.totalStockUnits || 0
+    const catalogPendingWhitelabel = summary?.catalogPendingWhitelabel ?? 0
+    const catalogPendingGlobal = summary?.catalogPendingGlobal ?? 0
+    const catalogPendingTotal = catalogPendingWhitelabel + catalogPendingGlobal
+    const catalogListedUnique = summary?.catalogListedProductsUnique ?? 0
+    const catalogListedWl = summary?.catalogListedProductsWhitelabel ?? 0
+    const catalogListedGl = summary?.catalogListedProductsGlobal ?? 0
+    const showCatalogPendingCard = summary?.showCatalogPendingCard === true
 
     const filteredInventory = React.useMemo(() => {
         if (activeBusiness?.id) return inventory
@@ -335,8 +386,14 @@ export function InventoryView() {
 
     const displayItems = activeBusiness?.id ? inventory : filteredInventory
 
-    const prepareFormData = (item: any) => {
+    const prepareFormData = (item: InventoryItem): ProductFormState => {
         const raw = item.raw
+        const variantsSource = raw.variants ?? raw.product_variants ?? []
+        const productOptions: FormProductOption[] = (raw.productOptions ?? []).map((opt, idx) => ({
+            name: opt.name,
+            position: opt.position ?? idx + 1,
+            values: Array.from(new Set((opt.values ?? []).filter(Boolean))),
+        }))
         return {
             product: item.product,
             description: raw.description || '',
@@ -346,23 +403,82 @@ export function InventoryView() {
             barcode: raw.barcode ?? '',
             unit: raw.unit ?? '',
             isActive: raw.isActive !== false,
+            catalogSyncEnabled: raw.catalogSyncEnabled !== false,
             reorderLevel: raw.reorderLevel != null ? String(raw.reorderLevel) : '',
-            imageUrls: raw.images?.map((img: any) => img.url) || [],
-            storeIds: raw.stores?.map((s: any) => s.id) || [],
-            variants: raw?.variants?.map((v: any) => ({
+            imageUrls: raw.images?.map((img) => img.url) || [],
+            storeIds: raw.stores?.map((s) => s.id) || [],
+            productOptions,
+            variants: variantsSource.map((v): FormVariantRow => ({
+                _key: v.id || newVariantKey(),
                 id: v.id,
                 name: v.name || 'Standard',
                 sku: v.sku || '',
                 barcode: v.barcode || '',
                 price: v.price != null ? v.price.toString() : item.numericPrice.toString(),
-                stockQuantity: v.inventories?.reduce((sum: number, inv: any) => sum + (Number(inv.stockQuantity) || 0), 0) || 0,
-                storeInventory: v.inventories?.map((inv: any) => ({
+                stockQuantity:
+                    v.inventories?.reduce((sum, inv) => sum + (Number(inv.stockQuantity) || 0), 0) || 0,
+                storeInventory: v.inventories?.map((inv) => ({
                     storeId: inv.storeId,
-                    stockQuantity: inv.stockQuantity
-                })) || []
-            })) || [{ name: 'Standard', sku: '', barcode: '', price: item.numericPrice.toString(), stockQuantity: 0, storeInventory: [] }]
+                    stockQuantity: inv.stockQuantity,
+                })) || [],
+                optionValues: (v.optionValues ?? []).map((entry) => ({
+                    name: entry.name,
+                    value: entry.value,
+                })),
+            })) || [{
+                _key: newVariantKey(),
+                name: 'Standard',
+                sku: '',
+                barcode: '',
+                price: item.numericPrice.toString(),
+                stockQuantity: 0,
+                storeInventory: [],
+                optionValues: [],
+            }]
         }
     }
+
+    const productSyncEligibility = React.useCallback((item: InventoryItem) => {
+        const serverEligibility = item.catalogEligibility
+        if (serverEligibility && !serverEligibility.available) {
+            return { canSync: false, hint: serverEligibility.message || 'This product is not eligible for catalog sync.' }
+        }
+
+        const raw = item.raw
+        const variants = raw.variants ?? raw.product_variants ?? []
+        const hasImage = Boolean(item.image)
+        const isActive = raw.isActive !== false
+        const hasPrice = Number(item.numericPrice || 0) > 0 || variants.some((v) => Number(v?.price || 0) > 0)
+        const hasStock = Number(item.stock || 0) > 0
+
+        if (!isActive) return { canSync: false, hint: 'Only active products can be synced.' }
+        if (!hasImage) return { canSync: false, hint: 'Add a product image before syncing to catalog.' }
+        if (!hasPrice) return { canSync: false, hint: 'Set a valid product or variant price before syncing.' }
+        if (!hasStock) return { canSync: false, hint: 'Product must be in stock before syncing.' }
+        return { canSync: true, hint: null as string | null }
+    }, [])
+
+    const catalogScopeHasSyncedItems = React.useCallback((item: InventoryItem, scope: 'whitelabel' | 'global') => {
+        const sync = item.catalogSync
+        const n = scope === 'whitelabel' ? sync?.whitelabel?.syncedItems ?? 0 : sync?.global?.syncedItems ?? 0
+        return n > 0
+    }, [])
+
+    const productHasAnySyncedCatalogItems = React.useCallback(
+        (item: InventoryItem) =>
+            catalogScopeHasSyncedItems(item, 'whitelabel') || catalogScopeHasSyncedItems(item, 'global'),
+        [catalogScopeHasSyncedItems]
+    )
+
+    /** Match Catalog column: ineligible products (N/A) must not get removal actions. */
+    const productCanRemoveFromCatalog = React.useCallback(
+        (item: InventoryItem) => {
+            const el = item.catalogEligibility
+            if (el && !el.available) return false
+            return productHasAnySyncedCatalogItems(item)
+        },
+        [productHasAnySyncedCatalogItems]
+    )
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -377,20 +493,27 @@ export function InventoryView() {
                 barcode: formData.barcode || undefined,
                 unit: formData.unit || undefined,
                 isActive: formData.isActive,
+                catalogSyncEnabled: formData.catalogSyncEnabled,
                 reorderLevel: formData.reorderLevel ? parseInt(formData.reorderLevel, 10) : undefined,
                 imageUrls: formData.imageUrls,
                 storeIds: formData.storeIds,
+                productOptions: serializeProductOptions(formData.productOptions),
                 variants: formData.variants.map(v => {
+                    const { _key: _omit, ...rest } = v
                     // Final sum check before submission
                     const total = (v.storeInventory || [])
-                        .filter((s: any) => formData.storeIds.includes(s.storeId))
-                        .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+                        .filter((s: FormStoreInventoryLine) => formData.storeIds.includes(s.storeId))
+                        .reduce((sum: number, s: FormStoreInventoryLine) => sum + (Number(s.stockQuantity) || 0), 0)
 
+                    const cleanOptionValues = serializeVariantOptionValues(v.optionValues)
+                    const derivedName = variantDisplayNameFromOptions(cleanOptionValues)
                     return {
-                        ...v,
+                        ...rest,
+                        name: derivedName || v.name,
                         price: parseFloat(v.price) || 0,
                         stockQuantity: formData.storeIds.length > 1 ? total : (Number(v.stockQuantity) || 0),
-                        storeInventory: v.storeInventory?.map((s: any) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 }))
+                        storeInventory: v.storeInventory?.map((s: FormStoreInventoryLine) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 })),
+                        optionValues: cleanOptionValues,
                     }
                 })
             })
@@ -419,20 +542,27 @@ export function InventoryView() {
                     barcode: formData.barcode || undefined,
                     unit: formData.unit || undefined,
                     isActive: formData.isActive,
+                    catalogSyncEnabled: formData.catalogSyncEnabled,
                     reorderLevel: formData.reorderLevel ? parseInt(formData.reorderLevel, 10) : null,
                     imageUrls: formData.imageUrls,
                     storeIds: formData.storeIds,
+                    productOptions: serializeProductOptions(formData.productOptions),
                     variants: formData.variants.map(v => {
+                        const { _key: _omit, ...rest } = v
                         // Final sum check before submission
                         const total = (v.storeInventory || [])
-                            .filter((s: any) => formData.storeIds.includes(s.storeId))
-                            .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+                            .filter((s: FormStoreInventoryLine) => formData.storeIds.includes(s.storeId))
+                            .reduce((sum: number, s: FormStoreInventoryLine) => sum + (Number(s.stockQuantity) || 0), 0)
 
+                        const cleanOptionValues = serializeVariantOptionValues(v.optionValues)
+                        const derivedName = variantDisplayNameFromOptions(cleanOptionValues)
                         return {
-                            ...v,
+                            ...rest,
+                            name: derivedName || v.name,
                             price: parseFloat(v.price) || 0,
                             stockQuantity: formData.storeIds.length > 1 ? total : (Number(v.stockQuantity) || 0),
-                            storeInventory: v.storeInventory?.map((s: any) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 }))
+                            storeInventory: v.storeInventory?.map((s: FormStoreInventoryLine) => ({ ...s, stockQuantity: Number(s.stockQuantity) || 0 })),
+                            optionValues: cleanOptionValues,
                         }
                     })
                 }
@@ -459,13 +589,13 @@ export function InventoryView() {
         }
     }
 
-    const columns: any[] = [
+    const columns: Column<InventoryTableRow>[] = [
         {
             key: 'product',
             header: 'Product',
             width: 'auto',
             cellClassName: 'whitespace-normal',
-            render: (val: string, item: any) => (
+            render: (val: string, item: InventoryTableRow) => (
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5 flex items-center justify-center overflow-hidden shrink-0 relative">
                         {item.image ? (
@@ -500,7 +630,7 @@ export function InventoryView() {
             key: 'stock',
             header: 'Stock',
             width: '110px',
-            render: (value: number, item: any) => {
+            render: (value: number, item: InventoryTableRow) => {
                 const isAllStores = selectedStoreId === 'all-stores'
 
                 return (
@@ -546,6 +676,35 @@ export function InventoryView() {
             )
         },
         {
+            key: 'catalogSync',
+            header: 'Catalog',
+            width: '180px',
+            cellClassName: 'whitespace-normal',
+            render: (_sync: Product['catalogSync'], item: InventoryTableRow) => {
+                const eligibility = item.catalogEligibility
+                if (eligibility && !eligibility.available) {
+                    return (
+                        <Badge variant="secondary" className="uppercase">
+                            N/A
+                        </Badge>
+                    )
+                }
+                const sync = item.catalogSync
+                const whiteLabelSynced = Boolean(sync?.whitelabel?.hasItems)
+                const globalSynced = Boolean(sync?.global?.hasItems)
+                return (
+                    <div className="flex flex-wrap gap-1">
+                        <Badge variant={whiteLabelSynced ? 'success' : 'secondary'} className="uppercase">
+                            WL {whiteLabelSynced ? 'Synced' : 'Not Synced'}
+                        </Badge>
+                        <Badge variant={globalSynced ? 'success' : 'secondary'} className="uppercase">
+                            Global {globalSynced ? 'Synced' : 'Not Synced'}
+                        </Badge>
+                    </div>
+                )
+            }
+        },
+        {
             key: 'status',
             header: 'Status',
             width: '100px',
@@ -559,10 +718,10 @@ export function InventoryView() {
             )
         },
         {
-            key: 'actions' as any,
+            key: 'actions',
             header: '',
             width: '50px',
-            render: (_: any, item: any) => (
+            render: (_: unknown, item: InventoryTableRow) => (
                 <div className="flex justify-end">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -609,7 +768,7 @@ export function InventoryView() {
                                     const duplicated = {
                                         ...data,
                                         product: `${data.product} (Copy)`,
-                                        variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '', barcode: '' }))
+                                        variants: data.variants.map((v) => ({ ...v, _key: newVariantKey(), id: undefined, sku: '', barcode: '' }))
                                     }
                                     setFormData(duplicated)
                                     setIsAddDrawerOpen(true)
@@ -620,6 +779,87 @@ export function InventoryView() {
                                 Duplicate
                             </DropdownMenuItem>
                             <DropdownMenuSeparator className="my-1 bg-brand-deep/5 dark:bg-white/5" />
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger
+                                    disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
+                                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream data-[state=open]:bg-brand-deep/10 dark:data-[state=open]:bg-white/10 data-[state=open]:text-brand-deep dark:data-[state=open]:text-brand-cream"
+                                >
+                                    <Loader2 className={cn(
+                                        "w-4 h-4",
+                                        syncingCatalogState.productId === item.id && "animate-spin"
+                                    )} />
+                                    {syncingCatalogState.productId === item.id ? 'Syncing...' : 'Sync Catalog'}
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent
+                                    alignOffset={-8}
+                                    className="w-56 rounded-2xl p-2 bg-white/95 dark:bg-brand-deep-800 border-brand-deep/5 dark:border-white/5 shadow-2xl"
+                                >
+                                    <DropdownMenuItem
+                                        onClick={async () => {
+                                            const check = productSyncEligibility(item)
+                                            if (!check.canSync) return
+                                            await syncProductCatalog({ id: item.id, scope: 'whitelabel', productName: item.product })
+                                        }}
+                                        disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
+                                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium cursor-pointer"
+                                    >
+                                        <Loader2 className={cn("w-4 h-4", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' && "animate-spin")} />
+                                        {syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' ? 'Syncing White-label...' : 'Sync White-label'}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={async () => {
+                                            const check = productSyncEligibility(item)
+                                            if (!check.canSync) return
+                                            await syncProductCatalog({ id: item.id, scope: 'global', productName: item.product })
+                                        }}
+                                        disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
+                                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium cursor-pointer"
+                                    >
+                                        <Loader2 className={cn("w-4 h-4", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' && "animate-spin")} />
+                                        {syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' ? 'Syncing Global...' : 'Sync Global'}
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            {canManageProducts && productCanRemoveFromCatalog(item) ? (
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger
+                                        disabled={removingFromCatalogState.productId === item.id}
+                                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream data-[state=open]:bg-brand-deep/10 dark:data-[state=open]:bg-white/10 data-[state=open]:text-brand-deep dark:data-[state=open]:text-brand-cream"
+                                    >
+                                        {removingFromCatalogState.productId === item.id ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <PackageX className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/40" />
+                                        )}
+                                        Remove from catalog
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent
+                                        alignOffset={-8}
+                                        className="w-56 rounded-2xl p-2 bg-white/95 dark:bg-brand-deep-800 border-brand-deep/5 dark:border-white/5 shadow-2xl"
+                                    >
+                                        <DropdownMenuItem
+                                            onClick={() => setCatalogRemoveConfirm({ item, scope: 'whitelabel' })}
+                                            disabled={
+                                                !catalogScopeHasSyncedItems(item, 'whitelabel') ||
+                                                removingFromCatalogState.productId === item.id
+                                            }
+                                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium cursor-pointer"
+                                        >
+                                            White-label
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setCatalogRemoveConfirm({ item, scope: 'global' })}
+                                            disabled={
+                                                !catalogScopeHasSyncedItems(item, 'global') ||
+                                                removingFromCatalogState.productId === item.id
+                                            }
+                                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium cursor-pointer"
+                                        >
+                                            Global
+                                        </DropdownMenuItem>
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                            ) : null}
                             <DropdownMenuItem
                                 onClick={() => {
                                     setItemToDelete(item)
@@ -635,7 +875,7 @@ export function InventoryView() {
                 </div >
             )
         },
-    ]
+    ] as unknown as Column<InventoryTableRow>[]
 
     const intelligenceWhisper =
         lowStockItems > 0 ? iui.whisperLowStock(lowStockItems) : iui.whisperHealthy
@@ -676,7 +916,7 @@ export function InventoryView() {
                         setFormData({
                             ...INITIAL_FORM_STATE,
                             storeIds: defaultStore ? [defaultStore.id] : [],
-                            variants: [{ name: 'Standard', sku: '', price: '', stockQuantity: 0, storeInventory: [] }]
+                            variants: [{ _key: newVariantKey(), name: 'Standard', sku: '', barcode: '', price: '', stockQuantity: 0, storeInventory: [], optionValues: [] }]
                         })
                         setIsAddDrawerOpen(true)
                     }}
@@ -696,7 +936,12 @@ export function InventoryView() {
                 ) : null}
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div
+                    className={cn(
+                        "grid grid-cols-1 md:grid-cols-2 gap-4",
+                        showCatalogPendingCard ? "xl:grid-cols-4" : "xl:grid-cols-3"
+                    )}
+                >
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Package className="w-24 h-24 dark:text-brand-cream/10" />
@@ -737,6 +982,99 @@ export function InventoryView() {
                             </p>}
                         </div>
                     </GlassCard>
+
+                    {showCatalogPendingCard ? (
+                        <GlassCard
+                            className={cn(
+                                "p-5 flex items-center gap-4 relative overflow-hidden group",
+                                catalogPendingTotal > 0
+                                    ? "border-brand-green/20 dark:border-emerald-500/25"
+                                    : "border-brand-deep/8 dark:border-white/8"
+                            )}
+                        >
+                            <div className="absolute right-0 top-0 p-3 opacity-[0.06] group-hover:opacity-[0.1] transition-opacity pointer-events-none">
+                                <ListTree className="w-24 h-24 text-brand-green dark:text-emerald-400/30" />
+                            </div>
+                            <div
+                                className={cn(
+                                    "relative z-1 h-12 w-12 shrink-0 rounded-full flex items-center justify-center",
+                                    catalogPendingTotal > 0
+                                        ? "bg-brand-green/12 dark:bg-emerald-500/15 text-brand-green dark:text-emerald-300"
+                                        : "bg-brand-accent/10 dark:bg-white/5 text-brand-deep dark:text-brand-cream"
+                                )}
+                            >
+                                {isFetching ? (
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                ) : (
+                                    <RefreshCw className="h-6 w-6" />
+                                )}
+                            </div>
+                            <div className="relative z-1 flex-1 min-w-0">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute -top-1 right-0 h-9 w-9 rounded-full text-brand-deep/45 hover:text-brand-green hover:bg-brand-green/10 dark:text-brand-cream/45 dark:hover:bg-white/10 dark:hover:text-brand-gold"
+                                            aria-label={`${iui.stats.catalogListedBreakdown}${catalogPendingTotal > 0 ? ` · ${iui.stats.catalogPendingBreakdown}` : ''}`}
+                                        >
+                                            <ListTree className="h-4 w-4" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent align="end" sideOffset={8} className="w-80 p-0 overflow-hidden rounded-2xl">
+                                        <div className="px-4 py-3 border-b border-brand-deep/5 dark:border-white/10 bg-brand-deep/2 dark:bg-white/3">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/45 dark:text-brand-cream/45">
+                                                {iui.stats.catalogListedBreakdown}
+                                            </p>
+                                        </div>
+                                        <div className="p-4 space-y-4">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingWhitelabel}</span>
+                                                <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogListedWl}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingGlobal}</span>
+                                                <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogListedGl}</span>
+                                            </div>
+                                            {catalogPendingTotal > 0 ? (
+                                                <div className="border-t border-brand-deep/8 dark:border-white/10 pt-4 space-y-3">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/45 dark:text-brand-cream/45">
+                                                        {iui.stats.catalogPendingBreakdown}
+                                                    </p>
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingWhitelabel}</span>
+                                                        <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogPendingWhitelabel}</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between gap-4">
+                                                        <span className="text-sm font-medium text-brand-deep/75 dark:text-brand-cream/80">{iui.stats.catalogPendingGlobal}</span>
+                                                        <span className="text-xl font-semibold tabular-nums text-brand-deep dark:text-brand-cream">{catalogPendingGlobal}</span>
+                                                    </div>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent/50 dark:text-brand-cream/55 pr-11">
+                                    {iui.stats.catalogSyncTitle}
+                                </p>
+                                {isFetching ? (
+                                    <Skeleton className="h-9 w-14 mt-2" />
+                                ) : (
+                                    <>
+                                        <p className="mt-2 text-3xl font-serif font-medium text-brand-deep dark:text-brand-cream tabular-nums leading-none">
+                                            {catalogListedUnique}
+                                        </p>
+                                        {catalogPendingTotal > 0 ? (
+                                            <p className="mt-2 text-xs leading-relaxed text-brand-accent/50 dark:text-brand-cream/45 max-w-60">
+                                                {iui.stats.catalogSyncPendingHint}
+                                            </p>
+                                        ) : null}
+                                    </>
+                                )}
+                            </div>
+                        </GlassCard>
+                    ) : null}
                 </div>
 
                 {/* Main Content */}
@@ -838,7 +1176,7 @@ export function InventoryView() {
                                                             const duplicated = {
                                                                 ...data,
                                                                 product: `${data.product} (Copy)`,
-                                                                variants: data.variants.map((v: any) => ({ ...v, id: undefined, sku: '', barcode: '' }))
+                                                                variants: data.variants.map((v) => ({ ...v, _key: newVariantKey(), id: undefined, sku: '', barcode: '' }))
                                                             }
                                                             setFormData(duplicated)
                                                             setIsAddDrawerOpen(true)
@@ -849,6 +1187,95 @@ export function InventoryView() {
                                                         Duplicate
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1 bg-brand-deep/5 dark:bg-white/5" />
+                                                    <DropdownMenuSub>
+                                                        <DropdownMenuSubTrigger
+                                                            disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
+                                                            className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream data-[state=open]:bg-brand-deep/10 dark:data-[state=open]:bg-white/10 data-[state=open]:text-brand-deep dark:data-[state=open]:text-brand-cream transition-colors"
+                                                        >
+                                                            <Loader2 className={cn(
+                                                                "w-4 h-4 text-brand-green dark:text-brand-gold",
+                                                                syncingCatalogState.productId === item.id && "animate-spin"
+                                                            )} />
+                                                            {syncingCatalogState.productId === item.id ? 'Syncing...' : 'Sync Catalog'}
+                                                        </DropdownMenuSubTrigger>
+                                                        <DropdownMenuSubContent
+                                                            alignOffset={-8}
+                                                            className="w-56 rounded-2xl p-2 bg-white/95 dark:bg-brand-deep-800 border border-brand-deep/5 dark:border-white/5 shadow-2xl"
+                                                        >
+                                                            <DropdownMenuItem
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation()
+                                                                    const check = productSyncEligibility(item)
+                                                                    if (!check.canSync) return
+                                                                    await syncProductCatalog({ id: item.id, scope: 'whitelabel', productName: item.product })
+                                                                }}
+                                                                disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
+                                                                className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors"
+                                                            >
+                                                                <Loader2 className={cn("w-4 h-4 text-brand-green dark:text-brand-gold", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' && "animate-spin")} />
+                                                                {syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' ? 'Syncing White-label...' : 'Sync White-label'}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={async (e) => {
+                                                                    e.stopPropagation()
+                                                                    const check = productSyncEligibility(item)
+                                                                    if (!check.canSync) return
+                                                                    await syncProductCatalog({ id: item.id, scope: 'global', productName: item.product })
+                                                                }}
+                                                                disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
+                                                                className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors"
+                                                            >
+                                                                <Loader2 className={cn("w-4 h-4 text-brand-green dark:text-brand-gold", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' && "animate-spin")} />
+                                                                {syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' ? 'Syncing Global...' : 'Sync Global'}
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuSubContent>
+                                                    </DropdownMenuSub>
+                                                    {canManageProducts && productCanRemoveFromCatalog(item) ? (
+                                                        <DropdownMenuSub>
+                                                            <DropdownMenuSubTrigger
+                                                                disabled={removingFromCatalogState.productId === item.id}
+                                                                className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream data-[state=open]:bg-brand-deep/10 dark:data-[state=open]:bg-white/10 data-[state=open]:text-brand-deep dark:data-[state=open]:text-brand-cream transition-colors"
+                                                            >
+                                                                {removingFromCatalogState.productId === item.id ? (
+                                                                    <Loader2 className="w-4 h-4 animate-spin text-brand-green dark:text-brand-gold" />
+                                                                ) : (
+                                                                    <PackageX className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                                )}
+                                                                Remove from catalog
+                                                            </DropdownMenuSubTrigger>
+                                                            <DropdownMenuSubContent
+                                                                alignOffset={-8}
+                                                                className="w-56 rounded-2xl p-2 bg-white/95 dark:bg-brand-deep-800 border border-brand-deep/5 dark:border-white/5 shadow-2xl"
+                                                            >
+                                                                <DropdownMenuItem
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        setCatalogRemoveConfirm({ item, scope: 'whitelabel' })
+                                                                    }}
+                                                                    disabled={
+                                                                        !catalogScopeHasSyncedItems(item, 'whitelabel') ||
+                                                                        removingFromCatalogState.productId === item.id
+                                                                    }
+                                                                    className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors"
+                                                                >
+                                                                    White-label
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        setCatalogRemoveConfirm({ item, scope: 'global' })
+                                                                    }}
+                                                                    disabled={
+                                                                        !catalogScopeHasSyncedItems(item, 'global') ||
+                                                                        removingFromCatalogState.productId === item.id
+                                                                    }
+                                                                    className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors"
+                                                                >
+                                                                    Global
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuSubContent>
+                                                        </DropdownMenuSub>
+                                                    ) : null}
                                                     <DropdownMenuItem
                                                         onClick={(e) => {
                                                             e.stopPropagation()
@@ -874,20 +1301,20 @@ export function InventoryView() {
                             ) : null}
 
                             {/* Mobile Pagination */}
-                            {meta && (meta as any).totalPages > 1 ? (
+                            {pageMeta && pageMeta.totalPages > 1 ? (
                                 <div className="flex items-center justify-between pt-4 border-t border-brand-deep/5 dark:border-white/5">
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        disabled={(meta as any).currentPage === 1}
-                                        onClick={() => setCurrentPage((meta as any).currentPage - 1)}
+                                        disabled={pageMeta.currentPage === 1}
+                                        onClick={() => setCurrentPage(pageMeta.currentPage - 1)}
                                         className="rounded-xl h-10 border-brand-deep/5 dark:border-white/10"
                                     >
                                         <ChevronLeft className="h-4 w-4 mr-1 dark:text-brand-gold" />
                                         Prev
                                     </Button>
                                     <div className="flex items-center gap-1.5">
-                                        {Array.from({ length: Math.min((meta as any).totalPages, 5) }).map((_, i) => {
+                                        {Array.from({ length: Math.min(pageMeta.totalPages, 5) }).map((_, i) => {
                                             const page = i + 1
                                             return (
                                                 <button
@@ -895,7 +1322,7 @@ export function InventoryView() {
                                                     onClick={() => setCurrentPage(page)}
                                                     className={cn(
                                                         "w-1.5 h-1.5 rounded-full transition-all duration-300",
-                                                        (meta as any).currentPage === page
+                                                        pageMeta.currentPage === page
                                                             ? "bg-brand-green w-3 dark:bg-brand-gold"
                                                             : "bg-brand-accent/20 dark:bg-white/10"
                                                     )}
@@ -906,8 +1333,8 @@ export function InventoryView() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        disabled={(meta as any).currentPage === (meta as any).totalPages}
-                                        onClick={() => setCurrentPage((meta as any).currentPage + 1)}
+                                        disabled={pageMeta.currentPage === pageMeta.totalPages}
+                                        onClick={() => setCurrentPage(pageMeta.currentPage + 1)}
                                         className="rounded-xl h-10 border-brand-deep/5 dark:border-white/10"
                                     >
                                         Next
@@ -924,8 +1351,8 @@ export function InventoryView() {
                                     data={displayItems}
                                     isLoading={isFetching}
                                     manualPagination={{
-                                        currentPage: (meta as any)?.currentPage || 1,
-                                        totalPages: (meta as any)?.totalPages || 1,
+                                        currentPage: pageMeta?.currentPage || 1,
+                                        totalPages: pageMeta?.totalPages || 1,
                                         onPageChange: (page) => setCurrentPage(page)
                                     }}
                                 />
@@ -1043,7 +1470,7 @@ export function InventoryView() {
                                             <AlertTriangle className="w-3 h-3" />
                                             Inventory & Tracking
                                         </h3>
-                                        <GlassCard className="p-6 bg-white/50 dark:bg-white/5 border-none space-y-6">
+                                        <GlassCard className="p-6 bg-white dark:bg-white/5 border-brand-deep/8 dark:border-white/10 space-y-6">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Barcode</label>
                                                 <input
@@ -1129,8 +1556,8 @@ export function InventoryView() {
                                                     onChange={(ids) => {
                                                         const newVariants = formData.variants.map(v => {
                                                             const total = (v.storeInventory || [])
-                                                                .filter((s: any) => ids.includes(s.storeId))
-                                                                .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
+                                                                .filter((s: FormStoreInventoryLine) => ids.includes(s.storeId))
+                                                                .reduce((sum: number, s: FormStoreInventoryLine) => sum + (Number(s.stockQuantity) || 0), 0)
                                                             return { ...v, stockQuantity: total }
                                                         })
                                                         setFormData({ ...formData, storeIds: ids, variants: newVariants })
@@ -1150,212 +1577,82 @@ export function InventoryView() {
                                                     onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
                                                 />
                                             </div>
+
+                                            <div className="flex items-center justify-between p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
+                                                <div className="space-y-0.5">
+                                                    <label htmlFor="form-catalogSync" className="text-sm font-medium text-brand-deep dark:text-brand-cream cursor-pointer">
+                                                        Auto-sync WhatsApp catalog
+                                                    </label>
+                                                    <span className="block text-[10px] text-brand-deep/40 dark:text-brand-cream/40 uppercase tracking-tight font-normal">When on, stock and product edits queue catalog updates</span>
+                                                </div>
+                                                <Switch
+                                                    id="form-catalogSync"
+                                                    checked={formData.catalogSyncEnabled}
+                                                    onCheckedChange={(checked) => setFormData({ ...formData, catalogSyncEnabled: checked })}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Section: Variants & Specific Inventory */}
-                                    <div className="space-y-6 pt-4">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                                <Plus className="w-3 h-3" />
-                                                Inventory & Variants
-                                            </h3>
-                                            <Button
-                                                type="button"
-                                                onClick={() => setFormData({
-                                                    ...formData,
-                                                    variants: [...formData.variants, { name: '', sku: '', barcode: '', price: formData.price, stockQuantity: 0, storeInventory: [] }]
-                                                })}
-                                                variant="ghost"
-                                                className="text-[10px] h-8 font-bold uppercase tracking-widest text-brand-gold hover:bg-brand-gold/5 px-4 rounded-full transition-all"
-                                            >
-                                                <Plus className="w-3.5 h-3.5 mr-1" />
-                                                Add Variant
-                                            </Button>
-                                        </div>
-
-                                        <AnimatePresence mode="popLayout">
-                                            {formData.variants.length > 0 && (
-                                                <div className="space-y-6">
-                                                    {formData.variants.map((variant, index) => (
-                                                        <motion.div
-                                                            key={index}
-                                                            layout
-                                                            initial={{ opacity: 0, y: 20 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, scale: 0.95 }}
-                                                            className="relative group"
-                                                        >
-                                                            <GlassCard allowOverflow className="p-6 bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/5 space-y-5 transition-all hover:border-brand-gold/20">
-                                                                {formData.variants.length > 1 && (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const newVariants = [...formData.variants]
-                                                                            newVariants.splice(index, 1)
-                                                                            setFormData({ ...formData, variants: newVariants })
-                                                                        }}
-                                                                        className="absolute cursor-pointer -top-2 -right-2 w-7 h-7 bg-rose-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:scale-110 z-10"
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                )}
-
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Variant Name</label>
-                                                                        <input
-                                                                            placeholder="e.g. Extra Large"
-                                                                            value={variant.name}
-                                                                            onChange={(e) => {
-                                                                                const v = [...formData.variants]
-                                                                                v[index].name = e.target.value
-                                                                                setFormData({ ...formData, variants: v })
-                                                                            }}
-                                                                            className="text-sm w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 transition-all"
-                                                                        />
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">SKU (Optional)</label>
-                                                                        <input
-                                                                            placeholder="V-SKU-001"
-                                                                            value={variant.sku}
-                                                                            onChange={(e) => {
-                                                                                const v = [...formData.variants]
-                                                                                v[index].sku = e.target.value
-                                                                                setFormData({ ...formData, variants: v })
-                                                                            }}
-                                                                            className="text-xs w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 font-mono transition-all"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="grid grid-cols-1 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <div className="flex items-center justify-between ml-1">
-                                                                            <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30">Barcode (Optional)</label>
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    const v = [...formData.variants]
-                                                                                    v[index].barcode = autoGenerateBarcode(v[index].id || Math.random().toString(36).substring(7), barcodeFormat)
-                                                                                    setFormData({ ...formData, variants: v })
-                                                                                }}
-                                                                                className="text-[9px] font-bold text-brand-gold hover:text-brand-gold/80 transition-colors flex items-center gap-1"
-                                                                            >
-                                                                                <Sparkles className="w-3 h-3" />
-                                                                                Auto-Generate
-                                                                            </button>
-                                                                        </div>
-                                                                        <input
-                                                                            placeholder="Variant Barcode"
-                                                                            value={variant.barcode || ''}
-                                                                            onChange={(e) => {
-                                                                                const v = [...formData.variants]
-                                                                                v[index].barcode = e.target.value
-                                                                                setFormData({ ...formData, variants: v })
-                                                                            }}
-                                                                            className="text-xs w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 font-mono transition-all"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="grid grid-cols-2 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Stock Level</label>
-                                                                        <div className="relative">
-                                                                            <input
-                                                                                type="text"
-                                                                                inputMode="numeric"
-                                                                                pattern="[0-9]*"
-                                                                                placeholder="0"
-                                                                                readOnly={formData.storeIds.length > 1}
-                                                                                value={(() => {
-                                                                                    if (formData.storeIds.length > 1) {
-                                                                                        return (variant.storeInventory || [])
-                                                                                            .filter((s: any) => formData.storeIds.includes(s.storeId))
-                                                                                            .reduce((sum: number, s: any) => sum + (Number(s.stockQuantity) || 0), 0)
-                                                                                    }
-                                                                                    return variant.stockQuantity || 0
-                                                                                })()}
-                                                                                onChange={(e) => {
-                                                                                    const rawValue = e.target.value.replace(/[^0-9]/g, '')
-                                                                                    const val = rawValue === '' ? 0 : parseInt(rawValue)
-
-                                                                                    setFormData(prev => {
-                                                                                        const newVariants = [...prev.variants]
-                                                                                        const v = { ...newVariants[index] }
-                                                                                        v.stockQuantity = val
-
-                                                                                        if (prev.storeIds.length === 1) {
-                                                                                            const storeId = prev.storeIds[0]
-                                                                                            const inv = [...(v.storeInventory || [])]
-                                                                                            const sIdx = inv.findIndex(s => s.storeId === storeId)
-                                                                                            if (sIdx > -1) {
-                                                                                                inv[sIdx] = { ...inv[sIdx], stockQuantity: val }
-                                                                                            } else {
-                                                                                                inv.push({ storeId, stockQuantity: val })
-                                                                                            }
-                                                                                            v.storeInventory = inv
-                                                                                        }
-
-                                                                                        newVariants[index] = v
-                                                                                        return { ...prev, variants: newVariants }
-                                                                                    })
-                                                                                }}
-                                                                                className={cn(
-                                                                                    "text-sm w-full h-12 px-4 rounded-xl bg-brand-deep/2 dark:bg-white/2 border border-brand-deep/5 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-brand-gold/20 transition-all font-bold",
-                                                                                    formData.storeIds.length > 1 && "bg-brand-deep/5 dark:bg-white/5 cursor-not-allowed text-brand-deep/40 dark:text-brand-cream/40"
-                                                                                )}
-                                                                            />
-                                                                            {formData.storeIds.length > 1 && (
-                                                                                <div className="absolute right-3 top-1/2 -translate-y-1/2" title="Calculated from stores">
-                                                                                    <Loader2 className="w-3 h-3 text-brand-gold" />
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <label className="text-[9px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 ml-1">Variant Price</label>
-                                                                        <MoneyInput
-                                                                            currencySymbol={currency}
-                                                                            className="h-12 text-sm"
-                                                                            value={variant.price}
-                                                                            onChange={(val) => {
-                                                                                const v = [...formData.variants]
-                                                                                v[index].price = val?.toString() || ''
-                                                                                setFormData({ ...formData, variants: v })
-                                                                            }}
-                                                                            placeholder="0"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-
-                                                                <StoreStockInputs
-                                                                    storeIds={formData.storeIds}
-                                                                    stocks={variant.storeInventory || []}
-                                                                    onChange={(stocks) => {
-                                                                        const total = stocks
-                                                                            .filter(s => formData.storeIds.includes(s.storeId))
-                                                                            .reduce((sum, s) => sum + (Number(s.stockQuantity) || 0), 0)
-
-                                                                        setFormData(prev => {
-                                                                            const newVariants = [...prev.variants]
-                                                                            newVariants[index] = {
-                                                                                ...newVariants[index],
-                                                                                storeInventory: stocks,
-                                                                                stockQuantity: total
-                                                                            }
-                                                                            return { ...prev, variants: newVariants }
-                                                                        })
-                                                                    }}
-                                                                />
-                                                            </GlassCard>
-                                                        </motion.div>
-                                                    ))}
+                                    {/* Section: Variants & Options (opens in side sheet / drawer) */}
+                                    <div className="space-y-4 pt-4">
+                                        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
+                                            <Layers className="w-3 h-3" />
+                                            Variants & Options
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (formData.variants.length === 0) {
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        variants: [
+                                                            {
+                                                                _key: newVariantKey(),
+                                                                name: '',
+                                                                sku: '',
+                                                                barcode: '',
+                                                                price: prev.price,
+                                                                stockQuantity: 0,
+                                                                storeInventory: [],
+                                                                optionValues: prev.productOptions.map((opt) => ({ name: opt.name, value: '' })),
+                                                            },
+                                                        ],
+                                                    }))
+                                                }
+                                                setIsVariantsSheetOpen(true)
+                                            }}
+                                            className="w-full text-left rounded-2xl border border-brand-deep/5 dark:border-white/5 bg-white dark:bg-white/5 hover:border-brand-gold/30 hover:bg-brand-gold/2 transition-all p-5 flex items-center gap-4 group"
+                                        >
+                                            <div className="shrink-0 w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                                                <Layers className="w-5 h-5" strokeWidth={2.25} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                                                        {formData.variants.length === 0
+                                                            ? 'Add variants & options'
+                                                            : 'Manage variants & options'}
+                                                    </span>
                                                 </div>
-                                            )}
-                                        </AnimatePresence>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <Badge variant="default">
+                                                        {formData.productOptions.length}{' '}
+                                                        {formData.productOptions.length === 1 ? 'option' : 'options'}
+                                                    </Badge>
+                                                    <Badge variant="default">
+                                                        {formData.variants.length}{' '}
+                                                        {formData.variants.length === 1 ? 'variant' : 'variants'}
+                                                    </Badge>
+                                                    {formData.productOptions.length > 0 && (
+                                                        <span className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 truncate">
+                                                            {formData.productOptions.map((o) => o.name).filter(Boolean).join(' · ')}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <ChevronRightIcon className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30 shrink-0 group-hover:text-brand-gold transition-colors" />
+                                        </button>
                                     </div>
 
                                     {/* Action Buttons */}
@@ -1399,6 +1696,21 @@ export function InventoryView() {
                             </DrawerFooter>
                         </DrawerContent>
                     </Drawer>
+                    <VariantsAndOptionsSheet
+                        open={isVariantsSheetOpen}
+                        onOpenChange={setIsVariantsSheetOpen}
+                        productOptions={formData.productOptions}
+                        variants={formData.variants}
+                        storeIds={formData.storeIds}
+                        productBasePrice={formData.price}
+                        currencySymbol={currency}
+                        currencyCode={currencyCode}
+                        barcodeFormat={barcodeFormat}
+                        autoGenerateBarcode={autoGenerateBarcode}
+                        onChange={({ productOptions, variants }) =>
+                            setFormData((prev) => ({ ...prev, productOptions, variants }))
+                        }
+                    />
                     <ManageCategoriesDrawer open={isCategoriesDrawerOpen} onOpenChange={setIsCategoriesDrawerOpen} />
                     <BulkUploadDrawer
                         isOpen={isBulkUploadOpen}
@@ -1408,11 +1720,44 @@ export function InventoryView() {
                     <ConfirmDialog
                         open={confirmDeleteOpen}
                         onOpenChange={setConfirmDeleteOpen}
-                        onConfirm={() => handleDelete(itemToDelete?.id)}
+                        onConfirm={() => {
+                            if (itemToDelete?.id) void handleDelete(itemToDelete.id)
+                        }}
                         isLoading={isSubmitting}
                         title="Delete Product?"
                         description={`This will permanently remove "${itemToDelete?.product || 'this product'}" from your inventory across all stores. This action cannot be undone.`}
                         confirmText="Delete Product"
+                        variant="destructive"
+                    />
+                    <ConfirmDialog
+                        open={catalogRemoveConfirm !== null}
+                        onOpenChange={(open) => {
+                            if (!open) setCatalogRemoveConfirm(null)
+                        }}
+                        onConfirm={async () => {
+                            if (!catalogRemoveConfirm) return
+                            const { item, scope } = catalogRemoveConfirm
+                            await removeProductFromCatalog(item.id, item.product, scope)
+                        }}
+                        isLoading={
+                            !!catalogRemoveConfirm &&
+                            removingFromCatalogState.productId === catalogRemoveConfirm.item.id &&
+                            removingFromCatalogState.scope === catalogRemoveConfirm.scope
+                        }
+                        title={
+                            catalogRemoveConfirm?.scope === 'global'
+                                ? 'Remove from global catalog?'
+                                : 'Remove from white-label catalog?'
+                        }
+                        description={
+                            catalogRemoveConfirm
+                                ? `You are about to remove "${catalogRemoveConfirm.item.product}" from the ${catalogRemoveConfirm.scope === 'global'
+                                    ? 'global marketplace'
+                                    : 'white-label'
+                                } WhatsApp catalog. Matching items will be deleted from Meta. Automatic catalog sync for this product turns off only when it is no longer listed in any WhatsApp catalog for your business.`
+                                : ''
+                        }
+                        confirmText="Remove from catalog"
                         variant="destructive"
                     />
                     <ProductViewDrawer
@@ -1427,6 +1772,15 @@ export function InventoryView() {
                             setItemToDelete(item)
                             setConfirmDeleteOpen(true)
                         }}
+                        onSyncCatalog={async (item, scope) => {
+                            const check = productSyncEligibility(item)
+                            if (!check.canSync) return
+                            await syncProductCatalog({ id: item.id, scope, productName: item.product })
+                        }}
+                        isSyncingWhiteLabel={syncingCatalogState.productId === viewItem?.id && syncingCatalogState.scope === 'whitelabel'}
+                        isSyncingGlobal={syncingCatalogState.productId === viewItem?.id && syncingCatalogState.scope === 'global'}
+                        canSyncCatalog={viewItem ? productSyncEligibility(viewItem).canSync : false}
+                        syncHint={viewItem ? productSyncEligibility(viewItem).hint : null}
                     />
                     <LabelPreviewDrawer
                         isOpen={isLabelDrawerOpen}

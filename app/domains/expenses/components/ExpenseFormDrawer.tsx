@@ -53,6 +53,7 @@ export function ExpenseFormDrawer({
     const [category, setCategory] = React.useState("OTHER")
     const [description, setDescription] = React.useState("")
     const [date, setDate] = React.useState<Date | undefined>(new Date())
+    const [formError, setFormError] = React.useState<string | null>(null)
 
     React.useEffect(() => {
         if (editingExpense) {
@@ -70,6 +71,23 @@ export function ExpenseFormDrawer({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        setFormError(null)
+
+        if (!Number.isFinite(amount) || amount <= 0) {
+            setFormError("Amount must be greater than 0.")
+            return
+        }
+
+        if (description.trim().length > 500) {
+            setFormError("Description cannot be more than 500 characters.")
+            return
+        }
+
+        if (date && date > new Date()) {
+            setFormError("Expense date cannot be in the future.")
+            return
+        }
+
         await onSubmit({
             amount,
             category,
@@ -136,8 +154,12 @@ export function ExpenseFormDrawer({
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="e.g. Monthly office rent"
+                                maxLength={500}
                                 className="w-full px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-green/20 text-brand-deep dark:text-brand-cream"
                             />
+                            <p className="text-[10px] text-brand-accent/45 dark:text-brand-cream/45 text-right pr-1">
+                                {description.trim().length}/500
+                            </p>
                         </div>
 
                         <div className="space-y-3">
@@ -163,11 +185,18 @@ export function ExpenseFormDrawer({
                                         mode="single"
                                         selected={date}
                                         onSelect={setDate}
+                                        disabled={{ after: new Date() }}
                                         initialFocus
                                     />
                                 </PopoverContent>
                             </Popover>
                         </div>
+
+                        {formError && (
+                            <p className="text-sm text-rose-500 dark:text-rose-400">
+                                {formError}
+                            </p>
+                        )}
 
                         {editingExpense && onDelete && (
                             <div className="pt-6 border-t border-brand-deep/5 dark:border-white/5 mt-6">

@@ -16,14 +16,21 @@ function isPlaceholderConfigId(value: string | undefined) {
 export async function GET() {
   const appId = process.env.NEXT_PUBLIC_META_APP_ID?.trim() || ""
   const configId = process.env.NEXT_PUBLIC_EMBEDDED_SIGNUP_CONFIG_ID?.trim() || ""
-  const isConfigured = Boolean(appId) && Boolean(configId) && !isPlaceholderConfigId(configId)
+  const embeddedEnabled =
+    (process.env.NEXT_PUBLIC_WHATSAPP_EMBEDDED_SIGNUP_ENABLED || "false").toLowerCase() === "true"
+  const isConfigured =
+    embeddedEnabled && Boolean(appId) && Boolean(configId) && !isPlaceholderConfigId(configId)
 
   return NextResponse.json(
     {
       appId,
       configId: isConfigured ? configId : "",
+      embeddedEnabled,
       isConfigured,
-      error: isConfigured ? null : "Embedded Signup is not configured with a valid Meta config ID.",
+      error:
+        embeddedEnabled && !isConfigured
+          ? "Embedded Signup is not configured with a valid Meta config ID."
+          : null,
     },
     {
       headers: {

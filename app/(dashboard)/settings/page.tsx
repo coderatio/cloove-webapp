@@ -69,20 +69,23 @@ function SettingsContent() {
     }
 
     return (
-        <div className="mx-auto max-w-6xl space-y-8 pb-20">
-            <ManagementHeader
-                title="Settings"
-                description="Manage your business preferences and personal profile"
-            />
+        <div className="mx-auto max-w-6xl space-y-2 pb-20 md:space-y-8">
+            <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+3.5rem)] z-20 -mx-4 bg-background/85 px-4 py-2 backdrop-blur supports-backdrop-filter:bg-background/70 md:top-0 md:mx-0 md:px-0 md:py-4">
+                <ManagementHeader
+                    title="Settings"
+                    description="Manage your business preferences and personal profile"
+                />
+            </div>
 
-            <div className="grid gap-6 lg:grid-cols-[220px_1fr] lg:items-start">
-                <div className="lg:sticky lg:top-20">
+            <div className="md:grid md:gap-6 lg:grid-cols-[220px_1fr] lg:items-start">
+                <div className="lg:sticky lg:top-32">
                     <PersistedTabs
                         tabs={tabs}
                         activeTab={activeTab}
                         defaultTab={tabs[0]?.id || "profile"}
                         orientation="vertical"
                         compact
+                        mobileSheetTitle="Settings"
                         onChange={(id) => {
                             setActiveTab(id as Tab)
                             setIsDirty(false)
@@ -97,6 +100,7 @@ function SettingsContent() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
+                        className="min-w-0"
                     >
                         {activeTab === "business" && role === 'OWNER' && (
                             <BusinessSettings

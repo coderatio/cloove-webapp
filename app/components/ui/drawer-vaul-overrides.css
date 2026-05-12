@@ -1,0 +1,20 @@
+/*
+  Vaul defaults to 500ms (see vaul/src/constants.ts + style.css). Inline transitions use the same
+  duration; !important beats non-important inline styles so close/open stay in sync.
+
+  Import this from drawer.tsx after `vaul` so these rules sort after vaul/style.css in the bundle.
+*/
+[data-vaul-drawer] {
+  animation-duration: 0.28s !important;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1) !important;
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+[data-vaul-overlay][data-vaul-snap-points="false"] {
+  animation-duration: 0.28s !important;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+[data-vaul-overlay][data-vaul-snap-points="true"] {
+  transition: opacity 0.28s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}

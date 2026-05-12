@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 
 interface SwitchProps {
+    id?: string
     checked?: boolean
     defaultChecked?: boolean
     onCheckedChange?: (checked: boolean) => void
@@ -12,7 +13,7 @@ interface SwitchProps {
     className?: string
 }
 
-export function Switch({ checked, defaultChecked, onCheckedChange, disabled, className }: SwitchProps) {
+export function Switch({ id, checked, defaultChecked, onCheckedChange, disabled, className }: SwitchProps) {
     const [isOn, setIsOn] = React.useState(checked ?? defaultChecked ?? false)
 
     React.useEffect(() => {
@@ -32,6 +33,9 @@ export function Switch({ checked, defaultChecked, onCheckedChange, disabled, cla
 
     return (
         <div
+            id={id}
+            role="switch"
+            aria-checked={isOn}
             onClick={toggle}
             className={cn(
                 "relative h-7 w-12 cursor-pointer rounded-full border border-slate-300 bg-slate-200 p-1 transition-colors dark:border-slate-700 dark:bg-slate-800",

@@ -6,13 +6,29 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt, UtensilsCrossed, ChefHat, ShoppingCart } from 'lucide-react'
+import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt, UtensilsCrossed, ChefHat, ShoppingCart, User } from 'lucide-react'
 import { Order, OrderStatus, PaymentStatus } from "../types"
 import { OrderFilterPanel } from "./OrderFilterPanel"
 import { ActiveFilterChips } from "./ActiveFilterChips"
 import { RecordPaymentDrawer } from "./RecordPaymentDrawer"
 import { OrderDetailsDrawer } from "./OrderDetailsDrawer"
 import { Button } from '@/app/components/ui/button'
+import { Input } from '@/app/components/ui/input'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/app/components/ui/dialog'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/app/components/ui/select'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
@@ -29,7 +45,7 @@ import {
 } from "@/app/components/ui/drawer"
 import Link from 'next/link'
 import { useOrders } from '../hooks/useOrders'
-import { useKitchenTicketActions } from '@/app/domains/restaurant/hooks/useRestaurantOps'
+import { useKitchenTicketActions, type KitchenTicket } from '@/app/domains/restaurant/hooks/useRestaurantOps'
 import { useDebounce } from '@/app/hooks/useDebounce'
 import { OrdersSkeleton } from './OrdersSkeleton'
 import { Pagination } from '@/app/components/shared/Pagination'
@@ -71,6 +87,21 @@ const KITCHEN_TICKET_BADGE: Record<
     },
 }
 
+const KITCHEN_INITIAL_STATUS_OPTIONS: Array<{ value: KitchenTicket["status"]; label: string }> = [
+    { value: "queued", label: "Queued" },
+    { value: "preparing", label: "Preparing" },
+    { value: "ready", label: "Ready" },
+    { value: "served", label: "Served" },
+]
+
+const KITCHEN_STATION_OPTIONS = [
+    { value: "kitchen", label: "Kitchen" },
+    { value: "grill", label: "Grill" },
+    { value: "pastry", label: "Pastry" },
+    { value: "pickup", label: "Pickup" },
+    { value: "custom", label: "Enter manually" },
+]
+
 function kitchenTicketBadgeConfig(
     status: string | null | undefined
 ): { label: string; className: string } | null {
@@ -109,6 +140,11 @@ export function OrdersView() {
     const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = React.useState(false)
     const [generatedPaymentLink, setGeneratedPaymentLink] = React.useState<string | null>(null)
     const [schoolFeeDrawerOpen, setSchoolFeeDrawerOpen] = React.useState(false)
+    const [kitchenOrder, setKitchenOrder] = React.useState<Order | null>(null)
+    const [kitchenStation, setKitchenStation] = React.useState("kitchen")
+    const [kitchenStationMode, setKitchenStationMode] = React.useState("kitchen")
+    const [kitchenInitialStatus, setKitchenInitialStatus] =
+        React.useState<KitchenTicket["status"]>("queued")
     const statusColorMap: Record<string, { label: string, color: 'success' | 'warning' | 'danger' | 'neutral', className: string, icon: any }> = {
         COMPLETED: {
             label: 'Completed',
@@ -147,7 +183,7 @@ export function OrdersView() {
         requeryOrder,
         isRequerying,
         generateReceipt,
-        isGeneratingReceipt
+        isGeneratingReceipt,
     } = useOrders(page, limit, {
         search: debouncedSearch,
         status: filterState.selectedFilters.filter(f => f.startsWith('S:')).map(f => f.slice(2)) as OrderStatus[],
@@ -162,10 +198,47 @@ export function OrdersView() {
 
     const { printReceipt } = useReceiptPrinter()
     const kitchenAction = useKitchenTicketActions()
+    const kitchenSendCurrency = kitchenOrder?.currency ?? activeBusiness?.currency ?? "NGN"
+    const kitchenSendLineItems = kitchenOrder?.items?.filter(Boolean) ?? []
     const handleAdvanceKitchen = React.useCallback(
         (ticketId: string, status: 'queued' | 'preparing' | 'ready' | 'served') =>
-            kitchenAction.mutateAsync({ id: ticketId, status }),
-        [kitchenAction]
+            kitchenAction.advance.mutateAsync({ id: ticketId, status }),
+        [kitchenAction.advance]
+    )
+    const openSendToKitchenDialog = React.useCallback((order: Order) => {
+        setKitchenOrder(order)
+        setKitchenStation("kitchen")
+        setKitchenStationMode("kitchen")
+        setKitchenInitialStatus(order.status === "COMPLETED" ? "preparing" : "queued")
+    }, [])
+
+    const closeSendToKitchenDialog = React.useCallback(() => {
+        setKitchenOrder(null)
+        setKitchenStation("kitchen")
+        setKitchenStationMode("kitchen")
+        setKitchenInitialStatus("queued")
+    }, [])
+
+    const handleCreateKitchenTicket = React.useCallback(
+        async () => {
+            if (!kitchenOrder) return
+
+            const result = await kitchenAction.create.mutateAsync({
+                saleId: kitchenOrder.id,
+                station: kitchenStation.trim() || "kitchen",
+                status: kitchenInitialStatus,
+            })
+            const notification = result?.notification
+            if (notification?.status === "sent") {
+                toast.success(`Sent to kitchen. WhatsApp sent${notification.customerName ? ` to ${notification.customerName}` : ""}.`)
+            } else if (notification?.reason && notification.reason !== "auto_send_disabled") {
+                toast.success("Sent to kitchen. WhatsApp not sent.")
+            } else {
+                toast.success("Sent to kitchen.")
+            }
+            closeSendToKitchenDialog()
+        },
+        [closeSendToKitchenDialog, kitchenAction.create, kitchenInitialStatus, kitchenOrder, kitchenStation]
     )
     const createPaymentLink = useCreatePaymentLink()
 
@@ -268,7 +341,7 @@ export function OrdersView() {
             termOptions: layoutPreset === "school"
                 ? (academicCal?.sessions ?? []).flatMap(s =>
                     (s.terms ?? []).map(t => ({ id: t.id, label: `${s.name} · ${t.name}` }))
-                  )
+                )
                 : undefined,
         }),
         [oui.filterGroups, fo, layoutPreset, academicCal]
@@ -278,155 +351,156 @@ export function OrdersView() {
         const termColumn =
             layoutPreset === "school" && oui.table.term
                 ? [
-                      {
-                          key: "academicTerm",
-                          header: oui.table.term,
-                          width: "140px",
-                          cellClassName: "whitespace-normal",
-                          render: (_: unknown, row: Order) => {
-                              const t = row.academicTerm
-                              if (!t) {
-                                  return (
-                                      <span className="text-xs text-brand-accent/45 dark:text-brand-cream/45">—</span>
-                                  )
-                              }
-                              const sess = t.session?.name
-                              return (
-                                  <span className="text-xs text-brand-accent/75 dark:text-brand-cream/75">
-                                      {sess ? `${sess} · ` : ""}
-                                      {t.name}
-                                  </span>
-                              )
-                          },
-                      },
-                  ]
+                    {
+                        key: "academicTerm",
+                        header: oui.table.term,
+                        width: "140px",
+                        cellClassName: "whitespace-normal",
+                        render: (_: unknown, row: Order) => {
+                            const t = row.academicTerm
+                            if (!t) {
+                                return (
+                                    <span className="text-xs text-brand-accent/45 dark:text-brand-cream/45">—</span>
+                                )
+                            }
+                            const sess = t.session?.name
+                            return (
+                                <span className="text-xs text-brand-accent/75 dark:text-brand-cream/75">
+                                    {sess ? `${sess} · ` : ""}
+                                    {t.name}
+                                </span>
+                            )
+                        },
+                    },
+                ]
                 : []
 
         return [
-        {
-            key: 'customer',
-            header: oui.table.customer,
-            width: '200px',
-            cellClassName: 'whitespace-normal',
-            render: (value: string, row: Order) => {
-                const orderId = row.shortCode || row.id.substring(0, 6)
-                return (
-                    <div className="flex flex-col gap-0.5">
-                        <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
-                        <div className="group/id flex items-center gap-1.5">
-                            <span className="font-mono text-[11px] text-brand-accent/40 dark:text-brand-cream/40 uppercase">
-                                #{orderId}
-                            </span>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    navigator.clipboard.writeText(orderId)
-                                    toast.success(oui.toastOrderIdCopied)
-                                }}
-                                className="opacity-0 group-hover/id:opacity-100 transition-opacity p-0.5 rounded hover:bg-brand-deep/5 dark:hover:bg-white/10"
-                                title={oui.copyOrderIdTitle}
-                            >
-                                <Copy className="w-3 h-3 text-brand-accent/40 dark:text-brand-cream/40" />
-                            </button>
-                        </div>
-                        {layoutPreset === "restaurant" && row.serviceMode && (
-                            <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                                {row.serviceMode === "DINE_IN" ? (
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/8 text-blue-700 dark:text-blue-300 text-[9px] font-bold uppercase tracking-wider">
-                                        <UtensilsCrossed className="w-2.5 h-2.5" />
-                                        {row.tableLabel ?? "Dine-In"}
-                                    </span>
-                                ) : (
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/8 text-amber-700 dark:text-amber-300 text-[9px] font-bold uppercase tracking-wider">
-                                        <ShoppingCart className="w-2.5 h-2.5" />
-                                        Takeaway
-                                    </span>
-                                )}
-                                {(() => {
-                                    const cfg = kitchenTicketBadgeConfig(row.kitchenTicketStatus)
-                                    if (!cfg) return null
-                                    return (
-                                        <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
-                                            <ChefHat className="w-2.5 h-2.5" />
-                                            {cfg.label}
-                                        </span>
-                                    )
-                                })()}
+            {
+                key: 'customer',
+                header: oui.table.customer,
+                width: '200px',
+                cellClassName: 'whitespace-normal',
+                render: (value: string, row: Order) => {
+                    const orderId = row.shortCode || row.id.substring(0, 6)
+                    return (
+                        <div className="flex flex-col gap-0.5">
+                            <span className="font-medium text-brand-deep dark:text-brand-cream">{value}</span>
+                            <div className="group/id flex items-center gap-1.5">
+                                <span className="font-mono text-[11px] text-brand-accent/40 dark:text-brand-cream/40 uppercase">
+                                    #{orderId}
+                                </span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        navigator.clipboard.writeText(orderId)
+                                        toast.success(oui.toastOrderIdCopied)
+                                    }}
+                                    className="opacity-0 group-hover/id:opacity-100 transition-opacity p-0.5 rounded hover:bg-brand-deep/5 dark:hover:bg-white/10"
+                                    title={oui.copyOrderIdTitle}
+                                >
+                                    <Copy className="w-3 h-3 text-brand-accent/40 dark:text-brand-cream/40" />
+                                </button>
                             </div>
-                        )}
-                    </div>
-                )
-            }
-        },
-        {
-            key: 'items',
-            header: oui.table.summary,
-            width: 'auto',
-            cellClassName: 'whitespace-normal min-w-[200px]',
-            render: (_: any, row: Order) => <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">{row.summary}</span>
-        },
-        ...termColumn,
-        {
-            key: 'totalAmount',
-            header: oui.table.total,
-            width: '120px',
-            render: (value: number | string, row: Order) => (
-                <span className="text-sm font-bold text-brand-deep dark:text-brand-cream whitespace-nowrap">
-                    <CurrencyText value={formatCurrency(value, { currency: row.currency || activeBusiness?.currency || 'NGN' })} />
-                </span>
-            )
-        },
-        {
-            key: 'status',
-            header: oui.table.status,
-            width: '100px',
-            render: (value: string | undefined) => {
-                const status = value?.toUpperCase() || 'UNKNOWN'
-                const config = statusColorMap[status] || {
-                    label: value || 'Unknown',
-                    className: "text-brand-deep/60 dark:text-brand-cream/60 bg-brand-deep/5 dark:bg-white/5",
-                    icon: AlertCircle
+                            {layoutPreset === "restaurant" && (row.serviceMode || row.kitchenTicketStatus) && (
+                                <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                    {row.serviceMode === "DINE_IN" ? (
+                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/8 text-blue-700 dark:text-blue-300 text-[9px] font-bold uppercase tracking-wider">
+                                            <UtensilsCrossed className="w-2.5 h-2.5" />
+                                            {row.tableLabel ?? "Dine-In"}
+                                        </span>
+                                    ) : row.serviceMode === "TAKEAWAY" ? (
+                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/8 text-amber-700 dark:text-amber-300 text-[9px] font-bold uppercase tracking-wider">
+                                            <ShoppingCart className="w-2.5 h-2.5" />
+                                            Takeaway
+                                        </span>
+                                    ) : null}
+                                    {(() => {
+                                        const cfg = kitchenTicketBadgeConfig(row.kitchenTicketStatus)
+                                        if (!cfg) return null
+                                        return (
+                                            <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
+                                                <ChefHat className="w-2.5 h-2.5" />
+                                                {cfg.label}
+                                            </span>
+                                        )
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+                    )
                 }
-                const StatusIcon = config.icon
+            },
+            {
+                key: 'items',
+                header: oui.table.summary,
+                width: 'auto',
+                cellClassName: 'whitespace-normal min-w-[200px]',
+                render: (_: any, row: Order) => <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">{row.summary}</span>
+            },
+            ...termColumn,
+            {
+                key: 'totalAmount',
+                header: oui.table.total,
+                width: '120px',
+                render: (value: number | string, row: Order) => (
+                    <span className="text-sm font-bold text-brand-deep dark:text-brand-cream whitespace-nowrap">
+                        <CurrencyText value={formatCurrency(value, { currency: row.currency || activeBusiness?.currency || 'NGN' })} />
+                    </span>
+                )
+            },
+            {
+                key: 'status',
+                header: oui.table.status,
+                width: '100px',
+                render: (value: string | undefined) => {
+                    const status = value?.toUpperCase() || 'UNKNOWN'
+                    const config = statusColorMap[status] || {
+                        label: value || 'Unknown',
+                        className: "text-brand-deep/60 dark:text-brand-cream/60 bg-brand-deep/5 dark:bg-white/5",
+                        icon: AlertCircle
+                    }
+                    const StatusIcon = config.icon
 
-                return (
-                    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10 whitespace-nowrap", config.className)}>
-                        <StatusIcon className="w-3 h-3" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">
-                            {config.label}
-                        </span>
-                    </div>
+                    return (
+                        <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10 whitespace-nowrap", config.className)}>
+                            <StatusIcon className="w-3 h-3" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">
+                                {config.label}
+                            </span>
+                        </div>
+                    )
+                }
+            },
+            {
+                key: 'date',
+                header: oui.table.time,
+                width: '120px',
+                render: (_: any, order: Order) => (
+                    <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">{formatDate(order.date, 'MMM d, h:mm a')}</span>
+                )
+            },
+            {
+                key: 'actions' as any,
+                header: '',
+                width: '48px',
+                render: (_: any, row: Order) => (
+                    <OrderActionMenu
+                        order={row}
+                        onViewDetails={setViewingOrder}
+                        onUpdateStatus={handleUpdateStatus}
+                        onRequery={requeryOrder}
+                        onGenerateReceipt={generateReceipt}
+                        onPrintReceipt={handlePrintReceipt}
+                        onRecordPayment={setRecordingPaymentOrder}
+                        onGeneratePaymentLink={handleGeneratePaymentLink}
+                        onAdvanceKitchen={handleAdvanceKitchen}
+                        onSendToKitchen={openSendToKitchenDialog}
+                    />
                 )
             }
-        },
-        {
-            key: 'date',
-            header: oui.table.time,
-            width: '120px',
-            render: (_: any, order: Order) => (
-                <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">{formatDate(order.date, 'MMM d, h:mm a')}</span>
-            )
-        },
-        {
-            key: 'actions' as any,
-            header: '',
-            width: '48px',
-            render: (_: any, row: Order) => (
-                <OrderActionMenu
-                    order={row}
-                    onViewDetails={setViewingOrder}
-                    onUpdateStatus={handleUpdateStatus}
-                    onRequery={requeryOrder}
-                    onGenerateReceipt={generateReceipt}
-                    onPrintReceipt={handlePrintReceipt}
-                    onRecordPayment={setRecordingPaymentOrder}
-                    onGeneratePaymentLink={handleGeneratePaymentLink}
-                    onAdvanceKitchen={handleAdvanceKitchen}
-                />
-            )
-        }
-    ]
-    }, [layoutPreset, oui, activeBusiness?.currency, handlePrintReceipt, handleGeneratePaymentLink, handleUpdateStatus, requeryOrder, generateReceipt, handleAdvanceKitchen])
+        ]
+    }, [layoutPreset, oui, activeBusiness?.currency, handlePrintReceipt, handleGeneratePaymentLink, handleUpdateStatus, requeryOrder, generateReceipt, handleAdvanceKitchen, openSendToKitchenDialog])
 
     const pendingCount = summary?.pendingOrdersCount ?? 0
     const pendingOutstandingAmount = summary?.pendingOutstandingAmount ?? 0
@@ -546,7 +620,7 @@ export function OrdersView() {
                                     )}>
                                         <stat.icon className="h-5 w-5" />
                                     </div>
-                                    
+
                                     {(stat as any).isPending && (
                                         <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 animate-pulse">
                                             <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
@@ -562,7 +636,7 @@ export function OrdersView() {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {/* Subtle hover accent line */}
                             <div className={cn(
                                 "absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-700",
@@ -697,7 +771,9 @@ export function OrdersView() {
                                         onGenerateReceipt={generateReceipt}
                                         onPrintReceipt={handlePrintReceipt}
                                         onRecordPayment={setRecordingPaymentOrder}
+                                        onGeneratePaymentLink={handleGeneratePaymentLink}
                                         onAdvanceKitchen={handleAdvanceKitchen}
+                                        onSendToKitchen={openSendToKitchenDialog}
                                     />
                                 }
                             />
@@ -740,6 +816,207 @@ export function OrdersView() {
                     isUpdating={isUpdating}
                     isDeleting={isDeleting}
                 />
+
+                <Dialog
+                    open={!!kitchenOrder}
+                    onOpenChange={(open) => {
+                        if (!open) closeSendToKitchenDialog()
+                    }}
+                >
+                    <DialogContent className="flex! max-h-[min(88vh,720px)] w-full max-w-lg flex-col gap-0 overflow-hidden rounded-3xl! border-brand-deep/10 bg-white/95 p-0 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-brand-deep-900/95">
+                        <DialogHeader className="shrink-0 space-y-1.5 border-b border-brand-deep/10 px-6 pb-4 pt-6 pr-14 text-left sm:text-left dark:border-white/10">
+                            <DialogTitle>Send order to kitchen</DialogTitle>
+                            <DialogDescription>
+                                Review the generated ticket details or adjust them before creating the kitchen ticket.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {kitchenOrder && (
+                            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-6 py-4 [-webkit-overflow-scrolling:touch]">
+                                <div className="rounded-2xl border border-brand-deep/8 bg-brand-deep/3 p-4 dark:border-white/10 dark:bg-white/5">
+                                    <div className="pr-0.5">
+                                        <table
+                                            className="w-full border-separate border-spacing-0 text-left"
+                                            aria-label="Order preview"
+                                        >
+                                            <tbody>
+                                                <tr className="border-b border-brand-deep/10 dark:border-white/10">
+                                                    <td className="min-w-0 pb-3 pr-4 align-middle">
+                                                        <span className="text-sm font-semibold leading-tight text-brand-deep dark:text-brand-cream">
+                                                            #{kitchenOrder.shortCode ?? kitchenOrder.id.slice(0, 8)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="whitespace-nowrap pb-3 text-right align-middle">
+                                                        <span className="inline-flex items-center rounded-full bg-brand-deep/8 px-3 py-1 text-xs font-bold tabular-nums text-brand-deep dark:bg-white/10 dark:text-brand-cream">
+                                                            {formatCurrency(kitchenOrder.totalAmount, {
+                                                                currency: kitchenSendCurrency,
+                                                            })}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+
+                                                {kitchenSendLineItems.length > 0 ? (
+                                                    kitchenSendLineItems.map((item, idx) => {
+                                                        const qty = Number(item.quantity)
+                                                        const unit =
+                                                            Number.isFinite(qty) && qty === 1 ? "unit" : "units"
+                                                        const isLastLine =
+                                                            idx === kitchenSendLineItems.length - 1
+                                                        return (
+                                                            <tr
+                                                                key={idx}
+                                                                className={cn(
+                                                                    "border-b border-brand-deep/10 dark:border-white/10",
+                                                                    isLastLine && "border-b-0"
+                                                                )}
+                                                            >
+                                                                <td className="min-w-0 py-3 pr-4 align-top">
+                                                                    <p className="text-sm font-medium leading-snug text-brand-deep dark:text-brand-cream">
+                                                                        {item.productName}
+                                                                    </p>
+                                                                    <p className="mt-1 text-xs leading-snug text-brand-accent/55 dark:text-brand-cream/45">
+                                                                        {qty} {unit} ×{" "}
+                                                                        <CurrencyText
+                                                                            value={formatCurrency(item.price, {
+                                                                                currency: kitchenSendCurrency,
+                                                                            })}
+                                                                        />
+                                                                    </p>
+                                                                </td>
+                                                                <td className="whitespace-nowrap py-3 align-top text-right tabular-nums">
+                                                                    <span className="inline-block text-sm font-medium leading-snug text-brand-deep dark:text-brand-cream">
+                                                                        <CurrencyText
+                                                                            value={formatCurrency(item.total, {
+                                                                                currency: kitchenSendCurrency,
+                                                                            })}
+                                                                        />
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        )
+                                                    })
+                                                ) : (
+                                                    <tr>
+                                                        <td
+                                                            colSpan={2}
+                                                            className="py-3 text-sm leading-snug text-brand-accent/70 dark:text-brand-cream/60"
+                                                        >
+                                                            {kitchenOrder.summary}
+                                                        </td>
+                                                    </tr>
+                                                )}
+
+                                                <tr>
+                                                    <td
+                                                        colSpan={2}
+                                                        className="border-t border-brand-deep/10 pt-3 dark:border-white/10"
+                                                    >
+                                                        <span className="inline-flex items-center gap-2 text-xs leading-relaxed text-brand-accent/50 dark:text-brand-cream/40">
+                                                            <User
+                                                                className="size-3.5 shrink-0 text-brand-accent/45 dark:text-brand-cream/35"
+                                                                aria-hidden
+                                                            />
+                                                            <span className="min-w-0">
+                                                                {kitchenOrder.customer || "Walk-in"}
+                                                            </span>
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div className="min-w-0 space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">
+                                                Station
+                                            </label>
+                                            <Select
+                                                value={kitchenStationMode}
+                                                onValueChange={(value) => {
+                                                    setKitchenStationMode(value)
+                                                    if (value !== "custom") setKitchenStation(value)
+                                                }}
+                                            >
+                                                <SelectTrigger className="rounded-2xl">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {KITCHEN_STATION_OPTIONS.map((option) => (
+                                                        <SelectItem key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">
+                                                Initial stage
+                                            </label>
+                                            <Select
+                                                value={kitchenInitialStatus}
+                                                onValueChange={(value) =>
+                                                    setKitchenInitialStatus(value as KitchenTicket["status"])
+                                                }
+                                            >
+                                                <SelectTrigger className="rounded-2xl">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {KITCHEN_INITIAL_STATUS_OPTIONS.map((option) => (
+                                                        <SelectItem key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    {kitchenStationMode === "custom" && (
+                                        <div className="w-full min-w-0">
+                                            <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/50">
+                                                Station name
+                                            </label>
+                                            <Input
+                                                value={kitchenStation}
+                                                onChange={(event) => setKitchenStation(event.target.value)}
+                                                placeholder="Enter station name"
+                                                className="w-full rounded-2xl"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <p className="text-xs leading-5 text-brand-accent/55 dark:text-brand-cream/45">
+                                    Defaults are generated from the order. Creating the ticket may also send the configured WhatsApp update for the selected initial stage.
+                                </p>
+                            </div>
+                        )}
+
+                        <DialogFooter className="shrink-0 gap-2 border-t border-brand-deep/10 bg-white/95 px-6 pb-6 pt-4 dark:border-white/10 dark:bg-brand-deep-900/95 sm:justify-end">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={closeSendToKitchenDialog}
+                                disabled={kitchenAction.create.isPending}
+                                className="rounded-full"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleCreateKitchenTicket}
+                                disabled={!kitchenStation.trim() || kitchenAction.create.isPending}
+                                className="rounded-full"
+                            >
+                                {kitchenAction.create.isPending ? "Creating..." : "Create ticket"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             {/* Mobile Floating Action Button */}

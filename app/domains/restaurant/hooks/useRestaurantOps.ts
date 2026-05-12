@@ -10,6 +10,16 @@ export interface KitchenTicket {
   station: string
   status: "queued" | "preparing" | "ready" | "served"
   createdAt: string
+  hasReachableCustomer?: boolean
+  customerName?: string | null
+}
+
+export interface OrderWhatsAppNotificationResult {
+  status: "sent" | "skipped" | "failed"
+  reason?: string
+  messageId?: string
+  customerName?: string
+  customerPhone?: string
 }
 
 export interface BarTicket {
@@ -190,13 +200,40 @@ export function useKitchenTicketActions() {
   const queryClient = useQueryClient()
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id
-  return useMutation({
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["restaurant", "kitchenTickets", businessId] })
+    queryClient.invalidateQueries({ queryKey: ["sales", businessId] })
+  }
+
+  const advance = useMutation({
     mutationFn: ({ id, status }: { id: string; status: KitchenTicket["status"] }) =>
-      apiClient.patch(`/restaurant/kitchen-tickets/${id}`, { status }),
+      apiClient.patch<KitchenTicket & { notification?: OrderWhatsAppNotificationResult }>(
+        `/restaurant/kitchen-tickets/${id}`,
+        { status }
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restaurant", "kitchenTickets", businessId] })
+      invalidate()
     },
   })
+
+  const create = useMutation({
+    mutationFn: (payload: { saleId: string; station?: string; status?: KitchenTicket["status"] }) =>
+      apiClient.post<KitchenTicket & { notification?: OrderWhatsAppNotificationResult }>(
+        "/restaurant/kitchen-tickets",
+        payload
+      ),
+    onSuccess: invalidate,
+  })
+
+  const sendMessage = useMutation({
+    mutationFn: ({ id, body, presetId }: { id: string; body?: string; presetId?: string }) =>
+      apiClient.post<OrderWhatsAppNotificationResult>(`/restaurant/kitchen-tickets/${id}/message`, {
+        body,
+        presetId,
+      }),
+  })
+
+  return { advance, create, sendMessage }
 }
 
 export function useTableSessionActions() {

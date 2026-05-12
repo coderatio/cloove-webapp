@@ -9,6 +9,9 @@ import {
     BarChart3,
     Eye,
     ExternalLink,
+    Globe,
+    MessageSquare,
+    CircleAlert,
     MapPin,
     Layers,
     Boxes,
@@ -17,6 +20,12 @@ import {
     Trash2,
     Barcode
 } from "lucide-react"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu"
 import {
     Drawer,
     DrawerContent,
@@ -45,9 +54,25 @@ interface ProductViewDrawerProps {
     item: InventoryItem | null
     onEdit?: (item: InventoryItem) => void
     onDelete?: (item: InventoryItem) => void
+    onSyncCatalog?: (item: InventoryItem, scope: 'whitelabel' | 'global') => Promise<void> | void
+    isSyncingWhiteLabel?: boolean
+    isSyncingGlobal?: boolean
+    canSyncCatalog?: boolean
+    syncHint?: string | null
 }
 
-export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete }: ProductViewDrawerProps) {
+export function ProductViewDrawer({
+    isOpen,
+    onOpenChange,
+    item,
+    onEdit,
+    onDelete,
+    onSyncCatalog,
+    isSyncingWhiteLabel = false,
+    isSyncingGlobal = false,
+    canSyncCatalog = true,
+    syncHint = null,
+}: ProductViewDrawerProps) {
     const [activeImageIndex, setActiveImageIndex] = React.useState(0)
     const [isLabelDrawerOpen, setIsLabelDrawerOpen] = React.useState(false)
     const { activeBusiness } = useBusiness()
@@ -59,6 +84,8 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
     const images = raw?.images || []
     const variants = raw?.variants || raw?.product_variants || []
     const stores = raw?.stores || []
+    const whiteLabelSynced = Boolean(item.catalogSync?.whitelabel?.hasItems)
+    const globalSynced = Boolean(item.catalogSync?.global?.hasItems)
 
     const activeImage = images[activeImageIndex] || images[0]
 
@@ -89,6 +116,41 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
 
                 <DrawerBody className="p-0 overflow-y-auto bg-brand-cream/30 dark:bg-brand-deep/10">
                     <div className="py-8 px-4 sm:px-8 space-y-8">
+                        {canSyncCatalog ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="rounded-2xl border border-brand-deep/8 dark:border-white/10 bg-white/70 dark:bg-white/4 px-4 py-3">
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/45 dark:text-brand-cream/45">
+                                        White-label Catalog
+                                    </div>
+                                    <div className="mt-2">
+                                        <Badge variant={whiteLabelSynced ? 'success' : 'secondary'}>
+                                            {whiteLabelSynced ? 'Synced' : 'Not Synced'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <div className="rounded-2xl border border-brand-deep/8 dark:border-white/10 bg-white/70 dark:bg-white/4 px-4 py-3">
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/45 dark:text-brand-cream/45">
+                                        Global Catalog
+                                    </div>
+                                    <div className="mt-2">
+                                        <Badge variant={globalSynced ? 'success' : 'secondary'}>
+                                            {globalSynced ? 'Synced' : 'Not Synced'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
+
+                        {!canSyncCatalog && syncHint ? (
+                            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/8 px-4 py-3">
+                                <div className="flex items-start gap-2">
+                                    <CircleAlert className="w-4 h-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                    <div className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+                                        {syncHint}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
                         {/* Image Gallery */}
                         {images.length > 0 ? (
                             <div className="space-y-4">
@@ -259,6 +321,40 @@ export function ProductViewDrawer({ isOpen, onOpenChange, item, onEdit, onDelete
                         <Barcode className="w-4 h-4 mr-2" />
                         Print Label
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="flex-1 h-12 rounded-2xl border-brand-deep/5 dark:border-white/10 text-brand-deep/60 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-all uppercase tracking-widest text-[10px] font-bold"
+                                disabled={!canSyncCatalog || isSyncingWhiteLabel || isSyncingGlobal}
+                            >
+                                {(isSyncingWhiteLabel || isSyncingGlobal) ? (
+                                    <Package className="w-4 h-4 mr-2 animate-spin" />
+                                ) : (
+                                    <ExternalLink className="w-4 h-4 mr-2" />
+                                )}
+                                {(isSyncingWhiteLabel || isSyncingGlobal) ? 'Syncing...' : 'Sync Catalog'}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" className="w-52 rounded-2xl p-2 bg-white/95 dark:bg-brand-deep-800 border-brand-deep/5 dark:border-white/5 shadow-2xl">
+                            <DropdownMenuItem
+                                disabled={!canSyncCatalog || isSyncingWhiteLabel || isSyncingGlobal}
+                                onClick={() => onSyncCatalog?.(item, 'whitelabel')}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream"
+                            >
+                                {isSyncingWhiteLabel ? <Package className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                                {isSyncingWhiteLabel ? 'Syncing White-label...' : 'Sync White-label'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                disabled={!canSyncCatalog || isSyncingWhiteLabel || isSyncingGlobal}
+                                onClick={() => onSyncCatalog?.(item, 'global')}
+                                className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream"
+                            >
+                                {isSyncingGlobal ? <Package className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                                {isSyncingGlobal ? 'Syncing Global...' : 'Sync Global'}
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button
                         className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep shadow-lg hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px] font-bold"
                         onClick={() => {
