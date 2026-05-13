@@ -13,7 +13,7 @@ declare global {
     FB?: {
       init: (params: Record<string, unknown>) => void
       login: (
-        callback: (response: { authResponse?: { code?: string } }) => void,
+        callback: (response: { authResponse?: { code?: string }; status?: string }) => void,
         params: Record<string, unknown>
       ) => void
     }
@@ -32,7 +32,9 @@ interface EmbeddedSignupButtonProps {
   label?: string
   connectingLabel?: string
   className?: string
+  containerClassName?: string
   icon?: ElementType
+  showStatusMessage?: boolean
 }
 
 const WA_SIGNUP_LOG_PREFIX = "[WhatsApp Embedded Signup]"
@@ -41,7 +43,9 @@ export function EmbeddedSignupButton({
   label = "Connect WhatsApp Number",
   connectingLabel = "Connecting…",
   className,
+  containerClassName = "w-full space-y-2",
   icon: Icon = MessageSquare,
+  showStatusMessage = true,
 }: EmbeddedSignupButtonProps) {
   const connectNumber = useConnectWhatsAppNumber()
   const { activeBusiness } = useBusiness()
@@ -76,7 +80,7 @@ export function EmbeddedSignupButton({
             appId: "",
             configId: "",
             isConfigured: false,
-            error: "Failed to load Meta Embedded Signup configuration.",
+            error: "We could not load the Meta connection options right now.",
           })
         }
       }
@@ -224,7 +228,7 @@ export function EmbeddedSignupButton({
   const isConfigured = !!runtimeConfig?.isConfigured
 
   return (
-    <div className="w-full space-y-2">
+    <div className={containerClassName}>
       <Button
         onClick={() => {
           if (!runtimeConfig?.isConfigured || !runtimeConfig.configId) {
@@ -260,7 +264,10 @@ export function EmbeddedSignupButton({
               const code = response.authResponse?.code
               if (!code) {
                 console.error(`${WA_SIGNUP_LOG_PREFIX} Meta signup returned no auth code`, response)
-                toast.error("Meta signup did not return an authorization code.")
+                toast.error("Meta connection was not completed", {
+                  description:
+                    "Finish the Meta signup window to connect your WhatsApp number. If you closed it or cancelled permissions, you can try again.",
+                })
                 return
               }
 
@@ -297,12 +304,12 @@ export function EmbeddedSignupButton({
           </>
         )}
       </Button>
-      {!isEmbeddedEnabled ? (
+      {showStatusMessage && !isEmbeddedEnabled ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
-          Embedded Meta signup is disabled in configuration.
+          Connect with Meta is not available for your business right now.
         </p>
       ) : null}
-      {!isConfigured && runtimeConfig?.error ? (
+      {showStatusMessage && !isConfigured && runtimeConfig?.error ? (
         <p className="rounded-xl border border-red-200 bg-red-50/80 px-3 py-2 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
           {runtimeConfig.error}
         </p>
