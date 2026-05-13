@@ -72,9 +72,15 @@
 
   /* Fonts — reference next/font's loaded variables so the browser always resolves
      to the actual @font-face name rather than a bare string with no matching
-     @font-face when next/font is active. */
-  --font-serif: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+     @font-face when next/font is active.
+     ── Pairing ─────────────────────────────────────────────────────────────
+     --font-sans  → Inter for body copy and dense UI (forms, tables, prose).
+     --font-serif → Bricolage Grotesque for display: headings, hero copy,
+                    buttons, anything that needs presence. The name "serif"
+                    is historical (both fonts are sans-serif); think of it
+                    as the "display" slot. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-dm-mono), ui-monospace, 'Cascadia Code', monospace;
 
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -203,14 +209,14 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.2;
 }
 
 .heading-display {
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
   font-size: 2rem;
   font-weight: 700;
   color: var(--color-text-primary);

@@ -239,10 +239,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     message: string
   } | null>(null)
   const [embeddedConfig, setEmbeddedConfig] = useState<EmbeddedSignupRuntimeConfig>({
-    embeddedEnabled: false,
+    embeddedEnabled: true,
     isConfigured: false,
     error: null,
   })
+  const [embeddedConfigLoaded, setEmbeddedConfigLoaded] = useState(false)
 
   const [isDirty, setIsDirty] = useState(false)
   const [showAddAnother, setShowAddAnother] = useState(false)
@@ -302,14 +303,16 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
             isConfigured: data.isConfigured === true,
             error: data.error ?? null,
           })
+          setEmbeddedConfigLoaded(true)
         }
       } catch {
         if (!cancelled) {
           setEmbeddedConfig({
             embeddedEnabled: true,
             isConfigured: false,
-            error: "Could not load embedded signup configuration.",
+            error: "We could not load the Meta connection options right now.",
           })
+          setEmbeddedConfigLoaded(true)
         }
       }
     }
@@ -481,7 +484,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                   {embeddedConfig.embeddedEnabled ? (
                     <>
                       <div className="sm:flex-1">
-                        <EmbeddedSignupButton />
+                        <EmbeddedSignupButton showStatusMessage={false} />
                       </div>
                       <Button
                         type="button"
@@ -498,11 +501,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                     </p>
                   )}
                 </div>
-                {!embeddedConfig.isConfigured && embeddedConfig.error ? (
-                  <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-                    {embeddedConfig.error} You can still connect manually below.
-                  </p>
-                ) : null}
+                <EmbeddedSignupConfigNotice
+                  config={embeddedConfig}
+                  isLoaded={embeddedConfigLoaded}
+                  className="mt-3"
+                />
                 {(!embeddedConfig.embeddedEnabled || showManualConnect) && (
                   <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/60">
                     <ConnectWhatsAppForm
@@ -521,6 +524,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                     <NumberStatusPoller number={number} />
                     <ConnectedNumberCard
                       number={number}
+                      embeddedConfig={embeddedConfig}
+                      embeddedConfigLoaded={embeddedConfigLoaded}
                       onDisconnect={() => disconnectNumber.mutate(number.id)}
                       isDisconnecting={
                         disconnectNumber.isPending && disconnectNumber.variables === number.id
@@ -537,6 +542,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                   <SuspendedNumberCard
                     key={number.id}
                     number={number}
+                    embeddedConfig={embeddedConfig}
+                    embeddedConfigLoaded={embeddedConfigLoaded}
                     onRestore={() => restoreNumber.mutate(number.id)}
                     isRestoring={
                       restoreNumber.isPending && restoreNumber.variables === number.id
@@ -562,7 +569,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                     </div>
                     <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
                       {embeddedConfig.embeddedEnabled && (
-                        <EmbeddedSignupButton label="Connect with Meta" />
+                        <EmbeddedSignupButton
+                          label="Connect with Meta"
+                          containerClassName="w-full sm:w-auto"
+                          showStatusMessage={false}
+                        />
                       )}
                       <Button
                         type="button"
@@ -574,6 +585,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                       </Button>
                     </div>
                   </div>
+                  <EmbeddedSignupConfigNotice
+                    config={embeddedConfig}
+                    isLoaded={embeddedConfigLoaded}
+                    className="mt-4"
+                  />
                   {showAddAnother && (
                     <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/60">
                       <ConnectWhatsAppForm
@@ -858,6 +874,40 @@ function SettingsCard({ children, className = "" }: { children: React.ReactNode;
   )
 }
 
+function EmbeddedSignupConfigNotice({
+  config,
+  isLoaded,
+  className = "",
+}: {
+  config: EmbeddedSignupRuntimeConfig
+  isLoaded: boolean
+  className?: string
+}) {
+  if (!isLoaded) return null
+
+  const isDisabled = !config.embeddedEnabled
+  const message = isDisabled
+    ? "Connect with Meta is not available for your business right now. You can still add your WhatsApp number manually."
+    : !config.isConfigured && config.error
+      ? `${config.error} You can still add your WhatsApp number manually.`
+      : null
+
+  if (!message) return null
+
+  return (
+    <div
+      className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm leading-6 ${
+        isDisabled
+          ? "border-amber-100 bg-amber-50/80 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
+          : "border-red-100 bg-red-50/80 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300"
+      } ${className}`}
+    >
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+      <p>{message}</p>
+    </div>
+  )
+}
+
 function NumberStatusPoller({ number }: { number: WhatsAppNumber }) {
   const enabled =
     number.status === WhatsAppNumberStatusValue.PENDING ||
@@ -1030,14 +1080,7 @@ function WhatsAppCatalogPanel({
     isSyncing ||
     status === WhatsAppCatalogSyncStatus.SYNCING ||
     (status === WhatsAppCatalogSyncStatus.PENDING && isProvisioning)
-  const lastSynced = catalog?.last_synced_at
-    ? new Date(catalog.last_synced_at).toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-    : "Not synced yet"
+  const lastSynced = formatCatalogSyncTime(catalog?.last_synced_at)
   const summary = catalog
     ? buildCatalogSummary(catalog, lastSynced)
     : isProvisioning
@@ -1048,35 +1091,27 @@ function WhatsAppCatalogPanel({
   const errorMessage =
     (isFailed && catalog?.last_error) ||
     (shouldShowBootstrapError ? number.catalog_bootstrap_error : null)
+  const customerErrorMessage = errorMessage ? buildCatalogErrorMessage(errorMessage) : null
   const canSync = !isProvisioning && !isRunning
+  const showCatalogStats = !!catalog && !isFailed
 
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
         WhatsApp Catalog
       </h2>
-      <SettingsCard>
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="flex gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-                <PackageCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div className="min-w-0 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">
-                    Cloove Product Catalog
-                  </p>
-                  <CatalogStatusBadge status={status} />
-                </div>
-                <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
-                  {summary}
+      <SettingsCard className="space-y-4 border-brand-green-100/80 bg-linear-to-br from-brand-green-50/80 via-white to-brand-gold-50/45 p-4 shadow-sm dark:border-brand-green-700/30 dark:from-brand-deep-950/80 dark:via-slate-950/80 dark:to-brand-green-950/50 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+              <PackageCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-semibold text-slate-900 dark:text-slate-100">
+                  Cloove Product Catalog
                 </p>
-                {errorMessage ? (
-                  <div className="rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm leading-6 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
-                    {errorMessage}
-                  </div>
-                ) : null}
+                <CatalogStatusBadge status={status} />
               </div>
             </div>
           </div>
@@ -1085,7 +1120,7 @@ function WhatsAppCatalogPanel({
             variant={isFailed ? "default" : "outline"}
             onClick={onSync}
             disabled={!canSync}
-            className="shrink-0 rounded-full px-5"
+            className="h-11 w-full shrink-0 rounded-full px-5 sm:w-auto"
           >
             {isRunning ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1095,18 +1130,152 @@ function WhatsAppCatalogPanel({
             {isFailed ? "Retry" : "Sync Now"}
           </Button>
         </div>
+        <div className="space-y-2.5">
+          {showCatalogStats ? (
+            <CatalogSyncStats catalog={catalog} lastSynced={lastSynced} />
+          ) : (
+            <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
+              {summary}
+            </p>
+          )}
+          {customerErrorMessage ? (
+            <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm leading-6 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-1">
+                <p className="font-medium">Catalog setup needs attention</p>
+                <p>{customerErrorMessage}</p>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </SettingsCard>
     </section>
   )
 }
 
 function buildCatalogSummary(catalog: WhatsAppCatalogStatus, lastSynced: string): string {
-  const productsPart = `${catalog.synced_products_count} of ${catalog.products_count} products synced`
-  const variantsPart =
-    catalog.variants_count > 0
-      ? ` · ${catalog.synced_variants_count} of ${catalog.variants_count} variants`
-      : ""
-  return `${productsPart}${variantsPart}. Last sync: ${lastSynced}.`
+  const hasProducts = catalog.products_count > 0
+
+  if (catalog.sync_status === WhatsAppCatalogSyncStatus.FAILED) {
+    return hasProducts
+      ? `Catalog sync was interrupted. ${catalog.synced_products_count} of ${catalog.products_count} products were synced. Last checked: ${lastSynced}.`
+      : "Catalog sync has not completed yet. Retry when your Meta catalog access is ready."
+  }
+
+  if (!hasProducts) {
+    return catalog.last_synced_at
+      ? `No products were available to sync. Last checked: ${lastSynced}.`
+      : "No products have been synced yet."
+  }
+
+  return `${catalog.synced_products_count} of ${catalog.products_count} products synced. Last sync: ${lastSynced}.`
+}
+
+function buildCatalogErrorMessage(errorMessage: string): string {
+  const normalizedError = errorMessage.trim()
+  const metaStatusMatch = normalizedError.match(/\b(?:failed|error):\s*(\d{3})\b/i)
+  const metaStatus = metaStatusMatch?.[1]
+
+  if (metaStatus) {
+    return `Meta could not finish creating your product catalog. Retry the setup, and if it still fails, check that your Meta Business account has catalog permissions.`
+  }
+
+  return normalizedError
+}
+
+function formatCatalogSyncTime(dateString?: string | null): string {
+  if (!dateString) return "Not synced yet"
+
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return "Not synced yet"
+
+  const datePart = date.toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })
+  const timePart = date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  })
+
+  return `${datePart} at ${timePart}`
+}
+
+function CatalogSyncStats({
+  catalog,
+  lastSynced,
+}: {
+  catalog: WhatsAppCatalogStatus
+  lastSynced: string
+}) {
+  const additionalOptionVariants = Math.max(catalog.variants_count - catalog.products_count, 0)
+  const syncedAdditionalOptionVariants = Math.min(
+    Math.max(catalog.synced_variants_count - catalog.synced_products_count, 0),
+    additionalOptionVariants
+  )
+  const hasProducts = catalog.products_count > 0
+
+  if (!hasProducts) {
+    return (
+      <p className="text-sm leading-6 text-slate-500 dark:text-slate-300">
+        No products have been synced yet.
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-2.5">
+      <div className="grid gap-2 sm:grid-cols-2">
+        <CatalogStat
+          label="Products synced"
+          value={`${catalog.synced_products_count}/${catalog.products_count}`}
+          description="Customer-facing items available in WhatsApp"
+        />
+        <CatalogStat
+          label="Product options"
+          value={
+            additionalOptionVariants > 0
+              ? `${syncedAdditionalOptionVariants}/${additionalOptionVariants}`
+              : "None"
+          }
+          description={
+            additionalOptionVariants > 0
+              ? "Additional selectable variants, excluding default product rows"
+              : "No extra options beyond the default product rows"
+          }
+        />
+      </div>
+      <p className="text-xs leading-4 text-slate-500 dark:text-slate-400">
+        Last sync: {lastSynced}
+      </p>
+    </div>
+  )
+}
+
+function CatalogStat({
+  label,
+  value,
+  description,
+}: {
+  label: string
+  value: string
+  description: string
+}) {
+  return (
+    <div className="rounded-2xl border border-brand-green-100/70 bg-white px-4 py-2.5 shadow-[0_1px_0_rgba(11,61,46,0.03)] dark:border-brand-green-800/35 dark:bg-slate-950/55">
+      <p className="text-xs font-medium uppercase tracking-[0.12em] text-slate-400">
+        {label}
+      </p>
+      <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">
+        {value}
+      </p>
+      <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+        {description}
+      </p>
+    </div>
+  )
 }
 
 function CatalogStatusBadge({ status }: { status: WhatsAppCatalogStatus["sync_status"] }) {
@@ -1162,6 +1331,8 @@ function SettingToggle({
 
 function ConnectedNumberCard({
   number,
+  embeddedConfig,
+  embeddedConfigLoaded,
   onDisconnect,
   isDisconnecting,
   onSyncCatalog,
@@ -1169,6 +1340,8 @@ function ConnectedNumberCard({
   onManualReconnectSuccess,
 }: {
   number: WhatsAppNumber
+  embeddedConfig: EmbeddedSignupRuntimeConfig
+  embeddedConfigLoaded: boolean
   onDisconnect: () => void
   isDisconnecting: boolean
   onSyncCatalog: () => void
@@ -1324,6 +1497,8 @@ function ConnectedNumberCard({
               ) : (
                 <EmbeddedSignupButton
                   label="Connect Again"
+                  containerClassName="w-full sm:w-auto"
+                  showStatusMessage={false}
                   className="h-10 w-full justify-center rounded-full border border-slate-200 bg-white px-4 text-slate-900 hover:bg-slate-50 sm:w-auto dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
                   icon={RefreshCw}
                 />
@@ -1353,6 +1528,13 @@ function ConnectedNumberCard({
                 </Button>
               ) : null}
             </div>
+            {number.connection_mode === "embedded" ? (
+              <EmbeddedSignupConfigNotice
+                config={embeddedConfig}
+                isLoaded={embeddedConfigLoaded}
+                className="mt-3"
+              />
+            ) : null}
             {number.connection_mode === "manual" && showManualReconnect ? (
               <div className="mt-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
                 <ConnectWhatsAppForm
@@ -1436,6 +1618,8 @@ function StatusMetric({ label, value }: { label: string; value: string }) {
 
 function SuspendedNumberCard({
   number,
+  embeddedConfig,
+  embeddedConfigLoaded,
   onRestore,
   isRestoring,
   onDelete,
@@ -1443,6 +1627,8 @@ function SuspendedNumberCard({
   onManualReconnectSuccess,
 }: {
   number: WhatsAppNumber
+  embeddedConfig: EmbeddedSignupRuntimeConfig
+  embeddedConfigLoaded: boolean
   onRestore: () => void
   isRestoring: boolean
   onDelete: () => void
@@ -1500,6 +1686,8 @@ function SuspendedNumberCard({
             {number.connection_mode === "embedded" ? (
               <EmbeddedSignupButton
                 label="Reconnect"
+                containerClassName="w-full sm:w-auto"
+                showStatusMessage={false}
                 className="h-10 rounded-full bg-brand-deep px-4 text-brand-cream hover:bg-brand-deep/90"
                 icon={RotateCcw}
               />
@@ -1530,6 +1718,12 @@ function SuspendedNumberCard({
               Delete
             </Button>
           </div>
+          {number.connection_mode === "embedded" ? (
+            <EmbeddedSignupConfigNotice
+              config={embeddedConfig}
+              isLoaded={embeddedConfigLoaded}
+            />
+          ) : null}
           {number.connection_mode !== "embedded" && showManualReconnect ? (
             <div className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
               <ConnectWhatsAppForm

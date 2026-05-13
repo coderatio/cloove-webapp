@@ -1,10 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, DM_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Inter, DM_Mono } from "next/font/google";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-dm-sans",
+const inter = Inter({
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-inter",
+  preload: false,
+});
+
+const bricolage = Bricolage_Grotesque({
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-bricolage",
   preload: false,
 });
 
@@ -87,7 +93,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`scroll-smooth ${dmSans.variable} ${dmMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`scroll-smooth ${inter.variable} ${bricolage.variable} ${dmMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
         {/* ── Early Theme Sync (Prevents white flash/bar on forced-dark public routes) ── */}
         <script
