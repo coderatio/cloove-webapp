@@ -84,6 +84,14 @@ const STATUS_CONFIG: Record<WhatsAppNumberStatusValue, { label: string; icon: Re
   [WhatsAppNumberStatusValue.SUSPENDED]: { label: "Disconnected", icon: AlertCircle, color: "text-slate-500 dark:text-slate-300" },
 }
 
+function getWhatsAppPhoneLabel(number: WhatsAppNumber) {
+  return number.display_phone_number || number.phone_number
+}
+
+function getWhatsAppDisplayName(number: WhatsAppNumber) {
+  return number.display_name || number.verified_name
+}
+
 const TONE_OPTIONS = [
   { value: "professional", label: "Professional" },
   { value: "friendly", label: "Friendly" },
@@ -1359,6 +1367,8 @@ function ConnectedNumberCard({
     number.status === WhatsAppNumberStatusValue.VERIFYING
   const config = STATUS_CONFIG[number.status] ?? STATUS_CONFIG[WhatsAppNumberStatusValue.FAILED]
   const StatusIcon = config.icon
+  const phoneLabel = getWhatsAppPhoneLabel(number)
+  const displayName = getWhatsAppDisplayName(number)
   const effectiveCatalog =
     catalog ??
     (number.catalog_bootstrap_status
@@ -1399,7 +1409,7 @@ function ConnectedNumberCard({
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
-              {number.phone_number}
+              {phoneLabel}
             </p>
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${config.color} bg-slate-100 dark:bg-slate-800`}
@@ -1421,9 +1431,9 @@ function ConnectedNumberCard({
               {number.connection_mode === "embedded" ? "Embedded" : "Manual"}
             </span>
           </div>
-          {number.display_name && (
+          {displayName && (
             <p className="truncate text-sm text-slate-500 dark:text-slate-300">
-              {number.display_name}
+              {displayName}
             </p>
           )}
         </div>
@@ -1638,6 +1648,8 @@ function SuspendedNumberCard({
   const [isOpen, setIsOpen] = useState(false)
   const [showManualReconnect, setShowManualReconnect] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const phoneLabel = getWhatsAppPhoneLabel(number)
+  const displayName = getWhatsAppDisplayName(number)
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
@@ -1653,7 +1665,7 @@ function SuspendedNumberCard({
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
-              {number.phone_number}
+              {phoneLabel}
             </p>
             <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
               <AlertCircle className="h-3 w-3" />
@@ -1663,9 +1675,9 @@ function SuspendedNumberCard({
               {number.connection_mode === "embedded" ? "Embedded" : "Manual"}
             </span>
           </div>
-          {number.display_name && (
+          {displayName && (
             <p className="truncate text-sm text-slate-500 dark:text-slate-300">
-              {number.display_name}
+              {displayName}
             </p>
           )}
         </div>

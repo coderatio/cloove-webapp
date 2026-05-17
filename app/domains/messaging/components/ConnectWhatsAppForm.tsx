@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
 import { Loader2, Eye, EyeOff } from "lucide-react"
@@ -16,6 +16,8 @@ interface FormState {
   access_token: string
   app_secret: string
   catalog_id: string
+  catalog_name: string
+  display_name: string
 }
 
 interface ConnectWhatsAppFormProps {
@@ -33,6 +35,25 @@ const INITIAL_STATE: FormState = {
   access_token: "",
   app_secret: "",
   catalog_id: "",
+  catalog_name: "",
+  display_name: "",
+}
+
+function buildFormState(number: WhatsAppNumber | null): FormState {
+  if (!number) return INITIAL_STATE
+
+  return {
+    phone_number: number.display_phone_number || number.phone_number || "",
+    phone_number_id: number.phone_number_id ?? "",
+    meta_business_id: number.meta_business_id ?? "",
+    waba_id: number.waba_id ?? "",
+    app_id: number.app_id ?? "",
+    access_token: "",
+    app_secret: "",
+    catalog_id: number.selected_catalog_id ?? "",
+    catalog_name: number.selected_catalog_name ?? "",
+    display_name: number.display_name || number.verified_name || "",
+  }
 }
 
 export function ConnectWhatsAppForm({
@@ -41,19 +62,14 @@ export function ConnectWhatsAppForm({
   onSuccess,
 }: ConnectWhatsAppFormProps) {
   const connectMutation = useManualConnectWhatsAppNumber()
-  const [form, setForm] = useState<FormState>({
-    phone_number: initialNumber?.phone_number ?? "",
-    phone_number_id: initialNumber?.phone_number_id ?? "",
-    meta_business_id: initialNumber?.meta_business_id ?? "",
-    waba_id: initialNumber?.waba_id ?? "",
-    app_id: initialNumber?.app_id ?? "",
-    access_token: "",
-    app_secret: "",
-    catalog_id: initialNumber?.selected_catalog_id ?? "",
-  })
+  const [form, setForm] = useState<FormState>(() => buildFormState(initialNumber))
   const [showToken, setShowToken] = useState(false)
   const [showAppSecret, setShowAppSecret] = useState(false)
   const isUpdateMode = mode === "update"
+
+  useEffect(() => {
+    setForm(buildFormState(initialNumber))
+  }, [initialNumber])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,6 +83,8 @@ export function ConnectWhatsAppForm({
       access_token: form.access_token.trim(),
       app_secret: form.app_secret.trim(),
       catalog_id: form.catalog_id.trim(),
+      catalog_name: form.catalog_name.trim(),
+      display_name: form.display_name.trim(),
     }
 
     if (
@@ -92,7 +110,9 @@ export function ConnectWhatsAppForm({
       !trimmed.app_id &&
       !trimmed.access_token &&
       !trimmed.app_secret &&
-      !trimmed.catalog_id
+      !trimmed.catalog_id &&
+      !trimmed.catalog_name &&
+      !trimmed.display_name
     ) {
       toast.error("Add at least one field to update.")
       return
@@ -108,12 +128,21 @@ export function ConnectWhatsAppForm({
         ...(trimmed.access_token ? { access_token: trimmed.access_token } : {}),
         ...(trimmed.app_secret ? { app_secret: trimmed.app_secret } : {}),
         ...(trimmed.catalog_id ? { catalog_id: trimmed.catalog_id } : {}),
+        ...(trimmed.catalog_name ? { catalog_name: trimmed.catalog_name } : {}),
+        ...(trimmed.display_name ? { display_name: trimmed.display_name } : {}),
       },
       {
         onSuccess: (response) => {
           setForm((prev) =>
             isUpdateMode
-              ? { ...prev, access_token: "", app_secret: "", catalog_id: prev.catalog_id }
+              ? {
+                  ...prev,
+                  access_token: "",
+                  app_secret: "",
+                  catalog_id: prev.catalog_id,
+                  catalog_name: prev.catalog_name,
+                  display_name: prev.display_name,
+                }
               : INITIAL_STATE
           )
           onSuccess?.({
@@ -228,6 +257,25 @@ export function ConnectWhatsAppForm({
             className="bg-white dark:bg-slate-900/50"
           />
         </FormField>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <FormField label="Catalog Name (optional)">
+            <Input
+              value={form.catalog_name}
+              onChange={(e) => handleChange("catalog_name", e.target.value)}
+              placeholder="Product catalog name"
+              className="bg-white dark:bg-slate-900/50"
+            />
+          </FormField>
+          <FormField label="Display Name (optional)">
+            <Input
+              value={form.display_name}
+              onChange={(e) => handleChange("display_name", e.target.value)}
+              placeholder="WhatsApp display name"
+              className="bg-white dark:bg-slate-900/50"
+            />
+          </FormField>
+        </div>
 
         <Button
           type="submit"
