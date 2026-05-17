@@ -47,7 +47,8 @@ export function usePaymentProviders() {
   return useQuery<PaymentProviderInfo[]>({
     queryKey: ['payment-providers'],
     queryFn: () => checkoutFetch<PaymentProviderInfo[]>('/payment-providers'),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   })
 }
 

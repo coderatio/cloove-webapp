@@ -6,6 +6,10 @@ export interface BusinessConfigs {
     low_stock_threshold: number
     low_stock_alert_enabled: boolean
     allow_credit_sales: boolean
+    require_customer_for_sale: boolean
+    auto_generate_receipt: boolean
+    default_payment_method: string
+    sales_virtual_account_provider?: string
     debt_reminder_enabled: boolean
     daily_summary_enabled: boolean
     email_summaries_enabled: boolean

@@ -284,13 +284,17 @@ export interface PaymentProviderOption {
     name: string
     is_enabled: boolean
     logo_url: string | null
+    virtual_account_mode?: "pool" | "dynamic"
+    dynamic_account_enabled?: boolean
+    static_account_enabled?: boolean
 }
 
 export function usePaymentProviders() {
     return useQuery<ApiResponse<PaymentProviderOption[]>>({
         queryKey: ['common', 'payment-providers'],
         queryFn: () => apiClient.get<ApiResponse<PaymentProviderOption[]>>('/payment-providers', {}, { fullResponse: true }),
-        staleTime: 1000 * 60 * 60, // 1 hour
+        staleTime: 0,
+        refetchOnWindowFocus: true,
     })
 }
 

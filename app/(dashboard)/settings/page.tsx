@@ -14,6 +14,7 @@ import {
     Printer,
     LayoutTemplate,
     MessageSquare,
+    ShoppingCart,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BillingSettings } from "@/app/domains/business/components/BillingSettings"
@@ -28,8 +29,9 @@ import { usePermission } from "@/app/hooks/usePermission"
 import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
 import { WorkspaceSettings } from "@/app/domains/workspace/components/WorkspaceSettings"
 import { WhatsAppSettings } from "@/app/domains/messaging/components/WhatsAppSettings"
+import { SalesSettings } from "@/app/domains/business/components/SalesSettings"
 
-type Tab = "business" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace" | "messaging"
+type Tab = "business" | "sales" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace" | "messaging"
 
 function SettingsContent() {
     const { role, can } = usePermission()
@@ -39,6 +41,7 @@ function SettingsContent() {
 
     const allTabs: (TabItem & { id: Tab })[] = [
         { id: "business", label: "Business", icon: Building2 },
+        { id: "sales", label: "Sales", icon: ShoppingCart },
         { id: "workspace", label: "Workspace", icon: LayoutTemplate },
         { id: "messaging", label: "WhatsApp", icon: MessageSquare },
         { id: "profile", label: "My Profile", icon: User },
@@ -104,6 +107,13 @@ function SettingsContent() {
                     >
                         {activeTab === "business" && role === 'OWNER' && (
                             <BusinessSettings
+                                onDirtyChange={setIsDirty}
+                                onSavingChange={setIsSaving}
+                                saveTrigger={saveTrigger}
+                            />
+                        )}
+                        {activeTab === "sales" && role === 'OWNER' && (
+                            <SalesSettings
                                 onDirtyChange={setIsDirty}
                                 onSavingChange={setIsSaving}
                                 saveTrigger={saveTrigger}

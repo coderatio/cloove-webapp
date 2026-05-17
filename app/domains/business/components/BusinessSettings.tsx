@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Input } from "@/app/components/ui/input"
 import { Switch } from "@/app/components/ui/switch"
@@ -16,6 +16,7 @@ interface BusinessSettingsProps {
 export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }: BusinessSettingsProps) {
     const { data: settingsData, isLoading } = useSettings()
     const updateSettings = useUpdateBusinessSettings()
+    const lastHandledSaveTrigger = useRef<number>(0)
 
     useEffect(() => {
         onSavingChange?.(updateSettings.isPending)
@@ -24,7 +25,6 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     const [localConfigs, setLocalConfigs] = useState({
         low_stock_alert_enabled: true,
         low_stock_threshold: 5,
-        allow_credit_sales: true,
         debt_reminder_enabled: true,
         daily_summary_enabled: true,
         email_summaries_enabled: true,
@@ -39,7 +39,6 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
             setLocalConfigs({
                 low_stock_alert_enabled: !!configs.low_stock_alert_enabled,
                 low_stock_threshold: Number(configs.low_stock_threshold) || 5,
-                allow_credit_sales: !!configs.allow_credit_sales,
                 debt_reminder_enabled: !!configs.debt_reminder_enabled,
                 daily_summary_enabled: !!configs.daily_summary_enabled,
                 email_summaries_enabled: !!configs.email_summaries_enabled,
@@ -51,10 +50,16 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
     // Trigger save when parent increments saveTrigger
     useEffect(() => {
-        if (saveTrigger && saveTrigger > 0 && isDirty) {
+        if (
+            saveTrigger &&
+            saveTrigger > 0 &&
+            saveTrigger !== lastHandledSaveTrigger.current &&
+            isDirty
+        ) {
+            lastHandledSaveTrigger.current = saveTrigger
             updateSettings.mutate(localConfigs)
         }
-    }, [saveTrigger])
+    }, [isDirty, localConfigs, saveTrigger, updateSettings])
 
     const handleConfigChange = (key: keyof typeof localConfigs, value: any) => {
         setLocalConfigs(prev => ({ ...prev, [key]: value }))
@@ -98,18 +103,8 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
             </section>
 
             <section className="space-y-4">
-                <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Sales & Credit</h2>
+                <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Communications & Reports</h2>
                 <GlassCard className="p-6 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <span className="font-medium text-brand-deep dark:text-brand-cream">Allow Credit Sales</span>
-                            <p className="text-xs text-brand-accent/60 dark:text-white/40">Enable "Buy Now Pay Later" for customers.</p>
-                        </div>
-                        <Switch
-                            checked={localConfigs.allow_credit_sales}
-                            onCheckedChange={(checked) => handleConfigChange('allow_credit_sales', checked)}
-                        />
-                    </div>
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <span className="font-medium text-brand-deep dark:text-brand-cream">Automated Debt Reminders</span>
@@ -120,12 +115,6 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                             onCheckedChange={(checked) => handleConfigChange('debt_reminder_enabled', checked)}
                         />
                     </div>
-                </GlassCard>
-            </section>
-
-            <section className="space-y-4">
-                <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Communications & Reports</h2>
-                <GlassCard className="p-6 space-y-6">
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <span className="font-medium text-brand-deep dark:text-brand-cream">Email Summaries</span>
