@@ -69,12 +69,42 @@ function parseUserAgent(userAgent: string | null | undefined) {
 
 function formatIpAddress(ipAddress: string | null | undefined) {
     if (!ipAddress) return "Active now"
-    if (ipAddress.includes(":")) return "Private network"
 
-    const segments = ipAddress.split(".")
-    if (segments.length !== 4) return ipAddress
+    const normalizedIp = ipAddress.startsWith("::ffff:")
+        ? ipAddress.slice("::ffff:".length)
+        : ipAddress
 
-    return `${segments[0]}.${segments[1]}.x.x`
+    if (normalizedIp === "::1" || normalizedIp === "localhost") return "Private network"
+
+    if (normalizedIp.includes(".")) {
+        const segments = normalizedIp.split(".")
+        if (segments.length !== 4) return normalizedIp
+
+        const [first, second] = segments.map((segment) => Number(segment))
+        const isPrivateIpv4 =
+            first === 10 ||
+            first === 127 ||
+            (first === 192 && second === 168) ||
+            (first === 172 && second >= 16 && second <= 31)
+
+        if (isPrivateIpv4) return "Private network"
+
+        return `${segments[0]}.${segments[1]}.x.x`
+    }
+
+    const compactIpv6 = normalizedIp.toLowerCase()
+    const isPrivateIpv6 =
+        compactIpv6 === "::1" ||
+        compactIpv6.startsWith("fc") ||
+        compactIpv6.startsWith("fd") ||
+        compactIpv6.startsWith("fe80:")
+
+    if (isPrivateIpv6) return "Private network"
+
+    const ipv6Segments = normalizedIp.split(":").filter(Boolean)
+    if (ipv6Segments.length < 2) return normalizedIp
+
+    return `${ipv6Segments[0]}:${ipv6Segments[1]}::`
 }
 
 function formatSecurityEventLabel(event: string) {
@@ -187,6 +217,7 @@ export function SecuritySettings() {
     const sessionTtlMinutes = sessionConfigDraft.ttlMinutes ?? savedSessionTtlMinutes
     const currentSession = securityActivity?.currentSession
     const recentSecurityActivity = securityActivity?.activity ?? []
+    const latestSecurityActivity = recentSecurityActivity[0]
     const { browser: currentBrowser, os: currentOs } = parseUserAgent(currentSession?.userAgent)
     const currentLocation = formatLocationLabel(user?.countryDetail?.name ?? user?.country ?? null)
     const currentSessionMeta = currentSession?.ipAddress ? formatIpAddress(currentSession.ipAddress) : "Current network"
@@ -376,59 +407,66 @@ export function SecuritySettings() {
 
             <section className="space-y-4">
                 <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Audit & Devices</h2>
-                <GlassCard className="p-6 space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="flex items-center justify-between gap-4 text-sm p-4 bg-white/50 dark:bg-white/5 rounded-xl border border-brand-deep/5 dark:border-white/5">
+                <GlassCard className="p-6">
+                    <div className="grid gap-4 xl:grid-cols-[0.95fr_0.95fr_1.2fr]">
+                        <div className="rounded-2xl border border-brand-deep/5 bg-white/50 p-4 dark:border-white/5 dark:bg-white/5">
                             <div className="flex items-center gap-2 text-brand-deep/60 dark:text-brand-cream/60">
                                 <MapPin className="h-4 w-4" />
-                                <span>Current Session</span>
+                                <span className="text-sm">Current Session</span>
                             </div>
-                            <div className="text-right">
-                                <p className="font-medium text-brand-deep dark:text-brand-cream">{currentLocation}</p>
-                                <p className="text-[11px] text-brand-accent/55 dark:text-white/45">{currentSessionMeta}</p>
-                            </div>
+                            <p className="mt-4 text-lg font-semibold text-brand-deep dark:text-brand-cream">{currentLocation}</p>
+                            <p className="mt-1 text-xs text-brand-accent/55 dark:text-white/45">{currentSessionMeta}</p>
                         </div>
-                        <div className="flex items-center justify-between gap-4 text-sm p-4 bg-white/50 dark:bg-white/5 rounded-xl border border-brand-deep/5 dark:border-white/5">
+
+                        <div className="rounded-2xl border border-brand-deep/5 bg-white/50 p-4 dark:border-white/5 dark:bg-white/5">
                             <div className="flex items-center gap-2 text-brand-deep/60 dark:text-brand-cream/60">
                                 <Monitor className="h-4 w-4" />
-                                <span>Browser</span>
+                                <span className="text-sm">Device</span>
                             </div>
-                            <div className="text-right">
-                                <p className="font-medium text-brand-deep dark:text-brand-cream">{currentBrowser} on {currentOs}</p>
-                                <p className="text-[11px] text-brand-accent/55 dark:text-white/45">
-                                    {currentSession?.lastSeenAt
-                                        ? `Seen ${formatDistanceToNow(new Date(currentSession.lastSeenAt), { addSuffix: true })}`
-                                        : "Live session"}
-                                </p>
-                            </div>
+                            <p className="mt-4 text-lg font-semibold text-brand-deep dark:text-brand-cream">{currentBrowser} on {currentOs}</p>
+                            <p className="mt-1 text-xs text-brand-accent/55 dark:text-white/45">
+                                {currentSession?.lastSeenAt
+                                    ? `Seen ${formatDistanceToNow(new Date(currentSession.lastSeenAt), { addSuffix: true })}`
+                                    : "Live session"}
+                            </p>
                         </div>
-                    </div>
-                    <div className="rounded-2xl border border-brand-deep/5 bg-white/40 p-4 dark:border-white/5 dark:bg-white/[0.03]">
-                        <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-2">
-                                    <ShieldCheck className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
-                                    <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
-                                        Recent security activity
-                                    </p>
+
+                        <div className="rounded-2xl border border-brand-deep/5 bg-white/40 p-4 dark:border-white/5 dark:bg-white/[0.03]">
+                            <div className="flex h-full flex-col justify-between gap-4">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <ShieldCheck className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
+                                            <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                                                Recent security activity
+                                            </p>
+                                        </div>
+                                        {isSecurityActivityLoading && <Loader2 className="h-4 w-4 animate-spin text-brand-deep/40 dark:text-brand-cream/50" />}
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <p className="text-base font-semibold text-brand-deep dark:text-brand-cream">
+                                            {latestSecurityActivity?.description || "No security events recorded yet."}
+                                        </p>
+                                        <p className="text-xs text-brand-accent/55 dark:text-white/45">
+                                            {latestSecurityActivity?.createdAt
+                                                ? `${formatSecurityEventLabel(latestSecurityActivity.event)} · ${formatDistanceToNow(new Date(latestSecurityActivity.createdAt), { addSuffix: true })}`
+                                                : "Sign-ins, PIN changes, password updates, and other account events will appear here."}
+                                        </p>
+                                    </div>
                                 </div>
-                                <p className="text-xs text-brand-accent/55 dark:text-white/45">
-                                    {recentSecurityActivity[0]?.createdAt
-                                        ? `Last event ${formatDistanceToNow(new Date(recentSecurityActivity[0].createdAt), { addSuffix: true })}`
-                                        : "No security events recorded yet."}
-                                </p>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setIsViewingActivity(true)}
+                                    className="w-full justify-center rounded-xl border-brand-deep/15 bg-white/70 text-xs font-bold text-brand-deep hover:bg-brand-deep/5 dark:border-white/10 dark:bg-white/[0.04] dark:text-brand-gold dark:hover:bg-white/[0.06]"
+                                >
+                                    View All Activity <ExternalLink className="ml-2 h-3 w-3" />
+                                </Button>
                             </div>
-                            {isSecurityActivityLoading && <Loader2 className="h-4 w-4 animate-spin text-brand-deep/40 dark:text-brand-cream/50" />}
                         </div>
                     </div>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setIsViewingActivity(true)}
-                        className="w-full text-brand-deep dark:text-brand-gold text-xs font-bold mt-2"
-                    >
-                        View All Activity <ExternalLink className="w-3 h-3 ml-2" />
-                    </Button>
                 </GlassCard>
             </section>
 

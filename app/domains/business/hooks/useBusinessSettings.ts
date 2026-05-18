@@ -76,7 +76,7 @@ export const useUpdateBusinessSettings = () => {
     return useMutation({
         mutationFn: (variables: Partial<BusinessConfigs> & { quiet?: boolean }) => {
             const configs = stripQuietFlag(variables)
-            return apiClient.patch("/settings/business", { configs })
+            return apiClient.patch<MutationResponse>("/settings/business", { configs })
         },
         onMutate: async (newConfigs) => {
             // Cancel any outgoing refetches

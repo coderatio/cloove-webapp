@@ -18,7 +18,7 @@ export function RootSessionManager() {
             sessionMetadata={user.session}
             sessionConfig={{
                 expirationMode: user.session?.expirationMode,
-                ttlMinutes: user.session?.ttlMinutes,
+                ttlMinutes: user.session?.ttlMinutes ?? undefined,
             }}
             onSessionRefresh={updateUserMetadata}
         />

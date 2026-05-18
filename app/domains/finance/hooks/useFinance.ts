@@ -142,6 +142,14 @@ export interface TransactionFilterParams {
     category?: string[] // multi-select
 }
 
+export interface FinanceTransactionsMeta {
+    total?: number
+    perPage?: number
+    lastPage?: number
+    currentPage: number
+    totalPages: number
+}
+
 export function useFinanceTransactions(
     storeId: string | undefined,
     page: number = 1,
@@ -169,13 +177,30 @@ export function useFinanceTransactions(
         staleTime: 30 * 1000, // 30s — users expect to see recent transactions quickly
     })
 
-    const meta = response?.meta
-    const totalPages = meta ? (meta.lastPage ?? meta.totalPages ?? 1) : 1
-    const currentPage = meta ? (meta.currentPage ?? page) : page
+    const rawMeta = response?.meta as Record<string, unknown> | undefined
+    const totalPages =
+        typeof rawMeta?.lastPage === 'number'
+            ? rawMeta.lastPage
+            : typeof rawMeta?.totalPages === 'number'
+                ? rawMeta.totalPages
+                : 1
+    const currentPage =
+        typeof rawMeta?.currentPage === 'number'
+            ? rawMeta.currentPage
+            : page
+    const meta: FinanceTransactionsMeta | undefined = rawMeta
+        ? {
+            total: typeof rawMeta.total === 'number' ? rawMeta.total : undefined,
+            perPage: typeof rawMeta.perPage === 'number' ? rawMeta.perPage : undefined,
+            lastPage: typeof rawMeta.lastPage === 'number' ? rawMeta.lastPage : undefined,
+            currentPage,
+            totalPages,
+        }
+        : undefined
 
     return {
         transactions: response?.data ?? [],
-        meta: meta ? { ...meta, totalPages, currentPage } : undefined,
+        meta,
         isLoading,
         isFetching,
         error,
