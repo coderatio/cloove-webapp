@@ -10,6 +10,14 @@ export interface BusinessConfigs {
     auto_generate_receipt: boolean
     default_payment_method: string
     sales_virtual_account_provider?: string
+    customer_checkout_fulfillment_methods?: string[]
+    customer_checkout_payment_methods?: string[]
+    customer_checkout_dine_in_locations?: Array<{
+        id?: string
+        title?: string
+        description?: string
+    }>
+    customer_checkout_require_confirmation?: boolean
     debt_reminder_enabled: boolean
     daily_summary_enabled: boolean
     email_summaries_enabled: boolean
