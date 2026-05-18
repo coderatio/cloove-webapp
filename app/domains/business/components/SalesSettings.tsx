@@ -15,6 +15,7 @@ import {
 import { Loader2, Plus, Trash2, Wallet } from "lucide-react"
 import { useSettings, useUpdateBusinessSettings } from "../hooks/useBusinessSettings"
 import { usePaymentProviders } from "@/app/domains/finance/hooks/useFinance"
+import { usePermission } from "@/app/hooks/usePermission"
 
 interface SalesSettingsProps {
     onDirtyChange?: (isDirty: boolean) => void
@@ -154,10 +155,12 @@ function buildDineInLocationId(title: string): string {
 }
 
 export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: SalesSettingsProps) {
+    const { can } = usePermission()
     const { data: settingsData, isLoading } = useSettings()
     const updateSettings = useUpdateBusinessSettings()
     const { data: providersResponse, isLoading: providersLoading } = usePaymentProviders()
     const lastHandledSaveTrigger = useRef<number>(0)
+    const canManageSalesSettings = can("MANAGE_STORES")
 
     useEffect(() => {
         onSavingChange?.(updateSettings.isPending)
@@ -236,10 +239,11 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
         })
         setIsDirty(false)
         onDirtyChange?.(false)
-    }, [settingsData, onDirtyChange])
+    }, [layoutPreset, settingsData, onDirtyChange])
 
     useEffect(() => {
         if (
+            canManageSalesSettings &&
             saveTrigger &&
             saveTrigger > 0 &&
             saveTrigger !== lastHandledSaveTrigger.current &&
@@ -248,7 +252,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
             lastHandledSaveTrigger.current = saveTrigger
             updateSettings.mutate(localConfigs)
         }
-    }, [isDirty, localConfigs, saveTrigger, updateSettings])
+    }, [canManageSalesSettings, isDirty, localConfigs, saveTrigger, updateSettings])
 
     const handleConfigChange = (
         key: keyof typeof localConfigs,
@@ -259,6 +263,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
             | CheckoutPaymentOptionId[]
             | DineInLocationOption[]
     ) => {
+        if (!canManageSalesSettings) return
         setLocalConfigs((prev) => ({ ...prev, [key]: value }))
         setIsDirty(true)
         onDirtyChange?.(true)
@@ -325,12 +330,19 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                     Checkout & Transfers
                 </h2>
                 <GlassCard className="space-y-6 p-6">
+                    {!canManageSalesSettings && (
+                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+                            You can view these sales settings, but only users with store management access can change them.
+                        </div>
+                    )}
+
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
                             Virtual Account Provider
                         </label>
                         <Select
                             value={localConfigs.sales_virtual_account_provider || "__auto__"}
+                            disabled={!canManageSalesSettings}
                             onValueChange={(value) =>
                                 handleConfigChange(
                                     "sales_virtual_account_provider",
@@ -362,6 +374,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                             </label>
                             <Select
                                 value={localConfigs.default_payment_method}
+                                disabled={!canManageSalesSettings}
                                 onValueChange={(value) =>
                                     handleConfigChange("default_payment_method", value)
                                 }
@@ -405,6 +418,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                         </div>
                         <Switch
                             checked={localConfigs.customer_checkout_require_confirmation}
+                            disabled={!canManageSalesSettings}
                             onCheckedChange={(checked) =>
                                 handleConfigChange("customer_checkout_require_confirmation", checked)
                             }
@@ -445,6 +459,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                         </div>
                                         <Switch
                                             checked={localConfigs.customer_checkout_fulfillment_methods.includes(option.id)}
+                                            disabled={!canManageSalesSettings}
                                             onCheckedChange={() => toggleFulfillmentSelection(option.id)}
                                         />
                                     </label>
@@ -481,6 +496,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                         </div>
                                         <Switch
                                             checked={localConfigs.customer_checkout_payment_methods.includes(option.id)}
+                                            disabled={!canManageSalesSettings}
                                             onCheckedChange={() => togglePaymentSelection(option.id)}
                                         />
                                     </label>
@@ -503,6 +519,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                     type="button"
                                     variant="outline"
                                     size="sm"
+                                    disabled={!canManageSalesSettings}
                                     className="h-9 rounded-xl"
                                     onClick={addDineInLocation}
                                 >
@@ -524,6 +541,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                         >
                                             <Input
                                                 value={location.title}
+                                                disabled={!canManageSalesSettings}
                                                 onChange={(event) =>
                                                     updateDineInLocation(index, "title", event.target.value)
                                                 }
@@ -532,6 +550,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                             />
                                             <Input
                                                 value={location.description}
+                                                disabled={!canManageSalesSettings}
                                                 onChange={(event) =>
                                                     updateDineInLocation(index, "description", event.target.value)
                                                 }
@@ -542,6 +561,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
+                                                disabled={!canManageSalesSettings}
                                                 className="h-11 w-11 rounded-xl text-brand-accent/70 hover:text-red-600"
                                                 onClick={() => removeDineInLocation(index)}
                                             >
@@ -572,6 +592,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                         </div>
                         <Switch
                             checked={localConfigs.allow_credit_sales}
+                            disabled={!canManageSalesSettings}
                             onCheckedChange={(checked) => handleConfigChange("allow_credit_sales", checked)}
                         />
                     </div>
@@ -587,6 +608,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                         </div>
                         <Switch
                             checked={localConfigs.require_customer_for_sale}
+                            disabled={!canManageSalesSettings}
                             onCheckedChange={(checked) => handleConfigChange("require_customer_for_sale", checked)}
                         />
                     </div>
@@ -602,6 +624,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                         </div>
                         <Switch
                             checked={localConfigs.auto_generate_receipt}
+                            disabled={!canManageSalesSettings}
                             onCheckedChange={(checked) => handleConfigChange("auto_generate_receipt", checked)}
                         />
                     </div>

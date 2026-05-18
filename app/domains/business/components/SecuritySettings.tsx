@@ -11,6 +11,7 @@ import {
     Eye,
     EyeOff,
     ChevronRight,
+    Clock3,
 } from "lucide-react"
 import { toast } from "sonner"
 import {
@@ -24,21 +25,50 @@ import {
 } from "@/app/components/ui/drawer"
 
 import { formatDistanceToNow } from "date-fns"
+import { useAuth } from "@/app/components/providers/auth-provider"
+import { usePermission } from "@/app/hooks/usePermission"
+import { apiClient } from "@/app/lib/api-client"
 import { useChangePassword, useChangePin, useSecurityStatus } from "../hooks/useSecurity"
+import { useSettings, useUpdateBusinessSettings } from "../hooks/useBusinessSettings"
+
+type SessionExpirationMode = "default" | "custom" | "never"
 
 export function SecuritySettings() {
     const [isChangingPin, setIsChangingPin] = useState(false)
     const [isChangingPassword, setIsChangingPassword] = useState(false)
 
+    const { user, refreshUser } = useAuth()
+    const { can } = usePermission()
     const changePassword = useChangePassword()
     const changePin = useChangePin()
     const { data: securityStatus } = useSecurityStatus()
+    const { data: settings } = useSettings()
+    const updateBusinessSettings = useUpdateBusinessSettings()
+    const canManageSessionPolicy = can("MANAGE_BUSINESS_CONFIG")
+    const persistedSessionExpirationMode =
+        settings?.business?.configs?.session_expiration_mode === "custom" ||
+            settings?.business?.configs?.session_expiration_mode === "never"
+            ? settings.business.configs.session_expiration_mode
+            : "default"
+    const effectiveSessionExpirationMode =
+        user?.session?.expirationMode === "custom" || user?.session?.expirationMode === "never"
+            ? user.session.expirationMode
+            : "default"
+    const backendSessionTtlMinutes = Number(user?.session?.ttlMinutes)
+    const persistedSessionTtlMinutes = Number(settings?.business?.configs?.session_expiration_ttl_minutes)
+    const savedSessionTtlMinutes = String(
+        effectiveSessionExpirationMode === "default" && Number.isFinite(backendSessionTtlMinutes) && backendSessionTtlMinutes > 0
+            ? backendSessionTtlMinutes
+            : Number.isFinite(persistedSessionTtlMinutes) && persistedSessionTtlMinutes > 0
+            ? persistedSessionTtlMinutes
+            : 30
+    )
 
     const formatLastChanged = (dateString: string | null | undefined) => {
         if (!dateString) return "Not set yet"
         try {
             return `Last changed ${formatDistanceToNow(new Date(dateString), { addSuffix: true })}`
-        } catch (e) {
+        } catch {
             return "Recently changed"
         }
     }
@@ -54,6 +84,13 @@ export function SecuritySettings() {
     const [showCurrentPass, setShowCurrentPass] = useState(false)
     const [showNewPass, setShowNewPass] = useState(false)
     const [showConfirmPass, setShowConfirmPass] = useState(false)
+    const [sessionConfigDraft, setSessionConfigDraft] = useState<{
+        mode?: SessionExpirationMode
+        ttlMinutes?: string
+    }>({})
+
+    const sessionExpirationMode = sessionConfigDraft.mode ?? persistedSessionExpirationMode
+    const sessionTtlMinutes = sessionConfigDraft.ttlMinutes ?? savedSessionTtlMinutes
 
     const handlePinSave = () => {
         if (pinData.new !== pinData.confirm) {
@@ -94,6 +131,33 @@ export function SecuritySettings() {
                 setIsChangingPassword(false)
                 setPassData({ current: "", new: "", confirm: "" })
             }
+        })
+    }
+
+    const handleSessionConfigSave = () => {
+        if (!canManageSessionPolicy) {
+            toast.error("You do not have permission to update session policy")
+            return
+        }
+
+        const parsedTtl = Number(sessionTtlMinutes)
+
+        if (sessionExpirationMode === "custom" && (!Number.isFinite(parsedTtl) || parsedTtl < 1)) {
+            toast.error("Session TTL must be at least 1 minute")
+            return
+        }
+
+        updateBusinessSettings.mutate({
+            session_expiration_mode: sessionExpirationMode,
+            ...(sessionExpirationMode === "custom"
+                ? { session_expiration_ttl_minutes: parsedTtl }
+                : {}),
+        }, {
+            onSuccess: async () => {
+                await apiClient.refresh()
+                await refreshUser()
+                setSessionConfigDraft({})
+            },
         })
     }
 
@@ -139,6 +203,75 @@ export function SecuritySettings() {
                             <ChevronRight className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
                         </Button>
                     </div>
+                </GlassCard>
+            </section>
+
+            <section className="space-y-4">
+                <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Session Policy</h2>
+                <GlassCard className="p-6 space-y-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <Clock3 className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                <span className="font-medium text-brand-deep dark:text-brand-cream">Session expiration</span>
+                            </div>
+                            <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                Choose whether this business uses the platform default, a custom idle TTL, or a non-expiring session.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-3">
+                        {(["default", "custom", "never"] as SessionExpirationMode[]).map((mode) => {
+                            const isActive = sessionExpirationMode === mode
+                            const label =
+                                mode === "default" ? "Use default" : mode === "custom" ? "Custom TTL" : "Never expire"
+
+                            return (
+                                <Button
+                                    key={mode}
+                                    type="button"
+                                    variant={isActive ? "base" : "ghost"}
+                                    disabled={!canManageSessionPolicy}
+                                    onClick={() => setSessionConfigDraft((current) => ({ ...current, mode }))}
+                                    className="justify-center rounded-xl"
+                                >
+                                    {label}
+                                </Button>
+                            )
+                        })}
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
+                            Session TTL (minutes)
+                        </label>
+                        <Input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={sessionTtlMinutes}
+                            disabled={sessionExpirationMode !== "custom" || !canManageSessionPolicy}
+                            onChange={(e) => setSessionConfigDraft((current) => ({ ...current, ttlMinutes: e.target.value }))}
+                            className="h-10 rounded-xl bg-white/50 dark:bg-white/5 border-brand-deep/10 dark:border-white/10 disabled:opacity-60"
+                        />
+                        <p className="text-[11px] text-brand-accent/50 dark:text-white/35">
+                            `default` uses the platform policy. `custom` logs out idle users after the configured window. `never` issues a non-expiring session for this business.
+                        </p>
+                        {!canManageSessionPolicy && (
+                            <p className="text-[11px] text-amber-600/80 dark:text-amber-400/80">
+                                Only users with business configuration access can change this policy.
+                            </p>
+                        )}
+                    </div>
+
+                    <Button
+                        onClick={handleSessionConfigSave}
+                        disabled={updateBusinessSettings.isPending || !canManageSessionPolicy}
+                        className="w-full sm:w-auto rounded-xl"
+                    >
+                        {updateBusinessSettings.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Session Policy"}
+                    </Button>
                 </GlassCard>
             </section>
 

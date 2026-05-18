@@ -20,6 +20,10 @@ interface SessionManagerProps {
         expiresAt?: string
         refreshInterval?: string
     }
+    sessionConfig?: {
+        expirationMode?: "default" | "custom" | "never"
+        ttlMinutes?: number
+    }
     onSessionRefresh?: () => void
 }
 
@@ -31,13 +35,22 @@ function parseDuration(duration: string): number {
     return value || 5 * 60 * 1000
 }
 
-export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionManagerProps) {
+export function SessionManager({ sessionMetadata, sessionConfig, onSessionRefresh }: SessionManagerProps) {
     const { lastActivity, resetActivity } = useIdleTracker()
     const [showWarning, setShowWarning] = useState(false)
     const [remainingSeconds, setRemainingSeconds] = useState(0)
 
     const refreshIntervalMs = parseDuration(sessionMetadata?.refreshInterval || "5m")
-    const warningBeforeMs = getWarningBeforeMs(refreshIntervalMs)
+    const expirationMode = sessionConfig?.expirationMode || "default"
+    const isNeverExpiring = expirationMode === "never"
+    const overrideTtlMinutes = Number(sessionConfig?.ttlMinutes)
+    const overrideTtlMs =
+        expirationMode === "custom" && Number.isFinite(overrideTtlMinutes) && overrideTtlMinutes > 0
+            ? overrideTtlMinutes * 60 * 1000
+            : null
+    const warningBeforeMs = overrideTtlMs
+        ? Math.min(5 * 60 * 1000, Math.max(60 * 1000, Math.floor(overrideTtlMs / 3)))
+        : getWarningBeforeMs(refreshIntervalMs)
 
     // Source of truth for when the session expires — updated after each successful refresh
     const effectiveExpiresAtRef = useRef<number | null>(null)
@@ -113,8 +126,13 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
             showWarningRef.current = false
             resetActivity()
             onSessionRefresh?.()
-        } catch (error: any) {
-            if (error?.statusCode === 401) {
+        } catch (error: unknown) {
+            if (
+                typeof error === "object" &&
+                error !== null &&
+                "statusCode" in error &&
+                error.statusCode === 401
+            ) {
                 // Backend already expired the session — log out immediately
                 handleLogout('timeout')
             }
@@ -132,11 +150,21 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
 
     useEffect(() => {
         const checkSession = () => {
-            const expiresAt = effectiveExpiresAtRef.current
-            if (!expiresAt) return
+            if (isNeverExpiring) {
+                setShowWarning(false)
+                setRemainingSeconds(0)
+                return
+            }
 
             const now = Date.now()
-            const remainingMs = expiresAt - now
+            const idleTimeMs = now - lastActivityRef.current
+            const expiresAt = effectiveExpiresAtRef.current
+
+            const remainingMs = overrideTtlMs
+                ? overrideTtlMs - idleTimeMs
+                : expiresAt
+                    ? expiresAt - now
+                    : 0
 
             // Session has fully expired
             if (remainingMs <= 0) {
@@ -147,7 +175,6 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
             }
 
             const remainingSecs = Math.ceil(remainingMs / 1000)
-            const idleTimeMs = now - lastActivityRef.current
 
             // Proactive refresh: fire on a schedule (every refreshInterval) while
             // the user is actively using the app (idle < refreshInterval).
@@ -171,8 +198,7 @@ export function SessionManager({ sessionMetadata, onSessionRefresh }: SessionMan
 
         const interval = setInterval(checkSession, CHECK_INTERVAL_MS)
         return () => clearInterval(interval)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [refreshIntervalMs, warningBeforeMs])
+    }, [isNeverExpiring, overrideTtlMs, refreshIntervalMs, warningBeforeMs])
 
     return (
         <SessionTimeoutDrawer

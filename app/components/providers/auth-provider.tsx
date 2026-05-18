@@ -4,7 +4,6 @@ import React, { createContext, useContext, useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { apiClient } from "@/app/lib/api-client"
 import { storage, STORAGE_KEYS } from "@/app/lib/storage"
-import { SessionManager } from "../auth/SessionManager"
 
 export interface UserCountryDetail {
     id: string
@@ -39,6 +38,8 @@ interface User {
     session?: {
         expiresAt?: string
         refreshInterval?: string
+        expirationMode?: "default" | "custom" | "never"
+        ttlMinutes?: number | null
     }
     hasTransactionPin: boolean
     avatarUrl?: string | null
@@ -72,13 +73,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const pathname = usePathname()
+    const hasUser = !!user
 
     const fetchUser = async (silent = false) => {
         if (!silent) setIsLoading(true)
         try {
             const userData = await apiClient.get<User>("/security/me", undefined, { skipAuthRedirect: true })
             setUser(userData)
-        } catch (error) {
+        } catch {
             // 401 means no valid session — just clear user state
             setUser(null)
         } finally {
@@ -93,10 +95,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Reset activity timer when user state transitions from null to non-null
     // (e.g. on successful login or initial session load)
     useEffect(() => {
-        if (user) {
+        if (hasUser) {
             storage.setLastActivity(Date.now())
         }
-    }, [!!user])
+    }, [hasUser])
 
     const refreshUser = () => fetchUser(true) // Subsequent refreshes should be silent
 
