@@ -2,15 +2,29 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/app/components/ui/button"
+import {
+    Drawer,
+    DrawerBody,
+    DrawerContent,
+    DrawerDescription,
+    DrawerStickyHeader,
+    DrawerTitle,
+} from "@/app/components/ui/drawer"
 import { Input } from "@/app/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Switch } from "@/app/components/ui/switch"
 import { Textarea } from "@/app/components/ui/textarea"
 import { GlassCard } from "@/app/components/ui/glass-card"
+import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
-import { OperatingHoursBuilder, serializeSchedule, createDefaultSchedule } from "@/app/components/shared/OperatingHoursBuilder"
+import { serializeSchedule, createDefaultSchedule } from "@/app/components/shared/OperatingHoursBuilder"
 import { PersistedTabs, type TabItem } from "@/app/components/shared/PersistedTabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui/dialog"
+import { VoiceNumberCard } from "@/app/domains/voice/components/VoiceNumberCard"
+import { VoiceProviderCredentialsForm } from "@/app/domains/voice/components/VoiceProviderCredentialsForm"
+import { VoiceScheduleBuilder } from "@/app/domains/voice/components/VoiceScheduleBuilder"
+import { VoiceTransferTargetsForm } from "@/app/domains/voice/components/VoiceTransferTargetsForm"
+import { VoiceAgentSettingsForm } from "@/app/domains/voice/components/VoiceAgentSettingsForm"
 import {
     AudioLines,
     Headphones,
@@ -26,7 +40,9 @@ import {
     useCreateVoiceNumber,
     useCreateVoiceTransferTarget,
     useDeleteVoiceTransferTarget,
+    useDisconnectVoiceNumber,
     useStartVoiceCall,
+    useUpdateVoiceNumber,
     useUpdateVoiceSettings,
     useVoiceCalls,
     useVoiceHealth,
@@ -35,6 +51,7 @@ import {
     useVoiceSettings,
     useVoiceTransferTargets,
     type VoiceCall,
+    type VoiceNumberItem,
 } from "@/app/domains/voice/hooks/useVoice"
 
 const EMPTY_SETTINGS = {
@@ -69,20 +86,6 @@ const TONE_OPTIONS = [
     { value: "warm", label: "Warm" },
     { value: "concise", label: "Concise" },
     { value: "supportive", label: "Supportive" },
-]
-
-const TRANSFER_ROLE_OPTIONS = [
-    { value: "frontdesk", label: "Front desk" },
-    { value: "sales", label: "Sales" },
-    { value: "support", label: "Support" },
-    { value: "manager", label: "Manager" },
-    { value: "owner", label: "Owner" },
-]
-
-const PRIORITY_OPTIONS = [
-    { value: "0", label: "Primary" },
-    { value: "1", label: "Secondary" },
-    { value: "2", label: "Backup" },
 ]
 
 const GREETING_PRESETS = [
@@ -124,6 +127,31 @@ const FALLBACK_PRESETS = [
     },
 ]
 
+const EMPTY_NUMBER_FORM = {
+    provider: "africas_talking",
+    label: "",
+    phone_number: "",
+    provider_credentials: {} as Record<string, string>,
+    use_system_credentials: true,
+    is_default: true,
+}
+
+const EMPTY_TARGET_FORM = {
+    label: "",
+    role_label: "support",
+    phone_number: "",
+    priority: 0,
+    is_fallback: false,
+}
+
+const EMPTY_CALL_FORM = {
+    business_voice_number_id: "",
+    customer_phone: "",
+    customer_name: "",
+    purpose: "",
+    context: "",
+}
+
 function formatDuration(value: number | null) {
     if (!value) return "—"
     const minutes = Math.floor(value / 60)
@@ -131,9 +159,34 @@ function formatDuration(value: number | null) {
     return `${minutes}:${String(seconds).padStart(2, "0")}`
 }
 
-function humanizeRole(role: string | null | undefined) {
-    if (!role) return "Staff"
-    return role.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+function numberToForm(number: VoiceNumberItem) {
+    return {
+        provider: number.provider,
+        label: number.label ?? "",
+        phone_number: number.phone_number,
+        provider_credentials: {} as Record<string, string>,
+        use_system_credentials: number.use_system_credentials,
+        is_default: number.is_default,
+    }
+}
+
+function buildNumberUpdatePayload(form: typeof EMPTY_NUMBER_FORM) {
+    const payload: Record<string, unknown> = {
+        label: form.label.trim() || null,
+        provider: form.provider,
+        use_system_credentials: form.use_system_credentials,
+        is_default: form.is_default,
+    }
+
+    const credentials = Object.fromEntries(
+        Object.entries(form.provider_credentials).filter(([, value]) => value.trim().length > 0)
+    )
+
+    if (Object.keys(credentials).length > 0) {
+        payload.provider_credentials = credentials
+    }
+
+    return payload
 }
 
 export function VoiceView() {
@@ -145,6 +198,8 @@ export function VoiceView() {
     const healthQuery = useVoiceHealth()
 
     const createNumber = useCreateVoiceNumber()
+    const updateNumber = useUpdateVoiceNumber()
+    const disconnectNumber = useDisconnectVoiceNumber()
     const updateSettings = useUpdateVoiceSettings()
     const createTarget = useCreateVoiceTransferTarget()
     const deleteTarget = useDeleteVoiceTransferTarget()
@@ -158,28 +213,11 @@ export function VoiceView() {
         { id: "settings", label: "Settings", icon: Settings2 },
     ]
     const [activeTab, setActiveTab] = useState("overview")
-    const [numberForm, setNumberForm] = useState({
-        provider: "africas_talking",
-        label: "",
-        phone_number: "",
-        provider_credentials: {} as Record<string, string>,
-        use_system_credentials: true,
-        is_default: true,
-    })
-    const [targetForm, setTargetForm] = useState({
-        label: "",
-        role_label: "support",
-        phone_number: "",
-        priority: 0,
-        is_fallback: false,
-    })
-    const [callForm, setCallForm] = useState({
-        business_voice_number_id: "",
-        customer_phone: "",
-        customer_name: "",
-        purpose: "",
-        context: "",
-    })
+    const [numberDrawerMode, setNumberDrawerMode] = useState<"closed" | "create" | "edit">("closed")
+    const [editingNumberId, setEditingNumberId] = useState<string | null>(null)
+    const [numberForm, setNumberForm] = useState(EMPTY_NUMBER_FORM)
+    const [targetForm, setTargetForm] = useState(EMPTY_TARGET_FORM)
+    const [callForm, setCallForm] = useState(EMPTY_CALL_FORM)
     const [settingsForm, setSettingsForm] = useState(EMPTY_SETTINGS)
 
     const businessDisplayName = settingsForm.display_name.trim()
@@ -228,6 +266,41 @@ export function VoiceView() {
         [providerOptions]
     )
     const selectedProvider = providerMap.get(numberForm.provider) ?? providerOptions[0]
+    const editingNumber = useMemo(
+        () => (numbersQuery.data ?? []).find((number) => number.id === editingNumberId) ?? null,
+        [editingNumberId, numbersQuery.data]
+    )
+    const isNumberDrawerOpen = numberDrawerMode !== "closed"
+
+    const closeNumberDrawer = () => {
+        setNumberDrawerMode("closed")
+        setEditingNumberId(null)
+        setNumberForm(EMPTY_NUMBER_FORM)
+    }
+
+    const openCreateNumberDrawer = () => {
+        setEditingNumberId(null)
+        setNumberForm(EMPTY_NUMBER_FORM)
+        setNumberDrawerMode("create")
+    }
+
+    const openEditNumberDrawer = (number: VoiceNumberItem) => {
+        setEditingNumberId(number.id)
+        setNumberForm(numberToForm(number))
+        setNumberDrawerMode("edit")
+    }
+
+    const handleSaveNumber = () => {
+        if (numberDrawerMode === "edit" && editingNumber) {
+            updateNumber.mutate(
+                { id: editingNumber.id, payload: buildNumberUpdatePayload(numberForm) },
+                { onSuccess: closeNumberDrawer }
+            )
+            return
+        }
+
+        createNumber.mutate(numberForm, { onSuccess: closeNumberDrawer })
+    }
 
     const isLoading =
         providersQuery.isPending ||
@@ -317,10 +390,13 @@ export function VoiceView() {
                             <Textarea placeholder="Context for the agent" value={callForm.context} onChange={(e) => setCallForm((prev) => ({ ...prev, context: e.target.value }))} rows={4} />
                             <Button
                                 onClick={() =>
-                                    startCall.mutate({
-                                        ...callForm,
-                                        business_voice_number_id: callForm.business_voice_number_id || null,
-                                    })
+                                    startCall.mutate(
+                                        {
+                                            ...callForm,
+                                            business_voice_number_id: callForm.business_voice_number_id || null,
+                                        },
+                                        { onSuccess: () => setCallForm(EMPTY_CALL_FORM) }
+                                    )
                                 }
                                 disabled={startCall.isPending || !callForm.customer_phone.trim()}
                                 className="rounded-full"
@@ -331,26 +407,76 @@ export function VoiceView() {
                         </GlassCard>
 
                         <GlassCard className="p-6 space-y-4">
-                            <SectionTitle icon={Headphones} title="Voice numbers" />
+                            <div className="flex items-start justify-between gap-4">
+                                <SectionTitle icon={Headphones} title="Voice numbers" />
+                                <Drawer
+                                    open={isNumberDrawerOpen}
+                                    onOpenChange={(open) => {
+                                        if (!open) closeNumberDrawer()
+                                    }}
+                                >
+                                    <Button type="button" className="rounded-full" onClick={openCreateNumberDrawer}>
+                                        Connect number
+                                    </Button>
+                                    <DrawerContent>
+                                        <DrawerStickyHeader>
+                                            <DrawerTitle className="font-sans text-xl font-semibold tracking-normal text-foreground">
+                                                {numberDrawerMode === "edit" ? "Edit voice number" : "Connect voice number"}
+                                            </DrawerTitle>
+                                            <DrawerDescription>
+                                                {numberDrawerMode === "edit"
+                                                    ? "Update how this line appears in Cloove and refresh provider credentials if needed."
+                                                    : "Add a provider-backed calling number for inbound and outbound AI calls."}
+                                            </DrawerDescription>
+                                        </DrawerStickyHeader>
+                                        <DrawerBody>
+                                            <VoiceProviderCredentialsForm
+                                                form={numberForm}
+                                                providerOptions={providerOptions}
+                                                selectedProvider={selectedProvider}
+                                                mode={numberDrawerMode === "edit" ? "update" : "create"}
+                                                isPending={createNumber.isPending || updateNumber.isPending}
+                                                framed={false}
+                                                onChange={(updater) => setNumberForm((prev) => updater(prev))}
+                                                onSubmit={handleSaveNumber}
+                                            />
+                                        </DrawerBody>
+                                    </DrawerContent>
+                                </Drawer>
+                            </div>
                             <div className="space-y-3">
-                                {(numbersQuery.data ?? []).map((number) => (
-                                    <div key={number.id} className="rounded-2xl border border-black/5 px-4 py-3 dark:border-white/10">
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div>
-                                                <p className="font-medium">{number.label || number.phone_number}</p>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {providerMap.get(number.provider)?.name || number.provider}
-                                                </p>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {number.use_system_credentials ? "Managed credentials" : "Custom credentials"}
-                                                </p>
-                                            </div>
-                                            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                                                {number.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
+                                {(numbersQuery.data ?? []).length === 0 ? (
+                                    <VoiceNumbersEmptyState onConnect={openCreateNumberDrawer} />
+                                ) : (
+                                    (numbersQuery.data ?? []).map((number) => (
+                                        <VoiceNumberCard
+                                            key={number.id}
+                                            number={number}
+                                            provider={providerMap.get(number.provider)}
+                                            isUpdating={
+                                                updateNumber.isPending && updateNumber.variables?.id === number.id
+                                            }
+                                            isDisconnecting={
+                                                disconnectNumber.isPending &&
+                                                disconnectNumber.variables === number.id
+                                            }
+                                            onEdit={() => openEditNumberDrawer(number)}
+                                            onSetDefault={() =>
+                                                updateNumber.mutate({
+                                                    id: number.id,
+                                                    payload: { is_default: true },
+                                                })
+                                            }
+                                            onReconnect={() =>
+                                                updateNumber.mutate({
+                                                    id: number.id,
+                                                    payload: { status: "active" },
+                                                })
+                                            }
+                                            onDisconnect={() => disconnectNumber.mutate(number.id)}
+                                        />
+                                    ))
+                                )}
                             </div>
                         </GlassCard>
                     </div>
@@ -358,299 +484,46 @@ export function VoiceView() {
             )}
 
             {activeTab === "transfer" && (
-                <GlassCard className="p-6 space-y-4">
-                    <SectionTitle icon={PhoneForwarded} title="Transfer targets" />
-                    <p className="text-sm text-muted-foreground">
-                        Choose who receives escalated calls when the AI needs a human handoff.
-                    </p>
-                    <div className="space-y-3">
-                        {(targetsQuery.data ?? []).map((target) => (
-                            <div key={target.id} className="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 dark:border-white/10">
-                                <div>
-                                    <p className="font-medium">{target.label}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        {humanizeRole(target.role_label)} • {target.phone_number}
-                                    </p>
-                                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                                        {target.priority === 0 ? "Primary route" : `Priority ${target.priority + 1}`}
-                                        {target.is_fallback ? " • Fallback" : ""}
-                                    </p>
-                                </div>
-                                <Button variant="ghost" onClick={() => deleteTarget.mutate(target.id)}>
-                                    Remove
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Staff name</p>
-                            <Input
-                                placeholder="Jane Ibrahim"
-                                value={targetForm.label}
-                                onChange={(e) => setTargetForm((prev) => ({ ...prev, label: e.target.value }))}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Role</p>
-                            <Select
-                                value={targetForm.role_label}
-                                onValueChange={(value) => setTargetForm((prev) => ({ ...prev, role_label: value }))}
-                            >
-                                <SelectTrigger className="rounded-2xl">
-                                    <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-2xl">
-                                    {TRANSFER_ROLE_OPTIONS.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Phone number</p>
-                            <Input
-                                placeholder="+2348012345678"
-                                value={targetForm.phone_number}
-                                onChange={(e) => setTargetForm((prev) => ({ ...prev, phone_number: e.target.value }))}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Routing order</p>
-                            <Select
-                                value={String(targetForm.priority)}
-                                onValueChange={(value) => setTargetForm((prev) => ({ ...prev, priority: Number(value) }))}
-                            >
-                                <SelectTrigger className="rounded-2xl">
-                                    <SelectValue placeholder="Select order" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-2xl">
-                                    {PRIORITY_OPTIONS.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <ToggleRow
-                        label="Use as fallback if primary transfer fails"
-                        checked={targetForm.is_fallback}
-                        onCheckedChange={(value) => setTargetForm((prev) => ({ ...prev, is_fallback: value }))}
-                    />
-                    <Button
-                        onClick={() => createTarget.mutate(targetForm)}
-                        disabled={createTarget.isPending || !targetForm.label.trim() || !targetForm.phone_number.trim()}
-                        className="rounded-full"
-                    >
-                        Add target
-                    </Button>
-                </GlassCard>
+                <VoiceTransferTargetsForm
+                    targets={targetsQuery.data ?? []}
+                    form={targetForm}
+                    isCreatePending={createTarget.isPending}
+                    onFormChange={(updater) => setTargetForm((prev) => updater(prev))}
+                    onCreate={() =>
+                        createTarget.mutate(targetForm, {
+                            onSuccess: () => setTargetForm(EMPTY_TARGET_FORM),
+                        })
+                    }
+                    onDelete={(id) => deleteTarget.mutate(id)}
+                />
             )}
 
             {activeTab === "settings" && (
-                <div className="grid gap-6 xl:grid-cols-2">
-                    <GlassCard className="p-6 space-y-4">
-                        <SectionTitle icon={Headphones} title="Number connection" />
-                        <div className="grid gap-3">
-                            <Select
-                                value={numberForm.provider}
-                                onValueChange={(value) =>
-                                    setNumberForm((prev) => {
-                                        const provider = providerMap.get(value)
-                                        return {
-                                            ...prev,
-                                            provider: value,
-                                            provider_credentials: {},
-                                            use_system_credentials: provider?.system_credentials_enabled
-                                                ? prev.use_system_credentials
-                                                : false,
-                                        }
-                                    })
-                                }
-                            >
-                                <SelectTrigger className="rounded-2xl">
-                                    <SelectValue placeholder="Select provider" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-2xl">
-                                    {providerOptions.map((provider) => (
-                                        <SelectItem key={provider.id} value={provider.id}>
-                                            {provider.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Input placeholder="Label" value={numberForm.label} onChange={(e) => setNumberForm((prev) => ({ ...prev, label: e.target.value }))} />
-                            <Input placeholder="Phone number" value={numberForm.phone_number} onChange={(e) => setNumberForm((prev) => ({ ...prev, phone_number: e.target.value }))} />
-                            {selectedProvider?.system_credentials_enabled && (
-                                <ToggleRow
-                                    label="Use managed credentials"
-                                    checked={numberForm.use_system_credentials}
-                                    onCheckedChange={(value) => setNumberForm((prev) => ({ ...prev, use_system_credentials: value }))}
-                                />
-                            )}
-                            {!numberForm.use_system_credentials && selectedProvider?.custom_credentials_enabled !== false && (
-                                <>
-                                    {(selectedProvider?.credential_fields ?? []).map((field) => (
-                                        <div key={field.key} className="space-y-2">
-                                            <p className="text-sm font-medium">
-                                                {field.label}
-                                                {field.required ? " *" : ""}
-                                            </p>
-                                            <Input
-                                                placeholder={field.placeholder ?? field.label}
-                                                type={field.type === "password" ? "password" : "text"}
-                                                value={numberForm.provider_credentials[field.key] ?? ""}
-                                                onChange={(e) =>
-                                                    setNumberForm((prev) => ({
-                                                        ...prev,
-                                                        provider_credentials: {
-                                                            ...prev.provider_credentials,
-                                                            [field.key]: e.target.value,
-                                                        },
-                                                    }))
-                                                }
-                                            />
-                                            {field.help_text ? (
-                                                <p className="text-xs text-muted-foreground">{field.help_text}</p>
-                                            ) : null}
-                                        </div>
-                                    ))}
-                                </>
-                            )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                            Connect a calling provider, assign the number, and decide whether Cloove manages credentials or the business brings its own.
-                        </p>
-                        <Button
-                            onClick={() => createNumber.mutate(numberForm)}
-                            disabled={createNumber.isPending || !numberForm.phone_number.trim()}
-                            className="rounded-full"
-                        >
-                            {createNumber.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Save number
-                        </Button>
-                    </GlassCard>
-
-                    <GlassCard className="p-6 space-y-4">
-                        <SectionTitle icon={ShieldCheck} title="Agent settings" />
-                        <div className="grid gap-3 md:grid-cols-2">
-                            <Input placeholder="Display name" value={settingsForm.display_name} onChange={(e) => setSettingsForm((prev) => ({ ...prev, display_name: e.target.value }))} />
-                            <Select
-                                value={settingsForm.language}
-                                onValueChange={(value) => setSettingsForm((prev) => ({ ...prev, language: value }))}
-                            >
-                                <SelectTrigger className="rounded-2xl">
-                                    <SelectValue placeholder="Select language" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-2xl">
-                                    {LANGUAGE_OPTIONS.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Conversation tone</p>
-                            <Select
-                                value={settingsForm.tone}
-                                onValueChange={(value) => setSettingsForm((prev) => ({ ...prev, tone: value }))}
-                            >
-                                <SelectTrigger className="rounded-2xl">
-                                    <SelectValue placeholder="Select tone" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-2xl">
-                                    {TONE_OPTIONS.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-medium">Greeting</p>
-                                {GREETING_PRESETS.map((preset) => (
-                                    <Button
-                                        key={preset.id}
-                                        type="button"
-                                        variant="outline"
-                                        className="h-8 rounded-full px-3 text-xs"
-                                        onClick={() =>
-                                            setSettingsForm((prev) => ({
-                                                ...prev,
-                                                greeting_message: preset.build(businessDisplayName),
-                                            }))
-                                        }
-                                    >
-                                        {preset.label}
-                                    </Button>
-                                ))}
-                            </div>
-                            <Textarea
-                                placeholder="How the AI should welcome callers"
-                                value={settingsForm.greeting_message}
-                                onChange={(e) => setSettingsForm((prev) => ({ ...prev, greeting_message: e.target.value }))}
-                                rows={3}
-                            />
-                        </div>
-                        <div className="space-y-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-medium">Fallback response</p>
-                                {FALLBACK_PRESETS.map((preset) => (
-                                    <Button
-                                        key={preset.id}
-                                        type="button"
-                                        variant="outline"
-                                        className="h-8 rounded-full px-3 text-xs"
-                                        onClick={() =>
-                                            setSettingsForm((prev) => ({
-                                                ...prev,
-                                                fallback_message: preset.text,
-                                            }))
-                                        }
-                                    >
-                                        {preset.label}
-                                    </Button>
-                                ))}
-                            </div>
-                            <Textarea
-                                placeholder="What the AI should say when it needs the caller to repeat or wait"
-                                value={settingsForm.fallback_message}
-                                onChange={(e) => setSettingsForm((prev) => ({ ...prev, fallback_message: e.target.value }))}
-                                rows={3}
-                            />
-                        </div>
-                        <div className="space-y-3">
-                            <OperatingHoursBuilder
-                                value={settingsForm.operating_hours}
-                                onChange={(value) => setSettingsForm((prev) => ({ ...prev, operating_hours: value }))}
-                                description="Used for after-hours routing and caller expectation setting."
-                            />
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <ToggleRow label="AI enabled" checked={settingsForm.ai_enabled} onCheckedChange={(value) => setSettingsForm((prev) => ({ ...prev, ai_enabled: value }))} />
-                            <ToggleRow label="Record calls" checked={settingsForm.recording_enabled} onCheckedChange={(value) => setSettingsForm((prev) => ({ ...prev, recording_enabled: value }))} />
-                            <ToggleRow label="Transcribe calls" checked={settingsForm.transcription_enabled} onCheckedChange={(value) => setSettingsForm((prev) => ({ ...prev, transcription_enabled: value }))} />
-                            <ToggleRow label="Human handoff" checked={settingsForm.human_handoff_enabled} onCheckedChange={(value) => setSettingsForm((prev) => ({ ...prev, human_handoff_enabled: value }))} />
-                        </div>
-                        <Button onClick={() => updateSettings.mutate(settingsForm)} disabled={updateSettings.isPending} className="rounded-full">
-                            {updateSettings.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Save settings
-                        </Button>
-                    </GlassCard>
+                <div className="max-w-4xl">
+                    <VoiceAgentSettingsForm
+                        settings={settingsForm}
+                        businessDisplayName={businessDisplayName}
+                        languageOptions={LANGUAGE_OPTIONS}
+                        toneOptions={TONE_OPTIONS}
+                        greetingPresets={GREETING_PRESETS}
+                        fallbackPresets={FALLBACK_PRESETS}
+                        isPending={updateSettings.isPending}
+                        onChange={(updater) => setSettingsForm((prev) => updater(prev))}
+                        onSubmit={() => updateSettings.mutate(settingsForm)}
+                    />
                 </div>
             )}
 
             {activeTab === "calls" && (
-                <GlassCard className="p-6 space-y-4">
-                    <SectionTitle icon={Headphones} title="Recent calls" />
+                <GlassCard className="p-6 space-y-5">
+                    <div className="flex items-center justify-between gap-4">
+                        <SectionTitle icon={Headphones} title="Recent calls" />
+                        {!isLoading && (callsQuery.data ?? []).length > 0 ? (
+                            <span className="text-sm text-muted-foreground">
+                                {(callsQuery.data ?? []).length} {(callsQuery.data ?? []).length === 1 ? "call" : "calls"}
+                            </span>
+                        ) : null}
+                    </div>
                     {isLoading ? (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -659,31 +532,58 @@ export function VoiceView() {
                     ) : (callsQuery.data ?? []).length === 0 ? (
                         <p className="text-sm text-muted-foreground">No calls logged yet.</p>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <div className="overflow-x-auto -mx-2">
                             <table className="min-w-full text-sm">
-                                <thead className="text-left text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                                    <tr>
-                                        <th className="pb-3">Customer</th>
-                                        <th className="pb-3">Direction</th>
-                                        <th className="pb-3">Status</th>
-                                        <th className="pb-3">Duration</th>
-                                        <th className="pb-3">Created</th>
-                                        <th className="pb-3"></th>
+                                <thead>
+                                    <tr className="text-left text-[13px] font-medium text-slate-500 dark:text-slate-400">
+                                        <th className="px-2 pb-2 font-medium">Customer</th>
+                                        <th className="px-2 pb-2 font-medium">Direction</th>
+                                        <th className="px-2 pb-2 font-medium">Status</th>
+                                        <th className="px-2 pb-2 font-medium">Duration</th>
+                                        <th className="px-2 pb-2 font-medium">Created</th>
+                                        <th className="px-2 pb-2"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {(callsQuery.data ?? []).map((call) => (
-                                        <tr key={call.id} className="border-t border-black/5 dark:border-white/10">
-                                            <td className="py-3">
-                                                <div className="font-medium">{call.customer_name || "Unknown caller"}</div>
-                                                <div className="text-muted-foreground">{call.customer_phone || "—"}</div>
+                                        <tr
+                                            key={call.id}
+                                            className="border-t border-slate-100 transition-colors hover:bg-slate-50/60 dark:border-white/[0.06] dark:hover:bg-white/[0.02]"
+                                        >
+                                            <td className="px-2 py-3.5">
+                                                <div className="font-medium text-slate-900 dark:text-slate-100">
+                                                    {call.customer_name || "Unknown caller"}
+                                                </div>
+                                                <div className="mt-0.5 font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                                                    {call.customer_phone || "—"}
+                                                </div>
                                             </td>
-                                            <td className="py-3 capitalize">{call.direction.replace("_", " ")}</td>
-                                            <td className="py-3 capitalize">{call.status.replace("_", " ")}</td>
-                                            <td className="py-3">{formatDuration(call.duration_seconds)}</td>
-                                            <td className="py-3">{new Date(call.created_at).toLocaleString()}</td>
-                                            <td className="py-3 text-right">
-                                                <Button variant="ghost" onClick={() => setSelectedCall(call)}>Open</Button>
+                                            <td className="px-2 py-3.5">
+                                                <CallDirectionLabel direction={call.direction} />
+                                            </td>
+                                            <td className="px-2 py-3.5">
+                                                <CallStatusBadge status={call.status} />
+                                            </td>
+                                            <td className="px-2 py-3.5 font-mono text-[13px] tabular-nums text-slate-700 dark:text-slate-300">
+                                                {formatDuration(call.duration_seconds)}
+                                            </td>
+                                            <td className="px-2 py-3.5 text-slate-600 dark:text-slate-400">
+                                                {new Date(call.created_at).toLocaleString(undefined, {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                    hour: "numeric",
+                                                    minute: "2-digit",
+                                                })}
+                                            </td>
+                                            <td className="px-2 py-3.5 text-right">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setSelectedCall(call)}
+                                                    className="h-8 rounded-md px-2.5 text-[13px] font-medium text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-slate-100"
+                                                >
+                                                    Open
+                                                </Button>
                                             </td>
                                         </tr>
                                     ))}
@@ -695,47 +595,94 @@ export function VoiceView() {
             )}
 
             <Dialog open={!!selectedCall} onOpenChange={(open) => !open && setSelectedCall(null)}>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="max-w-2xl rounded-3xl!">
                     <DialogHeader>
                         <DialogTitle>Call details</DialogTitle>
                     </DialogHeader>
                     {selectedCall && (
-                        <div className="space-y-5">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <MetaItem label="Customer" value={selectedCall.customer_name || selectedCall.customer_phone || "Unknown"} />
-                                <MetaItem label="Status" value={selectedCall.status} />
-                                <MetaItem label="Resolution" value={selectedCall.resolution || "—"} />
-                                <MetaItem label="Transfer" value={selectedCall.transfer_status || "—"} />
+                        <div className="space-y-6">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                                <span className="font-medium text-slate-900 dark:text-slate-100">
+                                    {selectedCall.customer_name || "Unknown caller"}
+                                </span>
+                                {selectedCall.customer_phone ? (
+                                    <>
+                                        <span aria-hidden className="text-slate-300 dark:text-slate-600">·</span>
+                                        <span className="font-mono text-[13px] tabular-nums text-slate-600 dark:text-slate-300">
+                                            {selectedCall.customer_phone}
+                                        </span>
+                                    </>
+                                ) : null}
+                                <span aria-hidden className="text-slate-300 dark:text-slate-600">·</span>
+                                <CallDirectionLabel direction={selectedCall.direction} />
+                                <span aria-hidden className="text-slate-300 dark:text-slate-600">·</span>
+                                <span className="text-slate-500 dark:text-slate-400">
+                                    {new Date(selectedCall.created_at).toLocaleString(undefined, {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric",
+                                        hour: "numeric",
+                                        minute: "2-digit",
+                                    })}
+                                </span>
                             </div>
-                            {selectedCall.summary && (
-                                <div>
-                                    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">Summary</p>
-                                    <p className="text-sm leading-6">{selectedCall.summary}</p>
-                                </div>
-                            )}
-                            {selectedCall.recording_url && (
-                                <div>
-                                    <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">Recording</p>
+
+                            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border border-slate-200/70 bg-slate-50/50 px-5 py-4 dark:border-white/10 dark:bg-white/[0.02] sm:grid-cols-4">
+                                <CallDataRow label="Status">
+                                    <CallStatusBadge status={selectedCall.status} />
+                                </CallDataRow>
+                                <CallDataRow label="Duration">
+                                    <span className="font-mono text-sm tabular-nums text-slate-900 dark:text-slate-100">
+                                        {formatDuration(selectedCall.duration_seconds)}
+                                    </span>
+                                </CallDataRow>
+                                <CallDataRow
+                                    label="Resolution"
+                                    value={humanizeValue(selectedCall.resolution)}
+                                />
+                                <CallDataRow
+                                    label="Transfer"
+                                    value={humanizeValue(selectedCall.transfer_status)}
+                                />
+                            </dl>
+
+                            {selectedCall.summary ? (
+                                <CallSection title="Summary">
+                                    <p className="text-sm leading-6 text-slate-700 dark:text-slate-300">
+                                        {selectedCall.summary}
+                                    </p>
+                                </CallSection>
+                            ) : null}
+
+                            {selectedCall.recording_url ? (
+                                <CallSection title="Recording">
                                     <audio controls className="w-full" src={selectedCall.recording_url} />
-                                </div>
-                            )}
-                            <div>
-                                <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">Transcript</p>
-                                <div className="space-y-3">
-                                    {(selectedCall.turns ?? []).length === 0 ? (
-                                        <p className="text-sm text-muted-foreground">No transcript captured yet.</p>
-                                    ) : (
-                                        (selectedCall.turns ?? []).map((turn) => (
-                                            <div key={turn.id} className="rounded-2xl border border-black/5 px-4 py-3 dark:border-white/10">
-                                                <div className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                                </CallSection>
+                            ) : null}
+
+                            <CallSection title="Transcript">
+                                {(selectedCall.turns ?? []).length === 0 ? (
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                                        No transcript captured yet.
+                                    </p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {(selectedCall.turns ?? []).map((turn) => (
+                                            <div
+                                                key={turn.id}
+                                                className="rounded-lg bg-slate-50 px-4 py-3 dark:bg-white/[0.03]"
+                                            >
+                                                <div className="text-xs font-medium capitalize text-slate-500 dark:text-slate-400">
                                                     {turn.speaker}
                                                 </div>
-                                                <p className="text-sm leading-6">{turn.transcript || turn.prompt_text || "—"}</p>
+                                                <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-slate-200">
+                                                    {turn.transcript || turn.prompt_text || "—"}
+                                                </p>
                                             </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CallSection>
                         </div>
                     )}
                 </DialogContent>
@@ -760,7 +707,7 @@ function MetricCard({ icon: Icon, label, value }: { icon: typeof Phone; label: s
         <GlassCard className="p-5">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
                     <p className="mt-2 text-3xl font-semibold">{value}</p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
@@ -771,28 +718,130 @@ function MetricCard({ icon: Icon, label, value }: { icon: typeof Phone; label: s
     )
 }
 
-function ToggleRow({
+function CallDataRow({
     label,
-    checked,
-    onCheckedChange,
+    value,
+    children,
 }: {
     label: string
-    checked: boolean
-    onCheckedChange: (value: boolean) => void
+    value?: string
+    children?: React.ReactNode
 }) {
     return (
-        <label className="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 text-sm dark:border-white/10">
-            <span>{label}</span>
-            <Switch checked={checked} onCheckedChange={onCheckedChange} />
-        </label>
+        <div className="min-w-0">
+            <dt className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</dt>
+            <dd className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
+                {children ?? (value && value.length > 0 ? value : <span className="text-slate-400 dark:text-slate-500">—</span>)}
+            </dd>
+        </div>
     )
 }
 
-function MetaItem({ label, value }: { label: string; value: string }) {
+function CallSection({ title, children }: { title: string; children: React.ReactNode }) {
     return (
-        <div className="rounded-2xl border border-black/5 px-4 py-3 dark:border-white/10">
-            <div className="mb-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
-            <div className="text-sm">{value}</div>
+        <section>
+            <h3 className="mb-2.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+            {children}
+        </section>
+    )
+}
+
+function humanizeValue(value: string | null | undefined) {
+    if (!value) return ""
+    const normalized = value.replace(/_/g, " ").trim().toLowerCase()
+    if (!normalized || normalized === "not requested") return ""
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+}
+
+function CallDirectionLabel({ direction }: { direction: string }) {
+    const normalized = direction.toLowerCase()
+    const isOutbound = normalized.includes("outbound")
+    return (
+        <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-700 dark:text-slate-300">
+            <span
+                aria-hidden
+                className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    isOutbound ? "bg-sky-500" : "bg-violet-500"
+                )}
+            />
+            <span className="capitalize">{normalized.replace(/_/g, " ")}</span>
+        </span>
+    )
+}
+
+function CallStatusBadge({ status }: { status: string }) {
+    const normalized = status.toLowerCase()
+    const styles: Record<string, string> = {
+        completed:
+            "bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20",
+        transferred:
+            "bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20",
+        failed:
+            "bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-500/20",
+        missed:
+            "bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20",
+        in_progress:
+            "bg-blue-50 text-blue-700 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20",
+        queued:
+            "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10",
+    }
+    const className =
+        styles[normalized] ??
+        "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10"
+    return (
+        <span
+            className={cn(
+                "inline-flex items-center rounded-md px-2 py-0.5 text-[12px] font-medium capitalize ring-1 ring-inset",
+                className
+            )}
+        >
+            {normalized.replace(/_/g, " ")}
+        </span>
+    )
+}
+
+function VoiceNumbersEmptyState({ onConnect }: { onConnect: () => void }) {
+    return (
+        <div className="rounded-3xl border border-brand-green-100/80 bg-linear-to-br from-brand-green-50/80 via-white to-brand-gold-50/40 px-5 py-8 text-center shadow-sm dark:border-brand-green-800/30 dark:from-brand-deep-950/80 dark:via-slate-950/80 dark:to-brand-green-950/50 sm:px-6 sm:py-9">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-brand-green-100 bg-white shadow-[0_1px_0_rgba(11,61,46,0.04)] dark:border-brand-green-800/40 dark:bg-slate-950/60">
+                <Phone className="h-6 w-6 text-brand-green dark:text-emerald-400" />
+            </div>
+            <h3 className="mt-4 font-serif text-lg text-brand-deep dark:text-brand-cream">
+                Connect your first voice line
+            </h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-brand-accent/70 dark:text-brand-cream/55">
+                Link a business phone number so Cloove can answer inbound calls, place outbound calls, and transfer
+                callers to your team when needed.
+            </p>
+            <ul className="mx-auto mt-5 grid w-full grid-cols-1 gap-2 text-left sm:grid-cols-3">
+                <li className="rounded-2xl border border-brand-green-100/70 bg-white px-3 py-2.5 text-xs leading-5 text-brand-deep/80 dark:border-brand-green-800/35 dark:bg-slate-950/55 dark:text-brand-cream/75">
+                    <span className="font-medium text-brand-deep dark:text-brand-cream">Inbound AI</span>
+                    <span className="mt-0.5 block text-brand-accent/60 dark:text-brand-cream/45">
+                        Greet callers and handle common questions
+                    </span>
+                </li>
+                <li className="rounded-2xl border border-brand-green-100/70 bg-white px-3 py-2.5 text-xs leading-5 text-brand-deep/80 dark:border-brand-green-800/35 dark:bg-slate-950/55 dark:text-brand-cream/75">
+                    <span className="font-medium text-brand-deep dark:text-brand-cream">Outbound calls</span>
+                    <span className="mt-0.5 block text-brand-accent/60 dark:text-brand-cream/45">
+                        Reach customers from your business line
+                    </span>
+                </li>
+                <li className="rounded-2xl border border-brand-green-100/70 bg-white px-3 py-2.5 text-xs leading-5 text-brand-deep/80 dark:border-brand-green-800/35 dark:bg-slate-950/55 dark:text-brand-cream/75">
+                    <span className="font-medium text-brand-deep dark:text-brand-cream">Live transfer</span>
+                    <span className="mt-0.5 block text-brand-accent/60 dark:text-brand-cream/45">
+                        Hand off to staff when a human is needed
+                    </span>
+                </li>
+            </ul>
+            <Button
+                type="button"
+                onClick={onConnect}
+                className="mt-6 h-11 rounded-full bg-brand-deep px-6 text-brand-gold-300 hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90"
+            >
+                <Phone className="mr-2 h-4 w-4" />
+                Connect voice number
+            </Button>
         </div>
     )
 }

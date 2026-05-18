@@ -1,0 +1,328 @@
+"use client"
+
+import { Accordion } from "@base-ui/react/accordion"
+import { Button } from "@/app/components/ui/button"
+import { Input } from "@/app/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
+import { Switch } from "@/app/components/ui/switch"
+import { Textarea } from "@/app/components/ui/textarea"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { VoiceScheduleBuilder } from "@/app/domains/voice/components/VoiceScheduleBuilder"
+import { ChevronDown, Loader2, Phone, ShieldCheck } from "lucide-react"
+import { cn } from "@/app/lib/utils"
+
+const accordionTriggerClass =
+    "flex w-full items-center justify-between gap-3 px-5 py-4 text-left text-sm font-semibold text-brand-deep transition-colors hover:bg-black/5 dark:text-brand-cream dark:hover:bg-white/5 data-panel-open:bg-black/5 dark:data-panel-open:bg-white/5"
+const accordionPanelClass =
+    "overflow-hidden transition-[height] duration-300 ease-out motion-reduce:duration-[0.01ms]"
+const accordionItemClass = "border-t border-brand-deep/5 dark:border-white/5 first:border-t-0"
+
+type SettingsForm = {
+    display_name: string
+    greeting_message: string
+    fallback_message: string
+    voicemail_message: string
+    language: string
+    tone: string
+    ai_enabled: boolean
+    recording_enabled: boolean
+    transcription_enabled: boolean
+    human_handoff_enabled: boolean
+    after_hours_enabled: boolean
+    disclosure_enabled: boolean
+    business_info: string
+    ai_instructions: string
+    restricted_topics: string
+    operating_hours: string
+}
+
+interface VoiceAgentSettingsFormProps {
+    settings: SettingsForm
+    businessDisplayName: string
+    languageOptions: Array<{ value: string; label: string }>
+    toneOptions: Array<{ value: string; label: string }>
+    greetingPresets: Array<{ id: string; label: string; build: (name: string) => string }>
+    fallbackPresets: Array<{ id: string; label: string; text: string }>
+    isPending: boolean
+    onChange: (updater: (prev: SettingsForm) => SettingsForm) => void
+    onSubmit: () => void
+}
+
+export function VoiceAgentSettingsForm({
+    settings,
+    businessDisplayName,
+    languageOptions,
+    toneOptions,
+    greetingPresets,
+    fallbackPresets,
+    isPending,
+    onChange,
+    onSubmit,
+}: VoiceAgentSettingsFormProps) {
+    return (
+        <GlassCard className="p-0 overflow-hidden">
+            <div className="flex items-center gap-3 border-b border-brand-deep/5 px-6 py-5 dark:border-white/5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
+                    <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                    <h2 className="text-lg font-semibold">Agent settings</h2>
+                    <p className="text-sm text-muted-foreground">
+                        Configure how the voice assistant speaks, responds, and behaves during calls.
+                    </p>
+                </div>
+            </div>
+
+            <Accordion.Root defaultValue={["identity", "prompts"]} className="bg-transparent">
+                <Accordion.Item value="identity" className={accordionItemClass}>
+                    <Accordion.Header>
+                        <Accordion.Trigger className={accordionTriggerClass}>
+                            Identity and language
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+                        </Accordion.Trigger>
+                    </Accordion.Header>
+                    <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
+                        <div className="space-y-4 pt-2">
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <Field label="Display name">
+                                    <Input
+                                        placeholder="Cloove Support"
+                                        value={settings.display_name}
+                                        onChange={(e) =>
+                                            onChange((prev) => ({ ...prev, display_name: e.target.value }))
+                                        }
+                                    />
+                                </Field>
+                                <Field label="Language">
+                                    <Select
+                                        value={settings.language}
+                                        onValueChange={(value) =>
+                                            onChange((prev) => ({ ...prev, language: value }))
+                                        }
+                                    >
+                                        <SelectTrigger className="rounded-2xl">
+                                            <SelectValue placeholder="Select language" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl">
+                                            {languageOptions.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </Field>
+                            </div>
+                            <Field label="Conversation tone">
+                                <Select
+                                    value={settings.tone}
+                                    onValueChange={(value) =>
+                                        onChange((prev) => ({ ...prev, tone: value }))
+                                    }
+                                >
+                                    <SelectTrigger className="rounded-2xl">
+                                        <SelectValue placeholder="Select tone" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl">
+                                        {toneOptions.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                        </div>
+                    </Accordion.Panel>
+                </Accordion.Item>
+
+                <Accordion.Item value="prompts" className={accordionItemClass}>
+                    <Accordion.Header>
+                        <Accordion.Trigger className={accordionTriggerClass}>
+                            Call prompts
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+                        </Accordion.Trigger>
+                    </Accordion.Header>
+                    <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
+                        <div className="space-y-5 pt-2">
+                            <Field label="Greeting">
+                                <div className="space-y-3">
+                                    <div className="flex flex-wrap gap-2">
+                                        {greetingPresets.map((preset) => (
+                                            <Button
+                                                key={preset.id}
+                                                type="button"
+                                                variant="outline"
+                                                className="h-8 rounded-full px-3 text-xs"
+                                                onClick={() =>
+                                                    onChange((prev) => ({
+                                                        ...prev,
+                                                        greeting_message: preset.build(businessDisplayName),
+                                                    }))
+                                                }
+                                            >
+                                                {preset.label}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    <Textarea
+                                        placeholder="How the AI should welcome callers"
+                                        value={settings.greeting_message}
+                                        onChange={(e) =>
+                                            onChange((prev) => ({
+                                                ...prev,
+                                                greeting_message: e.target.value,
+                                            }))
+                                        }
+                                        rows={3}
+                                    />
+                                </div>
+                            </Field>
+
+                            <Field label="Fallback response">
+                                <div className="space-y-3">
+                                    <div className="flex flex-wrap gap-2">
+                                        {fallbackPresets.map((preset) => (
+                                            <Button
+                                                key={preset.id}
+                                                type="button"
+                                                variant="outline"
+                                                className="h-8 rounded-full px-3 text-xs"
+                                                onClick={() =>
+                                                    onChange((prev) => ({
+                                                        ...prev,
+                                                        fallback_message: preset.text,
+                                                    }))
+                                                }
+                                            >
+                                                {preset.label}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    <Textarea
+                                        placeholder="What the AI should say when it needs the caller to repeat or wait"
+                                        value={settings.fallback_message}
+                                        onChange={(e) =>
+                                            onChange((prev) => ({
+                                                ...prev,
+                                                fallback_message: e.target.value,
+                                            }))
+                                        }
+                                        rows={3}
+                                    />
+                                </div>
+                            </Field>
+                        </div>
+                    </Accordion.Panel>
+                </Accordion.Item>
+
+                <Accordion.Item value="availability" className={accordionItemClass}>
+                    <Accordion.Header>
+                        <Accordion.Trigger className={accordionTriggerClass}>
+                            Availability
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+                        </Accordion.Trigger>
+                    </Accordion.Header>
+                    <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
+                        <div className="space-y-4 pt-2">
+                            <VoiceScheduleBuilder
+                                value={settings.operating_hours}
+                                onChange={(value) =>
+                                    onChange((prev) => ({ ...prev, operating_hours: value }))
+                                }
+                            />
+                        </div>
+                    </Accordion.Panel>
+                </Accordion.Item>
+
+                <Accordion.Item value="automation" className={accordionItemClass}>
+                    <Accordion.Header>
+                        <Accordion.Trigger className={accordionTriggerClass}>
+                            Automation controls
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+                        </Accordion.Trigger>
+                    </Accordion.Header>
+                    <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
+                        <div className="grid gap-4 pt-2 md:grid-cols-2">
+                            <ToggleRow
+                                label="AI enabled"
+                                checked={settings.ai_enabled}
+                                onCheckedChange={(value) =>
+                                    onChange((prev) => ({ ...prev, ai_enabled: value }))
+                                }
+                            />
+                            <ToggleRow
+                                label="Record calls"
+                                checked={settings.recording_enabled}
+                                onCheckedChange={(value) =>
+                                    onChange((prev) => ({ ...prev, recording_enabled: value }))
+                                }
+                            />
+                            <ToggleRow
+                                label="Transcribe calls"
+                                checked={settings.transcription_enabled}
+                                onCheckedChange={(value) =>
+                                    onChange((prev) => ({ ...prev, transcription_enabled: value }))
+                                }
+                            />
+                            <ToggleRow
+                                label="Human handoff"
+                                checked={settings.human_handoff_enabled}
+                                onCheckedChange={(value) =>
+                                    onChange((prev) => ({ ...prev, human_handoff_enabled: value }))
+                                }
+                            />
+                            <ToggleRow
+                                label="After-hours behavior"
+                                checked={settings.after_hours_enabled}
+                                onCheckedChange={(value) =>
+                                    onChange((prev) => ({ ...prev, after_hours_enabled: value }))
+                                }
+                            />
+                            <ToggleRow
+                                label="Recording disclosure"
+                                checked={settings.disclosure_enabled}
+                                onCheckedChange={(value) =>
+                                    onChange((prev) => ({ ...prev, disclosure_enabled: value }))
+                                }
+                            />
+                        </div>
+                    </Accordion.Panel>
+                </Accordion.Item>
+            </Accordion.Root>
+
+            <div className="border-t border-brand-deep/5 px-6 py-5 dark:border-white/5">
+                <Button onClick={onSubmit} disabled={isPending} className="rounded-full">
+                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Save settings
+                </Button>
+            </div>
+        </GlassCard>
+    )
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <div className="space-y-2">
+            <p className="text-sm font-medium">{label}</p>
+            {children}
+        </div>
+    )
+}
+
+function ToggleRow({
+    label,
+    checked,
+    onCheckedChange,
+}: {
+    label: string
+    checked: boolean
+    onCheckedChange: (value: boolean) => void
+}) {
+    return (
+        <label className="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 text-sm dark:border-white/10">
+            <span>{label}</span>
+            <Switch checked={checked} onCheckedChange={onCheckedChange} />
+        </label>
+    )
+}

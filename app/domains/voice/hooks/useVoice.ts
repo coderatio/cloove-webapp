@@ -212,6 +212,37 @@ export function useCreateVoiceNumber() {
     })
 }
 
+export function useUpdateVoiceNumber() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: Record<string, unknown> }) =>
+            apiClient.patch<VoiceNumberItem>(`/voice/numbers/${id}`, payload),
+        onSuccess: () => {
+            toast.success("Voice number updated")
+            void queryClient.invalidateQueries({ queryKey: keys.numbers(businessId) })
+        },
+        onError: (error: { message?: string }) => toast.error(error.message ?? "Failed to update voice number"),
+    })
+}
+
+export function useDisconnectVoiceNumber() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: (id: string) => apiClient.post<VoiceNumberItem>(`/voice/numbers/${id}/disconnect`, {}),
+        onSuccess: () => {
+            toast.success("Voice number disconnected")
+            void queryClient.invalidateQueries({ queryKey: keys.numbers(businessId) })
+        },
+        onError: (error: { message?: string }) => toast.error(error.message ?? "Failed to disconnect voice number"),
+    })
+}
+
 export function useUpdateVoiceSettings() {
     const queryClient = useQueryClient()
     const { activeBusiness } = useBusiness()
