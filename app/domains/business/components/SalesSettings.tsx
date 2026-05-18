@@ -12,7 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/app/components/ui/select"
-import { Loader2, Plus, Trash2, Wallet } from "lucide-react"
+import { Loader2, Plus, Trash2 } from "lucide-react"
 import { useSettings, useUpdateBusinessSettings } from "../hooks/useBusinessSettings"
 import { usePaymentProviders } from "@/app/domains/finance/hooks/useFinance"
 import { usePermission } from "@/app/hooks/usePermission"
@@ -324,114 +324,181 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
             <section className="space-y-4">
-                <h2 className="pl-1 font-serif text-xl text-brand-deep dark:text-brand-cream">
-                    Checkout & Transfers
+                <h2 className="pl-1 font-serif text-lg text-brand-deep dark:text-brand-cream sm:text-xl">
+                    Point of Sale
                 </h2>
-                <GlassCard className="space-y-6 p-6">
+                <GlassCard className="space-y-5 p-4 sm:space-y-6 sm:p-6">
                     {!canManageSalesSettings && (
-                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+                        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
                             You can view these sales settings, but only users with store management access can change them.
                         </div>
                     )}
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
-                            Virtual Account Provider
-                        </label>
-                        <Select
-                            value={localConfigs.sales_virtual_account_provider || "__auto__"}
-                            disabled={!canManageSalesSettings}
-                            onValueChange={(value) =>
-                                handleConfigChange(
-                                    "sales_virtual_account_provider",
-                                    value === "__auto__" ? "" : value
-                                )
-                            }
-                        >
-                            <SelectTrigger className="h-12 rounded-xl border-brand-deep/10 bg-white/50 dark:border-white/10 dark:bg-white/5">
-                                <SelectValue placeholder="Choose a provider" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="__auto__">Automatic (workspace default)</SelectItem>
-                                {eligibleProviders.map((provider) => (
-                                    <SelectItem key={provider.id} value={provider.id}>
-                                        {provider.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <p className="text-xs text-brand-accent/60 dark:text-white/40">
-                            This provider will be used when generating storefront and checkout bank-transfer accounts for this business.
-                        </p>
-                    </div>
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                        <div className="space-y-4 rounded-2xl border border-brand-deep/10 bg-white/30 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="space-y-0.5">
+                                <span className="font-medium text-brand-deep dark:text-brand-cream">
+                                    Checkout Setup
+                                </span>
+                                <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                    Control the defaults staff see when creating sales at the counter.
+                                </p>
+                            </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
-                                Default Payment Method
-                            </label>
-                            <Select
-                                value={localConfigs.default_payment_method}
-                                disabled={!canManageSalesSettings}
-                                onValueChange={(value) =>
-                                    handleConfigChange("default_payment_method", value)
-                                }
-                            >
-                                <SelectTrigger className="h-12 rounded-xl border-brand-deep/10 bg-white/50 dark:border-white/10 dark:bg-white/5">
-                                    <SelectValue placeholder="Choose a payment method" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {PAYMENT_METHOD_OPTIONS.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="rounded-xl border border-brand-deep/10 bg-white/40 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-                            <div className="flex items-start gap-3">
-                                <Wallet className="mt-0.5 h-4 w-4 text-brand-deep/50 dark:text-brand-cream/60" />
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
-                                        Provider eligibility is enforced
-                                    </p>
-                                    <p className="text-xs text-brand-accent/60 dark:text-white/40">
-                                        Only enabled providers that support checkout virtual accounts show up here.
-                                    </p>
-                                </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
+                                    Default Payment Method
+                                </label>
+                                <Select
+                                    value={localConfigs.default_payment_method}
+                                    disabled={!canManageSalesSettings}
+                                    onValueChange={(value) =>
+                                        handleConfigChange("default_payment_method", value)
+                                    }
+                                >
+                                    <SelectTrigger className="h-12 rounded-xl border-brand-deep/10 bg-white/50 dark:border-white/10 dark:bg-white/5">
+                                        <SelectValue placeholder="Choose a payment method" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {PAYMENT_METHOD_OPTIONS.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                    Sets the payment method preselected when staff start a new sale.
+                                </p>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex items-center justify-between gap-4 rounded-xl border border-brand-deep/10 bg-white/30 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-                        <div className="space-y-0.5">
-                            <span className="font-medium text-brand-deep dark:text-brand-cream">
-                                Require Final Confirmation
-                            </span>
-                            <p className="text-xs text-brand-accent/60 dark:text-white/40">
-                                Ask the customer to confirm before the WhatsApp checkout is submitted as an order.
-                            </p>
+                        <div className="space-y-4 rounded-2xl border border-brand-deep/10 bg-white/40 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="space-y-0.5">
+                                <span className="font-medium text-brand-deep dark:text-brand-cream">
+                                    Sales Workflow
+                                </span>
+                                <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                    Control how staff capture and complete sales in the dashboard.
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3">
+                                <div className="min-w-0 flex-1 space-y-0.5">
+                                    <span className="font-medium text-brand-deep dark:text-brand-cream">
+                                        Allow Credit Sales
+                                    </span>
+                                    <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                        Enable deferred payment workflows for customers.
+                                    </p>
+                                </div>
+                                <Switch
+                                    className="shrink-0"
+                                    checked={localConfigs.allow_credit_sales}
+                                    disabled={!canManageSalesSettings}
+                                    onCheckedChange={(checked) => handleConfigChange("allow_credit_sales", checked)}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3">
+                                <div className="min-w-0 flex-1 space-y-0.5">
+                                    <span className="font-medium text-brand-deep dark:text-brand-cream">
+                                        Require Customer On Sale
+                                    </span>
+                                    <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                        Force every new sale to be attached to a customer record.
+                                    </p>
+                                </div>
+                                <Switch
+                                    className="shrink-0"
+                                    checked={localConfigs.require_customer_for_sale}
+                                    disabled={!canManageSalesSettings}
+                                    onCheckedChange={(checked) => handleConfigChange("require_customer_for_sale", checked)}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3">
+                                <div className="min-w-0 flex-1 space-y-0.5">
+                                    <span className="font-medium text-brand-deep dark:text-brand-cream">
+                                        Auto-generate Receipt
+                                    </span>
+                                    <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                        Prepare a receipt immediately after each completed sale.
+                                    </p>
+                                </div>
+                                <Switch
+                                    className="shrink-0"
+                                    checked={localConfigs.auto_generate_receipt}
+                                    disabled={!canManageSalesSettings}
+                                    onCheckedChange={(checked) => handleConfigChange("auto_generate_receipt", checked)}
+                                />
+                            </div>
                         </div>
-                        <Switch
-                            checked={localConfigs.customer_checkout_require_confirmation}
-                            disabled={!canManageSalesSettings}
-                            onCheckedChange={(checked) =>
-                                handleConfigChange("customer_checkout_require_confirmation", checked)
-                            }
-                        />
                     </div>
                 </GlassCard>
             </section>
 
             <section className="space-y-4">
-                <h2 className="pl-1 font-serif text-xl text-brand-deep dark:text-brand-cream">
-                    Customer Checkout Options
+                <h2 className="pl-1 font-serif text-lg text-brand-deep dark:text-brand-cream sm:text-xl">
+                    Storefront & WhatsApp Ordering
                 </h2>
-                <GlassCard className="space-y-6 p-6">
+                <GlassCard className="space-y-5 p-4 sm:space-y-6 sm:p-6">
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                        <div className="space-y-2 rounded-2xl border border-brand-deep/10 bg-white/40 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
+                                    Virtual Account Provider
+                                </label>
+                                <Select
+                                    value={localConfigs.sales_virtual_account_provider || "__auto__"}
+                                    disabled={!canManageSalesSettings}
+                                    onValueChange={(value) =>
+                                        handleConfigChange(
+                                            "sales_virtual_account_provider",
+                                            value === "__auto__" ? "" : value
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger className="h-12 rounded-xl border-brand-deep/10 bg-white/50 dark:border-white/10 dark:bg-white/5">
+                                        <SelectValue placeholder="Choose a provider" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="__auto__">Automatic (workspace default)</SelectItem>
+                                        {eligibleProviders.map((provider) => (
+                                            <SelectItem key={provider.id} value={provider.id}>
+                                                {provider.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                    Used when generating bank-transfer accounts for storefront and WhatsApp orders.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3 rounded-2xl border border-brand-deep/10 bg-white/30 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.03]">
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                                <span className="font-medium text-brand-deep dark:text-brand-cream">
+                                    Require Final Confirmation
+                                </span>
+                                <p className="text-xs text-brand-accent/60 dark:text-white/40">
+                                    Ask the customer to confirm before the WhatsApp checkout is submitted as an order.
+                                </p>
+                            </div>
+                            <Switch
+                                className="shrink-0"
+                                checked={localConfigs.customer_checkout_require_confirmation}
+                                disabled={!canManageSalesSettings}
+                                onCheckedChange={(checked) =>
+                                    handleConfigChange("customer_checkout_require_confirmation", checked)
+                                }
+                            />
+                        </div>
+                    </div>
+
                     <div className="space-y-3">
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
@@ -441,15 +508,15 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                 Choose the fulfillment types customers can select in WhatsApp checkout.
                             </p>
                         </div>
-                        <div className="grid gap-3 md:grid-cols-2">
+                        <div className="grid gap-3 xl:grid-cols-2">
                             {CHECKOUT_FULFILLMENT_OPTIONS
                                 .filter((option) => isRestaurant || !["dine_in", "takeaway"].includes(option.id))
                                 .map((option) => (
                                     <label
                                         key={option.id}
-                                        className="flex items-center justify-between gap-4 rounded-xl border border-brand-deep/10 bg-white/30 p-4 dark:border-white/10 dark:bg-white/[0.03]"
+                                        className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3 rounded-2xl border border-brand-deep/10 bg-white/30 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.03]"
                                     >
-                                        <div className="space-y-0.5">
+                                        <div className="min-w-0 flex-1 space-y-0.5">
                                             <div className="font-medium text-brand-deep dark:text-brand-cream">
                                                 {option.label}
                                             </div>
@@ -458,6 +525,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                             </p>
                                         </div>
                                         <Switch
+                                            className="shrink-0"
                                             checked={localConfigs.customer_checkout_fulfillment_methods.includes(option.id)}
                                             disabled={!canManageSalesSettings}
                                             onCheckedChange={() => toggleFulfillmentSelection(option.id)}
@@ -476,7 +544,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                 Choose the payment methods customers can pick during WhatsApp checkout.
                             </p>
                         </div>
-                        <div className="grid gap-3 md:grid-cols-2">
+                        <div className="grid gap-3 xl:grid-cols-2">
                             {CHECKOUT_PAYMENT_OPTIONS
                                 .filter((option) =>
                                     isRestaurant ? true : !["pay_after_eating", "pay_at_counter"].includes(option.id)
@@ -484,9 +552,9 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                 .map((option) => (
                                     <label
                                         key={option.id}
-                                        className="flex items-center justify-between gap-4 rounded-xl border border-brand-deep/10 bg-white/30 p-4 dark:border-white/10 dark:bg-white/[0.03]"
+                                        className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3 rounded-2xl border border-brand-deep/10 bg-white/30 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.03]"
                                     >
-                                        <div className="space-y-0.5">
+                                        <div className="min-w-0 flex-1 space-y-0.5">
                                             <div className="font-medium text-brand-deep dark:text-brand-cream">
                                                 {option.label}
                                             </div>
@@ -495,6 +563,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                             </p>
                                         </div>
                                         <Switch
+                                            className="shrink-0"
                                             checked={localConfigs.customer_checkout_payment_methods.includes(option.id)}
                                             disabled={!canManageSalesSettings}
                                             onCheckedChange={() => togglePaymentSelection(option.id)}
@@ -503,133 +572,83 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                 ))}
                         </div>
                     </div>
+                </GlassCard>
+            </section>
 
-                    {isRestaurant && (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
-                                        Dine-in Locations
-                                    </label>
-                                    <p className="mt-1 text-xs text-brand-accent/60 dark:text-white/40">
-                                        Add the dine-in areas or table labels customers should choose from.
-                                    </p>
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={!canManageSalesSettings}
-                                    className="h-9 rounded-xl"
-                                    onClick={addDineInLocation}
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add location
-                                </Button>
+            {isRestaurant && (
+                <section className="space-y-4">
+                    <h2 className="pl-1 font-serif text-lg text-brand-deep dark:text-brand-cream sm:text-xl">
+                        Dine-In Locations
+                    </h2>
+                    <GlassCard className="space-y-5 p-4 sm:space-y-6 sm:p-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">
+                                    Dine-In Locations
+                                </label>
+                                <p className="mt-1 text-xs text-brand-accent/60 dark:text-white/40">
+                                    Add the dine-in areas or table labels customers should choose from.
+                                </p>
                             </div>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={!canManageSalesSettings}
+                                className="h-10 w-full rounded-xl sm:h-9 sm:w-auto"
+                                onClick={addDineInLocation}
+                            >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add location
+                            </Button>
+                        </div>
 
-                            {localConfigs.customer_checkout_dine_in_locations.length === 0 ? (
-                                <div className="rounded-xl border border-dashed border-brand-deep/10 bg-white/20 px-4 py-5 text-sm text-brand-accent/60 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/40">
-                                    No dine-in locations added yet.
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {localConfigs.customer_checkout_dine_in_locations.map((location, index) => (
-                                        <div
-                                            key={`${location.id || "new"}-${index}`}
-                                            className="grid gap-3 rounded-xl border border-brand-deep/10 bg-white/30 p-4 dark:border-white/10 dark:bg-white/[0.03] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                        {localConfigs.customer_checkout_dine_in_locations.length === 0 ? (
+                            <div className="rounded-2xl border border-dashed border-brand-deep/10 bg-white/20 px-4 py-5 text-sm text-brand-accent/60 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/40">
+                                No dine-in locations added yet.
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {localConfigs.customer_checkout_dine_in_locations.map((location, index) => (
+                                    <div
+                                        key={`${location.id || "new"}-${index}`}
+                                        className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 rounded-2xl border border-brand-deep/10 bg-white/30 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.03] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                                    >
+                                        <Input
+                                            value={location.title}
+                                            disabled={!canManageSalesSettings}
+                                            onChange={(event) =>
+                                                updateDineInLocation(index, "title", event.target.value)
+                                            }
+                                            placeholder="Location name"
+                                            className="col-span-2 h-11 rounded-xl border-brand-deep/10 bg-white/50 dark:border-white/10 dark:bg-white/5 md:col-span-1"
+                                        />
+                                        <Input
+                                            value={location.description}
+                                            disabled={!canManageSalesSettings}
+                                            onChange={(event) =>
+                                                updateDineInLocation(index, "description", event.target.value)
+                                            }
+                                            placeholder="Location details"
+                                            className="h-11 rounded-xl border-brand-deep/10 bg-white/50 dark:border-white/10 dark:bg-white/5"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            disabled={!canManageSalesSettings}
+                                            className="h-11 w-11 rounded-xl text-brand-accent/70 hover:text-red-600"
+                                            onClick={() => removeDineInLocation(index)}
                                         >
-                                            <Input
-                                                value={location.title}
-                                                disabled={!canManageSalesSettings}
-                                                onChange={(event) =>
-                                                    updateDineInLocation(index, "title", event.target.value)
-                                                }
-                                                placeholder="Table 1"
-                                                className="h-11 rounded-xl border-brand-deep/10 bg-white/50 dark:border-white/10 dark:bg-white/5"
-                                            />
-                                            <Input
-                                                value={location.description}
-                                                disabled={!canManageSalesSettings}
-                                                onChange={(event) =>
-                                                    updateDineInLocation(index, "description", event.target.value)
-                                                }
-                                                placeholder="Patio"
-                                                className="h-11 rounded-xl border-brand-deep/10 bg-white/50 dark:border-white/10 dark:bg-white/5"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                disabled={!canManageSalesSettings}
-                                                className="h-11 w-11 rounded-xl text-brand-accent/70 hover:text-red-600"
-                                                onClick={() => removeDineInLocation(index)}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </GlassCard>
-            </section>
-
-            <section className="space-y-4">
-                <h2 className="pl-1 font-serif text-xl text-brand-deep dark:text-brand-cream">
-                    Sales Workflow
-                </h2>
-                <GlassCard className="space-y-6 p-6">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="space-y-0.5">
-                            <span className="font-medium text-brand-deep dark:text-brand-cream">
-                                Allow Credit Sales
-                            </span>
-                            <p className="text-xs text-brand-accent/60 dark:text-white/40">
-                                Enable deferred payment workflows for customers.
-                            </p>
-                        </div>
-                        <Switch
-                            checked={localConfigs.allow_credit_sales}
-                            disabled={!canManageSalesSettings}
-                            onCheckedChange={(checked) => handleConfigChange("allow_credit_sales", checked)}
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="space-y-0.5">
-                            <span className="font-medium text-brand-deep dark:text-brand-cream">
-                                Require Customer On Sale
-                            </span>
-                            <p className="text-xs text-brand-accent/60 dark:text-white/40">
-                                Force every new sale to be attached to a customer record.
-                            </p>
-                        </div>
-                        <Switch
-                            checked={localConfigs.require_customer_for_sale}
-                            disabled={!canManageSalesSettings}
-                            onCheckedChange={(checked) => handleConfigChange("require_customer_for_sale", checked)}
-                        />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="space-y-0.5">
-                            <span className="font-medium text-brand-deep dark:text-brand-cream">
-                                Auto-generate Receipt
-                            </span>
-                            <p className="text-xs text-brand-accent/60 dark:text-white/40">
-                                Prepare a receipt immediately after each completed sale.
-                            </p>
-                        </div>
-                        <Switch
-                            checked={localConfigs.auto_generate_receipt}
-                            disabled={!canManageSalesSettings}
-                            onCheckedChange={(checked) => handleConfigChange("auto_generate_receipt", checked)}
-                        />
-                    </div>
-                </GlassCard>
-            </section>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </GlassCard>
+                </section>
+            )}
 
         </div>
     )
