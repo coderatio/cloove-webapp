@@ -11,6 +11,7 @@ import {
     LayoutGrid,
     Link2,
     Package,
+    Phone,
     Receipt,
     ShieldCheck,
     ShoppingBag,
@@ -34,6 +35,7 @@ export type NavRouteId =
     | "restaurant_bar"
     | "finance"
     | "payment_links"
+    | "voice"
     | "customers"
     | "debts"
     | "expenses"
@@ -60,6 +62,7 @@ export type ModuleFeatureKey =
     | "module_staff"
     | "module_expenses"
     | "module_debts"
+    | "module_voice"
 
 export interface NavItemDef {
     id: NavRouteId
@@ -175,6 +178,14 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         permission: "VIEW_FINANCIALS",
                     },
                 ],
+            },
+            {
+                id: "voice",
+                href: "/voice",
+                icon: Phone,
+                defaultLabel: "Voice",
+                permission: "VIEW_VOICE_CALLS",
+                moduleFeatureKey: "module_voice",
             },
             {
                 id: "customers",

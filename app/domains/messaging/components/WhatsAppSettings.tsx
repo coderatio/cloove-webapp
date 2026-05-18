@@ -63,6 +63,7 @@ import { WhatsAppNotificationMessageInput } from "./WhatsAppNotificationMessageI
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
+import { OperatingHoursBuilder } from "@/app/components/shared/OperatingHoursBuilder"
 
 interface WhatsAppSettingsProps {
   onDirtyChange?: (isDirty: boolean) => void
@@ -798,12 +799,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                   </h3>
                   <SettingsCard className="divide-y divide-slate-100 dark:divide-slate-800/60">
                     <div className="pb-6">
-                      <SettingTextarea
+                      <OperatingHoursBuilder
                         label="Operating Hours"
-                        placeholder="E.g. 'Monday–Friday: 9am–6pm, Saturday: 10am–4pm, Sunday: Closed'"
                         value={localSettings.operating_hours ?? ""}
                         onChange={(v) => handleChange("operating_hours", v)}
-                        rows={2}
+                        description="Used by WhatsApp AI when customers ask if you are open or when they need availability guidance."
                       />
                     </div>
 
