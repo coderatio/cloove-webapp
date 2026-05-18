@@ -21,8 +21,8 @@ import { serializeSchedule, createDefaultSchedule } from "@/app/components/share
 import { PersistedTabs, type TabItem } from "@/app/components/shared/PersistedTabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui/dialog"
 import { VoiceNumberCard } from "@/app/domains/voice/components/VoiceNumberCard"
+import { VoiceOutboundCallComposer } from "@/app/domains/voice/components/VoiceOutboundCallComposer"
 import { VoiceProviderCredentialsForm } from "@/app/domains/voice/components/VoiceProviderCredentialsForm"
-import { VoiceScheduleBuilder } from "@/app/domains/voice/components/VoiceScheduleBuilder"
 import { VoiceTransferTargetsForm } from "@/app/domains/voice/components/VoiceTransferTargetsForm"
 import { VoiceAgentSettingsForm } from "@/app/domains/voice/components/VoiceAgentSettingsForm"
 import {
@@ -365,46 +365,21 @@ export function VoiceView() {
                     </div>
 
                     <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-                        <GlassCard className="p-6 space-y-4">
-                            <SectionTitle icon={Phone} title="Start outbound call" />
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <Select
-                                    value={callForm.business_voice_number_id || undefined}
-                                    onValueChange={(value) => setCallForm((prev) => ({ ...prev, business_voice_number_id: value }))}
-                                >
-                                    <SelectTrigger className="rounded-2xl">
-                                        <SelectValue placeholder="Select calling line" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-2xl">
-                                        {(numbersQuery.data ?? []).map((number) => (
-                                            <SelectItem key={number.id} value={number.id}>
-                                                {number.label || number.phone_number}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <Input placeholder="Customer phone" value={callForm.customer_phone} onChange={(e) => setCallForm((prev) => ({ ...prev, customer_phone: e.target.value }))} />
-                            </div>
-                            <Input placeholder="Customer name" value={callForm.customer_name} onChange={(e) => setCallForm((prev) => ({ ...prev, customer_name: e.target.value }))} />
-                            <Input placeholder="Purpose" value={callForm.purpose} onChange={(e) => setCallForm((prev) => ({ ...prev, purpose: e.target.value }))} />
-                            <Textarea placeholder="Context for the agent" value={callForm.context} onChange={(e) => setCallForm((prev) => ({ ...prev, context: e.target.value }))} rows={4} />
-                            <Button
-                                onClick={() =>
-                                    startCall.mutate(
-                                        {
-                                            ...callForm,
-                                            business_voice_number_id: callForm.business_voice_number_id || null,
-                                        },
-                                        { onSuccess: () => setCallForm(EMPTY_CALL_FORM) }
-                                    )
-                                }
-                                disabled={startCall.isPending || !callForm.customer_phone.trim()}
-                                className="rounded-full"
-                            >
-                                {startCall.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PhoneCall className="mr-2 h-4 w-4" />}
-                                Queue call
-                            </Button>
-                        </GlassCard>
+                        <VoiceOutboundCallComposer
+                            form={callForm}
+                            numbers={numbersQuery.data ?? []}
+                            isPending={startCall.isPending}
+                            onChange={(updater) => setCallForm((prev) => updater(prev))}
+                            onSubmit={() =>
+                                startCall.mutate(
+                                    {
+                                        ...callForm,
+                                        business_voice_number_id: callForm.business_voice_number_id || null,
+                                    },
+                                    { onSuccess: () => setCallForm(EMPTY_CALL_FORM) }
+                                )
+                            }
+                        />
 
                         <GlassCard className="p-6 space-y-4">
                             <div className="flex items-start justify-between gap-4">
