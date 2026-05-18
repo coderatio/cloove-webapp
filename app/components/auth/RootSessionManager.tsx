@@ -16,6 +16,10 @@ export function RootSessionManager() {
         <SessionManager
             key={user.id}
             sessionMetadata={user.session}
+            sessionConfig={{
+                expirationMode: user.session?.expirationMode,
+                ttlMinutes: user.session?.ttlMinutes ?? undefined,
+            }}
             onSessionRefresh={updateUserMetadata}
         />
     )

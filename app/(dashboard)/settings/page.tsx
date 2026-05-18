@@ -14,6 +14,7 @@ import {
     Printer,
     LayoutTemplate,
     MessageSquare,
+    ShoppingCart,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { BillingSettings } from "@/app/domains/business/components/BillingSettings"
@@ -28,8 +29,9 @@ import { usePermission } from "@/app/hooks/usePermission"
 import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
 import { WorkspaceSettings } from "@/app/domains/workspace/components/WorkspaceSettings"
 import { WhatsAppSettings } from "@/app/domains/messaging/components/WhatsAppSettings"
+import { SalesSettings } from "@/app/domains/business/components/SalesSettings"
 
-type Tab = "business" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace" | "messaging"
+type Tab = "business" | "sales" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace" | "messaging"
 
 function SettingsContent() {
     const { role, can } = usePermission()
@@ -39,6 +41,7 @@ function SettingsContent() {
 
     const allTabs: (TabItem & { id: Tab })[] = [
         { id: "business", label: "Business", icon: Building2 },
+        { id: "sales", label: "Sales", icon: ShoppingCart },
         { id: "workspace", label: "Workspace", icon: LayoutTemplate },
         { id: "messaging", label: "WhatsApp", icon: MessageSquare },
         { id: "profile", label: "My Profile", icon: User },
@@ -69,7 +72,7 @@ function SettingsContent() {
     }
 
     return (
-        <div className="mx-auto max-w-6xl space-y-2 pb-20 md:space-y-8">
+        <div className="mx-auto max-w-6xl space-y-2 pb-32 md:space-y-8 md:pb-36">
             <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+3.5rem)] z-20 -mx-4 bg-background/85 px-4 py-2 backdrop-blur supports-backdrop-filter:bg-background/70 md:top-0 md:mx-0 md:px-0 md:py-4">
                 <ManagementHeader
                     title="Settings"
@@ -109,6 +112,13 @@ function SettingsContent() {
                                 saveTrigger={saveTrigger}
                             />
                         )}
+                        {activeTab === "sales" && role === 'OWNER' && (
+                            <SalesSettings
+                                onDirtyChange={setIsDirty}
+                                onSavingChange={setIsSaving}
+                                saveTrigger={saveTrigger}
+                            />
+                        )}
                         {activeTab === "workspace" && can("MANAGE_BUSINESS_CONFIG") && <WorkspaceSettings />}
                         {activeTab === "profile" && <ProfileSettings />}
                         {activeTab === "verification" && role === 'OWNER' && <VerificationSettings />}
@@ -128,24 +138,26 @@ function SettingsContent() {
 
             {/* Common Save Bar */}
             {isDirty && (
-                <div className="fixed bottom-8 right-8 z-30">
-                    <Button
-                        onClick={handleGlobalSave}
-                        disabled={isSaving}
-                        className="h-14 rounded-full bg-brand-deep px-8 font-bold text-brand-gold shadow-2xl transition-all hover:scale-105 hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-white dark:hover:bg-brand-gold/90"
-                    >
-                        {isSaving ? (
-                            <>
-                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4 mr-2" />
-                                Save Changes
-                            </>
-                        )}
-                    </Button>
+                <div className="fixed inset-x-0 bottom-0 z-30 border-t border-brand-deep/10 bg-background/92 backdrop-blur-xl dark:border-white/10">
+                    <div className="mx-auto flex max-w-6xl justify-end px-4 py-4">
+                        <Button
+                            onClick={handleGlobalSave}
+                            disabled={isSaving}
+                            className="h-12 w-full rounded-full bg-brand-deep px-6 font-bold text-brand-gold shadow-xl transition-all hover:bg-brand-deep/90 sm:w-auto sm:min-w-[180px] dark:bg-brand-gold dark:text-white dark:hover:bg-brand-gold/90"
+                        >
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4 mr-2" />
+                                    Save Changes
+                                </>
+                            )}
+                        </Button>
+                    </div>
                 </div>
             )}
         </div>

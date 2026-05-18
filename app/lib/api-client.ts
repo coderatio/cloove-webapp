@@ -27,12 +27,12 @@ interface RequestOptions extends RequestInit {
 /**
  * Standard API Response structure
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
     success: boolean
     message: string
     data: T
-    meta: Record<string, any>
-    summary?: any
+    meta: Record<string, unknown>
+    summary?: unknown
 }
 
 /**
@@ -41,7 +41,11 @@ export interface ApiResponse<T = any> {
 export const apiClient = {
     async refresh() {
         try {
-            const data = await this.post<{ expiresAt: string }>("/security/refresh", {}, { skipAuthRedirect: true })
+            const data = await this.post<{
+                expiresAt?: string
+                expirationMode?: "default" | "custom" | "never"
+                ttlMinutes?: number | null
+            }>("/security/refresh", {}, { skipAuthRedirect: true })
             return data
         } catch (error) {
             throw error
@@ -119,13 +123,14 @@ export const apiClient = {
         }
 
         // Only add JSON Content-Type if it's not FormData AND hasn't been explicitly set or unset
-        if (!requestHeaders["Content-Type"] && !((customConfig.body as any) instanceof FormData)) {
+        const isFormDataBody = typeof FormData !== "undefined" && customConfig.body instanceof FormData
+        if (!requestHeaders["Content-Type"] && !isFormDataBody) {
             requestHeaders["Content-Type"] = "application/json"
         }
 
         // If explicitly set to undefined/null by user, remove it from the final object
         // This is crucial for FormData to let the browser set the boundary
-        if (requestHeaders["Content-Type"] === undefined || (requestHeaders as any)["Content-Type"] === null) {
+        if (requestHeaders["Content-Type"] === undefined || requestHeaders["Content-Type"] === null) {
             delete requestHeaders["Content-Type"]
         }
 
@@ -150,7 +155,7 @@ export const apiClient = {
 
                 // If the caller explicitly wants the full response, return it
                 if (options.fullResponse) {
-                    return apiResponse as any as T
+                    return apiResponse as unknown as T
                 }
 
                 // Otherwise return just the data to maintain compatibility with existing hooks
@@ -173,7 +178,10 @@ export const apiClient = {
                 // Handle validation errors from AdonisJS/VineJS
                 const validationMessages =
                     rawData.errors && Array.isArray(rawData.errors)
-                        ? rawData.errors.map((e: any) => e.message).join(', ')
+                        ? rawData.errors
+                            .map((errorItem: { message?: string }) => errorItem.message)
+                            .filter(Boolean)
+                            .join(', ')
                         : ''
                 const errorMessage =
                     validationMessages || rawData.error || rawData.message || 'Request failed'

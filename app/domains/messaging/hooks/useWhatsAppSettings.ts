@@ -25,9 +25,16 @@ export interface WhatsAppNumber {
   verification_logs_count: number
   is_default: boolean
   display_name: string | null
+  display_phone_number: string | null
+  verified_name: string | null
+  meta_status: string | null
+  code_verification_status: string | null
+  quality_rating: string | null
+  is_official_business_account: boolean | null
   connection_mode: "embedded" | "manual"
   meta_business_id: string | null
   selected_catalog_id: string | null
+  selected_catalog_name: string | null
   catalog_bootstrap_status: WhatsAppCatalogSyncStatus | null
   catalog_bootstrap_error: string | null
   catalog_bootstrap_failed_at: string | null
@@ -36,11 +43,6 @@ export interface WhatsAppNumber {
 }
 
 export interface WhatsAppNumberStatus extends WhatsAppNumber {
-  meta_status: string | null
-  code_verification_status: string | null
-  quality_rating: string | null
-  is_official_business_account: boolean | null
-  verified_name: string | null
   meta_error?: string
 }
 
