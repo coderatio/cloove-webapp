@@ -21,6 +21,12 @@ export interface BusinessConfigs {
     debt_reminder_enabled: boolean
     daily_summary_enabled: boolean
     email_summaries_enabled: boolean
+    tx_email_business_sale_payment_enabled?: boolean
+    tx_email_business_wallet_deposit_enabled?: boolean
+    tx_email_business_withdrawal_outcome_enabled?: boolean
+    tx_email_business_withdrawal_reversal_enabled?: boolean
+    tx_email_business_recipient_email?: string
+    tx_email_customer_sale_payment_enabled?: boolean
     show_wallet_balance: boolean
     ui_layout_preset?: string
     session_expiration_mode?: "default" | "custom" | "never"
