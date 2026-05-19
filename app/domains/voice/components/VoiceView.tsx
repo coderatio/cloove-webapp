@@ -470,23 +470,7 @@ export function VoiceView() {
                         <MetricCard icon={PhoneCall} label="Active now" value={String(healthQuery.data?.active_calls ?? 0)} />
                     </div>
 
-                    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-                        <VoiceOutboundCallComposer
-                            form={callForm}
-                            numbers={numbersQuery.data ?? []}
-                            isPending={startCall.isPending}
-                            onChange={(updater) => setCallForm((prev) => updater(prev))}
-                            onSubmit={() =>
-                                startCall.mutate(
-                                    {
-                                        ...callForm,
-                                        business_voice_number_id: callForm.business_voice_number_id || null,
-                                    },
-                                    { onSuccess: () => setCallForm(EMPTY_CALL_FORM) }
-                                )
-                            }
-                        />
-
+                    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.75fr)]">
                         <div className="space-y-5">
                             <GlassCard className="p-5 space-y-4">
                                 <div className="space-y-3">
@@ -617,31 +601,56 @@ export function VoiceView() {
                                         No call activity yet.
                                     </div>
                                 ) : (
-                                    <div className="space-y-2">
-                                        {recentCalls.slice(0, 4).map((call) => (
+                                    <div className="space-y-1.5">
+                                        {recentCalls.slice(0, 5).map((call) => (
                                             <button
                                                 key={call.id}
                                                 type="button"
                                                 onClick={() => setSelectedCall(call)}
-                                                className="flex w-full items-start justify-between rounded-2xl border border-black/5 px-4 py-3 text-left transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+                                                className="flex w-full items-center justify-between rounded-2xl border border-black/5 px-4 py-3 text-left transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
                                             >
-                                                <div className="min-w-0">
+                                                <div className="min-w-0 flex-1">
                                                     <p className="truncate text-sm font-medium">
                                                         {call.customer_name || call.customer_phone || "Unknown caller"}
                                                     </p>
-                                                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                                                        {call.direction.replace(/_/g, " ")} • {call.status.replace(/_/g, " ")}
+                                                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                                        <CallDirectionLabel direction={call.direction} />
+                                                        <CallStatusBadge status={call.status} />
+                                                    </div>
+                                                </div>
+                                                <div className="ml-3 shrink-0 text-right">
+                                                    {call.duration_seconds ? (
+                                                        <p className="font-mono text-xs tabular-nums text-slate-600 dark:text-slate-400">
+                                                            {formatCallDuration(call.duration_seconds)}
+                                                        </p>
+                                                    ) : null}
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {new Date(call.created_at).toLocaleDateString()}
                                                     </p>
                                                 </div>
-                                                <span className="shrink-0 text-xs text-muted-foreground">
-                                                    {new Date(call.created_at).toLocaleDateString()}
-                                                </span>
                                             </button>
                                         ))}
                                     </div>
                                 )}
                             </GlassCard>
 
+                        </div>
+                        <div className="space-y-5">
+                            <VoiceOutboundCallComposer
+                                form={callForm}
+                                numbers={numbersQuery.data ?? []}
+                                isPending={startCall.isPending}
+                                onChange={(updater) => setCallForm((prev) => updater(prev))}
+                                onSubmit={() =>
+                                    startCall.mutate(
+                                        {
+                                            ...callForm,
+                                            business_voice_number_id: callForm.business_voice_number_id || null,
+                                        },
+                                        { onSuccess: () => setCallForm(EMPTY_CALL_FORM) }
+                                    )
+                                }
+                            />
                             <GlassCard className="p-5 space-y-4">
                                 <SectionTitle icon={ShieldCheck} title="System health" />
                                 <div className="grid gap-3 sm:grid-cols-2">
@@ -936,9 +945,34 @@ export function VoiceView() {
                         </div>
                     </div>
                     {callsQuery.isPending ? (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Loading voice activity...
+                        <div className="overflow-x-auto -mx-2">
+                            <table className="min-w-full text-sm">
+                                <thead>
+                                    <tr className="text-left text-[13px] font-medium text-slate-500 dark:text-slate-400">
+                                        <th className="px-2 pb-2 font-medium">Customer</th>
+                                        <th className="px-2 pb-2 font-medium">Direction</th>
+                                        <th className="px-2 pb-2 font-medium">Status</th>
+                                        <th className="px-2 pb-2 font-medium">Duration</th>
+                                        <th className="px-2 pb-2 font-medium">Created</th>
+                                        <th className="px-2 pb-2" />
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <tr key={i} className="border-t border-slate-100 dark:border-white/[0.06]">
+                                            <td className="px-2 py-3.5">
+                                                <div className="h-3.5 w-32 animate-pulse rounded-md bg-slate-100 dark:bg-white/5" />
+                                                <div className="mt-1.5 h-3 w-24 animate-pulse rounded-md bg-slate-100 dark:bg-white/5" />
+                                            </td>
+                                            <td className="px-2 py-3.5"><div className="h-3.5 w-16 animate-pulse rounded-md bg-slate-100 dark:bg-white/5" /></td>
+                                            <td className="px-2 py-3.5"><div className="h-5 w-20 animate-pulse rounded-full bg-slate-100 dark:bg-white/5" /></td>
+                                            <td className="px-2 py-3.5"><div className="h-3.5 w-10 animate-pulse rounded-md bg-slate-100 dark:bg-white/5" /></td>
+                                            <td className="px-2 py-3.5"><div className="h-3.5 w-24 animate-pulse rounded-md bg-slate-100 dark:bg-white/5" /></td>
+                                            <td className="px-2 py-3.5" />
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     ) : calls.length === 0 ? (
                         <p className="text-sm text-muted-foreground">
@@ -957,14 +991,14 @@ export function VoiceView() {
                                             <th className="px-2 pb-2 font-medium">Status</th>
                                             <th className="px-2 pb-2 font-medium">Duration</th>
                                             <th className="px-2 pb-2 font-medium">Created</th>
-                                            <th className="px-2 pb-2"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {calls.map((call) => (
                                             <tr
                                                 key={call.id}
-                                                className="border-t border-slate-100 transition-colors hover:bg-slate-50/60 dark:border-white/[0.06] dark:hover:bg-white/[0.02]"
+                                                onClick={() => setSelectedCall(call)}
+                                                className="cursor-pointer border-t border-slate-100 transition-colors hover:bg-slate-50/60 dark:border-white/[0.06] dark:hover:bg-white/[0.02]"
                                             >
                                                 <td className="px-2 py-3.5">
                                                     <div className="font-medium text-slate-900 dark:text-slate-100">
@@ -990,16 +1024,6 @@ export function VoiceView() {
                                                         hour: "numeric",
                                                         minute: "2-digit",
                                                     })}
-                                                </td>
-                                                <td className="px-2 py-3.5 text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => setSelectedCall(call)}
-                                                        className="h-8 rounded-md px-2.5 text-[13px] font-medium text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-slate-100"
-                                                    >
-                                                        Open
-                                                    </Button>
                                                 </td>
                                             </tr>
                                         ))}

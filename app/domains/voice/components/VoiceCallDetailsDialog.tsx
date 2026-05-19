@@ -7,6 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/app/components/ui/base-dialog"
+import { cn } from "@/app/lib/utils"
 import type { VoiceCall } from "@/app/domains/voice/hooks/useVoice"
 import {
     CallDirectionLabel,
@@ -106,19 +107,37 @@ export function VoiceCallDetailsDialog({ call, open, onOpenChange }: VoiceCallDe
                                     </p>
                                 ) : (
                                     <div className="space-y-2">
-                                        {(call.turns ?? []).map((turn) => (
-                                            <div
-                                                key={turn.id}
-                                                className="rounded-lg bg-slate-50 px-4 py-3 dark:bg-white/[0.03]"
-                                            >
-                                                <div className="text-xs font-medium capitalize text-slate-500 dark:text-slate-400">
-                                                    {turn.speaker}
+                                        {(call.turns ?? []).map((turn) => {
+                                            const isAI =
+                                                turn.speaker === "assistant" ||
+                                                turn.speaker === "agent" ||
+                                                turn.speaker === "ai"
+                                            return (
+                                                <div
+                                                    key={turn.id}
+                                                    className={cn(
+                                                        "rounded-2xl px-4 py-3",
+                                                        isAI
+                                                            ? "bg-emerald-50/60 dark:bg-emerald-500/[0.06]"
+                                                            : "bg-slate-50 dark:bg-white/[0.03]"
+                                                    )}
+                                                >
+                                                    <div
+                                                        className={cn(
+                                                            "text-[11px] font-semibold uppercase tracking-wide",
+                                                            isAI
+                                                                ? "text-emerald-600 dark:text-emerald-400"
+                                                                : "text-slate-500 dark:text-slate-400"
+                                                        )}
+                                                    >
+                                                        {isAI ? "AI Agent" : turn.speaker}
+                                                    </div>
+                                                    <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-slate-200">
+                                                        {turn.transcript || turn.prompt_text || "—"}
+                                                    </p>
                                                 </div>
-                                                <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-slate-200">
-                                                    {turn.transcript || turn.prompt_text || "—"}
-                                                </p>
-                                            </div>
-                                        ))}
+                                            )
+                                        })}
                                     </div>
                                 )}
                             </CallSection>
