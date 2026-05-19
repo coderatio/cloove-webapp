@@ -22,6 +22,25 @@ export interface VoiceNumberItem {
     updated_at: string | null
 }
 
+export interface VoiceNumberRequestItem {
+    id: string
+    business_id: string
+    store_id: string | null
+    provider: string
+    label: string | null
+    country_code: string
+    desired_area: string | null
+    notes: string | null
+    status: "pending" | "approved" | "rejected" | "fulfilled"
+    approved_phone_number: string | null
+    provider_number_id: string | null
+    provider_account_id: string | null
+    approved_at: string | null
+    fulfilled_at: string | null
+    created_at: string
+    updated_at: string | null
+}
+
 export interface VoiceProviderOption {
     id: string
     name: string
@@ -126,6 +145,7 @@ export interface VoiceHealth {
 const keys = {
     providers: ["voice", "providers"],
     numbers: (businessId?: string) => ["voice", "numbers", businessId],
+    numberRequests: (businessId?: string) => ["voice", "number-requests", businessId],
     settings: (businessId?: string) => ["voice", "settings", businessId],
     targets: (businessId?: string) => ["voice", "targets", businessId],
     calls: (businessId?: string) => ["voice", "calls", businessId],
@@ -147,6 +167,17 @@ export function useVoiceNumbers() {
     return useQuery({
         queryKey: keys.numbers(businessId),
         queryFn: () => apiClient.get<VoiceNumberItem[]>("/voice/numbers"),
+        enabled: !!businessId,
+    })
+}
+
+export function useVoiceNumberRequests() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useQuery({
+        queryKey: keys.numberRequests(businessId),
+        queryFn: () => apiClient.get<VoiceNumberRequestItem[]>("/voice/number-requests"),
         enabled: !!businessId,
     })
 }
@@ -207,8 +238,26 @@ export function useCreateVoiceNumber() {
         onSuccess: () => {
             toast.success("Voice number saved")
             void queryClient.invalidateQueries({ queryKey: keys.numbers(businessId) })
+            void queryClient.invalidateQueries({ queryKey: keys.numberRequests(businessId) })
         },
         onError: (error: { message?: string }) => toast.error(error.message ?? "Failed to save voice number"),
+    })
+}
+
+export function useCreateVoiceNumberRequest() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: (payload: Record<string, unknown>) =>
+            apiClient.post<VoiceNumberRequestItem>("/voice/number-requests", payload),
+        onSuccess: () => {
+            toast.success("Voice number request submitted")
+            void queryClient.invalidateQueries({ queryKey: keys.numberRequests(businessId) })
+        },
+        onError: (error: { message?: string }) =>
+            toast.error(error.message ?? "Failed to submit voice number request"),
     })
 }
 

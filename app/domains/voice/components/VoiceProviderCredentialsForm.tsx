@@ -12,6 +12,7 @@ type NumberForm = {
     provider: string
     label: string
     phone_number: string
+    voice_number_request_id?: string | null
     provider_credentials: Record<string, string>
     use_system_credentials: boolean
     is_default: boolean
@@ -39,6 +40,7 @@ export function VoiceProviderCredentialsForm({
     framed = true,
 }: VoiceProviderCredentialsFormProps) {
     const isUpdateMode = mode === "update"
+    const isRequestBackedNumber = Boolean(form.voice_number_request_id)
     const hasCredentialInput = Object.values(form.provider_credentials).some((value) => value.trim().length > 0)
     const canSubmit = isUpdateMode
         ? form.label.trim().length > 0 || hasCredentialInput
@@ -50,6 +52,7 @@ export function VoiceProviderCredentialsForm({
             <div className="grid gap-3">
                 <Select
                     value={form.provider}
+                    disabled={isRequestBackedNumber}
                     onValueChange={(value) =>
                         onChange((prev) => {
                             const provider = providerOptions.find((item) => item.id === value)
@@ -85,8 +88,12 @@ export function VoiceProviderCredentialsForm({
                     placeholder="Phone number"
                     value={form.phone_number}
                     onChange={(e) => onChange((prev) => ({ ...prev, phone_number: e.target.value }))}
-                    disabled={isUpdateMode}
-                    className={isUpdateMode ? "bg-slate-50 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400" : undefined}
+                    disabled={isUpdateMode || isRequestBackedNumber}
+                    className={
+                        isUpdateMode || isRequestBackedNumber
+                            ? "bg-slate-50 text-slate-500 dark:bg-slate-900/50 dark:text-slate-400"
+                            : undefined
+                    }
                 />
 
                 {selectedProvider?.system_credentials_enabled && (
@@ -96,6 +103,7 @@ export function VoiceProviderCredentialsForm({
                         onCheckedChange={(value) =>
                             onChange((prev) => ({ ...prev, use_system_credentials: value }))
                         }
+                        disabled={isRequestBackedNumber}
                     />
                 )}
 
@@ -133,6 +141,8 @@ export function VoiceProviderCredentialsForm({
             <p className="text-sm text-muted-foreground">
                 {isUpdateMode
                     ? "Update the label or credentials for this line. The phone number stays linked to your provider account."
+                    : isRequestBackedNumber
+                        ? "This number came from an approved provisioning request. Review the label and save to connect it."
                     : "Connect a calling provider, assign the number, and decide whether Cloove manages credentials or the business brings its own."}
             </p>
 
@@ -167,15 +177,17 @@ function ToggleRow({
     label,
     checked,
     onCheckedChange,
+    disabled = false,
 }: {
     label: string
     checked: boolean
     onCheckedChange: (value: boolean) => void
+    disabled?: boolean
 }) {
     return (
         <label className="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 text-sm dark:border-white/10">
             <span>{label}</span>
-            <Switch checked={checked} onCheckedChange={onCheckedChange} />
+            <Switch checked={checked} onCheckedChange={onCheckedChange} disabled={disabled} />
         </label>
     )
 }

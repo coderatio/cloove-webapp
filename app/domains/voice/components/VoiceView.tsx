@@ -10,33 +10,39 @@ import {
     DrawerStickyHeader,
     DrawerTitle,
 } from "@/app/components/ui/drawer"
-import { Input } from "@/app/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
-import { Switch } from "@/app/components/ui/switch"
-import { Textarea } from "@/app/components/ui/textarea"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { serializeSchedule, createDefaultSchedule } from "@/app/components/shared/OperatingHoursBuilder"
 import { PersistedTabs, type TabItem } from "@/app/components/shared/PersistedTabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/app/components/ui/dialog"
+import { VoiceCallDetailsDialog } from "@/app/domains/voice/components/VoiceCallDetailsDialog"
+import {
+    CallDirectionLabel,
+    CallStatusBadge,
+    formatCallDuration,
+} from "@/app/domains/voice/components/VoiceCallLabels"
 import { VoiceNumberCard } from "@/app/domains/voice/components/VoiceNumberCard"
 import { VoiceOutboundCallComposer } from "@/app/domains/voice/components/VoiceOutboundCallComposer"
 import { VoiceProviderCredentialsForm } from "@/app/domains/voice/components/VoiceProviderCredentialsForm"
+import { VoiceNumberRequestDrawer } from "@/app/domains/voice/components/VoiceNumberRequestDrawer"
 import { VoiceTransferTargetsForm } from "@/app/domains/voice/components/VoiceTransferTargetsForm"
 import { VoiceAgentSettingsForm } from "@/app/domains/voice/components/VoiceAgentSettingsForm"
 import {
     AudioLines,
     Headphones,
     Loader2,
+    MapPinned,
     PanelsTopLeft,
     Phone,
     PhoneCall,
     PhoneForwarded,
+    PhoneIncoming,
+    Plus,
     Settings2,
     ShieldCheck,
 } from "lucide-react"
 import {
+    useCreateVoiceNumberRequest,
     useCreateVoiceNumber,
     useCreateVoiceTransferTarget,
     useDeleteVoiceTransferTarget,
@@ -47,11 +53,13 @@ import {
     useVoiceCalls,
     useVoiceHealth,
     useVoiceNumbers,
+    useVoiceNumberRequests,
     useVoiceProviders,
     useVoiceSettings,
     useVoiceTransferTargets,
     type VoiceCall,
     type VoiceNumberItem,
+    type VoiceNumberRequestItem,
 } from "@/app/domains/voice/hooks/useVoice"
 
 const EMPTY_SETTINGS = {
@@ -131,9 +139,18 @@ const EMPTY_NUMBER_FORM = {
     provider: "africas_talking",
     label: "",
     phone_number: "",
+    voice_number_request_id: null as string | null,
     provider_credentials: {} as Record<string, string>,
     use_system_credentials: true,
     is_default: true,
+}
+
+const EMPTY_NUMBER_REQUEST_FORM = {
+    provider: "africas_talking",
+    label: "",
+    country_code: "NG",
+    desired_area: "",
+    notes: "",
 }
 
 const EMPTY_TARGET_FORM = {
@@ -152,18 +169,12 @@ const EMPTY_CALL_FORM = {
     context: "",
 }
 
-function formatDuration(value: number | null) {
-    if (!value) return "—"
-    const minutes = Math.floor(value / 60)
-    const seconds = value % 60
-    return `${minutes}:${String(seconds).padStart(2, "0")}`
-}
-
 function numberToForm(number: VoiceNumberItem) {
     return {
         provider: number.provider,
         label: number.label ?? "",
         phone_number: number.phone_number,
+        voice_number_request_id: null,
         provider_credentials: {} as Record<string, string>,
         use_system_credentials: number.use_system_credentials,
         is_default: number.is_default,
@@ -192,12 +203,14 @@ function buildNumberUpdatePayload(form: typeof EMPTY_NUMBER_FORM) {
 export function VoiceView() {
     const providersQuery = useVoiceProviders()
     const numbersQuery = useVoiceNumbers()
+    const numberRequestsQuery = useVoiceNumberRequests()
     const settingsQuery = useVoiceSettings()
     const targetsQuery = useVoiceTransferTargets()
     const callsQuery = useVoiceCalls()
     const healthQuery = useVoiceHealth()
 
     const createNumber = useCreateVoiceNumber()
+    const createNumberRequest = useCreateVoiceNumberRequest()
     const updateNumber = useUpdateVoiceNumber()
     const disconnectNumber = useDisconnectVoiceNumber()
     const updateSettings = useUpdateVoiceSettings()
@@ -208,14 +221,17 @@ export function VoiceView() {
     const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null)
     const voiceTabs: TabItem[] = [
         { id: "overview", label: "Overview", icon: PanelsTopLeft },
+        { id: "requests", label: "Requests", icon: PhoneIncoming },
         { id: "calls", label: "Calls", icon: AudioLines },
         { id: "transfer", label: "Transfer", icon: PhoneForwarded },
         { id: "settings", label: "Settings", icon: Settings2 },
     ]
     const [activeTab, setActiveTab] = useState("overview")
     const [numberDrawerMode, setNumberDrawerMode] = useState<"closed" | "create" | "edit">("closed")
+    const [requestDrawerOpen, setRequestDrawerOpen] = useState(false)
     const [editingNumberId, setEditingNumberId] = useState<string | null>(null)
     const [numberForm, setNumberForm] = useState(EMPTY_NUMBER_FORM)
+    const [numberRequestForm, setNumberRequestForm] = useState(EMPTY_NUMBER_REQUEST_FORM)
     const [targetForm, setTargetForm] = useState(EMPTY_TARGET_FORM)
     const [callForm, setCallForm] = useState(EMPTY_CALL_FORM)
     const [settingsForm, setSettingsForm] = useState(EMPTY_SETTINGS)
@@ -224,6 +240,7 @@ export function VoiceView() {
 
     useEffect(() => {
         if (settingsQuery.data) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSettingsForm({
                 display_name: settingsQuery.data.display_name ?? "",
                 greeting_message: settingsQuery.data.greeting_message ?? "",
@@ -270,6 +287,14 @@ export function VoiceView() {
         () => (numbersQuery.data ?? []).find((number) => number.id === editingNumberId) ?? null,
         [editingNumberId, numbersQuery.data]
     )
+    const approvedRequests = useMemo(
+        () => (numberRequestsQuery.data ?? []).filter((request) => request.status === "approved"),
+        [numberRequestsQuery.data]
+    )
+    const otherRequests = useMemo(
+        () => (numberRequestsQuery.data ?? []).filter((request) => request.status !== "approved"),
+        [numberRequestsQuery.data]
+    )
     const isNumberDrawerOpen = numberDrawerMode !== "closed"
 
     const closeNumberDrawer = () => {
@@ -281,6 +306,20 @@ export function VoiceView() {
     const openCreateNumberDrawer = () => {
         setEditingNumberId(null)
         setNumberForm(EMPTY_NUMBER_FORM)
+        setNumberDrawerMode("create")
+    }
+
+    const openApprovedRequestNumberDrawer = (request: VoiceNumberRequestItem) => {
+        setEditingNumberId(null)
+        setNumberForm({
+            provider: request.provider,
+            label: request.label ?? "",
+            phone_number: request.approved_phone_number ?? "",
+            voice_number_request_id: request.id,
+            provider_credentials: {},
+            use_system_credentials: true,
+            is_default: (numbersQuery.data ?? []).length === 0,
+        })
         setNumberDrawerMode("create")
     }
 
@@ -305,6 +344,7 @@ export function VoiceView() {
     const isLoading =
         providersQuery.isPending ||
         numbersQuery.isPending ||
+        numberRequestsQuery.isPending ||
         settingsQuery.isPending ||
         targetsQuery.isPending ||
         callsQuery.isPending ||
@@ -313,6 +353,7 @@ export function VoiceView() {
     useEffect(() => {
         if (!providerOptions.length) return
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setNumberForm((prev) => {
             const hasSelectedProvider = providerMap.has(prev.provider)
             const fallbackProviderId =
@@ -357,14 +398,14 @@ export function VoiceView() {
 
             {activeTab === "overview" && (
                 <>
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <MetricCard icon={PhoneCall} label="Recent calls" value={String(metrics.total)} />
                         <MetricCard icon={PhoneForwarded} label="Transferred" value={String(metrics.transferred)} />
                         <MetricCard icon={ShieldCheck} label="Pending events" value={String(healthQuery.data?.pending_events ?? 0)} />
                         <MetricCard icon={PhoneCall} label="Active now" value={String(healthQuery.data?.active_calls ?? 0)} />
                     </div>
 
-                    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+                    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
                         <VoiceOutboundCallComposer
                             form={callForm}
                             numbers={numbersQuery.data ?? []}
@@ -381,79 +422,205 @@ export function VoiceView() {
                             }
                         />
 
-                        <GlassCard className="p-6 space-y-4">
-                            <div className="flex items-start justify-between gap-4">
-                                <SectionTitle icon={Headphones} title="Voice numbers" />
-                                <Drawer
-                                    open={isNumberDrawerOpen}
-                                    onOpenChange={(open) => {
-                                        if (!open) closeNumberDrawer()
-                                    }}
-                                >
-                                    <Button type="button" className="rounded-full" onClick={openCreateNumberDrawer}>
-                                        Connect number
-                                    </Button>
-                                    <DrawerContent>
-                                        <DrawerStickyHeader>
-                                            <DrawerTitle className="font-sans text-xl font-semibold tracking-normal text-foreground">
-                                                {numberDrawerMode === "edit" ? "Edit voice number" : "Connect voice number"}
-                                            </DrawerTitle>
-                                            <DrawerDescription>
-                                                {numberDrawerMode === "edit"
-                                                    ? "Update how this line appears in Cloove and refresh provider credentials if needed."
-                                                    : "Add a provider-backed calling number for inbound and outbound AI calls."}
-                                            </DrawerDescription>
-                                        </DrawerStickyHeader>
-                                        <DrawerBody>
-                                            <VoiceProviderCredentialsForm
-                                                form={numberForm}
-                                                providerOptions={providerOptions}
-                                                selectedProvider={selectedProvider}
-                                                mode={numberDrawerMode === "edit" ? "update" : "create"}
-                                                isPending={createNumber.isPending || updateNumber.isPending}
-                                                framed={false}
-                                                onChange={(updater) => setNumberForm((prev) => updater(prev))}
-                                                onSubmit={handleSaveNumber}
+                        <div className="space-y-5">
+                            <GlassCard className="p-5 space-y-4">
+                                <div className="space-y-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <SectionTitle icon={Headphones} title="Voice numbers" />
+                                        </div>
+                                        <div className="flex shrink-0 items-center">
+                                            <div className="inline-flex items-center overflow-hidden rounded-full border border-slate-200 bg-white px-1 shadow-sm dark:border-white/10 dark:bg-slate-950/50">
+                                                <VoiceNumberRequestDrawer
+                                                    open={requestDrawerOpen}
+                                                    onOpenChange={setRequestDrawerOpen}
+                                                    form={numberRequestForm}
+                                                    providerOptions={providerOptions}
+                                                    isPending={createNumberRequest.isPending}
+                                                    onChange={(updater) => setNumberRequestForm((prev) => updater(prev))}
+                                                    onSubmit={() =>
+                                                        createNumberRequest.mutate(numberRequestForm, {
+                                                            onSuccess: () => {
+                                                                setRequestDrawerOpen(false)
+                                                                setNumberRequestForm(EMPTY_NUMBER_REQUEST_FORM)
+                                                            },
+                                                        })
+                                                    }
+                                                    trigger={
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            aria-label="Request voice number"
+                                                            title="Request voice number"
+                                                            className="h-11 w-12 rounded-full border-0 bg-transparent text-slate-700 shadow-none hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900"
+                                                            onClick={() => setRequestDrawerOpen(true)}
+                                                        >
+                                                            <PhoneIncoming className="h-4.5 w-4.5" />
+                                                        </Button>
+                                                    }
+                                                />
+
+                                                <Drawer
+                                                    open={isNumberDrawerOpen}
+                                                    onOpenChange={(open) => {
+                                                        if (!open) closeNumberDrawer()
+                                                    }}
+                                                >
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        aria-label="Connect voice number"
+                                                        title="Connect voice number"
+                                                        className="h-11 w-12 rounded-full border-l border-slate-200 bg-brand-deep text-brand-gold-300 shadow-none hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:border-white/10 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92 dark:hover:text-brand-deep"
+                                                        onClick={openCreateNumberDrawer}
+                                                    >
+                                                        <Plus className="h-5 w-5" />
+                                                    </Button>
+                                                    <DrawerContent>
+                                                        <DrawerStickyHeader>
+                                                            <DrawerTitle className="font-sans text-xl font-semibold text-foreground">
+                                                                {numberDrawerMode === "edit" ? "Edit voice number" : "Connect voice number"}
+                                                            </DrawerTitle>
+                                                            <DrawerDescription>
+                                                                {numberDrawerMode === "edit"
+                                                                    ? "Update how this line appears in Cloove and refresh provider credentials if needed."
+                                                                    : "Add a provider-backed calling number for inbound and outbound AI calls."}
+                                                            </DrawerDescription>
+                                                        </DrawerStickyHeader>
+                                                        <DrawerBody>
+                                                            <VoiceProviderCredentialsForm
+                                                                form={numberForm}
+                                                                providerOptions={providerOptions}
+                                                                selectedProvider={selectedProvider}
+                                                                mode={numberDrawerMode === "edit" ? "update" : "create"}
+                                                                isPending={createNumber.isPending || updateNumber.isPending}
+                                                                framed={false}
+                                                                onChange={(updater) => setNumberForm((prev) => updater(prev))}
+                                                                onSubmit={handleSaveNumber}
+                                                            />
+                                                        </DrawerBody>
+                                                    </DrawerContent>
+                                                </Drawer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="max-w-sm text-sm text-muted-foreground">
+                                        Connected lines used for inbound and outbound calls.
+                                    </p>
+                                </div>
+                                {approvedRequests.length > 0 ? (
+                                    <div className="space-y-3 rounded-3xl border border-emerald-200/70 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-semibold text-foreground">Approved numbers ready to connect</p>
+                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                    Approved requests appear here and feed into the existing connect-number flow.
+                                                </p>
+                                            </div>
+                                            <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white">
+                                                {approvedRequests.length} ready
+                                            </span>
+                                        </div>
+                                        <div className="grid gap-3">
+                                            {approvedRequests.map((request) => (
+                                                <ApprovedNumberRequestCard
+                                                    key={request.id}
+                                                    request={request}
+                                                    providerName={
+                                                        providerMap.get(request.provider)?.name ??
+                                                        request.provider.replace(/_/g, " ")
+                                                    }
+                                                    onConnect={() => openApprovedRequestNumberDrawer(request)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : null}
+                                <div className="space-y-3">
+                                    {(numbersQuery.data ?? []).length === 0 ? (
+                                        <VoiceNumbersEmptyState onConnect={openCreateNumberDrawer} />
+                                    ) : (
+                                        (numbersQuery.data ?? []).map((number) => (
+                                            <VoiceNumberCard
+                                                key={number.id}
+                                                number={number}
+                                                provider={providerMap.get(number.provider)}
+                                                isUpdating={
+                                                    updateNumber.isPending && updateNumber.variables?.id === number.id
+                                                }
+                                                isDisconnecting={
+                                                    disconnectNumber.isPending &&
+                                                    disconnectNumber.variables === number.id
+                                                }
+                                                onEdit={() => openEditNumberDrawer(number)}
+                                                onSetDefault={() =>
+                                                    updateNumber.mutate({
+                                                        id: number.id,
+                                                        payload: { is_default: true },
+                                                    })
+                                                }
+                                                onReconnect={() =>
+                                                    updateNumber.mutate({
+                                                        id: number.id,
+                                                        payload: { status: "active" },
+                                                    })
+                                                }
+                                                onDisconnect={() => disconnectNumber.mutate(number.id)}
                                             />
-                                        </DrawerBody>
-                                    </DrawerContent>
-                                </Drawer>
-                            </div>
-                            <div className="space-y-3">
-                                {(numbersQuery.data ?? []).length === 0 ? (
-                                    <VoiceNumbersEmptyState onConnect={openCreateNumberDrawer} />
+                                        ))
+                                    )}
+                                </div>
+                            </GlassCard>
+
+                            <GlassCard className="p-5 space-y-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <SectionTitle icon={AudioLines} title="Recent activity" />
+                                    <span className="text-sm text-muted-foreground">
+                                        {(callsQuery.data ?? []).length} {(callsQuery.data ?? []).length === 1 ? "call" : "calls"}
+                                    </span>
+                                </div>
+                                {(callsQuery.data ?? []).length === 0 ? (
+                                    <div className="rounded-2xl border border-dashed border-black/10 px-4 py-6 text-center text-sm text-muted-foreground dark:border-white/10">
+                                        No call activity yet.
+                                    </div>
                                 ) : (
-                                    (numbersQuery.data ?? []).map((number) => (
-                                        <VoiceNumberCard
-                                            key={number.id}
-                                            number={number}
-                                            provider={providerMap.get(number.provider)}
-                                            isUpdating={
-                                                updateNumber.isPending && updateNumber.variables?.id === number.id
-                                            }
-                                            isDisconnecting={
-                                                disconnectNumber.isPending &&
-                                                disconnectNumber.variables === number.id
-                                            }
-                                            onEdit={() => openEditNumberDrawer(number)}
-                                            onSetDefault={() =>
-                                                updateNumber.mutate({
-                                                    id: number.id,
-                                                    payload: { is_default: true },
-                                                })
-                                            }
-                                            onReconnect={() =>
-                                                updateNumber.mutate({
-                                                    id: number.id,
-                                                    payload: { status: "active" },
-                                                })
-                                            }
-                                            onDisconnect={() => disconnectNumber.mutate(number.id)}
-                                        />
-                                    ))
+                                    <div className="space-y-2">
+                                        {(callsQuery.data ?? []).slice(0, 4).map((call) => (
+                                            <button
+                                                key={call.id}
+                                                type="button"
+                                                onClick={() => setSelectedCall(call)}
+                                                className="flex w-full items-start justify-between rounded-2xl border border-black/5 px-4 py-3 text-left transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+                                            >
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-medium">
+                                                        {call.customer_name || call.customer_phone || "Unknown caller"}
+                                                    </p>
+                                                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                                                        {call.direction.replace(/_/g, " ")} • {call.status.replace(/_/g, " ")}
+                                                    </p>
+                                                </div>
+                                                <span className="shrink-0 text-xs text-muted-foreground">
+                                                    {new Date(call.created_at).toLocaleDateString()}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 )}
-                            </div>
-                        </GlassCard>
+                            </GlassCard>
+
+                            <GlassCard className="p-5 space-y-4">
+                                <SectionTitle icon={ShieldCheck} title="System health" />
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <OverviewStat label="Provider status" value={healthQuery.data?.provider_status || "Unknown"} />
+                                    <OverviewStat label="Last event" value={healthQuery.data?.last_event_at ? new Date(healthQuery.data.last_event_at).toLocaleString() : "No recent events"} />
+                                    <OverviewStat label="Failed requests (24h)" value={String(healthQuery.data?.failed_requests_last_24h ?? 0)} />
+                                    <OverviewStat label="Pending events" value={String(healthQuery.data?.pending_events ?? 0)} />
+                                </div>
+                            </GlassCard>
+                        </div>
                     </div>
                 </>
             )}
@@ -469,8 +636,108 @@ export function VoiceView() {
                             onSuccess: () => setTargetForm(EMPTY_TARGET_FORM),
                         })
                     }
-                    onDelete={(id) => deleteTarget.mutate(id)}
+                    isDeletePending={deleteTarget.isPending}
+                    onDelete={async (id) => {
+                        await deleteTarget.mutateAsync(id)
+                    }}
                 />
+            )}
+
+            {activeTab === "requests" && (
+                <GlassCard className="p-5 space-y-5">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                            <SectionTitle icon={MapPinned} title="Requested numbers" />
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                Track provisioning requests, connect approved numbers, and review completed requests.
+                            </p>
+                        </div>
+                        <VoiceNumberRequestDrawer
+                            open={requestDrawerOpen}
+                            onOpenChange={setRequestDrawerOpen}
+                            form={numberRequestForm}
+                            providerOptions={providerOptions}
+                            isPending={createNumberRequest.isPending}
+                            onChange={(updater) => setNumberRequestForm((prev) => updater(prev))}
+                            onSubmit={() =>
+                                createNumberRequest.mutate(numberRequestForm, {
+                                    onSuccess: () => {
+                                        setRequestDrawerOpen(false)
+                                        setNumberRequestForm(EMPTY_NUMBER_REQUEST_FORM)
+                                    },
+                                })
+                            }
+                            trigger={
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    aria-label="Request voice number"
+                                    title="Request voice number"
+                                    className="h-11 w-11 shrink-0 rounded-full border-slate-200 bg-white px-0 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:bg-slate-900 sm:w-auto sm:gap-2 sm:px-4"
+                                    onClick={() => setRequestDrawerOpen(true)}
+                                >
+                                    <PhoneIncoming className="h-4.5 w-4.5" />
+                                    <span className="hidden sm:inline">Request number</span>
+                                </Button>
+                            }
+                        />
+                    </div>
+
+                    {approvedRequests.length > 0 ? (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <SectionTitle icon={Phone} title="Approved and ready" />
+                                <span className="text-sm text-muted-foreground">{approvedRequests.length} ready</span>
+                            </div>
+                            <div className="grid gap-3">
+                                {approvedRequests.map((request) => (
+                                    <ApprovedNumberRequestCard
+                                        key={request.id}
+                                        request={request}
+                                        providerName={
+                                            providerMap.get(request.provider)?.name ??
+                                            request.provider.replace(/_/g, " ")
+                                        }
+                                        onConnect={() => openApprovedRequestNumberDrawer(request)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {otherRequests.length > 0 ? (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                                <SectionTitle icon={MapPinned} title="All requests" />
+                                <span className="text-sm text-muted-foreground">{otherRequests.length} listed</span>
+                            </div>
+                            <div className="space-y-2">
+                                {otherRequests.map((request) => (
+                                    <NumberRequestRow
+                                        key={request.id}
+                                        request={request}
+                                        providerName={
+                                            providerMap.get(request.provider)?.name ??
+                                            request.provider.replace(/_/g, " ")
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {(approvedRequests.length === 0 && otherRequests.length === 0) ? (
+                        <div className="rounded-3xl border border-dashed border-black/10 px-5 py-10 text-center dark:border-white/10">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
+                                <PhoneIncoming className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                            <p className="mt-4 text-sm font-medium text-foreground">No number requests yet</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Submit a provisioning request to have a provider-backed voice number assigned to your business.
+                            </p>
+                        </div>
+                    ) : null}
+                </GlassCard>
             )}
 
             {activeTab === "settings" && (
@@ -540,7 +807,7 @@ export function VoiceView() {
                                                 <CallStatusBadge status={call.status} />
                                             </td>
                                             <td className="px-2 py-3.5 font-mono text-[13px] tabular-nums text-slate-700 dark:text-slate-300">
-                                                {formatDuration(call.duration_seconds)}
+                                                {formatCallDuration(call.duration_seconds)}
                                             </td>
                                             <td className="px-2 py-3.5 text-slate-600 dark:text-slate-400">
                                                 {new Date(call.created_at).toLocaleString(undefined, {
@@ -569,99 +836,12 @@ export function VoiceView() {
                 </GlassCard>
             )}
 
-            <Dialog open={!!selectedCall} onOpenChange={(open) => !open && setSelectedCall(null)}>
-                <DialogContent className="max-w-2xl rounded-3xl!">
-                    <DialogHeader>
-                        <DialogTitle>Call details</DialogTitle>
-                    </DialogHeader>
-                    {selectedCall && (
-                        <div className="space-y-6">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                                <span className="font-medium text-slate-900 dark:text-slate-100">
-                                    {selectedCall.customer_name || "Unknown caller"}
-                                </span>
-                                {selectedCall.customer_phone ? (
-                                    <>
-                                        <span aria-hidden className="text-slate-300 dark:text-slate-600">·</span>
-                                        <span className="font-mono text-[13px] tabular-nums text-slate-600 dark:text-slate-300">
-                                            {selectedCall.customer_phone}
-                                        </span>
-                                    </>
-                                ) : null}
-                                <span aria-hidden className="text-slate-300 dark:text-slate-600">·</span>
-                                <CallDirectionLabel direction={selectedCall.direction} />
-                                <span aria-hidden className="text-slate-300 dark:text-slate-600">·</span>
-                                <span className="text-slate-500 dark:text-slate-400">
-                                    {new Date(selectedCall.created_at).toLocaleString(undefined, {
-                                        month: "short",
-                                        day: "numeric",
-                                        year: "numeric",
-                                        hour: "numeric",
-                                        minute: "2-digit",
-                                    })}
-                                </span>
-                            </div>
+            <VoiceCallDetailsDialog
+                call={selectedCall}
+                open={!!selectedCall}
+                onOpenChange={(open) => !open && setSelectedCall(null)}
+            />
 
-                            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border border-slate-200/70 bg-slate-50/50 px-5 py-4 dark:border-white/10 dark:bg-white/[0.02] sm:grid-cols-4">
-                                <CallDataRow label="Status">
-                                    <CallStatusBadge status={selectedCall.status} />
-                                </CallDataRow>
-                                <CallDataRow label="Duration">
-                                    <span className="font-mono text-sm tabular-nums text-slate-900 dark:text-slate-100">
-                                        {formatDuration(selectedCall.duration_seconds)}
-                                    </span>
-                                </CallDataRow>
-                                <CallDataRow
-                                    label="Resolution"
-                                    value={humanizeValue(selectedCall.resolution)}
-                                />
-                                <CallDataRow
-                                    label="Transfer"
-                                    value={humanizeValue(selectedCall.transfer_status)}
-                                />
-                            </dl>
-
-                            {selectedCall.summary ? (
-                                <CallSection title="Summary">
-                                    <p className="text-sm leading-6 text-slate-700 dark:text-slate-300">
-                                        {selectedCall.summary}
-                                    </p>
-                                </CallSection>
-                            ) : null}
-
-                            {selectedCall.recording_url ? (
-                                <CallSection title="Recording">
-                                    <audio controls className="w-full" src={selectedCall.recording_url} />
-                                </CallSection>
-                            ) : null}
-
-                            <CallSection title="Transcript">
-                                {(selectedCall.turns ?? []).length === 0 ? (
-                                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                                        No transcript captured yet.
-                                    </p>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {(selectedCall.turns ?? []).map((turn) => (
-                                            <div
-                                                key={turn.id}
-                                                className="rounded-lg bg-slate-50 px-4 py-3 dark:bg-white/[0.03]"
-                                            >
-                                                <div className="text-xs font-medium capitalize text-slate-500 dark:text-slate-400">
-                                                    {turn.speaker}
-                                                </div>
-                                                <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-slate-200">
-                                                    {turn.transcript || turn.prompt_text || "—"}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </CallSection>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
         </div>
     )
 }
@@ -679,100 +859,88 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Phone; title: string
 
 function MetricCard({ icon: Icon, label, value }: { icon: typeof Phone; label: string; value: string }) {
     return (
-        <GlassCard className="p-5">
+        <GlassCard className="p-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
-                    <p className="mt-2 text-3xl font-semibold">{value}</p>
+                    <p className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{label}</p>
+                    <p className="mt-1.5 text-2xl font-semibold">{value}</p>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
-                    <Icon className="h-5 w-5" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
+                    <Icon className="h-4 w-4" />
                 </div>
             </div>
         </GlassCard>
     )
 }
 
-function CallDataRow({
-    label,
-    value,
-    children,
-}: {
-    label: string
-    value?: string
-    children?: React.ReactNode
-}) {
+function OverviewStat({ label, value }: { label: string; value: string }) {
     return (
-        <div className="min-w-0">
-            <dt className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</dt>
-            <dd className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-100">
-                {children ?? (value && value.length > 0 ? value : <span className="text-slate-400 dark:text-slate-500">—</span>)}
-            </dd>
+        <div className="rounded-2xl border border-black/5 px-4 py-3 dark:border-white/10">
+            <p className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{label}</p>
+            <p className="mt-1 text-sm font-medium leading-5">{value}</p>
         </div>
     )
 }
 
-function CallSection({ title, children }: { title: string; children: React.ReactNode }) {
+function ApprovedNumberRequestCard({
+    request,
+    providerName,
+    onConnect,
+}: {
+    request: VoiceNumberRequestItem
+    providerName: string
+    onConnect: () => void
+}) {
     return (
-        <section>
-            <h3 className="mb-2.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-            {children}
-        </section>
+        <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200/80 bg-white/85 p-4 dark:border-emerald-500/20 dark:bg-slate-950/30 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-foreground">
+                    {request.label || request.approved_phone_number || "Approved voice number"}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    {request.approved_phone_number} • <span className="capitalize">{providerName}</span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                    Approved {request.approved_at ? new Date(request.approved_at).toLocaleDateString() : "recently"}
+                </p>
+            </div>
+            <Button type="button" className="rounded-full" onClick={onConnect}>
+                Connect now
+            </Button>
+        </div>
     )
 }
 
-function humanizeValue(value: string | null | undefined) {
-    if (!value) return ""
-    const normalized = value.replace(/_/g, " ").trim().toLowerCase()
-    if (!normalized || normalized === "not requested") return ""
-    return normalized.charAt(0).toUpperCase() + normalized.slice(1)
-}
+function NumberRequestRow({
+    request,
+    providerName,
+}: {
+    request: VoiceNumberRequestItem
+    providerName: string
+}) {
+    const statusTone =
+        request.status === "pending"
+            ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+            : request.status === "fulfilled"
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"
 
-function CallDirectionLabel({ direction }: { direction: string }) {
-    const normalized = direction.toLowerCase()
-    const isOutbound = normalized.includes("outbound")
     return (
-        <span className="inline-flex items-center gap-1.5 text-[13px] text-slate-700 dark:text-slate-300">
-            <span
-                aria-hidden
-                className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    isOutbound ? "bg-sky-500" : "bg-violet-500"
-                )}
-            />
-            <span className="capitalize">{normalized.replace(/_/g, " ")}</span>
-        </span>
-    )
-}
-
-function CallStatusBadge({ status }: { status: string }) {
-    const normalized = status.toLowerCase()
-    const styles: Record<string, string> = {
-        completed:
-            "bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20",
-        transferred:
-            "bg-sky-50 text-sky-700 ring-sky-100 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20",
-        failed:
-            "bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-300 dark:ring-red-500/20",
-        missed:
-            "bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20",
-        in_progress:
-            "bg-blue-50 text-blue-700 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20",
-        queued:
-            "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10",
-    }
-    const className =
-        styles[normalized] ??
-        "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10"
-    return (
-        <span
-            className={cn(
-                "inline-flex items-center rounded-md px-2 py-0.5 text-[12px] font-medium capitalize ring-1 ring-inset",
-                className
-            )}
-        >
-            {normalized.replace(/_/g, " ")}
-        </span>
+        <div className="flex flex-col gap-2 rounded-2xl border border-black/5 px-4 py-3 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">
+                    {request.label || `${request.country_code} voice number request`}
+                </p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                    <span className="capitalize">{providerName}</span>
+                    {request.desired_area ? ` • ${request.desired_area}` : ""}
+                    {request.notes ? ` • ${request.notes}` : ""}
+                </p>
+            </div>
+            <span className={cn("inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-medium capitalize", statusTone)}>
+                {request.status.replace(/_/g, " ")}
+            </span>
+        </div>
     )
 }
 

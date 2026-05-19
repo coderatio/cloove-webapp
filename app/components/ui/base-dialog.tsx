@@ -5,7 +5,7 @@ import { Dialog as BaseDialogPrimitive } from "@base-ui/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X } from "lucide-react"
 import { cn } from "@/app/lib/utils"
-import { useIsMobile } from "@/app/hooks/useMediaQuery"
+import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 
 /* ─── Primitives (re-export as-is) ─── */
 const Dialog = BaseDialogPrimitive.Root
@@ -52,13 +52,15 @@ const DialogOverlay = React.forwardRef<
     <BaseDialogPrimitive.Backdrop
         ref={ref}
         className={cn(
-            "fixed inset-0 z-50 bg-brand-deep/30 dark:bg-black/50 backdrop-blur-xl",
+            "fixed inset-0 z-50 bg-slate-950/24 dark:bg-black/64",
             className
         )}
         {...props}
         render={(backdropProps, state) => {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { onDrag, ...restProps } = backdropProps as any;
+            const { onDrag, className: backdropClassName, ...restProps } = backdropProps as React.HTMLAttributes<HTMLDivElement> & {
+                onDrag?: unknown
+            }
             return (
                 <AnimatePresence>
                     {state.open && (
@@ -68,6 +70,7 @@ const DialogOverlay = React.forwardRef<
                             animate="visible"
                             exit="hidden"
                             transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                            className={cn("fixed inset-0 z-50 bg-slate-950/24 dark:bg-black/64", backdropClassName)}
                             {...restProps}
                         />
                     )}
@@ -91,7 +94,7 @@ const DialogContent = React.forwardRef<
     React.ElementRef<typeof BaseDialogPrimitive.Popup>,
     DialogContentProps
 >(({ className, children, forceMobile, hideClose = false, ...props }, ref) => {
-    const isMobile = useIsMobile();
+    const isMobile = useMediaQuery("(max-width: 640px)");
     const mobile = forceMobile ?? isMobile;
 
     return (
@@ -99,73 +102,73 @@ const DialogContent = React.forwardRef<
             <DialogOverlay />
             <BaseDialogPrimitive.Popup
                 ref={ref}
-                className={cn(
-                    "fixed z-50 focus:outline-none flex flex-col",
-                    // Desktop: centered
-                    !mobile && "left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] w-full max-w-lg",
-                    // Mobile: bottom-anchored
-                    mobile && "bottom-0 left-0 right-0 w-full max-h-[92vh]",
-                    className
-                )}
+                className="focus:outline-none"
                 {...props}
                 render={(popupProps, state) => {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { onDrag, ...restProps } = popupProps as any;
+                    const { onDrag, className: popupClassName, ...restProps } = popupProps as React.HTMLAttributes<HTMLDivElement> & {
+                        onDrag?: unknown
+                    }
                     return (
                         <AnimatePresence>
                             {state.open && (
-                                <motion.div
-                                    variants={mobile ? mobileDrawerVariants : desktopPopupVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    exit="exit"
-                                    transition={mobile ? springTransition : desktopTransition}
-                                    className={cn(
-                                        "flex flex-col overflow-hidden shadow-2xl",
-                                        // Glass panel styling
-                                        "glass-panel",
-                                        // Shape: rounded-top on mobile, fully rounded on desktop
-                                        mobile
-                                            ? "rounded-t-[28px] border-b-0"
-                                            : "rounded-[28px]",
-                                        // Subtle light sweep
-                                        "relative",
-                                    )}
+                                <div
                                     {...restProps}
+                                    className={cn(
+                                        "fixed inset-0 z-50 flex focus:outline-none pointer-events-none",
+                                        mobile ? "items-end justify-center" : "items-center justify-center p-4",
+                                        popupClassName,
+                                    )}
                                 >
-                                    {/* Light sweep overlay */}
-                                    <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none rounded-[inherit]" />
+                                    <motion.div
+                                        variants={mobile ? mobileDrawerVariants : desktopPopupVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="exit"
+                                        transition={mobile ? springTransition : desktopTransition}
+                                        className={cn(
+                                            "pointer-events-auto relative flex w-full flex-col overflow-hidden shadow-2xl",
+                                            !mobile && "max-h-[90vh] max-w-lg",
+                                            mobile && "max-h-[92vh]",
+                                            className,
+                                            "border border-black/8 bg-white text-slate-950 dark:border-white/10 dark:bg-[#121417] dark:text-slate-100",
+                                            mobile
+                                                ? "rounded-t-[28px] border-b-0"
+                                                : "rounded-[28px]",
+                                        )}
+                                    >
+                                        {/* Light sweep overlay */}
+                                        <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-linear-to-b from-white/[0.03] to-transparent dark:from-white/[0.02] dark:to-transparent" />
 
-                                    {/* Mobile drag indicator */}
-                                    {mobile && (
-                                        <div className="flex justify-center pt-3 pb-1 shrink-0">
-                                            <div className="w-10 h-1 rounded-full bg-brand-deep/15 dark:bg-white/15" />
+                                        {/* Mobile drag indicator */}
+                                        {mobile && (
+                                            <div className="flex justify-center pt-3 pb-1 shrink-0">
+                                                <div className="w-10 h-1 rounded-full bg-brand-deep/15 dark:bg-white/15" />
+                                            </div>
+                                        )}
+
+                                        {/* Content */}
+                                        <div className="relative z-10 flex-1 flex flex-col min-h-0">
+                                            {children}
                                         </div>
-                                    )}
 
-                                    {/* Content */}
-                                    <div className="relative z-10 flex-1 flex flex-col min-h-0">
-                                        {children}
-                                    </div>
-
-                                    {/* Close button */}
-                                    {!hideClose && (
-                                        <BaseDialogPrimitive.Close
-                                            className={cn(
-                                                "absolute z-50 cursor-pointer rounded-full p-2",
-                                                "bg-brand-deep/5 dark:bg-white/5",
-                                                "opacity-70 transition-all duration-300",
-                                                "hover:opacity-100 hover:bg-brand-deep/10 dark:hover:bg-white/10",
-                                                "focus:outline-none ring-2 ring-transparent focus:ring-brand-gold",
-                                                "active:scale-90",
-                                                mobile ? "right-4 top-4" : "right-6 top-6",
-                                            )}
-                                        >
-                                            <X className="h-5 w-5 text-brand-deep/60 dark:text-brand-cream/60" />
-                                            <span className="sr-only">Close</span>
-                                        </BaseDialogPrimitive.Close>
-                                    )}
-                                </motion.div>
+                                        {/* Close button */}
+                                        {!hideClose && (
+                                            <BaseDialogPrimitive.Close
+                                                className={cn(
+                                                    "absolute z-50 cursor-pointer rounded-full p-2",
+                                                    "bg-black/[0.04] text-slate-600 opacity-80 transition-all duration-300 hover:opacity-100 hover:bg-black/[0.07] dark:bg-white/[0.06] dark:text-slate-300 dark:hover:bg-white/[0.1]",
+                                                    "focus:outline-none ring-2 ring-transparent focus:ring-brand-gold",
+                                                    "active:scale-90",
+                                                    mobile ? "right-4 top-4" : "right-6 top-6",
+                                                )}
+                                            >
+                                                <X className="h-5 w-5" />
+                                                <span className="sr-only">Close</span>
+                                            </BaseDialogPrimitive.Close>
+                                        )}
+                                    </motion.div>
+                                </div>
                             )}
                         </AnimatePresence>
                     );
@@ -213,6 +216,7 @@ const DialogTitle = React.forwardRef<
         ref={ref}
         className={cn(
             "font-serif text-3xl font-medium tracking-tight text-brand-deep dark:text-brand-cream",
+            "text-slate-950 dark:text-slate-50",
             className
         )}
         {...props}
@@ -227,7 +231,7 @@ const DialogDescription = React.forwardRef<
     <BaseDialogPrimitive.Description
         ref={ref}
         className={cn(
-            "text-base text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed",
+            "text-base leading-relaxed text-slate-600 dark:text-slate-400",
             className
         )}
         {...props}
@@ -244,16 +248,14 @@ const DialogCloseButton = React.forwardRef<
         ref={ref}
         className={cn(
             "cursor-pointer rounded-full p-2",
-            "bg-brand-deep/5 dark:bg-white/5",
-            "opacity-70 transition-all duration-300",
-            "hover:opacity-100 hover:bg-brand-deep/10 dark:hover:bg-white/10",
+            "bg-black/[0.04] text-slate-600 opacity-80 transition-all duration-300 hover:opacity-100 hover:bg-black/[0.07] dark:bg-white/[0.06] dark:text-slate-300 dark:hover:bg-white/[0.1]",
             "focus:outline-none ring-2 ring-transparent focus:ring-brand-gold",
             "active:scale-90",
             className,
         )}
         {...props}
     >
-        <X className="h-5 w-5 text-brand-deep/60 dark:text-brand-cream/60" />
+        <X className="h-5 w-5" />
         <span className="sr-only">Close</span>
     </BaseDialogPrimitive.Close>
 ))

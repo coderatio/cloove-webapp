@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Switch } from "@/app/components/ui/switch"
 
 const OPERATING_HOUR_PRESETS = [
@@ -39,6 +39,18 @@ interface OperatingHoursBuilderProps {
     value: string
     onChange: (value: string) => void
 }
+
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+    const hour = Math.floor(index / 2)
+    const minute = index % 2 === 0 ? "00" : "30"
+    const value = `${String(hour).padStart(2, "0")}:${minute}`
+    const displayHour = hour % 12 === 0 ? 12 : hour % 12
+    const meridiem = hour < 12 ? "AM" : "PM"
+    return {
+        value,
+        label: `${displayHour}:${minute} ${meridiem}`,
+    }
+})
 
 function createDefaultSchedule(): ScheduleDay[] {
     return WEEK_SCHEDULE.map((day) => ({
@@ -226,21 +238,19 @@ export function OperatingHoursBuilder({
                             />
                         </div>
 
-                        <Input
-                            type="time"
+                        <TimeSelect
                             value={day.open}
                             disabled={!day.enabled || day.allDay}
-                            onChange={(e) =>
-                                updateDay(day.id, (current) => ({ ...current, open: e.target.value }))
+                            onValueChange={(value) =>
+                                updateDay(day.id, (current) => ({ ...current, open: value }))
                             }
                         />
 
-                        <Input
-                            type="time"
+                        <TimeSelect
                             value={day.close}
                             disabled={!day.enabled || day.allDay}
-                            onChange={(e) =>
-                                updateDay(day.id, (current) => ({ ...current, close: e.target.value }))
+                            onValueChange={(value) =>
+                                updateDay(day.id, (current) => ({ ...current, close: value }))
                             }
                         />
 
@@ -271,3 +281,32 @@ export function OperatingHoursBuilder({
 }
 
 export { serializeSchedule, createDefaultSchedule }
+
+function TimeSelect({
+    value,
+    disabled,
+    onValueChange,
+}: {
+    value: string
+    disabled?: boolean
+    onValueChange: (value: string) => void
+}) {
+    const selected = TIME_OPTIONS.find((option) => option.value === value)
+
+    return (
+        <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+            <SelectTrigger className="rounded-2xl">
+                <SelectValue placeholder="Select time">
+                    {selected?.label ?? value}
+                </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-h-72 rounded-2xl">
+                {TIME_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    )
+}

@@ -1,6 +1,8 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/app/components/ui/button"
+import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { Input } from "@/app/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -35,141 +37,164 @@ interface VoiceTransferTargetsFormProps {
     targets: VoiceTransferTarget[]
     form: TransferForm
     isCreatePending: boolean
+    isDeletePending?: boolean
     onFormChange: (updater: (prev: TransferForm) => TransferForm) => void
     onCreate: () => void
-    onDelete: (id: string) => void
+    onDelete: (id: string) => Promise<void> | void
 }
 
 export function VoiceTransferTargetsForm({
     targets,
     form,
     isCreatePending,
+    isDeletePending = false,
     onFormChange,
     onCreate,
     onDelete,
 }: VoiceTransferTargetsFormProps) {
+    const [targetToRemove, setTargetToRemove] = useState<VoiceTransferTarget | null>(null)
+
     return (
-        <div className="space-y-6">
-            <GlassCard className="p-6 space-y-5">
-                <div className="flex items-start justify-between gap-4">
-                    <SectionHeader
-                        icon={PhoneForwarded}
-                        title="Transfer targets"
-                        description="Choose who receives escalated calls when the AI needs a human handoff."
-                    />
-                    {targets.length > 0 ? (
-                        <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-white/5 dark:text-slate-300">
-                            {targets.length} {targets.length === 1 ? "target" : "targets"}
-                        </span>
-                    ) : null}
-                </div>
-
-                {targets.length === 0 ? (
-                    <EmptyState />
-                ) : (
-                    <div className="space-y-2">
-                        {targets.map((target) => (
-                            <TargetRow key={target.id} target={target} onDelete={onDelete} />
-                        ))}
+        <>
+            <div className="space-y-6">
+                <GlassCard className="p-6 space-y-5">
+                    <div className="flex items-start justify-between gap-4">
+                        <SectionHeader
+                            icon={PhoneForwarded}
+                            title="Transfer targets"
+                            description="Choose who receives escalated calls when the AI needs a human handoff."
+                        />
+                        {targets.length > 0 ? (
+                            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-white/5 dark:text-slate-300">
+                                {targets.length} {targets.length === 1 ? "target" : "targets"}
+                            </span>
+                        ) : null}
                     </div>
-                )}
-            </GlassCard>
 
-            <GlassCard className="p-6 space-y-5">
-                <SectionHeader
-                    icon={UserPlus}
-                    title="Add a target"
-                    description="Connect a new staff member to handle live transfers."
-                />
+                    {targets.length === 0 ? (
+                        <EmptyState />
+                    ) : (
+                        <div className="space-y-2">
+                            {targets.map((target) => (
+                                <TargetRow
+                                    key={target.id}
+                                    target={target}
+                                    onRemove={() => setTargetToRemove(target)}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </GlassCard>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                    <FormField label="Staff name">
-                        <Input
-                            placeholder="Jane Ibrahim"
-                            value={form.label}
-                            onChange={(e) => onFormChange((prev) => ({ ...prev, label: e.target.value }))}
-                        />
-                    </FormField>
+                <GlassCard className="p-6 space-y-5">
+                    <SectionHeader
+                        icon={UserPlus}
+                        title="Add a target"
+                        description="Connect a new staff member to handle live transfers."
+                    />
 
-                    <FormField label="Role">
-                        <Select
-                            value={form.role_label}
-                            onValueChange={(value) => onFormChange((prev) => ({ ...prev, role_label: value }))}
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <FormField label="Staff name">
+                            <Input
+                                placeholder="Jane Ibrahim"
+                                value={form.label}
+                                onChange={(e) => onFormChange((prev) => ({ ...prev, label: e.target.value }))}
+                            />
+                        </FormField>
+
+                        <FormField label="Role">
+                            <Select
+                                value={form.role_label}
+                                onValueChange={(value) => onFormChange((prev) => ({ ...prev, role_label: value }))}
+                            >
+                                <SelectTrigger className="rounded-2xl">
+                                    <SelectValue placeholder="Select role" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl">
+                                    {TRANSFER_ROLE_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
+
+                        <FormField label="Phone number">
+                            <Input
+                                placeholder="+2348012345678"
+                                value={form.phone_number}
+                                onChange={(e) =>
+                                    onFormChange((prev) => ({ ...prev, phone_number: e.target.value }))
+                                }
+                            />
+                        </FormField>
+
+                        <FormField label="Routing order">
+                            <Select
+                                value={String(form.priority)}
+                                onValueChange={(value) =>
+                                    onFormChange((prev) => ({ ...prev, priority: Number(value) }))
+                                }
+                            >
+                                <SelectTrigger className="rounded-2xl">
+                                    <SelectValue placeholder="Select order" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl">
+                                    {PRIORITY_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </FormField>
+                    </div>
+
+                    <ToggleRow
+                        label="Use as fallback if primary transfer fails"
+                        description="Cloove will route here only when the primary target is unreachable."
+                        checked={form.is_fallback}
+                        onCheckedChange={(value) =>
+                            onFormChange((prev) => ({ ...prev, is_fallback: value }))
+                        }
+                    />
+
+                    <div className="flex justify-end pt-1">
+                        <Button
+                            onClick={onCreate}
+                            disabled={isCreatePending || !form.label.trim() || !form.phone_number.trim()}
+                            className="rounded-full"
                         >
-                            <SelectTrigger className="rounded-2xl">
-                                <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                                {TRANSFER_ROLE_OPTIONS.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </FormField>
+                            <Plus className="mr-1.5 h-4 w-4" />
+                            Add target
+                        </Button>
+                    </div>
+                </GlassCard>
+            </div>
 
-                    <FormField label="Phone number">
-                        <Input
-                            placeholder="+2348012345678"
-                            value={form.phone_number}
-                            onChange={(e) =>
-                                onFormChange((prev) => ({ ...prev, phone_number: e.target.value }))
-                            }
-                        />
-                    </FormField>
-
-                    <FormField label="Routing order">
-                        <Select
-                            value={String(form.priority)}
-                            onValueChange={(value) =>
-                                onFormChange((prev) => ({ ...prev, priority: Number(value) }))
-                            }
-                        >
-                            <SelectTrigger className="rounded-2xl">
-                                <SelectValue placeholder="Select order" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                                {PRIORITY_OPTIONS.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </FormField>
-                </div>
-
-                <ToggleRow
-                    label="Use as fallback if primary transfer fails"
-                    description="Cloove will route here only when the primary target is unreachable."
-                    checked={form.is_fallback}
-                    onCheckedChange={(value) =>
-                        onFormChange((prev) => ({ ...prev, is_fallback: value }))
-                    }
-                />
-
-                <div className="flex justify-end pt-1">
-                    <Button
-                        onClick={onCreate}
-                        disabled={isCreatePending || !form.label.trim() || !form.phone_number.trim()}
-                        className="rounded-full"
-                    >
-                        <Plus className="mr-1.5 h-4 w-4" />
-                        Add target
-                    </Button>
-                </div>
-            </GlassCard>
-        </div>
+            <ConfirmDialog
+                open={!!targetToRemove}
+                onOpenChange={(open) => !open && setTargetToRemove(null)}
+                onConfirm={async () => {
+                    if (!targetToRemove) return
+                    await onDelete(targetToRemove.id)
+                }}
+                title={targetToRemove ? `Remove ${targetToRemove.label}?` : "Remove transfer target?"}
+                description="This person will no longer receive live call transfers from the AI. You can add them again at any time."
+                confirmText="Remove"
+                isLoading={isDeletePending}
+            />
+        </>
     )
 }
 
 function TargetRow({
     target,
-    onDelete,
+    onRemove,
 }: {
     target: VoiceTransferTarget
-    onDelete: (id: string) => void
+    onRemove: () => void
 }) {
     const initials = getInitials(target.label)
     return (
@@ -199,8 +224,8 @@ function TargetRow({
             <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onDelete(target.id)}
-                className="h-8 rounded-md px-2.5 text-[13px] font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                onClick={onRemove}
+                className="h-8 rounded-xl px-2.5 text-[13px] font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
             >
                 Remove
             </Button>
@@ -219,7 +244,7 @@ function PriorityChip({ priority }: { priority: number }) {
     return (
         <span
             className={cn(
-                "inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-[12px] font-medium ring-1 ring-inset",
+                "inline-flex shrink-0 items-center rounded-xl px-2 py-0.5 text-[12px] font-medium ring-1 ring-inset",
                 className
             )}
         >
