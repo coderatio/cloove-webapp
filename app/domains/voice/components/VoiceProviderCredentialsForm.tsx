@@ -12,7 +12,7 @@ type NumberForm = {
     provider: string
     label: string
     phone_number: string
-    voice_number_request_id?: string | null
+    voice_number_request_id: string | null
     provider_credentials: Record<string, string>
     use_system_credentials: boolean
     is_default: boolean

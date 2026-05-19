@@ -14,7 +14,9 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { serializeSchedule, createDefaultSchedule } from "@/app/components/shared/OperatingHoursBuilder"
+import { Pagination } from "@/app/components/shared/Pagination"
 import { PersistedTabs, type TabItem } from "@/app/components/shared/PersistedTabs"
+import { TableSearch } from "@/app/components/shared/TableSearch"
 import { VoiceCallDetailsDialog } from "@/app/domains/voice/components/VoiceCallDetailsDialog"
 import {
     CallDirectionLabel,
@@ -27,8 +29,17 @@ import { VoiceProviderCredentialsForm } from "@/app/domains/voice/components/Voi
 import { VoiceNumberRequestDrawer } from "@/app/domains/voice/components/VoiceNumberRequestDrawer"
 import { VoiceTransferTargetsForm } from "@/app/domains/voice/components/VoiceTransferTargetsForm"
 import { VoiceAgentSettingsForm } from "@/app/domains/voice/components/VoiceAgentSettingsForm"
+import { useDebounce } from "@/app/hooks/useDebounce"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
 import {
     AudioLines,
+    FilterX,
     Headphones,
     Loader2,
     MapPinned,
@@ -42,6 +53,7 @@ import {
     ShieldCheck,
 } from "lucide-react"
 import {
+    useCancelVoiceNumberRequest,
     useCreateVoiceNumberRequest,
     useCreateVoiceNumber,
     useCreateVoiceTransferTarget,
@@ -149,7 +161,6 @@ const EMPTY_NUMBER_REQUEST_FORM = {
     provider: "africas_talking",
     label: "",
     country_code: "NG",
-    desired_area: "",
     notes: "",
 }
 
@@ -206,11 +217,12 @@ export function VoiceView() {
     const numberRequestsQuery = useVoiceNumberRequests()
     const settingsQuery = useVoiceSettings()
     const targetsQuery = useVoiceTransferTargets()
-    const callsQuery = useVoiceCalls()
+    const recentCallsQuery = useVoiceCalls({ page: 1, limit: 100 })
     const healthQuery = useVoiceHealth()
 
     const createNumber = useCreateVoiceNumber()
     const createNumberRequest = useCreateVoiceNumberRequest()
+    const cancelNumberRequest = useCancelVoiceNumberRequest()
     const updateNumber = useUpdateVoiceNumber()
     const disconnectNumber = useDisconnectVoiceNumber()
     const updateSettings = useUpdateVoiceSettings()
@@ -227,6 +239,11 @@ export function VoiceView() {
         { id: "settings", label: "Settings", icon: Settings2 },
     ]
     const [activeTab, setActiveTab] = useState("overview")
+    const [requestListTab, setRequestListTab] = useState<"pending" | "ready" | "history">("pending")
+    const [callsPage, setCallsPage] = useState(1)
+    const [callsSearch, setCallsSearch] = useState("")
+    const [callsDirection, setCallsDirection] = useState("all")
+    const [callsStatus, setCallsStatus] = useState("all")
     const [numberDrawerMode, setNumberDrawerMode] = useState<"closed" | "create" | "edit">("closed")
     const [requestDrawerOpen, setRequestDrawerOpen] = useState(false)
     const [editingNumberId, setEditingNumberId] = useState<string | null>(null)
@@ -237,6 +254,14 @@ export function VoiceView() {
     const [settingsForm, setSettingsForm] = useState(EMPTY_SETTINGS)
 
     const businessDisplayName = settingsForm.display_name.trim()
+    const debouncedCallsSearch = useDebounce(callsSearch, 300)
+    const callsQuery = useVoiceCalls({
+        page: callsPage,
+        limit: 10,
+        search: debouncedCallsSearch.trim() || undefined,
+        direction: callsDirection === "all" ? undefined : callsDirection,
+        status: callsStatus === "all" ? undefined : callsStatus,
+    })
 
     useEffect(() => {
         if (settingsQuery.data) {
@@ -264,15 +289,18 @@ export function VoiceView() {
     }, [settingsQuery.data])
 
     const metrics = useMemo(() => {
-        const calls = callsQuery.data ?? []
+        const calls = recentCallsQuery.data?.data ?? []
         const transferred = calls.filter((call) => call.transfer_status && call.transfer_status !== "not_requested").length
         const completed = calls.filter((call) => call.status === "completed" || call.status === "transferred").length
         return {
-            total: calls.length,
+            total: recentCallsQuery.data?.meta.total ?? calls.length,
             transferred,
             completed,
         }
-    }, [callsQuery.data])
+    }, [recentCallsQuery.data])
+    const recentCalls = recentCallsQuery.data?.data ?? []
+    const calls = callsQuery.data?.data ?? []
+    const callsMeta = callsQuery.data?.meta
 
     const providerOptions = useMemo(
         () => (providersQuery.data ?? []).filter((provider) => provider.is_enabled),
@@ -291,8 +319,15 @@ export function VoiceView() {
         () => (numberRequestsQuery.data ?? []).filter((request) => request.status === "approved"),
         [numberRequestsQuery.data]
     )
-    const otherRequests = useMemo(
-        () => (numberRequestsQuery.data ?? []).filter((request) => request.status !== "approved"),
+    const pendingRequests = useMemo(
+        () => (numberRequestsQuery.data ?? []).filter((request) => request.status === "pending"),
+        [numberRequestsQuery.data]
+    )
+    const historyRequests = useMemo(
+        () =>
+            (numberRequestsQuery.data ?? []).filter(
+                (request) => request.status !== "approved" && request.status !== "pending"
+            ),
         [numberRequestsQuery.data]
     )
     const isNumberDrawerOpen = numberDrawerMode !== "closed"
@@ -307,6 +342,13 @@ export function VoiceView() {
         setEditingNumberId(null)
         setNumberForm(EMPTY_NUMBER_FORM)
         setNumberDrawerMode("create")
+    }
+
+    const handleNumberRequestCreated = () => {
+        setRequestDrawerOpen(false)
+        setNumberRequestForm(EMPTY_NUMBER_REQUEST_FORM)
+        setActiveTab("requests")
+        setRequestListTab("pending")
     }
 
     const openApprovedRequestNumberDrawer = (request: VoiceNumberRequestItem) => {
@@ -340,15 +382,6 @@ export function VoiceView() {
 
         createNumber.mutate(numberForm, { onSuccess: closeNumberDrawer })
     }
-
-    const isLoading =
-        providersQuery.isPending ||
-        numbersQuery.isPending ||
-        numberRequestsQuery.isPending ||
-        settingsQuery.isPending ||
-        targetsQuery.isPending ||
-        callsQuery.isPending ||
-        healthQuery.isPending
 
     useEffect(() => {
         if (!providerOptions.length) return
@@ -396,6 +429,38 @@ export function VoiceView() {
                 orientation="horizontal"
             />
 
+            <Drawer
+                open={isNumberDrawerOpen}
+                onOpenChange={(open) => {
+                    if (!open) closeNumberDrawer()
+                }}
+            >
+                <DrawerContent>
+                    <DrawerStickyHeader>
+                        <DrawerTitle className="font-sans text-xl font-semibold text-foreground">
+                            {numberDrawerMode === "edit" ? "Edit voice number" : "Connect voice number"}
+                        </DrawerTitle>
+                        <DrawerDescription>
+                            {numberDrawerMode === "edit"
+                                ? "Update how this line appears in Cloove and refresh provider credentials if needed."
+                                : "Add a provider-backed calling number for inbound and outbound AI calls."}
+                        </DrawerDescription>
+                    </DrawerStickyHeader>
+                    <DrawerBody>
+                        <VoiceProviderCredentialsForm
+                            form={numberForm}
+                            providerOptions={providerOptions}
+                            selectedProvider={selectedProvider}
+                            mode={numberDrawerMode === "edit" ? "update" : "create"}
+                            isPending={createNumber.isPending || updateNumber.isPending}
+                            framed={false}
+                            onChange={(updater) => setNumberForm((prev) => updater(prev))}
+                            onSubmit={handleSaveNumber}
+                        />
+                    </DrawerBody>
+                </DrawerContent>
+            </Drawer>
+
             {activeTab === "overview" && (
                 <>
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -440,10 +505,7 @@ export function VoiceView() {
                                                     onChange={(updater) => setNumberRequestForm((prev) => updater(prev))}
                                                     onSubmit={() =>
                                                         createNumberRequest.mutate(numberRequestForm, {
-                                                            onSuccess: () => {
-                                                                setRequestDrawerOpen(false)
-                                                                setNumberRequestForm(EMPTY_NUMBER_REQUEST_FORM)
-                                                            },
+                                                            onSuccess: handleNumberRequestCreated,
                                                         })
                                                     }
                                                     trigger={
@@ -461,48 +523,17 @@ export function VoiceView() {
                                                     }
                                                 />
 
-                                                <Drawer
-                                                    open={isNumberDrawerOpen}
-                                                    onOpenChange={(open) => {
-                                                        if (!open) closeNumberDrawer()
-                                                    }}
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    aria-label="Connect voice number"
+                                                    title="Connect voice number"
+                                                    className="h-11 w-12 rounded-full border-l border-slate-200 bg-brand-deep text-brand-gold-300 shadow-none hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:border-white/10 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92 dark:hover:text-brand-deep"
+                                                    onClick={openCreateNumberDrawer}
                                                 >
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        aria-label="Connect voice number"
-                                                        title="Connect voice number"
-                                                        className="h-11 w-12 rounded-full border-l border-slate-200 bg-brand-deep text-brand-gold-300 shadow-none hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:border-white/10 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92 dark:hover:text-brand-deep"
-                                                        onClick={openCreateNumberDrawer}
-                                                    >
-                                                        <Plus className="h-5 w-5" />
-                                                    </Button>
-                                                    <DrawerContent>
-                                                        <DrawerStickyHeader>
-                                                            <DrawerTitle className="font-sans text-xl font-semibold text-foreground">
-                                                                {numberDrawerMode === "edit" ? "Edit voice number" : "Connect voice number"}
-                                                            </DrawerTitle>
-                                                            <DrawerDescription>
-                                                                {numberDrawerMode === "edit"
-                                                                    ? "Update how this line appears in Cloove and refresh provider credentials if needed."
-                                                                    : "Add a provider-backed calling number for inbound and outbound AI calls."}
-                                                            </DrawerDescription>
-                                                        </DrawerStickyHeader>
-                                                        <DrawerBody>
-                                                            <VoiceProviderCredentialsForm
-                                                                form={numberForm}
-                                                                providerOptions={providerOptions}
-                                                                selectedProvider={selectedProvider}
-                                                                mode={numberDrawerMode === "edit" ? "update" : "create"}
-                                                                isPending={createNumber.isPending || updateNumber.isPending}
-                                                                framed={false}
-                                                                onChange={(updater) => setNumberForm((prev) => updater(prev))}
-                                                                onSubmit={handleSaveNumber}
-                                                            />
-                                                        </DrawerBody>
-                                                    </DrawerContent>
-                                                </Drawer>
+                                                    <Plus className="h-5 w-5" />
+                                                </Button>
                                             </div>
                                         </div>
                                     </div>
@@ -519,7 +550,7 @@ export function VoiceView() {
                                                     Approved requests appear here and feed into the existing connect-number flow.
                                                 </p>
                                             </div>
-                                            <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white">
+                                            <span className="inline-flex h-9 min-w-fit items-center whitespace-nowrap rounded-full bg-emerald-600 px-4 text-sm font-medium text-white">
                                                 {approvedRequests.length} ready
                                             </span>
                                         </div>
@@ -578,16 +609,16 @@ export function VoiceView() {
                                 <div className="flex items-center justify-between gap-4">
                                     <SectionTitle icon={AudioLines} title="Recent activity" />
                                     <span className="text-sm text-muted-foreground">
-                                        {(callsQuery.data ?? []).length} {(callsQuery.data ?? []).length === 1 ? "call" : "calls"}
+                                        {metrics.total} {metrics.total === 1 ? "call" : "calls"}
                                     </span>
                                 </div>
-                                {(callsQuery.data ?? []).length === 0 ? (
+                                {recentCalls.length === 0 ? (
                                     <div className="rounded-2xl border border-dashed border-black/10 px-4 py-6 text-center text-sm text-muted-foreground dark:border-white/10">
                                         No call activity yet.
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
-                                        {(callsQuery.data ?? []).slice(0, 4).map((call) => (
+                                        {recentCalls.slice(0, 4).map((call) => (
                                             <button
                                                 key={call.id}
                                                 type="button"
@@ -661,10 +692,7 @@ export function VoiceView() {
                             onChange={(updater) => setNumberRequestForm((prev) => updater(prev))}
                             onSubmit={() =>
                                 createNumberRequest.mutate(numberRequestForm, {
-                                    onSuccess: () => {
-                                        setRequestDrawerOpen(false)
-                                        setNumberRequestForm(EMPTY_NUMBER_REQUEST_FORM)
-                                    },
+                                    onSuccess: handleNumberRequestCreated,
                                 })
                             }
                             trigger={
@@ -683,50 +711,7 @@ export function VoiceView() {
                         />
                     </div>
 
-                    {approvedRequests.length > 0 ? (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between gap-3">
-                                <SectionTitle icon={Phone} title="Approved and ready" />
-                                <span className="text-sm text-muted-foreground">{approvedRequests.length} ready</span>
-                            </div>
-                            <div className="grid gap-3">
-                                {approvedRequests.map((request) => (
-                                    <ApprovedNumberRequestCard
-                                        key={request.id}
-                                        request={request}
-                                        providerName={
-                                            providerMap.get(request.provider)?.name ??
-                                            request.provider.replace(/_/g, " ")
-                                        }
-                                        onConnect={() => openApprovedRequestNumberDrawer(request)}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    ) : null}
-
-                    {otherRequests.length > 0 ? (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between gap-3">
-                                <SectionTitle icon={MapPinned} title="All requests" />
-                                <span className="text-sm text-muted-foreground">{otherRequests.length} listed</span>
-                            </div>
-                            <div className="space-y-2">
-                                {otherRequests.map((request) => (
-                                    <NumberRequestRow
-                                        key={request.id}
-                                        request={request}
-                                        providerName={
-                                            providerMap.get(request.provider)?.name ??
-                                            request.provider.replace(/_/g, " ")
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    ) : null}
-
-                    {(approvedRequests.length === 0 && otherRequests.length === 0) ? (
+                    {(approvedRequests.length === 0 && pendingRequests.length === 0 && historyRequests.length === 0) ? (
                         <div className="rounded-3xl border border-dashed border-black/10 px-5 py-10 text-center dark:border-white/10">
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
                                 <PhoneIncoming className="h-5 w-5 text-muted-foreground" />
@@ -736,7 +721,125 @@ export function VoiceView() {
                                 Submit a provisioning request to have a provider-backed voice number assigned to your business.
                             </p>
                         </div>
-                    ) : null}
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="inline-flex w-full max-w-full items-center gap-2 overflow-x-auto rounded-2xl bg-black/[0.03] p-1 dark:bg-white/[0.04]">
+                                <RequestInnerTabButton
+                                    label="Pending"
+                                    count={pendingRequests.length}
+                                    isActive={requestListTab === "pending"}
+                                    icon={PhoneIncoming}
+                                    onClick={() => setRequestListTab("pending")}
+                                />
+                                <RequestInnerTabButton
+                                    label="Ready"
+                                    count={approvedRequests.length}
+                                    isActive={requestListTab === "ready"}
+                                    icon={Phone}
+                                    onClick={() => setRequestListTab("ready")}
+                                />
+                                <RequestInnerTabButton
+                                    label="History"
+                                    count={historyRequests.length}
+                                    isActive={requestListTab === "history"}
+                                    icon={ShieldCheck}
+                                    onClick={() => setRequestListTab("history")}
+                                />
+                            </div>
+
+                            {requestListTab === "pending" ? (
+                                pendingRequests.length > 0 ? (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <SectionTitle icon={PhoneIncoming} title="Pending requests" />
+                                            <span className="text-sm text-muted-foreground">{pendingRequests.length} pending</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {pendingRequests.map((request) => (
+                                                <NumberRequestRow
+                                                    key={request.id}
+                                                    request={request}
+                                                    providerName={
+                                                        providerMap.get(request.provider)?.name ??
+                                                        request.provider.replace(/_/g, " ")
+                                                    }
+                                                    isCancelling={
+                                                        cancelNumberRequest.isPending &&
+                                                        cancelNumberRequest.variables === request.id
+                                                    }
+                                                    onCancel={() => cancelNumberRequest.mutate(request.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <RequestTabEmptyState
+                                        title="No pending requests"
+                                        description="New provisioning requests will appear here while they are waiting for review."
+                                    />
+                                )
+                            ) : null}
+
+                            {requestListTab === "ready" ? (
+                                approvedRequests.length > 0 ? (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <SectionTitle icon={Phone} title="Approved and ready" />
+                                            <span className="text-sm text-muted-foreground">{approvedRequests.length} ready</span>
+                                        </div>
+                                        <div className="grid gap-3">
+                                            {approvedRequests.map((request) => (
+                                                <ApprovedNumberRequestCard
+                                                    key={request.id}
+                                                    request={request}
+                                                    providerName={
+                                                        providerMap.get(request.provider)?.name ??
+                                                        request.provider.replace(/_/g, " ")
+                                                    }
+                                                    onConnect={() => openApprovedRequestNumberDrawer(request)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <RequestTabEmptyState
+                                        title="No approved requests"
+                                        description="Approved requests will move here when a provider allocates a number and it is ready to connect."
+                                    />
+                                )
+                            ) : null}
+
+                            {requestListTab === "history" ? (
+                                historyRequests.length > 0 ? (
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <SectionTitle icon={MapPinned} title="Request history" />
+                                            <span className="text-sm text-muted-foreground">{historyRequests.length} listed</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {historyRequests.map((request) => (
+                                                <NumberRequestRow
+                                                    key={request.id}
+                                                    request={request}
+                                                    providerName={
+                                                        providerMap.get(request.provider)?.name ??
+                                                        request.provider.replace(/_/g, " ")
+                                                    }
+                                                    isCancelling={false}
+                                                    onCancel={() => undefined}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <RequestTabEmptyState
+                                        title="No request history"
+                                        description="Completed, cancelled, and rejected requests will appear here."
+                                    />
+                                )
+                            ) : null}
+                        </div>
+                    )}
                 </GlassCard>
             )}
 
@@ -760,78 +863,156 @@ export function VoiceView() {
                 <GlassCard className="p-6 space-y-5">
                     <div className="flex items-center justify-between gap-4">
                         <SectionTitle icon={Headphones} title="Recent calls" />
-                        {!isLoading && (callsQuery.data ?? []).length > 0 ? (
+                        {!callsQuery.isPending && (callsMeta?.total ?? 0) > 0 ? (
                             <span className="text-sm text-muted-foreground">
-                                {(callsQuery.data ?? []).length} {(callsQuery.data ?? []).length === 1 ? "call" : "calls"}
+                                {callsMeta?.total ?? 0} {(callsMeta?.total ?? 0) === 1 ? "call" : "calls"}
                             </span>
                         ) : null}
                     </div>
-                    {isLoading ? (
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                        <TableSearch
+                            value={callsSearch}
+                            onChange={(value) => {
+                                setCallsSearch(value)
+                                setCallsPage(1)
+                            }}
+                            placeholder="Search by customer, phone, or purpose..."
+                            className="w-full lg:max-w-md"
+                        />
+                        <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:items-center">
+                            <Select
+                                value={callsDirection}
+                                onValueChange={(value) => {
+                                    setCallsDirection(value)
+                                    setCallsPage(1)
+                                }}
+                            >
+                                <SelectTrigger className="h-12 min-w-[160px] rounded-2xl">
+                                    <SelectValue placeholder="All directions" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All directions</SelectItem>
+                                    <SelectItem value="inbound">Inbound</SelectItem>
+                                    <SelectItem value="outbound">Outbound</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select
+                                value={callsStatus}
+                                onValueChange={(value) => {
+                                    setCallsStatus(value)
+                                    setCallsPage(1)
+                                }}
+                            >
+                                <SelectTrigger className="h-12 min-w-[180px] rounded-2xl">
+                                    <SelectValue placeholder="All statuses" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All statuses</SelectItem>
+                                    <SelectItem value="queued">Queued</SelectItem>
+                                    <SelectItem value="initiated">Initiated</SelectItem>
+                                    <SelectItem value="ringing">Ringing</SelectItem>
+                                    <SelectItem value="in_progress">In progress</SelectItem>
+                                    <SelectItem value="completed">Completed</SelectItem>
+                                    <SelectItem value="failed">Failed</SelectItem>
+                                    <SelectItem value="missed">Missed</SelectItem>
+                                    <SelectItem value="transferred">Transferred</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {(callsSearch || callsDirection !== "all" || callsStatus !== "all") && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setCallsSearch("")
+                                        setCallsDirection("all")
+                                        setCallsStatus("all")
+                                    }}
+                                    className="h-12 rounded-2xl px-4 text-sm text-slate-600 dark:text-slate-300"
+                                >
+                                    <FilterX className="mr-2 h-4 w-4" />
+                                    Clear
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                    {callsQuery.isPending ? (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Loading voice activity...
                         </div>
-                    ) : (callsQuery.data ?? []).length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No calls logged yet.</p>
+                    ) : calls.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            {callsSearch || callsDirection !== "all" || callsStatus !== "all"
+                                ? "No calls match the current filters."
+                                : "No calls logged yet."}
+                        </p>
                     ) : (
-                        <div className="overflow-x-auto -mx-2">
-                            <table className="min-w-full text-sm">
-                                <thead>
-                                    <tr className="text-left text-[13px] font-medium text-slate-500 dark:text-slate-400">
-                                        <th className="px-2 pb-2 font-medium">Customer</th>
-                                        <th className="px-2 pb-2 font-medium">Direction</th>
-                                        <th className="px-2 pb-2 font-medium">Status</th>
-                                        <th className="px-2 pb-2 font-medium">Duration</th>
-                                        <th className="px-2 pb-2 font-medium">Created</th>
-                                        <th className="px-2 pb-2"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {(callsQuery.data ?? []).map((call) => (
-                                        <tr
-                                            key={call.id}
-                                            className="border-t border-slate-100 transition-colors hover:bg-slate-50/60 dark:border-white/[0.06] dark:hover:bg-white/[0.02]"
-                                        >
-                                            <td className="px-2 py-3.5">
-                                                <div className="font-medium text-slate-900 dark:text-slate-100">
-                                                    {call.customer_name || "Unknown caller"}
-                                                </div>
-                                                <div className="mt-0.5 font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400">
-                                                    {call.customer_phone || "—"}
-                                                </div>
-                                            </td>
-                                            <td className="px-2 py-3.5">
-                                                <CallDirectionLabel direction={call.direction} />
-                                            </td>
-                                            <td className="px-2 py-3.5">
-                                                <CallStatusBadge status={call.status} />
-                                            </td>
-                                            <td className="px-2 py-3.5 font-mono text-[13px] tabular-nums text-slate-700 dark:text-slate-300">
-                                                {formatCallDuration(call.duration_seconds)}
-                                            </td>
-                                            <td className="px-2 py-3.5 text-slate-600 dark:text-slate-400">
-                                                {new Date(call.created_at).toLocaleString(undefined, {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    hour: "numeric",
-                                                    minute: "2-digit",
-                                                })}
-                                            </td>
-                                            <td className="px-2 py-3.5 text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setSelectedCall(call)}
-                                                    className="h-8 rounded-md px-2.5 text-[13px] font-medium text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-slate-100"
-                                                >
-                                                    Open
-                                                </Button>
-                                            </td>
+                        <>
+                            <div className="overflow-x-auto -mx-2">
+                                <table className="min-w-full text-sm">
+                                    <thead>
+                                        <tr className="text-left text-[13px] font-medium text-slate-500 dark:text-slate-400">
+                                            <th className="px-2 pb-2 font-medium">Customer</th>
+                                            <th className="px-2 pb-2 font-medium">Direction</th>
+                                            <th className="px-2 pb-2 font-medium">Status</th>
+                                            <th className="px-2 pb-2 font-medium">Duration</th>
+                                            <th className="px-2 pb-2 font-medium">Created</th>
+                                            <th className="px-2 pb-2"></th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {calls.map((call) => (
+                                            <tr
+                                                key={call.id}
+                                                className="border-t border-slate-100 transition-colors hover:bg-slate-50/60 dark:border-white/[0.06] dark:hover:bg-white/[0.02]"
+                                            >
+                                                <td className="px-2 py-3.5">
+                                                    <div className="font-medium text-slate-900 dark:text-slate-100">
+                                                        {call.customer_name || "Unknown caller"}
+                                                    </div>
+                                                    <div className="mt-0.5 font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                                                        {call.customer_phone || "—"}
+                                                    </div>
+                                                </td>
+                                                <td className="px-2 py-3.5">
+                                                    <CallDirectionLabel direction={call.direction} />
+                                                </td>
+                                                <td className="px-2 py-3.5">
+                                                    <CallStatusBadge status={call.status} />
+                                                </td>
+                                                <td className="px-2 py-3.5 font-mono text-[13px] tabular-nums text-slate-700 dark:text-slate-300">
+                                                    {formatCallDuration(call.duration_seconds)}
+                                                </td>
+                                                <td className="px-2 py-3.5 text-slate-600 dark:text-slate-400">
+                                                    {new Date(call.created_at).toLocaleString(undefined, {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        hour: "numeric",
+                                                        minute: "2-digit",
+                                                    })}
+                                                </td>
+                                                <td className="px-2 py-3.5 text-right">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setSelectedCall(call)}
+                                                        className="h-8 rounded-md px-2.5 text-[13px] font-medium text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-slate-100"
+                                                    >
+                                                        Open
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <Pagination
+                                currentPage={callsMeta?.page ?? 1}
+                                totalPages={callsMeta?.lastPage ?? 1}
+                                onPageChange={setCallsPage}
+                                isLoading={callsQuery.isFetching}
+                            />
+                        </>
                     )}
                 </GlassCard>
             )}
@@ -892,21 +1073,24 @@ function ApprovedNumberRequestCard({
     onConnect: () => void
 }) {
     return (
-        <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200/80 bg-white/85 p-4 dark:border-emerald-500/20 dark:bg-slate-950/30 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-foreground">
-                    {request.label || request.approved_phone_number || "Approved voice number"}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    {request.approved_phone_number} • <span className="capitalize">{providerName}</span>
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                    Approved {request.approved_at ? new Date(request.approved_at).toLocaleDateString() : "recently"}
-                </p>
+        <div className="rounded-3xl border border-emerald-200/80 bg-white/85 p-4 dark:border-emerald-500/20 dark:bg-slate-950/30">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                        {request.label || request.approved_phone_number || "Approved voice number"}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        {request.approved_phone_number} • <span className="capitalize">{providerName}</span>
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Approved {request.approved_at ? new Date(request.approved_at).toLocaleDateString() : "recently"}
+                    </p>
+                </div>
+                <Button type="button" className="rounded-full" onClick={onConnect}>
+                    Connect now
+                </Button>
             </div>
-            <Button type="button" className="rounded-full" onClick={onConnect}>
-                Connect now
-            </Button>
+            <RequestLogTimeline logs={request.logs} className="mt-4" />
         </div>
     )
 }
@@ -914,32 +1098,144 @@ function ApprovedNumberRequestCard({
 function NumberRequestRow({
     request,
     providerName,
+    isCancelling,
+    onCancel,
 }: {
     request: VoiceNumberRequestItem
     providerName: string
+    isCancelling: boolean
+    onCancel: () => void
 }) {
     const statusTone =
         request.status === "pending"
             ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
             : request.status === "fulfilled"
                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                : request.status === "cancelled"
+                    ? "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
                 : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"
 
     return (
-        <div className="flex flex-col gap-2 rounded-2xl border border-black/5 px-4 py-3 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">
-                    {request.label || `${request.country_code} voice number request`}
-                </p>
-                <p className="mt-1 truncate text-xs text-muted-foreground">
-                    <span className="capitalize">{providerName}</span>
-                    {request.desired_area ? ` • ${request.desired_area}` : ""}
-                    {request.notes ? ` • ${request.notes}` : ""}
-                </p>
+        <div className="rounded-3xl border border-black/5 px-4 py-4 dark:border-white/10">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                        {request.label || `${request.country_code} voice number request`}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        <span className="capitalize">{providerName}</span>
+                        {request.notes ? ` • ${request.notes}` : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Submitted {new Date(request.created_at).toLocaleDateString()}
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    {request.status === "pending" ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-full"
+                            disabled={isCancelling}
+                            onClick={onCancel}
+                        >
+                            {isCancelling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Cancel request
+                        </Button>
+                    ) : null}
+                    <span className={cn("inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-medium capitalize", statusTone)}>
+                        {request.status.replace(/_/g, " ")}
+                    </span>
+                </div>
             </div>
-            <span className={cn("inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-medium capitalize", statusTone)}>
-                {request.status.replace(/_/g, " ")}
+            <RequestLogTimeline logs={request.logs} className="mt-4" />
+        </div>
+    )
+}
+
+function RequestInnerTabButton({
+    label,
+    count,
+    isActive,
+    icon: Icon,
+    onClick,
+}: {
+    label: string
+    count: number
+    isActive: boolean
+    icon: typeof Phone
+    onClick: () => void
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                "inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
+                isActive
+                    ? "bg-white text-foreground shadow-sm dark:bg-slate-900"
+                    : "text-muted-foreground hover:bg-white/70 dark:hover:bg-white/[0.06]"
+            )}
+        >
+            <Icon className="h-4 w-4" />
+            <span>{label}</span>
+            <span
+                className={cn(
+                    "rounded-full px-2 py-0.5 text-xs",
+                    isActive
+                        ? "bg-black/[0.05] text-foreground dark:bg-white/[0.08]"
+                        : "bg-black/[0.04] text-muted-foreground dark:bg-white/[0.05]"
+                )}
+            >
+                {count}
             </span>
+        </button>
+    )
+}
+
+function RequestTabEmptyState({
+    title,
+    description,
+}: {
+    title: string
+    description: string
+}) {
+    return (
+        <div className="rounded-3xl border border-dashed border-black/10 px-5 py-10 text-center dark:border-white/10">
+            <p className="text-sm font-medium text-foreground">{title}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        </div>
+    )
+}
+
+function RequestLogTimeline({
+    logs,
+    className,
+}: {
+    logs?: VoiceNumberRequestItem["logs"]
+    className?: string
+}) {
+    if (!logs?.length) return null
+
+    return (
+        <div className={cn("rounded-[1.25rem] bg-black/[0.02] px-3 py-3 dark:bg-white/[0.03]", className)}>
+            <p className="text-xs font-medium text-muted-foreground">Request activity</p>
+            <div className="mt-3 space-y-3">
+                {logs.map((log) => (
+                    <div key={log.id} className="flex gap-3">
+                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-green/70 dark:bg-emerald-400/70" />
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground">{log.title}</p>
+                            {log.description ? (
+                                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{log.description}</p>
+                            ) : null}
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                {new Date(log.created_at).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }

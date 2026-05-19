@@ -44,6 +44,23 @@ const desktopTransition = {
     opacity: { duration: 0.25 },
 }
 
+/** Base UI div props that overlap Framer Motion's gesture/animation callbacks. */
+function toMotionDivProps({
+    onDrag: _onDrag,
+    onDragStart: _onDragStart,
+    onDragEnd: _onDragEnd,
+    onDragEnter: _onDragEnter,
+    onDragExit: _onDragExit,
+    onDragLeave: _onDragLeave,
+    onDragOver: _onDragOver,
+    onAnimationStart: _onAnimationStart,
+    onAnimationEnd: _onAnimationEnd,
+    onAnimationIteration: _onAnimationIteration,
+    ...rest
+}: React.HTMLAttributes<HTMLDivElement>): React.ComponentPropsWithoutRef<typeof motion.div> {
+    return rest
+}
+
 /* ─── Backdrop / Overlay ─── */
 const DialogOverlay = React.forwardRef<
     React.ElementRef<typeof BaseDialogPrimitive.Backdrop>,
@@ -57,10 +74,9 @@ const DialogOverlay = React.forwardRef<
         )}
         {...props}
         render={(backdropProps, state) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { onDrag, className: backdropClassName, ...restProps } = backdropProps as React.HTMLAttributes<HTMLDivElement> & {
-                onDrag?: unknown
-            }
+            const { className: backdropClassName, ...restProps } = toMotionDivProps(
+                backdropProps as React.HTMLAttributes<HTMLDivElement>
+            )
             return (
                 <AnimatePresence>
                     {state.open && (
@@ -105,10 +121,8 @@ const DialogContent = React.forwardRef<
                 className="focus:outline-none"
                 {...props}
                 render={(popupProps, state) => {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { onDrag, className: popupClassName, ...restProps } = popupProps as React.HTMLAttributes<HTMLDivElement> & {
-                        onDrag?: unknown
-                    }
+                    const { className: popupClassName, ...restProps } =
+                        popupProps as React.HTMLAttributes<HTMLDivElement>
                     return (
                         <AnimatePresence>
                             {state.open && (

@@ -1,5 +1,6 @@
 "use client"
 
+import { startTransition, useEffect, useState } from "react"
 import { Accordion } from "@base-ui/react/accordion"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -8,7 +9,7 @@ import { Switch } from "@/app/components/ui/switch"
 import { Textarea } from "@/app/components/ui/textarea"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { VoiceScheduleBuilder } from "@/app/domains/voice/components/VoiceScheduleBuilder"
-import { ChevronDown, Loader2, Phone, ShieldCheck } from "lucide-react"
+import { ChevronDown, Loader2, ShieldCheck } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 
 const accordionTriggerClass =
@@ -59,6 +60,17 @@ export function VoiceAgentSettingsForm({
     onChange,
     onSubmit,
 }: VoiceAgentSettingsFormProps) {
+    const [openSections, setOpenSections] = useState<string[]>(["identity", "prompts"])
+    const [availabilityReady, setAvailabilityReady] = useState(false)
+    const availabilityOpen = openSections.includes("availability")
+
+    useEffect(() => {
+        if (!availabilityOpen || availabilityReady) return
+        startTransition(() => {
+            setAvailabilityReady(true)
+        })
+    }, [availabilityOpen, availabilityReady])
+
     return (
         <GlassCard className="p-0 overflow-hidden">
             <div className="flex items-center gap-3 border-b border-brand-deep/5 px-6 py-5 dark:border-white/5">
@@ -73,7 +85,11 @@ export function VoiceAgentSettingsForm({
                 </div>
             </div>
 
-            <Accordion.Root defaultValue={["identity", "prompts"]} className="bg-transparent">
+            <Accordion.Root
+                value={openSections}
+                onValueChange={(value) => setOpenSections(Array.isArray(value) ? value : [value])}
+                className="bg-transparent"
+            >
                 <Accordion.Item value="identity" className={accordionItemClass}>
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
@@ -225,12 +241,18 @@ export function VoiceAgentSettingsForm({
                     </Accordion.Header>
                     <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
                         <div className="space-y-4 pt-2">
-                            <VoiceScheduleBuilder
-                                value={settings.operating_hours}
-                                onChange={(value) =>
-                                    onChange((prev) => ({ ...prev, operating_hours: value }))
-                                }
-                            />
+                            {availabilityReady ? (
+                                <VoiceScheduleBuilder
+                                    value={settings.operating_hours}
+                                    onChange={(value) =>
+                                        onChange((prev) => ({ ...prev, operating_hours: value }))
+                                    }
+                                />
+                            ) : (
+                                <div className="rounded-2xl border border-black/5 px-4 py-3 text-sm text-muted-foreground dark:border-white/10">
+                                    Loading availability...
+                                </div>
+                            )}
                         </div>
                     </Accordion.Panel>
                 </Accordion.Item>

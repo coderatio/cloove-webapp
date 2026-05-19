@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { memo, useEffect, useMemo, useState } from "react"
 import { Button } from "@/app/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Switch } from "@/app/components/ui/switch"
@@ -51,6 +51,8 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
         label: `${displayHour}:${minute} ${meridiem}`,
     }
 })
+
+const TIME_OPTION_LABELS = new Map(TIME_OPTIONS.map((option) => [option.value, option.label]))
 
 function createDefaultSchedule(): ScheduleDay[] {
     return WEEK_SCHEDULE.map((day) => ({
@@ -154,20 +156,31 @@ export function OperatingHoursBuilder({
     const [schedule, setSchedule] = useState<ScheduleDay[]>(createDefaultSchedule())
     const [legacyValue, setLegacyValue] = useState<string | null>(null)
 
+    const summary = useMemo(() => serializeSchedule(schedule), [schedule])
+    const normalizedValue = value.trim()
+    const normalizedLegacyValue = legacyValue?.trim() ?? ""
+
     useEffect(() => {
+        if (normalizedValue === summary || normalizedValue === normalizedLegacyValue) {
+            return
+        }
+
         const parsed = parseSchedule(value || "")
         if (parsed) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSchedule(parsed)
             setLegacyValue(null)
-        } else if (value?.trim()) {
-            setLegacyValue(value)
-        } else {
-            setSchedule(createDefaultSchedule())
-            setLegacyValue(null)
+            return
         }
-    }, [value])
 
-    const summary = useMemo(() => serializeSchedule(schedule), [schedule])
+        if (normalizedValue) {
+            setLegacyValue(value)
+            return
+        }
+
+        setSchedule(createDefaultSchedule())
+        setLegacyValue(null)
+    }, [normalizedLegacyValue, normalizedValue, summary, value])
 
     const applySchedule = (nextSchedule: ScheduleDay[]) => {
         const cloned = cloneSchedule(nextSchedule)
@@ -213,63 +226,29 @@ export function OperatingHoursBuilder({
 
             <div className="rounded-2xl border border-black/5 dark:border-white/10">
                 {schedule.map((day, index) => (
-                    <div
+                    <OperatingHoursDayRow
                         key={day.id}
-                        className={`grid gap-3 px-4 py-3 md:grid-cols-[1.1fr_0.8fr_0.8fr_auto] md:items-center ${
-                            index !== schedule.length - 1 ? "border-b border-black/5 dark:border-white/10" : ""
-                        }`}
-                    >
-                        <div className="flex items-center justify-between gap-3">
-                            <div>
-                                <p className="text-sm font-medium">{day.label}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    {day.enabled
-                                        ? day.allDay
-                                            ? "Open all day"
-                                            : `${day.open} - ${day.close}`
-                                        : "Closed"}
-                                </p>
-                            </div>
-                            <Switch
-                                checked={day.enabled}
-                                onCheckedChange={(checked) =>
-                                    updateDay(day.id, (current) => ({ ...current, enabled: checked }))
-                                }
-                            />
-                        </div>
-
-                        <TimeSelect
-                            value={day.open}
-                            disabled={!day.enabled || day.allDay}
-                            onValueChange={(value) =>
-                                updateDay(day.id, (current) => ({ ...current, open: value }))
-                            }
-                        />
-
-                        <TimeSelect
-                            value={day.close}
-                            disabled={!day.enabled || day.allDay}
-                            onValueChange={(value) =>
-                                updateDay(day.id, (current) => ({ ...current, close: value }))
-                            }
-                        />
-
-                        <label className="flex items-center justify-between gap-3 rounded-2xl border border-black/5 px-4 py-3 text-sm dark:border-white/10">
-                            <span>24h</span>
-                            <Switch
-                                checked={day.allDay}
-                                onCheckedChange={(checked) =>
-                                    updateDay(day.id, (current) => ({
-                                        ...current,
-                                        enabled: checked ? true : current.enabled,
-                                        allDay: checked,
-                                        open: checked ? "00:00" : current.open,
-                                        close: checked ? "23:59" : current.close,
-                                    }))
-                                }
-                            />
-                        </label>
-                    </div>
+                        day={day}
+                        hasBorder={index !== schedule.length - 1}
+                        onEnabledChange={(checked) =>
+                            updateDay(day.id, (current) => ({ ...current, enabled: checked }))
+                        }
+                        onOpenChange={(value) =>
+                            updateDay(day.id, (current) => ({ ...current, open: value }))
+                        }
+                        onCloseChange={(value) =>
+                            updateDay(day.id, (current) => ({ ...current, close: value }))
+                        }
+                        onAllDayChange={(checked) =>
+                            updateDay(day.id, (current) => ({
+                                ...current,
+                                enabled: checked ? true : current.enabled,
+                                allDay: checked,
+                                open: checked ? "00:00" : current.open,
+                                close: checked ? "23:59" : current.close,
+                            }))
+                        }
+                    />
                 ))}
             </div>
 
@@ -282,7 +261,54 @@ export function OperatingHoursBuilder({
 
 export { serializeSchedule, createDefaultSchedule }
 
-function TimeSelect({
+const OperatingHoursDayRow = memo(function OperatingHoursDayRow({
+    day,
+    hasBorder,
+    onEnabledChange,
+    onOpenChange,
+    onCloseChange,
+    onAllDayChange,
+}: {
+    day: ScheduleDay
+    hasBorder: boolean
+    onEnabledChange: (checked: boolean) => void
+    onOpenChange: (value: string) => void
+    onCloseChange: (value: string) => void
+    onAllDayChange: (checked: boolean) => void
+}) {
+    return (
+        <div
+            className={`grid gap-3 px-4 py-3 md:grid-cols-[1.1fr_0.8fr_0.8fr_auto] md:items-center ${
+                hasBorder ? "border-b border-black/5 dark:border-white/10" : ""
+            }`}
+        >
+            <div className="flex items-center justify-between gap-3">
+                <div>
+                    <p className="text-sm font-medium">{day.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                        {day.enabled
+                            ? day.allDay
+                                ? "Open all day"
+                                : `${day.open} - ${day.close}`
+                            : "Closed"}
+                    </p>
+                </div>
+                <Switch checked={day.enabled} onCheckedChange={onEnabledChange} />
+            </div>
+
+            <TimeSelect value={day.open} disabled={!day.enabled || day.allDay} onValueChange={onOpenChange} />
+
+            <TimeSelect value={day.close} disabled={!day.enabled || day.allDay} onValueChange={onCloseChange} />
+
+            <label className="flex items-center justify-between gap-3 rounded-2xl border border-black/5 px-4 py-3 text-sm dark:border-white/10">
+                <span>24h</span>
+                <Switch checked={day.allDay} onCheckedChange={onAllDayChange} />
+            </label>
+        </div>
+    )
+})
+
+const TimeSelect = memo(function TimeSelect({
     value,
     disabled,
     onValueChange,
@@ -291,13 +317,13 @@ function TimeSelect({
     disabled?: boolean
     onValueChange: (value: string) => void
 }) {
-    const selected = TIME_OPTIONS.find((option) => option.value === value)
+    const selected = TIME_OPTION_LABELS.get(value)
 
     return (
         <Select value={value} onValueChange={onValueChange} disabled={disabled}>
             <SelectTrigger className="rounded-2xl">
                 <SelectValue placeholder="Select time">
-                    {selected?.label ?? value}
+                    {selected ?? value}
                 </SelectValue>
             </SelectTrigger>
             <SelectContent className="max-h-72 rounded-2xl">
@@ -309,4 +335,4 @@ function TimeSelect({
             </SelectContent>
         </Select>
     )
-}
+})

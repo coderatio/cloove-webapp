@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/app/lib/api-client"
+import type { ApiResponse } from "@/app/lib/api-client"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { toast } from "sonner"
 
@@ -29,9 +30,8 @@ export interface VoiceNumberRequestItem {
     provider: string
     label: string | null
     country_code: string
-    desired_area: string | null
     notes: string | null
-    status: "pending" | "approved" | "rejected" | "fulfilled"
+    status: "pending" | "approved" | "rejected" | "cancelled" | "fulfilled"
     approved_phone_number: string | null
     provider_number_id: string | null
     provider_account_id: string | null
@@ -39,6 +39,18 @@ export interface VoiceNumberRequestItem {
     fulfilled_at: string | null
     created_at: string
     updated_at: string | null
+    logs?: VoiceNumberRequestLogItem[]
+}
+
+export interface VoiceNumberRequestLogItem {
+    id: string
+    voice_number_request_id: string
+    business_id: string
+    event_type: string
+    title: string
+    description: string | null
+    metadata: Record<string, unknown> | null
+    created_at: string
 }
 
 export interface VoiceProviderOption {
@@ -134,6 +146,26 @@ export interface VoiceCall {
     events?: VoiceCallEvent[]
 }
 
+export interface VoiceCallListMeta {
+    total: number
+    page: number
+    limit: number
+    lastPage: number
+}
+
+export interface VoiceCallListResult {
+    data: VoiceCall[]
+    meta: VoiceCallListMeta
+}
+
+export interface VoiceCallListParams {
+    page?: number
+    limit?: number
+    search?: string
+    direction?: string
+    status?: string
+}
+
 export interface VoiceHealth {
     active_calls: number
     failed_requests_last_24h: number
@@ -148,7 +180,7 @@ const keys = {
     numberRequests: (businessId?: string) => ["voice", "number-requests", businessId],
     settings: (businessId?: string) => ["voice", "settings", businessId],
     targets: (businessId?: string) => ["voice", "targets", businessId],
-    calls: (businessId?: string) => ["voice", "calls", businessId],
+    calls: (businessId?: string, params?: VoiceCallListParams) => ["voice", "calls", businessId, params ?? {}],
     health: (businessId?: string) => ["voice", "health", businessId],
 }
 
@@ -204,15 +236,38 @@ export function useVoiceTransferTargets() {
     })
 }
 
-export function useVoiceCalls() {
+export function useVoiceCalls(params: VoiceCallListParams = {}) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
     return useQuery({
-        queryKey: keys.calls(businessId),
-        queryFn: () => apiClient.get<VoiceCall[]>("/voice/calls", { limit: "100" }),
+        queryKey: keys.calls(businessId, params),
+        queryFn: async () => {
+            const response = await apiClient.get<ApiResponse<VoiceCall[]>>(
+                "/voice/calls",
+                {
+                    page: String(params.page ?? 1),
+                    limit: String(params.limit ?? 20),
+                    ...(params.search ? { search: params.search } : {}),
+                    ...(params.direction ? { direction: params.direction } : {}),
+                    ...(params.status ? { status: params.status } : {}),
+                },
+                { fullResponse: true }
+            )
+
+            return {
+                data: response.data,
+                meta: {
+                    total: Number(response.meta?.total ?? response.data.length ?? 0),
+                    page: Number(response.meta?.page ?? params.page ?? 1),
+                    limit: Number(response.meta?.limit ?? params.limit ?? 20),
+                    lastPage: Number(response.meta?.lastPage ?? 1),
+                },
+            } satisfies VoiceCallListResult
+        },
         enabled: !!businessId,
         refetchInterval: 15000,
+        placeholderData: (previousData) => previousData,
     })
 }
 
@@ -258,6 +313,22 @@ export function useCreateVoiceNumberRequest() {
         },
         onError: (error: { message?: string }) =>
             toast.error(error.message ?? "Failed to submit voice number request"),
+    })
+}
+
+export function useCancelVoiceNumberRequest() {
+    const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useMutation({
+        mutationFn: (id: string) => apiClient.post<VoiceNumberRequestItem>(`/voice/number-requests/${id}/cancel`, {}),
+        onSuccess: () => {
+            toast.success("Voice number request cancelled")
+            void queryClient.invalidateQueries({ queryKey: keys.numberRequests(businessId) })
+        },
+        onError: (error: { message?: string }) =>
+            toast.error(error.message ?? "Failed to cancel voice number request"),
     })
 }
 

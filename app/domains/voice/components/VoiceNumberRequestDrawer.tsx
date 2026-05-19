@@ -12,15 +12,15 @@ import {
 import { Input } from "@/app/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Textarea } from "@/app/components/ui/textarea"
+import { useCountries } from "@/app/hooks/useCountries"
 import { Loader2, Phone, PhoneIncoming } from "lucide-react"
-import type { ReactNode } from "react"
+import { useEffect, useMemo, type ReactNode } from "react"
 import type { VoiceProviderOption } from "@/app/domains/voice/hooks/useVoice"
 
 type VoiceNumberRequestForm = {
     provider: string
     label: string
     country_code: string
-    desired_area: string
     notes: string
 }
 
@@ -45,6 +45,24 @@ export function VoiceNumberRequestDrawer({
     onChange,
     onSubmit,
 }: VoiceNumberRequestDrawerProps) {
+    const { data: countries = [], isLoading: isLoadingCountries } = useCountries()
+    const selectedCountry = useMemo(() => {
+        return countries.find((country) => country.code === form.country_code) ?? null
+    }, [countries, form.country_code])
+
+    useEffect(() => {
+        if (form.country_code || !countries.length) return
+
+        const defaultCountry = countries.find((country) => country.isDefault) ?? countries[0]
+
+        if (!defaultCountry) return
+
+        onChange((prev) => ({
+            ...prev,
+            country_code: defaultCountry.code,
+        }))
+    }, [countries, form.country_code, onChange])
+
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
             {trigger}
@@ -61,66 +79,93 @@ export function VoiceNumberRequestDrawer({
                     <div className="space-y-4">
                         <SectionTitle icon={PhoneIncoming} title="Provisioning request" />
                         <div className="grid gap-3">
-                            <Select
-                                value={form.provider}
-                                onValueChange={(value) =>
-                                    onChange((prev) => ({ ...prev, provider: value }))
-                                }
-                            >
-                                <SelectTrigger className="rounded-2xl">
-                                    <SelectValue placeholder="Select provider" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-2xl">
-                                    {providerOptions.map((provider) => (
-                                        <SelectItem key={provider.id} value={provider.id}>
-                                            {provider.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <Input
-                                placeholder="Internal label"
-                                value={form.label}
-                                onChange={(e) =>
-                                    onChange((prev) => ({
-                                        ...prev,
-                                        label: e.target.value,
-                                    }))
-                                }
-                            />
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                <Input
-                                    placeholder="Country code"
-                                    value={form.country_code}
-                                    onChange={(e) =>
-                                        onChange((prev) => ({
-                                            ...prev,
-                                            country_code: e.target.value.toUpperCase(),
-                                        }))
+                            <div className="space-y-2">
+                                <label className="px-1 text-sm font-medium text-foreground">
+                                    Provider
+                                </label>
+                                <Select
+                                    value={form.provider}
+                                    onValueChange={(value) =>
+                                        onChange((prev) => ({ ...prev, provider: value }))
                                     }
-                                />
+                                >
+                                    <SelectTrigger className="rounded-2xl">
+                                        <SelectValue placeholder="Select provider" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl">
+                                        {providerOptions.map((provider) => (
+                                            <SelectItem key={provider.id} value={provider.id}>
+                                                {provider.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="px-1 text-sm font-medium text-foreground">
+                                    Internal label
+                                </label>
                                 <Input
-                                    placeholder="Preferred area or city"
-                                    value={form.desired_area}
+                                    placeholder="e.g. Main support line"
+                                    value={form.label}
                                     onChange={(e) =>
                                         onChange((prev) => ({
                                             ...prev,
-                                            desired_area: e.target.value,
+                                            label: e.target.value,
                                         }))
                                     }
                                 />
                             </div>
-                            <Textarea
-                                placeholder="Any routing or provisioning notes"
-                                rows={4}
-                                value={form.notes}
-                                onChange={(e) =>
-                                    onChange((prev) => ({
-                                        ...prev,
-                                        notes: e.target.value,
-                                    }))
-                                }
-                            />
+                            <div className="space-y-2">
+                                <label className="px-1 text-sm font-medium text-foreground">
+                                    Country
+                                </label>
+                                <Select
+                                    value={form.country_code}
+                                    onValueChange={(value) =>
+                                        onChange((prev) => ({
+                                            ...prev,
+                                            country_code: value,
+                                        }))
+                                    }
+                                    disabled={isLoadingCountries}
+                                >
+                                    <SelectTrigger className="rounded-2xl">
+                                        <SelectValue
+                                            placeholder={
+                                                isLoadingCountries ? "Loading countries..." : "Select country"
+                                            }
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl">
+                                        {countries.map((country) => (
+                                            <SelectItem key={country.id} value={country.code}>
+                                                {country.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="px-1 text-sm font-medium text-foreground">
+                                    Notes
+                                </label>
+                                <Textarea
+                                    placeholder={
+                                        selectedCountry
+                                            ? `Anything we should know about this ${selectedCountry.name} number request`
+                                            : "Anything we should know before provisioning this number"
+                                    }
+                                    rows={4}
+                                    value={form.notes}
+                                    onChange={(e) =>
+                                        onChange((prev) => ({
+                                            ...prev,
+                                            notes: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
                         </div>
                         <Button
                             type="button"

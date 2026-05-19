@@ -4,16 +4,42 @@ import { cn } from "@/app/lib/utils"
 
 export function formatCallDuration(value: number | null) {
     if (!value) return "—"
-    const minutes = Math.floor(value / 60)
-    const seconds = value % 60
-    return `${minutes}:${String(seconds).padStart(2, "0")}`
+
+    const totalSeconds = Math.max(Math.floor(value), 0)
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+
+    if (hours > 0) {
+        return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
+    }
+
+    if (minutes > 0) {
+        return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`
+    }
+
+    return `${seconds}s`
 }
 
 export function humanizeCallValue(value: string | null | undefined) {
     if (!value) return ""
     const normalized = value.replace(/_/g, " ").trim().toLowerCase()
     if (!normalized || normalized === "not requested") return ""
-    return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+
+    const wordMap: Record<string, string> = {
+        ai: "AI",
+        dtmf: "DTMF",
+        ivr: "IVR",
+    }
+
+    return normalized
+        .split(/\s+/)
+        .map((word, index) => {
+            if (wordMap[word]) return wordMap[word]
+            if (index === 0) return word.charAt(0).toUpperCase() + word.slice(1)
+            return word
+        })
+        .join(" ")
 }
 
 export function CallDirectionLabel({ direction }: { direction: string }) {
