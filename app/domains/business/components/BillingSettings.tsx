@@ -708,7 +708,7 @@ export function BillingSettings() {
                 )}
             >
                 {selectedAddonCards.length > 0 && !checkoutOpen ? (
-                    <div className="absolute left-1/2 top-0 z-20 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 px-4 md:px-0">
+                    <div className="fixed left-1/2 bottom-6 z-30 w-full max-w-xl -translate-x-1/2 px-4" style={{ marginLeft: '36px' }}>
                         <button
                             type="button"
                             onClick={() => setCheckoutOpen(true)}
