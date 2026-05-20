@@ -61,6 +61,7 @@ import { WhatsAppNumberLogsSheet } from "./WhatsAppNumberLogsSheet"
 import { AgentProfileSection } from "./AgentProfileSection"
 import { WhatsAppNotificationMessageInput } from "./WhatsAppNotificationMessageInput"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { useFeature } from "@/app/hooks/useFeature"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { OperatingHoursBuilder } from "@/app/components/shared/OperatingHoursBuilder"
@@ -180,6 +181,7 @@ function mergeOrderNotifications(
 }
 
 export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }: WhatsAppSettingsProps) {
+  const hasWhitelabelWhatsapp = useFeature("hasWhitelabelWhatsapp")
   const { data: numbers, isLoading: numbersLoading } = useWhatsAppNumbers()
   const { data: goSettingsData, isLoading: settingsLoading } = useGoSettings()
   const updateGoSettings = useUpdateGoSettings()
@@ -357,6 +359,30 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
       tone: warning ? "warning" : "success",
       message: warning || "WhatsApp connection saved successfully.",
     })
+
+  if (!hasWhitelabelWhatsapp) {
+    return (
+      <div className="mx-auto max-w-3xl rounded-[2rem] border border-brand-gold/20 bg-white p-8 shadow-sm dark:bg-slate-950/40 md:p-10">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold">
+            <MessageSquare className="h-7 w-7" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold text-brand-deep dark:text-brand-cream">
+              WhatsApp white-label is a paid business add-on
+            </h2>
+            <p className="mx-auto max-w-2xl text-sm leading-relaxed text-brand-deep/60 dark:text-brand-cream/60">
+              Free and trial access do not include WhatsApp number setup. Purchase the WhatsApp add-on in Billing to
+              connect and manage a branded business number for this workspace.
+            </p>
+          </div>
+          <Button asChild className="h-12 rounded-2xl bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep">
+            <a href="/settings?tab=billing&addon=whatsapp_whitelabel_number">Open Billing</a>
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   if (numbersLoading || settingsLoading) {
     return (

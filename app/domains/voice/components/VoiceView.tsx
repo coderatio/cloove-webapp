@@ -31,6 +31,7 @@ import { VoiceNumberRequestDrawer } from "@/app/domains/voice/components/VoiceNu
 import { VoiceTransferTargetsForm } from "@/app/domains/voice/components/VoiceTransferTargetsForm"
 import { VoiceAgentSettingsForm } from "@/app/domains/voice/components/VoiceAgentSettingsForm"
 import { useDebounce } from "@/app/hooks/useDebounce"
+import { useFeature } from "@/app/hooks/useFeature"
 import {
     Select,
     SelectContent,
@@ -239,6 +240,7 @@ export function VoiceView() {
     const createTarget = useCreateVoiceTransferTarget()
     const deleteTarget = useDeleteVoiceTransferTarget()
     const startCall = useStartVoiceCall()
+    const hasVoiceAddon = useFeature("hasVoiceAgent")
 
     const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null)
     const voiceTabs: TabItem[] = [
@@ -422,6 +424,46 @@ export function VoiceView() {
             }
         })
     }, [providerMap, providerOptions])
+
+    if (!hasVoiceAddon) {
+        return (
+            <GlassCard className="mx-auto max-w-3xl border-brand-gold/20 p-8 md:p-10">
+                <div className="space-y-4 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold">
+                        <PhoneCall className="h-7 w-7" />
+                    </div>
+                    <div className="space-y-2">
+                        <h2 className="font-serif text-2xl text-brand-deep dark:text-brand-cream">
+                            Voice is a paid business add-on
+                        </h2>
+                        <p className="mx-auto max-w-2xl text-sm leading-relaxed text-brand-deep/60 dark:text-brand-cream/60">
+                            Trial access does not include Voice. Purchase the Voice add-on in Billing to unlock number requests,
+                            voice settings, transfer targets, and outbound calls for this business.
+                        </p>
+                    </div>
+                    <Button
+                        asChild
+                        className="h-auto min-h-14 rounded-[1.4rem] bg-brand-deep px-5 py-3 text-brand-gold shadow-[0_18px_40px_rgba(11,61,46,0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-deep/92 hover:shadow-[0_22px_44px_rgba(11,61,46,0.22)] dark:bg-brand-gold dark:text-brand-deep dark:shadow-[0_18px_40px_rgba(245,158,11,0.18)] dark:hover:bg-brand-gold/92"
+                    >
+                        <a
+                            href="/settings?tab=billing&addon=voice_agent_number"
+                            className="inline-flex items-center gap-4"
+                        >
+                            <span className="text-left">
+                                <span className="block text-base font-semibold leading-none">Unlock Voice in Billing</span>
+                                <span className="mt-1 block text-xs font-medium uppercase tracking-[0.18em] text-brand-gold/75 dark:text-brand-deep/70">
+                                    Business add-on
+                                </span>
+                            </span>
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold/14 text-brand-gold dark:bg-brand-deep/10 dark:text-brand-deep">
+                                <ChevronRight className="h-4 w-4" />
+                            </span>
+                        </a>
+                    </Button>
+                </div>
+            </GlassCard>
+        )
+    }
 
     return (
         <div className="space-y-8">

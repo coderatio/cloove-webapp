@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { ListCard } from "@/app/components/ui/list-card"
 import { PlanCard } from "@/app/components/billing/PlanCard"
+import { AddonCard } from "@/app/components/billing/AddonCard"
 import { Button } from "@/app/components/ui/button"
-import { AlertCircle, Copy, CreditCard, Download, Loader2, FileText, ChevronRight, Lock, Wallet } from "lucide-react"
+import { AlertCircle, Copy, CreditCard, Download, Loader2, FileText, ChevronRight, KeyRound, Lock, MessageCircleMore, PhoneCall, Wallet } from "lucide-react"
 import { Switch } from "@/app/components/ui/switch"
 import { Progress } from "@/app/components/ui/progress"
 import { cn } from "@/app/lib/utils"
@@ -35,6 +37,8 @@ import {
     SelectValue,
 } from "@/app/components/ui/select"
 import {
+    type BillingAddon,
+    type BillingAddonSelection,
     type Plan,
     type BillingHistoryItem,
     useSubscriptionPlans,
@@ -59,6 +63,34 @@ const formatPrice = (amount: number, currency: string = "NGN") => {
     }).format(amount)
 }
 
+const getAddonMaxQuantity = (addon: BillingAddon) => {
+    const raw = addon.metadata?.maxQuantity
+    const parsed = typeof raw === "number" ? raw : Number(raw)
+    if (!Number.isFinite(parsed) || parsed <= 0) return 1
+    return Math.floor(parsed)
+}
+
+const getAddonPresentation = (addon: BillingAddon) => {
+    if (addon.slug === "whatsapp_whitelabel_number" || addon.featureKey === "hasWhitelabelWhatsapp") {
+        return {
+            icon: MessageCircleMore,
+            iconClassName: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+        }
+    }
+
+    if (addon.slug === "voice_agent_number" || addon.featureKey === "hasVoiceAgent") {
+        return {
+            icon: PhoneCall,
+            iconClassName: "bg-sky-500/10 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300",
+        }
+    }
+
+    return {
+        icon: KeyRound,
+        iconClassName: "bg-brand-deep/8 text-brand-deep dark:bg-white/8 dark:text-brand-cream",
+    }
+}
+
 /** e.g. `past_due` → "Past due", `trialing` → "Trialing" */
 const formatSubscriptionStatusLabel = (raw: string) => {
     const normalized = raw.replace(/_/g, " ").trim()
@@ -69,6 +101,7 @@ const formatSubscriptionStatusLabel = (raw: string) => {
 
 
 export function BillingSettings() {
+    const searchParams = useSearchParams()
     const { user } = useAuth()
     const { activeBusiness, businesses, isMultiBusinessRestricted, primaryBusinessId } = useBusiness()
     const ownerBusinesses = businesses.filter((b) => b.role === "OWNER")
@@ -80,7 +113,9 @@ export function BillingSettings() {
         ? ownerBusinesses.filter((b) => b.id === primaryBusinessId)
         : ownerBusinesses
 
-    const { data: plans = [], isLoading: isLoadingPlans } = useSubscriptionPlans()
+    const { data: plansData, isLoading: isLoadingPlans } = useSubscriptionPlans()
+    const plans = plansData?.plans ?? []
+    const addonsCatalog = plansData?.addons ?? []
     const { data: subData, isLoading: isLoadingSub } = useCurrentSubscription(effectiveWalletId)
     const initiateSub = useInitiateSubscription()
     const payFromWallet = usePaySubscriptionFromWallet()
@@ -91,6 +126,8 @@ export function BillingSettings() {
     const downloadReceipt = useDownloadReceipt()
 
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
+    const [selectedAddons, setSelectedAddons] = useState<BillingAddonSelection[]>([])
+    const [hasAppliedAddonParam, setHasAppliedAddonParam] = useState(false)
 
     const [selectedInvoice, setSelectedInvoice] = useState<BillingHistoryItem | null>(null)
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -103,16 +140,91 @@ export function BillingSettings() {
     const { data: checkoutQuote, isLoading: checkoutQuoteLoading } = useSubscriptionQuote(
         checkoutPlanSlug,
         billingCycle,
+        selectedAddons,
         effectiveWalletId,
-        checkoutOpen && !!checkoutPlanSlug
+        !!checkoutPlanSlug || selectedAddons.length > 0
     )
+
+    useEffect(() => {
+        if (!effectiveWalletId) return
+        setSelectedAddons((current) =>
+            current.map((item) => ({
+                ...item,
+                businessId: effectiveWalletId,
+            }))
+        )
+    }, [effectiveWalletId])
+
+    useEffect(() => {
+        const addonSlug = searchParams.get("addon")
+        if (!addonSlug || !effectiveWalletId || !addonsCatalog.length || hasAppliedAddonParam) return
+        const matched = addonsCatalog.find((addon) => addon.slug === addonSlug)
+        if (!matched) return
+        setSelectedAddons([{ slug: matched.slug, businessId: effectiveWalletId, quantity: 1 }])
+        setCheckoutOpen(true)
+        setHasAppliedAddonParam(true)
+    }, [addonsCatalog, effectiveWalletId, hasAppliedAddonParam, searchParams])
+
+    const activeAddonMap = useMemo(
+        () => new Map((subData?.activeAddons ?? []).map((addon) => [addon.slug, addon])),
+        [subData?.activeAddons]
+    )
+
+    const upsertAddonSelection = (addon: BillingAddon, quantity: number) => {
+        if (!effectiveWalletId) return
+        const maxQuantity = getAddonMaxQuantity(addon)
+        const nextQuantity = Math.min(Math.max(quantity, 0), maxQuantity)
+        if (nextQuantity <= 0) {
+            setSelectedAddons((current) => current.filter((item) => item.slug !== addon.slug))
+            return
+        }
+        setSelectedAddons((current) => {
+            const existing = current.find((item) => item.slug === addon.slug)
+            if (existing) {
+                return current.map((item) =>
+                    item.slug === addon.slug
+                        ? { ...item, quantity: nextQuantity, businessId: effectiveWalletId }
+                        : item
+                )
+            }
+            return [...current, { slug: addon.slug, businessId: effectiveWalletId, quantity: nextQuantity }]
+        })
+    }
+
+    const getSelectedAddonQuantity = (slug: string) =>
+        selectedAddons.find((item) => item.slug === slug)?.quantity ?? 0
+
+    const addAddonToSelection = (addon: BillingAddon) => {
+        const quantity = Math.max(1, getSelectedAddonQuantity(addon.slug))
+        upsertAddonSelection(addon, quantity)
+    }
+
+    const selectedAddonCards = useMemo(
+        () =>
+            selectedAddons
+                .map((selection) => {
+                    const addon = addonsCatalog.find((item) => item.slug === selection.slug)
+                    if (!addon) return null
+                    return {
+                        addon,
+                        quantity: selection.quantity ?? 1,
+                    }
+                })
+                .filter((item): item is { addon: BillingAddon; quantity: number } => Boolean(item)),
+        [addonsCatalog, selectedAddons]
+    )
+
+    const selectedAddonLabel =
+        selectedAddonCards.length === 1
+            ? selectedAddonCards[0].addon.name
+            : `${selectedAddonCards.length} add-ons selected`
 
     const handlePlanSelect = (planSlug: string) => {
         const plan = plans.find((p) => p.slug === planSlug)
         const price =
             billingCycle === "yearly" ? (plan?.yearlyPrice || 0) : (plan?.monthlyPrice || 0)
 
-        if (price === 0) {
+        if (price === 0 && selectedAddons.length === 0) {
             downgradeSub.mutate({
                 planSlug,
                 businessIdOverride: effectiveWalletId,
@@ -192,7 +304,7 @@ export function BillingSettings() {
                 downloadReceipt.variables?.transactionId === id))
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 pb-28">
             {/* Current Subscription Status */}
             <section className="space-y-4">
                 <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Subscription</h2>
@@ -472,8 +584,173 @@ export function BillingSettings() {
                 </GlassCard>
             </section>
 
+            <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Business Add-ons</h2>
+                        <p className="pl-1 text-sm text-brand-deep/55 dark:text-brand-cream/55">
+                            Add-ons are billed separately and are not included in free trials.
+                        </p>
+                    </div>
+                    <div className="hidden md:flex items-center gap-2 rounded-full border border-brand-gold/20 bg-brand-gold/10 px-3 py-1.5 text-[11px] font-semibold text-brand-gold">
+                        <KeyRound className="h-3.5 w-3.5" />
+                        Paid unlocks
+                    </div>
+                </div>
+
+                {(subData?.activeAddons?.length ?? 0) > 0 ? (
+                    <GlassCard className="p-5">
+                        <div className="flex flex-wrap gap-3">
+                            {subData?.activeAddons.map((addon) => (
+                                <div
+                                    key={addon.id}
+                                    className="min-w-[220px] rounded-2xl border border-emerald-500/15 bg-emerald-500/5 px-4 py-3"
+                                >
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p className="font-semibold text-brand-deep dark:text-brand-cream">{addon.name}</p>
+                                            <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">
+                                                Qty {addon.quantity} · {addon.interval}
+                                            </p>
+                                        </div>
+                                        <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                            {addon.status}
+                                        </span>
+                                    </div>
+                                    <p className="mt-2 text-xs text-brand-deep/55 dark:text-brand-cream/55">
+                                        {addon.endsAt
+                                            ? `Active until ${new Date(addon.endsAt).toLocaleDateString()}`
+                                            : "Active on this business"}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </GlassCard>
+                ) : null}
+
+                {addonsCatalog.length > 0 ? (
+                    <div className="grid gap-4 lg:grid-cols-2">
+                        {addonsCatalog.map((addon) => {
+                            const selectedQuantity = getSelectedAddonQuantity(addon.slug)
+                            const maxQuantity = getAddonMaxQuantity(addon)
+                            const price = billingCycle === "yearly" ? addon.yearlyPrice : addon.monthlyPrice
+                            const presentation = getAddonPresentation(addon)
+                            return (
+                                <AddonCard
+                                    key={addon.id}
+                                    icon={presentation.icon}
+                                    iconClassName={presentation.iconClassName}
+                                    name={addon.name}
+                                    description={addon.description}
+                                    priceLabel={`${formatPrice(price, addon.currency)} / ${billingCycle === "yearly" ? "year" : "month"}`}
+                                    selected={selectedQuantity > 0}
+                                    quantity={Math.max(1, selectedQuantity || 1)}
+                                    maxQuantity={maxQuantity}
+                                    isActive={Boolean(activeAddonMap.get(addon.slug))}
+                                    onToggle={() =>
+                                        selectedQuantity > 0
+                                            ? upsertAddonSelection(addon, 0)
+                                            : addAddonToSelection(addon)
+                                    }
+                                    onIncrease={() =>
+                                        upsertAddonSelection(
+                                            addon,
+                                            Math.min(maxQuantity, Math.max(1, selectedQuantity || 1) + 1)
+                                        )
+                                    }
+                                    onDecrease={() =>
+                                        upsertAddonSelection(addon, Math.max(0, (selectedQuantity || 1) - 1))
+                                    }
+                                />
+                            )
+                        })}
+                    </div>
+                ) : (
+                    <GlassCard className="p-5 md:p-6">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-deep/6 text-brand-deep dark:bg-white/8 dark:text-brand-cream">
+                                <Lock className="h-5 w-5" />
+                            </div>
+                            <div className="space-y-2">
+                                <div className="space-y-1">
+                                    <h3 className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                                        No add-ons available for this business yet
+                                    </h3>
+                                    <p className="text-sm leading-relaxed text-brand-deep/60 dark:text-brand-cream/60">
+                                        Add-ons are shown based on the selected business country. This workspace does not
+                                        have any add-on offers configured right now.
+                                    </p>
+                                </div>
+                                <p className="text-xs text-brand-deep/45 dark:text-brand-cream/45">
+                                    When add-ons are enabled for this market, they will appear here automatically.
+                                </p>
+                            </div>
+                        </div>
+                    </GlassCard>
+                )}
+            </section>
+
             {/* Available Plans */}
-            <section id="plans" className="space-y-6 scroll-mt-24">
+            <section
+                id="plans"
+                className={cn(
+                    "space-y-6 scroll-mt-24",
+                    selectedAddonCards.length > 0 && !checkoutOpen ? "relative pt-24 md:pt-20" : ""
+                )}
+            >
+                {selectedAddonCards.length > 0 && !checkoutOpen ? (
+                    <div className="absolute left-1/2 top-0 z-20 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 px-4 md:px-0">
+                        <button
+                            type="button"
+                            onClick={() => setCheckoutOpen(true)}
+                            className="w-full rounded-[1.75rem] border border-brand-deep/10 bg-white/96 px-4 py-3.5 text-left shadow-[0_20px_45px_rgba(15,23,42,0.12)] backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_52px_rgba(15,23,42,0.16)] dark:border-white/10 dark:bg-brand-deep/95"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-gold/12 text-brand-gold">
+                                    <KeyRound className="h-5 w-5" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <p className="truncate text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                                                Review add-ons
+                                            </p>
+                                            <p className="truncate text-xs text-brand-deep/55 dark:text-brand-cream/55">
+                                                {selectedAddonLabel}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {checkoutQuote ? (
+                                                <CurrencyText
+                                                    value={formatPrice(checkoutQuote.totalAmount, checkoutQuote.currency)}
+                                                    className="text-sm font-semibold text-brand-deep dark:text-brand-cream"
+                                                />
+                                            ) : (
+                                                <span className="text-xs text-brand-deep/45 dark:text-brand-cream/45">
+                                                    Updating total
+                                                </span>
+                                            )}
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-deep/6 text-brand-deep dark:bg-white/8 dark:text-brand-cream">
+                                                <ChevronRight className="h-4 w-4" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {selectedAddonCards.map(({ addon }) => (
+                                            <span
+                                                key={addon.slug}
+                                                className="inline-flex items-center rounded-full bg-brand-deep/5 px-2.5 py-1 text-[11px] font-medium text-brand-deep/70 dark:bg-white/8 dark:text-brand-cream/70"
+                                            >
+                                                {addon.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                ) : null}
+
                 <div className="flex items-center justify-between">
                     <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Available Plans</h2>
                     <div className="flex items-center gap-2 p-1 bg-brand-deep/5 dark:bg-white/5 rounded-lg">
@@ -502,37 +779,45 @@ export function BillingSettings() {
                     </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6">
-                    {plans.map((plan: Plan) => (
-                        <PlanCard
-                            key={plan.id}
-                            name={plan.name}
-                            description={plan.description}
-                            price={billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice}
-                            currency={ownerCurrencyCode}
-                            currentPlanPrice={currentPlanPrice}
-                            interval={billingCycle === "yearly" ? "year" : "month"}
-                            features={plan.features}
-                            isRecommended={plan.slug === 'growth'}
-                            isCurrent={(currentPlan?.slug === plan.slug || (!currentPlan && plan.slug === 'starter')) && (plan.monthlyPrice === 0 || subscription?.interval === billingCycle)}
-                            isLoading={
-                                (initiateSub.isPending && initiateSub.variables?.planSlug === plan.slug) ||
-                                (payFromWallet.isPending &&
-                                    payFromWallet.variables?.planSlug === plan.slug) ||
-                                (downgradeSub.isPending &&
-                                    (downgradeSub.variables === plan.slug ||
-                                        (typeof downgradeSub.variables === "object" &&
-                                            downgradeSub.variables?.planSlug === plan.slug)))
-                            }
-                            onSelect={() => handlePlanSelect(plan.slug)}
-                        />
-                    ))}
-                </div>
+                {plans.length > 0 ? (
+                    <>
+                        <div className="grid md:grid-cols-3 gap-6">
+                            {plans.map((plan: Plan) => (
+                                <PlanCard
+                                    key={plan.id}
+                                    name={plan.name}
+                                    description={plan.description}
+                                    price={billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice}
+                                    currency={ownerCurrencyCode}
+                                    currentPlanPrice={currentPlanPrice}
+                                    interval={billingCycle === "yearly" ? "year" : "month"}
+                                    features={plan.features}
+                                    isRecommended={plan.slug === 'growth'}
+                                    isCurrent={(currentPlan?.slug === plan.slug || (!currentPlan && plan.slug === 'starter')) && (plan.monthlyPrice === 0 || subscription?.interval === billingCycle)}
+                                    isLoading={
+                                        (initiateSub.isPending && initiateSub.variables?.planSlug === plan.slug) ||
+                                        (payFromWallet.isPending &&
+                                            payFromWallet.variables?.planSlug === plan.slug) ||
+                                        (downgradeSub.isPending &&
+                                            (downgradeSub.variables === plan.slug ||
+                                                (typeof downgradeSub.variables === "object" &&
+                                                    downgradeSub.variables?.planSlug === plan.slug)))
+                                    }
+                                    onSelect={() => handlePlanSelect(plan.slug)}
+                                />
+                            ))}
+                        </div>
 
-                <div className="flex items-start gap-3 p-4 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm">
-                    <AlertCircle className="w-5 h-5 shrink-0" />
-                    <p>Downgrading your plan may result in loss of access to certain features (e.g., staff accounts, analytics history) at the end of your complete billing cycle.</p>
-                </div>
+                        <div className="flex items-start gap-3 p-4 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm">
+                            <AlertCircle className="w-5 h-5 shrink-0" />
+                            <p>Downgrading your plan may result in loss of access to certain features (e.g., staff accounts, analytics history) at the end of your complete billing cycle.</p>
+                        </div>
+                    </>
+                ) : (
+                    <GlassCard className="p-5 text-sm text-brand-deep/60 dark:text-brand-cream/60">
+                        No subscription plans are currently available for this business country.
+                    </GlassCard>
+                )}
             </section>
 
             {/* Billing History */}
@@ -628,7 +913,6 @@ export function BillingSettings() {
                 onOpenChange={(open) => {
                     setCheckoutOpen(open)
                     if (!open) {
-                        setCheckoutPlanSlug(null)
                         setPinDrawerOpen(false)
                     }
                 }}
@@ -643,7 +927,9 @@ export function BillingSettings() {
                             <DrawerTitle className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream tracking-tight">
                                 {checkoutPlanSlug
                                     ? plans.find((p) => p.slug === checkoutPlanSlug)?.name ?? "Plan"
-                                    : "Plan"}
+                                    : selectedAddons.length === 1
+                                        ? addonsCatalog.find((addon) => addon.slug === selectedAddons[0]?.slug)?.name ?? "Add-on"
+                                        : "Billing checkout"}
                             </DrawerTitle>
                             <DrawerDescription className="text-sm text-brand-deep/55 dark:text-brand-cream/55 leading-relaxed max-w-md mx-auto">
                                 Choose how you would like to pay. Card and bank transfers are processed by
@@ -660,14 +946,51 @@ export function BillingSettings() {
                         ) : checkoutQuote ? (
                             <div className="space-y-6">
                                 <GlassCard className="p-6 space-y-4 border-brand-gold/15 bg-brand-gold/3 dark:bg-white/3 shadow-sm">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                            Plan amount
-                                        </span>
-                                        <CurrencyText
-                                            value={formatPrice(checkoutQuote.baseAmount, checkoutQuote.currency)}
-                                            className="text-xl font-serif font-semibold tabular-nums text-brand-deep dark:text-brand-cream"
-                                        />
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                                                Plan amount
+                                            </span>
+                                            <CurrencyText
+                                                value={formatPrice(checkoutQuote.baseAmount, checkoutQuote.currency)}
+                                                className="text-xl font-serif font-semibold tabular-nums text-brand-deep dark:text-brand-cream"
+                                            />
+                                        </div>
+
+                                        {checkoutQuote.addonLines.length > 0 ? (
+                                            <div className="rounded-2xl border border-brand-deep/8 bg-white/70 p-4 dark:border-white/8 dark:bg-white/5">
+                                                <div className="mb-3 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
+                                                    <span>Add-ons</span>
+                                                    <span>{checkoutQuote.addonLines.length} line item(s)</span>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {checkoutQuote.addonLines.map((line, index) => (
+                                                        <div key={`${line.slug}-${index}`} className="flex items-start justify-between gap-4 text-sm">
+                                                            <div>
+                                                                <p className="font-medium text-brand-deep dark:text-brand-cream">
+                                                                    {line.name}
+                                                                </p>
+                                                                <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">
+                                                                    Qty {line.quantity ?? 1}
+                                                                </p>
+                                                            </div>
+                                                            <CurrencyText
+                                                                value={formatPrice(line.totalAmount, line.currency)}
+                                                                className="font-semibold text-brand-deep dark:text-brand-cream"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : null}
+
+                                        <div className="flex items-center justify-between pt-3 text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                                            <span>Total due</span>
+                                            <CurrencyText
+                                                value={formatPrice(checkoutQuote.totalAmount, checkoutQuote.currency)}
+                                                className="text-lg font-serif"
+                                            />
+                                        </div>
                                     </div>
                                     {checkoutQuote.wallet ? (
                                         <div className="pt-3 border-t border-brand-deep/10 dark:border-white/10 space-y-1">
@@ -722,7 +1045,7 @@ export function BillingSettings() {
                                 initiateSub.isPending
                             }
                             onClick={() => {
-                                if (!checkoutPlanSlug || !effectiveWalletId) return
+                                if ((!checkoutPlanSlug && selectedAddons.length === 0) || !effectiveWalletId) return
                                 if (!checkoutQuote?.wallet?.sufficient) return
                                 if (!user?.hasTransactionPin) {
                                     toast.error(
@@ -741,10 +1064,11 @@ export function BillingSettings() {
                             className="w-full h-12 rounded-2xl bg-brand-gold text-brand-deep hover:bg-brand-gold/90 font-semibold shadow-lg shadow-brand-gold/20"
                             disabled={initiateSub.isPending || payFromWallet.isPending}
                             onClick={() => {
-                                if (!checkoutPlanSlug || !effectiveWalletId) return
+                                if ((!checkoutPlanSlug && selectedAddons.length === 0) || !effectiveWalletId) return
                                 initiateSub.mutate({
                                     planSlug: checkoutPlanSlug,
                                     interval: billingCycle,
+                                    addons: selectedAddons,
                                     businessIdOverride: effectiveWalletId,
                                 })
                             }}
@@ -762,18 +1086,20 @@ export function BillingSettings() {
                 title="Confirm wallet payment"
                 description="Enter your 4-digit transaction PIN to debit your business wallet for this subscription."
                 onSubmit={async (pin) => {
-                    if (!checkoutPlanSlug || !effectiveWalletId) {
+                    if ((!checkoutPlanSlug && selectedAddons.length === 0) || !effectiveWalletId) {
                         throw new Error("Checkout expired. Please try again.")
                     }
                     try {
                         await payFromWallet.mutateAsync({
                             planSlug: checkoutPlanSlug,
                             interval: billingCycle,
+                            addons: selectedAddons,
                             pin,
                             businessIdOverride: effectiveWalletId,
                         })
                         setCheckoutOpen(false)
                         setCheckoutPlanSlug(null)
+                        setSelectedAddons([])
                     } catch (err) {
                         const message =
                             err instanceof ApiError
@@ -872,6 +1198,38 @@ export function BillingSettings() {
                                         {selectedInvoice.description}
                                     </span>
                                 </div>
+                                {selectedInvoice.lineItems?.length ? (
+                                    <div className="border-b border-brand-deep/5 py-3 dark:border-white/5">
+                                        <p className="mb-3 text-sm text-brand-deep/60 dark:text-brand-cream/60">
+                                            Line items
+                                        </p>
+                                        <div className="space-y-2">
+                                            {selectedInvoice.lineItems.map((line, index) => (
+                                                <div
+                                                    key={`${line.kind}-${line.slug ?? line.planSlug ?? index}`}
+                                                    className="flex items-start justify-between gap-4 rounded-2xl bg-brand-deep/4 px-3 py-3 dark:bg-white/4"
+                                                >
+                                                    <div>
+                                                        <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
+                                                            {line.kind === "plan"
+                                                                ? line.planName || "Plan"
+                                                                : line.name || "Add-on"}
+                                                        </p>
+                                                        <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">
+                                                            {line.kind === "addon"
+                                                                ? `Add-on · Qty ${line.quantity ?? 1}`
+                                                                : "Subscription"}
+                                                        </p>
+                                                    </div>
+                                                    <CurrencyText
+                                                        value={formatPrice(line.totalAmount, line.currency)}
+                                                        className="text-sm font-semibold text-brand-deep dark:text-brand-cream"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : null}
                                 <div className="flex flex-col gap-1 py-4 text-brand-deep dark:text-brand-cream md:flex-row md:items-baseline md:justify-between md:gap-4">
                                     <span className="w-full text-sm font-medium md:max-w-[40%]">Total Amount</span>
                                     <CurrencyText
