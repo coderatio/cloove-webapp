@@ -9,7 +9,7 @@ import { ListCard } from "@/app/components/ui/list-card"
 import { PlanCard } from "@/app/components/billing/PlanCard"
 import { AddonCard } from "@/app/components/billing/AddonCard"
 import { Button } from "@/app/components/ui/button"
-import { AlertCircle, Copy, CreditCard, Download, Loader2, FileText, ChevronRight, KeyRound, Lock, MessageCircleMore, PhoneCall, Wallet } from "lucide-react"
+import { AlertCircle, Copy, CreditCard, Download, Loader2, FileText, ChevronRight, KeyRound, Lock, MessageCircleMore, PhoneCall, Wallet, X } from "lucide-react"
 import { Switch } from "@/app/components/ui/switch"
 import { Progress } from "@/app/components/ui/progress"
 import { cn } from "@/app/lib/utils"
@@ -113,7 +113,7 @@ export function BillingSettings() {
         ? ownerBusinesses.filter((b) => b.id === primaryBusinessId)
         : ownerBusinesses
 
-    const { data: plansData, isLoading: isLoadingPlans } = useSubscriptionPlans()
+    const { data: plansData, isLoading: isLoadingPlans } = useSubscriptionPlans(effectiveWalletId)
     const plans = plansData?.plans ?? []
     const addonsCatalog = plansData?.addons ?? []
     const { data: subData, isLoading: isLoadingSub } = useCurrentSubscription(effectiveWalletId)
@@ -136,13 +136,14 @@ export function BillingSettings() {
     const [checkoutPlanSlug, setCheckoutPlanSlug] = useState<string | null>(null)
     const [pinDrawerOpen, setPinDrawerOpen] = useState(false)
     const [addFundsOpen, setAddFundsOpen] = useState(false)
+    const hasCheckoutItems = !!checkoutPlanSlug || selectedAddons.length > 0
 
     const { data: checkoutQuote, isLoading: checkoutQuoteLoading } = useSubscriptionQuote(
         checkoutPlanSlug,
         billingCycle,
         selectedAddons,
         effectiveWalletId,
-        !!checkoutPlanSlug || selectedAddons.length > 0
+        hasCheckoutItems
     )
 
     useEffect(() => {
@@ -164,6 +165,14 @@ export function BillingSettings() {
         setCheckoutOpen(true)
         setHasAppliedAddonParam(true)
     }, [addonsCatalog, effectiveWalletId, hasAppliedAddonParam, searchParams])
+
+    useEffect(() => {
+        if (!checkoutOpen || hasCheckoutItems) return
+
+        setCheckoutOpen(false)
+        setPinDrawerOpen(false)
+        setCheckoutPlanSlug(null)
+    }, [checkoutOpen, hasCheckoutItems])
 
     const activeAddonMap = useMemo(
         () => new Map((subData?.activeAddons ?? []).map((addon) => [addon.slug, addon])),
@@ -966,7 +975,7 @@ export function BillingSettings() {
                                                 <div className="space-y-2">
                                                     {checkoutQuote.addonLines.map((line, index) => (
                                                         <div key={`${line.slug}-${index}`} className="flex items-start justify-between gap-4 text-sm">
-                                                            <div>
+                                                            <div className="min-w-0 flex-1">
                                                                 <p className="font-medium text-brand-deep dark:text-brand-cream">
                                                                     {line.name}
                                                                 </p>
@@ -974,10 +983,26 @@ export function BillingSettings() {
                                                                     Qty {line.quantity ?? 1}
                                                                 </p>
                                                             </div>
-                                                            <CurrencyText
-                                                                value={formatPrice(line.totalAmount, line.currency)}
-                                                                className="font-semibold text-brand-deep dark:text-brand-cream"
-                                                            />
+                                                            <div className="flex min-w-[7.5rem] items-center justify-end gap-2 self-center">
+                                                                <CurrencyText
+                                                                    value={formatPrice(line.totalAmount, line.currency)}
+                                                                    className="font-semibold text-brand-deep dark:text-brand-cream"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-brand-deep/40 transition-colors hover:bg-brand-deep/6 hover:text-brand-deep dark:text-brand-cream/40 dark:hover:bg-white/8 dark:hover:text-brand-cream"
+                                                                    onClick={() => {
+                                                                        if (!line.slug) return
+                                                                        const addon = addonsCatalog.find((item) => item.slug === line.slug)
+                                                                        if (!addon) return
+                                                                        upsertAddonSelection(addon, 0)
+                                                                    }}
+                                                                    aria-label={`Remove ${line.name ?? "add-on"} from checkout`}
+                                                                    title={`Remove ${line.name ?? "add-on"}`}
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -1039,13 +1064,14 @@ export function BillingSettings() {
                             variant="outline"
                             className="w-full h-12 rounded-2xl border-brand-deep/15 dark:border-white/15 text-brand-deep dark:text-brand-cream hover:bg-brand-deep/5 dark:hover:bg-white/5"
                             disabled={
+                                !hasCheckoutItems ||
                                 !checkoutQuote?.wallet?.sufficient ||
                                 !user?.hasTransactionPin ||
                                 payFromWallet.isPending ||
                                 initiateSub.isPending
                             }
                             onClick={() => {
-                                if ((!checkoutPlanSlug && selectedAddons.length === 0) || !effectiveWalletId) return
+                                if (!hasCheckoutItems || !effectiveWalletId) return
                                 if (!checkoutQuote?.wallet?.sufficient) return
                                 if (!user?.hasTransactionPin) {
                                     toast.error(
@@ -1062,9 +1088,9 @@ export function BillingSettings() {
                         <Button
                             type="button"
                             className="w-full h-12 rounded-2xl bg-brand-gold text-brand-deep hover:bg-brand-gold/90 font-semibold shadow-lg shadow-brand-gold/20"
-                            disabled={initiateSub.isPending || payFromWallet.isPending}
+                            disabled={!hasCheckoutItems || initiateSub.isPending || payFromWallet.isPending}
                             onClick={() => {
-                                if ((!checkoutPlanSlug && selectedAddons.length === 0) || !effectiveWalletId) return
+                                if (!hasCheckoutItems || !effectiveWalletId) return
                                 initiateSub.mutate({
                                     planSlug: checkoutPlanSlug,
                                     interval: billingCycle,
@@ -1086,7 +1112,7 @@ export function BillingSettings() {
                 title="Confirm wallet payment"
                 description="Enter your 4-digit transaction PIN to debit your business wallet for this subscription."
                 onSubmit={async (pin) => {
-                    if ((!checkoutPlanSlug && selectedAddons.length === 0) || !effectiveWalletId) {
+                    if (!hasCheckoutItems || !effectiveWalletId) {
                         throw new Error("Checkout expired. Please try again.")
                     }
                     try {

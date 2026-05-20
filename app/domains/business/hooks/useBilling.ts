@@ -119,10 +119,15 @@ export interface SubscriptionPlansResponse {
     addons: BillingAddon[]
 }
 
-export const useSubscriptionPlans = () => {
+export const useSubscriptionPlans = (billingBusinessId?: string | null) => {
+    const effectiveId = billingBusinessId ?? storage.getActiveBusinessId()
     return useQuery({
-        queryKey: ["subscription-plans"],
-        queryFn: () => apiClient.get<SubscriptionPlansResponse>("/subscriptions/plans"),
+        queryKey: ["subscription-plans", effectiveId ?? ""],
+        queryFn: () =>
+            apiClient.get<SubscriptionPlansResponse>("/subscriptions/plans", undefined, {
+                businessIdOverride: effectiveId ?? undefined,
+            }),
+        enabled: !!effectiveId,
     })
 }
 
