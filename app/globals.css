@@ -116,15 +116,27 @@
   --color-input: var(--color-cloove-border);
   --color-ring: var(--color-cloove-green);
 
+  /* Sidebar semantic colors */
+  --color-brand-deep: #0b3d2e;
+  --color-brand-gold: #d4af37;
+  --color-cream: #fdfcf8;
+  --color-text-primary: #111827;
+  --color-cloove-border: #dde7e2;
+  --color-surface: #ffffff;
+
   --color-brand-deep: #0b3d2e;
   --color-brand-green: #125741;
-  --color-brand-gold: #f97316;
+  --color-brand-gold: #d4af37;
   --color-brand-gold-light: #fb923c;
   --color-brand-gold-bright: #fdba74;
   --color-brand-cream: #ffffff;
   --color-brand-accent: #335b4f;
   --color-brand-emerald: #2b6a58;
   --color-brand-emerald-light: #4e8373;
+
+  /* Semantic sidebar colors */
+  --color-cream: #fdfcf8;
+  --color-text-primary: #111827;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

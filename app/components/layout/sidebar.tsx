@@ -1,454 +1,719 @@
+'use client'
 
-import Image from "next/image"
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { AnimatePresence, motion } from "framer-motion"
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
     ChevronRight,
-    ChevronDown,
-    Moon,
-    Sun,
     Settings,
     LogOut,
     Gift,
-    PanelRightClose,
-    PanelRightOpen,
-} from "lucide-react"
-import { cn } from "@/app/lib/utils"
+    PanelLeft,
+    Sun,
+    Moon,
+} from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { toast } from 'sonner'
+import { cn } from '@/app/lib/utils'
+import { useWorkspaceNav } from '@/app/domains/workspace/hooks/useWorkspaceNav'
+import { usePermission } from '@/app/hooks/usePermission'
+import { useAuth } from '@/app/components/providers/auth-provider'
+import { useBusiness } from '@/app/components/BusinessProvider'
+import { BusinessSwitcher } from '@/app/components/shared/BusinessSwitcher'
+import { Button } from '@/app/components/ui/button'
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
-} from "@/app/components/ui/tooltip"
-import { useTheme } from "next-themes"
-import { BusinessSwitcher } from "../shared/BusinessSwitcher"
-import { Button } from "../ui/button"
-import { toast } from "sonner"
-import { usePermission } from "@/app/hooks/usePermission"
-import { useAuth } from "../providers/auth-provider"
-import { useBusiness } from "../BusinessProvider"
-import { useWorkspaceNav } from "@/app/domains/workspace/hooks/useWorkspaceNav"
+} from '@/app/components/ui/tooltip'
+
 interface SidebarProps {
-    isCollapsed: boolean;
-    setIsCollapsed: (value: boolean) => void;
+    isCollapsed: boolean
+    setIsCollapsed: (value: boolean) => void
+}
+
+const SIDEBAR_WIDTH = 260
+const SIDEBAR_COLLAPSED_WIDTH = 72
+
+function useCollapsedSettled(isCollapsed: boolean) {
+    const [settled, setSettled] = useState(false)
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    useEffect(() => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        if (isCollapsed) {
+            timeoutRef.current = setTimeout(() => setSettled(true), 250)
+        } else {
+            setSettled(false)
+        }
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current)
+        }
+    }, [isCollapsed])
+
+    return settled
+}
+
+function getInitials(name: string) {
+    return name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2)
 }
 
 export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const pathname = usePathname()
     const { theme, setTheme, resolvedTheme } = useTheme()
-    const isDark = resolvedTheme === "dark"
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+    const isDark = resolvedTheme === 'dark'
+    const collapsedSettled = useCollapsedSettled(isCollapsed)
     const { navGroups } = useWorkspaceNav()
+    const { can, role } = usePermission()
+    const { user, logout } = useAuth()
     const { features } = useBusiness()
+    const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-    const getExpandedForPath = React.useCallback((path: string, groups: typeof navGroups) => {
+    const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
         const expanded = new Set<string>()
-        for (const group of groups) {
+        for (const group of navGroups) {
             for (const item of group.items) {
-                const isParentOrChildActive = path === item.href || item.children?.some(child => path.startsWith(child.href))
-                if (isParentOrChildActive && item.children?.length) expanded.add(item.href)
+                const isActive =
+                    pathname === item.href ||
+                    item.children?.some((child) => pathname.startsWith(child.href))
+                if (isActive && item.children?.length) expanded.add(item.href)
             }
         }
         return expanded
-    }, [])
-    const [expandedItems, setExpandedItems] = React.useState<Set<string>>(() =>
-        getExpandedForPath(pathname, navGroups)
-    )
-    const [collapsedSettled, setCollapsedSettled] = React.useState(false)
-    const settleRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+    })
 
-    React.useEffect(() => {
-        if (settleRef.current) clearTimeout(settleRef.current)
-        if (isCollapsed) {
-            settleRef.current = setTimeout(() => setCollapsedSettled(true), 220)
-        } else {
-            setCollapsedSettled(false)
+    useEffect(() => {
+        const next = new Set<string>()
+        for (const group of navGroups) {
+            for (const item of group.items) {
+                const isActive =
+                    pathname === item.href ||
+                    item.children?.some((child) => pathname.startsWith(child.href))
+                if (isActive && item.children?.length) next.add(item.href)
+            }
         }
-        return () => { if (settleRef.current) clearTimeout(settleRef.current) }
-    }, [isCollapsed])
-
-    const { can, role } = usePermission()
-
-    React.useEffect(() => {
-        const next = getExpandedForPath(pathname, navGroups)
         setExpandedItems((prev) => {
             if (prev.size === next.size && [...next].every((href) => prev.has(href))) {
                 return prev
             }
             return next
         })
-    }, [pathname, navGroups, getExpandedForPath])
-    const { user, logout } = useAuth()
+    }, [pathname, navGroups])
 
-    const toggleExpanded = (href: string) => {
-        setExpandedItems(prev => {
+    const toggleExpanded = useCallback((href: string) => {
+        setExpandedItems((prev) => {
             const next = new Set(prev)
             if (next.has(href)) next.delete(href)
             else next.add(href)
             return next
         })
-    }
+    }, [])
 
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2)
-    }
+    const handleLogout = useCallback(() => {
+        toast.promise(logout(), {
+            loading: 'Logging out...',
+            success: 'Logged out successfully',
+            error: 'Failed to logout. Please try again.',
+        })
+    }, [logout])
 
     const userInitials = user?.fullName ? getInitials(user.fullName) : '??'
 
-    const handleLogout = () => {
-        toast.promise(
-            logout(),
-            {
-                loading: 'Logging out...',
-                success: 'Logged out successfully',
-                error: 'Failed to logout. Please try again.'
-            }
-        )
-    }
-
-        return (
+    return (
         <motion.aside
             initial={false}
-            animate={{ width: isCollapsed ? 68 : 248 }}
-            transition={{ type: "tween", duration: 0.05, ease: [0.25, 0.1, 0.25, 1] }}
+            animate={{ width: isCollapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             className={cn(
-                "fixed inset-y-0 left-0 z-40 hidden flex-col border-r md:flex",
+                'fixed inset-y-0 left-0 z-40 hidden flex-col border-r md:flex',
                 isDark
-                    ? "border-border bg-background"
-                    : "border-brand-green-100 bg-brand-green-50/55"
+                    ? 'border-border/50 bg-background/95 backdrop-blur-xl'
+                    : 'border-border/40 bg-white/95 backdrop-blur-xl'
             )}
         >
-            <div className={cn(
-                "relative z-10 flex h-full flex-col text-foreground",
-                !isCollapsed && "overflow-hidden"
-            )}>
-                {/* Header: when collapsed stack logo + expand; when expanded logo + label left, collapse right */}
-                <div className={cn("mb-0.5 p-2.5", isCollapsed ? "flex flex-col items-center gap-1.5" : "flex items-center justify-between")}>
-                    <div className="flex items-center gap-3 overflow-hidden min-w-0">
-                        <div className="relative h-7 w-7 shrink-0">
-                            <Image
-                                src={isDark ? "/images/logo-white.png" : "/images/logo-green.png"}
-                                alt="Cloove"
-                                fill
-                                className="object-contain"
-                            />
-                        </div>
-                        {!isCollapsed && (
-                            <span className="whitespace-nowrap text-lg font-semibold text-foreground">
-                                Cloove
-                            </span>
-                        )}
-                    </div>
-                    {isCollapsed ? (
-                        <Tooltip delayDuration={collapsedSettled ? 200 : 99999}>
+            <div className="flex h-full flex-col">
+                {/* Header */}
+                <Header
+                    isCollapsed={isCollapsed}
+                    isDark={isDark}
+                    onToggle={() => setIsCollapsed(!isCollapsed)}
+                />
+
+                {/* Business Switcher */}
+                <div className={cn('px-3 pb-4', isCollapsed && 'px-2')}>
+                    <BusinessSwitcher isCollapsed={isCollapsed} />
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 overflow-y-auto px-3 py-2">
+                    {navGroups.map((group, groupIndex) => (
+                        <NavGroup
+                            key={group.key}
+                            group={group}
+                            isCollapsed={isCollapsed}
+                            collapsedSettled={collapsedSettled}
+                            pathname={pathname}
+                            expandedItems={expandedItems}
+                            onToggleExpand={toggleExpanded}
+                            can={can}
+                            isLast={groupIndex === navGroups.length - 1}
+                        />
+                    ))}
+                </nav>
+
+                {/* Footer */}
+                <Footer
+                    isCollapsed={isCollapsed}
+                    pathname={pathname}
+                    role={role}
+                    features={features}
+                    userInitials={userInitials}
+                    userName={user?.fullName}
+                    isMenuOpen={isMenuOpen}
+                    setIsMenuOpen={setIsMenuOpen}
+                    theme={theme}
+                    setTheme={setTheme}
+                    isDark={isDark}
+                    onLogout={handleLogout}
+                />
+            </div>
+        </motion.aside>
+    )
+}
+
+// Header Component
+interface HeaderProps {
+    isCollapsed: boolean
+    isDark: boolean
+    onToggle: () => void
+}
+
+function Header({ isCollapsed, isDark, onToggle }: HeaderProps) {
+    return (
+        <div className={cn(
+            "flex items-center p-3",
+            isCollapsed ? "justify-center" : "justify-between"
+        )}>
+            <Link href="/" className="flex items-center gap-2.5 overflow-hidden">
+                <div className="relative h-8 w-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center overflow-hidden">
+                    <Image
+                        src={isDark ? '/images/logo-white.png' : '/images/logo-green.png'}
+                        alt="Cloove"
+                        fill
+                        className="object-contain p-1"
+                    />
+                </div>
+                <AnimatePresence mode="wait">
+                    {!isCollapsed && (
+                        <motion.span
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            transition={{ duration: 0.15 }}
+                            className="whitespace-nowrap text-base font-semibold text-foreground"
+                        >
+                            Cloove
+                        </motion.span>
+                    )}
+                </AnimatePresence>
+            </Link>
+
+            <AnimatePresence mode="wait">
+                {!isCollapsed ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.15 }}
+                    >
+                        <Tooltip delayDuration={300}>
                             <TooltipTrigger asChild>
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => setIsCollapsed(!isCollapsed)}
+                                    onClick={onToggle}
                                     className="h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
-                                    aria-label="Expand sidebar"
                                 >
-                                    <PanelRightOpen className="h-5 w-5" />
+                                    <PanelLeft className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="right">Expand sidebar</TooltipContent>
+                            <TooltipContent side="right">Collapse</TooltipContent>
                         </Tooltip>
-                    ) : (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
-                            aria-label="Collapse sidebar"
-                        >
-                            <PanelRightClose className="h-5 w-5" />
-                        </Button>
-                    )}
-                </div>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute -right-3 top-3"
+                    >
+                        <Tooltip delayDuration={300}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={onToggle}
+                                    className="h-6 w-6 shrink-0 rounded-full bg-background border border-border shadow-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                                >
+                                    <PanelLeft className="h-3 w-3" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">Expand</TooltipContent>
+                        </Tooltip>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    )
+}
 
-                {/* Store Switcher */}
-                <div className={cn("px-2.5 pb-3.5 transition-all", isCollapsed && "px-1.5")}>
-                    <BusinessSwitcher isCollapsed={isCollapsed} />
-                </div>
+// NavGroup Component
+interface NavGroupProps {
+    group: {
+        key: string
+        label: string
+        items: Array<{
+            href: string
+            label: string
+            icon: React.ComponentType<{ className?: string }>
+            children?: Array<{
+                href: string
+                label: string
+                icon: React.ComponentType<{ className?: string }>
+                permission?: string
+            }>
+        }>
+    }
+    isCollapsed: boolean
+    collapsedSettled: boolean
+    pathname: string
+    expandedItems: Set<string>
+    onToggleExpand: (href: string) => void
+    can: (permission: string) => boolean
+    isLast: boolean
+}
 
-                {/* Nav Items Grouped */}
-                <nav className={cn("flex-1 overflow-y-auto scrollbar-hide pb-3", isCollapsed ? "space-y-1.5 px-1.5" : "space-y-3 px-2.5")}>
-                    {navGroups.map((group, groupIndex) => {
-                        const filteredItems = group.items
+function NavGroup({
+    group,
+    isCollapsed,
+    collapsedSettled,
+    pathname,
+    expandedItems,
+    onToggleExpand,
+    can,
+    isLast,
+}: NavGroupProps) {
+    const filteredItems = group.items
+    if (filteredItems.length === 0) return null
 
-                        if (filteredItems.length === 0) return null
+    return (
+        <div className={cn('mb-4', isLast && 'mb-0')}>
+            <AnimatePresence mode="wait">
+                {!isCollapsed && (
+                    <motion.h3
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60"
+                    >
+                        {group.label}
+                    </motion.h3>
+                )}
+            </AnimatePresence>
+            <div className="space-y-0.5">
+                {filteredItems.map((item) => (
+                    <NavItem
+                        key={item.href}
+                        item={item}
+                        isCollapsed={isCollapsed}
+                        collapsedSettled={collapsedSettled}
+                        pathname={pathname}
+                        isExpanded={expandedItems.has(item.href)}
+                        onToggleExpand={onToggleExpand}
+                        can={can}
+                    />
+                ))}
+            </div>
+        </div>
+    )
+}
 
-                        return (
-                            <div key={group.key} className="space-y-1">
-                                {!isCollapsed && (
-                                    <h3 className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                                        {group.label}
-                                    </h3>
-                                )}
-                                <div className="space-y-1">
-                                    {filteredItems.map((item) => {
-                                        const isActive = pathname === item.href
-                                        const hasChildren = item.children && item.children.length > 0
-                                        const isExpanded = expandedItems.has(item.href)
-                                        const isChildActive = item.children?.some(child => pathname.startsWith(child.href))
-                                        const filteredChildren = item.children?.filter(child => !child.permission || can(child.permission))
+// NavItem Component
+interface NavItemProps {
+    item: {
+        href: string
+        label: string
+        icon: React.ComponentType<{ className?: string }>
+        children?: Array<{
+            href: string
+            label: string
+            icon: React.ComponentType<{ className?: string }>
+            permission?: string
+        }>
+    }
+    isCollapsed: boolean
+    collapsedSettled: boolean
+    pathname: string
+    isExpanded: boolean
+    onToggleExpand: (href: string) => void
+    can: (permission: string) => boolean
+}
 
-                                        return (
-                                            <div key={item.href}>
-                                                <Tooltip delayDuration={collapsedSettled ? 200 : 99999}>
-                                                    <TooltipTrigger asChild>
-                                                        <div
-                                                            className={cn(
-                                                                "group relative flex items-center rounded-xl transition-colors duration-150",
-                                                                isCollapsed ? "mx-auto h-10 w-10 justify-center" : "gap-3 px-3 py-2.5",
-                                                                (isActive || isChildActive)
-                                                                    ? "bg-primary text-primary-foreground shadow-sm"
-                                                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                                            )}
-                                                        >
-                                                            <Link
-                                                                href={item.href}
-                                                                className={cn(
-                                                                    "flex items-center gap-3",
-                                                                    isCollapsed ? "justify-center" : "flex-1 min-w-0"
-                                                                )}
-                                                            >
-                                                                <item.icon
-                                                                    className={cn(
-                                                                        "h-4.5 w-4.5 shrink-0 transition-colors",
-                                                                        (isActive || isChildActive) ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
-                                                                    )}
-                                                                />
+function NavItem({
+    item,
+    isCollapsed,
+    collapsedSettled,
+    pathname,
+    isExpanded,
+    onToggleExpand,
+    can,
+}: NavItemProps) {
+    const isActive = pathname === item.href
+    const isChildActive = item.children?.some((child) => pathname.startsWith(child.href))
+    const hasChildren = item.children && item.children.length > 0
+    const filteredChildren = item.children?.filter(
+        (child) => !child.permission || can(child.permission)
+    )
 
-                                                                {!isCollapsed && (
-                                                                    <span className="whitespace-nowrap text-sm font-medium">{item.label}</span>
-                                                                )}
-                                                            </Link>
+    const Icon = item.icon
 
-                                                            {hasChildren && !isCollapsed && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleExpanded(item.href) }}
-                                                                    className="h-6 w-6 shrink-0 rounded-md text-muted-foreground transition-colors hover:bg-background/10 hover:text-inherit"
-                                                                >
-                                                                    <ChevronDown className={cn(
-                                                                        "h-3.5 w-3.5 transition-transform duration-300",
-                                                                        isExpanded ? "rotate-0" : "-rotate-90"
-                                                                    )} />
-                                                                </Button>
-                                                            )}
-
-                                                            {(isActive || isChildActive) && !isCollapsed && (
-                                                                <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary-foreground/60" />
-                                                            )}
-                                                        </div>
-                                                    </TooltipTrigger>
-                                                    {isCollapsed && collapsedSettled && (
-                                                        <TooltipContent side="right" className="flex flex-col gap-1">
-                                                            <span>{item.label}</span>
-                                                            {filteredChildren && filteredChildren.length > 0 && (
-                                                                <>
-                                                                    <div className="my-1 h-px bg-border" />
-                                                                    {filteredChildren.map(child => (
-                                                                            <Link
-                                                                                key={child.href}
-                                                                                href={child.href}
-                                                                                className={cn(
-                                                                                "rounded px-1 py-1 text-xs transition-colors hover:bg-muted",
-                                                                                pathname.startsWith(child.href) ? "font-medium text-foreground" : "text-muted-foreground"
-                                                                            )}
-                                                                        >
-                                                                            {child.label}
-                                                                        </Link>
-                                                                    ))}
-                                                                </>
-                                                            )}
-                                                        </TooltipContent>
-                                                    )}
-                                                </Tooltip>
-
-                                                {/* Submenu Children */}
-                                                {hasChildren && !isCollapsed && isExpanded && filteredChildren && filteredChildren.length > 0 && (
-                                                    <div className="overflow-hidden">
-                                                        <div className="relative ml-3.5 space-y-1 py-1">
-                                                            {/* Vertical Connection Line */}
-                                                            <div className="absolute bottom-3 left-[8px] top-3 w-px bg-border" />
-
-                                                            {filteredChildren.map(child => {
-                                                                const isChildItemActive = pathname === child.href || pathname.startsWith(child.href)
-                                                                return (
-                                                                    <Link
-                                                                        key={child.href}
-                                                                        href={child.href}
-                                                                        className={cn(
-                                                                            "group/sub relative grid min-h-9 grid-cols-[16px_16px_minmax(0,1fr)] items-center gap-3 rounded-xl py-1.5 text-sm transition-colors duration-150",
-                                                                            isChildItemActive
-                                                                                ? "text-foreground"
-                                                                                : "text-muted-foreground hover:text-foreground"
-                                                                        )}
-                                                                    >
-                                                                        <span className="relative flex h-full items-center justify-center" aria-hidden>
-                                                                            <span className={cn(
-                                                                            "h-1.5 w-1.5 rounded-full transition-colors duration-150",
-                                                                            isChildItemActive
-                                                                                ? "bg-foreground ring-4 ring-foreground/10"
-                                                                                : "bg-border group-hover/sub:bg-foreground/30"
-                                                                        )} />
-                                                                        </span>
-
-                                                                        <child.icon className={cn(
-                                                                            "h-4 w-4 shrink-0 transition-colors",
-                                                                            isChildItemActive ? "text-foreground" : "text-muted-foreground group-hover/sub:text-foreground"
-                                                                        )} />
-                                                                        <span className="min-w-0 truncate font-medium">{child.label}</span>
-                                                                    </Link>
-                                                                )
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                                {/* Divider for grouped look when collapsed */}
-                                {isCollapsed && groupIndex < navGroups.length - 1 && (
-                                    <div className="mx-2 my-2 h-px bg-border" />
-                                )}
-                            </div>
-                        )
-                    })}
-                </nav>
-
-                {/* Footer Actions */}
-                <div className="relative mt-auto space-y-2.5 border-t border-border p-2.5">
-                    {/* Footer buttons removed from here to be moved inside their own relative containers if needed, but primarily profile menu needs it */}
-
-                    {/* Settings Button */}
-                    <Link
-                        href="/settings"
-                            className={cn(
-                                "mb-2 flex items-center rounded-xl transition-colors duration-150",
-                                isCollapsed ? "mx-auto h-10 w-10 justify-center" : "gap-3 px-3 py-2 text-sm font-medium",
-                                pathname === "/settings" || pathname.startsWith("/settings/")
-                                ? "bg-muted text-foreground"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+    return (
+        <div>
+            <Tooltip delayDuration={collapsedSettled ? 200 : 99999}>
+                <TooltipTrigger asChild>
+                    <div
+                        className={cn(
+                            'group relative flex items-center rounded-lg transition-all duration-200',
+                            isCollapsed ? 'h-10 w-10 justify-center mx-auto' : 'px-3 py-2',
+                            isActive || isChildActive
+                                ? 'bg-primary/10 text-primary'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         )}
                     >
-                        <Settings className={cn(
-                            "h-5 w-5 shrink-0",
-                            pathname === "/settings" || pathname.startsWith("/settings/")
-                                ? "text-foreground"
-                                : "text-muted-foreground"
-                        )} />
-                        {!isCollapsed && <span className="whitespace-nowrap">Settings</span>}
-                    </Link>
-
-                    {/* Refer & Earn Button */}
-                    {role === 'OWNER' && features?.module_referrals !== false && (
                         <Link
-                            href="/referrals"
+                            href={item.href}
                             className={cn(
-                                "mb-2 flex items-center rounded-xl transition-colors duration-150",
-                                isCollapsed ? "mx-auto h-10 w-10 justify-center" : "gap-3 px-3 py-2 text-sm font-medium",
-                                pathname === "/referrals"
-                                    ? "bg-muted text-foreground"
-                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                'flex items-center gap-3',
+                                isCollapsed ? 'justify-center' : 'flex-1 min-w-0'
                             )}
                         >
-                            <Gift className={cn("h-5 w-5 shrink-0", pathname === "/referrals" ? "text-foreground" : "text-muted-foreground")} />
-                            {!isCollapsed && <span className="whitespace-nowrap">Refer & Earn</span>}
+                            <Icon
+                                className={cn(
+                                    'shrink-0 transition-colors',
+                                    isCollapsed ? 'h-[18px] w-[18px]' : 'h-[18px] w-[18px]',
+                                    isActive || isChildActive
+                                        ? 'text-primary'
+                                        : 'text-muted-foreground group-hover:text-foreground'
+                                )}
+                            />
+                            <AnimatePresence mode="wait">
+                                {!isCollapsed && (
+                                    <motion.span
+                                        initial={{ opacity: 0, width: 0 }}
+                                        animate={{ opacity: 1, width: 'auto' }}
+                                        exit={{ opacity: 0, width: 0 }}
+                                        className="whitespace-nowrap text-sm font-medium overflow-hidden"
+                                    >
+                                        {item.label}
+                                    </motion.span>
+                                )}
+                            </AnimatePresence>
                         </Link>
-                    )}
 
-                    {/* Profile Trigger & Popover */}
-                    <div className="relative w-full">
-                        <AnimatePresence>
-                            {isMenuOpen && (
-                                <>
-                                    <div
-                                        className="fixed inset-0 z-40"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    />
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        {hasChildren && !isCollapsed && (
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    onToggleExpand(item.href)
+                                }}
+                                className="ml-auto p-1 rounded-md text-muted-foreground hover:bg-background/50 transition-colors"
+                            >
+                                <ChevronRight
+                                    className={cn(
+                                        'h-3.5 w-3.5 transition-transform duration-200',
+                                        isExpanded && 'rotate-90'
+                                    )}
+                                />
+                            </button>
+                        )}
+
+                        {(isActive || isChildActive) && (
+                            <motion.div
+                                layoutId="activeIndicator"
+                                className={cn(
+                                    'absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary',
+                                    isCollapsed && 'hidden'
+                                )}
+                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                            />
+                        )}
+                    </div>
+                </TooltipTrigger>
+                {isCollapsed && collapsedSettled && (
+                    <TooltipContent side="right" className="flex flex-col gap-1">
+                        <span className="font-medium">{item.label}</span>
+                        {filteredChildren && filteredChildren.length > 0 && (
+                            <>
+                                <div className="my-1 h-px bg-border" />
+                                {filteredChildren.map((child) => (
+                                    <Link
+                                        key={child.href}
+                                        href={child.href}
                                         className={cn(
-                                            "absolute z-50 bottom-full mb-3 min-w-[200px] rounded-2xl border border-border bg-background p-1 shadow-lg",
-                                            isCollapsed ? "left-0" : "left-0 right-0"
+                                            'text-xs transition-colors hover:text-foreground',
+                                            pathname.startsWith(child.href)
+                                                ? 'font-medium text-foreground'
+                                                : 'text-muted-foreground'
                                         )}
                                     >
-                                        <div className="flex flex-col gap-0.5">
-                                            <Link
-                                                href="/settings"
-                                                onClick={() => setIsMenuOpen(false)}
-                                                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                            >
-                                                <Settings className="h-4 w-4" />
-                                                Settings
-                                            </Link>
-                                            <button
-                                                onClick={() => {
-                                                    setTheme(theme === "dark" ? "light" : "dark")
-                                                    setIsMenuOpen(false)
-                                                }}
-                                                className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                            >
-                                                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                                                {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                                            </button>
-                                            <div className="mx-2 my-1 h-px bg-border" />
-                                            <button
-                                                onClick={() => {
-                                                    setIsMenuOpen(false)
-                                                    handleLogout()
-                                                }}
-                                                className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                                            >
-                                                <LogOut className="h-4 w-4" />
-                                                Log Out
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                </>
-                            )}
-                        </AnimatePresence>
+                                        {child.label}
+                                    </Link>
+                                ))}
+                            </>
+                        )}
+                    </TooltipContent>
+                )}
+            </Tooltip>
 
-                        <button
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className={cn(
-                                "group flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-border bg-muted/40 p-2 text-left transition-colors hover:bg-muted",
-                                isCollapsed && "justify-center border-0 bg-transparent p-1"
-                            )}
-                        >
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-background text-[11px] font-semibold uppercase text-foreground">
-                                {userInitials}
-                            </div>
-                            {!isCollapsed && (
-                                <>
-                                    <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-                                        <span className="truncate text-xs font-semibold text-foreground">{user?.fullName}</span>
-                                        <span className="truncate text-[10px] font-medium capitalize text-muted-foreground">{role?.toLowerCase().replace('_', ' ') || 'User'}</span>
-                                    </div>
-                                    <ChevronRight className={cn(
-                                        "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300",
-                                        isMenuOpen && "rotate-90 text-foreground"
-                                    )} />
-                                </>
-                            )}
-                        </button>
+            {/* Submenu */}
+            <AnimatePresence initial={false}>
+                {hasChildren && !isCollapsed && isExpanded && filteredChildren && filteredChildren.length > 0 && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                        className="overflow-hidden"
+                    >
+                        <div className="relative ml-4 mt-1 space-y-0.5 border-l border-border/50 pl-4 py-1">
+                            {filteredChildren.map((child) => {
+                                const ChildIcon = child.icon
+                                const isChildItemActive =
+                                    pathname === child.href || pathname.startsWith(child.href)
+                                return (
+                                    <Link
+                                        key={child.href}
+                                        href={child.href}
+                                        className={cn(
+                                            'group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors',
+                                            isChildItemActive
+                                                ? 'text-foreground font-medium'
+                                                : 'text-muted-foreground hover:text-foreground'
+                                        )}
+                                    >
+                                        <span
+                                            className={cn(
+                                                'h-1.5 w-1.5 rounded-full transition-colors',
+                                                isChildItemActive
+                                                    ? 'bg-primary'
+                                                    : 'bg-border group-hover:bg-muted-foreground/50'
+                                            )}
+                                        />
+                                        <ChildIcon className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">{child.label}</span>
+                                    </Link>
+                                )
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    )
+}
+
+// Footer Component
+interface FooterProps {
+    isCollapsed: boolean
+    pathname: string
+    role: string | null
+    features: { module_referrals?: boolean } | null
+    userInitials: string
+    userName?: string
+    isMenuOpen: boolean
+    setIsMenuOpen: (open: boolean) => void
+    theme: string | undefined
+    setTheme: (theme: string) => void
+    isDark: boolean
+    onLogout: () => void
+}
+
+function Footer({
+    isCollapsed,
+    pathname,
+    role,
+    features,
+    userInitials,
+    userName,
+    isMenuOpen,
+    setIsMenuOpen,
+    theme,
+    setTheme,
+    isDark,
+    onLogout,
+}: FooterProps) {
+    return (
+        <div className="mt-auto border-t border-border/50 p-3 space-y-1">
+            {/* Settings */}
+            <FooterLink
+                href="/settings"
+                icon={Settings}
+                label="Settings"
+                isActive={pathname === '/settings' || pathname.startsWith('/settings/')}
+                isCollapsed={isCollapsed}
+            />
+
+            {/* Refer & Earn */}
+            {role === 'OWNER' && features?.module_referrals !== false && (
+                <FooterLink
+                    href="/referrals"
+                    icon={Gift}
+                    label="Refer & Earn"
+                    isActive={pathname === '/referrals'}
+                    isCollapsed={isCollapsed}
+                />
+            )}
+
+            {/* Profile Menu */}
+            <div className="relative pt-1">
+                <AnimatePresence>
+                    {isMenuOpen && (
+                        <>
+                            <div
+                                className="fixed inset-0 z-40"
+                                onClick={() => setIsMenuOpen(false)}
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                                className={cn(
+                                    'absolute z-50 bottom-full mb-2 rounded-xl border border-border bg-background p-1 shadow-lg',
+                                    isCollapsed ? 'left-0 w-48' : 'left-0 right-0'
+                                )}
+                            >
+                                <div className="flex flex-col gap-0.5">
+                                    <Link
+                                        href="/settings"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                    >
+                                        <Settings className="h-4 w-4" />
+                                        Settings
+                                    </Link>
+                                    <button
+                                        onClick={() => {
+                                            setTheme(theme === 'dark' ? 'light' : 'dark')
+                                            setIsMenuOpen(false)
+                                        }}
+                                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                    >
+                                        {theme === 'dark' ? (
+                                            <Sun className="h-4 w-4" />
+                                        ) : (
+                                            <Moon className="h-4 w-4" />
+                                        )}
+                                        {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+                                    </button>
+                                    <div className="mx-1.5 my-1 h-px bg-border" />
+                                    <button
+                                        onClick={() => {
+                                            setIsMenuOpen(false)
+                                            onLogout()
+                                        }}
+                                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                        Log out
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
+
+                <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className={cn(
+                        'group flex w-full items-center gap-3 rounded-xl border border-border/50 bg-muted/30 p-2 text-left transition-all hover:bg-muted hover:border-border',
+                        isCollapsed && 'justify-center border-0 bg-transparent hover:bg-muted/50'
+                    )}
+                >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                        {userInitials}
                     </div>
-                </div>
+                    <AnimatePresence mode="wait">
+                        {!isCollapsed && (
+                            <motion.div
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: 'auto' }}
+                                exit={{ opacity: 0, width: 0 }}
+                                className="flex flex-1 flex-col overflow-hidden"
+                            >
+                                <span className="truncate text-sm font-medium text-foreground">
+                                    {userName}
+                                </span>
+                                <span className="truncate text-[10px] text-muted-foreground capitalize">
+                                    {role?.toLowerCase().replace('_', ' ') || 'User'}
+                                </span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </button>
             </div>
-        </motion.aside>
+        </div>
+    )
+}
+
+// FooterLink Component
+interface FooterLinkProps {
+    href: string
+    icon: React.ComponentType<{ className?: string }>
+    label: string
+    isActive: boolean
+    isCollapsed: boolean
+}
+
+function FooterLink({ href, icon: Icon, label, isActive, isCollapsed }: FooterLinkProps) {
+    return (
+        <Tooltip delayDuration={isCollapsed ? 200 : 99999}>
+            <TooltipTrigger asChild>
+                <Link
+                    href={href}
+                    className={cn(
+                        'flex items-center rounded-lg transition-colors',
+                        isCollapsed ? 'h-9 w-9 justify-center mx-auto' : 'gap-3 px-2.5 py-2',
+                        isActive
+                            ? 'bg-muted text-foreground'
+                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                    )}
+                >
+                    <Icon className={cn('shrink-0', isCollapsed ? 'h-[18px] w-[18px]' : 'h-[18px] w-[18px]')} />
+                    <AnimatePresence mode="wait">
+                        {!isCollapsed && (
+                            <motion.span
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: 'auto' }}
+                                exit={{ opacity: 0, width: 0 }}
+                                className="whitespace-nowrap text-sm font-medium overflow-hidden"
+                            >
+                                {label}
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
+                </Link>
+            </TooltipTrigger>
+            {isCollapsed && <TooltipContent side="right">{label}</TooltipContent>}
+        </Tooltip>
     )
 }
