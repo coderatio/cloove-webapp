@@ -498,7 +498,7 @@ export function BillingSettings() {
                                     )}
                                 </div>
 
-                                <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 leading-relaxed italic">
+                                <p className="text-[10px] text-brand-gold-950 dark:text-brand-cream/40 leading-tight">
                                     Fund your wallet to ensure automatic renewal of your{" "}
                                     {currentPlan?.name || "Starter"} plan.
                                 </p>
@@ -525,7 +525,7 @@ export function BillingSettings() {
                                         </div>
                                         <div className="flex items-center justify-between gap-3">
                                             <span className="text-xs text-brand-deep/80 dark:text-brand-cream/80">
-                                                Card/bank only (no wallet auto-debit)
+                                                External payment method
                                             </span>
                                             <Switch
                                                 checked={

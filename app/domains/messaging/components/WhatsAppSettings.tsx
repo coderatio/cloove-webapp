@@ -30,6 +30,7 @@ import {
   Bell,
   Plus,
   ChevronDown,
+  ChevronRight,
   Plug,
 } from "lucide-react"
 import {
@@ -376,8 +377,24 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
               connect and manage a branded business number for this workspace.
             </p>
           </div>
-          <Button asChild className="h-12 rounded-2xl bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep">
-            <a href="/settings?tab=billing&addon=whatsapp_whitelabel_number">Open Billing</a>
+          <Button
+            asChild
+            className="h-auto min-h-14 rounded-[1.4rem] bg-brand-deep px-5 py-3 text-brand-gold-300 shadow-[0_18px_40px_rgba(11,61,46,0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-deep/92 hover:text-brand-gold-200 hover:shadow-[0_22px_44px_rgba(11,61,46,0.22)] dark:bg-brand-gold dark:text-brand-deep dark:shadow-[0_18px_40px_rgba(245,158,11,0.18)] dark:hover:bg-brand-gold/92"
+          >
+            <a
+              href="/settings?tab=billing&addon=whatsapp_whitelabel_number"
+              className="inline-flex items-center gap-4"
+            >
+              <span className="text-left">
+                <span className="block text-base font-semibold leading-none">Unlock WhatsApp in Billing</span>
+                <span className="mt-1 block text-xs font-medium uppercase tracking-[0.18em] text-brand-gold-300/75 dark:text-brand-deep/70">
+                  Business add-on
+                </span>
+              </span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold-300/15 text-brand-gold-300 dark:bg-brand-deep/10 dark:text-brand-deep">
+                <ChevronRight className="h-4 w-4" />
+              </span>
+            </a>
           </Button>
         </div>
       </div>
