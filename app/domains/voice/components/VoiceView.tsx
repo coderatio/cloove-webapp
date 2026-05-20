@@ -478,33 +478,35 @@ export function VoiceView() {
 
             {activeTab === "overview" && (
                 <>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <MetricCard
-                            icon={PhoneCall}
-                            label="Recent calls"
-                            value={String(metrics.total)}
-                            tone="sky"
-                        />
-                        <MetricCard
-                            icon={PhoneForwarded}
-                            label="Transferred"
-                            value={String(metrics.transferred)}
-                            tone="amber"
-                        />
-                        <MetricCard
-                            icon={Inbox}
-                            label="Open calls"
-                            value={String(healthQuery.data?.open_calls ?? 0)}
-                            tone="slate"
-                        />
-                        <MetricCard
-                            icon={Radio}
-                            label="Active now"
-                            value={String(healthQuery.data?.active_calls ?? 0)}
-                            tone="emerald"
-                            live
-                        />
-                    </div>
+                    <OverviewMetricsStrip
+                        items={[
+                            {
+                                icon: PhoneCall,
+                                label: "Recent calls",
+                                value: String(metrics.total),
+                                tone: "sky",
+                            },
+                            {
+                                icon: PhoneForwarded,
+                                label: "Transferred",
+                                value: String(metrics.transferred),
+                                tone: "amber",
+                            },
+                            {
+                                icon: Inbox,
+                                label: "Open calls",
+                                value: String(healthQuery.data?.open_calls ?? 0),
+                                tone: "slate",
+                            },
+                            {
+                                icon: Radio,
+                                label: "Active now",
+                                value: String(healthQuery.data?.active_calls ?? 0),
+                                tone: "emerald",
+                                live: true,
+                            },
+                        ]}
+                    />
 
                     <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.75fr)]">
                         <div className="space-y-5">
@@ -1202,37 +1204,84 @@ const METRIC_TONE_STYLES: Record<MetricTone, { accent: string; iconBg: string }>
     },
 }
 
-function MetricCard({
+function OverviewMetricsStrip({
+    items,
+}: {
+    items: Array<{
+        icon: typeof Phone
+        label: string
+        value: string
+        tone?: MetricTone
+        live?: boolean
+    }>
+}) {
+    return (
+        <GlassCard className="overflow-hidden rounded-[28px] border-black/5 p-0 dark:border-white/10">
+            <div className="grid grid-cols-2 xl:grid-cols-4">
+                {items.map((item, index) => (
+                    <OverviewMetricSegment
+                        key={item.label}
+                        icon={item.icon}
+                        label={item.label}
+                        value={item.value}
+                        tone={item.tone}
+                        live={item.live}
+                        className={cn(
+                            "min-w-0",
+                            index % 2 === 1 && "border-l border-black/5 dark:border-white/10",
+                            index >= 2 && "border-t border-black/5 dark:border-white/10",
+                            index > 0 && "xl:border-t-0 xl:border-l",
+                            index % 2 === 0 && index < 2 && "xl:border-l-0"
+                        )}
+                    />
+                ))}
+            </div>
+        </GlassCard>
+    )
+}
+
+function OverviewMetricSegment({
     icon: Icon,
     label,
     value,
     tone = "slate",
     live = false,
+    className,
 }: {
     icon: typeof Phone
     label: string
     value: string
     tone?: MetricTone
     live?: boolean
+    className?: string
 }) {
     const styles = METRIC_TONE_STYLES[tone]
     const showLivePulse = live && Number(value) > 0
 
     return (
-        <GlassCard
+        <div
             className={cn(
-                "relative overflow-hidden p-4 pl-5",
-                "before:absolute before:left-0 before:top-4 before:bottom-4 before:w-[3px] before:rounded-r-full",
-                styles.accent
+                "relative overflow-hidden px-4 py-4 sm:px-5 sm:py-5",
+                "before:absolute before:left-0 before:top-3 before:bottom-3 before:w-[3px] before:rounded-r-full",
+                styles.accent,
+                className
             )}
         >
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
+            <div className="flex h-full flex-col gap-5">
+                <div
+                    className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+                        styles.iconBg
+                    )}
+                >
+                    <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
                     <p className="text-[11px] font-medium uppercase text-slate-500 dark:text-slate-400">
                         {label}
                     </p>
-                    <div className="mt-2 flex items-baseline gap-2">
-                        <p className="font-serif text-3xl font-semibold leading-none tracking-tight text-brand-deep dark:text-brand-cream">
+                    <div className="mt-2 flex min-w-0 items-baseline gap-2">
+                        <p className="truncate font-serif text-2xl font-semibold leading-none tracking-tight text-brand-deep sm:text-3xl dark:text-brand-cream">
                             {value}
                         </p>
                         {showLivePulse ? (
@@ -1243,16 +1292,8 @@ function MetricCard({
                         ) : null}
                     </div>
                 </div>
-                <div
-                    className={cn(
-                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
-                        styles.iconBg
-                    )}
-                >
-                    <Icon className="h-4 w-4" />
-                </div>
             </div>
-        </GlassCard>
+        </div>
     )
 }
 
