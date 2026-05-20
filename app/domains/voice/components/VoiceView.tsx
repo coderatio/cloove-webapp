@@ -493,8 +493,8 @@ export function VoiceView() {
                         />
                         <MetricCard
                             icon={Inbox}
-                            label="Pending events"
-                            value={String(healthQuery.data?.pending_events ?? 0)}
+                            label="Open calls"
+                            value={String(healthQuery.data?.open_calls ?? 0)}
                             tone="slate"
                         />
                         <MetricCard
@@ -718,9 +718,9 @@ export function VoiceView() {
                                         tone={getProviderTone(healthQuery.data?.provider_status)}
                                     />
                                     <HealthRow
-                                        label="Pending events"
-                                        value={String(healthQuery.data?.pending_events ?? 0)}
-                                        tone={(healthQuery.data?.pending_events ?? 0) > 0 ? "amber" : "emerald"}
+                                        label="Unprocessed events"
+                                        value={String(healthQuery.data?.unprocessed_events ?? 0)}
+                                        tone={(healthQuery.data?.unprocessed_events ?? 0) > 0 ? "amber" : "emerald"}
                                     />
                                     <HealthRow
                                         label="Failed (24h)"

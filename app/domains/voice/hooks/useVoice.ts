@@ -168,7 +168,9 @@ export interface VoiceCallListParams {
 
 export interface VoiceHealth {
     active_calls: number
+    open_calls: number
     failed_requests_last_24h: number
+    unprocessed_events: number
     pending_events: number
     last_event_at: string | null
     provider_status: string

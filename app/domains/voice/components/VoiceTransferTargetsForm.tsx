@@ -344,7 +344,7 @@ function ToggleRow({
     onCheckedChange: (value: boolean) => void
 }) {
     return (
-        <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.02]">
+        <label className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-slate-50/40 px-4 py-3 dark:border-white/10 dark:bg-white/[0.02]">
             <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{label}</p>
                 {description ? (
