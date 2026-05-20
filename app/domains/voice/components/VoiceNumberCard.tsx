@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/app/components/ui/button"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
-import { cn } from "@/app/lib/utils"
+import { cn, formatPhoneNumber } from "@/app/lib/utils"
 import { Pencil, Phone, RotateCcw, Star, Unplug } from "lucide-react"
 import type { VoiceNumberItem, VoiceProviderOption } from "@/app/domains/voice/hooks/useVoice"
 
@@ -35,7 +35,8 @@ export function VoiceNumberCard({
     const canReconnect = status === "disconnected" || status === "failed"
     const providerName = provider?.name ?? number.provider.replace(/_/g, " ")
     const hasLabel = Boolean(number.label)
-    const displayTitle = number.label || number.phone_number
+    const formattedPhone = formatPhoneNumber(number.phone_number)
+    const displayTitle = number.label || formattedPhone
     const statusLabel = isActive ? null : isFailed ? "Needs attention" : "Disconnected"
 
     return (
@@ -93,7 +94,7 @@ export function VoiceNumberCard({
 
                         {hasLabel ? (
                             <p className="mt-1 truncate font-mono text-[13px] tabular-nums text-slate-600 dark:text-slate-300">
-                                {number.phone_number}
+                                {formattedPhone}
                             </p>
                         ) : null}
 

@@ -5,7 +5,8 @@ import { Input } from "@/app/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Textarea } from "@/app/components/ui/textarea"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { Loader2, Phone, PhoneCall } from "lucide-react"
+import { formatPhoneNumber } from "@/app/lib/utils"
+import { Bookmark, Info, Loader2, Phone, PhoneCall } from "lucide-react"
 import type { VoiceNumberItem } from "@/app/domains/voice/hooks/useVoice"
 
 const PURPOSE_PRESETS = [
@@ -62,15 +63,25 @@ export function VoiceOutboundCallComposer({
 
     return (
         <GlassCard className="p-6 space-y-5">
-            <SectionTitle icon={Phone} title="Start outbound call" />
-            <p className="text-sm text-muted-foreground">
-                Choose the calling line, tell the AI why it is calling, and give it enough context
-                to handle the conversation well.
-            </p>
+            <div>
+                <SectionTitle icon={PhoneCall} title="Start outbound call" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                    Choose the calling line, tell the AI why it is calling, and give it enough context
+                    to handle the conversation well.
+                </p>
+            </div>
 
             {!hasLines ? (
-                <div className="rounded-2xl border border-dashed border-black/10 px-4 py-8 text-center text-sm text-muted-foreground dark:border-white/10">
-                    Connect a voice number before starting outbound AI calls.
+                <div className="rounded-3xl border border-dashed border-black/10 px-5 py-10 text-center dark:border-white/10">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                        <Phone className="h-5 w-5" />
+                    </div>
+                    <p className="mt-4 text-sm font-medium text-foreground">
+                        No calling line connected
+                    </p>
+                    <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
+                        Connect a voice number from the overview above before starting outbound AI calls.
+                    </p>
                 </div>
             ) : (
                 <>
@@ -88,7 +99,7 @@ export function VoiceOutboundCallComposer({
                                 <SelectContent className="rounded-2xl">
                                     {numbers.map((number) => (
                                         <SelectItem key={number.id} value={number.id}>
-                                            {number.label || number.phone_number}
+                                            {number.label || formatPhoneNumber(number.phone_number)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -128,15 +139,20 @@ export function VoiceOutboundCallComposer({
                         </Field>
                     </div>
 
-                    <div className="space-y-3">
-                        <p className="text-sm font-medium">Quick templates</p>
+                    <div className="space-y-2.5">
+                        <div className="flex items-center gap-1.5">
+                            <Bookmark className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-slate-400">
+                                Quick templates
+                            </p>
+                        </div>
                         <div className="flex flex-wrap gap-2">
                             {PURPOSE_PRESETS.map((preset) => (
                                 <Button
                                     key={preset.id}
                                     type="button"
                                     variant="outline"
-                                    className="h-8 rounded-full px-3 text-xs"
+                                    className="h-8 rounded-full border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 hover:border-brand-gold/40 hover:bg-brand-gold/[0.06] hover:text-brand-deep dark:border-white/10 dark:bg-slate-950/40 dark:text-slate-200 dark:hover:border-brand-gold/40 dark:hover:bg-brand-gold/[0.08] dark:hover:text-brand-cream"
                                     onClick={() =>
                                         onChange((prev) => ({
                                             ...prev,
@@ -162,25 +178,30 @@ export function VoiceOutboundCallComposer({
                         />
                     </Field>
 
-                    <div className="rounded-2xl border border-black/5 px-4 py-3 text-sm text-muted-foreground dark:border-white/10">
-                        The AI will introduce itself, handle the conversation using your configured
-                        voice settings, and transfer to staff if needed.
+                    <div className="flex items-start gap-2.5 rounded-2xl border border-black/5 bg-slate-50/60 px-4 py-3 text-xs leading-5 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+                        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                        <span>
+                            The AI will introduce itself, handle the conversation using your configured
+                            voice settings, and transfer to staff if needed.
+                        </span>
                     </div>
                 </>
             )}
 
-            <Button
-                onClick={onSubmit}
-                disabled={isPending || !hasLines || !form.customer_phone.trim()}
-                className="rounded-full"
-            >
-                {isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <PhoneCall className="mr-2 h-4 w-4" />
-                )}
-                Queue call
-            </Button>
+            <div className="flex justify-end">
+                <Button
+                    onClick={onSubmit}
+                    disabled={isPending || !hasLines || !form.customer_phone.trim()}
+                    className="h-11 rounded-full bg-brand-deep px-6 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 disabled:opacity-50 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92"
+                >
+                    {isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <PhoneCall className="mr-2 h-4 w-4" />
+                    )}
+                    Queue call
+                </Button>
+            </div>
         </GlassCard>
     )
 }

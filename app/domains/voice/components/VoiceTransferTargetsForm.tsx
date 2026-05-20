@@ -7,7 +7,7 @@ import { Input } from "@/app/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Switch } from "@/app/components/ui/switch"
-import { cn } from "@/app/lib/utils"
+import { cn, formatPhoneNumber } from "@/app/lib/utils"
 import { Phone, PhoneForwarded, Plus, UserPlus } from "lucide-react"
 import type { VoiceTransferTarget } from "@/app/domains/voice/hooks/useVoice"
 
@@ -164,7 +164,7 @@ export function VoiceTransferTargetsForm({
                         <Button
                             onClick={onCreate}
                             disabled={isCreatePending || !form.label.trim() || !form.phone_number.trim()}
-                            className="rounded-full"
+                            className="h-10 rounded-full bg-brand-deep px-5 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92"
                         >
                             <Plus className="mr-1.5 h-4 w-4" />
                             Add target
@@ -198,7 +198,15 @@ function TargetRow({
 }) {
     const initials = getInitials(target.label)
     return (
-        <div className="group flex items-center gap-3.5 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 transition-colors hover:border-slate-200 dark:border-white/10 dark:bg-slate-950/40 dark:hover:border-white/15">
+        <div
+            className={cn(
+                "group relative flex items-center gap-3.5 overflow-hidden rounded-2xl border bg-white px-4 py-3 transition-colors dark:bg-slate-950/40",
+                "before:absolute before:left-0 before:top-3 before:bottom-3 before:w-[3px] before:rounded-r-full",
+                target.is_fallback
+                    ? "border-amber-200/70 hover:border-amber-300 before:bg-amber-500 dark:border-amber-500/20 dark:hover:border-amber-500/40"
+                    : "border-slate-200/80 hover:border-slate-200 before:bg-transparent dark:border-white/10 dark:hover:border-white/15"
+            )}
+        >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-green-50 text-[13px] font-semibold text-brand-green dark:bg-brand-green-950/40 dark:text-emerald-400">
                 {initials}
             </div>
@@ -214,7 +222,7 @@ function TargetRow({
                     <span>{humanizeRole(target.role_label)}</span>
                     <span aria-hidden className="text-slate-300 dark:text-slate-600">·</span>
                     <span className="font-mono tabular-nums text-slate-600 dark:text-slate-300">
-                        {target.phone_number}
+                        {formatPhoneNumber(target.phone_number)}
                     </span>
                 </div>
             </div>
@@ -263,15 +271,15 @@ function FallbackChip() {
 
 function EmptyState() {
     return (
-        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/40 px-6 py-10 text-center dark:border-white/10 dark:bg-white/[0.02]">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-950">
-                <PhoneForwarded className="h-4 w-4 text-slate-400" />
+        <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/40 px-6 py-10 text-center dark:border-white/10 dark:bg-white/[0.02]">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                <PhoneForwarded className="h-5 w-5" />
             </div>
-            <p className="mt-3 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <p className="mt-4 text-sm font-medium text-slate-800 dark:text-slate-100">
                 No transfer targets yet
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Add a staff member below so the AI can hand off live calls.
+            <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
+                Add a staff member below so the AI can hand off live calls when a human is needed.
             </p>
         </div>
     )

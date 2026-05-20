@@ -59,6 +59,36 @@ export function CallDirectionLabel({ direction }: { direction: string }) {
     )
 }
 
+const CALL_STATUS_DOT_STYLES: Record<string, string> = {
+    completed: "bg-emerald-500",
+    transferred: "bg-sky-500",
+    failed: "bg-red-500",
+    missed: "bg-amber-500",
+    in_progress: "bg-blue-500",
+    ringing: "bg-blue-500",
+    initiated: "bg-blue-500",
+    queued: "bg-slate-400 dark:bg-slate-500",
+}
+
+export function CallStatusDot({
+    status,
+    showLabel = true,
+}: {
+    status: string
+    showLabel?: boolean
+}) {
+    const normalized = status.toLowerCase()
+    const dotColor = CALL_STATUS_DOT_STYLES[normalized] ?? "bg-slate-400 dark:bg-slate-500"
+    return (
+        <span className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+            <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden />
+            {showLabel ? (
+                <span className="capitalize">{normalized.replace(/_/g, " ")}</span>
+            ) : null}
+        </span>
+    )
+}
+
 export function CallStatusBadge({ status }: { status: string }) {
     const normalized = status.toLowerCase()
     const styles: Record<string, string> = {

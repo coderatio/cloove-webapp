@@ -11,7 +11,7 @@ import {
     DrawerTitle,
 } from "@/app/components/ui/drawer"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { cn } from "@/app/lib/utils"
+import { cn, formatPhoneNumber } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { serializeSchedule, createDefaultSchedule } from "@/app/components/shared/OperatingHoursBuilder"
 import { Pagination } from "@/app/components/shared/Pagination"
@@ -21,6 +21,7 @@ import { VoiceCallDetailsDialog } from "@/app/domains/voice/components/VoiceCall
 import {
     CallDirectionLabel,
     CallStatusBadge,
+    CallStatusDot,
     formatCallDuration,
 } from "@/app/domains/voice/components/VoiceCallLabels"
 import { VoiceNumberCard } from "@/app/domains/voice/components/VoiceNumberCard"
@@ -39,8 +40,12 @@ import {
 } from "@/app/components/ui/select"
 import {
     AudioLines,
+    CheckCircle2,
+    ChevronRight,
+    Clock,
     FilterX,
     Headphones,
+    Inbox,
     Loader2,
     MapPinned,
     PanelsTopLeft,
@@ -48,9 +53,12 @@ import {
     PhoneCall,
     PhoneForwarded,
     PhoneIncoming,
+    PhoneOutgoing,
     Plus,
+    Radio,
     Settings2,
     ShieldCheck,
+    XCircle,
 } from "lucide-react"
 import {
     useCancelVoiceNumberRequest,
@@ -70,6 +78,7 @@ import {
     useVoiceSettings,
     useVoiceTransferTargets,
     type VoiceCall,
+    type VoiceHealth,
     type VoiceNumberItem,
     type VoiceNumberRequestItem,
 } from "@/app/domains/voice/hooks/useVoice"
@@ -179,6 +188,7 @@ const EMPTY_CALL_FORM = {
     purpose: "",
     context: "",
 }
+
 
 function numberToForm(number: VoiceNumberItem) {
     return {
@@ -420,6 +430,11 @@ export function VoiceView() {
                 description="Manage call handling, outbound calls, transfers, recordings, and transcripts."
             />
 
+            <VoiceStatusBar
+                health={healthQuery.data}
+                isPending={healthQuery.isPending}
+            />
+
             <PersistedTabs
                 tabs={voiceTabs}
                 activeTab={activeTab}
@@ -464,61 +479,78 @@ export function VoiceView() {
             {activeTab === "overview" && (
                 <>
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        <MetricCard icon={PhoneCall} label="Recent calls" value={String(metrics.total)} />
-                        <MetricCard icon={PhoneForwarded} label="Transferred" value={String(metrics.transferred)} />
-                        <MetricCard icon={ShieldCheck} label="Pending events" value={String(healthQuery.data?.pending_events ?? 0)} />
-                        <MetricCard icon={PhoneCall} label="Active now" value={String(healthQuery.data?.active_calls ?? 0)} />
+                        <MetricCard
+                            icon={PhoneCall}
+                            label="Recent calls"
+                            value={String(metrics.total)}
+                            tone="sky"
+                        />
+                        <MetricCard
+                            icon={PhoneForwarded}
+                            label="Transferred"
+                            value={String(metrics.transferred)}
+                            tone="amber"
+                        />
+                        <MetricCard
+                            icon={Inbox}
+                            label="Pending events"
+                            value={String(healthQuery.data?.pending_events ?? 0)}
+                            tone="slate"
+                        />
+                        <MetricCard
+                            icon={Radio}
+                            label="Active now"
+                            value={String(healthQuery.data?.active_calls ?? 0)}
+                            tone="emerald"
+                            live
+                        />
                     </div>
 
                     <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.75fr)]">
                         <div className="space-y-5">
-                            <GlassCard className="p-5 space-y-4">
+                            <GlassCard className="rounded-[2rem] border-black/5 p-5 space-y-4 dark:border-white/10">
                                 <div className="space-y-3">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <SectionTitle icon={Headphones} title="Voice numbers" />
                                         </div>
-                                        <div className="flex shrink-0 items-center">
-                                            <div className="inline-flex items-center overflow-hidden rounded-full border border-slate-200 bg-white px-1 shadow-sm dark:border-white/10 dark:bg-slate-950/50">
-                                                <VoiceNumberRequestDrawer
-                                                    open={requestDrawerOpen}
-                                                    onOpenChange={setRequestDrawerOpen}
-                                                    form={numberRequestForm}
-                                                    providerOptions={providerOptions}
-                                                    isPending={createNumberRequest.isPending}
-                                                    onChange={(updater) => setNumberRequestForm((prev) => updater(prev))}
-                                                    onSubmit={() =>
-                                                        createNumberRequest.mutate(numberRequestForm, {
-                                                            onSuccess: handleNumberRequestCreated,
-                                                        })
-                                                    }
-                                                    trigger={
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="icon"
-                                                            aria-label="Request voice number"
-                                                            title="Request voice number"
-                                                            className="h-11 w-12 rounded-full border-0 bg-transparent text-slate-700 shadow-none hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900"
-                                                            onClick={() => setRequestDrawerOpen(true)}
-                                                        >
-                                                            <PhoneIncoming className="h-4.5 w-4.5" />
-                                                        </Button>
-                                                    }
-                                                />
-
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label="Connect voice number"
-                                                    title="Connect voice number"
-                                                    className="h-11 w-12 rounded-full border-l border-slate-200 bg-brand-deep text-brand-gold-300 shadow-none hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:border-white/10 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92 dark:hover:text-brand-deep"
-                                                    onClick={openCreateNumberDrawer}
-                                                >
-                                                    <Plus className="h-5 w-5" />
-                                                </Button>
-                                            </div>
+                                        <div className="flex shrink-0 items-center gap-2">
+                                            <VoiceNumberRequestDrawer
+                                                open={requestDrawerOpen}
+                                                onOpenChange={setRequestDrawerOpen}
+                                                form={numberRequestForm}
+                                                providerOptions={providerOptions}
+                                                isPending={createNumberRequest.isPending}
+                                                onChange={(updater) => setNumberRequestForm((prev) => updater(prev))}
+                                                onSubmit={() =>
+                                                    createNumberRequest.mutate(numberRequestForm, {
+                                                        onSuccess: handleNumberRequestCreated,
+                                                    })
+                                                }
+                                                trigger={
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        aria-label="Request voice number"
+                                                        title="Request voice number"
+                                                        className="h-10 rounded-full border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:bg-slate-900 sm:px-4"
+                                                        onClick={() => setRequestDrawerOpen(true)}
+                                                    >
+                                                        <PhoneIncoming className="h-4 w-4 sm:mr-1.5" />
+                                                        <span className="hidden sm:inline">Request</span>
+                                                    </Button>
+                                                }
+                                            />
+                                            <Button
+                                                type="button"
+                                                aria-label="Connect voice number"
+                                                title="Connect voice number"
+                                                className="h-10 rounded-full bg-brand-deep px-3 text-sm font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92 dark:hover:text-brand-deep sm:px-4"
+                                                onClick={openCreateNumberDrawer}
+                                            >
+                                                <Plus className="h-4 w-4 sm:mr-1.5" />
+                                                <span className="hidden sm:inline">Connect</span>
+                                            </Button>
                                         </div>
                                     </div>
                                     <p className="max-w-sm text-sm text-muted-foreground">
@@ -526,7 +558,7 @@ export function VoiceView() {
                                     </p>
                                 </div>
                                 {approvedRequests.length > 0 ? (
-                                    <div className="space-y-3 rounded-3xl border border-emerald-200/70 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+                                    <div className="space-y-3 rounded-[2rem] border border-emerald-200/70 bg-emerald-50/70 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
                                                 <p className="text-sm font-semibold text-foreground">Approved numbers ready to connect</p>
@@ -589,7 +621,7 @@ export function VoiceView() {
                                 </div>
                             </GlassCard>
 
-                            <GlassCard className="p-5 space-y-4">
+                            <GlassCard className="rounded-[2rem] border-black/5 p-5 space-y-4 dark:border-white/10">
                                 <div className="flex items-center justify-between gap-4">
                                     <SectionTitle icon={AudioLines} title="Recent activity" />
                                     <span className="text-sm text-muted-foreground">
@@ -602,34 +634,60 @@ export function VoiceView() {
                                     </div>
                                 ) : (
                                     <div className="space-y-1.5">
-                                        {recentCalls.slice(0, 5).map((call) => (
-                                            <button
-                                                key={call.id}
-                                                type="button"
-                                                onClick={() => setSelectedCall(call)}
-                                                className="flex w-full items-center justify-between rounded-2xl border border-black/5 px-4 py-3 text-left transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
-                                            >
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-sm font-medium">
-                                                        {call.customer_name || call.customer_phone || "Unknown caller"}
-                                                    </p>
-                                                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                                                        <CallDirectionLabel direction={call.direction} />
-                                                        <CallStatusBadge status={call.status} />
+                                        {recentCalls.slice(0, 5).map((call) => {
+                                            const isOutbound = call.direction.toLowerCase().includes("outbound")
+                                            const DirectionIcon = isOutbound ? PhoneOutgoing : PhoneIncoming
+                                            return (
+                                                <button
+                                                    key={call.id}
+                                                    type="button"
+                                                    onClick={() => setSelectedCall(call)}
+                                                    className="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-black/5 px-3 py-3 text-left transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+                                                >
+                                                    <div
+                                                        className={cn(
+                                                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                                                            isOutbound
+                                                                ? "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300"
+                                                                : "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300"
+                                                        )}
+                                                        aria-hidden
+                                                    >
+                                                        <DirectionIcon className="h-4 w-4" />
                                                     </div>
-                                                </div>
-                                                <div className="ml-3 shrink-0 text-right">
-                                                    {call.duration_seconds ? (
-                                                        <p className="font-mono text-xs tabular-nums text-slate-600 dark:text-slate-400">
-                                                            {formatCallDuration(call.duration_seconds)}
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="truncate text-sm font-medium">
+                                                            {call.customer_name || formatPhoneNumber(call.customer_phone) || "Unknown caller"}
                                                         </p>
-                                                    ) : null}
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {new Date(call.created_at).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                            </button>
-                                        ))}
+                                                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                                            <CallStatusDot
+                                                                status={call.status}
+                                                                showLabel={false}
+                                                            />
+                                                            {call.customer_name && call.customer_phone ? (
+                                                                <span className="font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                                                                    {formatPhoneNumber(call.customer_phone)}
+                                                                </span>
+                                                            ) : null}
+                                                        </div>
+                                                    </div>
+                                                    <div className="shrink-0 text-right">
+                                                        {call.duration_seconds ? (
+                                                            <p className="font-mono text-xs tabular-nums text-slate-700 dark:text-slate-300">
+                                                                {formatCallDuration(call.duration_seconds)}
+                                                            </p>
+                                                        ) : null}
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {new Date(call.created_at).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                    <ChevronRight
+                                                        className="h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400"
+                                                        aria-hidden
+                                                    />
+                                                </button>
+                                            )
+                                        })}
                                     </div>
                                 )}
                             </GlassCard>
@@ -651,13 +709,38 @@ export function VoiceView() {
                                     )
                                 }
                             />
-                            <GlassCard className="p-5 space-y-4">
+                            <GlassCard className="rounded-[2rem] border-black/5 p-5 space-y-4 dark:border-white/10">
                                 <SectionTitle icon={ShieldCheck} title="System health" />
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    <OverviewStat label="Provider status" value={healthQuery.data?.provider_status || "Unknown"} />
-                                    <OverviewStat label="Last event" value={healthQuery.data?.last_event_at ? new Date(healthQuery.data.last_event_at).toLocaleString() : "No recent events"} />
-                                    <OverviewStat label="Failed requests (24h)" value={String(healthQuery.data?.failed_requests_last_24h ?? 0)} />
-                                    <OverviewStat label="Pending events" value={String(healthQuery.data?.pending_events ?? 0)} />
+                                <div className="space-y-1.5">
+                                    <HealthRow
+                                        label="Provider"
+                                        value={healthQuery.data?.provider_status?.trim() || "Unknown"}
+                                        tone={getProviderTone(healthQuery.data?.provider_status)}
+                                    />
+                                    <HealthRow
+                                        label="Pending events"
+                                        value={String(healthQuery.data?.pending_events ?? 0)}
+                                        tone={(healthQuery.data?.pending_events ?? 0) > 0 ? "amber" : "emerald"}
+                                    />
+                                    <HealthRow
+                                        label="Failed (24h)"
+                                        value={String(healthQuery.data?.failed_requests_last_24h ?? 0)}
+                                        tone={(healthQuery.data?.failed_requests_last_24h ?? 0) > 0 ? "rose" : "emerald"}
+                                    />
+                                    <HealthRow
+                                        label="Last event"
+                                        value={
+                                            healthQuery.data?.last_event_at
+                                                ? new Date(healthQuery.data.last_event_at).toLocaleString(undefined, {
+                                                      month: "short",
+                                                      day: "numeric",
+                                                      hour: "numeric",
+                                                      minute: "2-digit",
+                                                  })
+                                                : "No recent events"
+                                        }
+                                        tone="slate"
+                                    />
                                 </div>
                             </GlassCard>
                         </div>
@@ -684,7 +767,7 @@ export function VoiceView() {
             )}
 
             {activeTab === "requests" && (
-                <GlassCard className="p-5 space-y-5">
+                <GlassCard className="rounded-[2rem] border-black/5 p-5 space-y-5 dark:border-white/10">
                     <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
                             <SectionTitle icon={MapPinned} title="Requested numbers" />
@@ -869,11 +952,16 @@ export function VoiceView() {
             )}
 
             {activeTab === "calls" && (
-                <GlassCard className="p-6 space-y-5">
-                    <div className="flex items-center justify-between gap-4">
-                        <SectionTitle icon={Headphones} title="Recent calls" />
+                <GlassCard className="rounded-[2rem] border-black/5 p-6 space-y-5 dark:border-white/10">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                            <SectionTitle icon={Headphones} title="Recent calls" />
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                Review past calls, listen to recordings, and read transcripts.
+                            </p>
+                        </div>
                         {!callsQuery.isPending && (callsMeta?.total ?? 0) > 0 ? (
-                            <span className="text-sm text-muted-foreground">
+                            <span className="inline-flex h-7 shrink-0 items-center rounded-full bg-slate-100 px-3 text-xs font-medium text-slate-600 dark:bg-white/5 dark:text-slate-300">
                                 {callsMeta?.total ?? 0} {(callsMeta?.total ?? 0) === 1 ? "call" : "calls"}
                             </span>
                         ) : null}
@@ -975,11 +1063,42 @@ export function VoiceView() {
                             </table>
                         </div>
                     ) : calls.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                            {callsSearch || callsDirection !== "all" || callsStatus !== "all"
-                                ? "No calls match the current filters."
-                                : "No calls logged yet."}
-                        </p>
+                        (() => {
+                            const isFiltered =
+                                Boolean(callsSearch) ||
+                                callsDirection !== "all" ||
+                                callsStatus !== "all"
+                            return (
+                                <div className="rounded-3xl border border-dashed border-black/10 px-5 py-12 text-center dark:border-white/10">
+                                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
+                                        <Headphones className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                    <p className="mt-4 text-sm font-medium text-foreground">
+                                        {isFiltered ? "No calls match the current filters" : "No calls logged yet"}
+                                    </p>
+                                    <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                                        {isFiltered
+                                            ? "Try a different search term or clear filters to see all calls."
+                                            : "Inbound and outbound calls will appear here once activity begins."}
+                                    </p>
+                                    {isFiltered ? (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="mt-4 rounded-full"
+                                            onClick={() => {
+                                                setCallsSearch("")
+                                                setCallsDirection("all")
+                                                setCallsStatus("all")
+                                            }}
+                                        >
+                                            <FilterX className="mr-2 h-4 w-4" />
+                                            Clear filters
+                                        </Button>
+                                    ) : null}
+                                </div>
+                            )
+                        })()
                     ) : (
                         <>
                             <div className="overflow-x-auto -mx-2">
@@ -1005,7 +1124,7 @@ export function VoiceView() {
                                                         {call.customer_name || "Unknown caller"}
                                                     </div>
                                                     <div className="mt-0.5 font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400">
-                                                        {call.customer_phone || "—"}
+                                                        {formatPhoneNumber(call.customer_phone) || "—"}
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-3.5">
@@ -1062,15 +1181,74 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Phone; title: string
     )
 }
 
-function MetricCard({ icon: Icon, label, value }: { icon: typeof Phone; label: string; value: string }) {
+type MetricTone = "sky" | "amber" | "emerald" | "slate"
+
+const METRIC_TONE_STYLES: Record<MetricTone, { accent: string; iconBg: string }> = {
+    sky: {
+        accent: "before:bg-sky-500",
+        iconBg: "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300",
+    },
+    amber: {
+        accent: "before:bg-amber-500",
+        iconBg: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+    },
+    emerald: {
+        accent: "before:bg-emerald-500",
+        iconBg: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+    },
+    slate: {
+        accent: "before:bg-slate-300 dark:before:bg-white/15",
+        iconBg: "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300",
+    },
+}
+
+function MetricCard({
+    icon: Icon,
+    label,
+    value,
+    tone = "slate",
+    live = false,
+}: {
+    icon: typeof Phone
+    label: string
+    value: string
+    tone?: MetricTone
+    live?: boolean
+}) {
+    const styles = METRIC_TONE_STYLES[tone]
+    const showLivePulse = live && Number(value) > 0
+
     return (
-        <GlassCard className="p-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{label}</p>
-                    <p className="mt-1.5 text-2xl font-semibold">{value}</p>
+        <GlassCard
+            className={cn(
+                "relative overflow-hidden p-4 pl-5",
+                "before:absolute before:left-0 before:top-4 before:bottom-4 before:w-[3px] before:rounded-r-full",
+                styles.accent
+            )}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium uppercase text-slate-500 dark:text-slate-400">
+                        {label}
+                    </p>
+                    <div className="mt-2 flex items-baseline gap-2">
+                        <p className="font-serif text-3xl font-semibold leading-none tracking-tight text-brand-deep dark:text-brand-cream">
+                            {value}
+                        </p>
+                        {showLivePulse ? (
+                            <span className="relative inline-flex h-2 w-2" aria-label="Live">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                            </span>
+                        ) : null}
+                    </div>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
+                <div
+                    className={cn(
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+                        styles.iconBg
+                    )}
+                >
                     <Icon className="h-4 w-4" />
                 </div>
             </div>
@@ -1078,11 +1256,134 @@ function MetricCard({ icon: Icon, label, value }: { icon: typeof Phone; label: s
     )
 }
 
-function OverviewStat({ label, value }: { label: string; value: string }) {
+function HealthRow({
+    label,
+    value,
+    tone,
+}: {
+    label: string
+    value: string
+    tone: StatusTone
+}) {
+    const dotClass = STATUS_CHIP_STYLES[tone].dot
     return (
-        <div className="rounded-2xl border border-black/5 px-4 py-3 dark:border-white/10">
-            <p className="text-xs font-medium uppercase text-slate-500 dark:text-slate-400">{label}</p>
-            <p className="mt-1 text-sm font-medium leading-5">{value}</p>
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-black/5 px-3 py-2.5 dark:border-white/10">
+            <div className="flex min-w-0 items-center gap-2.5">
+                <span className={cn("h-2 w-2 shrink-0 rounded-full", dotClass)} aria-hidden />
+                <span className="text-[13px] font-medium text-slate-600 dark:text-slate-300">
+                    {label}
+                </span>
+            </div>
+            <span className="truncate text-sm font-medium capitalize text-slate-900 dark:text-slate-100">
+                {value}
+            </span>
+        </div>
+    )
+}
+
+type StatusTone = "emerald" | "amber" | "rose" | "slate"
+
+const STATUS_CHIP_STYLES: Record<StatusTone, { container: string; dot: string }> = {
+    emerald: {
+        container: "border-emerald-200/70 bg-emerald-50/80 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
+        dot: "bg-emerald-500",
+    },
+    amber: {
+        container: "border-amber-200/70 bg-amber-50/80 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300",
+        dot: "bg-amber-500",
+    },
+    rose: {
+        container: "border-rose-200/70 bg-rose-50/80 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300",
+        dot: "bg-rose-500",
+    },
+    slate: {
+        container: "border-slate-200/80 bg-slate-50/80 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300",
+        dot: "bg-slate-400 dark:bg-slate-500",
+    },
+}
+
+function StatusChip({
+    tone,
+    label,
+    pulse = false,
+}: {
+    tone: StatusTone
+    label: string
+    pulse?: boolean
+}) {
+    const styles = STATUS_CHIP_STYLES[tone]
+    return (
+        <span
+            className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                styles.container
+            )}
+        >
+            <span className="relative inline-flex h-1.5 w-1.5">
+                {pulse ? (
+                    <span
+                        className={cn(
+                            "absolute inline-flex h-full w-full animate-ping rounded-full opacity-60",
+                            styles.dot
+                        )}
+                        aria-hidden
+                    />
+                ) : null}
+                <span className={cn("relative inline-flex h-1.5 w-1.5 rounded-full", styles.dot)} />
+            </span>
+            <span>{label}</span>
+        </span>
+    )
+}
+
+const HEALTHY_PROVIDER_STATES = new Set(["online", "operational", "healthy", "active", "ok", "ready"])
+const DEGRADED_PROVIDER_STATES = new Set(["degraded", "warning", "limited", "partial"])
+const DOWN_PROVIDER_STATES = new Set(["offline", "down", "failed", "error", "unavailable"])
+
+function getProviderTone(status: string | undefined): StatusTone {
+    const normalized = status?.toLowerCase().trim() ?? ""
+    if (HEALTHY_PROVIDER_STATES.has(normalized)) return "emerald"
+    if (DEGRADED_PROVIDER_STATES.has(normalized)) return "amber"
+    if (DOWN_PROVIDER_STATES.has(normalized)) return "rose"
+    return "slate"
+}
+
+function VoiceStatusBar({
+    health,
+    isPending,
+}: {
+    health: VoiceHealth | undefined
+    isPending: boolean
+}) {
+    if (isPending && !health) {
+        return (
+            <div className="flex flex-wrap items-center gap-2">
+                <div className="h-7 w-32 animate-pulse rounded-full bg-slate-100 dark:bg-white/5" />
+                <div className="h-7 w-28 animate-pulse rounded-full bg-slate-100 dark:bg-white/5" />
+            </div>
+        )
+    }
+
+    const providerStatus = health?.provider_status?.trim() || "Unknown"
+    const providerTone = getProviderTone(providerStatus)
+    const activeCalls = health?.active_calls ?? 0
+    const failed24h = health?.failed_requests_last_24h ?? 0
+
+    return (
+        <div className="flex flex-wrap items-center gap-2">
+            <StatusChip
+                tone={providerTone}
+                label={`Provider · ${providerStatus.replace(/_/g, " ")}`}
+                pulse={providerTone === "emerald"}
+            />
+            <StatusChip
+                tone={activeCalls > 0 ? "emerald" : "slate"}
+                label={`${activeCalls} ${activeCalls === 1 ? "active call" : "active calls"}`}
+                pulse={activeCalls > 0}
+            />
+            {failed24h > 0 ? (
+                <StatusChip tone="rose" label={`${failed24h} failed (24h)`} />
+            ) : null}
         </div>
     )
 }
@@ -1097,26 +1398,52 @@ function ApprovedNumberRequestCard({
     onConnect: () => void
 }) {
     return (
-        <div className="rounded-3xl border border-emerald-200/80 bg-white/85 p-4 dark:border-emerald-500/20 dark:bg-slate-950/30">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                        {request.label || request.approved_phone_number || "Approved voice number"}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        {request.approved_phone_number} • <span className="capitalize">{providerName}</span>
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                        Approved {request.approved_at ? new Date(request.approved_at).toLocaleDateString() : "recently"}
-                    </p>
+        <div className="rounded-[2rem] border border-emerald-200/80 bg-white/85 p-4 dark:border-emerald-500/20 dark:bg-slate-950/30">
+            <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
+                    <CheckCircle2 className="h-5 w-5" />
                 </div>
-                <Button type="button" className="rounded-full" onClick={onConnect}>
-                    Connect now
-                </Button>
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                                {request.label || formatPhoneNumber(request.approved_phone_number) || "Approved voice number"}
+                            </p>
+                            <p className="mt-0.5 text-sm text-muted-foreground">
+                                <span className="font-mono tabular-nums text-slate-700 dark:text-slate-300">
+                                    {formatPhoneNumber(request.approved_phone_number)}
+                                </span>
+                                <span aria-hidden className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
+                                <span className="capitalize">{providerName}</span>
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Approved {request.approved_at ? new Date(request.approved_at).toLocaleDateString() : "recently"}
+                            </p>
+                        </div>
+                        <Button
+                            type="button"
+                            onClick={onConnect}
+                            className="h-9 shrink-0 rounded-full bg-brand-deep px-4 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92"
+                        >
+                            Connect now
+                        </Button>
+                    </div>
+                </div>
             </div>
-            <RequestLogTimeline logs={request.logs} className="mt-4" />
+            <RequestLogTimeline logs={request.logs} className="ml-[3.25rem] mt-4" />
         </div>
     )
+}
+
+const REQUEST_STATUS_META: Record<
+    VoiceNumberRequestItem["status"],
+    { tone: StatusTone; icon: typeof Phone; label: string }
+> = {
+    pending: { tone: "amber", icon: Clock, label: "Pending review" },
+    approved: { tone: "emerald", icon: CheckCircle2, label: "Approved" },
+    fulfilled: { tone: "emerald", icon: CheckCircle2, label: "Fulfilled" },
+    cancelled: { tone: "rose", icon: XCircle, label: "Cancelled" },
+    rejected: { tone: "rose", icon: XCircle, label: "Rejected" },
 }
 
 function NumberRequestRow({
@@ -1130,49 +1457,62 @@ function NumberRequestRow({
     isCancelling: boolean
     onCancel: () => void
 }) {
-    const statusTone =
-        request.status === "pending"
-            ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
-            : request.status === "fulfilled"
-                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
-                : request.status === "cancelled"
-                    ? "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
-                : "bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300"
+    const meta = REQUEST_STATUS_META[request.status] ?? {
+        tone: "slate" as StatusTone,
+        icon: PhoneIncoming,
+        label: request.status.replace(/_/g, " "),
+    }
+    const StatusIcon = meta.icon
+    const iconStyles = {
+        amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300",
+        emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
+        rose: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300",
+        slate: "bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400",
+    }[meta.tone]
 
     return (
-        <div className="rounded-3xl border border-black/5 px-4 py-4 dark:border-white/10">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                        {request.label || `${request.country_code} voice number request`}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                        <span className="capitalize">{providerName}</span>
-                        {request.notes ? ` • ${request.notes}` : ""}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                        Submitted {new Date(request.created_at).toLocaleDateString()}
-                    </p>
+        <div className="rounded-[2rem] border border-black/6 bg-white/40 px-4 py-4 dark:border-white/10 dark:bg-white/[0.02]">
+            <div className="flex items-start gap-3">
+                <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full", iconStyles)}>
+                    <StatusIcon className="h-4.5 w-4.5" />
                 </div>
-                <div className="flex items-center gap-2">
-                    {request.status === "pending" ? (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="rounded-full"
-                            disabled={isCancelling}
-                            onClick={onCancel}
-                        >
-                            {isCancelling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Cancel request
-                        </Button>
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                                {request.label || `${request.country_code} voice number request`}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                <span className="capitalize">{providerName}</span>
+                                <span aria-hidden className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
+                                <span>Submitted {new Date(request.created_at).toLocaleDateString()}</span>
+                            </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2 sm:flex-row-reverse">
+                            <StatusChip tone={meta.tone} label={meta.label} />
+                            {request.status === "pending" ? (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 rounded-full text-xs"
+                                    disabled={isCancelling}
+                                    onClick={onCancel}
+                                >
+                                    {isCancelling ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                                    Cancel
+                                </Button>
+                            ) : null}
+                        </div>
+                    </div>
+                    {request.notes ? (
+                        <p className="mt-2 rounded-xl bg-black/[0.02] px-3 py-2 text-xs leading-5 text-slate-600 dark:bg-white/[0.03] dark:text-slate-400">
+                            {request.notes}
+                        </p>
                     ) : null}
-                    <span className={cn("inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-medium capitalize", statusTone)}>
-                        {request.status.replace(/_/g, " ")}
-                    </span>
                 </div>
             </div>
-            <RequestLogTimeline logs={request.logs} className="mt-4" />
+            <RequestLogTimeline logs={request.logs} className="ml-[3.25rem] mt-3" />
         </div>
     )
 }
@@ -1242,19 +1582,35 @@ function RequestLogTimeline({
     if (!logs?.length) return null
 
     return (
-        <div className={cn("rounded-[1.25rem] bg-black/[0.02] px-3 py-3 dark:bg-white/[0.03]", className)}>
-            <p className="text-xs font-medium text-muted-foreground">Request activity</p>
-            <div className="mt-3 space-y-3">
-                {logs.map((log) => (
-                    <div key={log.id} className="flex gap-3">
-                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-green/70 dark:bg-emerald-400/70" />
-                        <div className="min-w-0">
+        <div className={cn("rounded-[1.25rem] bg-black/[0.02] px-4 py-3 dark:bg-white/[0.03]", className)}>
+            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                Request activity
+            </p>
+            <div className="relative mt-3 space-y-3">
+                {logs.map((log, index) => (
+                    <div key={log.id} className="relative flex gap-3">
+                        {index < logs.length - 1 ? (
+                            <span
+                                aria-hidden
+                                className="absolute left-[3px] top-3 -bottom-2 w-[1.5px] bg-black/[0.06] dark:bg-white/[0.06]"
+                            />
+                        ) : null}
+                        <span
+                            aria-hidden
+                            className="relative mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green/80 ring-[2px] ring-white dark:bg-emerald-400/80 dark:ring-slate-950"
+                        />
+                        <div className="min-w-0 flex-1 pb-0.5">
                             <p className="text-sm font-medium text-foreground">{log.title}</p>
                             {log.description ? (
                                 <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{log.description}</p>
                             ) : null}
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                                {new Date(log.created_at).toLocaleString()}
+                            <p className="mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
+                                {new Date(log.created_at).toLocaleString(undefined, {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                })}
                             </p>
                         </div>
                     </div>

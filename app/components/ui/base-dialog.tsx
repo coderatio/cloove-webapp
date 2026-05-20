@@ -20,9 +20,9 @@ const backdropVariants = {
 }
 
 const desktopPopupVariants = {
-    hidden: { opacity: 0, scale: 0.96, y: -12 },
+    hidden: { opacity: 0, scale: 0.995, y: -2 },
     visible: { opacity: 1, scale: 1, y: 0 },
-    exit: { opacity: 0, scale: 0.97, y: 8 },
+    exit: { opacity: 0, scale: 0.998, y: 2 },
 }
 
 const mobileDrawerVariants = {
@@ -33,15 +33,15 @@ const mobileDrawerVariants = {
 
 const springTransition = {
     type: "spring" as const,
-    damping: 30,
-    stiffness: 350,
-    mass: 0.8,
+    damping: 38,
+    stiffness: 520,
+    mass: 0.55,
 }
 
 const desktopTransition = {
-    duration: 0.45,
-    ease: [0.16, 1, 0.3, 1] as const,
-    opacity: { duration: 0.25 },
+    duration: 0.12,
+    ease: [0.2, 0.9, 0.2, 1] as const,
+    opacity: { duration: 0.1 },
 }
 
 /** Base UI div props that overlap Framer Motion's gesture/animation callbacks. */
@@ -80,15 +80,15 @@ const DialogOverlay = React.forwardRef<
             return (
                 <AnimatePresence>
                     {state.open && (
-                        <motion.div
-                            variants={backdropVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="hidden"
-                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                            className={cn("fixed inset-0 z-50 bg-slate-950/24 dark:bg-black/64", backdropClassName)}
-                            {...restProps}
-                        />
+                            <motion.div
+                                variants={backdropVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                                className={cn("fixed inset-0 z-50 bg-slate-950/24 dark:bg-black/64", backdropClassName)}
+                                {...restProps}
+                            />
                     )}
                 </AnimatePresence>
             );

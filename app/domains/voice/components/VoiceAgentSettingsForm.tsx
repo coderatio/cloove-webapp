@@ -9,11 +9,21 @@ import { Switch } from "@/app/components/ui/switch"
 import { Textarea } from "@/app/components/ui/textarea"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { VoiceScheduleBuilder } from "@/app/domains/voice/components/VoiceScheduleBuilder"
-import { ChevronDown, Loader2, ShieldCheck } from "lucide-react"
+import {
+    CalendarClock,
+    ChevronDown,
+    Loader2,
+    MessageSquare,
+    ShieldCheck,
+    SlidersHorizontal,
+    UserCircle2,
+} from "lucide-react"
 import { cn } from "@/app/lib/utils"
 
 const accordionTriggerClass =
-    "flex w-full items-center justify-between gap-3 px-5 py-4 text-left text-sm font-semibold text-brand-deep transition-colors hover:bg-black/5 dark:text-brand-cream dark:hover:bg-white/5 data-panel-open:bg-black/5 dark:data-panel-open:bg-white/5"
+    "flex w-full items-center gap-3 px-5 py-4 text-left text-sm font-semibold text-brand-deep transition-colors hover:bg-black/5 dark:text-brand-cream dark:hover:bg-white/5 data-panel-open:bg-black/5 dark:data-panel-open:bg-white/5"
+const accordionTriggerIconClass =
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-black/5 text-slate-600 dark:bg-white/5 dark:text-slate-300"
 const accordionPanelClass =
     "overflow-hidden transition-[height] duration-300 ease-out motion-reduce:duration-[0.01ms]"
 const accordionItemClass = "border-t border-brand-deep/5 dark:border-white/5 first:border-t-0"
@@ -74,12 +84,14 @@ export function VoiceAgentSettingsForm({
     return (
         <GlassCard className="p-0 overflow-hidden">
             <div className="flex items-center gap-3 border-b border-brand-deep/5 px-6 py-5 dark:border-white/5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green-50 text-brand-green dark:bg-brand-green-950/40 dark:text-emerald-400">
                     <ShieldCheck className="h-5 w-5" />
                 </div>
-                <div>
-                    <h2 className="text-lg font-semibold">Agent settings</h2>
-                    <p className="text-sm text-muted-foreground">
+                <div className="min-w-0">
+                    <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">
+                        Agent settings
+                    </h2>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
                         Configure how the voice assistant speaks, responds, and behaves during calls.
                     </p>
                 </div>
@@ -93,7 +105,10 @@ export function VoiceAgentSettingsForm({
                 <Accordion.Item value="identity" className={accordionItemClass}>
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
-                            Identity and language
+                            <span className={accordionTriggerIconClass}>
+                                <UserCircle2 className="h-4 w-4" />
+                            </span>
+                            <span className="flex-1">Identity and language</span>
                             <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
                         </Accordion.Trigger>
                     </Accordion.Header>
@@ -155,7 +170,10 @@ export function VoiceAgentSettingsForm({
                 <Accordion.Item value="prompts" className={accordionItemClass}>
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
-                            Call prompts
+                            <span className={accordionTriggerIconClass}>
+                                <MessageSquare className="h-4 w-4" />
+                            </span>
+                            <span className="flex-1">Call prompts</span>
                             <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
                         </Accordion.Trigger>
                     </Accordion.Header>
@@ -235,7 +253,10 @@ export function VoiceAgentSettingsForm({
                 <Accordion.Item value="availability" className={accordionItemClass}>
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
-                            Availability
+                            <span className={accordionTriggerIconClass}>
+                                <CalendarClock className="h-4 w-4" />
+                            </span>
+                            <span className="flex-1">Availability</span>
                             <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
                         </Accordion.Trigger>
                     </Accordion.Header>
@@ -260,14 +281,18 @@ export function VoiceAgentSettingsForm({
                 <Accordion.Item value="automation" className={accordionItemClass}>
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
-                            Automation controls
+                            <span className={accordionTriggerIconClass}>
+                                <SlidersHorizontal className="h-4 w-4" />
+                            </span>
+                            <span className="flex-1">Automation controls</span>
                             <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
                         </Accordion.Trigger>
                     </Accordion.Header>
                     <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
-                        <div className="grid gap-4 pt-2 md:grid-cols-2">
+                        <div className="grid gap-3 pt-2 md:grid-cols-2">
                             <ToggleRow
                                 label="AI enabled"
+                                description="Let the AI assistant answer and respond on calls."
                                 checked={settings.ai_enabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, ai_enabled: value }))
@@ -275,6 +300,7 @@ export function VoiceAgentSettingsForm({
                             />
                             <ToggleRow
                                 label="Record calls"
+                                description="Save audio recordings for later review."
                                 checked={settings.recording_enabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, recording_enabled: value }))
@@ -282,6 +308,7 @@ export function VoiceAgentSettingsForm({
                             />
                             <ToggleRow
                                 label="Transcribe calls"
+                                description="Generate written transcripts of conversations."
                                 checked={settings.transcription_enabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, transcription_enabled: value }))
@@ -289,6 +316,7 @@ export function VoiceAgentSettingsForm({
                             />
                             <ToggleRow
                                 label="Human handoff"
+                                description="Allow the AI to transfer callers to a staff member."
                                 checked={settings.human_handoff_enabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, human_handoff_enabled: value }))
@@ -296,6 +324,7 @@ export function VoiceAgentSettingsForm({
                             />
                             <ToggleRow
                                 label="After-hours behavior"
+                                description="Use after-hours messaging outside operating windows."
                                 checked={settings.after_hours_enabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, after_hours_enabled: value }))
@@ -303,6 +332,7 @@ export function VoiceAgentSettingsForm({
                             />
                             <ToggleRow
                                 label="Recording disclosure"
+                                description="Announce that the call is being recorded."
                                 checked={settings.disclosure_enabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, disclosure_enabled: value }))
@@ -313,8 +343,12 @@ export function VoiceAgentSettingsForm({
                 </Accordion.Item>
             </Accordion.Root>
 
-            <div className="border-t border-brand-deep/5 px-6 py-5 dark:border-white/5">
-                <Button onClick={onSubmit} disabled={isPending} className="rounded-full">
+            <div className="flex items-center justify-end border-t border-brand-deep/5 px-6 py-5 dark:border-white/5">
+                <Button
+                    onClick={onSubmit}
+                    disabled={isPending}
+                    className="h-10 rounded-full bg-brand-deep px-6 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92"
+                >
                     {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Save settings
                 </Button>
@@ -334,16 +368,25 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function ToggleRow({
     label,
+    description,
     checked,
     onCheckedChange,
 }: {
     label: string
+    description?: string
     checked: boolean
     onCheckedChange: (value: boolean) => void
 }) {
     return (
-        <label className="flex items-center justify-between rounded-2xl border border-black/5 px-4 py-3 text-sm dark:border-white/10">
-            <span>{label}</span>
+        <label className="flex items-start justify-between gap-3 rounded-2xl border border-black/5 px-4 py-3 transition-colors hover:border-black/10 dark:border-white/10 dark:hover:border-white/15">
+            <div className="min-w-0">
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{label}</p>
+                {description ? (
+                    <p className="mt-0.5 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                        {description}
+                    </p>
+                ) : null}
+            </div>
             <Switch checked={checked} onCheckedChange={onCheckedChange} />
         </label>
     )
