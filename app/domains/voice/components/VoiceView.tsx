@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useState } from "react"
 import { Button } from "@/app/components/ui/button"
 import {
     Drawer,
@@ -620,7 +620,8 @@ export function VoiceView() {
                                                     key={request.id}
                                                     request={request}
                                                     providerName={
-                                                        providerMap.get(request.provider)?.name ??
+                                                        providerMap.get(request.provider)?.display_name ||
+                                                        providerMap.get(request.provider)?.name ||
                                                         request.provider.replace(/_/g, " ")
                                                     }
                                                     onConnect={() => openApprovedRequestNumberDrawer(request)}
@@ -896,7 +897,8 @@ export function VoiceView() {
                                                     key={request.id}
                                                     request={request}
                                                     providerName={
-                                                        providerMap.get(request.provider)?.name ??
+                                                        providerMap.get(request.provider)?.display_name ||
+                                                        providerMap.get(request.provider)?.name ||
                                                         request.provider.replace(/_/g, " ")
                                                     }
                                                     isCancelling={
@@ -929,7 +931,8 @@ export function VoiceView() {
                                                     key={request.id}
                                                     request={request}
                                                     providerName={
-                                                        providerMap.get(request.provider)?.name ??
+                                                        providerMap.get(request.provider)?.display_name ||
+                                                        providerMap.get(request.provider)?.name ||
                                                         request.provider.replace(/_/g, " ")
                                                     }
                                                     onConnect={() => openApprovedRequestNumberDrawer(request)}
@@ -958,7 +961,8 @@ export function VoiceView() {
                                                     key={request.id}
                                                     request={request}
                                                     providerName={
-                                                        providerMap.get(request.provider)?.name ??
+                                                        providerMap.get(request.provider)?.display_name ||
+                                                        providerMap.get(request.provider)?.name ||
                                                         request.provider.replace(/_/g, " ")
                                                     }
                                                     isCancelling={false}
@@ -1655,6 +1659,49 @@ function RequestTabEmptyState({
     )
 }
 
+function formatRequestLogTime(value: string) {
+    return new Date(value).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+    })
+}
+
+function RequestLogTimelineEntries({
+    logs,
+}: {
+    logs: NonNullable<VoiceNumberRequestItem["logs"]>
+}) {
+    return (
+        <div className="relative space-y-3">
+            {logs.map((log, index) => (
+                <div key={log.id} className="relative flex gap-3">
+                    {index < logs.length - 1 ? (
+                        <span
+                            aria-hidden
+                            className="absolute left-[3px] top-3 -bottom-2 w-[1.5px] bg-black/[0.06] dark:bg-white/[0.06]"
+                        />
+                    ) : null}
+                    <span
+                        aria-hidden
+                        className="relative mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green/80 ring-[2px] ring-white dark:bg-emerald-400/80 dark:ring-slate-950"
+                    />
+                    <div className="min-w-0 flex-1 pb-0.5">
+                        <p className="text-sm font-medium text-foreground">{log.title}</p>
+                        {log.description ? (
+                            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{log.description}</p>
+                        ) : null}
+                        <p className="mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
+                            {formatRequestLogTime(log.created_at)}
+                        </p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
+}
+
 function RequestLogTimeline({
     logs,
     className,
@@ -1662,42 +1709,90 @@ function RequestLogTimeline({
     logs?: VoiceNumberRequestItem["logs"]
     className?: string
 }) {
+    const panelId = useId()
+    const [open, setOpen] = useState(false)
+
     if (!logs?.length) return null
 
+    // A single log entry has nothing meaningful to hide — render it inline
+    // without a toggle so users don't get a redundant disclosure affordance.
+    if (logs.length === 1) {
+        return (
+            <div
+                className={cn(
+                    "rounded-[1.25rem] bg-black/[0.02] px-4 py-3 dark:bg-white/[0.03]",
+                    className
+                )}
+            >
+                <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                    Request activity
+                </p>
+                <div className="mt-3">
+                    <RequestLogTimelineEntries logs={logs} />
+                </div>
+            </div>
+        )
+    }
+
+    const latestLog = logs[logs.length - 1]
+    const countLabel = `${logs.length} ${logs.length === 1 ? "event" : "events"}`
+
     return (
-        <div className={cn("rounded-[1.25rem] bg-black/[0.02] px-4 py-3 dark:bg-white/[0.03]", className)}>
-            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                Request activity
-            </p>
-            <div className="relative mt-3 space-y-3">
-                {logs.map((log, index) => (
-                    <div key={log.id} className="relative flex gap-3">
-                        {index < logs.length - 1 ? (
-                            <span
-                                aria-hidden
-                                className="absolute left-[3px] top-3 -bottom-2 w-[1.5px] bg-black/[0.06] dark:bg-white/[0.06]"
-                            />
-                        ) : null}
-                        <span
-                            aria-hidden
-                            className="relative mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green/80 ring-[2px] ring-white dark:bg-emerald-400/80 dark:ring-slate-950"
-                        />
-                        <div className="min-w-0 flex-1 pb-0.5">
-                            <p className="text-sm font-medium text-foreground">{log.title}</p>
-                            {log.description ? (
-                                <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{log.description}</p>
-                            ) : null}
-                            <p className="mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
-                                {new Date(log.created_at).toLocaleString(undefined, {
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                })}
-                            </p>
-                        </div>
+        <div className={cn("rounded-[1.25rem] bg-black/[0.02] dark:bg-white/[0.03]", className)}>
+            <button
+                type="button"
+                aria-expanded={open}
+                aria-controls={panelId}
+                onClick={() => setOpen((prev) => !prev)}
+                className={cn(
+                    "group flex w-full items-start gap-3 rounded-[1.25rem] px-4 py-3 text-left transition-colors",
+                    "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40 dark:focus-visible:ring-emerald-400/40",
+                    open && "rounded-b-none"
+                )}
+            >
+                <ChevronRight
+                    aria-hidden
+                    className={cn(
+                        "mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
+                        open && "rotate-90"
+                    )}
+                />
+                <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                        Request activity
+                        <span aria-hidden className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
+                        <span className="normal-case tracking-normal">{countLabel}</span>
+                    </p>
+                    <p
+                        className={cn(
+                            "mt-1 truncate text-sm font-medium text-foreground transition-opacity",
+                            open && "opacity-60"
+                        )}
+                    >
+                        {latestLog.title}
+                        <span aria-hidden className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
+                        <span className="font-mono text-[11px] tabular-nums font-normal text-muted-foreground">
+                            {formatRequestLogTime(latestLog.created_at)}
+                        </span>
+                    </p>
+                </div>
+                <span className="sr-only">{open ? "Hide" : "Show"} request activity timeline</span>
+            </button>
+            <div
+                id={panelId}
+                role="region"
+                aria-label="Request activity timeline"
+                className={cn(
+                    "grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none",
+                    open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                )}
+            >
+                <div className="overflow-hidden">
+                    <div className="px-4 pb-3 pt-1">
+                        <RequestLogTimelineEntries logs={logs} />
                     </div>
-                ))}
+                </div>
             </div>
         </div>
     )

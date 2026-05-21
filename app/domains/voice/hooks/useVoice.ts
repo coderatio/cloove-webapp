@@ -56,6 +56,11 @@ export interface VoiceNumberRequestLogItem {
 export interface VoiceProviderOption {
     id: string
     name: string
+    /**
+     * Customer-facing label for the provider (e.g. "Cloove Voice Basic").
+     * Falls back to `name` when null. Internal identifiers always use `id`.
+     */
+    display_name: string | null
     is_enabled: boolean
     is_default?: boolean
     logo_url: string | null
@@ -64,6 +69,12 @@ export interface VoiceProviderOption {
     supports_recording: boolean
     supports_transcription: boolean
     supports_transfer: boolean
+    /**
+     * Countries this provider can provision voice numbers in. The backend
+     * expands the codes stored in `voice_call_providers` system config into
+     * full metadata objects for direct UI consumption.
+     */
+    supported_countries: VoiceNumberRequestCountry[]
     system_credentials_enabled: boolean
     custom_credentials_enabled: boolean
     credential_fields: Array<{
@@ -174,6 +185,18 @@ export interface VoiceHealth {
     pending_events: number
     last_event_at: string | null
     provider_status: string
+}
+
+export interface VoiceNumberRequestCountry {
+    id: string
+    name: string
+    code: string
+    phoneCode: string
+    currency: {
+        code: string
+        symbol: string
+    }
+    isDefault: boolean
 }
 
 const keys = {

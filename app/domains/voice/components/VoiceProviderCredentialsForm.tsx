@@ -68,12 +68,12 @@ export function VoiceProviderCredentialsForm({
                     }
                 >
                     <SelectTrigger className="rounded-2xl">
-                        <SelectValue placeholder="Select provider" />
+                        <SelectValue placeholder="Select a voice plan" />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl">
                         {providerOptions.map((provider) => (
                             <SelectItem key={provider.id} value={provider.id}>
-                                {provider.name}
+                                {provider.display_name || provider.name}
                             </SelectItem>
                         ))}
                     </SelectContent>

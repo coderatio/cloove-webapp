@@ -12,7 +12,6 @@ import {
 import { Input } from "@/app/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Textarea } from "@/app/components/ui/textarea"
-import { useCountries } from "@/app/hooks/useCountries"
 import { Loader2, Phone, PhoneIncoming } from "lucide-react"
 import { useEffect, useMemo, type ReactNode } from "react"
 import type { VoiceProviderOption } from "@/app/domains/voice/hooks/useVoice"
@@ -45,13 +44,24 @@ export function VoiceNumberRequestDrawer({
     onChange,
     onSubmit,
 }: VoiceNumberRequestDrawerProps) {
-    const { data: countries = [], isLoading: isLoadingCountries } = useCountries()
+    const selectedProvider = useMemo(
+        () => providerOptions.find((provider) => provider.id === form.provider) ?? null,
+        [providerOptions, form.provider]
+    )
+    const countries = selectedProvider?.supported_countries ?? []
+    const hasProviderSelection = Boolean(selectedProvider)
     const selectedCountry = useMemo(() => {
         return countries.find((country) => country.code === form.country_code) ?? null
     }, [countries, form.country_code])
 
     useEffect(() => {
-        if (form.country_code || !countries.length) return
+        if (!countries.length) {
+            if (form.country_code) {
+                onChange((prev) => ({ ...prev, country_code: "" }))
+            }
+            return
+        }
+        if (form.country_code && countries.some((country) => country.code === form.country_code)) return
 
         const defaultCountry = countries.find((country) => country.isDefault) ?? countries[0]
 
@@ -81,7 +91,7 @@ export function VoiceNumberRequestDrawer({
                         <div className="grid gap-3">
                             <div className="space-y-2">
                                 <label className="px-1 text-sm font-medium text-foreground">
-                                    Provider
+                                    Voice plan
                                 </label>
                                 <Select
                                     value={form.provider}
@@ -90,12 +100,12 @@ export function VoiceNumberRequestDrawer({
                                     }
                                 >
                                     <SelectTrigger className="rounded-2xl">
-                                        <SelectValue placeholder="Select provider" />
+                                        <SelectValue placeholder="Select a voice plan" />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-2xl">
                                         {providerOptions.map((provider) => (
                                             <SelectItem key={provider.id} value={provider.id}>
-                                                {provider.name}
+                                                {provider.display_name || provider.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -128,12 +138,16 @@ export function VoiceNumberRequestDrawer({
                                             country_code: value,
                                         }))
                                     }
-                                    disabled={isLoadingCountries}
+                                    disabled={!hasProviderSelection || countries.length === 0}
                                 >
                                     <SelectTrigger className="rounded-2xl">
                                         <SelectValue
                                             placeholder={
-                                                isLoadingCountries ? "Loading countries..." : "Select country"
+                                                !hasProviderSelection
+                                                    ? "Select a voice plan first"
+                                                    : countries.length === 0
+                                                        ? "No countries available for this plan"
+                                                        : "Select country"
                                             }
                                         />
                                     </SelectTrigger>
@@ -145,6 +159,12 @@ export function VoiceNumberRequestDrawer({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {hasProviderSelection && countries.length === 0 ? (
+                                    <p className="px-1 text-xs text-muted-foreground">
+                                        {(selectedProvider?.display_name || selectedProvider?.name) ?? "This plan"}{" "}
+                                        does not currently support new number requests.
+                                    </p>
+                                ) : null}
                             </div>
                             <div className="space-y-2">
                                 <label className="px-1 text-sm font-medium text-foreground">
@@ -170,7 +190,7 @@ export function VoiceNumberRequestDrawer({
                         <Button
                             type="button"
                             className="rounded-full"
-                            disabled={isPending}
+                            disabled={isPending || !hasProviderSelection || !form.country_code}
                             onClick={onSubmit}
                         >
                             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

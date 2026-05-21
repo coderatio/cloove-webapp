@@ -33,7 +33,8 @@ export function VoiceNumberCard({
     const isActive = status === "active"
     const isFailed = status === "failed"
     const canReconnect = status === "disconnected" || status === "failed"
-    const providerName = provider?.name ?? number.provider.replace(/_/g, " ")
+    const providerName =
+        provider?.display_name || provider?.name || number.provider.replace(/_/g, " ")
     const hasLabel = Boolean(number.label)
     const formattedPhone = formatPhoneNumber(number.phone_number)
     const displayTitle = number.label || formattedPhone

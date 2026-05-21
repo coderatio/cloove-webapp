@@ -704,11 +704,11 @@ export function BillingSettings() {
                 id="plans"
                 className={cn(
                     "space-y-6 scroll-mt-24",
-                    selectedAddonCards.length > 0 && !checkoutOpen ? "relative pt-24 md:pt-20" : ""
+                    selectedAddonCards.length > 0 && !checkoutOpen ? "relative pt-4 md:pt-3" : ""
                 )}
             >
                 {selectedAddonCards.length > 0 && !checkoutOpen ? (
-                    <div className="fixed left-1/2 bottom-6 z-30 w-full max-w-xl -translate-x-1/2 px-4" style={{ marginLeft: '36px' }}>
+                    <div className="fixed left-1/2 -translate-x-1/2 bottom-32 z-30 w-[calc(100%-2rem)] max-w-xl px-4 md:bottom-6 md:left-[calc(50%+36px)] md:w-full md:-translate-x-1/2 lg:left-[calc(50%+130px)]">
                         <button
                             type="button"
                             onClick={() => setCheckoutOpen(true)}
