@@ -267,6 +267,15 @@ function AgentCard({
                     Activate agent
                 </button>
             )}
+
+            {agent.status === "active" &&
+                agent.linked_number_count === 0 &&
+                !agent.is_default && (
+                    <p className="text-[11px] leading-4 text-amber-700 dark:text-amber-400">
+                        Active but not answering any numbers — link it under the Numbers tab or
+                        mark this agent as the default.
+                    </p>
+                )}
         </div>
     )
 }

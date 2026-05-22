@@ -171,6 +171,8 @@ export interface VoiceCall {
     recording_url: string | null
     duration_seconds: number | null
     created_at: string
+    ai_agent_id: string | null
+    ai_agent: { id: string; name: string } | null
     turns?: VoiceCallTurn[]
     events?: VoiceCallEvent[]
 }

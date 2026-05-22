@@ -299,12 +299,20 @@ function AssignAgentDrawer({
                                 <SelectItem value="__default__">
                                     Default {defaultAgentName ? `(${defaultAgentName})` : "AI agent"}
                                 </SelectItem>
-                                {agents.map((agent) => (
-                                    <SelectItem key={agent.id} value={agent.id}>
-                                        {agent.name}
-                                        {agent.is_default ? " — default" : ""}
-                                    </SelectItem>
-                                ))}
+                                {agents.map((agent) => {
+                                    const isActive = agent.status === "active"
+                                    return (
+                                        <SelectItem
+                                            key={agent.id}
+                                            value={agent.id}
+                                            disabled={!isActive}
+                                        >
+                                            {agent.name}
+                                            {agent.is_default ? " — default" : ""}
+                                            {!isActive ? ` — ${agent.status === "draft" ? "draft" : agent.status} (activate first)` : ""}
+                                        </SelectItem>
+                                    )
+                                })}
                             </SelectContent>
                         </Select>
                     )}

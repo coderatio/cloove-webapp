@@ -73,6 +73,7 @@ import {
     useStartVoiceCall,
     useUpdateVoiceNumber,
     useUpdateVoiceSettings,
+    useVoiceAiAgents,
     useVoiceCalls,
     useVoiceHealth,
     useVoiceNumbers,
@@ -190,6 +191,7 @@ const EMPTY_CALL_FORM = {
     customer_name: "",
     purpose: "",
     context: "",
+    ai_agent_id: "",
 }
 
 
@@ -232,6 +234,7 @@ export function VoiceView() {
     const targetsQuery = useVoiceTransferTargets()
     const recentCallsQuery = useVoiceCalls({ page: 1, limit: 100 })
     const healthQuery = useVoiceHealth()
+    const agentsQuery = useVoiceAiAgents()
 
     const createNumber = useCreateVoiceNumber()
     const createNumberRequest = useCreateVoiceNumberRequest()
@@ -734,6 +737,7 @@ export function VoiceView() {
                             <VoiceOutboundCallComposer
                                 form={callForm}
                                 numbers={numbersQuery.data ?? []}
+                                agents={agentsQuery.data ?? []}
                                 isPending={startCall.isPending}
                                 onChange={(updater) => setCallForm((prev) => updater(prev))}
                                 onSubmit={() =>
@@ -741,6 +745,7 @@ export function VoiceView() {
                                         {
                                             ...callForm,
                                             business_voice_number_id: callForm.business_voice_number_id || null,
+                                            ai_agent_id: callForm.ai_agent_id || null,
                                         },
                                         { onSuccess: () => setCallForm(EMPTY_CALL_FORM) }
                                     )
@@ -1139,6 +1144,7 @@ export function VoiceView() {
                                             <th className="px-2 pb-2 font-medium">Customer</th>
                                             <th className="px-2 pb-2 font-medium">Direction</th>
                                             <th className="px-2 pb-2 font-medium">Status</th>
+                                            <th className="px-2 pb-2 font-medium">Agent</th>
                                             <th className="px-2 pb-2 font-medium">Duration</th>
                                             <th className="px-2 pb-2 font-medium">Created</th>
                                         </tr>
@@ -1163,6 +1169,11 @@ export function VoiceView() {
                                                 </td>
                                                 <td className="px-2 py-3.5">
                                                     <CallStatusBadge status={call.status} />
+                                                </td>
+                                                <td className="px-2 py-3.5 text-[13px] text-slate-700 dark:text-slate-300">
+                                                    {call.ai_agent?.name ?? (
+                                                        <span className="text-slate-400 dark:text-slate-500">—</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-2 py-3.5 font-mono text-[13px] tabular-nums text-slate-700 dark:text-slate-300">
                                                     {formatCallDuration(call.duration_seconds)}

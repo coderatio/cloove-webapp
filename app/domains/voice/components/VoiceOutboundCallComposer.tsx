@@ -6,8 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/app/components/ui/textarea"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { formatPhoneNumber } from "@/app/lib/utils"
-import { Bookmark, Info, Loader2, Phone, PhoneCall } from "lucide-react"
-import type { VoiceNumberItem } from "@/app/domains/voice/hooks/useVoice"
+import { Bookmark, Info, Loader2, Phone, PhoneCall, Sparkles } from "lucide-react"
+import type { AiAgentItem, VoiceNumberItem } from "@/app/domains/voice/hooks/useVoice"
+
+const USE_NUMBER_AGENT_VALUE = "__inherit__"
 
 const PURPOSE_PRESETS = [
     {
@@ -42,11 +44,13 @@ type CallForm = {
     customer_name: string
     purpose: string
     context: string
+    ai_agent_id: string
 }
 
 interface VoiceOutboundCallComposerProps {
     form: CallForm
     numbers: VoiceNumberItem[]
+    agents?: AiAgentItem[]
     isPending: boolean
     onChange: (updater: (prev: CallForm) => CallForm) => void
     onSubmit: () => void
@@ -55,11 +59,13 @@ interface VoiceOutboundCallComposerProps {
 export function VoiceOutboundCallComposer({
     form,
     numbers,
+    agents = [],
     isPending,
     onChange,
     onSubmit,
 }: VoiceOutboundCallComposerProps) {
     const hasLines = numbers.length > 0
+    const activeAgents = agents.filter((agent) => agent.status === "active")
 
     return (
         <GlassCard className="p-6 space-y-5">
@@ -138,6 +144,42 @@ export function VoiceOutboundCallComposer({
                             />
                         </Field>
                     </div>
+
+                    {activeAgents.length > 0 && (
+                        <Field label="AI agent">
+                            <Select
+                                value={form.ai_agent_id || USE_NUMBER_AGENT_VALUE}
+                                onValueChange={(value) =>
+                                    onChange((prev) => ({
+                                        ...prev,
+                                        ai_agent_id: value === USE_NUMBER_AGENT_VALUE ? "" : value,
+                                    }))
+                                }
+                            >
+                                <SelectTrigger className="rounded-2xl">
+                                    <SelectValue placeholder="Use the number's agent" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl">
+                                    <SelectItem value={USE_NUMBER_AGENT_VALUE}>
+                                        <span className="flex items-center gap-2">
+                                            <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                                            Use the number's agent
+                                        </span>
+                                    </SelectItem>
+                                    {activeAgents.map((agent) => (
+                                        <SelectItem key={agent.id} value={agent.id}>
+                                            {agent.name}
+                                            {agent.is_default ? " · default" : ""}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-[11px] text-muted-foreground">
+                                Override the persona for this single call. Only active agents are
+                                listed.
+                            </p>
+                        </Field>
+                    )}
 
                     <div className="space-y-2.5">
                         <div className="flex items-center gap-1.5">
