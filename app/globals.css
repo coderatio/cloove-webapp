@@ -211,6 +211,20 @@ body {
   letter-spacing: -0.01em;
 }
 
+.app-content-pattern {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.58)),
+    radial-gradient(circle at 1px 1px, rgba(11, 61, 46, 0.055) 1px, transparent 0);
+  background-size: auto, 22px 22px;
+}
+
+.dark .app-content-pattern {
+  background-image:
+    linear-gradient(180deg, rgba(9, 9, 11, 0.72), rgba(9, 9, 11, 0.9)),
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    TYPOGRAPHY
    ───────────────────────────────────────────────────────────────────────────── */

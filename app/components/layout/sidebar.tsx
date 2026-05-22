@@ -180,7 +180,6 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                     setIsMenuOpen={setIsMenuOpen}
                     theme={theme}
                     setTheme={setTheme}
-                    isDark={isDark}
                     onLogout={handleLogout}
                 />
             </div>
@@ -394,8 +393,8 @@ function NavItem({
                             'group relative flex items-center rounded-lg transition-all duration-200',
                             isCollapsed ? 'h-10 w-10 justify-center mx-auto' : 'px-3 py-2',
                             isActive || isChildActive
-                                ? 'bg-primary/10 text-primary'
-                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                ? 'border border-primary/15 bg-primary/10 text-primary shadow-sm dark:border-brand-gold/20 dark:bg-brand-gold/12 dark:text-brand-gold-300'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream'
                         )}
                     >
                         <Link
@@ -410,8 +409,8 @@ function NavItem({
                                     'shrink-0 transition-colors',
                                     isCollapsed ? 'h-[18px] w-[18px]' : 'h-[18px] w-[18px]',
                                     isActive || isChildActive
-                                        ? 'text-primary'
-                                        : 'text-muted-foreground group-hover:text-foreground'
+                                        ? 'text-primary dark:text-brand-gold-300'
+                                        : 'text-muted-foreground group-hover:text-foreground dark:group-hover:text-brand-cream'
                                 )}
                             />
                             <AnimatePresence mode="wait">
@@ -451,6 +450,7 @@ function NavItem({
                                 layoutId="activeIndicator"
                                 className={cn(
                                     'absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary',
+                                    'dark:bg-brand-gold',
                                     isCollapsed && 'hidden'
                                 )}
                                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -543,7 +543,6 @@ interface FooterProps {
     setIsMenuOpen: (open: boolean) => void
     theme: string | undefined
     setTheme: (theme: string) => void
-    isDark: boolean
     onLogout: () => void
 }
 
@@ -558,7 +557,6 @@ function Footer({
     setIsMenuOpen,
     theme,
     setTheme,
-    isDark,
     onLogout,
 }: FooterProps) {
     return (
@@ -645,11 +643,12 @@ function Footer({
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className={cn(
-                        'group flex w-full items-center gap-3 rounded-xl border border-border/50 bg-muted/30 p-2 text-left transition-all hover:bg-muted hover:border-border',
-                        isCollapsed && 'justify-center border-0 bg-transparent hover:bg-muted/50'
+                        'group flex w-full items-center gap-3 rounded-xl border border-border/50 bg-muted/30 p-2 text-left transition-all hover:bg-muted hover:border-border dark:border-white/10 dark:bg-white/[0.045] dark:hover:border-brand-gold/20 dark:hover:bg-brand-gold/10',
+                        isMenuOpen && 'border-primary/20 bg-primary/10 dark:border-brand-gold/25 dark:bg-brand-gold/12',
+                        isCollapsed && 'justify-center border-0 bg-transparent hover:bg-muted/50 dark:hover:bg-white/8'
                     )}
                 >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300">
                         {userInitials}
                     </div>
                     <AnimatePresence mode="wait">
@@ -660,10 +659,10 @@ function Footer({
                                 exit={{ opacity: 0, width: 0 }}
                                 className="flex flex-1 flex-col overflow-hidden"
                             >
-                                <span className="truncate text-sm font-medium text-foreground">
+                                <span className="truncate text-sm font-medium text-foreground dark:text-brand-cream">
                                     {userName}
                                 </span>
-                                <span className="truncate text-[10px] text-muted-foreground capitalize">
+                                <span className="truncate text-[10px] text-muted-foreground capitalize dark:text-brand-cream/55">
                                     {role?.toLowerCase().replace('_', ' ') || 'User'}
                                 </span>
                             </motion.div>
@@ -694,8 +693,8 @@ function FooterLink({ href, icon: Icon, label, isActive, isCollapsed }: FooterLi
                         'flex items-center rounded-lg transition-colors',
                         isCollapsed ? 'h-9 w-9 justify-center mx-auto' : 'gap-3 px-2.5 py-2',
                         isActive
-                            ? 'bg-muted text-foreground'
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                            ? 'bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300'
+                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream'
                     )}
                 >
                     <Icon className={cn('shrink-0', isCollapsed ? 'h-[18px] w-[18px]' : 'h-[18px] w-[18px]')} />

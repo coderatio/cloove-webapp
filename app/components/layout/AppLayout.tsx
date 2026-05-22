@@ -130,8 +130,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                 <main
                     className={cn(
-                        "relative z-10 min-h-screen transition-all duration-300",
-                        !isAssistantPage && "md:pr-6 md:pt-6 md:pb-8",
+                        "app-content-pattern relative z-10 min-h-screen transition-all duration-300",
+                        !isAssistantPage && "md:pr-6 md:pt-3 md:pb-8",
                         zenActive ? "md:pl-8" : isCollapsed ? "md:pl-[96px]" : "md:pl-[280px]"
                     )}
                 >
