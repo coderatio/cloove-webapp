@@ -27,7 +27,8 @@ import {
 import { VoiceNumberCard } from "@/app/domains/voice/components/VoiceNumberCard"
 import { VoiceOutboundCallComposer } from "@/app/domains/voice/components/VoiceOutboundCallComposer"
 import { VoiceProviderCredentialsForm } from "@/app/domains/voice/components/VoiceProviderCredentialsForm"
-import { VoiceNumberRequestDrawer } from "@/app/domains/voice/components/VoiceNumberRequestDrawer"
+import { VoiceNumberRequestWizard } from "@/app/domains/voice/components/VoiceNumberRequestWizard"
+import { AiAgentsList } from "@/app/domains/voice/components/ai-agents/AiAgentsList"
 import { VoiceTransferTargetsForm } from "@/app/domains/voice/components/VoiceTransferTargetsForm"
 import { VoiceAgentSettingsForm } from "@/app/domains/voice/components/VoiceAgentSettingsForm"
 import { useDebounce } from "@/app/hooks/useDebounce"
@@ -59,6 +60,7 @@ import {
     Radio,
     Settings2,
     ShieldCheck,
+    Sparkles,
     XCircle,
 } from "lucide-react"
 import {
@@ -246,6 +248,7 @@ export function VoiceView() {
     const voiceTabs: TabItem[] = [
         { id: "overview", label: "Overview", icon: PanelsTopLeft },
         { id: "requests", label: "Requests", icon: PhoneIncoming },
+        { id: "ai-agents", label: "AI Agents", icon: Sparkles },
         { id: "calls", label: "Calls", icon: AudioLines },
         { id: "transfer", label: "Transfer", icon: PhoneForwarded },
         { id: "settings", label: "Settings", icon: Settings2 },
@@ -559,31 +562,20 @@ export function VoiceView() {
                                             <SectionTitle icon={Headphones} title="Voice numbers" />
                                         </div>
                                         <div className="flex shrink-0 items-center gap-2">
-                                            <VoiceNumberRequestDrawer
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                aria-label="Request voice number"
+                                                title="Request voice number"
+                                                className="h-10 rounded-full border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:bg-slate-900 sm:px-4"
+                                                onClick={() => setRequestDrawerOpen(true)}
+                                            >
+                                                <PhoneIncoming className="h-4 w-4 sm:mr-1.5" />
+                                                <span className="hidden sm:inline">Request</span>
+                                            </Button>
+                                            <VoiceNumberRequestWizard
                                                 open={requestDrawerOpen}
                                                 onOpenChange={setRequestDrawerOpen}
-                                                form={numberRequestForm}
-                                                providerOptions={providerOptions}
-                                                isPending={createNumberRequest.isPending}
-                                                onChange={(updater) => setNumberRequestForm((prev) => updater(prev))}
-                                                onSubmit={() =>
-                                                    createNumberRequest.mutate(numberRequestForm, {
-                                                        onSuccess: handleNumberRequestCreated,
-                                                    })
-                                                }
-                                                trigger={
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        aria-label="Request voice number"
-                                                        title="Request voice number"
-                                                        className="h-10 rounded-full border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:bg-slate-900 sm:px-4"
-                                                        onClick={() => setRequestDrawerOpen(true)}
-                                                    >
-                                                        <PhoneIncoming className="h-4 w-4 sm:mr-1.5" />
-                                                        <span className="hidden sm:inline">Request</span>
-                                                    </Button>
-                                                }
                                             />
                                             <Button
                                                 type="button"
@@ -811,6 +803,8 @@ export function VoiceView() {
                 />
             )}
 
+            {activeTab === "ai-agents" && <AiAgentsList />}
+
             {activeTab === "requests" && (
                 <GlassCard className="rounded-[2rem] border-black/5 p-5 space-y-5 dark:border-white/10">
                     <div className="flex items-start justify-between gap-4">
@@ -820,31 +814,20 @@ export function VoiceView() {
                                 Track provisioning requests, connect approved numbers, and review completed requests.
                             </p>
                         </div>
-                        <VoiceNumberRequestDrawer
+                        <Button
+                            type="button"
+                            variant="outline"
+                            aria-label="Request voice number"
+                            title="Request voice number"
+                            className="h-11 w-11 shrink-0 rounded-full border-slate-200 bg-white px-0 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:bg-slate-900 sm:w-auto sm:gap-2 sm:px-4"
+                            onClick={() => setRequestDrawerOpen(true)}
+                        >
+                            <PhoneIncoming className="h-4.5 w-4.5" />
+                            <span className="hidden sm:inline">Request number</span>
+                        </Button>
+                        <VoiceNumberRequestWizard
                             open={requestDrawerOpen}
                             onOpenChange={setRequestDrawerOpen}
-                            form={numberRequestForm}
-                            providerOptions={providerOptions}
-                            isPending={createNumberRequest.isPending}
-                            onChange={(updater) => setNumberRequestForm((prev) => updater(prev))}
-                            onSubmit={() =>
-                                createNumberRequest.mutate(numberRequestForm, {
-                                    onSuccess: handleNumberRequestCreated,
-                                })
-                            }
-                            trigger={
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    aria-label="Request voice number"
-                                    title="Request voice number"
-                                    className="h-11 w-11 shrink-0 rounded-full border-slate-200 bg-white px-0 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:bg-slate-900 sm:w-auto sm:gap-2 sm:px-4"
-                                    onClick={() => setRequestDrawerOpen(true)}
-                                >
-                                    <PhoneIncoming className="h-4.5 w-4.5" />
-                                    <span className="hidden sm:inline">Request number</span>
-                                </Button>
-                            }
                         />
                     </div>
 
@@ -1527,10 +1510,12 @@ const REQUEST_STATUS_META: Record<
     { tone: StatusTone; icon: typeof Phone; label: string }
 > = {
     pending: { tone: "amber", icon: Clock, label: "Pending review" },
+    provisioning: { tone: "slate", icon: Loader2, label: "Provisioning" },
     approved: { tone: "emerald", icon: CheckCircle2, label: "Approved" },
     fulfilled: { tone: "emerald", icon: CheckCircle2, label: "Fulfilled" },
     cancelled: { tone: "rose", icon: XCircle, label: "Cancelled" },
     rejected: { tone: "rose", icon: XCircle, label: "Rejected" },
+    failed: { tone: "rose", icon: XCircle, label: "Failed" },
 }
 
 function NumberRequestRow({

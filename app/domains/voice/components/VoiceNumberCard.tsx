@@ -1,11 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/app/components/ui/button"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
+import {
+    Drawer,
+    DrawerBody,
+    DrawerContent,
+    DrawerDescription,
+    DrawerStickyHeader,
+    DrawerTitle,
+} from "@/app/components/ui/drawer"
 import { cn, formatPhoneNumber } from "@/app/lib/utils"
-import { Pencil, Phone, RotateCcw, Star, Unplug } from "lucide-react"
-import type { VoiceNumberItem, VoiceProviderOption } from "@/app/domains/voice/hooks/useVoice"
+import { Loader2, Pencil, Phone, RotateCcw, Sparkles, Star, Unplug } from "lucide-react"
+import {
+    useAssignVoiceAiAgentToNumber,
+    useVoiceAiAgents,
+    type VoiceNumberItem,
+    type VoiceProviderOption,
+} from "@/app/domains/voice/hooks/useVoice"
 
 interface VoiceNumberCardProps {
     number: VoiceNumberItem
@@ -29,6 +49,7 @@ export function VoiceNumberCard({
     onDisconnect,
 }: VoiceNumberCardProps) {
     const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false)
+    const [showAgentDrawer, setShowAgentDrawer] = useState(false)
     const status = number.status.toLowerCase()
     const isActive = status === "active"
     const isFailed = status === "failed"
@@ -39,6 +60,15 @@ export function VoiceNumberCard({
     const formattedPhone = formatPhoneNumber(number.phone_number)
     const displayTitle = number.label || formattedPhone
     const statusLabel = isActive ? null : isFailed ? "Needs attention" : "Disconnected"
+
+    const aiAgentsQuery = useVoiceAiAgents()
+    const aiAgents = aiAgentsQuery.data ?? []
+    const linkedAgent = useMemo(
+        () => aiAgents.find((a) => a.id === number.ai_agent_id) ?? null,
+        [aiAgents, number.ai_agent_id]
+    )
+    const defaultAgent = useMemo(() => aiAgents.find((a) => a.is_default) ?? null, [aiAgents])
+    const activeAgent = linkedAgent ?? defaultAgent
 
     return (
         <>
@@ -121,6 +151,19 @@ export function VoiceNumberCard({
                                 </>
                             ) : null}
                         </p>
+
+                        <button
+                            type="button"
+                            onClick={() => setShowAgentDrawer(true)}
+                            className="mt-2 inline-flex max-w-full items-center gap-1.5 truncate rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
+                        >
+                            <Sparkles className="h-3 w-3" />
+                            <span className="truncate">
+                                {activeAgent
+                                    ? `${activeAgent.name}${!linkedAgent ? " (default)" : ""}`
+                                    : "No AI agent linked"}
+                            </span>
+                        </button>
                     </div>
                 </div>
 
@@ -189,6 +232,99 @@ export function VoiceNumberCard({
                 confirmText="Disconnect"
                 isLoading={isDisconnecting}
             />
+
+            <AssignAgentDrawer
+                open={showAgentDrawer}
+                onOpenChange={setShowAgentDrawer}
+                number={number}
+                aiAgents={aiAgents}
+                linkedAgentId={number.ai_agent_id}
+                defaultAgentName={defaultAgent?.name ?? null}
+            />
         </>
+    )
+}
+
+function AssignAgentDrawer({
+    open,
+    onOpenChange,
+    number,
+    aiAgents,
+    linkedAgentId,
+    defaultAgentName,
+}: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    number: VoiceNumberItem
+    aiAgents: ReturnType<typeof useVoiceAiAgents>["data"]
+    linkedAgentId: string | null
+    defaultAgentName: string | null
+}) {
+    const [selected, setSelected] = useState<string>(linkedAgentId ?? "__default__")
+    const assignMutation = useAssignVoiceAiAgentToNumber()
+    const agents = aiAgents ?? []
+
+    const handleSave = async () => {
+        try {
+            await assignMutation.mutateAsync({
+                numberId: number.id,
+                aiAgentId: selected === "__default__" ? null : selected,
+            })
+            onOpenChange(false)
+        } catch {
+            // toast handled by hook
+        }
+    }
+
+    return (
+        <Drawer open={open} onOpenChange={onOpenChange}>
+            <DrawerContent className="max-h-[80vh]">
+                <DrawerStickyHeader>
+                    <DrawerTitle className="font-sans text-xl font-semibold">Change AI agent</DrawerTitle>
+                    <DrawerDescription>
+                        Pick which AI agent answers calls for {formatPhoneNumber(number.phone_number)}.
+                    </DrawerDescription>
+                </DrawerStickyHeader>
+                <DrawerBody className="space-y-4">
+                    {agents.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                            You haven't created any AI agents yet. Create one from the AI Agents tab first.
+                        </p>
+                    ) : (
+                        <Select value={selected} onValueChange={setSelected}>
+                            <SelectTrigger className="rounded-2xl">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl">
+                                <SelectItem value="__default__">
+                                    Default {defaultAgentName ? `(${defaultAgentName})` : "AI agent"}
+                                </SelectItem>
+                                {agents.map((agent) => (
+                                    <SelectItem key={agent.id} value={agent.id}>
+                                        {agent.name}
+                                        {agent.is_default ? " — default" : ""}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                    <div className="flex justify-end gap-2">
+                        <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-full">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSave}
+                            disabled={assignMutation.isPending || agents.length === 0}
+                            className="rounded-full"
+                        >
+                            {assignMutation.isPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            Save
+                        </Button>
+                    </div>
+                </DrawerBody>
+            </DrawerContent>
+        </Drawer>
     )
 }

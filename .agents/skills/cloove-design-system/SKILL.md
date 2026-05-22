@@ -20,15 +20,23 @@ Cloove is **"The Financial Operating System for Social Trade."** The interface m
 
 ## Color Palette
 
-The Cloove palette is inspired by natural forest depths and luxury academic environments.
+The Cloove palette is inspired by natural forest depths with a warm orange action accent. In the web app, trust comes from green depth and clarity; action comes from orange. Do not use metallic gold (`#d4af37`) for `brand-gold`.
 
 | Token | Hex | Usage |
 | :--- | :--- | :--- |
-| **Brand Deep** | `#062c21` | Backgrounds (Dark), Primary Text (Light), Sidebars |
-| **Brand Green** | `#0b3d2e` | Secondary Backgrounds, Interactive Hovers |
-| **Brand Gold** | `#d4af37` | Accents, Active Nav, AI-driven Highlights, Buttons |
-| **Brand Cream** | `#fdfcf8` | Page Backgrounds (Light), Primary Text (Dark) |
-| **Brand Accent** | `#1e4d3f` | Borders, Muted Text, Glass Shadows |
+| **Brand Deep** | `#0b3d2e` | Primary brand color, text, sidebars, strong CTAs |
+| **Brand Green** | `#125741` | Secondary brand color, selected states, interactive hovers |
+| **Brand Gold** | `#f97316` | Warm orange action/accent token, highlights, badges, active affordances |
+| **Brand Cream** | `#ffffff` | Card and page surfaces in light mode, primary text in dark mode |
+| **Brand Accent** | `#335b4f` | Borders, muted text, subdued UI accents |
+
+`brand-gold` is an orange scale in `app/globals.css`:
+- `brand-gold-300`: `#fdba74`
+- `brand-gold-400`: `#fb923c`
+- `brand-gold-500`: `#f97316`
+- `brand-gold-600`: `#ea580c`
+
+When using Tailwind classes, prefer `bg-brand-gold`, `text-brand-gold`, `border-brand-gold/20`, or scale classes like `text-brand-gold-500`. These should resolve to the orange family above, not metallic gold.
 
 ## Typography
 
@@ -61,7 +69,7 @@ Everything should enter the screen with intent. Use staggered fade-ins, gentle u
 ## Dark Mode Best Practices
 - Avoid pure black (`#000`). Use `Brand Deep` (`#062c21`) as the base.
 - Borders should be extremely subtle (e.g., `rgba(255, 255, 255, 0.05)`).
-- Ensure `Brand Gold` provides at least 3:1 contrast against `Brand Deep`.
+- Ensure `Brand Gold` orange provides sufficient contrast for the specific use. On `Brand Deep`, prefer `brand-gold-300` for text and use `brand-gold`/`brand-gold-500` for fills or non-text accents.
 
 ## Spacing
 Follow the 4px grid defined in `globals.css` (e.g., `gap-4`, `p-8`).
