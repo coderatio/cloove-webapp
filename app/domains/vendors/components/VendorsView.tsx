@@ -371,7 +371,7 @@ export function VendorsView() {
                                     {!deferredSearch && (
                                         <Button
                                             onClick={() => setIsAddOpen(true)}
-                                            className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold"
+                                            className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold"
                                         >
                                             <Plus className="w-4 h-4 mr-2" />
                                             Add Vendor

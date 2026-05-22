@@ -506,7 +506,7 @@ export default function StorefrontCustomization() {
                             updateTheme.mutate(fullTheme)
                         }}
                         disabled={updateTheme.isPending || isLoading}
-                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-8 h-12 shadow-xl hover:scale-105 transition-all"
+                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep font-bold px-8 h-12 shadow-xl hover:scale-105 transition-all"
                     >
                         {updateTheme.isPending ? 'Saving...' : 'Save Changes'}
                     </Button>

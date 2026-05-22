@@ -164,7 +164,7 @@ export function VoiceTransferTargetsForm({
                         <Button
                             onClick={onCreate}
                             disabled={isCreatePending || !form.label.trim() || !form.phone_number.trim()}
-                            className="h-10 rounded-full bg-brand-deep px-5 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92"
+                            className="h-10 rounded-full bg-brand-deep px-5 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                         >
                             <Plus className="mr-1.5 h-4 w-4" />
                             Add target

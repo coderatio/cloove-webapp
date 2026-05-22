@@ -543,7 +543,7 @@ export function SecuritySettings() {
                         <Button
                             onClick={handlePinSave}
                             disabled={changePin.isPending}
-                            className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                            className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                         >
                             {changePin.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update PIN"}
                         </Button>
@@ -621,7 +621,7 @@ export function SecuritySettings() {
                         <Button
                             onClick={handlePassSave}
                             disabled={changePassword.isPending}
-                            className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                            className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                         >
                             {changePassword.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update Password"}
                         </Button>

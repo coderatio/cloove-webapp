@@ -172,7 +172,7 @@ export function AddBankDrawer({
                                 <Button
                                     onClick={handleContinue}
                                     disabled={!isValid}
-                                    className="w-full h-12 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 text-base font-medium rounded-xl"
+                                    className="w-full h-12 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 text-base font-medium rounded-xl"
                                 >
                                     Confirm & Save
                                 </Button>

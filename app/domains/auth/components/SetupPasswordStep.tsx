@@ -25,7 +25,7 @@ function getPasswordStrength(password: string): StrengthLevel {
 
 const STRENGTH_CONFIG: Record<StrengthLevel, { label: string; bars: number; color: string }> = {
     weak: { label: 'Weak', bars: 1, color: 'bg-red-400' },
-    medium: { label: 'Good', bars: 2, color: 'bg-brand-gold' },
+    medium: { label: 'Good', bars: 2, color: 'bg-brand-gold-700' },
     strong: { label: 'Strong', bars: 3, color: 'bg-emerald-400' },
 }
 

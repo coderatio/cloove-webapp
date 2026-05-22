@@ -250,7 +250,7 @@ export function CustomerProfileDrawer({
                                         asChild
                                     >
                                         <a href={`mailto:${customer.email}`} className="w-full flex items-center gap-4">
-                                            <div className="h-9 w-9 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold group-hover:text-white transition-all">
+                                            <div className="h-9 w-9 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold-800 group-hover:text-white transition-all">
                                                 <Mail className="w-4.5 h-4.5" />
                                             </div>
                                             <div className="flex flex-col items-start flex-1">

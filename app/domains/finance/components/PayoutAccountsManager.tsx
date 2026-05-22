@@ -253,7 +253,7 @@ export function PayoutAccountsManager({
                                     onClick={handleAction}
                                     className={cn(
                                         "flex-1 rounded-xl h-11 font-black uppercase text-[10px] tracking-widest",
-                                        confirmAction.type === 'delete' ? "bg-rose-600 text-white" : "bg-brand-gold dark:bg-brand-gold-400 dark:text-brand-deep shadow-lg"
+                                        confirmAction.type === 'delete' ? "bg-rose-600 text-white" : "bg-brand-gold-700 dark:bg-brand-gold-400 dark:text-brand-deep shadow-lg"
                                     )}
                                 >
                                     {(deleteAccount.isPending || setDefaultAccount.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm'}

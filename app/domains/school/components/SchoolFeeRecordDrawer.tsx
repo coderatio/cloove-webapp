@@ -121,7 +121,7 @@ function StepDots({ current }: { current: Step }) {
                     className={cn(
                         "h-1.5 rounded-full",
                         s === current
-                            ? "w-5 bg-brand-gold"
+                            ? "w-5 bg-brand-gold-700"
                             : steps.indexOf(current) > i
                                 ? "w-1.5 bg-brand-gold/40"
                                 : "w-1.5 bg-brand-deep/10 dark:bg-white/10"
@@ -213,7 +213,7 @@ function StudentStep({
                                         className={cn(
                                             "h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold",
                                             isSelected
-                                                ? "bg-brand-gold text-white"
+                                                ? "bg-brand-gold-700 text-white"
                                                 : "bg-brand-deep/8 dark:bg-white/8 text-brand-deep dark:text-brand-cream"
                                         )}
                                     >
@@ -386,7 +386,7 @@ function FeesStep({
                                     <div className={cn(
                                         "h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 border-2",
                                         isSelected
-                                            ? "bg-brand-gold border-brand-gold"
+                                            ? "bg-brand-gold-700 border-brand-gold"
                                             : "border-brand-deep/20 dark:border-white/15 group-hover:border-brand-gold/40"
                                     )}>
                                         {isSelected && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}

@@ -64,6 +64,21 @@ function createDefaultSchedule(): ScheduleDay[] {
     }))
 }
 
+/**
+ * An "untouched" schedule with no days enabled. Used when the consumer hasn't
+ * provided a value yet, so the UI reflects "not configured" instead of
+ * pre-selecting a default the user never agreed to.
+ */
+function createEmptySchedule(): ScheduleDay[] {
+    return WEEK_SCHEDULE.map((day) => ({
+        ...day,
+        enabled: false,
+        open: "09:00",
+        close: "17:00",
+        allDay: false,
+    }))
+}
+
 function createScheduleFromPreset(presetId: string): ScheduleDay[] {
     switch (presetId) {
         case "business":
@@ -123,7 +138,13 @@ function parseSchedule(value: string): ScheduleDay[] | null {
     if (!parts.length) return null
 
     for (const part of parts) {
-        const [rawDay, rawHours] = part.split(":").map((item) => item?.trim())
+        // Split on the FIRST colon only — the times themselves contain
+        // colons (e.g. "Monday: 09:00-17:00"), so a naive `split(":")`
+        // shreds the hours half into pieces and the parser bails.
+        const colonIndex = part.indexOf(":")
+        if (colonIndex < 0) return null
+        const rawDay = part.slice(0, colonIndex).trim()
+        const rawHours = part.slice(colonIndex + 1).trim()
         if (!rawDay || !rawHours) return null
         const existing = dayMap.get(rawDay.toLowerCase())
         if (!existing) return null
@@ -153,7 +174,7 @@ export function OperatingHoursBuilder({
     value,
     onChange,
 }: OperatingHoursBuilderProps) {
-    const [schedule, setSchedule] = useState<ScheduleDay[]>(createDefaultSchedule())
+    const [schedule, setSchedule] = useState<ScheduleDay[]>(() => createEmptySchedule())
     const [legacyValue, setLegacyValue] = useState<string | null>(null)
 
     const summary = useMemo(() => serializeSchedule(schedule), [schedule])
@@ -161,26 +182,31 @@ export function OperatingHoursBuilder({
     const normalizedLegacyValue = legacyValue?.trim() ?? ""
 
     useEffect(() => {
-        if (normalizedValue === summary || normalizedValue === normalizedLegacyValue) {
+        if (normalizedValue === summary) return
+        if (legacyValue !== null && normalizedValue === normalizedLegacyValue) return
+
+        if (!normalizedValue) {
+            // No saved value — reflect "not configured" in the UI rather than
+            // pre-filling defaults the user never agreed to. The parent's
+            // form state stays empty until the user enables a day or picks a
+            // preset, at which point `applySchedule` pushes the schedule.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setSchedule(createEmptySchedule())
+            setLegacyValue(null)
             return
         }
 
-        const parsed = parseSchedule(value || "")
+        const parsed = parseSchedule(value)
         if (parsed) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSchedule(parsed)
             setLegacyValue(null)
             return
         }
 
-        if (normalizedValue) {
-            setLegacyValue(value)
-            return
-        }
-
-        setSchedule(createDefaultSchedule())
-        setLegacyValue(null)
-    }, [normalizedLegacyValue, normalizedValue, summary, value])
+        // Non-empty but unparseable — stash as legacy so the user can convert
+        // it into structured hours via a preset or by editing the rows.
+        setLegacyValue(value)
+    }, [legacyValue, normalizedLegacyValue, normalizedValue, summary, value])
 
     const applySchedule = (nextSchedule: ScheduleDay[]) => {
         const cloned = cloneSchedule(nextSchedule)

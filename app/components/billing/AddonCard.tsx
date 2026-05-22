@@ -78,7 +78,7 @@ export function AddonCard({
                         "h-11 rounded-2xl px-5",
                         isActive && "cursor-default opacity-100",
                         selected
-                            ? "bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep"
+                            ? "bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold-700 dark:text-white"
                             : "border-brand-deep/10 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
                     )}
                     onClick={onToggle}

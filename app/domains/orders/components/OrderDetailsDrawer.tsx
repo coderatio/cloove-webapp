@@ -260,7 +260,7 @@ export function OrderDetailsDrawer({
                                 Print Receipt
                             </Button>
                             <DrawerClose asChild>
-                                <Button className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl">
+                                <Button className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold shadow-xl">
                                     Done
                                 </Button>
                             </DrawerClose>

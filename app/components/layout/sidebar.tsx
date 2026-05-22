@@ -450,7 +450,7 @@ function NavItem({
                                 layoutId="activeIndicator"
                                 className={cn(
                                     'absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary',
-                                    'dark:bg-brand-gold',
+                                    'dark:bg-brand-gold-700',
                                     isCollapsed && 'hidden'
                                 )}
                                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}

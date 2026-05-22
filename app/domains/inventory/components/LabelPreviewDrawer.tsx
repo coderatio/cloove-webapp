@@ -516,7 +516,7 @@ export function LabelPreviewDrawer({
                                                 <div className={cn(
                                                     "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
                                                     template === key
-                                                        ? "bg-brand-gold text-white"
+                                                        ? "bg-brand-gold-700 text-white"
                                                         : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40"
                                                 )}>
                                                     {tmpl.icon}
@@ -643,7 +643,7 @@ export function LabelPreviewDrawer({
                                                             className={cn(
                                                                 "w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all cursor-pointer",
                                                                 isSelected
-                                                                    ? "bg-brand-gold border-brand-gold text-white"
+                                                                    ? "bg-brand-gold-700 border-brand-gold text-white"
                                                                     : "border-brand-deep/15 dark:border-white/15"
                                                             )}
                                                         >
@@ -737,7 +737,7 @@ export function LabelPreviewDrawer({
                                     size="sm"
                                     onClick={handleSaveBarcodes}
                                     disabled={isSyncing}
-                                    className="h-7 rounded-lg bg-brand-gold text-brand-deep hover:bg-brand-gold/90 text-[10px] font-bold px-4"
+                                    className="h-7 rounded-lg bg-brand-gold-700 text-white hover:bg-brand-gold-800 text-[10px] font-bold px-4"
                                 >
                                     {isSyncing ? "Saving..." : "Save to DB"}
                                 </Button>
@@ -746,7 +746,7 @@ export function LabelPreviewDrawer({
                         <Button
                             onClick={handlePrint}
                             disabled={totalLabels === 0 || isSyncing}
-                            className="w-full rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest text-xs"
+                            className="w-full rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 dark:text-brand-deep font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest text-xs"
                         >
                             <Printer className="w-4 h-4 mr-2" />
                             Print {totalLabels} {totalLabels === 1 ? 'Label' : 'Labels'}
@@ -852,7 +852,7 @@ function BarcodePreview({
                         </div>
                     )}
                     
-                    <div className="w-full h-px bg-brand-deep dark:bg-brand-gold opacity-20" />
+                    <div className="w-full h-px bg-brand-deep dark:bg-brand-gold-700 opacity-20" />
                     
                     <div className="flex items-center justify-center w-full grow py-3">
                         {dataUrl ? (
@@ -871,7 +871,7 @@ function BarcodePreview({
                         )}
                     </div>
 
-                    <div className="w-full h-px bg-brand-deep dark:bg-brand-gold opacity-20" />
+                    <div className="w-full h-px bg-brand-deep dark:bg-brand-gold-700 opacity-20" />
                     
                     <div className="flex flex-col items-center justify-center w-full pt-2">
                         <p className={cn(

@@ -91,7 +91,7 @@ export function PersistedTabs({
                             initial={{ scale: 0, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                            className="fixed bottom-28 right-6 z-40 inline-flex h-12 max-w-[70vw] items-center gap-2 rounded-full bg-brand-deep px-5 text-sm font-semibold text-brand-cream shadow-xl shadow-brand-deep/20 transition-colors active:scale-95 lg:hidden dark:bg-brand-gold dark:text-white"
+                            className="fixed bottom-28 right-6 z-40 inline-flex h-12 max-w-[70vw] items-center gap-2 rounded-full bg-brand-deep px-5 text-sm font-semibold text-brand-cream shadow-xl shadow-brand-deep/20 transition-colors active:scale-95 lg:hidden dark:bg-brand-gold-700 dark:text-white"
                             aria-label={`Open ${mobileSheetTitle.toLowerCase()}`}
                         >
                             {ActiveIcon && <ActiveIcon className="h-4 w-4 shrink-0" />}

@@ -161,7 +161,7 @@ export function SectionInspector({ section, onUpdate, onGenerateAI }: SectionIns
 
             {/* Sticky Actions */}
             <div className="absolute bottom-0 left-0 right-0 p-6 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-t border-brand-deep/5 dark:border-white/5">
-                <Button className="w-full rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold h-12 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
+                <Button className="w-full rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold h-12 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
                     <Check className="w-4 h-4 mr-2" />
                     Save Settings
                 </Button>

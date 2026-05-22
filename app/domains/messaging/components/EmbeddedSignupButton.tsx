@@ -289,7 +289,7 @@ export function EmbeddedSignupButton({
         disabled={connectNumber.isPending || !activeBusiness?.id || !isEmbeddedEnabled}
         className={
           className ??
-          "h-12 w-full rounded-full bg-brand-deep px-6 text-brand-gold-300 hover:bg-brand-deep/90 hover:text-brand-gold-200 dark:bg-brand-gold dark:text-white dark:hover:bg-brand-gold/90 sm:w-auto"
+          "h-12 w-full rounded-full bg-brand-deep px-6 text-brand-gold-300 hover:bg-brand-deep/90 hover:text-brand-gold-200 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 sm:w-auto"
         }
       >
         {connectNumber.isPending ? (

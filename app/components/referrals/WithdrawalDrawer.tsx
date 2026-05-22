@@ -120,7 +120,7 @@ export function WithdrawalDrawer({
                                                 </div>
                                             </div>
                                             {selectedBank === bank.id && (
-                                                <div className="w-4 h-4 rounded-full bg-brand-deep dark:bg-brand-gold flex items-center justify-center text-brand-gold dark:text-brand-deep">
+                                                <div className="w-4 h-4 rounded-full bg-brand-deep dark:bg-brand-gold-700 flex items-center justify-center text-brand-gold dark:text-brand-deep">
                                                     <Check className="w-2.5 h-2.5" strokeWidth={3} />
                                                 </div>
                                             )}
@@ -134,7 +134,7 @@ export function WithdrawalDrawer({
                         <Button
                             onClick={handleContinue}
                             disabled={!isValid}
-                            className="w-full h-12 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 text-base font-medium rounded-xl"
+                            className="w-full h-12 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 text-base font-medium rounded-xl"
                         >
                             Continue
                         </Button>

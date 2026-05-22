@@ -121,7 +121,7 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
                                 <div className={cn(
                                     "flex size-5 items-center justify-center rounded-md border transition-all duration-200",
                                     accepted
-                                        ? "bg-brand-gold border-brand-gold"
+                                        ? "bg-brand-gold-700 border-brand-gold"
                                         : "border-brand-deep/20 bg-brand-deep/4 group-hover:border-brand-deep/40 dark:border-white/20 dark:bg-white/5 dark:group-hover:border-brand-gold/40"
                                 )}>
                                     {accepted && (
@@ -160,7 +160,7 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
                         <Button
                             onClick={handleAccept}
                             disabled={isSubmitting || !accepted}
-                            className="w-full h-12 rounded-2xl bg-brand-gold font-bold text-brand-deep hover:bg-brand-gold/90 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full h-12 rounded-2xl bg-brand-gold-700 font-bold text-brand-deep hover:bg-brand-gold-800 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
                                 <Loader2 className="size-4 animate-spin" />

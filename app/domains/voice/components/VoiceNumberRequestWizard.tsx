@@ -363,7 +363,7 @@ function WizardProgress({ current }: { current: WizardStep }) {
                     className={cn(
                         "h-1.5 w-6 rounded-full transition-colors",
                         STEP_ORDER.indexOf(current) >= STEP_ORDER.indexOf(s)
-                            ? "bg-brand-gold"
+                            ? "bg-brand-gold-700"
                             : "bg-black/10 dark:bg-white/10"
                     )}
                 />

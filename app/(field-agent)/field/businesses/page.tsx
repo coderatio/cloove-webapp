@@ -136,7 +136,7 @@ export default function BusinessesPage() {
                             className="w-full pl-10 pr-4 py-3 bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 rounded-2xl text-sm outline-none focus:border-brand-gold/50 transition-all font-medium dark:text-brand-cream"
                         />
                     </div>
-                    <Button className="w-full sm:w-auto bg-brand-gold text-brand-deep hover:bg-brand-gold/90 rounded-2xl px-8 h-12 font-bold shadow-lg shadow-brand-gold/10" asChild>
+                    <Button className="w-full sm:w-auto bg-brand-gold-700 text-white hover:bg-brand-gold-800 rounded-2xl px-8 h-12 font-bold shadow-lg shadow-brand-gold/10" asChild>
                         <Link href="/field/onboard">
                             <Plus className="w-4 h-4 mr-2" />
                             New Merchant
@@ -156,7 +156,7 @@ export default function BusinessesPage() {
                         {/* Status Glow Indicator (Subtle) */}
                         <div className={cn(
                             "absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 transition-opacity group-hover:opacity-20",
-                            biz.status === 'active' ? "bg-green-500" : "bg-brand-gold"
+                            biz.status === 'active' ? "bg-green-500" : "bg-brand-gold-700"
                         )} />
 
                         <div className="flex items-center justify-between mb-6">
@@ -250,7 +250,7 @@ export default function BusinessesPage() {
                                     className={cn(
                                         "w-9 h-9 rounded-xl text-xs font-black transition-all",
                                         currentPage === i + 1
-                                            ? "bg-brand-gold text-white shadow-lg shadow-brand-gold/20 scale-110"
+                                            ? "bg-brand-gold-700 text-white shadow-lg shadow-brand-gold/20 scale-110"
                                             : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 hover:bg-brand-deep/10 dark:hover:bg-white/10"
                                     )}
                                 >

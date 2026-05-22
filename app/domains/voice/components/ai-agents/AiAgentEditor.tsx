@@ -30,6 +30,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn, formatPhoneNumber } from "@/app/lib/utils"
 import { OperatingHoursBuilder } from "@/app/components/shared/OperatingHoursBuilder"
 import {
+    scheduleStringToStructured,
+    structuredToScheduleString,
+} from "@/app/lib/operating-hours"
+import {
     useCreateVoiceAiAgent,
     useUpdateVoiceAiAgent,
     useVoiceNumbers,
@@ -163,11 +167,12 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
             setAiInstructions(agent.ai_instructions ?? "")
             setRestrictedTopics(agent.restricted_topics ?? "")
             setOperatingHours(
-                typeof agent.operating_hours === "string"
-                    ? agent.operating_hours
-                    : agent.operating_hours
-                        ? JSON.stringify(agent.operating_hours, null, 2)
-                        : ""
+                structuredToScheduleString(
+                    agent.operating_hours as
+                    | string
+                    | Array<{ dayOfWeek: number; openAt: string; closeAt: string }>
+                    | null
+                )
             )
             setEnabledTools(agent.enabled_tools ?? [])
             setBehaviourFlags({
@@ -218,12 +223,27 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
         if (preset) setEnabledTools(preset.tools)
     }, [open, isEdit, template, toolsCatalogQuery.data])
 
-    const currentIdx = STEPS.findIndex((s) => s.key === step)
+    // Edit mode drops the create-only stages: `template` (the persona seed
+    // picker) and `review` (the final summary). The user goes straight to
+    // the section they want to change via the step chips and saves from
+    // anywhere — they shouldn't have to walk through 8 screens just to tweak
+    // a tool toggle.
+    const activeSteps = useMemo(
+        () =>
+            isEdit
+                ? STEPS.filter((s) => s.key !== "template" && s.key !== "review")
+                : STEPS,
+        [isEdit]
+    )
+    const currentIdx = Math.max(
+        0,
+        activeSteps.findIndex((s) => s.key === step)
+    )
     const goNext = () => {
-        if (currentIdx < STEPS.length - 1) setStep(STEPS[currentIdx + 1].key)
+        if (currentIdx < activeSteps.length - 1) setStep(activeSteps[currentIdx + 1].key)
     }
     const goBack = () => {
-        if (currentIdx > 0) setStep(STEPS[currentIdx - 1].key)
+        if (currentIdx > 0) setStep(activeSteps[currentIdx - 1].key)
     }
 
     const handleTemplate = (key: string) => {
@@ -264,7 +284,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
         business_info: businessInfo || null,
         ai_instructions: aiInstructions || null,
         restricted_topics: restrictedTopics || null,
-        operating_hours: operatingHours || null,
+        operating_hours: scheduleStringToStructured(operatingHours),
         enabled_tools: enabledTools,
         behaviour_flags: behaviourFlags,
         is_default: isDefault,
@@ -308,7 +328,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                 <DrawerStickyHeader>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            {currentIdx > 0 && (
+                            {!isEdit && currentIdx > 0 && (
                                 <button
                                     onClick={goBack}
                                     className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
@@ -321,12 +341,17 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                     {isEdit ? `Edit ${agent?.name}` : "New AI agent"}
                                 </DrawerTitle>
                                 <DrawerDescription>
-                                    Step {currentIdx + 1} of {STEPS.length} — {STEPS[currentIdx].label}
+                                    {isEdit
+                                        ? activeSteps[currentIdx]?.label
+                                        : `Step ${currentIdx + 1} of ${activeSteps.length} — ${activeSteps[currentIdx]?.label ?? ""}`}
                                 </DrawerDescription>
                             </div>
                         </div>
-                        <StepDots current={step} />
+                        {isEdit ? null : <StepDots steps={activeSteps} current={step} />}
                     </div>
+                    {isEdit ? (
+                        <StepChips steps={activeSteps} current={step} onSelect={setStep} />
+                    ) : null}
                 </DrawerStickyHeader>
 
                 <DrawerBody className="pb-12 pt-6">
@@ -659,20 +684,19 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                 <div className="border-t border-black/5 px-6 py-4 dark:border-white/5">
                     <div className="flex items-center justify-between gap-3">
                         <span className="text-xs text-muted-foreground">
-                            {step === "review" ? "Review and save." : `${STEPS[currentIdx].label} — ${currentIdx + 1}/${STEPS.length}`}
+                            {isEdit
+                                ? "Jump between sections above. Save changes whenever you're done."
+                                : step === "review"
+                                    ? "Review and save."
+                                    : `${activeSteps[currentIdx]?.label ?? ""} — ${currentIdx + 1}/${activeSteps.length}`}
                         </span>
                         <div className="flex items-center gap-2">
-                            {currentIdx > 0 && (
+                            {!isEdit && currentIdx > 0 && (
                                 <Button variant="ghost" onClick={goBack} className="rounded-full">
                                     Back
                                 </Button>
                             )}
-                            {step !== "review" ? (
-                                <Button onClick={goNext} className="rounded-full">
-                                    Continue
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                            ) : isEdit ? (
+                            {isEdit ? (
                                 <Button
                                     onClick={() => handleSave()}
                                     disabled={!canSave || isSaving}
@@ -680,6 +704,11 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                 >
                                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                     Save changes
+                                </Button>
+                            ) : step !== "review" ? (
+                                <Button onClick={goNext} className="rounded-full">
+                                    Continue
+                                    <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             ) : (
                                 <>
@@ -709,20 +738,60 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
     )
 }
 
-function StepDots({ current }: { current: Step }) {
+function StepDots({
+    steps,
+    current,
+}: {
+    steps: typeof STEPS
+    current: Step
+}) {
+    const currentIdx = steps.findIndex((s) => s.key === current)
     return (
         <div className="hidden items-center gap-1.5 sm:flex">
-            {STEPS.map((s) => (
+            {steps.map((s, idx) => (
                 <span
                     key={s.key}
                     className={cn(
                         "h-1.5 w-4 rounded-full transition-colors",
-                        STEPS.findIndex((x) => x.key === current) >= STEPS.findIndex((x) => x.key === s.key)
-                            ? "bg-brand-gold"
-                            : "bg-black/10 dark:bg-white/10"
+                        idx <= currentIdx ? "bg-brand-gold-700" : "bg-black/10 dark:bg-white/10"
                     )}
                 />
             ))}
+        </div>
+    )
+}
+
+function StepChips({
+    steps,
+    current,
+    onSelect,
+}: {
+    steps: typeof STEPS
+    current: Step
+    onSelect: (step: Step) => void
+}) {
+    return (
+        <div className="mt-3 -mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {steps.map((s) => {
+                const Icon = s.icon
+                const active = s.key === current
+                return (
+                    <button
+                        key={s.key}
+                        type="button"
+                        onClick={() => onSelect(s.key)}
+                        className={cn(
+                            "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                            active
+                                ? "bg-brand-deep text-brand-gold-300 dark:bg-brand-gold-700 dark:text-white"
+                                : "text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/5"
+                        )}
+                    >
+                        <Icon className="h-3.5 w-3.5" />
+                        {s.label}
+                    </button>
+                )
+            })}
         </div>
     )
 }
@@ -961,7 +1030,7 @@ function SpeechProviderPicker({
                                 type="button"
                                 onClick={() => onProviderChange(provider.id)}
                                 className={cn(
-                                    "rounded-2xl border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
+                                    "rounded-3xl cursor-pointer border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
                                     active
                                         ? "border-brand-gold/45 bg-brand-gold/[0.06] ring-1 ring-inset ring-brand-gold/20 shadow-brand-gold/5"
                                         : "border-brand-deep/8 bg-brand-deep/[0.035] hover:border-brand-deep/16 hover:bg-brand-deep/[0.055] dark:border-white/8 dark:bg-white/[0.045] dark:hover:border-white/16 dark:hover:bg-white/[0.07]"
@@ -1003,16 +1072,16 @@ function SpeechProviderPicker({
                                     key={voice.id}
                                     onClick={() => onVoiceChange(voice.id)}
                                     className={cn(
-                                        "flex items-start justify-between gap-3 rounded-2xl border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
+                                        "flex items-start justify-between gap-3 rounded-3xl border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
                                         active
-                                            ? "border-brand-gold/45 bg-brand-gold/[0.06] ring-1 ring-inset ring-brand-gold/20 shadow-brand-gold/5"
+                                            ? "border-brand-gold/45 bg-brand-gold/6 ring-1 ring-inset ring-brand-gold/20 shadow-brand-gold/5"
                                             : "border-brand-deep/8 bg-brand-deep/[0.035] hover:border-brand-deep/16 hover:bg-brand-deep/[0.055] dark:border-white/8 dark:bg-white/[0.045] dark:hover:border-white/16 dark:hover:bg-white/[0.07]"
                                     )}
                                 >
                                     <button
                                         type="button"
                                         onClick={() => onVoiceChange(voice.id)}
-                                        className="min-w-0 flex-1 text-left focus-visible:outline-none"
+                                        className="min-w-0 cursor-pointer flex-1 text-left focus-visible:outline-none"
                                     >
                                         <div className="flex items-center gap-2">
                                             <p className="truncate text-sm font-semibold">{voice.name}</p>
@@ -1063,7 +1132,7 @@ function VoicePreviewButton({
                 event.stopPropagation()
                 onPreview()
             }}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gold text-white shadow-sm shadow-brand-gold/15 hover:bg-brand-gold-600"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gold-700 text-white shadow-sm shadow-brand-gold/15 hover:bg-brand-gold-600"
             aria-label="Preview voice"
         >
             {isPlaying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}

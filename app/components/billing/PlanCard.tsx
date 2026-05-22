@@ -68,7 +68,7 @@ export function PlanCard({
             isCurrent && "border-brand-deep dark:border-brand-cream bg-brand-deep/5 dark:bg-white/5"
         )}>
             {isRecommended && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gold px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-gold-700 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
                     Recommended
                 </div>
             )}
@@ -119,7 +119,7 @@ export function PlanCard({
                 className={cn(
                     "w-full h-12 rounded-xl text-sm font-bold transition-all",
                     isRecommended
-                        ? "bg-brand-deep hover:bg-brand-deep/90 text-brand-gold shadow-lg shadow-brand-deep/10 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90"
+                        ? "bg-brand-deep hover:bg-brand-deep/90 text-brand-gold shadow-lg shadow-brand-deep/10 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                         : "border-brand-deep/10 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5",
                     isCurrent && "opacity-100 bg-transparent border-brand-deep/20 text-brand-deep dark:text-brand-cream cursor-default hover:bg-transparent"
                 )}

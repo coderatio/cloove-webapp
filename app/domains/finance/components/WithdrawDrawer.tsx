@@ -261,7 +261,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 onOpenChange(false)
                                 setTimeout(() => router.push("/settings?tab=verification"), 300)
                             }}
-                            className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                            className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                         >
                             Start Verification
                             <ArrowRight className="w-5 h-5" />
@@ -512,7 +512,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                         <DrawerFooter className="p-6 md:p-8 space-y-4 dark:bg-transparent">
                             <Button
                                 onClick={() => setIsPinOpen(true)}
-                                className="w-full h-18 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
+                                className="w-full h-18 bg-brand-deep text-brand-cream dark:bg-brand-gold-700 dark:text-white font-black uppercase tracking-[0.3em] text-sm rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300"
                             >
                                 Confirm & Execute
                             </Button>

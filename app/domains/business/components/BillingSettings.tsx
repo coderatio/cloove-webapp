@@ -1087,7 +1087,7 @@ export function BillingSettings() {
                         </Button>
                         <Button
                             type="button"
-                            className="w-full h-12 rounded-2xl bg-brand-gold text-brand-deep hover:bg-brand-gold/90 font-semibold shadow-lg shadow-brand-gold/20"
+                            className="w-full h-12 rounded-2xl bg-brand-gold-700 text-white hover:bg-brand-gold-800 font-semibold shadow-lg shadow-brand-gold/20"
                             disabled={!hasCheckoutItems || initiateSub.isPending || payFromWallet.isPending}
                             onClick={() => {
                                 if (!hasCheckoutItems || !effectiveWalletId) return

@@ -210,7 +210,7 @@ function TimelineStage({ title, description, children }: { title: string; descri
         <div className="space-y-4">
             <div className="flex items-center gap-3 pl-[16px]">
                 <div className="w-3 h-3 rounded-full bg-brand-gold/10 border border-brand-gold/20 flex items-center justify-center">
-                    <div className="w-1 h-1 rounded-full bg-brand-gold" />
+                    <div className="w-1 h-1 rounded-full bg-brand-gold-700" />
                 </div>
                 <div>
                     <h6 className="text-[11px] font-black text-brand-deep/80 dark:text-brand-cream/80 uppercase tracking-[0.2em]">{title}</h6>
@@ -268,7 +268,7 @@ function MilestoneRow({
                         initial={{ scale: 1, opacity: 0.5 }}
                         animate={{ scale: 1.5, opacity: 0 }}
                         transition={{ repeat: Infinity, duration: 2 }}
-                        className="absolute inset-0 bg-brand-gold rounded-2xl z-0"
+                        className="absolute inset-0 bg-brand-gold-700 rounded-2xl z-0"
                     />
                 )}
             </div>

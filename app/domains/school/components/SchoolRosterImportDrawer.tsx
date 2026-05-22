@@ -310,15 +310,15 @@ export function SchoolRosterImportDrawer({ open, onOpenChange }: SchoolRosterImp
                                     </div>
                                     <ul className="space-y-2 text-xs text-brand-deep/65 dark:text-brand-cream/65">
                                         <li className="flex gap-2">
-                                            <span className="mt-1 h-1 w-1 rounded-full bg-brand-gold shrink-0" />
+                                            <span className="mt-1 h-1 w-1 rounded-full bg-brand-gold-700 shrink-0" />
                                             Upload any list — printed table, Excel sheet, PDF register, even a photo
                                         </li>
                                         <li className="flex gap-2">
-                                            <span className="mt-1 h-1 w-1 rounded-full bg-brand-gold shrink-0" />
+                                            <span className="mt-1 h-1 w-1 rounded-full bg-brand-gold-700 shrink-0" />
                                             Automatically identifies names, phone numbers, class, and role
                                         </li>
                                         <li className="flex gap-2">
-                                            <span className="mt-1 h-1 w-1 rounded-full bg-brand-gold shrink-0" />
+                                            <span className="mt-1 h-1 w-1 rounded-full bg-brand-gold-700 shrink-0" />
                                             Review and edit every record before it is saved
                                         </li>
                                     </ul>

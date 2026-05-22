@@ -107,7 +107,7 @@ export function InstallBanner() {
                             <div className="flex items-center gap-2">
                                 <Button
                                     onClick={handleInstall}
-                                    className="h-9 md:h-10 bg-brand-deep dark:bg-brand-gold text-white dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 px-4 md:px-6 rounded-xl font-medium text-xs md:text-sm"
+                                    className="h-9 md:h-10 bg-brand-deep dark:bg-brand-gold-700 text-white dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 px-4 md:px-6 rounded-xl font-medium text-xs md:text-sm"
                                 >
                                     <Download className="w-3.5 h-3.5 mr-2" />
                                     Install

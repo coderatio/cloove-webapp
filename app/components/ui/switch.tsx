@@ -38,8 +38,8 @@ export function Switch({ id, checked, defaultChecked, onCheckedChange, disabled,
             aria-checked={isOn}
             onClick={toggle}
             className={cn(
-                "relative h-7 w-12 cursor-pointer rounded-full border border-brand-deep/10 bg-brand-deep/8 p-1 transition-colors dark:border-brand-cream/10 dark:bg-brand-cream/10",
-                isOn && "border-brand-gold bg-brand-gold",
+                "relative h-7 w-12 cursor-pointer rounded-full border border-brand-deep/10 bg-brand-deep/8 p-1 transition-colors shadow-inner shadow-brand-deep/[0.025] dark:border-white/12 dark:bg-white/10 dark:shadow-black/20",
+                isOn && "border-brand-gold bg-brand-gold-700 shadow-none dark:border-brand-gold dark:bg-brand-gold-700",
                 disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
@@ -49,7 +49,7 @@ export function Switch({ id, checked, defaultChecked, onCheckedChange, disabled,
                 animate={{ x: isOn ? 20 : 0 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 className={cn(
-                    "h-5 w-5 rounded-full bg-brand-cream shadow-sm"
+                    "h-5 w-5 rounded-full bg-white shadow-sm ring-1 ring-black/[0.03] dark:bg-white dark:ring-white/10"
                 )}
             />
         </div>

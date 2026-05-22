@@ -24,7 +24,7 @@ const TooltipContent = React.forwardRef<
                 )}
                 {...props}
             >
-                <div className="rounded-lg border border-white/10 bg-green-950 dark:bg-brand-gold px-3 py-1.5 text-[11px] font-bold text-white dark:text-brand-deep-950 shadow-xl backdrop-blur-md">
+                <div className="rounded-lg border border-white/10 bg-green-950 dark:bg-brand-gold-700 px-3 py-1.5 text-[11px] font-bold text-white dark:text-brand-deep-950 shadow-xl backdrop-blur-md">
                     {children}
                     <BaseTooltipPrimitive.Arrow className="fill-green-950 dark:fill-brand-gold" />
                 </div>

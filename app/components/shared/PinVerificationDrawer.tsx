@@ -246,7 +246,7 @@ export function PinVerificationDrawer({
                                     <div className="flex items-center gap-3">
                                         {isVerifying && (
                                             <div className="flex items-center gap-2 bg-brand-gold/10 px-4 py-2 rounded-full border border-brand-gold/20">
-                                                <div className="w-2 h-2 rounded-full bg-brand-gold animate-pulse" />
+                                                <div className="w-2 h-2 rounded-full bg-brand-gold-700 animate-pulse" />
                                                 <span className="text-[10px] font-black uppercase tracking-tighter text-brand-gold">
                                                     Cryptographic Verification Active
                                                 </span>

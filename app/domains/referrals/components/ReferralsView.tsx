@@ -191,7 +191,7 @@ export function ReferralsView() {
                                     <Button
                                         onClick={() => stats?.referralLink && copyToClipboard(stats.referralLink)}
                                         disabled={!stats?.referralLink}
-                                        className="bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shrink-0 rounded-xl"
+                                        className="bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold shrink-0 rounded-xl"
                                     >
                                         Copy
                                     </Button>
@@ -274,7 +274,7 @@ export function ReferralsView() {
                                     <Button
                                         onClick={startWithdrawal}
                                         size="sm"
-                                        className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl gap-2"
+                                        className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold rounded-xl gap-2"
                                     >
                                         <ArrowUpRight className="w-4 h-4" />
                                         Withdraw Funds
@@ -340,7 +340,7 @@ export function ReferralsView() {
                                     onClick={() => stats?.referralCode && copyToClipboard(stats.referralCode)}
                                     disabled={!stats?.referralCode}
                                     size="sm"
-                                    className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl gap-2"
+                                    className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold rounded-xl gap-2"
                                 >
                                     <Share2 className="w-4 h-4" />
                                     Share Your Code

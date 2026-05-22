@@ -143,7 +143,7 @@ function SettingsContent() {
                         <Button
                             onClick={handleGlobalSave}
                             disabled={isSaving}
-                            className="h-12 w-full rounded-full bg-brand-deep px-6 font-bold text-brand-gold shadow-xl transition-all hover:bg-brand-deep/90 sm:w-auto sm:min-w-[180px] dark:bg-brand-gold dark:text-white dark:hover:bg-brand-gold/90"
+                            className="h-12 w-full rounded-full bg-brand-deep px-6 font-bold text-brand-gold shadow-xl transition-all hover:bg-brand-deep/90 sm:w-auto sm:min-w-[180px] dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                         >
                             {isSaving ? (
                                 <>

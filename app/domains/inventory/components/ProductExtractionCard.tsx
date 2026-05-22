@@ -58,7 +58,7 @@ export function ProductExtractionCard({
                     <div className={cn(
                         "mt-1 w-2 h-2 rounded-full shrink-0",
                         product.status === 'success' ? "bg-brand-green dark:bg-brand-deep-400" :
-                            product.status === 'error' ? "bg-rose-500 dark:bg-rose-400" : "bg-brand-gold animate-pulse"
+                            product.status === 'error' ? "bg-rose-500 dark:bg-rose-400" : "bg-brand-gold-700 animate-pulse"
                     )} />
 
                     <div className="flex-1 space-y-4">

@@ -56,7 +56,7 @@ export function SessionTimeoutDrawer({
                         <div className="flex flex-col sm:flex-row gap-4 w-full pt-4">
                             <Button
                                 onClick={onExtend}
-                                className="flex-1 h-12 rounded-xl bg-brand-deep dark:bg-brand-gold text-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-medium gap-2"
+                                className="flex-1 h-12 rounded-xl bg-brand-deep dark:bg-brand-gold-700 text-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-medium gap-2"
                             >
                                 <RefreshCw className="w-4 h-4" />
                                 Stay Logged In

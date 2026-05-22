@@ -93,7 +93,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                 {/* 
                             <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/10 dark:border-white/5 hover:border-brand-gold/50 transition-all group">
                                 <Bell className="w-5 h-5 text-brand-deep/60 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
-                                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-gold rounded-full border-2 border-brand-cream dark:border-brand-deep" />
+                                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-gold-700 rounded-full border-2 border-brand-cream dark:border-brand-deep" />
                             </button> 
                             */}
 

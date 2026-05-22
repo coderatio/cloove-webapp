@@ -533,7 +533,7 @@ export function ExpensesView() {
                                                             {category.label}
                                                         </span>
                                                         <div className="h-2 flex-1 rounded-full bg-brand-deep/5 dark:bg-white/10 overflow-hidden">
-                                                            <div className="h-full bg-brand-gold" style={{ width: `${Math.min(percent, 100)}%` }} />
+                                                            <div className="h-full bg-brand-gold-700" style={{ width: `${Math.min(percent, 100)}%` }} />
                                                         </div>
                                                         <span className="text-xs text-brand-deep dark:text-brand-cream min-w-[96px] text-right">
                                                             <CurrencyText value={formatCurrency(item.amount, { currency: currencyCode, notation: "compact" })} />
@@ -708,7 +708,7 @@ export function ExpensesView() {
                             {!deferredSearch && selectedFilters.length === 0 && (
                                 <Button
                                     onClick={() => setIsAddOpen(true)}
-                                    className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold"
+                                    className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold"
                                 >
                                     <Banknote className="w-4 h-4 mr-2" />
                                     Record Expense

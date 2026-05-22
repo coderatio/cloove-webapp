@@ -141,7 +141,7 @@ export function InquiryDetailDrawer({
                     <Button
                         onClick={() => onUpdateStatus(status, notes.trim() || null)}
                         disabled={submitting}
-                        className="bg-brand-deep text-brand-gold-300 dark:bg-brand-gold dark:text-brand-deep"
+                        className="bg-brand-deep text-brand-gold-300 dark:bg-brand-gold-700 dark:text-white"
                     >
                         {submitting ? "Saving..." : "Save"}
                     </Button>

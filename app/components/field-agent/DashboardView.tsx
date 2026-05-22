@@ -258,7 +258,7 @@ export function DashboardView() {
                                     <div className="text-right">
                                         <p className="text-sm font-serif font-medium text-brand-deep dark:text-brand-cream">{fmt(biz.earnings)}</p>
                                         <div className="flex items-center justify-end gap-1 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-1 h-1 rounded-full bg-brand-gold" />
+                                            <div className="w-1 h-1 rounded-full bg-brand-gold-700" />
                                             <span className="text-[9px] font-black uppercase text-brand-gold">Yield</span>
                                         </div>
                                     </div>
@@ -297,7 +297,7 @@ export function DashboardView() {
 
                     <Button
                         size="lg"
-                        className="shrink-0 w-full sm:w-auto bg-brand-gold text-brand-deep hover:bg-white hover:scale-105 rounded-[24px] px-8 md:px-14 h-16 md:h-20 text-sm md:text-lg font-black uppercase tracking-[0.2em] shadow-[0_20px_50px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center"
+                        className="shrink-0 w-full sm:w-auto bg-brand-gold-700 text-white hover:bg-white hover:scale-105 rounded-[24px] px-8 md:px-14 h-16 md:h-20 text-sm md:text-lg font-black uppercase tracking-[0.2em] shadow-[0_20px_50px_rgba(212,175,55,0.3)] transition-all flex items-center justify-center"
                         asChild
                     >
                         <Link href="/field/onboard">

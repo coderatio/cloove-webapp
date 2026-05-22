@@ -453,15 +453,15 @@ export function BulkUploadDrawer({
                                     </h4>
                                     <ul className="space-y-2 text-xs text-brand-accent/60 dark:text-brand-cream/60">
                                         <li className="flex gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-brand-gold mt-1.5 shrink-0" />
+                                            <div className="w-1 h-1 rounded-full bg-brand-gold-700 mt-1.5 shrink-0" />
                                             No need for specific templates. Just upload your invoice or list.
                                         </li>
                                         <li className="flex gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-brand-gold mt-1.5 shrink-0" />
+                                            <div className="w-1 h-1 rounded-full bg-brand-gold-700 mt-1.5 shrink-0" />
                                             Automatic identification of name, price, variants and stock.
                                         </li>
                                         <li className="flex gap-2">
-                                            <div className="w-1 h-1 rounded-full bg-brand-gold mt-1.5 shrink-0" />
+                                            <div className="w-1 h-1 rounded-full bg-brand-gold-700 mt-1.5 shrink-0" />
                                             Instant refinement via the interactive dashboard.
                                         </li>
                                     </ul>
@@ -561,7 +561,7 @@ export function BulkUploadDrawer({
                                         </Button>
                                         <Button
                                             onClick={() => setStep('upload')}
-                                            className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep px-8 h-12 shadow-lg"
+                                            className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white px-8 h-12 shadow-lg"
                                         >
                                             Upload More
                                             <ChevronRight className="w-4 h-4 ml-2" />
@@ -597,7 +597,7 @@ export function BulkUploadDrawer({
                                         extractedProducts.some(p => p.status === 'error') ||
                                         brokenImageUrls.length > 0
                                     }
-                                    className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep px-8 h-12 shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
+                                    className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white px-8 h-12 shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
                                 >
                                     {isUploading || isValidatingImages ? (
                                         <Loader2 className="w-4 h-4 animate-spin mr-2" />

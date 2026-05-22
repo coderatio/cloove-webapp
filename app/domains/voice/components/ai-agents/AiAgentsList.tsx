@@ -72,7 +72,7 @@ export function AiAgentsList() {
                 <Button
                     type="button"
                     onClick={openCreate}
-                    className="h-10 rounded-full bg-brand-deep px-3 text-sm font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92 dark:hover:text-brand-deep sm:px-4"
+                    className="h-10 rounded-full bg-brand-deep px-3 text-sm font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep sm:px-4"
                 >
                     <Plus className="h-4 w-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">New agent</span>
@@ -159,7 +159,7 @@ function AgentCard({
                     onEdit()
                 }
             }}
-            className="group relative flex cursor-pointer flex-col gap-3 rounded-2xl border border-black/5 bg-black/3 p-4 text-left transition-colors hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 dark:border-white/5 dark:bg-white/3"
+            className="group relative flex cursor-pointer flex-col gap-3 rounded-3xl border border-black/5 bg-black/3 p-4 text-left transition-colors hover:border-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 dark:border-white/5 dark:bg-white/3"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
@@ -261,7 +261,7 @@ function AgentCard({
                         e.stopPropagation()
                         onSetStatus("active")
                     }}
-                    className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-deep px-3 py-1 text-xs font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92"
+                    className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-deep px-3 py-1 text-xs font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                 >
                     <Play className="h-3 w-3" />
                     Activate agent

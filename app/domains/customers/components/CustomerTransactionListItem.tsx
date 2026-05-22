@@ -52,7 +52,7 @@ export function CustomerTransactionListItem({
             onClick={onClick}
             className="w-full h-auto flex items-center gap-4 p-4 rounded-3xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm group hover:border-brand-gold/20 dark:hover:border-brand-gold/20 hover:bg-white dark:hover:bg-brand-deep/60 transition-all text-left justify-start"
         >
-            <div className="h-10 w-10 shrink-0 rounded-full bg-brand-gold/5 dark:bg-brand-gold/10 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold group-hover:text-white transition-all">
+            <div className="h-10 w-10 shrink-0 rounded-full bg-brand-gold/5 dark:bg-brand-gold/10 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold-800 group-hover:text-white transition-all">
                 <ShoppingBag className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">

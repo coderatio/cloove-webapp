@@ -103,7 +103,7 @@ export function ConfirmDialog({
                             "h-10 min-w-30 rounded-xl px-5 font-medium shadow-sm",
                             isDestructive
                                 ? "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
-                                : "bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90",
+                                : "bg-brand-deep text-brand-gold hover:bg-brand-deep/90 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800",
                         )}
                     >
                         {isLoading ? (

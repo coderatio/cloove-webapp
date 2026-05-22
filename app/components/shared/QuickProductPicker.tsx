@@ -136,7 +136,7 @@ export function QuickProductPicker({
                         className={cn(
                             "shrink-0 h-auto px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider",
                             activeCategory === cat
-                                ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90"
+                                ? "bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800"
                                 : "bg-brand-accent/5 dark:bg-white/5 text-brand-accent/60 dark:text-brand-cream/50 hover:bg-brand-accent/10 dark:hover:bg-white/10"
                         )}
                     >
@@ -178,7 +178,7 @@ export function QuickProductPicker({
                                 )}
                             >
                                 {qty > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 z-20 h-6 min-w-6 px-1.5 rounded-full bg-amber-400 dark:bg-brand-gold text-brand-deep text-[10px] font-black flex items-center justify-center shadow-md ring-2 ring-white/90 dark:ring-brand-deep/70">
+                                    <span className="absolute top-1.5 right-1.5 z-20 h-6 min-w-6 px-1.5 rounded-full bg-amber-400 dark:bg-brand-gold-700 text-white text-[10px] font-black flex items-center justify-center shadow-md ring-2 ring-white/90 dark:ring-brand-deep/70">
                                         {qty}
                                     </span>
                                 )}

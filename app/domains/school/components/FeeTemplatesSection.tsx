@@ -962,7 +962,7 @@ export function FeeTemplatesSection() {
                                                 <div className={cn(
                                                     "w-3.5 h-3.5 rounded-full border-2 mb-2 transition-colors",
                                                     scope === s
-                                                        ? "border-brand-gold bg-brand-gold"
+                                                        ? "border-brand-gold bg-brand-gold-700"
                                                         : "border-brand-deep/25 dark:border-white/25"
                                                 )} />
                                                 <div>

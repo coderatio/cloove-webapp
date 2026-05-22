@@ -1016,7 +1016,7 @@ export function VariantsAndOptionsSheet({
                         <SideSheetClose asChild>
                             <Button
                                 type="button"
-                                className="flex-1 rounded-2xl h-12 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-xl uppercase tracking-widest text-xs"
+                                className="flex-1 rounded-2xl h-12 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 dark:text-brand-deep font-bold shadow-xl uppercase tracking-widest text-xs"
                             >
                                 Done
                             </Button>

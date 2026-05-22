@@ -64,7 +64,7 @@ export function AgentSidebar() {
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group relative",
                                     isActive
-                                        ? "bg-brand-gold text-brand-deep"
+                                        ? "bg-brand-gold-700 text-white"
                                         : "text-brand-cream/60 hover:text-white hover:bg-white/5"
                                 )}
                             >
@@ -89,7 +89,7 @@ export function AgentSidebar() {
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group",
                                     isActive
-                                        ? "bg-brand-gold text-brand-deep"
+                                        ? "bg-brand-gold-700 text-white"
                                         : "text-brand-cream/60 hover:text-white hover:bg-white/5"
                                 )}
                             >
@@ -131,7 +131,7 @@ export function AgentSidebar() {
                             {isActive && (
                                 <motion.div
                                     layoutId="mobile-active-glow"
-                                    className="absolute -bottom-1 w-1 h-1 bg-brand-gold rounded-full shadow-[0_0_8px_rgba(234,179,8,0.8)]"
+                                    className="absolute -bottom-1 w-1 h-1 bg-brand-gold-700 rounded-full shadow-[0_0_8px_rgba(234,179,8,0.8)]"
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
                             )}

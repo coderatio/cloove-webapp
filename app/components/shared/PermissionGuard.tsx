@@ -76,7 +76,7 @@ function AccessDenied({ permission }: { permission?: string }) {
                             <Button
                                 type="button"
                                 onClick={() => router.push("/")}
-                                className="h-12 rounded-2xl bg-brand-deep font-semibold text-brand-gold shadow-lg shadow-brand-deep/20 hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90"
+                                className="h-12 rounded-2xl bg-brand-deep font-semibold text-brand-gold shadow-lg shadow-brand-deep/20 hover:bg-brand-deep/90 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                             >
                                 Home
                             </Button>

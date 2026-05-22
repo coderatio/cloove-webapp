@@ -93,7 +93,7 @@ export function PinVerificationDrawer({
                         <Button
                             onClick={handleSubmit}
                             disabled={isLoading || pin.some(d => !d)}
-                            className="w-full h-12 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 text-base font-medium rounded-xl"
+                            className="w-full h-12 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 text-base font-medium rounded-xl"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />

@@ -81,7 +81,7 @@ export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePre
           <Button
             onClick={onSave}
             disabled={isSaving}
-            className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold px-3 md:px-6 h-9 gap-1.5 md:gap-2 shadow-lg hover:scale-105 transition-all duration-300"
+            className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold px-3 md:px-6 h-9 gap-1.5 md:gap-2 shadow-lg hover:scale-105 transition-all duration-300"
           >
             <Save className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{isSaving ? "Saving…" : "Save"}</span>

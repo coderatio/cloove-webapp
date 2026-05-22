@@ -133,7 +133,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
 
                             {/* Scan Line */}
                             <motion.div
-                                className="absolute left-4 right-4 h-0.5 bg-brand-gold shadow-[0_0_15px_rgba(212,175,55,1)] z-20"
+                                className="absolute left-4 right-4 h-0.5 bg-brand-gold-700 shadow-[0_0_15px_rgba(212,175,55,1)] z-20"
                                 animate={{ top: ["20%", "80%", "20%"] }}
                                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                             />
@@ -154,7 +154,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                                 initial={{ scale: 0 }}
                                 animate={{ scale: [0, 1.5, 0] }}
                                 transition={{ duration: 0.8 }}
-                                className="absolute inset-0 bg-brand-gold rounded-full blur-xl"
+                                className="absolute inset-0 bg-brand-gold-700 rounded-full blur-xl"
                             />
                         </motion.div>
                     )}
@@ -170,7 +170,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                             key={s}
                             className={cn(
                                 "h-1.5 rounded-full transition-all duration-500",
-                                step === s ? "w-8 bg-brand-gold" : "w-1.5 bg-brand-deep/10 dark:bg-white/10"
+                                step === s ? "w-8 bg-brand-gold-700" : "w-1.5 bg-brand-deep/10 dark:bg-white/10"
                             )}
                         />
                     ))}
@@ -208,7 +208,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
 
                             <Button
                                 onClick={startVerification}
-                                className="w-full h-14 rounded-2xl bg-brand-deep dark:bg-brand-gold hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 text-brand-gold dark:text-brand-deep dark:hover:text-brand-deep font-bold text-lg shadow-2xl transition-all group active:scale-95"
+                                className="w-full h-14 rounded-2xl bg-brand-deep dark:bg-brand-gold-700 hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 text-brand-gold dark:text-brand-deep dark:hover:text-brand-deep font-bold text-lg shadow-2xl transition-all group active:scale-95"
                             >
                                 Verify My Identity
                                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -251,7 +251,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                                 <Button
                                     type="submit"
                                     disabled={bvn.length !== 11}
-                                    className="w-full h-14 cursor-pointer rounded-2xl bg-brand-deep dark:bg-brand-gold hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 text-brand-gold dark:text-brand-deep dark:hover:text-brand-deep font-bold text-lg shadow-2xl transition-all group active:scale-95 disabled:opacity-50"
+                                    className="w-full h-14 cursor-pointer rounded-2xl bg-brand-deep dark:bg-brand-gold-700 hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 text-brand-gold dark:text-brand-deep dark:hover:text-brand-deep font-bold text-lg shadow-2xl transition-all group active:scale-95 disabled:opacity-50"
                                 >
                                     Proceed
                                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -289,7 +289,7 @@ export function VerificationModal({ isOpen, onOpenChange, onComplete }: Verifica
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${progress}%` }}
-                                        className="h-full bg-brand-gold shadow-[0_0_10px_rgba(212,175,55,0.5)]"
+                                        className="h-full bg-brand-gold-700 shadow-[0_0_10px_rgba(212,175,55,0.5)]"
                                     />
                                 </div>
                                 <p className="text-xs text-brand-gold font-mono font-bold tracking-[0.2em]">

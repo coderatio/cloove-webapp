@@ -350,7 +350,7 @@ function PaymentLinkView({ businessName }: { businessName: string }) {
                 <div className="flex gap-3 w-full">
                     <Button
                         onClick={handleCopy}
-                        className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold gap-2"
+                        className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold gap-2"
                     >
                         {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         {copied ? "Copied" : "Copy"}
@@ -413,7 +413,7 @@ function PaymentLinkView({ businessName }: { businessName: string }) {
                 <Button
                     onClick={handleCreate}
                     disabled={!slug.trim() || createWalletLink.isPending}
-                    className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {createWalletLink.isPending ? 'Creating...' : 'Create Payment Link'}
                 </Button>
@@ -559,7 +559,7 @@ function EmailMissingView({ onGoToProfile }: { onGoToProfile: () => void }) {
                             <div className={cn(
                                 "w-7 h-7 rounded-full flex items-center justify-center shrink-0 border text-xs font-bold",
                                 step.active
-                                    ? "bg-brand-gold border-brand-gold text-white"
+                                    ? "bg-brand-gold-700 border-brand-gold text-white"
                                     : "bg-transparent border-brand-deep/10 dark:border-white/10 text-brand-accent/30 dark:text-brand-cream/30"
                             )}>
                                 {i + 1}
@@ -579,7 +579,7 @@ function EmailMissingView({ onGoToProfile }: { onGoToProfile: () => void }) {
 
             <Button
                 onClick={onGoToProfile}
-                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
             >
                 Go to Profile Settings
                 <ArrowRight className="w-5 h-5" />
@@ -652,7 +652,7 @@ function EmailUnverifiedView({ email }: { email: string }) {
                 <Button
                     onClick={handleResend}
                     disabled={resendState === 'loading'}
-                    className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+                    className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
                 >
                     {resendState === 'loading' ? (
                         <><RefreshCw className="w-5 h-5 animate-spin" /> Sending…</>
@@ -762,7 +762,7 @@ function VerificationRequiredView({
             {/* CTA */}
             <Button
                 onClick={onStartVerification}
-                className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold/90 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
             >
                 Start Verification
                 <ArrowRight className="w-5 h-5" />

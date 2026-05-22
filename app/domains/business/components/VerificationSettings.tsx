@@ -249,7 +249,7 @@ function AccordionItem({
                             <div className="flex flex-wrap gap-2">
                                 {step.requirements.map((req, i) => (
                                     <span key={i} className="flex items-center gap-2 text-[11px] font-medium text-brand-deep/60 dark:text-brand-cream/60 bg-brand-deep/5 dark:bg-white/5 px-3 py-1.5 rounded-lg border border-transparent hover:border-brand-gold/10 transition-colors">
-                                        <div className="w-1 h-1 rounded-full bg-brand-gold" />
+                                        <div className="w-1 h-1 rounded-full bg-brand-gold-700" />
                                         {req}
                                     </span>
                                 ))}
@@ -488,7 +488,7 @@ export function VerificationSettings() {
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12 items-end">
                     <div className="space-y-4 relative">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="w-8 h-1 bg-brand-gold rounded-full" />
+                            <div className="w-8 h-1 bg-brand-gold-700 rounded-full" />
                             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-gold">Institutional Trust</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-serif text-brand-deep dark:text-brand-cream tracking-tight leading-tight">
@@ -634,9 +634,9 @@ export function VerificationSettings() {
                     </p>
                     <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-brand-deep/30 dark:text-white/20">
                         <span>Encrypted</span>
-                        <div className="w-1 h-1 rounded-full bg-brand-gold" />
+                        <div className="w-1 h-1 rounded-full bg-brand-gold-700" />
                         <span>Audited</span>
-                        <div className="w-1 h-1 rounded-full bg-brand-gold" />
+                        <div className="w-1 h-1 rounded-full bg-brand-gold-700" />
                         <span>Compliant</span>
                     </div>
                 </GlassCard>
@@ -652,7 +652,7 @@ export function VerificationSettings() {
                     </p>
                     <Button
                         variant="outline"
-                        className="w-full rounded-2xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold hover:text-brand-deep h-12 font-bold uppercase tracking-widest text-[10px] transition-all"
+                        className="w-full rounded-2xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold-800 hover:text-brand-deep h-12 font-bold uppercase tracking-widest text-[10px] transition-all"
                     >
                         Initiate Private Consultation
                     </Button>

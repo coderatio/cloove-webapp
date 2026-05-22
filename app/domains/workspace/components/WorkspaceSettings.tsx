@@ -273,7 +273,7 @@ export function WorkspaceSettings() {
                                         {preset.label}
                                     </span>
                                     {selected && (
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold text-white">
+                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold-700 text-white">
                                             <Check className="h-3.5 w-3.5" />
                                         </span>
                                     )}

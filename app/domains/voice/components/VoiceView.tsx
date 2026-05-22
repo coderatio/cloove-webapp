@@ -449,7 +449,7 @@ export function VoiceView() {
                     </div>
                     <Button
                         asChild
-                        className="h-auto min-h-14 rounded-[1.4rem] bg-brand-deep px-5 py-3 text-brand-gold-300 shadow-[0_18px_40px_rgba(11,61,46,0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-deep/92 hover:text-brand-gold-200 hover:shadow-[0_22px_44px_rgba(11,61,46,0.22)] dark:bg-brand-gold dark:text-brand-deep dark:shadow-[0_18px_40px_rgba(245,158,11,0.18)] dark:hover:bg-brand-gold/92"
+                        className="h-auto min-h-14 rounded-[1.4rem] bg-brand-deep px-5 py-3 text-brand-gold-300 shadow-[0_18px_40px_rgba(11,61,46,0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-deep/92 hover:text-brand-gold-200 hover:shadow-[0_22px_44px_rgba(11,61,46,0.22)] dark:bg-brand-gold-700 dark:text-white dark:shadow-[0_18px_40px_rgba(245,158,11,0.18)] dark:hover:bg-brand-gold-800"
                     >
                         <a
                             href="/settings?tab=billing&addon=voice_agent_number"
@@ -584,7 +584,7 @@ export function VoiceView() {
                                                 type="button"
                                                 aria-label="Connect voice number"
                                                 title="Connect voice number"
-                                                className="h-10 rounded-full bg-brand-deep px-3 text-sm font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92 dark:hover:text-brand-deep sm:px-4"
+                                                className="h-10 rounded-full bg-brand-deep px-3 text-sm font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep sm:px-4"
                                                 onClick={openCreateNumberDrawer}
                                             >
                                                 <Plus className="h-4 w-4 sm:mr-1.5" />
@@ -1504,7 +1504,7 @@ function ApprovedNumberRequestCard({
                         <Button
                             type="button"
                             onClick={onConnect}
-                            className="h-9 shrink-0 rounded-full bg-brand-deep px-4 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92"
+                            className="h-9 shrink-0 rounded-full bg-brand-deep px-4 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                         >
                             Connect now
                         </Button>
@@ -1830,7 +1830,7 @@ function VoiceNumbersEmptyState({ onConnect }: { onConnect: () => void }) {
             <Button
                 type="button"
                 onClick={onConnect}
-                className="mt-6 h-11 rounded-full bg-brand-deep px-6 text-brand-gold-300 hover:bg-brand-deep/90 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90"
+                className="mt-6 h-11 rounded-full bg-brand-deep px-6 text-brand-gold-300 hover:bg-brand-deep/90 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
             >
                 <Phone className="mr-2 h-4 w-4" />
                 Connect voice number

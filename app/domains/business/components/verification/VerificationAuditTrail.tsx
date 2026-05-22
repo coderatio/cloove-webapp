@@ -79,7 +79,7 @@ export function VerificationAuditTrail({
                                     <div className={cn(
                                         "w-2 h-2 rounded-full mt-1.5 shrink-0 z-10",
                                         log.status === "VERIFIED" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" :
-                                            log.status === "PENDING" ? "bg-brand-gold shadow-[0_0_8px_rgba(212,175,55,0.5)]" :
+                                            log.status === "PENDING" ? "bg-brand-gold-700 shadow-[0_0_8px_rgba(212,175,55,0.5)]" :
                                                 "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
                                     )} />
                                     

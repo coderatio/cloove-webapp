@@ -1323,7 +1323,7 @@ export function InventoryView() {
                                                     className={cn(
                                                         "w-1.5 h-1.5 rounded-full transition-all duration-300",
                                                         pageMeta.currentPage === page
-                                                            ? "bg-brand-green w-3 dark:bg-brand-gold"
+                                                            ? "bg-brand-green w-3 dark:bg-brand-gold-700"
                                                             : "bg-brand-accent/20 dark:bg-white/10"
                                                     )}
                                                 />
@@ -1670,7 +1670,7 @@ export function InventoryView() {
                                                 form?.requestSubmit()
                                             }}
                                             disabled={isSubmitting}
-                                            className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest text-xs"
+                                            className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 dark:text-brand-deep font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest text-xs"
                                         >
                                             {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (editingItem ? "Update Changes" : "Create Product")}
                                         </Button>
