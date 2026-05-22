@@ -168,6 +168,8 @@ const EMPTY_NUMBER_FORM = {
     provider_credentials: {} as Record<string, string>,
     use_system_credentials: true,
     is_default: true,
+    country_code: "NG",
+    number_type: "local" as "local" | "mobile" | "toll_free" | "national",
 }
 
 const EMPTY_NUMBER_REQUEST_FORM = {
@@ -195,24 +197,44 @@ const EMPTY_CALL_FORM = {
 }
 
 
-function numberToForm(number: VoiceNumberItem) {
+function stripDialCode(value: string | null | undefined, phoneCode: string): string {
+    if (!value) return ""
+    const digits = String(value).replace(/^\+/, "").replace(/[^\d]/g, "")
+    if (phoneCode && digits.startsWith(phoneCode)) {
+        return digits.slice(phoneCode.length)
+    }
+    return digits
+}
+
+function combineE164(local: string, phoneCode: string): string {
+    const trimmed = String(local || "").replace(/^\+/, "").replace(/[^\d]/g, "").replace(/^0+/, "")
+    if (!phoneCode) return trimmed
+    return `+${phoneCode}${trimmed}`
+}
+
+function numberToForm(number: VoiceNumberItem, phoneCode: string) {
     return {
         provider: number.provider,
         label: number.label ?? "",
-        phone_number: number.phone_number,
+        phone_number: stripDialCode(number.phone_number, phoneCode),
         voice_number_request_id: null,
         provider_credentials: {} as Record<string, string>,
         use_system_credentials: number.use_system_credentials,
         is_default: number.is_default,
+        country_code: number.country_code ?? "NG",
+        number_type: (number.number_type ?? "local") as "local" | "mobile" | "toll_free" | "national",
     }
 }
 
-function buildNumberUpdatePayload(form: typeof EMPTY_NUMBER_FORM) {
+function buildNumberUpdatePayload(form: typeof EMPTY_NUMBER_FORM, phoneCode: string) {
     const payload: Record<string, unknown> = {
         label: form.label.trim() || null,
         provider: form.provider,
         use_system_credentials: form.use_system_credentials,
         is_default: form.is_default,
+        country_code: form.country_code,
+        number_type: form.number_type,
+        phone_number: combineE164(form.phone_number, phoneCode),
     }
 
     const credentials = Object.fromEntries(
@@ -329,6 +351,10 @@ export function VoiceView() {
         [providerOptions]
     )
     const selectedProvider = providerMap.get(numberForm.provider) ?? providerOptions[0]
+    const findPhoneCode = (providerId: string, countryCode: string): string => {
+        const provider = providerMap.get(providerId)
+        return provider?.supported_countries.find((c) => c.code === countryCode)?.phoneCode ?? ""
+    }
     const editingNumber = useMemo(
         () => (numbersQuery.data ?? []).find((number) => number.id === editingNumberId) ?? null,
         [editingNumberId, numbersQuery.data]
@@ -371,34 +397,43 @@ export function VoiceView() {
 
     const openApprovedRequestNumberDrawer = (request: VoiceNumberRequestItem) => {
         setEditingNumberId(null)
+        const countryCode = request.country_code ?? "NG"
+        const phoneCode = findPhoneCode(request.provider, countryCode)
         setNumberForm({
             provider: request.provider,
             label: request.label ?? "",
-            phone_number: request.approved_phone_number ?? "",
+            phone_number: stripDialCode(request.approved_phone_number, phoneCode),
             voice_number_request_id: request.id,
             provider_credentials: {},
             use_system_credentials: true,
             is_default: (numbersQuery.data ?? []).length === 0,
+            country_code: countryCode,
+            number_type: (request.number_type ?? "local") as "local" | "mobile" | "toll_free" | "national",
         })
         setNumberDrawerMode("create")
     }
 
     const openEditNumberDrawer = (number: VoiceNumberItem) => {
         setEditingNumberId(number.id)
-        setNumberForm(numberToForm(number))
+        const phoneCode = findPhoneCode(number.provider, number.country_code ?? "")
+        setNumberForm(numberToForm(number, phoneCode))
         setNumberDrawerMode("edit")
     }
 
     const handleSaveNumber = () => {
+        const phoneCode = findPhoneCode(numberForm.provider, numberForm.country_code)
         if (numberDrawerMode === "edit" && editingNumber) {
             updateNumber.mutate(
-                { id: editingNumber.id, payload: buildNumberUpdatePayload(numberForm) },
+                { id: editingNumber.id, payload: buildNumberUpdatePayload(numberForm, phoneCode) },
                 { onSuccess: closeNumberDrawer }
             )
             return
         }
 
-        createNumber.mutate(numberForm, { onSuccess: closeNumberDrawer })
+        createNumber.mutate(
+            { ...numberForm, phone_number: combineE164(numberForm.phone_number, phoneCode) },
+            { onSuccess: closeNumberDrawer }
+        )
     }
 
     useEffect(() => {

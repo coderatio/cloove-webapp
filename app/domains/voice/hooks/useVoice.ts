@@ -21,6 +21,15 @@ export interface VoiceNumberItem {
     is_default: boolean
     sms_enabled?: boolean
     ai_agent_id: string | null
+    country_code: string | null
+    number_type: string | null
+    rates: {
+        inboundPerMinute: number | null
+        outboundPerMinute: number | null
+        currency: string | null
+        countryIso: string | null
+        numberType: string | null
+    } | null
     created_at: string
     updated_at: string | null
 }
