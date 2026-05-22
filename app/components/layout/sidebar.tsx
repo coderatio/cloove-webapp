@@ -390,10 +390,10 @@ function NavItem({
                 <TooltipTrigger asChild>
                     <div
                         className={cn(
-                            'group relative flex items-center rounded-lg transition-all duration-200',
+                            'group relative flex items-center rounded-xl transition-all duration-200',
                             isCollapsed ? 'h-10 w-10 justify-center mx-auto' : 'px-3 py-2',
                             isActive || isChildActive
-                                ? 'border border-primary/15 bg-primary/10 text-primary shadow-sm dark:border-brand-gold/20 dark:bg-brand-gold/12 dark:text-brand-gold-300'
+                                ? 'bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream'
                         )}
                     >
@@ -643,7 +643,7 @@ function Footer({
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className={cn(
-                        'group flex w-full items-center gap-3 rounded-xl border border-border/50 bg-muted/30 p-2 text-left transition-all hover:bg-muted hover:border-border dark:border-white/10 dark:bg-white/[0.045] dark:hover:border-brand-gold/20 dark:hover:bg-brand-gold/10',
+                        'group flex w-full items-center gap-3 rounded-2xl border border-border/50 bg-muted/30 p-2 text-left transition-all hover:bg-muted hover:border-border dark:border-white/10 dark:bg-white/[0.045] dark:hover:border-brand-gold/20 dark:hover:bg-brand-gold/10',
                         isMenuOpen && 'border-primary/20 bg-primary/10 dark:border-brand-gold/25 dark:bg-brand-gold/12',
                         isCollapsed && 'justify-center border-0 bg-transparent hover:bg-muted/50 dark:hover:bg-white/8'
                     )}
@@ -690,7 +690,7 @@ function FooterLink({ href, icon: Icon, label, isActive, isCollapsed }: FooterLi
                 <Link
                     href={href}
                     className={cn(
-                        'flex items-center rounded-lg transition-colors',
+                        'flex items-center rounded-xl transition-colors',
                         isCollapsed ? 'h-9 w-9 justify-center mx-auto' : 'gap-3 px-2.5 py-2',
                         isActive
                             ? 'bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300'

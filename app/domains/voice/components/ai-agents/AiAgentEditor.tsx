@@ -35,9 +35,11 @@ import {
     useVoiceNumbers,
     useAssignVoiceAiAgentToNumber,
     useVoiceSpeechProviders,
+    useVoiceTools,
     type AiAgentItem,
     type VoiceSpeechProviderItem,
     type VoiceSpeechVoiceItem,
+    type VoiceToolPreset,
 } from "@/app/domains/voice/hooks/useVoice"
 import { ToolPicker } from "@/app/domains/voice/components/ai-agents/ToolPicker"
 
@@ -104,6 +106,8 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
     const assignMutation = useAssignVoiceAiAgentToNumber()
     const numbersQuery = useVoiceNumbers()
     const numbers = useMemo(() => numbersQuery.data ?? [], [numbersQuery.data])
+    const toolsCatalogQuery = useVoiceTools()
+    const lastAppliedTemplateRef = useRef<string | null>(null)
     const speechProvidersQuery = useVoiceSpeechProviders()
     const speechProviders: VoiceSpeechProviderItem[] = useMemo(
         () => speechProvidersQuery.data ?? [],
@@ -144,6 +148,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
         if (!open) return
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsEditorHydrated(false)
+        lastAppliedTemplateRef.current = null
         if (agent) {
             setStep("identity")
             setName(agent.name)
@@ -194,6 +199,24 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
         }
         setIsEditorHydrated(true)
     }, [open, agent, numbers])
+
+    // Apply tool preset when a template is chosen during create. Skipped on
+    // edit (preserves the agent's saved tools) and guarded by a ref so it
+    // runs once per template choice — not on every ToolPicker remount.
+    useEffect(() => {
+        if (!open || isEdit) return
+        const catalog = toolsCatalogQuery.data
+        if (!catalog) return
+        if (lastAppliedTemplateRef.current === template) return
+
+        lastAppliedTemplateRef.current = template
+        if (template === "scratch") {
+            setEnabledTools([])
+            return
+        }
+        const preset = findPresetForTemplate(template, catalog.presets)
+        if (preset) setEnabledTools(preset.tools)
+    }, [open, isEdit, template, toolsCatalogQuery.data])
 
     const currentIdx = STEPS.findIndex((s) => s.key === step)
     const goNext = () => {
@@ -247,11 +270,14 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
         is_default: isDefault,
     })
 
-    const handleSave = async () => {
+    const handleSave = async (statusOnCreate: "active" | "draft" = "active") => {
         try {
+            const payload = isEdit
+                ? buildPayload()
+                : { ...buildPayload(), status: statusOnCreate }
             const saved = isEdit
-                ? await updateMutation.mutateAsync({ id: agent!.id, payload: buildPayload() })
-                : await createMutation.mutateAsync(buildPayload())
+                ? await updateMutation.mutateAsync({ id: agent!.id, payload })
+                : await createMutation.mutateAsync(payload)
 
             // Sync linked numbers
             const currentlyLinked = numbers.filter((n) => n.ai_agent_id === saved.id).map((n) => n.id)
@@ -260,10 +286,10 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
 
             await Promise.all([
                 ...toLink.map((numberId) =>
-                    assignMutation.mutateAsync({ numberId, aiAgentId: saved.id })
+                    assignMutation.mutateAsync({ numberId, aiAgentId: saved.id, silent: true })
                 ),
                 ...toUnlink.map((numberId) =>
-                    assignMutation.mutateAsync({ numberId, aiAgentId: null })
+                    assignMutation.mutateAsync({ numberId, aiAgentId: null, silent: true })
                 ),
             ])
 
@@ -480,7 +506,6 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                 <ToolPicker
                                     selected={enabledTools}
                                     onChange={setEnabledTools}
-                                    templateKey={template}
                                 />
                             )}
                             {step === "behaviour" && (
@@ -647,15 +672,34 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                     Continue
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
-                            ) : (
+                            ) : isEdit ? (
                                 <Button
-                                    onClick={handleSave}
+                                    onClick={() => handleSave()}
                                     disabled={!canSave || isSaving}
                                     className="rounded-full"
                                 >
                                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                    {isEdit ? "Save changes" : "Create AI agent"}
+                                    Save changes
                                 </Button>
+                            ) : (
+                                <>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => handleSave("draft")}
+                                        disabled={!canSave || isSaving}
+                                        className="rounded-full"
+                                    >
+                                        Save as draft
+                                    </Button>
+                                    <Button
+                                        onClick={() => handleSave("active")}
+                                        disabled={!canSave || isSaving}
+                                        className="rounded-full"
+                                    >
+                                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                        Create & activate
+                                    </Button>
+                                </>
                             )}
                         </div>
                     </div>
@@ -992,7 +1036,7 @@ function SpeechProviderPicker({
                                     {voice.preview_url && (
                                         <VoicePreviewButton
                                             isPlaying={playingUrl === voice.preview_url}
-                                            onPreview={() => handlePreview(voice.preview_url)}
+                                            onPreview={() => handlePreview(voice.preview_url!)}
                                         />
                                     )}
                                 </div>
@@ -1072,6 +1116,20 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
             <span className="font-medium">{value}</span>
         </div>
     )
+}
+
+function findPresetForTemplate(templateKey: string, presets: VoiceToolPreset[]) {
+    const keywordsByTemplate: Record<string, string[]> = {
+        sales: ["sales", "ecommerce", "e-commerce", "commerce", "retail", "catalog"],
+        support: ["support", "customer", "faq", "help"],
+        restaurant: ["restaurant", "menu", "table", "booking"],
+        service: ["service", "appointment", "booking", "consultant"],
+    }
+    const keywords = keywordsByTemplate[templateKey] ?? [templateKey]
+    return presets.find((preset) => {
+        const searchable = `${preset.key} ${preset.label} ${preset.description}`.toLowerCase()
+        return keywords.some((keyword) => searchable.includes(keyword))
+    })
 }
 
 const flagLabels: Record<string, string> = {

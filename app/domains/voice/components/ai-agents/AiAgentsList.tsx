@@ -6,7 +6,9 @@ import {
     Brain,
     Copy,
     MoreVertical,
+    Pause,
     Phone,
+    Play,
     Plus,
     Sparkles,
     Star,
@@ -27,6 +29,7 @@ import {
     useDeleteVoiceAiAgent,
     useDuplicateVoiceAiAgent,
     useSetDefaultVoiceAiAgent,
+    useUpdateVoiceAiAgent,
     useVoiceAiAgents,
     type AiAgentItem,
 } from "@/app/domains/voice/hooks/useVoice"
@@ -38,6 +41,7 @@ export function AiAgentsList() {
     const setDefault = useSetDefaultVoiceAiAgent()
     const duplicate = useDuplicateVoiceAiAgent()
     const destroy = useDeleteVoiceAiAgent()
+    const update = useUpdateVoiceAiAgent()
     const [editorOpen, setEditorOpen] = useState(false)
     const [editing, setEditing] = useState<AiAgentItem | null>(null)
 
@@ -103,6 +107,9 @@ export function AiAgentsList() {
                             onEdit={() => openEdit(agent)}
                             onSetDefault={() => setDefault.mutate(agent.id)}
                             onDuplicate={() => duplicate.mutate({ id: agent.id })}
+                            onSetStatus={(status) =>
+                                update.mutate({ id: agent.id, payload: { status } })
+                            }
                             onDelete={() => {
                                 if (window.confirm(`Delete "${agent.name}"? This cannot be undone.`)) {
                                     destroy.mutate(agent.id)
@@ -123,12 +130,14 @@ function AgentCard({
     onEdit,
     onSetDefault,
     onDuplicate,
+    onSetStatus,
     onDelete,
 }: {
     agent: AiAgentItem
     onEdit: () => void
     onSetDefault: () => void
     onDuplicate: () => void
+    onSetStatus: (status: "active" | "paused" | "draft") => void
     onDelete: () => void
 }) {
     const statusTone =
@@ -139,10 +148,18 @@ function AgentCard({
                 : "bg-black/10 text-muted-foreground"
 
     return (
-        <button
-            type="button"
+        <div
+            role="button"
+            tabIndex={0}
             onClick={onEdit}
-            className="group relative flex flex-col gap-3 rounded-2xl border border-black/5 bg-black/3 p-4 text-left transition-colors hover:border-foreground/30 dark:border-white/5 dark:bg-white/3"
+            onKeyDown={(e) => {
+                if (e.target !== e.currentTarget) return
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault()
+                    onEdit()
+                }
+            }}
+            className="group relative flex cursor-pointer flex-col gap-3 rounded-2xl border border-black/5 bg-black/3 p-4 text-left transition-colors hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 dark:border-white/5 dark:bg-white/3"
         >
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
@@ -165,6 +182,7 @@ function AgentCard({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button
+                            type="button"
                             onClick={(e) => e.stopPropagation()}
                             className="rounded-full p-1.5 opacity-0 transition-opacity hover:bg-black/10 group-hover:opacity-100 dark:hover:bg-white/10"
                         >
@@ -176,6 +194,18 @@ function AgentCard({
                         onClick={(e) => e.stopPropagation()}
                         className="rounded-2xl"
                     >
+                        {agent.status !== "active" && (
+                            <DropdownMenuItem onSelect={() => onSetStatus("active")}>
+                                <Play className="mr-2 h-4 w-4" />
+                                Activate
+                            </DropdownMenuItem>
+                        )}
+                        {agent.status === "active" && (
+                            <DropdownMenuItem onSelect={() => onSetStatus("paused")}>
+                                <Pause className="mr-2 h-4 w-4" />
+                                Pause
+                            </DropdownMenuItem>
+                        )}
                         {!agent.is_default && (
                             <DropdownMenuItem onSelect={onSetDefault}>
                                 <Star className="mr-2 h-4 w-4" />
@@ -223,6 +253,20 @@ function AgentCard({
                     </span>
                 )}
             </div>
-        </button>
+
+            {agent.status !== "active" && (
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onSetStatus("active")
+                    }}
+                    className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-deep px-3 py-1 text-xs font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/92"
+                >
+                    <Play className="h-3 w-3" />
+                    Activate agent
+                </button>
+            )}
+        </div>
     )
 }

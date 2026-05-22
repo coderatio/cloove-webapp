@@ -416,7 +416,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
   return (
     <div className="min-w-0 max-w-4xl space-y-6 pb-16">
-      <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+10rem)] z-10 -mx-4 border-b border-slate-200 bg-background/85 backdrop-blur supports-backdrop-filter:bg-background/70 md:top-26 md:mx-0 dark:border-slate-800">
+      <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+12rem)] z-10 -mx-4 border-b border-slate-200 bg-background md:top-28 md:mx-0 dark:border-slate-800">
        <div className="scrollbar-none flex min-w-0 flex-nowrap gap-x-6 overflow-x-auto px-4 pt-2 md:px-0">
         <button
           onClick={() => setActiveSettingsTab("connections")}

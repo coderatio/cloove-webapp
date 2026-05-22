@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { ChevronDown, ChevronRight, ListChecks, Search, Wrench } from "lucide-react"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
@@ -19,7 +19,6 @@ import { useVoiceTools, type VoiceToolDefinitionItem } from "@/app/domains/voice
 interface ToolPickerProps {
     selected: string[]
     onChange: (next: string[]) => void
-    templateKey?: string
 }
 
 /**
@@ -30,12 +29,14 @@ interface ToolPickerProps {
  * - Per-tool description tooltip rendered inline (no native title attribute
  *   so it works on touch)
  * - Optional preset dropdown that bulk-applies a curated tool list
+ *
+ * Template-driven preset application lives in the parent editor so it can run
+ * once per user action without re-firing on remount and clobbering edits.
  */
-export function ToolPicker({ selected, onChange, templateKey }: ToolPickerProps) {
+export function ToolPicker({ selected, onChange }: ToolPickerProps) {
     const { data, isLoading } = useVoiceTools()
     const [query, setQuery] = useState("")
     const [expandedCategory, setExpandedCategory] = useState<string | null>("catalog")
-    const appliedTemplateRef = useRef<string | null>(null)
 
     const selectedSet = useMemo(() => new Set(selected), [selected])
     const totalTools = data?.tools.length ?? 0
@@ -74,19 +75,6 @@ export function ToolPicker({ selected, onChange, templateKey }: ToolPickerProps)
         const preset = data?.presets.find((p) => p.key === presetKey)
         if (preset) onChange(preset.tools)
     }
-
-    useEffect(() => {
-        if (!data || !templateKey || appliedTemplateRef.current === templateKey) return
-
-        appliedTemplateRef.current = templateKey
-        if (templateKey === "scratch") {
-            onChange([])
-            return
-        }
-
-        const preset = findPresetForTemplate(templateKey, data.presets)
-        if (preset) onChange(preset.tools)
-    }, [data, onChange, templateKey])
 
     if (isLoading) {
         return (
@@ -252,22 +240,4 @@ export function ToolPicker({ selected, onChange, templateKey }: ToolPickerProps)
             </div>
         </div>
     )
-}
-
-function findPresetForTemplate(
-    templateKey: string,
-    presets: NonNullable<ReturnType<typeof useVoiceTools>["data"]>["presets"]
-) {
-    const keywordsByTemplate: Record<string, string[]> = {
-        sales: ["sales", "ecommerce", "e-commerce", "commerce", "retail", "catalog"],
-        support: ["support", "customer", "faq", "help"],
-        restaurant: ["restaurant", "menu", "table", "booking"],
-        service: ["service", "appointment", "booking", "consultant"],
-    }
-
-    const keywords = keywordsByTemplate[templateKey] ?? [templateKey]
-    return presets.find((preset) => {
-        const searchable = `${preset.key} ${preset.label} ${preset.description}`.toLowerCase()
-        return keywords.some((keyword) => searchable.includes(keyword))
-    })
 }

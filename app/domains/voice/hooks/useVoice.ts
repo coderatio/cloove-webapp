@@ -675,16 +675,18 @@ export function useAssignVoiceAiAgentToNumber() {
     const businessId = activeBusiness?.id
 
     return useMutation({
-        mutationFn: ({ numberId, aiAgentId }: { numberId: string; aiAgentId: string | null }) =>
+        mutationFn: ({ numberId, aiAgentId }: { numberId: string; aiAgentId: string | null; silent?: boolean }) =>
             apiClient.patch<VoiceNumberItem>(`/voice/numbers/${numberId}/assign-ai-agent`, {
                 ai_agent_id: aiAgentId,
             }),
-        onSuccess: () => {
-            toast.success("AI agent assignment updated")
+        onSuccess: (_data, variables) => {
+            if (!variables.silent) toast.success("AI agent assignment updated")
             void queryClient.invalidateQueries({ queryKey: keys.numbers(businessId) })
         },
-        onError: (error: { message?: string }) =>
-            toast.error(error.message ?? "Failed to assign AI agent"),
+        onError: (error: { message?: string }, variables) => {
+            if (variables.silent) return
+            toast.error(error.message ?? "Failed to assign AI agent")
+        },
     })
 }
 

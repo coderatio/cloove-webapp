@@ -73,7 +73,7 @@ function SettingsContent() {
 
     return (
         <div className="mx-auto max-w-6xl space-y-2 pb-32 md:space-y-8 md:pb-36">
-            <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+3.5rem)] z-20 -mx-4 bg-background/85 px-4 py-2 backdrop-blur supports-backdrop-filter:bg-background/70 md:top-0 md:mx-0 md:px-0 md:py-4">
+            <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+3.5rem)] z-20 -mx-4 px-4 py-2 md:top-0 md:mx-0 md:px-0 md:py-4">
                 <ManagementHeader
                     title="Settings"
                     description="Manage your business preferences and personal profile"
