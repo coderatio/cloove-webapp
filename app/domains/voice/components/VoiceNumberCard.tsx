@@ -55,19 +55,19 @@ export function VoiceNumberCard({
     const isFailed = status === "failed"
     const canReconnect = status === "disconnected" || status === "failed"
     const providerName =
-        provider?.display_name || provider?.name || number.provider.replace(/_/g, " ")
+        provider?.displayName || provider?.name || number.provider.replace(/_/g, " ")
     const hasLabel = Boolean(number.label)
-    const formattedPhone = formatPhoneNumber(number.phone_number)
+    const formattedPhone = formatPhoneNumber(number.phoneNumber)
     const displayTitle = number.label || formattedPhone
     const statusLabel = isActive ? null : isFailed ? "Needs attention" : "Disconnected"
 
     const aiAgentsQuery = useVoiceAiAgents()
     const aiAgents = aiAgentsQuery.data ?? []
     const linkedAgent = useMemo(
-        () => aiAgents.find((a) => a.id === number.ai_agent_id) ?? null,
-        [aiAgents, number.ai_agent_id]
+        () => aiAgents.find((a) => a.id === number.aiAgentId) ?? null,
+        [aiAgents, number.aiAgentId]
     )
-    const defaultAgent = useMemo(() => aiAgents.find((a) => a.is_default) ?? null, [aiAgents])
+    const defaultAgent = useMemo(() => aiAgents.find((a) => a.isDefault) ?? null, [aiAgents])
     const activeAgent = linkedAgent ?? defaultAgent
 
     return (
@@ -112,7 +112,7 @@ export function VoiceNumberCard({
                             <h3 className="truncate text-[15px] font-semibold leading-tight text-slate-900 dark:text-slate-100">
                                 {displayTitle}
                             </h3>
-                            {number.is_default ? (
+                            {number.isDefault ? (
                                 <span
                                     className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                                     title="Default voice number"
@@ -133,7 +133,7 @@ export function VoiceNumberCard({
                             <span className="capitalize">{providerName}</span>
                             <span aria-hidden className="px-1.5 text-slate-300 dark:text-slate-600">·</span>
                             <span>
-                                {number.use_system_credentials ? "Managed credentials" : "Custom credentials"}
+                                {number.useSystemCredentials ? "Managed credentials" : "Custom credentials"}
                             </span>
                             {statusLabel ? (
                                 <>
@@ -179,7 +179,7 @@ export function VoiceNumberCard({
                         Edit
                     </Button>
 
-                    {isActive && !number.is_default ? (
+                    {isActive && !number.isDefault ? (
                         <Button
                             type="button"
                             variant="ghost"
@@ -238,7 +238,7 @@ export function VoiceNumberCard({
                 onOpenChange={setShowAgentDrawer}
                 number={number}
                 aiAgents={aiAgents}
-                linkedAgentId={number.ai_agent_id}
+                linkedAgentId={number.aiAgentId}
                 defaultAgentName={defaultAgent?.name ?? null}
             />
         </>
@@ -282,7 +282,7 @@ function AssignAgentDrawer({
                 <DrawerStickyHeader>
                     <DrawerTitle className="font-sans text-xl font-semibold">Change AI agent</DrawerTitle>
                     <DrawerDescription>
-                        Pick which AI agent answers calls for {formatPhoneNumber(number.phone_number)}.
+                        Pick which AI agent answers calls for {formatPhoneNumber(number.phoneNumber)}.
                     </DrawerDescription>
                 </DrawerStickyHeader>
                 <DrawerBody className="space-y-4">
@@ -308,7 +308,7 @@ function AssignAgentDrawer({
                                             disabled={!isActive}
                                         >
                                             {agent.name}
-                                            {agent.is_default ? " — default" : ""}
+                                            {agent.isDefault ? " — default" : ""}
                                             {!isActive ? ` — ${agent.status === "draft" ? "draft" : agent.status} (activate first)` : ""}
                                         </SelectItem>
                                     )

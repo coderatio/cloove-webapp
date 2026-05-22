@@ -43,7 +43,7 @@ export function VoiceCallDetailsDialog({ call, open, onOpenChange }: VoiceCallDe
                                 </CallDataRow>
                                 <CallDataRow label="Duration">
                                     <span className="font-mono text-sm tabular-nums text-slate-900 dark:text-slate-100">
-                                        {formatCallDuration(call.duration_seconds)}
+                                        {formatCallDuration(call.durationSeconds)}
                                     </span>
                                 </CallDataRow>
                                 <CallDataRow
@@ -52,7 +52,7 @@ export function VoiceCallDetailsDialog({ call, open, onOpenChange }: VoiceCallDe
                                 />
                                 <CallDataRow
                                     label="Transfer"
-                                    value={humanizeCallValue(call.transfer_status)}
+                                    value={humanizeCallValue(call.transferStatus)}
                                 />
                             </dl>
 
@@ -64,14 +64,14 @@ export function VoiceCallDetailsDialog({ call, open, onOpenChange }: VoiceCallDe
                                 </CallSection>
                             ) : null}
 
-                            {call.recording_url ? (
+                            {call.recordingUrl ? (
                                 <CallSection title="Recording">
                                     <div className="rounded-full border border-slate-200/70 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/[0.03]">
                                         <audio
                                             controls
                                             preload="metadata"
                                             className="block w-full"
-                                            src={call.recording_url}
+                                            src={call.recordingUrl}
                                         />
                                     </div>
                                 </CallSection>
@@ -147,12 +147,12 @@ export function VoiceCallDetailsDialog({ call, open, onOpenChange }: VoiceCallDe
                                                                     </div>
                                                                 </div>
                                                                 <span className="shrink-0 rounded-full bg-black/[0.035] px-2.5 py-1 font-mono text-[11px] text-slate-500 dark:bg-white/[0.05] dark:text-slate-400">
-                                                                    {formatTranscriptTurnTime(turn.created_at)}
+                                                                    {formatTranscriptTurnTime(turn.createdAt)}
                                                                 </span>
                                                             </div>
 
                                                             <p className="mt-3 text-[15px] leading-7 text-slate-700 dark:text-slate-200">
-                                                                {turn.transcript || turn.prompt_text || "—"}
+                                                                {turn.transcript || turn.promptText || "—"}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -206,7 +206,7 @@ function CallSection({ title, children }: { title: string; children: ReactNode }
 function CallHeaderSummary({ call }: { call: VoiceCall }) {
     const isOutbound = call.direction.toLowerCase().includes("outbound")
     const DirectionIcon = isOutbound ? PhoneOutgoing : PhoneIncoming
-    const formattedDate = new Date(call.created_at).toLocaleString(undefined, {
+    const formattedDate = new Date(call.createdAt).toLocaleString(undefined, {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -230,11 +230,11 @@ function CallHeaderSummary({ call }: { call: VoiceCall }) {
             <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                     <p className="truncate text-base font-semibold text-slate-900 dark:text-slate-100">
-                        {call.customer_name || "Unknown caller"}
+                        {call.customerName || "Unknown caller"}
                     </p>
-                    {call.customer_phone ? (
+                    {call.customerPhone ? (
                         <p className="font-mono text-[13px] tabular-nums text-slate-600 dark:text-slate-400">
-                            {formatPhoneNumber(call.customer_phone)}
+                            {formatPhoneNumber(call.customerPhone)}
                         </p>
                     ) : null}
                 </div>

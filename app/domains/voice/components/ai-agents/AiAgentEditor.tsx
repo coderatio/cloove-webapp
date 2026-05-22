@@ -124,7 +124,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
             const match = speechProviders.find((p) => p.id === speechProviderId)
             if (match) return match
         }
-        return speechProviders.find((p) => p.is_default) ?? speechProviders[0]
+        return speechProviders.find((p) => p.isDefault) ?? speechProviders[0]
     }, [speechProviders, speechProviderId])
 
     const activeVoice = useMemo<VoiceSpeechVoiceItem | null>(() => {
@@ -158,30 +158,30 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
             setName(agent.name)
             setLanguage(agent.language)
             setTone(agent.tone)
-            setSpeechProviderId(agent.speech_provider_id ?? "")
-            setVoiceId(agent.voice_id ?? "")
-            setGreeting(agent.greeting_message ?? "")
-            setFallback(agent.fallback_message ?? "")
-            setVoicemail(agent.voicemail_message ?? "")
-            setBusinessInfo(agent.business_info ?? "")
-            setAiInstructions(agent.ai_instructions ?? "")
-            setRestrictedTopics(agent.restricted_topics ?? "")
+            setSpeechProviderId(agent.speechProviderId ?? "")
+            setVoiceId(agent.voiceId ?? "")
+            setGreeting(agent.greetingMessage ?? "")
+            setFallback(agent.fallbackMessage ?? "")
+            setVoicemail(agent.voicemailMessage ?? "")
+            setBusinessInfo(agent.businessInfo ?? "")
+            setAiInstructions(agent.aiInstructions ?? "")
+            setRestrictedTopics(agent.restrictedTopics ?? "")
             setOperatingHours(
                 structuredToScheduleString(
-                    agent.operating_hours as
+                    agent.operatingHours as
                     | string
                     | Array<{ dayOfWeek: number; openAt: string; closeAt: string }>
                     | null
                 )
             )
-            setEnabledTools(agent.enabled_tools ?? [])
+            setEnabledTools(agent.enabledTools ?? [])
             setBehaviourFlags({
                 ...DEFAULT_BEHAVIOUR_FLAGS,
-                ...(agent.behaviour_flags ?? {}),
+                ...(agent.behaviourFlags ?? {}),
                 recording_enabled: false,
             })
-            setIsDefault(agent.is_default)
-            setSelectedNumberIds(numbers.filter((n) => n.ai_agent_id === agent.id).map((n) => n.id))
+            setIsDefault(agent.isDefault)
+            setSelectedNumberIds(numbers.filter((n) => n.aiAgentId === agent.id).map((n) => n.id))
         } else {
             setStep("template")
             setTemplate("scratch")
@@ -300,7 +300,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                 : await createMutation.mutateAsync(payload)
 
             // Sync linked numbers
-            const currentlyLinked = numbers.filter((n) => n.ai_agent_id === saved.id).map((n) => n.id)
+            const currentlyLinked = numbers.filter((n) => n.aiAgentId === saved.id).map((n) => n.id)
             const toLink = selectedNumberIds.filter((id) => !currentlyLinked.includes(id))
             const toUnlink = currentlyLinked.filter((id) => !selectedNumberIds.includes(id))
 
@@ -598,7 +598,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                                 {numbers.map((n) => {
                                                     const isSelected = selectedNumberIds.includes(n.id)
                                                     const isLinkedElsewhere =
-                                                        n.ai_agent_id && (!agent || n.ai_agent_id !== agent.id)
+                                                        n.aiAgentId && (!agent || n.aiAgentId !== agent.id)
                                                     return (
                                                         <label
                                                             key={n.id}
@@ -611,7 +611,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                                         >
                                                             <div className="min-w-0">
                                                                 <p className="font-mono text-sm text-brand-deep dark:text-brand-cream">
-                                                                    {formatPhoneNumber(n.phone_number) || n.phone_number}
+                                                                    {formatPhoneNumber(n.phoneNumber) || n.phoneNumber}
                                                                 </p>
                                                                 <p className="mt-0.5 text-xs text-muted-foreground">
                                                                     {n.label || n.provider}{" "}
@@ -665,7 +665,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                         <ReviewRow label="Language / tone" value={`${language} • ${tone}`} />
                                         <ReviewRow
                                             label="Speech provider"
-                                            value={activeProvider?.display_name ?? "—"}
+                                            value={activeProvider?.displayName ?? "—"}
                                         />
                                         <ReviewRow label="Voice" value={activeVoice?.name ?? "—"} />
                                         <ReviewRow label="Tools enabled" value={`${enabledTools.length} tools`} />
@@ -1037,8 +1037,8 @@ function SpeechProviderPicker({
                                 )}
                             >
                                 <div className="flex items-center justify-between">
-                                    <p className="text-sm font-semibold">{provider.display_name}</p>
-                                    {provider.is_default && (
+                                    <p className="text-sm font-semibold">{provider.displayName}</p>
+                                    {provider.isDefault && (
                                         <span className="rounded-full bg-brand-gold/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand-gold">
                                             Default
                                         </span>
@@ -1102,10 +1102,10 @@ function SpeechProviderPicker({
                                             {voice.accent && <span>{voice.accent}</span>}
                                         </div>
                                     </button>
-                                    {voice.preview_url && (
+                                    {voice.previewUrl && (
                                         <VoicePreviewButton
-                                            isPlaying={playingUrl === voice.preview_url}
-                                            onPreview={() => handlePreview(voice.preview_url!)}
+                                            isPlaying={playingUrl === voice.previewUrl}
+                                            onPreview={() => handlePreview(voice.previewUrl!)}
                                         />
                                     )}
                                 </div>

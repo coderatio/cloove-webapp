@@ -46,7 +46,7 @@ export function ToolPicker({ selected, onChange }: ToolPickerProps) {
         const filtered = query
             ? tools.filter(
                   (t) =>
-                      t.display_name.toLowerCase().includes(query.toLowerCase()) ||
+                      t.displayName.toLowerCase().includes(query.toLowerCase()) ||
                       t.name.toLowerCase().includes(query.toLowerCase()) ||
                       (t.description ?? "").toLowerCase().includes(query.toLowerCase())
               )
@@ -204,11 +204,11 @@ export function ToolPicker({ selected, onChange }: ToolPickerProps) {
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between gap-2">
                                                     <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
-                                                        {tool.display_name}
+                                                        {tool.displayName}
                                                     </p>
-                                                    {tool.required_plan_tier && (
+                                                    {tool.requiredPlanTier && (
                                                         <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                                                            {tool.required_plan_tier}
+                                                            {tool.requiredPlanTier}
                                                         </span>
                                                     )}
                                                 </div>

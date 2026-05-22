@@ -88,22 +88,22 @@ import {
 } from "@/app/domains/voice/hooks/useVoice"
 
 const EMPTY_SETTINGS = {
-    display_name: "",
-    greeting_message: "",
-    fallback_message: "",
-    voicemail_message: "",
+    displayName: "",
+    greetingMessage: "",
+    fallbackMessage: "",
+    voicemailMessage: "",
     language: "en-NG",
     tone: "professional",
-    ai_enabled: true,
-    recording_enabled: true,
-    transcription_enabled: true,
-    human_handoff_enabled: true,
-    after_hours_enabled: true,
-    disclosure_enabled: true,
-    business_info: "",
-    ai_instructions: "",
-    restricted_topics: "",
-    operating_hours: "",
+    aiEnabled: true,
+    recordingEnabled: true,
+    transcriptionEnabled: true,
+    humanHandoffEnabled: true,
+    afterHoursEnabled: true,
+    disclosureEnabled: true,
+    businessInfo: "",
+    aiInstructions: "",
+    restrictedTopics: "",
+    operatingHours: "",
 }
 
 const LANGUAGE_OPTIONS = [
@@ -163,37 +163,37 @@ const FALLBACK_PRESETS = [
 const EMPTY_NUMBER_FORM = {
     provider: "africas_talking",
     label: "",
-    phone_number: "",
-    voice_number_request_id: null as string | null,
-    provider_credentials: {} as Record<string, string>,
-    use_system_credentials: true,
-    is_default: true,
-    country_code: "NG",
-    number_type: "local" as "local" | "mobile" | "toll_free" | "national",
+    phoneNumber: "",
+    voiceNumberRequestId: null as string | null,
+    providerCredentials: {} as Record<string, string>,
+    useSystemCredentials: true,
+    isDefault: true,
+    countryCode: "NG",
+    numberType: "local" as "local" | "mobile" | "toll_free" | "national",
 }
 
 const EMPTY_NUMBER_REQUEST_FORM = {
     provider: "africas_talking",
     label: "",
-    country_code: "NG",
+    countryCode: "NG",
     notes: "",
 }
 
 const EMPTY_TARGET_FORM = {
     label: "",
-    role_label: "support",
-    phone_number: "",
+    roleLabel: "support",
+    phoneNumber: "",
     priority: 0,
-    is_fallback: false,
+    isFallback: false,
 }
 
 const EMPTY_CALL_FORM = {
-    business_voice_number_id: "",
-    customer_phone: "",
-    customer_name: "",
+    businessVoiceNumberId: "",
+    customerPhone: "",
+    customerName: "",
     purpose: "",
     context: "",
-    ai_agent_id: "",
+    aiAgentId: "",
 }
 
 
@@ -216,29 +216,52 @@ function numberToForm(number: VoiceNumberItem, phoneCode: string) {
     return {
         provider: number.provider,
         label: number.label ?? "",
-        phone_number: stripDialCode(number.phone_number, phoneCode),
-        voice_number_request_id: null,
-        provider_credentials: {} as Record<string, string>,
-        use_system_credentials: number.use_system_credentials,
-        is_default: number.is_default,
-        country_code: number.country_code ?? "NG",
-        number_type: (number.number_type ?? "local") as "local" | "mobile" | "toll_free" | "national",
+        phoneNumber: stripDialCode(number.phoneNumber, phoneCode),
+        voiceNumberRequestId: null,
+        providerCredentials: {} as Record<string, string>,
+        useSystemCredentials: number.useSystemCredentials,
+        isDefault: number.isDefault,
+        countryCode: number.countryCode ?? "NG",
+        numberType: (number.numberType ?? "local") as "local" | "mobile" | "toll_free" | "national",
     }
+}
+
+function buildNumberCreatePayload(form: typeof EMPTY_NUMBER_FORM, phoneCode: string) {
+    const payload: Record<string, unknown> = {
+        label: form.label.trim() || null,
+        provider: form.provider,
+        use_system_credentials: form.useSystemCredentials,
+        is_default: form.isDefault,
+        country_code: form.countryCode,
+        number_type: form.numberType,
+        phone_number: combineE164(form.phoneNumber, phoneCode),
+        voice_number_request_id: form.voiceNumberRequestId,
+    }
+
+    const credentials = Object.fromEntries(
+        Object.entries(form.providerCredentials).filter(([, value]) => value.trim().length > 0)
+    )
+
+    if (Object.keys(credentials).length > 0) {
+        payload.provider_credentials = credentials
+    }
+
+    return payload
 }
 
 function buildNumberUpdatePayload(form: typeof EMPTY_NUMBER_FORM, phoneCode: string) {
     const payload: Record<string, unknown> = {
         label: form.label.trim() || null,
         provider: form.provider,
-        use_system_credentials: form.use_system_credentials,
-        is_default: form.is_default,
-        country_code: form.country_code,
-        number_type: form.number_type,
-        phone_number: combineE164(form.phone_number, phoneCode),
+        use_system_credentials: form.useSystemCredentials,
+        is_default: form.isDefault,
+        country_code: form.countryCode,
+        number_type: form.numberType,
+        phone_number: combineE164(form.phoneNumber, phoneCode),
     }
 
     const credentials = Object.fromEntries(
-        Object.entries(form.provider_credentials).filter(([, value]) => value.trim().length > 0)
+        Object.entries(form.providerCredentials).filter(([, value]) => value.trim().length > 0)
     )
 
     if (Object.keys(credentials).length > 0) {
@@ -293,7 +316,7 @@ export function VoiceView() {
     const [callForm, setCallForm] = useState(EMPTY_CALL_FORM)
     const [settingsForm, setSettingsForm] = useState(EMPTY_SETTINGS)
 
-    const businessDisplayName = settingsForm.display_name.trim()
+    const businessDisplayName = settingsForm.displayName.trim()
     const debouncedCallsSearch = useDebounce(callsSearch, 300)
     const callsQuery = useVoiceCalls({
         page: callsPage,
@@ -307,30 +330,32 @@ export function VoiceView() {
         if (settingsQuery.data) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setSettingsForm({
-                display_name: settingsQuery.data.display_name ?? "",
-                greeting_message: settingsQuery.data.greeting_message ?? "",
-                fallback_message: settingsQuery.data.fallback_message ?? "",
-                voicemail_message: settingsQuery.data.voicemail_message ?? "",
+                displayName: settingsQuery.data.displayName ?? "",
+                greetingMessage: settingsQuery.data.greetingMessage ?? "",
+                fallbackMessage: settingsQuery.data.fallbackMessage ?? "",
+                voicemailMessage: settingsQuery.data.voicemailMessage ?? "",
                 language: settingsQuery.data.language ?? "en-NG",
                 tone: settingsQuery.data.tone ?? "professional",
-                ai_enabled: settingsQuery.data.ai_enabled ?? true,
-                recording_enabled: settingsQuery.data.recording_enabled ?? true,
-                transcription_enabled: settingsQuery.data.transcription_enabled ?? true,
-                human_handoff_enabled: settingsQuery.data.human_handoff_enabled ?? true,
-                after_hours_enabled: settingsQuery.data.after_hours_enabled ?? true,
-                disclosure_enabled: settingsQuery.data.disclosure_enabled ?? true,
-                business_info: settingsQuery.data.business_info ?? "",
-                ai_instructions: settingsQuery.data.ai_instructions ?? "",
-                restricted_topics: settingsQuery.data.restricted_topics ?? "",
-                operating_hours:
-                    settingsQuery.data.operating_hours ?? serializeSchedule(createDefaultSchedule()),
+                aiEnabled: settingsQuery.data.aiEnabled ?? true,
+                recordingEnabled: settingsQuery.data.recordingEnabled ?? true,
+                transcriptionEnabled: settingsQuery.data.transcriptionEnabled ?? true,
+                humanHandoffEnabled: settingsQuery.data.humanHandoffEnabled ?? true,
+                afterHoursEnabled: settingsQuery.data.afterHoursEnabled ?? true,
+                disclosureEnabled: settingsQuery.data.disclosureEnabled ?? true,
+                businessInfo: settingsQuery.data.businessInfo ?? "",
+                aiInstructions: settingsQuery.data.aiInstructions ?? "",
+                restrictedTopics: settingsQuery.data.restrictedTopics ?? "",
+                operatingHours:
+                    typeof settingsQuery.data.operatingHours === "string"
+                        ? settingsQuery.data.operatingHours
+                        : serializeSchedule(createDefaultSchedule()),
             })
         }
     }, [settingsQuery.data])
 
     const metrics = useMemo(() => {
         const calls = recentCallsQuery.data?.data ?? []
-        const transferred = calls.filter((call) => call.transfer_status && call.transfer_status !== "not_requested").length
+        const transferred = calls.filter((call) => call.transferStatus && call.transferStatus !== "not_requested").length
         const completed = calls.filter((call) => call.status === "completed" || call.status === "transferred").length
         return {
             total: recentCallsQuery.data?.meta.total ?? calls.length,
@@ -343,7 +368,7 @@ export function VoiceView() {
     const callsMeta = callsQuery.data?.meta
 
     const providerOptions = useMemo(
-        () => (providersQuery.data ?? []).filter((provider) => provider.is_enabled),
+        () => (providersQuery.data ?? []).filter((provider) => provider.isEnabled),
         [providersQuery.data]
     )
     const providerMap = useMemo(
@@ -353,7 +378,7 @@ export function VoiceView() {
     const selectedProvider = providerMap.get(numberForm.provider) ?? providerOptions[0]
     const findPhoneCode = (providerId: string, countryCode: string): string => {
         const provider = providerMap.get(providerId)
-        return provider?.supported_countries.find((c) => c.code === countryCode)?.phoneCode ?? ""
+        return provider?.supportedCountries.find((c) => c.code === countryCode)?.phoneCode ?? ""
     }
     const editingNumber = useMemo(
         () => (numbersQuery.data ?? []).find((number) => number.id === editingNumberId) ?? null,
@@ -397,31 +422,31 @@ export function VoiceView() {
 
     const openApprovedRequestNumberDrawer = (request: VoiceNumberRequestItem) => {
         setEditingNumberId(null)
-        const countryCode = request.country_code ?? "NG"
+        const countryCode = request.countryCode ?? "NG"
         const phoneCode = findPhoneCode(request.provider, countryCode)
         setNumberForm({
             provider: request.provider,
             label: request.label ?? "",
-            phone_number: stripDialCode(request.approved_phone_number, phoneCode),
-            voice_number_request_id: request.id,
-            provider_credentials: {},
-            use_system_credentials: true,
-            is_default: (numbersQuery.data ?? []).length === 0,
-            country_code: countryCode,
-            number_type: (request.number_type ?? "local") as "local" | "mobile" | "toll_free" | "national",
+            phoneNumber: stripDialCode(request.approvedPhoneNumber, phoneCode),
+            voiceNumberRequestId: request.id,
+            providerCredentials: {},
+            useSystemCredentials: true,
+            isDefault: (numbersQuery.data ?? []).length === 0,
+            countryCode: countryCode,
+            numberType: (request.numberType ?? "local") as "local" | "mobile" | "toll_free" | "national",
         })
         setNumberDrawerMode("create")
     }
 
     const openEditNumberDrawer = (number: VoiceNumberItem) => {
         setEditingNumberId(number.id)
-        const phoneCode = findPhoneCode(number.provider, number.country_code ?? "")
+        const phoneCode = findPhoneCode(number.provider, number.countryCode ?? "")
         setNumberForm(numberToForm(number, phoneCode))
         setNumberDrawerMode("edit")
     }
 
     const handleSaveNumber = () => {
-        const phoneCode = findPhoneCode(numberForm.provider, numberForm.country_code)
+        const phoneCode = findPhoneCode(numberForm.provider, numberForm.countryCode)
         if (numberDrawerMode === "edit" && editingNumber) {
             updateNumber.mutate(
                 { id: editingNumber.id, payload: buildNumberUpdatePayload(numberForm, phoneCode) },
@@ -430,10 +455,9 @@ export function VoiceView() {
             return
         }
 
-        createNumber.mutate(
-            { ...numberForm, phone_number: combineE164(numberForm.phone_number, phoneCode) },
-            { onSuccess: closeNumberDrawer }
-        )
+        createNumber.mutate(buildNumberCreatePayload(numberForm, phoneCode), {
+            onSuccess: closeNumberDrawer,
+        })
     }
 
     useEffect(() => {
@@ -443,16 +467,16 @@ export function VoiceView() {
         setNumberForm((prev) => {
             const hasSelectedProvider = providerMap.has(prev.provider)
             const fallbackProviderId =
-                providerOptions.find((provider) => provider.is_default)?.id ?? providerOptions[0]?.id ?? prev.provider
+                providerOptions.find((provider) => provider.isDefault)?.id ?? providerOptions[0]?.id ?? prev.provider
             const nextProviderId = hasSelectedProvider ? prev.provider : fallbackProviderId
             const nextProvider = providerMap.get(nextProviderId) ?? providerOptions[0]
-            const nextUseSystemCredentials = nextProvider?.system_credentials_enabled
-                ? prev.use_system_credentials
+            const nextUseSystemCredentials = nextProvider?.systemCredentialsEnabled
+                ? prev.useSystemCredentials
                 : false
 
             if (
                 nextProviderId === prev.provider &&
-                nextUseSystemCredentials === prev.use_system_credentials
+                nextUseSystemCredentials === prev.useSystemCredentials
             ) {
                 return prev
             }
@@ -460,8 +484,8 @@ export function VoiceView() {
             return {
                 ...prev,
                 provider: nextProviderId,
-                provider_credentials: hasSelectedProvider ? prev.provider_credentials : {},
-                use_system_credentials: nextUseSystemCredentials,
+                providerCredentials: hasSelectedProvider ? prev.providerCredentials : {},
+                useSystemCredentials: nextUseSystemCredentials,
             }
         })
     }, [providerMap, providerOptions])
@@ -578,13 +602,13 @@ export function VoiceView() {
                             {
                                 icon: Inbox,
                                 label: "Open calls",
-                                value: String(healthQuery.data?.open_calls ?? 0),
+                                value: String(healthQuery.data?.openCalls ?? 0),
                                 tone: "slate",
                             },
                             {
                                 icon: Radio,
                                 label: "Active now",
-                                value: String(healthQuery.data?.active_calls ?? 0),
+                                value: String(healthQuery.data?.activeCalls ?? 0),
                                 tone: "emerald",
                                 live: true,
                             },
@@ -650,7 +674,7 @@ export function VoiceView() {
                                                     key={request.id}
                                                     request={request}
                                                     providerName={
-                                                        providerMap.get(request.provider)?.display_name ||
+                                                        providerMap.get(request.provider)?.displayName ||
                                                         providerMap.get(request.provider)?.name ||
                                                         request.provider.replace(/_/g, " ")
                                                     }
@@ -732,28 +756,28 @@ export function VoiceView() {
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <p className="truncate text-sm font-medium">
-                                                            {call.customer_name || formatPhoneNumber(call.customer_phone) || "Unknown caller"}
+                                                            {call.customerName || formatPhoneNumber(call.customerPhone) || "Unknown caller"}
                                                         </p>
                                                         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                                             <CallStatusDot
                                                                 status={call.status}
                                                                 showLabel={false}
                                                             />
-                                                            {call.customer_name && call.customer_phone ? (
+                                                            {call.customerName && call.customerPhone ? (
                                                                 <span className="font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400">
-                                                                    {formatPhoneNumber(call.customer_phone)}
+                                                                    {formatPhoneNumber(call.customerPhone)}
                                                                 </span>
                                                             ) : null}
                                                         </div>
                                                     </div>
                                                     <div className="shrink-0 text-right">
-                                                        {call.duration_seconds ? (
+                                                        {call.durationSeconds ? (
                                                             <p className="font-mono text-xs tabular-nums text-slate-700 dark:text-slate-300">
-                                                                {formatCallDuration(call.duration_seconds)}
+                                                                {formatCallDuration(call.durationSeconds)}
                                                             </p>
                                                         ) : null}
                                                         <p className="text-xs text-muted-foreground">
-                                                            {new Date(call.created_at).toLocaleDateString()}
+                                                            {new Date(call.createdAt).toLocaleDateString()}
                                                         </p>
                                                     </div>
                                                     <ChevronRight
@@ -778,9 +802,12 @@ export function VoiceView() {
                                 onSubmit={() =>
                                     startCall.mutate(
                                         {
-                                            ...callForm,
-                                            business_voice_number_id: callForm.business_voice_number_id || null,
-                                            ai_agent_id: callForm.ai_agent_id || null,
+                                            customer_phone: callForm.customerPhone,
+                                            customer_name: callForm.customerName,
+                                            purpose: callForm.purpose,
+                                            context: callForm.context,
+                                            business_voice_number_id: callForm.businessVoiceNumberId || null,
+                                            ai_agent_id: callForm.aiAgentId || null,
                                         },
                                         { onSuccess: () => setCallForm(EMPTY_CALL_FORM) }
                                     )
@@ -791,24 +818,24 @@ export function VoiceView() {
                                 <div className="space-y-1.5">
                                     <HealthRow
                                         label="Provider"
-                                        value={healthQuery.data?.provider_status?.trim() || "Unknown"}
-                                        tone={getProviderTone(healthQuery.data?.provider_status)}
+                                        value={healthQuery.data?.providerStatus?.trim() || "Unknown"}
+                                        tone={getProviderTone(healthQuery.data?.providerStatus)}
                                     />
                                     <HealthRow
                                         label="Unprocessed events"
-                                        value={String(healthQuery.data?.unprocessed_events ?? 0)}
-                                        tone={(healthQuery.data?.unprocessed_events ?? 0) > 0 ? "amber" : "emerald"}
+                                        value={String(healthQuery.data?.unprocessedEvents ?? 0)}
+                                        tone={(healthQuery.data?.unprocessedEvents ?? 0) > 0 ? "amber" : "emerald"}
                                     />
                                     <HealthRow
                                         label="Failed (24h)"
-                                        value={String(healthQuery.data?.failed_requests_last_24h ?? 0)}
-                                        tone={(healthQuery.data?.failed_requests_last_24h ?? 0) > 0 ? "rose" : "emerald"}
+                                        value={String(healthQuery.data?.failedRequestsLast24h ?? 0)}
+                                        tone={(healthQuery.data?.failedRequestsLast24h ?? 0) > 0 ? "rose" : "emerald"}
                                     />
                                     <HealthRow
                                         label="Last event"
                                         value={
-                                            healthQuery.data?.last_event_at
-                                                ? new Date(healthQuery.data.last_event_at).toLocaleString(undefined, {
+                                            healthQuery.data?.lastEventAt
+                                                ? new Date(healthQuery.data.lastEventAt).toLocaleString(undefined, {
                                                       month: "short",
                                                       day: "numeric",
                                                       hour: "numeric",
@@ -832,9 +859,16 @@ export function VoiceView() {
                     isCreatePending={createTarget.isPending}
                     onFormChange={(updater) => setTargetForm((prev) => updater(prev))}
                     onCreate={() =>
-                        createTarget.mutate(targetForm, {
-                            onSuccess: () => setTargetForm(EMPTY_TARGET_FORM),
-                        })
+                        createTarget.mutate(
+                            {
+                                label: targetForm.label,
+                                role_label: targetForm.roleLabel,
+                                phone_number: targetForm.phoneNumber,
+                                priority: targetForm.priority,
+                                is_fallback: targetForm.isFallback,
+                            },
+                            { onSuccess: () => setTargetForm(EMPTY_TARGET_FORM) }
+                        )
                     }
                     isDeletePending={deleteTarget.isPending}
                     onDelete={async (id) => {
@@ -920,7 +954,7 @@ export function VoiceView() {
                                                     key={request.id}
                                                     request={request}
                                                     providerName={
-                                                        providerMap.get(request.provider)?.display_name ||
+                                                        providerMap.get(request.provider)?.displayName ||
                                                         providerMap.get(request.provider)?.name ||
                                                         request.provider.replace(/_/g, " ")
                                                     }
@@ -954,7 +988,7 @@ export function VoiceView() {
                                                     key={request.id}
                                                     request={request}
                                                     providerName={
-                                                        providerMap.get(request.provider)?.display_name ||
+                                                        providerMap.get(request.provider)?.displayName ||
                                                         providerMap.get(request.provider)?.name ||
                                                         request.provider.replace(/_/g, " ")
                                                     }
@@ -984,7 +1018,7 @@ export function VoiceView() {
                                                     key={request.id}
                                                     request={request}
                                                     providerName={
-                                                        providerMap.get(request.provider)?.display_name ||
+                                                        providerMap.get(request.provider)?.displayName ||
                                                         providerMap.get(request.provider)?.name ||
                                                         request.provider.replace(/_/g, " ")
                                                     }
@@ -1193,10 +1227,10 @@ export function VoiceView() {
                                             >
                                                 <td className="px-2 py-3.5">
                                                     <div className="font-medium text-slate-900 dark:text-slate-100">
-                                                        {call.customer_name || "Unknown caller"}
+                                                        {call.customerName || "Unknown caller"}
                                                     </div>
                                                     <div className="mt-0.5 font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400">
-                                                        {formatPhoneNumber(call.customer_phone) || "—"}
+                                                        {formatPhoneNumber(call.customerPhone) || "—"}
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-3.5">
@@ -1206,15 +1240,15 @@ export function VoiceView() {
                                                     <CallStatusBadge status={call.status} />
                                                 </td>
                                                 <td className="px-2 py-3.5 text-[13px] text-slate-700 dark:text-slate-300">
-                                                    {call.ai_agent?.name ?? (
+                                                    {call.aiAgent?.name ?? (
                                                         <span className="text-slate-400 dark:text-slate-500">—</span>
                                                     )}
                                                 </td>
                                                 <td className="px-2 py-3.5 font-mono text-[13px] tabular-nums text-slate-700 dark:text-slate-300">
-                                                    {formatCallDuration(call.duration_seconds)}
+                                                    {formatCallDuration(call.durationSeconds)}
                                                 </td>
                                                 <td className="px-2 py-3.5 text-slate-600 dark:text-slate-400">
-                                                    {new Date(call.created_at).toLocaleString(undefined, {
+                                                    {new Date(call.createdAt).toLocaleString(undefined, {
                                                         month: "short",
                                                         day: "numeric",
                                                         hour: "numeric",
@@ -1480,10 +1514,10 @@ function VoiceStatusBar({
         )
     }
 
-    const providerStatus = health?.provider_status?.trim() || "Unknown"
+    const providerStatus = health?.providerStatus?.trim() || "Unknown"
     const providerTone = getProviderTone(providerStatus)
-    const activeCalls = health?.active_calls ?? 0
-    const failed24h = health?.failed_requests_last_24h ?? 0
+    const activeCalls = health?.activeCalls ?? 0
+    const failed24h = health?.failedRequestsLast24h ?? 0
 
     return (
         <div className="flex flex-wrap items-center gap-2">
@@ -1523,17 +1557,17 @@ function ApprovedNumberRequestCard({
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-foreground">
-                                {request.label || formatPhoneNumber(request.approved_phone_number) || "Approved voice number"}
+                                {request.label || formatPhoneNumber(request.approvedPhoneNumber) || "Approved voice number"}
                             </p>
                             <p className="mt-0.5 text-sm text-muted-foreground">
                                 <span className="font-mono tabular-nums text-slate-700 dark:text-slate-300">
-                                    {formatPhoneNumber(request.approved_phone_number)}
+                                    {formatPhoneNumber(request.approvedPhoneNumber)}
                                 </span>
                                 <span aria-hidden className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
                                 <span className="capitalize">{providerName}</span>
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                                Approved {request.approved_at ? new Date(request.approved_at).toLocaleDateString() : "recently"}
+                                Approved {request.approvedAt ? new Date(request.approvedAt).toLocaleDateString() : "recently"}
                             </p>
                         </div>
                         <Button
@@ -1598,12 +1632,12 @@ function NumberRequestRow({
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                         <div className="min-w-0">
                             <p className="truncate text-sm font-semibold text-foreground">
-                                {request.label || `${request.country_code} voice number request`}
+                                {request.label || `${request.countryCode} voice number request`}
                             </p>
                             <p className="mt-0.5 text-xs text-muted-foreground">
                                 <span className="capitalize">{providerName}</span>
                                 <span aria-hidden className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
-                                <span>Submitted {new Date(request.created_at).toLocaleDateString()}</span>
+                                <span>Submitted {new Date(request.createdAt).toLocaleDateString()}</span>
                             </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2 sm:flex-row-reverse">
@@ -1724,7 +1758,7 @@ function RequestLogTimelineEntries({
                             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{log.description}</p>
                         ) : null}
                         <p className="mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
-                            {formatRequestLogTime(log.created_at)}
+                            {formatRequestLogTime(log.createdAt)}
                         </p>
                     </div>
                 </div>
@@ -1804,7 +1838,7 @@ function RequestLogTimeline({
                         {latestLog.title}
                         <span aria-hidden className="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
                         <span className="font-mono text-[11px] tabular-nums font-normal text-muted-foreground">
-                            {formatRequestLogTime(latestLog.created_at)}
+                            {formatRequestLogTime(latestLog.createdAt)}
                         </span>
                     </p>
                 </div>

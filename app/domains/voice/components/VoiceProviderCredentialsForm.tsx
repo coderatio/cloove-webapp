@@ -12,16 +12,16 @@ import type { VoiceProviderOption } from "@/app/domains/voice/hooks/useVoice"
 type NumberForm = {
     provider: string
     label: string
-    phone_number: string
-    voice_number_request_id: string | null
-    provider_credentials: Record<string, string>
-    use_system_credentials: boolean
-    is_default: boolean
-    country_code: string
-    number_type: "local" | "mobile" | "toll_free" | "national"
+    phoneNumber: string
+    voiceNumberRequestId: string | null
+    providerCredentials: Record<string, string>
+    useSystemCredentials: boolean
+    isDefault: boolean
+    countryCode: string
+    numberType: "local" | "mobile" | "toll_free" | "national"
 }
 
-const NUMBER_TYPE_OPTIONS: Array<{ value: NumberForm["number_type"]; label: string }> = [
+const NUMBER_TYPE_OPTIONS: Array<{ value: NumberForm["numberType"]; label: string }> = [
     { value: "local", label: "Local" },
     { value: "mobile", label: "Mobile" },
     { value: "toll_free", label: "Toll-free" },
@@ -50,14 +50,14 @@ export function VoiceProviderCredentialsForm({
     framed = true,
 }: VoiceProviderCredentialsFormProps) {
     const isUpdateMode = mode === "update"
-    const isRequestBackedNumber = Boolean(form.voice_number_request_id)
-    const hasCredentialInput = Object.values(form.provider_credentials).some((value) => value.trim().length > 0)
-    const supportedCountries = selectedProvider?.supported_countries ?? []
-    const selectedCountry = supportedCountries.find((c) => c.code === form.country_code)
+    const isRequestBackedNumber = Boolean(form.voiceNumberRequestId)
+    const hasCredentialInput = Object.values(form.providerCredentials).some((value) => value.trim().length > 0)
+    const supportedCountries = selectedProvider?.supportedCountries ?? []
+    const selectedCountry = supportedCountries.find((c) => c.code === form.countryCode)
     const dialCode = selectedCountry?.phoneCode ?? ""
     const canSubmit = isUpdateMode
         ? form.label.trim().length > 0 || hasCredentialInput
-        : form.phone_number.trim().length > 0
+        : form.phoneNumber.trim().length > 0
 
     const content = (
         <div className="space-y-4">
@@ -71,20 +71,20 @@ export function VoiceProviderCredentialsForm({
                         onValueChange={(value) =>
                             onChange((prev) => {
                                 const provider = providerOptions.find((item) => item.id === value)
-                                const supported = provider?.supported_countries ?? []
-                                const stillValid = supported.some((c) => c.code === prev.country_code)
+                                const supported = provider?.supportedCountries ?? []
+                                const stillValid = supported.some((c) => c.code === prev.countryCode)
                                 const nextCountry = stillValid
-                                    ? prev.country_code
+                                    ? prev.countryCode
                                     : (supported.find((c) => c.isDefault) ?? supported[0])?.code ??
-                                      prev.country_code
+                                      prev.countryCode
                                 return {
                                     ...prev,
                                     provider: value,
-                                    provider_credentials: {},
-                                    use_system_credentials: provider?.system_credentials_enabled
-                                        ? prev.use_system_credentials
+                                    providerCredentials: {},
+                                    useSystemCredentials: provider?.systemCredentialsEnabled
+                                        ? prev.useSystemCredentials
                                         : false,
-                                    country_code: nextCountry,
+                                    countryCode: nextCountry,
                                 }
                             })
                         }
@@ -95,7 +95,7 @@ export function VoiceProviderCredentialsForm({
                         <SelectContent className="rounded-2xl">
                             {providerOptions.map((provider) => (
                                 <SelectItem key={provider.id} value={provider.id}>
-                                    {provider.display_name || provider.name}
+                                    {provider.displayName || provider.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -116,10 +116,10 @@ export function VoiceProviderCredentialsForm({
                     <div className="space-y-1.5">
                         <Label htmlFor="voice-number-country">Country</Label>
                         <Select
-                            value={form.country_code}
+                            value={form.countryCode}
                             disabled={isRequestBackedNumber || supportedCountries.length === 0}
                             onValueChange={(value) =>
-                                onChange((prev) => ({ ...prev, country_code: value }))
+                                onChange((prev) => ({ ...prev, countryCode: value }))
                             }
                         >
                             <SelectTrigger id="voice-number-country" className="rounded-2xl">
@@ -143,12 +143,12 @@ export function VoiceProviderCredentialsForm({
                     <div className="space-y-1.5">
                         <Label htmlFor="voice-number-type">Number type</Label>
                         <Select
-                            value={form.number_type}
+                            value={form.numberType}
                             disabled={isRequestBackedNumber}
                             onValueChange={(value) =>
                                 onChange((prev) => ({
                                     ...prev,
-                                    number_type: value as NumberForm["number_type"],
+                                    numberType: value as NumberForm["numberType"],
                                 }))
                             }
                         >
@@ -182,7 +182,7 @@ export function VoiceProviderCredentialsForm({
                             id="voice-number-phone"
                             placeholder="8012345678"
                             inputMode="tel"
-                            value={form.phone_number}
+                            value={form.phoneNumber}
                             onChange={(e) =>
                                 onChange((prev) => ({
                                     ...prev,
@@ -202,10 +202,10 @@ export function VoiceProviderCredentialsForm({
                     </p>
                 </div>
 
-                {selectedProvider?.system_credentials_enabled && (
+                {selectedProvider?.systemCredentialsEnabled && (
                     <ToggleRow
                         label="Use managed credentials"
-                        checked={form.use_system_credentials}
+                        checked={form.useSystemCredentials}
                         onCheckedChange={(value) =>
                             onChange((prev) => ({ ...prev, use_system_credentials: value }))
                         }
@@ -213,9 +213,9 @@ export function VoiceProviderCredentialsForm({
                     />
                 )}
 
-                {!form.use_system_credentials && selectedProvider?.custom_credentials_enabled !== false && (
+                {!form.useSystemCredentials && selectedProvider?.customCredentialsEnabled !== false && (
                     <>
-                        {(selectedProvider?.credential_fields ?? []).map((field) => (
+                        {(selectedProvider?.credentialFields ?? []).map((field) => (
                             <div key={field.key} className="space-y-1.5">
                                 <Label htmlFor={`voice-number-cred-${field.key}`}>
                                     {field.label}
@@ -225,19 +225,19 @@ export function VoiceProviderCredentialsForm({
                                     id={`voice-number-cred-${field.key}`}
                                     placeholder={field.placeholder ?? field.label}
                                     type={field.type === "password" ? "password" : "text"}
-                                    value={form.provider_credentials[field.key] ?? ""}
+                                    value={form.providerCredentials[field.key] ?? ""}
                                     onChange={(e) =>
                                         onChange((prev) => ({
                                             ...prev,
-                                            provider_credentials: {
-                                                ...prev.provider_credentials,
+                                            providerCredentials: {
+                                                ...prev.providerCredentials,
                                                 [field.key]: e.target.value,
                                             },
                                         }))
                                     }
                                 />
-                                {field.help_text ? (
-                                    <p className="text-xs text-muted-foreground">{field.help_text}</p>
+                                {field.helpText ? (
+                                    <p className="text-xs text-muted-foreground">{field.helpText}</p>
                                 ) : null}
                             </div>
                         ))}

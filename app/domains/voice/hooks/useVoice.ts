@@ -8,21 +8,21 @@ import { toast } from "sonner"
 
 export interface VoiceNumberItem {
     id: string
-    business_id: string
-    store_id: string | null
+    businessId: string
+    storeId: string | null
     provider: string
     label: string | null
-    phone_number: string
-    provider_number_id: string | null
-    provider_account_id: string | null
-    use_system_credentials: boolean
-    has_custom_credentials: boolean
+    phoneNumber: string
+    providerNumberId: string | null
+    providerAccountId: string | null
+    useSystemCredentials: boolean
+    hasCustomCredentials: boolean
     status: string
-    is_default: boolean
-    sms_enabled?: boolean
-    ai_agent_id: string | null
-    country_code: string | null
-    number_type: string | null
+    isDefault: boolean
+    smsEnabled?: boolean
+    aiAgentId: string | null
+    countryCode: string | null
+    numberType: string | null
     rates: {
         inboundPerMinute: number | null
         outboundPerMinute: number | null
@@ -30,26 +30,26 @@ export interface VoiceNumberItem {
         countryIso: string | null
         numberType: string | null
     } | null
-    created_at: string
-    updated_at: string | null
+    createdAt: string
+    updatedAt: string | null
 }
 
 export interface VoiceNumberRequestItem {
     id: string
-    business_id: string
-    store_id: string | null
+    businessId: string
+    storeId: string | null
     provider: string
     label: string | null
-    country_code: string
-    number_type: string | null
+    countryCode: string
+    numberType: string | null
     quantity: number | null
-    setup_fee_amount: number | null
-    monthly_fee_amount: number | null
+    setupFeeAmount: number | null
+    monthlyFeeAmount: number | null
     currency: string | null
-    provisioning_attempts: number | null
-    last_provisioning_error: string | null
-    wallet_transaction_id: string | null
-    ai_agent_id: string | null
+    provisioningAttempts: number | null
+    lastProvisioningError: string | null
+    walletTransactionId: string | null
+    aiAgentId: string | null
     notes: string | null
     status:
         | "pending"
@@ -59,25 +59,25 @@ export interface VoiceNumberRequestItem {
         | "cancelled"
         | "fulfilled"
         | "failed"
-    approved_phone_number: string | null
-    provider_number_id: string | null
-    provider_account_id: string | null
-    approved_at: string | null
-    fulfilled_at: string | null
-    created_at: string
-    updated_at: string | null
+    approvedPhoneNumber: string | null
+    providerNumberId: string | null
+    providerAccountId: string | null
+    approvedAt: string | null
+    fulfilledAt: string | null
+    createdAt: string
+    updatedAt: string | null
     logs?: VoiceNumberRequestLogItem[]
 }
 
 export interface VoiceNumberRequestLogItem {
     id: string
-    voice_number_request_id: string
-    business_id: string
-    event_type: string
+    voiceNumberRequestId: string
+    businessId: string
+    eventType: string
     title: string
     description: string | null
     metadata: Record<string, unknown> | null
-    created_at: string
+    createdAt: string
 }
 
 export interface VoiceProviderOption {
@@ -87,67 +87,83 @@ export interface VoiceProviderOption {
      * Customer-facing label for the provider (e.g. "Cloove Voice Basic").
      * Falls back to `name` when null. Internal identifiers always use `id`.
      */
-    display_name: string | null
-    is_enabled: boolean
-    is_default?: boolean
-    logo_url: string | null
-    supports_inbound: boolean
-    supports_outbound: boolean
-    supports_recording: boolean
-    supports_transcription: boolean
-    supports_transfer: boolean
+    displayName: string | null
+    isEnabled: boolean
+    isDefault?: boolean
+    logoUrl: string | null
+    supportsInbound: boolean
+    supportsOutbound: boolean
+    supportsRecording: boolean
+    supportsTranscription: boolean
+    supportsTransfer: boolean
+    supportsSms?: boolean
+    supportsApiProvisioning?: boolean
     /**
      * Countries this provider can provision voice numbers in. The backend
      * expands the codes stored in `voice_call_providers` system config into
      * full metadata objects for direct UI consumption.
      */
-    supported_countries: VoiceNumberRequestCountry[]
-    system_credentials_enabled: boolean
-    custom_credentials_enabled: boolean
-    credential_fields: Array<{
+    supportedCountries: VoiceNumberRequestCountry[]
+    pricing?: Record<
+        string,
+        Record<
+            string,
+            {
+                setupFee: number
+                monthlyFee: number
+                currency: string
+                inboundPerMinute: number | null
+                outboundPerMinute: number | null
+            }
+        >
+    > | null
+    provisioningKycLevel?: number | null
+    systemCredentialsEnabled: boolean
+    customCredentialsEnabled: boolean
+    credentialFields: Array<{
         key: string
         label: string
         type: "text" | "password"
         placeholder?: string | null
         required: boolean
-        help_text?: string | null
+        helpText?: string | null
     }>
     priority: number
 }
 
 export interface VoiceSettings {
     id?: string
-    business_id: string
-    store_id: string | null
-    display_name: string | null
-    greeting_message: string | null
-    fallback_message: string | null
-    voicemail_message: string | null
+    businessId: string
+    storeId: string | null
+    displayName: string | null
+    greetingMessage: string | null
+    fallbackMessage: string | null
+    voicemailMessage: string | null
     language: string
     tone: string
-    ai_enabled: boolean
-    recording_enabled: boolean
-    transcription_enabled: boolean
-    human_handoff_enabled: boolean
-    after_hours_enabled: boolean
-    disclosure_enabled: boolean
-    business_info: string | null
-    ai_instructions: string | null
-    restricted_topics: string | null
-    operating_hours: string | null
+    aiEnabled: boolean
+    recordingEnabled: boolean
+    transcriptionEnabled: boolean
+    humanHandoffEnabled: boolean
+    afterHoursEnabled: boolean
+    disclosureEnabled: boolean
+    businessInfo: string | null
+    aiInstructions: string | null
+    restrictedTopics: string | null
+    operatingHours: string | null
 }
 
 export interface VoiceTransferTarget {
     id: string
-    business_id: string
-    user_id: string | null
+    businessId: string
+    userId: string | null
     label: string
-    role_label: string | null
-    phone_number: string
+    roleLabel: string | null
+    phoneNumber: string
     priority: number
-    is_active: boolean
-    is_fallback: boolean
-    availability_note: string | null
+    isActive: boolean
+    isFallback: boolean
+    availabilityNote: string | null
 }
 
 export interface VoiceCallTurn {
@@ -156,15 +172,15 @@ export interface VoiceCallTurn {
     speaker: string
     source: string
     transcript: string | null
-    prompt_text?: string | null
-    created_at: string
+    promptText?: string | null
+    createdAt: string
 }
 
 export interface VoiceCallEvent {
     id: string
-    event_type: string
+    eventType: string
     status: string | null
-    occurred_at: string | null
+    occurredAt: string | null
 }
 
 export interface VoiceCall {
@@ -172,16 +188,16 @@ export interface VoiceCall {
     direction: string
     status: string
     resolution: string | null
-    transfer_status: string | null
-    customer_phone: string | null
-    customer_name: string | null
+    transferStatus: string | null
+    customerPhone: string | null
+    customerName: string | null
     purpose: string | null
     summary: string | null
-    recording_url: string | null
-    duration_seconds: number | null
-    created_at: string
-    ai_agent_id: string | null
-    ai_agent: { id: string; name: string } | null
+    recordingUrl: string | null
+    durationSeconds: number | null
+    createdAt: string
+    aiAgentId: string | null
+    aiAgent: { id: string; name: string } | null
     turns?: VoiceCallTurn[]
     events?: VoiceCallEvent[]
 }
@@ -207,13 +223,13 @@ export interface VoiceCallListParams {
 }
 
 export interface VoiceHealth {
-    active_calls: number
-    open_calls: number
-    failed_requests_last_24h: number
-    unprocessed_events: number
-    pending_events: number
-    last_event_at: string | null
-    provider_status: string
+    activeCalls: number
+    openCalls: number
+    failedRequestsLast24h: number
+    unprocessedEvents: number
+    pendingEvents: number
+    lastEventAt: string | null
+    providerStatus: string
 }
 
 export interface VoiceNumberRequestCountry {
@@ -417,13 +433,47 @@ export function useDisconnectVoiceNumber() {
     })
 }
 
+// Maps camelCase form keys to the snake_case payload the API validator
+// still expects. Centralised here so the UI keeps a single naming convention.
+const VOICE_SETTINGS_PAYLOAD_MAP: Record<keyof VoiceSettings, string> = {
+    id: "id",
+    businessId: "business_id",
+    storeId: "store_id",
+    displayName: "display_name",
+    greetingMessage: "greeting_message",
+    fallbackMessage: "fallback_message",
+    voicemailMessage: "voicemail_message",
+    language: "language",
+    tone: "tone",
+    aiEnabled: "ai_enabled",
+    recordingEnabled: "recording_enabled",
+    transcriptionEnabled: "transcription_enabled",
+    humanHandoffEnabled: "human_handoff_enabled",
+    afterHoursEnabled: "after_hours_enabled",
+    disclosureEnabled: "disclosure_enabled",
+    businessInfo: "business_info",
+    aiInstructions: "ai_instructions",
+    restrictedTopics: "restricted_topics",
+    operatingHours: "operating_hours",
+}
+
+function toVoiceSettingsPayload(payload: Partial<VoiceSettings>): Record<string, unknown> {
+    const result: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(payload)) {
+        const apiKey = VOICE_SETTINGS_PAYLOAD_MAP[key as keyof VoiceSettings] ?? key
+        result[apiKey] = value
+    }
+    return result
+}
+
 export function useUpdateVoiceSettings() {
     const queryClient = useQueryClient()
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
     return useMutation({
-        mutationFn: (payload: Partial<VoiceSettings>) => apiClient.put<VoiceSettings>("/voice/settings", payload),
+        mutationFn: (payload: Partial<VoiceSettings>) =>
+            apiClient.put<VoiceSettings>("/voice/settings", toVoiceSettingsPayload(payload)),
         onSuccess: () => {
             toast.success("Voice settings updated")
             void queryClient.invalidateQueries({ queryKey: keys.settings(businessId) })
@@ -468,44 +518,44 @@ export function useDeleteVoiceTransferTarget() {
 
 export interface AiAgentItem {
     id: string
-    business_id: string
-    store_id: string | null
+    businessId: string
+    storeId: string | null
     name: string
     slug: string
     status: "draft" | "active" | "paused" | "archived"
-    agent_profile: string
-    speech_provider_id: string | null
-    voice_id: string | null
+    agentProfile: string
+    speechProviderId: string | null
+    voiceId: string | null
     language: string
     tone: string
-    greeting_message: string | null
-    fallback_message: string | null
-    voicemail_message: string | null
-    business_info: string | null
-    ai_instructions: string | null
-    restricted_topics: string | null
-    operating_hours: string | Record<string, unknown> | null
-    enabled_tools: string[]
-    capabilities_override: Record<string, boolean> | null
-    behaviour_flags: Record<string, boolean> | null
-    is_default: boolean
-    linked_number_count: number
+    greetingMessage: string | null
+    fallbackMessage: string | null
+    voicemailMessage: string | null
+    businessInfo: string | null
+    aiInstructions: string | null
+    restrictedTopics: string | null
+    operatingHours: string | Record<string, unknown> | null
+    enabledTools: string[]
+    capabilitiesOverride: Record<string, boolean> | null
+    behaviourFlags: Record<string, boolean> | null
+    isDefault: boolean
+    linkedNumberCount: number
     metadata: Record<string, unknown> | null
-    created_at: string
-    updated_at: string | null
+    createdAt: string
+    updatedAt: string | null
 }
 
 export interface VoiceToolDefinitionItem {
     name: string
     category: string
-    display_name: string
+    displayName: string
     description: string | null
     surface: string
-    capability_key: string | null
-    default_for_profile: Record<string, boolean> | null
-    required_plan_tier: string | null
+    capabilityKey: string | null
+    defaultForProfile: Record<string, boolean> | null
+    requiredPlanTier: string | null
     icon: string | null
-    sort_order: number
+    sortOrder: number
 }
 
 export interface VoiceToolPreset {
@@ -562,20 +612,20 @@ export interface VoiceSpeechVoiceItem {
     description: string | null
     accent: string | null
     gender: "female" | "male" | "neutral" | null
-    preview_url: string | null
+    previewUrl: string | null
     tier: "standard" | "premium"
 }
 
 export interface VoiceSpeechProviderItem {
     id: string
     name: string
-    display_name: string
-    realtime_provider: "openai" | "gemini"
-    is_default: boolean
-    logo_url: string | null
+    displayName: string
+    realtimeProvider: "openai" | "gemini"
+    isDefault: boolean
+    logoUrl: string | null
     description: string | null
-    required_plan_tier: string | null
-    supported_languages: string[]
+    requiredPlanTier: string | null
+    supportedLanguages: string[]
     priority: number
     voices: VoiceSpeechVoiceItem[]
 }

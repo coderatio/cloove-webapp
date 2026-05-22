@@ -39,12 +39,12 @@ const PURPOSE_PRESETS = [
 ]
 
 type CallForm = {
-    business_voice_number_id: string
-    customer_phone: string
-    customer_name: string
+    businessVoiceNumberId: string
+    customerPhone: string
+    customerName: string
     purpose: string
     context: string
-    ai_agent_id: string
+    aiAgentId: string
 }
 
 interface VoiceOutboundCallComposerProps {
@@ -94,7 +94,7 @@ export function VoiceOutboundCallComposer({
                     <div className="grid gap-4 md:grid-cols-2">
                         <Field label="Calling line">
                             <Select
-                                value={form.business_voice_number_id || undefined}
+                                value={form.businessVoiceNumberId || undefined}
                                 onValueChange={(value) =>
                                     onChange((prev) => ({ ...prev, business_voice_number_id: value }))
                                 }
@@ -105,7 +105,7 @@ export function VoiceOutboundCallComposer({
                                 <SelectContent className="rounded-2xl">
                                     {numbers.map((number) => (
                                         <SelectItem key={number.id} value={number.id}>
-                                            {number.label || formatPhoneNumber(number.phone_number)}
+                                            {number.label || formatPhoneNumber(number.phoneNumber)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -115,7 +115,7 @@ export function VoiceOutboundCallComposer({
                         <Field label="Customer phone number">
                             <Input
                                 placeholder="+2348012345678"
-                                value={form.customer_phone}
+                                value={form.customerPhone}
                                 onChange={(e) =>
                                     onChange((prev) => ({ ...prev, customer_phone: e.target.value }))
                                 }
@@ -127,7 +127,7 @@ export function VoiceOutboundCallComposer({
                         <Field label="Customer name">
                             <Input
                                 placeholder="Ada Okafor"
-                                value={form.customer_name}
+                                value={form.customerName}
                                 onChange={(e) =>
                                     onChange((prev) => ({ ...prev, customer_name: e.target.value }))
                                 }
@@ -148,7 +148,7 @@ export function VoiceOutboundCallComposer({
                     {activeAgents.length > 0 && (
                         <Field label="AI agent">
                             <Select
-                                value={form.ai_agent_id || USE_NUMBER_AGENT_VALUE}
+                                value={form.aiAgentId || USE_NUMBER_AGENT_VALUE}
                                 onValueChange={(value) =>
                                     onChange((prev) => ({
                                         ...prev,
@@ -169,7 +169,7 @@ export function VoiceOutboundCallComposer({
                                     {activeAgents.map((agent) => (
                                         <SelectItem key={agent.id} value={agent.id}>
                                             {agent.name}
-                                            {agent.is_default ? " · default" : ""}
+                                            {agent.isDefault ? " · default" : ""}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -233,7 +233,7 @@ export function VoiceOutboundCallComposer({
             <div className="flex justify-end">
                 <Button
                     onClick={onSubmit}
-                    disabled={isPending || !hasLines || !form.customer_phone.trim()}
+                    disabled={isPending || !hasLines || !form.customerPhone.trim()}
                     className="h-11 rounded-full bg-brand-deep px-6 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 disabled:opacity-50 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                 >
                     {isPending ? (

@@ -19,7 +19,7 @@ import type { VoiceProviderOption } from "@/app/domains/voice/hooks/useVoice"
 type VoiceNumberRequestForm = {
     provider: string
     label: string
-    country_code: string
+    countryCode: string
     notes: string
 }
 
@@ -48,20 +48,20 @@ export function VoiceNumberRequestDrawer({
         () => providerOptions.find((provider) => provider.id === form.provider) ?? null,
         [providerOptions, form.provider]
     )
-    const countries = selectedProvider?.supported_countries ?? []
+    const countries = selectedProvider?.supportedCountries ?? []
     const hasProviderSelection = Boolean(selectedProvider)
     const selectedCountry = useMemo(() => {
-        return countries.find((country) => country.code === form.country_code) ?? null
-    }, [countries, form.country_code])
+        return countries.find((country) => country.code === form.countryCode) ?? null
+    }, [countries, form.countryCode])
 
     useEffect(() => {
         if (!countries.length) {
-            if (form.country_code) {
+            if (form.countryCode) {
                 onChange((prev) => ({ ...prev, country_code: "" }))
             }
             return
         }
-        if (form.country_code && countries.some((country) => country.code === form.country_code)) return
+        if (form.countryCode && countries.some((country) => country.code === form.countryCode)) return
 
         const defaultCountry = countries.find((country) => country.isDefault) ?? countries[0]
 
@@ -71,7 +71,7 @@ export function VoiceNumberRequestDrawer({
             ...prev,
             country_code: defaultCountry.code,
         }))
-    }, [countries, form.country_code, onChange])
+    }, [countries, form.countryCode, onChange])
 
     return (
         <Drawer open={open} onOpenChange={onOpenChange}>
@@ -105,7 +105,7 @@ export function VoiceNumberRequestDrawer({
                                     <SelectContent className="rounded-2xl">
                                         {providerOptions.map((provider) => (
                                             <SelectItem key={provider.id} value={provider.id}>
-                                                {provider.display_name || provider.name}
+                                                {provider.displayName || provider.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -131,7 +131,7 @@ export function VoiceNumberRequestDrawer({
                                     Country
                                 </label>
                                 <Select
-                                    value={form.country_code}
+                                    value={form.countryCode}
                                     onValueChange={(value) =>
                                         onChange((prev) => ({
                                             ...prev,
@@ -161,7 +161,7 @@ export function VoiceNumberRequestDrawer({
                                 </Select>
                                 {hasProviderSelection && countries.length === 0 ? (
                                     <p className="px-1 text-xs text-muted-foreground">
-                                        {(selectedProvider?.display_name || selectedProvider?.name) ?? "This plan"}{" "}
+                                        {(selectedProvider?.displayName || selectedProvider?.name) ?? "This plan"}{" "}
                                         does not currently support new number requests.
                                     </p>
                                 ) : null}
@@ -190,7 +190,7 @@ export function VoiceNumberRequestDrawer({
                         <Button
                             type="button"
                             className="rounded-full"
-                            disabled={isPending || !hasProviderSelection || !form.country_code}
+                            disabled={isPending || !hasProviderSelection || !form.countryCode}
                             onClick={onSubmit}
                         >
                             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

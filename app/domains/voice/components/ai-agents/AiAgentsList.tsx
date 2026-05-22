@@ -165,7 +165,7 @@ function AgentCard({
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                         <h3 className="truncate text-sm font-semibold">{agent.name}</h3>
-                        {agent.is_default && (
+                        {agent.isDefault && (
                             <span
                                 title="Default agent"
                                 className="flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400"
@@ -176,7 +176,7 @@ function AgentCard({
                         )}
                     </div>
                     <p className="text-xs text-muted-foreground capitalize">
-                        {agent.agent_profile} • {agent.tone} • {agent.language}
+                        {agent.agentProfile} • {agent.tone} • {agent.language}
                     </p>
                 </div>
                 <DropdownMenu>
@@ -206,7 +206,7 @@ function AgentCard({
                                 Pause
                             </DropdownMenuItem>
                         )}
-                        {!agent.is_default && (
+                        {!agent.isDefault && (
                             <DropdownMenuItem onSelect={onSetDefault}>
                                 <Star className="mr-2 h-4 w-4" />
                                 Set as default
@@ -216,7 +216,7 @@ function AgentCard({
                             <Copy className="mr-2 h-4 w-4" />
                             Duplicate
                         </DropdownMenuItem>
-                        {!agent.is_default && (
+                        {!agent.isDefault && (
                             <DropdownMenuItem
                                 onSelect={onDelete}
                                 className="text-rose-600 focus:text-rose-600"
@@ -235,18 +235,18 @@ function AgentCard({
                 </span>
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
                     <Wrench className="h-3 w-3" />
-                    {agent.enabled_tools.length} tools
+                    {agent.enabledTools.length} tools
                 </span>
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
                     <Phone className="h-3 w-3" />
-                    {agent.linked_number_count} numbers
+                    {agent.linkedNumberCount} numbers
                 </span>
-                {agent.behaviour_flags?.ai_enabled === false && (
+                {agent.behaviourFlags?.aiEnabled === false && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-medium text-rose-700 dark:text-rose-400">
                         Paused
                     </span>
                 )}
-                {agent.behaviour_flags?.recording_enabled && (
+                {agent.behaviourFlags?.recordingEnabled && (
                     <span className="inline-flex items-center gap-1 text-muted-foreground">
                         <BadgeCheck className="h-3 w-3" />
                         Recording
@@ -269,8 +269,8 @@ function AgentCard({
             )}
 
             {agent.status === "active" &&
-                agent.linked_number_count === 0 &&
-                !agent.is_default && (
+                agent.linkedNumberCount === 0 &&
+                !agent.isDefault && (
                     <p className="text-[11px] leading-4 text-amber-700 dark:text-amber-400">
                         Active but not answering any numbers — link it under the Numbers tab or
                         mark this agent as the default.

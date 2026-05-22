@@ -98,7 +98,7 @@ export function VoiceNumberRequestWizard({
 
     useEffect(() => {
         if (providerId || providers.length === 0) return
-        const def = providers.find((p) => p.is_default) ?? providers[0]
+        const def = providers.find((p) => p.isDefault) ?? providers[0]
         // eslint-disable-next-line react-hooks/set-state-in-effect
         if (def) setProviderId(def.id)
     }, [providers, providerId])
@@ -108,8 +108,8 @@ export function VoiceNumberRequestWizard({
         [providers, providerId]
     )
     const countries = useMemo(
-        () => selectedProvider?.supported_countries ?? [],
-        [selectedProvider?.supported_countries]
+        () => selectedProvider?.supportedCountries ?? [],
+        [selectedProvider?.supportedCountries]
     )
 
     useEffect(() => {
@@ -290,8 +290,8 @@ export function VoiceNumberRequestWizard({
                                     notes={notes}
                                     selectedAgentName={
                                         aiAgents.find((a) => a.id === aiAgentId)?.name ??
-                                        (aiAgents.find((a) => a.is_default)?.name
-                                            ? `${aiAgents.find((a) => a.is_default)?.name} (default)`
+                                        (aiAgents.find((a) => a.isDefault)?.name
+                                            ? `${aiAgents.find((a) => a.isDefault)?.name} (default)`
                                             : "Default AI agent will be assigned")
                                     }
                                     pricing={pricing ?? null}
@@ -526,7 +526,7 @@ function ModeStep({
     isSearching: boolean
 }) {
     const selectedProvider = providers.find((p) => p.id === providerId) ?? null
-    const countries = selectedProvider?.supported_countries ?? []
+    const countries = selectedProvider?.supportedCountries ?? []
 
     return (
         <div className="space-y-5">
@@ -555,7 +555,7 @@ function ModeStep({
                         <SelectContent className="rounded-2xl">
                             {providers.map((p) => (
                                 <SelectItem key={p.id} value={p.id}>
-                                    {p.display_name || p.name}
+                                    {p.displayName || p.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -791,7 +791,7 @@ function AgentStep({
     notes: string
     onNotesChange: (v: string) => void
 }) {
-    const defaultAgent = aiAgents.find((a) => a.is_default) ?? null
+    const defaultAgent = aiAgents.find((a) => a.isDefault) ?? null
 
     return (
         <div className="space-y-4">
@@ -819,13 +819,13 @@ function AgentStep({
                         onClick={() => onSelect(null)}
                     />
                     {aiAgents
-                        .filter((a) => !a.is_default)
+                        .filter((a) => !a.isDefault)
                         .map((agent) => (
                             <AgentOption
                                 key={agent.id}
                                 active={selectedId === agent.id}
                                 title={agent.name}
-                                subtitle={`${agent.enabled_tools.length} tools • ${agent.linked_number_count} numbers linked`}
+                                subtitle={`${agent.enabledTools.length} tools • ${agent.linkedNumberCount} numbers linked`}
                                 onClick={() => onSelect(agent.id)}
                             />
                         ))}
@@ -899,7 +899,7 @@ function ConfirmStep({
     selectedNumber: VoiceAvailableNumber | null
 }) {
     const countryName =
-        provider?.supported_countries.find((c) => c.code === countryCode)?.name ?? countryCode
+        provider?.supportedCountries.find((c) => c.code === countryCode)?.name ?? countryCode
 
     return (
         <div className="space-y-4">
@@ -910,7 +910,7 @@ function ConfirmStep({
             />
 
             <div className="space-y-3 rounded-2xl border border-brand-deep/5 bg-brand-deep/[0.025] p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.035]">
-                <ConfirmRow label="Voice plan" value={provider?.display_name || provider?.name || "—"} />
+                <ConfirmRow label="Voice plan" value={provider?.displayName || provider?.name || "—"} />
                 <ConfirmRow label="Country" value={countryName} />
                 <ConfirmRow label="Number type" value={numberType.replace("_", " ")} />
                 <ConfirmRow label="Quantity" value={String(quantity)} />

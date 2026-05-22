@@ -27,10 +27,10 @@ const PRIORITY_OPTIONS = [
 
 type TransferForm = {
     label: string
-    role_label: string
-    phone_number: string
+    roleLabel: string
+    phoneNumber: string
     priority: number
-    is_fallback: boolean
+    isFallback: boolean
 }
 
 interface VoiceTransferTargetsFormProps {
@@ -104,7 +104,7 @@ export function VoiceTransferTargetsForm({
 
                         <FormField label="Role">
                             <Select
-                                value={form.role_label}
+                                value={form.roleLabel}
                                 onValueChange={(value) => onFormChange((prev) => ({ ...prev, role_label: value }))}
                             >
                                 <SelectTrigger className="rounded-2xl">
@@ -123,7 +123,7 @@ export function VoiceTransferTargetsForm({
                         <FormField label="Phone number">
                             <Input
                                 placeholder="+2348012345678"
-                                value={form.phone_number}
+                                value={form.phoneNumber}
                                 onChange={(e) =>
                                     onFormChange((prev) => ({ ...prev, phone_number: e.target.value }))
                                 }
@@ -154,7 +154,7 @@ export function VoiceTransferTargetsForm({
                     <ToggleRow
                         label="Use as fallback if primary transfer fails"
                         description="Cloove will route here only when the primary target is unreachable."
-                        checked={form.is_fallback}
+                        checked={form.isFallback}
                         onCheckedChange={(value) =>
                             onFormChange((prev) => ({ ...prev, is_fallback: value }))
                         }
@@ -163,7 +163,7 @@ export function VoiceTransferTargetsForm({
                     <div className="flex justify-end pt-1">
                         <Button
                             onClick={onCreate}
-                            disabled={isCreatePending || !form.label.trim() || !form.phone_number.trim()}
+                            disabled={isCreatePending || !form.label.trim() || !form.phoneNumber.trim()}
                             className="h-10 rounded-full bg-brand-deep px-5 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                         >
                             <Plus className="mr-1.5 h-4 w-4" />
@@ -202,7 +202,7 @@ function TargetRow({
             className={cn(
                 "group relative flex items-center gap-3.5 overflow-hidden rounded-2xl border bg-white px-4 py-3 transition-colors dark:bg-slate-950/40",
                 "before:absolute before:left-0 before:top-3 before:bottom-3 before:w-[3px] before:rounded-r-full",
-                target.is_fallback
+                target.isFallback
                     ? "border-amber-200/70 hover:border-amber-300 before:bg-amber-500 dark:border-amber-500/20 dark:hover:border-amber-500/40"
                     : "border-slate-200/80 hover:border-slate-200 before:bg-transparent dark:border-white/10 dark:hover:border-white/15"
             )}
@@ -216,13 +216,13 @@ function TargetRow({
                     <p className="truncate text-[15px] font-semibold text-slate-900 dark:text-slate-100">
                         {target.label}
                     </p>
-                    {target.is_fallback ? <FallbackChip /> : null}
+                    {target.isFallback ? <FallbackChip /> : null}
                 </div>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400">
-                    <span>{humanizeRole(target.role_label)}</span>
+                    <span>{humanizeRole(target.roleLabel)}</span>
                     <span aria-hidden className="text-slate-300 dark:text-slate-600">·</span>
                     <span className="font-mono tabular-nums text-slate-600 dark:text-slate-300">
-                        {formatPhoneNumber(target.phone_number)}
+                        {formatPhoneNumber(target.phoneNumber)}
                     </span>
                 </div>
             </div>

@@ -29,22 +29,22 @@ const accordionPanelClass =
 const accordionItemClass = "border-t border-brand-deep/5 dark:border-white/5 first:border-t-0"
 
 type SettingsForm = {
-    display_name: string
-    greeting_message: string
-    fallback_message: string
-    voicemail_message: string
+    displayName: string
+    greetingMessage: string
+    fallbackMessage: string
+    voicemailMessage: string
     language: string
     tone: string
-    ai_enabled: boolean
-    recording_enabled: boolean
-    transcription_enabled: boolean
-    human_handoff_enabled: boolean
-    after_hours_enabled: boolean
-    disclosure_enabled: boolean
-    business_info: string
-    ai_instructions: string
-    restricted_topics: string
-    operating_hours: string
+    aiEnabled: boolean
+    recordingEnabled: boolean
+    transcriptionEnabled: boolean
+    humanHandoffEnabled: boolean
+    afterHoursEnabled: boolean
+    disclosureEnabled: boolean
+    businessInfo: string
+    aiInstructions: string
+    restrictedTopics: string
+    operatingHours: string
 }
 
 interface VoiceAgentSettingsFormProps {
@@ -118,7 +118,7 @@ export function VoiceAgentSettingsForm({
                                 <Field label="Display name">
                                     <Input
                                         placeholder="Cloove Support"
-                                        value={settings.display_name}
+                                        value={settings.displayName}
                                         onChange={(e) =>
                                             onChange((prev) => ({ ...prev, display_name: e.target.value }))
                                         }
@@ -201,7 +201,7 @@ export function VoiceAgentSettingsForm({
                                     </div>
                                     <Textarea
                                         placeholder="How the AI should welcome callers"
-                                        value={settings.greeting_message}
+                                        value={settings.greetingMessage}
                                         onChange={(e) =>
                                             onChange((prev) => ({
                                                 ...prev,
@@ -235,7 +235,7 @@ export function VoiceAgentSettingsForm({
                                     </div>
                                     <Textarea
                                         placeholder="What the AI should say when it needs the caller to repeat or wait"
-                                        value={settings.fallback_message}
+                                        value={settings.fallbackMessage}
                                         onChange={(e) =>
                                             onChange((prev) => ({
                                                 ...prev,
@@ -264,7 +264,7 @@ export function VoiceAgentSettingsForm({
                         <div className="space-y-4 pt-2">
                             {availabilityReady ? (
                                 <VoiceScheduleBuilder
-                                    value={settings.operating_hours}
+                                    value={settings.operatingHours}
                                     onChange={(value) =>
                                         onChange((prev) => ({ ...prev, operating_hours: value }))
                                     }
@@ -293,7 +293,7 @@ export function VoiceAgentSettingsForm({
                             <ToggleRow
                                 label="AI enabled"
                                 description="Let the AI assistant answer and respond on calls."
-                                checked={settings.ai_enabled}
+                                checked={settings.aiEnabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, ai_enabled: value }))
                                 }
@@ -301,7 +301,7 @@ export function VoiceAgentSettingsForm({
                             <ToggleRow
                                 label="Record calls"
                                 description="Save audio recordings for later review."
-                                checked={settings.recording_enabled}
+                                checked={settings.recordingEnabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, recording_enabled: value }))
                                 }
@@ -309,7 +309,7 @@ export function VoiceAgentSettingsForm({
                             <ToggleRow
                                 label="Transcribe calls"
                                 description="Generate written transcripts of conversations."
-                                checked={settings.transcription_enabled}
+                                checked={settings.transcriptionEnabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, transcription_enabled: value }))
                                 }
@@ -317,7 +317,7 @@ export function VoiceAgentSettingsForm({
                             <ToggleRow
                                 label="Human handoff"
                                 description="Allow the AI to transfer callers to a staff member."
-                                checked={settings.human_handoff_enabled}
+                                checked={settings.humanHandoffEnabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, human_handoff_enabled: value }))
                                 }
@@ -325,7 +325,7 @@ export function VoiceAgentSettingsForm({
                             <ToggleRow
                                 label="After-hours behavior"
                                 description="Use after-hours messaging outside operating windows."
-                                checked={settings.after_hours_enabled}
+                                checked={settings.afterHoursEnabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, after_hours_enabled: value }))
                                 }
@@ -333,7 +333,7 @@ export function VoiceAgentSettingsForm({
                             <ToggleRow
                                 label="Recording disclosure"
                                 description="Announce that the call is being recorded."
-                                checked={settings.disclosure_enabled}
+                                checked={settings.disclosureEnabled}
                                 onCheckedChange={(value) =>
                                     onChange((prev) => ({ ...prev, disclosure_enabled: value }))
                                 }
