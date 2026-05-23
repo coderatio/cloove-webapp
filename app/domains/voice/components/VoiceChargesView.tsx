@@ -26,7 +26,7 @@ import {
     Loader2,
     Receipt,
 } from "lucide-react"
-import { cn } from "@/app/lib/utils"
+import { cn, formatPhoneNumber } from "@/app/lib/utils"
 import DataTable, { type Column } from "@/app/components/DataTable"
 import {
     useVoiceCallCharges,
@@ -538,7 +538,7 @@ function ChargeDetailContent({ charge, currencyCode }: { charge: VoiceCallCharge
                 <SectionHeader title="Call Details" />
                 <DetailRow label="Direction" value={<span className="capitalize">{dir} Call</span>} />
                 {charge.metadata?.callerNumber && (
-                    <DetailRow label="Called" value={charge.metadata.callerNumber} />
+                    <DetailRow label="Caller" value={formatPhoneNumber(charge.metadata.callerNumber)} />
                 )}
                 <DetailRow label="Duration" value={dur} />
                 <DetailRow label="Rate" value={rate} />
