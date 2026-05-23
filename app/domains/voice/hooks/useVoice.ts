@@ -616,11 +616,19 @@ export interface VoiceSpeechVoiceItem {
     tier: "standard" | "premium"
 }
 
+export interface VoiceSpeechVoiceGroupItem {
+    id: string
+    label: string
+    description: string | null
+    priority: number
+    voices: VoiceSpeechVoiceItem[]
+}
+
 export interface VoiceSpeechProviderItem {
     id: string
     name: string
     displayName: string
-    realtimeProvider: "openai" | "gemini"
+    realtimeProvider: "openai" | "gemini" | "decoupled"
     isDefault: boolean
     logoUrl: string | null
     description: string | null
@@ -628,6 +636,7 @@ export interface VoiceSpeechProviderItem {
     supportedLanguages: string[]
     priority: number
     voices: VoiceSpeechVoiceItem[]
+    voiceGroups: VoiceSpeechVoiceGroupItem[] | null
 }
 
 const speechProviderKeys = {

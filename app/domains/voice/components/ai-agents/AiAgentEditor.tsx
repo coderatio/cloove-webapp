@@ -42,6 +42,7 @@ import {
     useVoiceTools,
     type AiAgentItem,
     type VoiceSpeechProviderItem,
+    type VoiceSpeechVoiceGroupItem,
     type VoiceSpeechVoiceItem,
     type VoiceToolPreset,
 } from "@/app/domains/voice/hooks/useVoice"
@@ -81,6 +82,50 @@ interface AiAgentEditorProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     agent?: AiAgentItem | null
+}
+
+function getProviderVoiceGroups(
+    provider: VoiceSpeechProviderItem | null | undefined
+): VoiceSpeechVoiceGroupItem[] {
+    return provider?.voiceGroups?.length ? provider.voiceGroups : []
+}
+
+function findVoiceAcrossProvider(
+    provider: VoiceSpeechProviderItem | null | undefined,
+    voiceId: string
+): VoiceSpeechVoiceItem | null {
+    if (!provider || !voiceId) return null
+    const flat = (provider.voices ?? []).find((v) => v.id === voiceId)
+    if (flat) return flat
+    for (const group of getProviderVoiceGroups(provider)) {
+        const found = (group.voices ?? []).find((v) => v.id === voiceId)
+        if (found) return found
+    }
+    return null
+}
+
+function findGroupForVoice(
+    provider: VoiceSpeechProviderItem | null | undefined,
+    voiceId: string
+): VoiceSpeechVoiceGroupItem | null {
+    if (!voiceId) return null
+    for (const group of getProviderVoiceGroups(provider)) {
+        if ((group.voices ?? []).some((v) => v.id === voiceId)) return group
+    }
+    return null
+}
+
+function getFirstProviderVoiceId(
+    provider: VoiceSpeechProviderItem | null | undefined
+): string {
+    if (!provider) return ""
+    const flatFirst = provider.voices?.[0]?.id
+    if (flatFirst) return flatFirst
+    for (const group of getProviderVoiceGroups(provider)) {
+        const first = group.voices?.[0]?.id
+        if (first) return first
+    }
+    return ""
 }
 
 export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps) {
@@ -129,12 +174,15 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
 
     const activeVoice = useMemo<VoiceSpeechVoiceItem | null>(() => {
         if (!activeProvider) return null
-        const voices = activeProvider.voices ?? []
         if (voiceId) {
-            const match = voices.find((v) => v.id === voiceId)
+            const match = findVoiceAcrossProvider(activeProvider, voiceId)
             if (match) return match
         }
-        return voices[0] ?? null
+        if ((activeProvider.voices ?? []).length > 0) return activeProvider.voices[0] ?? null
+        for (const group of getProviderVoiceGroups(activeProvider)) {
+            if (group.voices?.length) return group.voices[0]
+        }
+        return null
     }, [activeProvider, voiceId])
 
     // Once the catalog loads, snap empty selections back onto the resolved
@@ -455,8 +503,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                         onProviderChange={(id) => {
                                             setSpeechProviderId(id)
                                             const provider = speechProviders.find((p) => p.id === id)
-                                            const first = provider?.voices?.[0]?.id ?? ""
-                                            setVoiceId(first)
+                                            setVoiceId(getFirstProviderVoiceId(provider))
                                         }}
                                         onVoiceChange={setVoiceId}
                                     />
@@ -798,7 +845,7 @@ function StepChips({
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
     return (
-        <div className="space-y-2">
+        <div className="space-y-3">
             <label className="px-1 text-sm font-medium">{label}</label>
             {children}
         </div>
@@ -959,7 +1006,40 @@ function SpeechProviderPicker({
         () => providers.find((p) => p.id === selectedProviderId) ?? null,
         [providers, selectedProviderId]
     )
-    const voices = activeProvider?.voices ?? []
+    const voiceGroups = useMemo(() => getProviderVoiceGroups(activeProvider), [activeProvider])
+    const hasVoiceGroups = voiceGroups.length > 0
+
+    const [selectedVoiceGroupId, setSelectedVoiceGroupId] = useState<string>("")
+
+    const activeGroup = useMemo(() => {
+        if (!hasVoiceGroups) return null
+        if (selectedVoiceGroupId) {
+            const match = voiceGroups.find((g) => g.id === selectedVoiceGroupId)
+            if (match) return match
+        }
+        const containing = findGroupForVoice(activeProvider, selectedVoiceId)
+        if (containing) return containing
+        return voiceGroups[0] ?? null
+    }, [hasVoiceGroups, voiceGroups, selectedVoiceGroupId, activeProvider, selectedVoiceId])
+
+    // Keep the local sub-provider selection in sync with the resolved active
+    // group so switching providers or loading an agent snaps the highlight to
+    // the group that owns the persisted voice.
+    useEffect(() => {
+        if (!hasVoiceGroups) {
+            if (selectedVoiceGroupId !== "") setSelectedVoiceGroupId("")
+            return
+        }
+        if (!activeGroup) return
+        if (selectedVoiceGroupId !== activeGroup.id) {
+            setSelectedVoiceGroupId(activeGroup.id)
+        }
+    }, [hasVoiceGroups, activeGroup, selectedVoiceGroupId])
+
+    const voices = hasVoiceGroups
+        ? activeGroup?.voices ?? []
+        : activeProvider?.voices ?? []
+
     const audioRef = useRef<HTMLAudioElement | null>(null)
     const [playingUrl, setPlayingUrl] = useState<string | null>(null)
 
@@ -1019,11 +1099,18 @@ function SpeechProviderPicker({
     }
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-6">
+            <div className="rounded-3xl border border-brand-deep/8 bg-brand-deep/[0.025] p-3 dark:border-white/8 dark:bg-white/[0.035]">
             <Field label="Speech provider">
                 <div className="grid gap-2 sm:grid-cols-2">
                     {providers.map((provider) => {
                         const active = provider.id === selectedProviderId
+                        const providerVoiceCount =
+                            (provider.voices?.length ?? 0) +
+                            (provider.voiceGroups ?? []).reduce(
+                                (sum, group) => sum + (group.voices?.length ?? 0),
+                                0
+                            )
                         return (
                             <button
                                 key={provider.id}
@@ -1033,7 +1120,7 @@ function SpeechProviderPicker({
                                     "rounded-3xl cursor-pointer border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
                                     active
                                         ? "border-brand-gold/45 bg-brand-gold/[0.06] ring-1 ring-inset ring-brand-gold/20 shadow-brand-gold/5"
-                                        : "border-brand-deep/8 bg-brand-deep/[0.035] hover:border-brand-deep/16 hover:bg-brand-deep/[0.055] dark:border-white/8 dark:bg-white/[0.045] dark:hover:border-white/16 dark:hover:bg-white/[0.07]"
+                                        : "border-brand-deep/8 bg-white/70 hover:border-brand-deep/16 hover:bg-white dark:border-white/8 dark:bg-white/[0.045] dark:hover:border-white/16 dark:hover:bg-white/[0.07]"
                                 )}
                             >
                                 <div className="flex items-center justify-between">
@@ -1050,70 +1137,133 @@ function SpeechProviderPicker({
                                     </p>
                                 )}
                                 <p className="mt-2 text-[11px] text-muted-foreground">
-                                    {provider.voices.length} voice{provider.voices.length === 1 ? "" : "s"}
+                                    {providerVoiceCount} voice{providerVoiceCount === 1 ? "" : "s"}
                                 </p>
                             </button>
                         )
                     })}
                 </div>
             </Field>
+            </div>
 
-            <Field label="Voice">
-                {voices.length === 0 ? (
-                    <div className="rounded-2xl border border-brand-gold/15 bg-brand-gold/5 px-3 py-3 text-sm text-muted-foreground dark:border-brand-gold/20 dark:bg-brand-gold/10">
-                        This provider has no voices configured yet.
+            {hasVoiceGroups ? (
+                <div className="space-y-3 rounded-3xl border border-brand-deep/8 bg-brand-deep/[0.025] p-3 dark:border-white/8 dark:bg-white/[0.035]">
+                    <Field label="TTS provider">
+                        <Select
+                            value={activeGroup?.id ?? ""}
+                            onValueChange={(value) => {
+                                setSelectedVoiceGroupId(value)
+                                const group = voiceGroups.find((g) => g.id === value)
+                                const firstVoice = group?.voices?.[0]?.id
+                                if (firstVoice) onVoiceChange(firstVoice)
+                            }}
+                        >
+                            <SelectTrigger className="rounded-2xl border-brand-deep/8 bg-white/70 focus:ring-brand-gold/20 dark:border-white/10 dark:bg-white/5">
+                                <SelectValue placeholder="Select a TTS provider" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl">
+                                {voiceGroups.map((group) => (
+                                    <SelectItem key={group.id} value={group.id}>
+                                        {group.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </Field>
+
+                    <Field label="Voice">
+                        <VoiceGrid
+                            voices={voices}
+                            selectedVoiceId={selectedVoiceId}
+                            playingUrl={playingUrl}
+                            onVoiceChange={onVoiceChange}
+                            onPreview={handlePreview}
+                        />
+                    </Field>
+                </div>
+            ) : (
+                <Field label="Voice">
+                    <VoiceGrid
+                        voices={voices}
+                        selectedVoiceId={selectedVoiceId}
+                        playingUrl={playingUrl}
+                        onVoiceChange={onVoiceChange}
+                        onPreview={handlePreview}
+                    />
+                </Field>
+            )}
+        </div>
+    )
+}
+
+function VoiceGrid({
+    voices,
+    selectedVoiceId,
+    playingUrl,
+    onVoiceChange,
+    onPreview,
+}: {
+    voices: VoiceSpeechVoiceItem[]
+    selectedVoiceId: string
+    playingUrl: string | null
+    onVoiceChange: (id: string) => void
+    onPreview: (url: string) => void
+}) {
+    if (voices.length === 0) {
+        return (
+            <div className="rounded-2xl border border-brand-gold/15 bg-brand-gold/5 px-3 py-3 text-sm text-muted-foreground dark:border-brand-gold/20 dark:bg-brand-gold/10">
+                This provider has no voices configured yet.
+            </div>
+        )
+    }
+    return (
+        <div className="grid gap-2 sm:grid-cols-2">
+            {voices.map((voice) => {
+                const active = voice.id === selectedVoiceId
+                return (
+                    <div
+                        key={voice.id}
+                        onClick={() => onVoiceChange(voice.id)}
+                        className={cn(
+                            "flex items-start justify-between gap-3 rounded-3xl border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
+                            active
+                                ? "border-brand-gold/45 bg-brand-gold/6 ring-1 ring-inset ring-brand-gold/20 shadow-brand-gold/5"
+                                : "border-brand-deep/8 bg-white/70 hover:border-brand-deep/16 hover:bg-white dark:border-white/8 dark:bg-white/[0.045] dark:hover:border-white/16 dark:hover:bg-white/[0.07]"
+                        )}
+                    >
+                        <button
+                            type="button"
+                            onClick={() => onVoiceChange(voice.id)}
+                            className="min-w-0 cursor-pointer flex-1 text-left focus-visible:outline-none"
+                        >
+                            <div className="flex items-center gap-2">
+                                <p className="truncate text-sm font-semibold">{voice.name}</p>
+                                {voice.tier === "premium" && (
+                                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                                        Premium
+                                    </span>
+                                )}
+                            </div>
+                            {voice.description && (
+                                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                                    {voice.description}
+                                </p>
+                            )}
+                            <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
+                                {voice.gender && <span className="capitalize">{voice.gender}</span>}
+                                {voice.accent && voice.gender && <span>·</span>}
+                                {voice.accent && <span>{voice.accent}</span>}
+                            </div>
+                        </button>
+                        {voice.previewUrl && (
+                            <VoicePreviewButton
+                                isPlaying={playingUrl === voice.previewUrl}
+                                onPreview={() => onPreview(voice.previewUrl!)}
+                            />
+                        )}
                     </div>
-                ) : (
-                    <div className="grid gap-2 sm:grid-cols-2">
-                        {voices.map((voice) => {
-                            const active = voice.id === selectedVoiceId
-                            return (
-                                <div
-                                    key={voice.id}
-                                    onClick={() => onVoiceChange(voice.id)}
-                                    className={cn(
-                                        "flex items-start justify-between gap-3 rounded-3xl border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
-                                        active
-                                            ? "border-brand-gold/45 bg-brand-gold/6 ring-1 ring-inset ring-brand-gold/20 shadow-brand-gold/5"
-                                            : "border-brand-deep/8 bg-brand-deep/[0.035] hover:border-brand-deep/16 hover:bg-brand-deep/[0.055] dark:border-white/8 dark:bg-white/[0.045] dark:hover:border-white/16 dark:hover:bg-white/[0.07]"
-                                    )}
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => onVoiceChange(voice.id)}
-                                        className="min-w-0 cursor-pointer flex-1 text-left focus-visible:outline-none"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <p className="truncate text-sm font-semibold">{voice.name}</p>
-                                            {voice.tier === "premium" && (
-                                                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                                                    Premium
-                                                </span>
-                                            )}
-                                        </div>
-                                        {voice.description && (
-                                            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                                                {voice.description}
-                                            </p>
-                                        )}
-                                        <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
-                                            {voice.gender && <span className="capitalize">{voice.gender}</span>}
-                                            {voice.accent && voice.gender && <span>·</span>}
-                                            {voice.accent && <span>{voice.accent}</span>}
-                                        </div>
-                                    </button>
-                                    {voice.previewUrl && (
-                                        <VoicePreviewButton
-                                            isPlaying={playingUrl === voice.previewUrl}
-                                            onPreview={() => handlePreview(voice.previewUrl!)}
-                                        />
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
-            </Field>
+                )
+            })}
         </div>
     )
 }
