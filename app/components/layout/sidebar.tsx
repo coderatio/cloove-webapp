@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     ChevronRight,
@@ -34,7 +34,9 @@ import {
     findMiniAppByPathname,
     findMiniAppById,
     isMiniAppItemActive,
+    resolveMiniAppItems,
     type MiniAppDef,
+    type MiniAppItem,
 } from './mini-apps'
 
 interface SidebarProps {
@@ -98,6 +100,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     }, [pathname])
 
     const activeMiniApp = activeMiniAppId ? findMiniAppById(activeMiniAppId) : null
+
+    // Compute mini app items, resolving nav-child items from the preset-aware nav tree
+    const miniAppItems = useMemo(() => {
+        if (!activeMiniApp) return []
+        return resolveMiniAppItems(activeMiniApp, navGroups)
+    }, [activeMiniApp, navGroups])
 
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -189,6 +197,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 {activeMiniApp && !isCollapsed ? (
                     <MiniAppPanel
                         miniApp={activeMiniApp}
+                        items={miniAppItems}
                         pathname={pathname}
                         searchParams={searchParams}
                         onBack={() => setActiveMiniAppId(null)}
@@ -596,12 +605,14 @@ function NavItem({
 // MiniAppPanel Component
 interface MiniAppPanelProps {
     miniApp: MiniAppDef
+    items: MiniAppItem[]
     pathname: string
     searchParams: URLSearchParams
     onBack: () => void
 }
 
-function MiniAppPanel({ miniApp, pathname, searchParams, onBack }: MiniAppPanelProps) {
+function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack }: MiniAppPanelProps) {
+    const resolvedItems = items.length > 0 ? items : miniApp.items
     return (
         <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -640,7 +651,7 @@ function MiniAppPanel({ miniApp, pathname, searchParams, onBack }: MiniAppPanelP
             {/* Mini app navigation items */}
             <nav className="flex-1 overflow-y-auto px-3 py-3">
                 <div className="space-y-0.5">
-                    {miniApp.items.map((item) => {
+                    {resolvedItems.map((item) => {
                         // Generalized active detection: works for both direct routes
                         // and query-param-based tab routes (PersistedTabs)
                         const isActive = isMiniAppItemActive(

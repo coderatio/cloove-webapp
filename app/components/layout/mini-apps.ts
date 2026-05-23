@@ -14,6 +14,24 @@ import {
     Sparkles,
 } from "lucide-react"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
+import { NAV_GROUPS } from "@/app/domains/workspace/nav/nav-definitions"
+import type { ResolvedNavGroup } from "@/app/domains/workspace/nav/build-nav-model"
+
+// ── Static maps built from NAV_GROUPS for fast lookups ──────────────────────
+
+/** Map from nav item id (parents + children) to href */
+const NAV_ID_TO_HREF = new Map<string, string>()
+/** Map from root-level nav item href to its id */
+const ROOT_HREF_TO_ID = new Map<string, string>()
+for (const group of NAV_GROUPS) {
+    for (const item of group.items) {
+        NAV_ID_TO_HREF.set(item.id, item.href)
+        ROOT_HREF_TO_ID.set(item.href, item.id)
+        for (const child of item.children || []) {
+            NAV_ID_TO_HREF.set(child.id, child.href)
+        }
+    }
+}
 
 export interface MiniAppItem {
     id: string
@@ -30,6 +48,11 @@ export interface MiniAppDef {
     description?: string
     icon: LucideIcon
     items: MiniAppItem[]
+    /**
+     * IDs of nav items to resolve from the resolved nav tree (preset-aware).
+     * Items that pass RBAC/feature/preset filtering will be rendered before static `items`.
+     */
+    navChildIds?: NavRouteId[]
     /** If pathname starts with any of these, auto-activate this mini app */
     autoActivatePrefixes: string[]
 }
@@ -64,6 +87,16 @@ export const MINI_APPS: MiniAppDef[] = [
             { id: "customers", label: "Customers", icon: Users, href: "/customers" },
             { id: "payment-links", label: "Payment Links", icon: Link2, href: "/finance/payment-links" },
         ],
+        /** Items resolved from the nav tree (preset-aware: restaurant, school, etc.) */
+        navChildIds: [
+            "orders",
+            "orders_sale",
+            "restaurant_live",
+            "restaurant_tables",
+            "restaurant_kitchen",
+            "restaurant_bar",
+            "school_fee_tools",
+        ],
     },
 ]
 
@@ -77,11 +110,114 @@ export function findMiniAppById(id: string): MiniAppDef | undefined {
     return MINI_APPS.find((app) => app.id === id)
 }
 
+/**
+ * Compute the full set of auto-activation prefixes for a mini app.
+ * Merges manual `autoActivatePrefixes` with prefixes derived from `navChildIds`
+ * by looking up their hrefs in NAV_GROUPS. This means any preset-specific route
+ * added to `navChildIds` is automatically included — no manual prefix maintenance.
+ *
+ * Safety rule for multi-segment hrefs:
+ *   - If the first segment is a root nav item belonging to a DIFFERENT module
+ *     (e.g., `/finance/payment-links` where `/finance` is the Finance page),
+ *     the full href is used as the prefix to avoid collision.
+ *   - Otherwise, the first segment is used (e.g., `/restaurant/live` → `/restaurant`).
+ */
+function getAutoActivatePrefixes(miniApp: MiniAppDef): string[] {
+    const prefixes = new Set(miniApp.autoActivatePrefixes)
+
+    if (miniApp.navChildIds) {
+        for (const childId of miniApp.navChildIds) {
+            const href = NAV_ID_TO_HREF.get(childId)
+            if (!href) continue
+
+            // Already covered by an existing prefix
+            if ([...prefixes].some((p) => href.startsWith(p))) continue
+
+            const parts = href.split("/").filter(Boolean)
+            if (parts.length >= 2) {
+                const firstSegment = "/" + parts[0]
+                const rootId = ROOT_HREF_TO_ID.get(firstSegment)
+
+                // If the first segment is a root nav item that belongs to a DIFFERENT module,
+                // use the full href to avoid colliding with that module's root page.
+                if (rootId !== undefined && rootId !== miniApp.navItemId) {
+                    prefixes.add(href)
+                } else {
+                    prefixes.add(firstSegment)
+                }
+            } else {
+                prefixes.add(href)
+            }
+        }
+    }
+
+    return [...prefixes]
+}
+
 /** Check if a pathname belongs to a mini app (auto-activate) */
 export function findMiniAppByPathname(pathname: string): MiniAppDef | undefined {
     return MINI_APPS.find((app) =>
-        app.autoActivatePrefixes.some((prefix) => pathname.startsWith(prefix))
+        getAutoActivatePrefixes(app).some((prefix) => pathname.startsWith(prefix))
     )
+}
+
+/**
+ * Resolve the actual items for a mini app by merging static `items` with
+ * preset-aware nav children resolved from the nav tree.
+ *
+ * Nav children that don't pass RBAC/feature/preset filtering won't be in the
+ * resolved tree and will be silently skipped.
+ */
+export function resolveMiniAppItems(
+    miniApp: MiniAppDef,
+    navGroups: ResolvedNavGroup[]
+): MiniAppItem[] {
+    if (!miniApp.navChildIds || miniApp.navChildIds.length === 0) {
+        return miniApp.items
+    }
+
+    // Build a map of all resolved nav items (including children) by their id
+    const itemMap = new Map<
+        string,
+        { id: string; href: string; icon: LucideIcon; label: string }
+    >()
+    for (const group of navGroups) {
+        for (const item of group.items) {
+            itemMap.set(item.id, item)
+            if (item.children) {
+                for (const child of item.children) {
+                    itemMap.set(child.id, child)
+                }
+            }
+        }
+    }
+
+    // Resolve nav child IDs that exist in the current preset tree
+    const resolvedChildren: MiniAppItem[] = []
+    for (const childId of miniApp.navChildIds) {
+        const navItem = itemMap.get(childId)
+        if (navItem) {
+            resolvedChildren.push({
+                id: navItem.id,
+                label: navItem.label,
+                icon: navItem.icon,
+                href: navItem.href,
+            })
+        }
+    }
+
+    // Ensure the parent nav item (the one that triggers this mini app) is always first
+    const parentIdx = resolvedChildren.findIndex((r) => r.id === miniApp.navItemId)
+    if (parentIdx > 0) {
+        const [parent] = resolvedChildren.splice(parentIdx, 1)
+        resolvedChildren.unshift(parent)
+    }
+
+    // Static items minus any that overlap with resolved children
+    const resolvedIds = new Set(resolvedChildren.map((r) => r.id))
+    const staticItems = miniApp.items.filter((i) => !resolvedIds.has(i.id))
+
+    return [...resolvedChildren, ...staticItems]
 }
 
 /**
