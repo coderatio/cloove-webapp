@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -13,6 +13,7 @@ import {
     PanelLeft,
     Sun,
     Moon,
+    ArrowLeft,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
@@ -28,6 +29,13 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/app/components/ui/tooltip'
+import {
+    findMiniAppByNavItemId,
+    findMiniAppByPathname,
+    findMiniAppById,
+    isMiniAppItemActive,
+    type MiniAppDef,
+} from './mini-apps'
 
 interface SidebarProps {
     isCollapsed: boolean
@@ -75,6 +83,32 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     const { user, logout } = useAuth()
     const { features } = useBusiness()
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+    const [activeMiniAppId, setActiveMiniAppId] = useState<string | null>(null)
+
+    // Auto-detect mini app from route
+    useEffect(() => {
+        const detected = findMiniAppByPathname(pathname)
+        setActiveMiniAppId((prev) => {
+            // Don't override if user manually exited mini app
+            if (prev && !detected) return null
+            if (detected && prev !== detected.id) return detected.id
+            return prev
+        })
+    }, [pathname])
+
+    const activeMiniApp = activeMiniAppId ? findMiniAppById(activeMiniAppId) : null
+
+    const router = useRouter()
+    const searchParams = useSearchParams()
+
+    const launchMiniApp = useCallback((navItemId: string, href: string) => {
+        const miniApp = findMiniAppByNavItemId(navItemId)
+        if (miniApp) {
+            setActiveMiniAppId(miniApp.id)
+            router.push(href)
+        }
+    }, [router])
 
     const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
         const expanded = new Set<string>()
@@ -152,21 +186,31 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 overflow-y-auto px-3 py-2">
-                    {navGroups.map((group, groupIndex) => (
-                        <NavGroup
-                            key={group.key}
-                            group={group}
-                            isCollapsed={isCollapsed}
-                            collapsedSettled={collapsedSettled}
-                            pathname={pathname}
-                            expandedItems={expandedItems}
-                            onToggleExpand={toggleExpanded}
-                            can={can}
-                            isLast={groupIndex === navGroups.length - 1}
-                        />
-                    ))}
-                </nav>
+                {activeMiniApp && !isCollapsed ? (
+                    <MiniAppPanel
+                        miniApp={activeMiniApp}
+                        pathname={pathname}
+                        searchParams={searchParams}
+                        onBack={() => setActiveMiniAppId(null)}
+                    />
+                ) : (
+                    <nav className="flex-1 overflow-y-auto px-3 py-2">
+                        {navGroups.map((group, groupIndex) => (
+                            <NavGroup
+                                key={group.key}
+                                group={group}
+                                isCollapsed={isCollapsed}
+                                collapsedSettled={collapsedSettled}
+                                pathname={pathname}
+                                expandedItems={expandedItems}
+                                onToggleExpand={toggleExpanded}
+                                can={can}
+                                isLast={groupIndex === navGroups.length - 1}
+                                onLaunchMiniApp={launchMiniApp}
+                            />
+                        ))}
+                    </nav>
+                )}
 
                 {/* Footer */}
                 <Footer
@@ -298,6 +342,7 @@ interface NavGroupProps {
     onToggleExpand: (href: string) => void
     can: (permission: string) => boolean
     isLast: boolean
+    onLaunchMiniApp?: (navItemId: string, href: string) => void
 }
 
 function NavGroup({
@@ -309,6 +354,7 @@ function NavGroup({
     onToggleExpand,
     can,
     isLast,
+    onLaunchMiniApp,
 }: NavGroupProps) {
     const filteredItems = group.items
     if (filteredItems.length === 0) return null
@@ -338,6 +384,7 @@ function NavGroup({
                         isExpanded={expandedItems.has(item.href)}
                         onToggleExpand={onToggleExpand}
                         can={can}
+                        onLaunchMiniApp={onLaunchMiniApp}
                     />
                 ))}
             </div>
@@ -348,6 +395,7 @@ function NavGroup({
 // NavItem Component
 interface NavItemProps {
     item: {
+        id?: string
         href: string
         label: string
         icon: React.ComponentType<{ className?: string }>
@@ -364,6 +412,7 @@ interface NavItemProps {
     isExpanded: boolean
     onToggleExpand: (href: string) => void
     can: (permission: string) => boolean
+    onLaunchMiniApp?: (navItemId: string, href: string) => void
 }
 
 function NavItem({
@@ -374,6 +423,7 @@ function NavItem({
     isExpanded,
     onToggleExpand,
     can,
+    onLaunchMiniApp,
 }: NavItemProps) {
     const isActive = pathname === item.href
     const isChildActive = item.children?.some((child) => pathname.startsWith(child.href))
@@ -382,7 +432,16 @@ function NavItem({
         (child) => !child.permission || can(child.permission)
     )
 
+    const miniApp = onLaunchMiniApp ? findMiniAppByNavItemId(item.id ?? "") : undefined
+
     const Icon = item.icon
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (miniApp) {
+            e.preventDefault()
+            onLaunchMiniApp!(item.id!, item.href)
+        }
+    }
 
     return (
         <div>
@@ -399,6 +458,7 @@ function NavItem({
                     >
                         <Link
                             href={item.href}
+                            onClick={handleClick}
                             className={cn(
                                 'flex items-center gap-3',
                                 isCollapsed ? 'justify-center' : 'flex-1 min-w-0'
@@ -427,7 +487,7 @@ function NavItem({
                             </AnimatePresence>
                         </Link>
 
-                        {hasChildren && !isCollapsed && (
+                        {hasChildren && !miniApp && !isCollapsed && (
                             <button
                                 onClick={(e) => {
                                     e.preventDefault()
@@ -461,7 +521,7 @@ function NavItem({
                 {isCollapsed && collapsedSettled && (
                     <TooltipContent side="right" className="flex flex-col gap-1">
                         <span className="font-medium">{item.label}</span>
-                        {filteredChildren && filteredChildren.length > 0 && (
+                        {!miniApp && filteredChildren && filteredChildren.length > 0 && (
                             <>
                                 <div className="my-1 h-px bg-border" />
                                 {filteredChildren.map((child) => (
@@ -485,49 +545,145 @@ function NavItem({
             </Tooltip>
 
             {/* Submenu */}
-            <AnimatePresence initial={false}>
-                {hasChildren && !isCollapsed && isExpanded && filteredChildren && filteredChildren.length > 0 && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                        className="overflow-hidden"
-                    >
-                        <div className="relative ml-4 mt-1 space-y-0.5 border-l border-border/50 pl-4 py-1">
-                            {filteredChildren.map((child) => {
-                                const ChildIcon = child.icon
-                                const isChildItemActive =
-                                    pathname === child.href || pathname.startsWith(child.href)
-                                return (
-                                    <Link
-                                        key={child.href}
-                                        href={child.href}
-                                        className={cn(
-                                            'group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors',
-                                            isChildItemActive
-                                                ? 'text-foreground font-medium'
-                                                : 'text-muted-foreground hover:text-foreground'
-                                        )}
-                                    >
-                                        <span
+            {!miniApp && (
+                <AnimatePresence initial={false}>
+                    {hasChildren && !isCollapsed && isExpanded && filteredChildren && filteredChildren.length > 0 && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                            className="overflow-hidden"
+                        >
+                            <div className="relative ml-4 mt-1 space-y-0.5 border-l border-border/50 pl-4 py-1">
+                                {filteredChildren.map((child) => {
+                                    const ChildIcon = child.icon
+                                    const isChildItemActive =
+                                        pathname === child.href || pathname.startsWith(child.href)
+                                    return (
+                                        <Link
+                                            key={child.href}
+                                            href={child.href}
                                             className={cn(
-                                                'h-1.5 w-1.5 rounded-full transition-colors',
+                                                'group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors',
                                                 isChildItemActive
-                                                    ? 'bg-primary'
-                                                    : 'bg-border group-hover:bg-muted-foreground/50'
+                                                    ? 'text-foreground font-medium'
+                                                    : 'text-muted-foreground hover:text-foreground'
                                             )}
-                                        />
-                                        <ChildIcon className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate">{child.label}</span>
-                                    </Link>
-                                )
-                            })}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                        >
+                                            <span
+                                                className={cn(
+                                                    'h-1.5 w-1.5 rounded-full transition-colors',
+                                                    isChildItemActive
+                                                        ? 'bg-primary'
+                                                        : 'bg-border group-hover:bg-muted-foreground/50'
+                                                )}
+                                            />
+                                            <ChildIcon className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="truncate">{child.label}</span>
+                                        </Link>
+                                    )
+                                })}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            )}
         </div>
+    )
+}
+
+// MiniAppPanel Component
+interface MiniAppPanelProps {
+    miniApp: MiniAppDef
+    pathname: string
+    searchParams: URLSearchParams
+    onBack: () => void
+}
+
+function MiniAppPanel({ miniApp, pathname, searchParams, onBack }: MiniAppPanelProps) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="flex flex-col flex-1 overflow-hidden"
+        >
+            {/* Mini app header with back button */}
+            <div className="flex items-center gap-3 border-b border-border/50 px-3 py-3">
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={onBack}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    aria-label="Back to main navigation"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                </motion.button>
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300">
+                        <miniApp.icon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">
+                            {miniApp.title}
+                        </p>
+                        {miniApp.description && (
+                            <p className="truncate text-[10px] text-muted-foreground/70">
+                                {miniApp.description}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Mini app navigation items */}
+            <nav className="flex-1 overflow-y-auto px-3 py-3">
+                <div className="space-y-0.5">
+                    {miniApp.items.map((item) => {
+                        // Generalized active detection: works for both direct routes
+                        // and query-param-based tab routes (PersistedTabs)
+                        const isActive = isMiniAppItemActive(
+                            item.href,
+                            pathname,
+                            searchParams
+                        )
+
+                        const Icon = item.icon
+
+                        return (
+                            <Link
+                                key={item.id}
+                                href={item.href}
+                                className={cn(
+                                    'group relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200',
+                                    isActive
+                                        ? 'bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300'
+                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream'
+                                )}
+                            >
+                                <Icon
+                                    className={cn(
+                                        'h-[18px] w-[18px] shrink-0 transition-colors',
+                                        isActive
+                                            ? 'text-primary dark:text-brand-gold-300'
+                                            : 'text-muted-foreground group-hover:text-foreground dark:group-hover:text-brand-cream'
+                                    )}
+                                />
+                                <span className="text-sm font-medium">{item.label}</span>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="miniAppActiveIndicator"
+                                        className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary dark:bg-brand-gold-700"
+                                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                    />
+                                )}
+                            </Link>
+                        )
+                    })}
+                </div>
+            </nav>
+        </motion.div>
     )
 }
 

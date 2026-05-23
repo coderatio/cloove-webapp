@@ -15,7 +15,7 @@ import { cn, formatPhoneNumber } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { serializeSchedule, createDefaultSchedule } from "@/app/components/shared/OperatingHoursBuilder"
 import { Pagination } from "@/app/components/shared/Pagination"
-import { PersistedTabs, type TabItem } from "@/app/components/shared/PersistedTabs"
+
 import { TableSearch } from "@/app/components/shared/TableSearch"
 import { VoiceCallDetailsDialog } from "@/app/domains/voice/components/VoiceCallDetailsDialog"
 import {
@@ -41,6 +41,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/app/components/ui/select"
+import { useSearchParams } from "next/navigation"
 import {
     AudioLines,
     CheckCircle2,
@@ -295,16 +296,15 @@ export function VoiceView() {
     const hasVoiceAddon = useFeature("hasVoiceAgent")
 
     const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null)
-    const    voiceTabs: TabItem[] = [
-        { id: "overview", label: "Overview", icon: PanelsTopLeft },
-        { id: "requests", label: "Requests", icon: PhoneIncoming },
-        { id: "ai-agents", label: "AI Agents", icon: Sparkles },
-        { id: "calls", label: "Calls", icon: AudioLines },
-        { id: "transfer", label: "Transfer", icon: PhoneForwarded },
-        { id: "charges", label: "Spend", icon: Receipt },
-        { id: "settings", label: "Settings", icon: Settings2 },
-    ]
+    const searchParams = useSearchParams()
     const [activeTab, setActiveTab] = useState("overview")
+
+    // Sync activeTab from URL search params (set by sidebar mini app)
+    useEffect(() => {
+        const tabParam = searchParams.get("voiceTab")
+        setActiveTab(tabParam || "overview")
+    }, [searchParams])
+
     const [requestListTab, setRequestListTab] = useState<"pending" | "ready" | "history">("pending")
     const [callsPage, setCallsPage] = useState(1)
     const [callsSearch, setCallsSearch] = useState("")
@@ -543,15 +543,6 @@ export function VoiceView() {
             <VoiceStatusBar
                 health={healthQuery.data}
                 isPending={healthQuery.isPending}
-            />
-
-            <PersistedTabs
-                tabs={voiceTabs}
-                activeTab={activeTab}
-                onChange={setActiveTab}
-                defaultTab="overview"
-                queryParamName="voiceTab"
-                orientation="horizontal"
             />
 
             <Drawer
