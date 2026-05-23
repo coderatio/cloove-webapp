@@ -13,7 +13,7 @@ import {
     PanelLeft,
     Sun,
     Moon,
-    ArrowLeft,
+    ChevronLeft,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
@@ -627,7 +627,7 @@ function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollap
                             className="group relative flex h-10 w-10 items-center justify-center mx-auto rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream"
                             aria-label="Back to main navigation"
                         >
-                            <ArrowLeft className="h-[18px] w-[18px] shrink-0" />
+                            <ChevronLeft className="h-[18px] w-[18px] shrink-0" />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -687,32 +687,23 @@ function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollap
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 overflow-hidden"
         >
-            {/* Mini app header with back button */}
-            <div className="flex items-center gap-3 border-b border-border/50 px-3 py-3">
+            {/* Mini app header — full-width clickable back button */}
+            <div className="border-b border-border/50">
                 <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={onBack}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="group flex w-full cursor-pointer items-center gap-3 rounded-none px-3 py-2.5 text-left transition-colors hover:bg-muted dark:hover:bg-white/7"
                     aria-label="Back to main navigation"
                 >
-                    <ArrowLeft className="h-4 w-4" />
-                </motion.button>
-                <div className="flex items-center gap-2.5 min-w-0">
+                    <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300">
                         <miniApp.icon className="h-3.5 w-3.5" />
                     </div>
-                    <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-foreground">
-                            {miniApp.title}
-                        </p>
-                        {miniApp.description && (
-                            <p className="truncate text-[10px] text-muted-foreground/70">
-                                {miniApp.description}
-                            </p>
-                        )}
-                    </div>
-                </div>
+                    <span className="flex-1 truncate text-sm font-semibold text-foreground">
+                        {miniApp.title}
+                    </span>
+                </motion.button>
             </div>
 
             {/* Mini app navigation items */}
