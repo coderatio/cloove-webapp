@@ -88,6 +88,12 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
 
     const [activeMiniAppId, setActiveMiniAppId] = useState<string | null>(null)
 
+    // Track last visited sub-route per mini app so re-entering preserves the route
+    const lastMiniAppPaths = useRef<Map<string, string>>(new Map())
+
+    const router = useRouter()
+    const searchParams = useSearchParams()
+
     // Auto-detect mini app from route
     useEffect(() => {
         const detected = findMiniAppByPathname(pathname)
@@ -99,6 +105,15 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         })
     }, [pathname])
 
+    // Save current route whenever it changes within a mini app
+    useEffect(() => {
+        if (activeMiniAppId && pathname) {
+            const searchStr = searchParams.toString()
+            const fullPath = searchStr ? `${pathname}?${searchStr}` : pathname
+            lastMiniAppPaths.current.set(activeMiniAppId, fullPath)
+        }
+    }, [pathname, searchParams, activeMiniAppId])
+
     const activeMiniApp = activeMiniAppId ? findMiniAppById(activeMiniAppId) : null
 
     // Compute mini app items, resolving nav-child items from the preset-aware nav tree
@@ -107,14 +122,13 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         return resolveMiniAppItems(activeMiniApp, navGroups)
     }, [activeMiniApp, navGroups])
 
-    const router = useRouter()
-    const searchParams = useSearchParams()
-
     const launchMiniApp = useCallback((navItemId: string, href: string) => {
         const miniApp = findMiniAppByNavItemId(navItemId)
         if (miniApp) {
             setActiveMiniAppId(miniApp.id)
-            router.push(href)
+            // Navigate to the last visited sub-route if available, otherwise use default href
+            const savedPath = lastMiniAppPaths.current.get(miniApp.id)
+            router.push(savedPath || href)
         }
     }, [router])
 
@@ -200,7 +214,15 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                         items={miniAppItems}
                         pathname={pathname}
                         searchParams={searchParams}
-                        onBack={() => setActiveMiniAppId(null)}
+                        onBack={() => {
+                            // Save current route before exiting so re-entering preserves it
+                            const searchStr = searchParams.toString()
+                            const currentPath = searchStr ? `${pathname}?${searchStr}` : pathname
+                            if (activeMiniAppId) {
+                                lastMiniAppPaths.current.set(activeMiniAppId, currentPath)
+                            }
+                            setActiveMiniAppId(null)
+                        }}
                         isCollapsed={isCollapsed}
                     />
                 ) : (
