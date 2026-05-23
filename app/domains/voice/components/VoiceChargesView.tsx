@@ -249,7 +249,7 @@ export function VoiceChargesView() {
         <div className="space-y-8">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-2xl before:rounded-2xl border-brand-deep/5">
+                <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl border-brand-deep/8">
                     <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Receipt className="w-24 h-24" />
                     </div>
@@ -258,7 +258,7 @@ export function VoiceChargesView() {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold uppercase text-brand-accent/40 dark:text-brand-cream/40">
-                            Call Charges
+                            Total spend
                         </p>
                         {chargesLoading ? (
                             <Skeleton className="h-8 w-20 mt-1" />
@@ -270,7 +270,7 @@ export function VoiceChargesView() {
                     </div>
                 </GlassCard>
 
-                <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-2xl before:rounded-2xl border-brand-deep/5">
+                <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl border-brand-deep/8">
                     <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Clock className="w-24 h-24" />
                     </div>
@@ -279,23 +279,23 @@ export function VoiceChargesView() {
                     </div>
                     <div>
                         <p className="text-[10px] font-bold uppercase text-brand-accent/40 dark:text-brand-cream/40">
-                            This Page
+                            Number of calls
                         </p>
                         {chargesLoading ? (
                             <Skeleton className="h-8 w-16 mt-1" />
                         ) : (
                             <p className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
-                                {charges.length} charge{charges.length !== 1 ? "s" : ""}
+                                {charges.length} call{charges.length !== 1 ? "s" : ""}
                             </p>
                         )}
                     </div>
                 </GlassCard>
 
                 <GlassCard className={cn(
-                    "p-5 flex items-center gap-4 relative overflow-hidden group rounded-2xl before:rounded-2xl",
+                    "p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl",
                     (debtsMeta?.totalOutstanding ?? 0) > 0
                         ? "border-rose-500/20 bg-rose-500/5"
-                        : "border-brand-deep/5"
+                        : "border-brand-deep/8"
                 )}>
                     <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
                         <AlertTriangle className="w-24 h-24" />
@@ -449,21 +449,21 @@ export function VoiceChargesView() {
                 </div>
             )}
 
-                {/* Charge Details Drawer */}
-                <Drawer open={!!selectedCharge} onOpenChange={(open) => !open && setSelectedCharge(null)}>
-                    <DrawerContent className="max-h-[85vh]">
-                        <DrawerStickyHeader showClose>
-                            <DrawerTitle className="font-sans text-xl font-semibold">Charge Details</DrawerTitle>
-                            <DrawerDescription className="text-sm">
-                                Detailed breakdown for this voice call charge.
-                            </DrawerDescription>
-                        </DrawerStickyHeader>
-                        <DrawerBody>
-                            {selectedCharge && <ChargeDetailContent charge={selectedCharge} currencyCode={currencyCode} />}
-                        </DrawerBody>
-                    </DrawerContent>
-                </Drawer>
-            </div>
+            {/* Charge Details Drawer */}
+            <Drawer open={!!selectedCharge} onOpenChange={(open) => !open && setSelectedCharge(null)}>
+                <DrawerContent className="max-h-[85vh]">
+                    <DrawerStickyHeader showClose>
+                        <DrawerTitle className="font-sans text-xl font-semibold">Charge Details</DrawerTitle>
+                        <DrawerDescription className="text-sm">
+                            Detailed breakdown for this voice call charge.
+                        </DrawerDescription>
+                    </DrawerStickyHeader>
+                    <DrawerBody>
+                        {selectedCharge && <ChargeDetailContent charge={selectedCharge} currencyCode={currencyCode} />}
+                    </DrawerBody>
+                </DrawerContent>
+            </Drawer>
+        </div>
     )
 }
 

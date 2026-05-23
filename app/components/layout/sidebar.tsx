@@ -194,13 +194,14 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 </div>
 
                 {/* Navigation */}
-                {activeMiniApp && !isCollapsed ? (
+                {activeMiniApp ? (
                     <MiniAppPanel
                         miniApp={activeMiniApp}
                         items={miniAppItems}
                         pathname={pathname}
                         searchParams={searchParams}
                         onBack={() => setActiveMiniAppId(null)}
+                        isCollapsed={isCollapsed}
                     />
                 ) : (
                     <nav className="flex-1 overflow-y-auto px-3 py-2">
@@ -609,15 +610,81 @@ interface MiniAppPanelProps {
     pathname: string
     searchParams: URLSearchParams
     onBack: () => void
+    isCollapsed: boolean
 }
 
-function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack }: MiniAppPanelProps) {
+function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollapsed }: MiniAppPanelProps) {
     const resolvedItems = items.length > 0 ? items : miniApp.items
+
+    if (isCollapsed) {
+        return (
+            <nav className="flex flex-1 flex-col overflow-y-auto py-3">
+                {/* Back button to exit mini app */}
+                <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                        <button
+                            onClick={onBack}
+                            className="group relative flex h-10 w-10 items-center justify-center mx-auto rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream"
+                            aria-label="Back to main navigation"
+                        >
+                            <ArrowLeft className="h-[18px] w-[18px] shrink-0" />
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                        <span className="font-medium">Back to main navigation</span>
+                    </TooltipContent>
+                </Tooltip>
+
+                {/* Separator between back button and nav items */}
+                <div className="mx-auto my-3 h-px w-5 bg-border/60" />
+
+                <div className="space-y-0.5">
+                    {resolvedItems.map((item) => {
+                        const isActive = isMiniAppItemActive(
+                            item.href,
+                            pathname,
+                            searchParams
+                        )
+
+                        const Icon = item.icon
+
+                        return (
+                            <Tooltip key={item.id} delayDuration={200}>
+                                <TooltipTrigger asChild>
+                                    <Link
+                                        href={item.href}
+                                        className={cn(
+                                            'group relative flex h-10 w-10 items-center justify-center mx-auto rounded-xl transition-all duration-200',
+                                            isActive
+                                                ? 'bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300'
+                                                : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream'
+                                        )}
+                                    >
+                                        <Icon className="h-[18px] w-[18px] shrink-0" />
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="miniAppActiveIndicator"
+                                                className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary dark:bg-brand-gold-700"
+                                                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                                            />
+                                        )}
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">
+                                    <span className="font-medium">{item.label}</span>
+                                </TooltipContent>
+                            </Tooltip>
+                        )
+                    })}
+                </div>
+            </nav>
+        )
+    }
+
     return (
         <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={false}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             className="flex flex-col flex-1 overflow-hidden"
         >
             {/* Mini app header with back button */}
