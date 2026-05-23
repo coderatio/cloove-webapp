@@ -909,3 +909,112 @@ export function useStartVoiceCall() {
         onError: (error: { message?: string }) => toast.error(error.message ?? "Failed to queue outbound call"),
     })
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Voice Call Charges & Wallet Debts — billing UI
+// ────────────────────────────────────────────────────────────────────────────
+
+export interface VoiceCallCharge {
+    id: string
+    reference: string
+    externalReference: string | null
+    amount: number
+    currency: string
+    description: string
+    voiceCallId: string
+    metadata: {
+        voice_call_id?: string
+        provider?: string
+        direction?: string
+        country?: string
+        number_type?: string
+        rate_per_minute?: number
+        duration_seconds?: number
+        full_amount?: number
+        shortfall?: number
+        callerNumber?: string
+        answerNumber?: string
+    } | null
+    balanceBefore: number
+    balanceAfter: number
+    createdAt: string
+    processedAt: string
+}
+
+export interface VoiceCallChargesMeta {
+    page: number
+    limit: number
+}
+
+export interface WalletDebtItem {
+    id: string
+    businessId: string
+    walletId: string
+    originType: string
+    originId: string
+    originDescription: string
+    originalAmount: number
+    paidAmount: number
+    remainingAmount: number
+    currency: string
+    status: string
+    relatedTransactionId: string | null
+    metadata: Record<string, unknown> | null
+    settledAt: string | null
+    createdAt: string
+    updatedAt: string | null
+}
+
+export interface WalletDebtsMeta {
+    count: number
+    totalOutstanding: number
+    currency: string | null
+}
+
+export function useVoiceCallCharges(page: number = 1, limit: number = 20) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    const params: Record<string, string> = {
+        page: String(page),
+        limit: String(limit),
+    }
+
+    return useQuery({
+        queryKey: ["voice", "charges", businessId, page, limit],
+        queryFn: async () => {
+            const response = await apiClient.get<ApiResponse<VoiceCallCharge[]>>("/finance/voice-calls/charges", params, { fullResponse: true })
+            const rawMeta = response.meta
+                ? (response.meta as unknown as VoiceCallChargesMeta)
+                : undefined
+            return {
+                data: response.data,
+                meta: rawMeta ?? { page, limit },
+            }
+        },
+        enabled: !!businessId,
+        staleTime: 30_000,
+    })
+}
+
+export function useWalletDebts() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useQuery({
+        queryKey: ["finance", "wallet-debts", businessId],
+        queryFn: async () => {
+            const response = await apiClient.get<ApiResponse<WalletDebtItem[]>>("/finance/wallet-debts", {}, { fullResponse: true })
+            const rawMeta = response.meta
+                ? (response.meta as unknown as WalletDebtsMeta)
+                : undefined
+            return {
+                data: response.data,
+                meta: rawMeta ?? { count: 0, totalOutstanding: 0, currency: null },
+            }
+        },
+        enabled: !!businessId,
+        staleTime: 15_000,
+        refetchInterval: 30_000,
+    })
+}

@@ -24,6 +24,7 @@ import {
     CallStatusDot,
     formatCallDuration,
 } from "@/app/domains/voice/components/VoiceCallLabels"
+import { VoiceChargesView } from "@/app/domains/voice/components/VoiceChargesView"
 import { VoiceNumberCard } from "@/app/domains/voice/components/VoiceNumberCard"
 import { VoiceOutboundCallComposer } from "@/app/domains/voice/components/VoiceOutboundCallComposer"
 import { VoiceProviderCredentialsForm } from "@/app/domains/voice/components/VoiceProviderCredentialsForm"
@@ -58,6 +59,7 @@ import {
     PhoneOutgoing,
     Plus,
     Radio,
+    Receipt,
     Settings2,
     ShieldCheck,
     Sparkles,
@@ -293,12 +295,13 @@ export function VoiceView() {
     const hasVoiceAddon = useFeature("hasVoiceAgent")
 
     const [selectedCall, setSelectedCall] = useState<VoiceCall | null>(null)
-    const voiceTabs: TabItem[] = [
+    const    voiceTabs: TabItem[] = [
         { id: "overview", label: "Overview", icon: PanelsTopLeft },
         { id: "requests", label: "Requests", icon: PhoneIncoming },
         { id: "ai-agents", label: "AI Agents", icon: Sparkles },
         { id: "calls", label: "Calls", icon: AudioLines },
         { id: "transfer", label: "Transfer", icon: PhoneForwarded },
+        { id: "charges", label: "Spend", icon: Receipt },
         { id: "settings", label: "Settings", icon: Settings2 },
     ]
     const [activeTab, setActiveTab] = useState("overview")
@@ -1038,6 +1041,10 @@ export function VoiceView() {
                         </div>
                     )}
                 </GlassCard>
+            )}
+
+            {activeTab === "charges" && (
+                <VoiceChargesView />
             )}
 
             {activeTab === "settings" && (

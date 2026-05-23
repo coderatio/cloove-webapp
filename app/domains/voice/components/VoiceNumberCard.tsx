@@ -19,6 +19,7 @@ import {
     DrawerTitle,
 } from "@/app/components/ui/drawer"
 import { cn, formatPhoneNumber } from "@/app/lib/utils"
+import { formatCurrency } from "@/app/lib/formatters"
 import { Loader2, Pencil, Phone, RotateCcw, Sparkles, Star, Unplug } from "lucide-react"
 import {
     useAssignVoiceAiAgentToNumber,
@@ -108,49 +109,78 @@ export function VoiceNumberCard({
                     </div>
 
                     <div className="min-w-0 flex-1 pt-0.5">
-                        <div className="flex items-center gap-2">
-                            <h3 className="truncate text-[15px] font-semibold leading-tight text-slate-900 dark:text-slate-100">
-                                {displayTitle}
-                            </h3>
-                            {number.isDefault ? (
-                                <span
-                                    className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
-                                    title="Default voice number"
-                                >
-                                    <Star className="h-2.5 w-2.5 fill-current" strokeWidth={0} />
-                                    Default
-                                </span>
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="truncate text-[15px] font-semibold leading-tight text-slate-900 dark:text-slate-100">
+                                        {displayTitle}
+                                    </h3>
+                                    {number.isDefault ? (
+                                        <span
+                                            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                                            title="Default voice number"
+                                        >
+                                            <Star className="h-2.5 w-2.5 fill-current" strokeWidth={0} />
+                                            Default
+                                        </span>
+                                    ) : null}
+                                </div>
+
+                                {hasLabel ? (
+                                    <p className="mt-1 truncate font-mono text-[13px] tabular-nums text-slate-600 dark:text-slate-300">
+                                        {formattedPhone}
+                                    </p>
+                                ) : null}
+
+                                <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
+                                    <span className="capitalize">{providerName}</span>
+                                    <span aria-hidden className="px-1.5 text-slate-300 dark:text-slate-600">·</span>
+                                    <span>
+                                        {number.useSystemCredentials ? "Managed credentials" : "Custom credentials"}
+                                    </span>
+                                    {statusLabel ? (
+                                        <>
+                                            <span aria-hidden className="px-1.5 text-slate-300 dark:text-slate-600">·</span>
+                                            <span
+                                                className={cn(
+                                                    "font-medium",
+                                                    isFailed
+                                                        ? "text-amber-600 dark:text-amber-400"
+                                                        : "text-slate-500 dark:text-slate-400"
+                                                )}
+                                            >
+                                                {statusLabel}
+                                            </span>
+                                        </>
+                                    ) : null}
+                                </p>
+                            </div>
+
+                            {number.rates?.inboundPerMinute != null || number.rates?.outboundPerMinute != null ? (
+                                <div className="shrink-0 text-right">
+                                    {number.rates.outboundPerMinute != null && (
+                                        <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                            Outbound
+                                        </p>
+                                    )}
+                                    {number.rates.outboundPerMinute != null && (
+                                        <p className="font-mono text-[12px] tabular-nums font-semibold text-slate-700 dark:text-slate-200">
+                                            {formatCurrency(number.rates.outboundPerMinute, { currency: number.rates.currency ?? 'NGN' })}/min
+                                        </p>
+                                    )}
+                                    {number.rates.inboundPerMinute != null && (
+                                        <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                            Inbound
+                                        </p>
+                                    )}
+                                    {number.rates.inboundPerMinute != null && (
+                                        <p className="font-mono text-[12px] tabular-nums font-semibold text-slate-700 dark:text-slate-200">
+                                            {formatCurrency(number.rates.inboundPerMinute, { currency: number.rates.currency ?? 'NGN' })}/min
+                                        </p>
+                                    )}
+                                </div>
                             ) : null}
                         </div>
-
-                        {hasLabel ? (
-                            <p className="mt-1 truncate font-mono text-[13px] tabular-nums text-slate-600 dark:text-slate-300">
-                                {formattedPhone}
-                            </p>
-                        ) : null}
-
-                        <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
-                            <span className="capitalize">{providerName}</span>
-                            <span aria-hidden className="px-1.5 text-slate-300 dark:text-slate-600">·</span>
-                            <span>
-                                {number.useSystemCredentials ? "Managed credentials" : "Custom credentials"}
-                            </span>
-                            {statusLabel ? (
-                                <>
-                                    <span aria-hidden className="px-1.5 text-slate-300 dark:text-slate-600">·</span>
-                                    <span
-                                        className={cn(
-                                            "font-medium",
-                                            isFailed
-                                                ? "text-amber-600 dark:text-amber-400"
-                                                : "text-slate-500 dark:text-slate-400"
-                                        )}
-                                    >
-                                        {statusLabel}
-                                    </span>
-                                </>
-                            ) : null}
-                        </p>
 
                         <button
                             type="button"
