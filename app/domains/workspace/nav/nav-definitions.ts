@@ -10,6 +10,7 @@ import {
     Home,
     LayoutGrid,
     Link2,
+    Code2,
     Package,
     Phone,
     Receipt,
@@ -45,6 +46,7 @@ export type NavRouteId =
     | "activity"
     | "storefront"
     | "staff"
+    | "developer"
 
 /** Keys merged into `business.features` (plan + feature_flags) */
 export type PlanFeatureKey =
@@ -268,6 +270,13 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 defaultLabel: "Staff",
                 permission: "MANAGE_STAFF",
                 moduleFeatureKey: "module_staff",
+            },
+            {
+                id: "developer",
+                href: "/developer",
+                icon: Code2,
+                defaultLabel: "Developer",
+                permission: "MANAGE_DEVELOPER_KEYS",
             },
         ],
     },

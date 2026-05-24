@@ -356,6 +356,7 @@ interface NavGroupProps {
         key: string
         label: string
         items: Array<{
+            id?: string
             href: string
             label: string
             icon: React.ComponentType<{ className?: string }>
