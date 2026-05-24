@@ -10,6 +10,7 @@ import {
     Loader2,
     Phone,
     Play,
+    Search,
     Sparkles,
     Sun,
     Wrench,
@@ -87,7 +88,7 @@ interface AiAgentEditorProps {
 function getProviderVoiceGroups(
     provider: VoiceSpeechProviderItem | null | undefined
 ): VoiceSpeechVoiceGroupItem[] {
-    return provider?.voiceGroups?.length ? provider.voiceGroups : []
+    return provider?.voiceGroups?.length ? provider.voiceGroups.filter((group) => group.isEnabled) : []
 }
 
 function getEnabledProviderVoiceGroups(
@@ -274,6 +275,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
 
         lastAppliedTemplateRef.current = template
         if (template === "scratch") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setEnabledTools([])
             return
         }
@@ -1017,10 +1019,6 @@ function SpeechProviderPicker({
         [providers, selectedProviderId]
     )
     const voiceGroups = useMemo(() => getProviderVoiceGroups(activeProvider), [activeProvider])
-    const enabledVoiceGroups = useMemo(
-        () => getEnabledProviderVoiceGroups(activeProvider),
-        [activeProvider]
-    )
     const hasVoiceGroups = voiceGroups.length > 0
 
     const [selectedVoiceGroupId, setSelectedVoiceGroupId] = useState<string>("")
@@ -1028,25 +1026,20 @@ function SpeechProviderPicker({
     const activeGroup = useMemo(() => {
         if (!hasVoiceGroups) return null
         if (selectedVoiceGroupId) {
-            const match = enabledVoiceGroups.find((g) => g.id === selectedVoiceGroupId)
+            const match = voiceGroups.find((g) => g.id === selectedVoiceGroupId)
             if (match) return match
         }
         const containing = findGroupForVoice(activeProvider, selectedVoiceId)
         if (containing?.isEnabled) return containing
-        return enabledVoiceGroups[0] ?? null
-    }, [
-        hasVoiceGroups,
-        enabledVoiceGroups,
-        selectedVoiceGroupId,
-        activeProvider,
-        selectedVoiceId,
-    ])
+        return voiceGroups[0] ?? null
+    }, [hasVoiceGroups, voiceGroups, selectedVoiceGroupId, activeProvider, selectedVoiceId])
 
     // Keep the local sub-provider selection in sync with the resolved active
     // group so switching providers or loading an agent snaps the highlight to
     // the group that owns the persisted voice.
     useEffect(() => {
         if (!hasVoiceGroups) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             if (selectedVoiceGroupId !== "") setSelectedVoiceGroupId("")
             return
         }
@@ -1174,7 +1167,6 @@ function SpeechProviderPicker({
                             onValueChange={(value) => {
                                 setSelectedVoiceGroupId(value)
                                 const group = voiceGroups.find((g) => g.id === value)
-                                if (!group?.isEnabled) return
                                 const firstVoice = group?.voices?.[0]?.id
                                 if (firstVoice) onVoiceChange(firstVoice)
                             }}
@@ -1187,10 +1179,8 @@ function SpeechProviderPicker({
                                     <SelectItem
                                         key={group.id}
                                         value={group.id}
-                                        disabled={!group.isEnabled}
                                     >
-                                        {group.label}
-                                        {!group.isEnabled ? " (disabled)" : ""}
+                                        {group.label} ({group.voices?.length ?? 0})
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -1199,6 +1189,7 @@ function SpeechProviderPicker({
 
                     <Field label="Voice">
                         <VoiceGrid
+                            key={activeGroup?.id ?? "grouped-voices"}
                             voices={voices}
                             selectedVoiceId={selectedVoiceId}
                             playingUrl={playingUrl}
@@ -1210,6 +1201,7 @@ function SpeechProviderPicker({
             ) : (
                 <Field label="Voice">
                     <VoiceGrid
+                        key={activeProvider?.id ?? "flat-voices"}
                         voices={voices}
                         selectedVoiceId={selectedVoiceId}
                         playingUrl={playingUrl}
@@ -1235,6 +1227,20 @@ function VoiceGrid({
     onVoiceChange: (id: string) => void
     onPreview: (url: string) => void
 }) {
+    const [query, setQuery] = useState("")
+    const showSearch = voices.length > 8
+    const normalizedQuery = query.trim().toLowerCase()
+    const filteredVoices = useMemo(() => {
+        if (!normalizedQuery) return voices
+        return voices.filter((voice) =>
+            [voice.name, voice.description, voice.accent, voice.gender]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase()
+                .includes(normalizedQuery)
+        )
+    }, [normalizedQuery, voices])
+
     if (voices.length === 0) {
         return (
             <div className="rounded-2xl border border-brand-gold/15 bg-brand-gold/5 px-3 py-3 text-sm text-muted-foreground dark:border-brand-gold/20 dark:bg-brand-gold/10">
@@ -1243,53 +1249,80 @@ function VoiceGrid({
         )
     }
     return (
-        <div className="grid gap-2 sm:grid-cols-2">
-            {voices.map((voice) => {
-                const active = voice.id === selectedVoiceId
-                return (
-                    <div
-                        key={voice.id}
-                        onClick={() => onVoiceChange(voice.id)}
-                        className={cn(
-                            "flex items-start justify-between gap-3 rounded-3xl border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
-                            active
-                                ? "border-brand-gold/45 bg-brand-gold/6 ring-1 ring-inset ring-brand-gold/20 shadow-brand-gold/5"
-                                : "border-brand-deep/8 bg-white/70 hover:border-brand-deep/16 hover:bg-white dark:border-white/8 dark:bg-white/[0.045] dark:hover:border-white/16 dark:hover:bg-white/[0.07]"
-                        )}
-                    >
-                        <button
-                            type="button"
-                            onClick={() => onVoiceChange(voice.id)}
-                            className="min-w-0 cursor-pointer flex-1 text-left focus-visible:outline-none"
-                        >
-                            <div className="flex items-center gap-2">
-                                <p className="truncate text-sm font-semibold">{voice.name}</p>
-                                {voice.tier === "premium" && (
-                                    <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                                        Premium
-                                    </span>
+        <div className="space-y-2">
+            {showSearch && (
+                <div className="flex items-center gap-2 rounded-2xl border border-brand-deep/8 bg-white/70 px-3 dark:border-white/10 dark:bg-white/5">
+                    <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <Input
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                        placeholder={`Search ${voices.length} voices`}
+                        className="h-10 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
+                    />
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                        {filteredVoices.length}/{voices.length}
+                    </span>
+                </div>
+            )}
+            {filteredVoices.length === 0 ? (
+                <div className="rounded-2xl border border-brand-deep/8 bg-white/70 px-3 py-3 text-sm text-muted-foreground dark:border-white/10 dark:bg-white/[0.045]">
+                    No voices match your search.
+                </div>
+            ) : (
+                <div
+                    className={cn(
+                        "grid gap-2 sm:grid-cols-2",
+                        showSearch && "max-h-[360px] overflow-y-auto pr-1"
+                    )}
+                >
+                    {filteredVoices.map((voice) => {
+                        const active = voice.id === selectedVoiceId
+                        return (
+                            <div
+                                key={voice.id}
+                                onClick={() => onVoiceChange(voice.id)}
+                                className={cn(
+                                    "flex min-h-[92px] items-start justify-between gap-3 rounded-2xl border p-3 text-left shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/20",
+                                    active
+                                        ? "border-brand-gold/45 bg-brand-gold/6 ring-1 ring-inset ring-brand-gold/20 shadow-brand-gold/5"
+                                        : "border-brand-deep/8 bg-white/70 hover:border-brand-deep/16 hover:bg-white dark:border-white/8 dark:bg-white/[0.045] dark:hover:border-white/16 dark:hover:bg-white/[0.07]"
+                                )}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => onVoiceChange(voice.id)}
+                                    className="min-w-0 cursor-pointer flex-1 text-left focus-visible:outline-none"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <p className="truncate text-sm font-semibold">{voice.name}</p>
+                                        {voice.tier === "premium" && (
+                                            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">
+                                                Premium
+                                            </span>
+                                        )}
+                                    </div>
+                                    {voice.description && (
+                                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                                            {voice.description}
+                                        </p>
+                                    )}
+                                    <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
+                                        {voice.gender && <span className="capitalize">{voice.gender}</span>}
+                                        {voice.accent && voice.gender && <span>·</span>}
+                                        {voice.accent && <span>{voice.accent}</span>}
+                                    </div>
+                                </button>
+                                {voice.previewUrl && (
+                                    <VoicePreviewButton
+                                        isPlaying={playingUrl === voice.previewUrl}
+                                        onPreview={() => onPreview(voice.previewUrl!)}
+                                    />
                                 )}
                             </div>
-                            {voice.description && (
-                                <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                                    {voice.description}
-                                </p>
-                            )}
-                            <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
-                                {voice.gender && <span className="capitalize">{voice.gender}</span>}
-                                {voice.accent && voice.gender && <span>·</span>}
-                                {voice.accent && <span>{voice.accent}</span>}
-                            </div>
-                        </button>
-                        {voice.previewUrl && (
-                            <VoicePreviewButton
-                                isPlaying={playingUrl === voice.previewUrl}
-                                onPreview={() => onPreview(voice.previewUrl!)}
-                            />
-                        )}
-                    </div>
-                )
-            })}
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }
