@@ -11,10 +11,9 @@ import {
     Users,
     Link2,
     Code2,
-    KeyRound,
+    LayoutGrid,
     BarChart3,
     ListChecks,
-    Webhook,
     Sparkles,
 } from "lucide-react"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
@@ -106,17 +105,14 @@ export const MINI_APPS: MiniAppDef[] = [
         id: "developer",
         navItemId: "developer",
         title: "Developer",
-        description: "API keys, usage, and integrations",
+        description: "Apps, API keys, and integrations",
         icon: Code2,
         autoActivatePrefixes: ["/developer"],
         items: [
             { id: "overview", label: "Overview", icon: PanelsTopLeft, href: "/developer" },
-            { id: "api-keys", label: "API Keys", icon: KeyRound, href: "/developer/api-keys" },
+            { id: "apps", label: "Apps", icon: LayoutGrid, href: "/developer/apps" },
             { id: "usage", label: "Usage", icon: BarChart3, href: "/developer/usage" },
             { id: "events", label: "Events", icon: ListChecks, href: "/developer/events" },
-            { id: "vox", label: "Vox API", icon: AudioLines, href: "/developer/vox" },
-            { id: "webhooks", label: "Webhooks", icon: Webhook, href: "/developer/webhooks" },
-            { id: "settings", label: "Settings", icon: Settings2, href: "/developer/settings" },
         ],
     },
 ]

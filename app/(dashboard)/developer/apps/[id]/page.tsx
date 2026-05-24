@@ -1,12 +1,12 @@
 "use client"
 
 import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
-import { DeveloperView } from "@/app/domains/developer/components/DeveloperView"
+import { AppDetailView } from "@/app/domains/developer/components/AppDetailView"
 
-export default function DeveloperApiKeysPage() {
+export default function DeveloperAppDetailPage() {
     return (
         <PermissionGuard anyPermission={["MANAGE_DEVELOPER_KEYS"]}>
-            <DeveloperView section="api-keys" />
+            <AppDetailView />
         </PermissionGuard>
     )
 }
