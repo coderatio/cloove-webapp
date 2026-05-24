@@ -90,14 +90,24 @@ function getProviderVoiceGroups(
     return provider?.voiceGroups?.length ? provider.voiceGroups : []
 }
 
+function getEnabledProviderVoiceGroups(
+    provider: VoiceSpeechProviderItem | null | undefined
+): VoiceSpeechVoiceGroupItem[] {
+    return getProviderVoiceGroups(provider).filter((group) => group.isEnabled)
+}
+
 function findVoiceAcrossProvider(
     provider: VoiceSpeechProviderItem | null | undefined,
-    voiceId: string
+    voiceId: string,
+    options: { onlyEnabledGroups?: boolean } = {}
 ): VoiceSpeechVoiceItem | null {
     if (!provider || !voiceId) return null
     const flat = (provider.voices ?? []).find((v) => v.id === voiceId)
     if (flat) return flat
-    for (const group of getProviderVoiceGroups(provider)) {
+    const groups = options.onlyEnabledGroups
+        ? getEnabledProviderVoiceGroups(provider)
+        : getProviderVoiceGroups(provider)
+    for (const group of groups) {
         const found = (group.voices ?? []).find((v) => v.id === voiceId)
         if (found) return found
     }
@@ -121,7 +131,7 @@ function getFirstProviderVoiceId(
     if (!provider) return ""
     const flatFirst = provider.voices?.[0]?.id
     if (flatFirst) return flatFirst
-    for (const group of getProviderVoiceGroups(provider)) {
+    for (const group of getEnabledProviderVoiceGroups(provider)) {
         const first = group.voices?.[0]?.id
         if (first) return first
     }
@@ -175,11 +185,11 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
     const activeVoice = useMemo<VoiceSpeechVoiceItem | null>(() => {
         if (!activeProvider) return null
         if (voiceId) {
-            const match = findVoiceAcrossProvider(activeProvider, voiceId)
+            const match = findVoiceAcrossProvider(activeProvider, voiceId, { onlyEnabledGroups: true })
             if (match) return match
         }
         if ((activeProvider.voices ?? []).length > 0) return activeProvider.voices[0] ?? null
-        for (const group of getProviderVoiceGroups(activeProvider)) {
+        for (const group of getEnabledProviderVoiceGroups(activeProvider)) {
             if (group.voices?.length) return group.voices[0]
         }
         return null
@@ -192,7 +202,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
         if (!open || !activeProvider) return
         // eslint-disable-next-line react-hooks/set-state-in-effect
         if (!speechProviderId) setSpeechProviderId(activeProvider.id)
-        if (!voiceId && activeVoice) setVoiceId(activeVoice.id)
+        if (activeVoice && voiceId !== activeVoice.id) setVoiceId(activeVoice.id)
     }, [open, activeProvider, activeVoice, speechProviderId, voiceId])
 
     // Hydrate fields when opening for edit.
@@ -1007,6 +1017,10 @@ function SpeechProviderPicker({
         [providers, selectedProviderId]
     )
     const voiceGroups = useMemo(() => getProviderVoiceGroups(activeProvider), [activeProvider])
+    const enabledVoiceGroups = useMemo(
+        () => getEnabledProviderVoiceGroups(activeProvider),
+        [activeProvider]
+    )
     const hasVoiceGroups = voiceGroups.length > 0
 
     const [selectedVoiceGroupId, setSelectedVoiceGroupId] = useState<string>("")
@@ -1014,13 +1028,19 @@ function SpeechProviderPicker({
     const activeGroup = useMemo(() => {
         if (!hasVoiceGroups) return null
         if (selectedVoiceGroupId) {
-            const match = voiceGroups.find((g) => g.id === selectedVoiceGroupId)
+            const match = enabledVoiceGroups.find((g) => g.id === selectedVoiceGroupId)
             if (match) return match
         }
         const containing = findGroupForVoice(activeProvider, selectedVoiceId)
-        if (containing) return containing
-        return voiceGroups[0] ?? null
-    }, [hasVoiceGroups, voiceGroups, selectedVoiceGroupId, activeProvider, selectedVoiceId])
+        if (containing?.isEnabled) return containing
+        return enabledVoiceGroups[0] ?? null
+    }, [
+        hasVoiceGroups,
+        enabledVoiceGroups,
+        selectedVoiceGroupId,
+        activeProvider,
+        selectedVoiceId,
+    ])
 
     // Keep the local sub-provider selection in sync with the resolved active
     // group so switching providers or loading an agent snaps the highlight to
@@ -1154,6 +1174,7 @@ function SpeechProviderPicker({
                             onValueChange={(value) => {
                                 setSelectedVoiceGroupId(value)
                                 const group = voiceGroups.find((g) => g.id === value)
+                                if (!group?.isEnabled) return
                                 const firstVoice = group?.voices?.[0]?.id
                                 if (firstVoice) onVoiceChange(firstVoice)
                             }}
@@ -1163,8 +1184,13 @@ function SpeechProviderPicker({
                             </SelectTrigger>
                             <SelectContent className="rounded-2xl">
                                 {voiceGroups.map((group) => (
-                                    <SelectItem key={group.id} value={group.id}>
+                                    <SelectItem
+                                        key={group.id}
+                                        value={group.id}
+                                        disabled={!group.isEnabled}
+                                    >
                                         {group.label}
+                                        {!group.isEnabled ? " (disabled)" : ""}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

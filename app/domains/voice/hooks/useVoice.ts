@@ -621,6 +621,7 @@ export interface VoiceSpeechVoiceGroupItem {
     label: string
     description: string | null
     priority: number
+    isEnabled: boolean
     voices: VoiceSpeechVoiceItem[]
 }
 
@@ -628,7 +629,7 @@ export interface VoiceSpeechProviderItem {
     id: string
     name: string
     displayName: string
-    realtimeProvider: "openai" | "gemini" | "decoupled"
+    realtimeProvider: "openai" | "gemini" | "vox"
     isDefault: boolean
     logoUrl: string | null
     description: string | null
