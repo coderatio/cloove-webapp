@@ -102,15 +102,15 @@ export function EventDetailDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg gap-0 p-0">
-                <DialogHeader className="px-6 pt-6 pb-3">
+            <DialogContent className="max-h-[84vh] max-w-lg gap-0 p-0 sm:max-h-[86vh]">
+                <DialogHeader className="shrink-0 px-6 pt-6 pb-3">
                     <DialogTitle>{event.title}</DialogTitle>
                     <DialogDescription>
                         <span className="font-mono text-xs text-muted-foreground">{event.eventType}</span>
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4 px-6 py-3">
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-3">
                     {/* Description */}
                     {event.description && (
                         <div>
