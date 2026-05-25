@@ -45,7 +45,7 @@ export function DeveloperView() {
         [activeKeys],
     )
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.cloove.com"
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.clooveai.com"
 
     return (
         <div className="mx-auto max-w-7xl space-y-5 pb-28">

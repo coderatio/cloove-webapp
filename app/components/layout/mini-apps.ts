@@ -15,6 +15,7 @@ import {
     BarChart3,
     ListChecks,
     Sparkles,
+    BookText,
 } from "lucide-react"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
 import { NAV_GROUPS } from "@/app/domains/workspace/nav/nav-definitions"
@@ -113,6 +114,7 @@ export const MINI_APPS: MiniAppDef[] = [
             { id: "apps", label: "Apps", icon: LayoutGrid, href: "/developer/apps" },
             { id: "usage", label: "Usage", icon: BarChart3, href: "/developer/usage" },
             { id: "events", label: "Events", icon: ListChecks, href: "/developer/events" },
+            { id: "api-docs", label: "Api Docs", icon: BookText, href: "https://docs.clooveai.com/" },
         ],
     },
 ]

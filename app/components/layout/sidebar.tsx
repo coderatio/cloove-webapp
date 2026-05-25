@@ -676,6 +676,8 @@ function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollap
                                 <TooltipTrigger asChild>
                                     <Link
                                         href={item.href}
+                                        target={item.href.startsWith('http') ? '_blank' : undefined}
+                                        rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                                         className={cn(
                                             'group relative flex h-10 w-10 items-center justify-center mx-auto rounded-xl transition-all duration-200',
                                             isActive
@@ -747,6 +749,8 @@ function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollap
                             <Link
                                 key={item.id}
                                 href={item.href}
+                                target={item.href.startsWith('http') ? '_blank' : undefined}
+                                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                                 className={cn(
                                     'group relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200',
                                     isActive
