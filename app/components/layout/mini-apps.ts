@@ -16,6 +16,10 @@ import {
     ListChecks,
     Sparkles,
     BookText,
+    MessageSquare,
+    Bot,
+    ClipboardList,
+    Plug,
 } from "lucide-react"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
 import { NAV_GROUPS } from "@/app/domains/workspace/nav/nav-definitions"
@@ -62,6 +66,21 @@ export interface MiniAppDef {
 }
 
 export const MINI_APPS: MiniAppDef[] = [
+    {
+        id: "whatsapp",
+        navItemId: "whatsapp",
+        title: "WhatsApp",
+        description: "Inbox, takeover, templates, and automation",
+        icon: MessageSquare,
+        autoActivatePrefixes: ["/whatsapp"],
+        items: [
+            { id: "overview", label: "Overview", icon: PanelsTopLeft, href: "/whatsapp?tab=overview" },
+            { id: "inbox", label: "Inbox", icon: MessageSquare, href: "/whatsapp?tab=inbox" },
+            { id: "templates", label: "Templates", icon: ClipboardList, href: "/whatsapp?tab=templates" },
+            { id: "connections", label: "Connections", icon: Plug, href: "/whatsapp?tab=connections" },
+            { id: "automation", label: "Automation", icon: Bot, href: "/whatsapp?tab=automation" },
+        ],
+    },
     {
         id: "voice",
         navItemId: "voice",

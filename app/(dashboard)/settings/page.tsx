@@ -13,7 +13,6 @@ import {
     Loader2,
     Printer,
     LayoutTemplate,
-    MessageSquare,
     ShoppingCart,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -28,10 +27,9 @@ import { PersistedTabs, TabItem } from "@/app/components/shared/PersistedTabs"
 import { usePermission } from "@/app/hooks/usePermission"
 import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
 import { WorkspaceSettings } from "@/app/domains/workspace/components/WorkspaceSettings"
-import { WhatsAppSettings } from "@/app/domains/messaging/components/WhatsAppSettings"
 import { SalesSettings } from "@/app/domains/business/components/SalesSettings"
 
-type Tab = "business" | "sales" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace" | "messaging"
+type Tab = "business" | "sales" | "profile" | "billing" | "security" | "verification" | "printer" | "workspace"
 
 function SettingsContent() {
     const { role, can } = usePermission()
@@ -43,7 +41,6 @@ function SettingsContent() {
         { id: "business", label: "Business", icon: Building2 },
         { id: "sales", label: "Sales", icon: ShoppingCart },
         { id: "workspace", label: "Workspace", icon: LayoutTemplate },
-        { id: "messaging", label: "WhatsApp", icon: MessageSquare },
         { id: "profile", label: "My Profile", icon: User },
         { id: "verification", label: "Verification", icon: ShieldCheck },
         { id: "billing", label: "Billing", icon: CreditCard },
@@ -55,7 +52,6 @@ function SettingsContent() {
     const tabs = allTabs.filter(tab => {
         if (tab.id === "profile" || tab.id === "security" || tab.id === "printer") return true
         if (tab.id === "workspace") return can("MANAGE_BUSINESS_CONFIG")
-        if (tab.id === "messaging") return role === 'OWNER'
         if (role === 'OWNER') return true
         if (tab.id === "billing" && role === 'ACCOUNTANT') return true
         return false
@@ -125,13 +121,6 @@ function SettingsContent() {
                         {activeTab === "billing" && (role === 'OWNER' || role === 'ACCOUNTANT') && <BillingSettings />}
                         {activeTab === "security" && <SecuritySettings />}
                         {activeTab === "printer" && <PrinterSettings />}
-                        {activeTab === "messaging" && role === 'OWNER' && (
-                            <WhatsAppSettings
-                                onDirtyChange={setIsDirty}
-                                onSavingChange={setIsSaving}
-                                saveTrigger={saveTrigger}
-                            />
-                        )}
                     </motion.div>
                 </AnimatePresence>
             </div>

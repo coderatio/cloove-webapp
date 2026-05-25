@@ -11,6 +11,7 @@ import {
     LayoutGrid,
     Link2,
     Code2,
+    MessageSquare,
     Package,
     Phone,
     Receipt,
@@ -37,6 +38,7 @@ export type NavRouteId =
     | "finance"
     | "payment_links"
     | "voice"
+    | "whatsapp"
     | "customers"
     | "debts"
     | "expenses"
@@ -54,6 +56,7 @@ export type PlanFeatureKey =
     | "hasDebts"
     | "hasAdvancedAnalytics"
     | "hasApiAccess"
+    | "hasWhitelabelWhatsapp"
     | "canHaveCustomDomain"
 
 /** Optional module visibility in feature_flags; default visible when absent */
@@ -188,6 +191,14 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 defaultLabel: "Voice",
                 permission: "VIEW_VOICE_CALLS",
                 moduleFeatureKey: "module_voice",
+            },
+            {
+                id: "whatsapp",
+                href: "/whatsapp",
+                icon: MessageSquare,
+                defaultLabel: "WhatsApp",
+                permission: "VIEW_WHATSAPP_CONVERSATIONS",
+                planFeatureKey: "hasWhitelabelWhatsapp",
             },
             {
                 id: "customers",
