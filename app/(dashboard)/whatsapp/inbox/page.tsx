@@ -1,7 +1,7 @@
 "use client"
 
 import { PermissionGuard } from "@/app/components/shared/PermissionGuard"
-import { WhatsAppInboxPageView } from "@/app/domains/messaging/components/WhatsAppAppView"
+import { WhatsAppInboxPageView } from "@/app/domains/messaging/components/WhatsAppInboxView"
 
 export default function WhatsAppInboxPage() {
     return (
