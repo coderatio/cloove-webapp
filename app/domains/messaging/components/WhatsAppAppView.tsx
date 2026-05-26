@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
@@ -18,7 +18,6 @@ import {
     PencilLine,
     Plus,
     Search,
-    Sparkles,
     UserRound,
     X,
 } from "lucide-react"
@@ -69,16 +68,12 @@ import {
     type WhatsAppFlowSummary,
 } from "@/app/domains/messaging/hooks/useWhatsAppInbox"
 
-type WhatsAppTab = "overview" | "inbox" | "templates" | "flows" | "connections" | "automation"
+type WhatsAppTab = "overview" | "templates" | "flows" | "connections" | "automation"
 
 const TAB_COPY: Record<WhatsAppTab, { title: string; description: string }> = {
     overview: {
         title: "WhatsApp",
         description: "Operational visibility across inbox activity, AI coverage, and connected numbers.",
-    },
-    inbox: {
-        title: "Inbox",
-        description: "Shared conversation workspace for human takeover, replies, and handing chats back to AI.",
     },
     templates: {
         title: "Templates",
@@ -98,7 +93,7 @@ const TAB_COPY: Record<WhatsAppTab, { title: string; description: string }> = {
     },
 }
 
-const VALID_TABS: WhatsAppTab[] = ["overview", "inbox", "templates", "flows", "connections", "automation"]
+const VALID_TABS: WhatsAppTab[] = ["overview", "templates", "flows", "connections", "automation"]
 
 const TEMPLATE_LANGUAGE_OPTIONS = [
     { value: "en", label: "English" },
@@ -253,7 +248,6 @@ export function WhatsAppAppView() {
             />
 
             {activeTab === "overview" && <OverviewTab />}
-            {activeTab === "inbox" && <InboxTab />}
             {activeTab === "templates" && <TemplatesTab />}
             {activeTab === "flows" && <FlowsTab />}
             {activeTab === "connections" && (
@@ -262,6 +256,14 @@ export function WhatsAppAppView() {
             {activeTab === "automation" && (
                 <WhatsAppSettings initialTab="general" allowedTabs={["general", "notifications", "ai"]} />
             )}
+        </div>
+    )
+}
+
+export function WhatsAppInboxPageView() {
+    return (
+        <div className="mx-auto h-[calc(100svh-2rem)] max-w-[1540px] overflow-hidden">
+            <InboxTab />
         </div>
     )
 }
@@ -414,12 +416,6 @@ function InboxTab() {
             conversation.number_label?.toLowerCase().includes(query)
         )
     })
-    const recentCustomerShared = selected?.messages
-        .filter((message) => message.sender_type === "customer" && message.text?.trim())
-        .slice(-3)
-        .map((message) => message.text?.trim())
-        .filter((value): value is string => !!value) ?? []
-
     const submitMessage = async () => {
         const text = draft.trim()
         if (!selectedId || !text) return
@@ -446,10 +442,11 @@ function InboxTab() {
     }
 
     return (
-        <div className="grid min-h-[calc(100vh-16rem)] gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-            {/* Conversation list */}
-            <GlassCard className="flex h-full min-h-0 flex-col overflow-hidden p-0">
-                <div className="border-b border-border/40 px-4 py-4">
+        <div className="h-full min-h-0 overflow-hidden rounded-2xl border border-border/50 bg-background/90 shadow-sm">
+            <div className="grid h-full min-h-0 xl:grid-cols-[360px_minmax(0,1fr)]">
+                {/* Conversation list */}
+                <section className="flex h-full min-h-0 flex-col overflow-hidden border-b border-border/50 bg-muted/[0.08] xl:border-b-0 xl:border-r">
+                    <div className="shrink-0 border-b border-border/40 px-4 py-3.5">
                     <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-muted/30">
                             <MessageSquare className="h-4 w-4 text-muted-foreground" />
@@ -461,7 +458,7 @@ function InboxTab() {
                             </p>
                         </div>
                     </div>
-                    <div className="relative mt-4">
+                    <div className="relative mt-3">
                         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             value={search}
@@ -470,10 +467,10 @@ function InboxTab() {
                             className="pl-9"
                         />
                     </div>
-                </div>
-                <div className="min-h-0 flex-1 overflow-y-auto space-y-1 px-4 py-3">
+                    </div>
+                    <div className="min-h-0 flex-1 space-y-0 overflow-y-auto">
                     {isLoading ? (
-                        <div className="space-y-2">
+                        <div className="space-y-2 px-3 py-3">
                             {Array.from({ length: 6 }).map((_, index) => (
                                 <div key={index} className="rounded-xl border border-border/40 p-3.5">
                                     <div className="flex items-start gap-3">
@@ -488,7 +485,7 @@ function InboxTab() {
                             ))}
                         </div>
                     ) : filteredConversations.length ? (
-                        <div className="space-y-1">
+                        <div>
                             {filteredConversations.map((conversation) => {
                                 const isSelected = selectedId === conversation.id
                                 const initial = (conversation.customer_name || conversation.customer_phone).charAt(0).toUpperCase()
@@ -497,9 +494,9 @@ function InboxTab() {
                                         key={conversation.id}
                                         type="button"
                                         onClick={() => setSelectedId(conversation.id)}
-                                        className={`w-full rounded-xl border px-3.5 py-3 text-left transition-all ${isSelected
-                                            ? "border-brand-deep/30 bg-brand-deep/[0.04] shadow-sm"
-                                            : "border-transparent bg-background hover:border-border/60 hover:bg-muted/20"
+                                        className={`w-full border-b border-border/35 px-4 py-3 text-left transition-colors ${isSelected
+                                            ? "bg-brand-deep/[0.07]"
+                                            : "bg-transparent hover:bg-muted/35"
                                             }`}
                                     >
                                         <div className="flex items-start gap-3">
@@ -552,11 +549,11 @@ function InboxTab() {
                             </p>
                         </div>
                     )}
-                </div>
-            </GlassCard>
+                    </div>
+                </section>
 
-            {/* Message detail */}
-            <GlassCard className="flex h-full min-h-0 flex-col overflow-hidden p-0">
+                {/* Message detail */}
+                <section className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
                 {!selected ? (
                     <div className="flex h-full items-center justify-center p-8 text-center">
                         <div className="max-w-xs space-y-3">
@@ -572,8 +569,8 @@ function InboxTab() {
                 ) : (
                     <>
                         {/* Conversation header */}
-                        <div className="border-b border-border/40 px-5 py-4">
-                            <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="shrink-0 border-b border-border/40 px-5 py-3.5">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="flex min-w-0 flex-1 items-center gap-3">
                                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${selected.mode === "human"
                                         ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
@@ -641,7 +638,7 @@ function InboxTab() {
                         )}
 
                         {/* Messages + sidebar */}
-                        <div className="grid min-h-0 flex-1 xl:grid-cols-[minmax(0,1fr)_280px]">
+                        <div className="grid min-h-0 flex-1 overflow-hidden xl:grid-cols-[minmax(0,1fr)_300px]">
                             {/* Messages */}
                             <div className="min-h-0 space-y-2 overflow-y-auto px-5 py-4">
                                 {selected.messages.map((message, idx) => {
@@ -657,7 +654,7 @@ function InboxTab() {
                                                     }`}
                                             >
                                                 {showAvatar && (
-                                                    <p className="px-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+                                                    <p className="px-1 text-[11px] font-medium uppercase text-muted-foreground/60">
                                                         {message.sender_type === "customer"
                                                             ? selected.customer_name || "Customer"
                                                             : message.sender_type === "ai"
@@ -666,9 +663,9 @@ function InboxTab() {
                                                     </p>
                                                 )}
                                                 <div
-                                                    className={`rounded-2xl px-4 py-2.5 ${isOutbound
+                                                    className={`rounded-2xl px-4 py-2.5 shadow-sm ${isOutbound
                                                         ? "bg-brand-deep text-white"
-                                                        : "border border-border/40 bg-background"
+                                                        : "border border-border/40 bg-muted/25"
                                                         }`}
                                                 >
                                                     <p className="text-sm leading-6">
@@ -690,48 +687,9 @@ function InboxTab() {
                             </div>
 
                             {/* Sidebar info */}
-                            <aside className="space-y-3 border-t border-border/40 p-5 xl:border-l xl:border-t-0">
-                                {/* Context — merges handoff summary + customer shared */}
-                                <div className="rounded-xl border border-border/40 p-3.5">
-                                    <h4 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                                        <Bot className="h-3.5 w-3.5" />
-                                        Conversation context
-                                    </h4>
-                                    <p className="mt-2 text-sm leading-6 text-foreground/80">
-                                        {selected.handoff_summary || selected.context_summary || "No context summary yet."}
-                                    </p>
-                                    {recentCustomerShared.length > 0 && (
-                                        <>
-                                            <div className="my-2.5 border-t border-border/30" />
-                                            <div className="space-y-1.5">
-                                                {recentCustomerShared.map((entry, index) => (
-                                                    <div
-                                                        key={`${index}-${entry.slice(0, 24)}`}
-                                                        className="rounded-lg bg-muted/40 px-3 py-2 text-sm leading-6 text-foreground/80"
-                                                    >
-                                                        “{entry}”
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* Latest AI response */}
-                                {selected.last_ai_reply && (
-                                    <div className="rounded-xl border border-border/40 p-3.5">
-                                        <h4 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                                            <Sparkles className="h-3.5 w-3.5" />
-                                            Latest AI response
-                                        </h4>
-                                        <p className="mt-2 text-sm leading-6 text-foreground/80">
-                                            {selected.last_ai_reply}
-                                        </p>
-                                    </div>
-                                )}
-
+                            <aside className="min-h-0 space-y-3 overflow-y-auto border-t border-border/40 bg-muted/[0.12] p-4 xl:border-l xl:border-t-0">
                                 {/* Details */}
-                                <div className="rounded-xl border border-border/40 p-3.5">
+                                <div className="rounded-xl border border-border/40 bg-background/70 p-3.5">
                                     <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                                         <CheckCircle2 className="h-3.5 w-3.5" />
                                         Details
@@ -785,13 +743,60 @@ function InboxTab() {
                                         Assign to me
                                     </Button>
                                 )}
+
+                                {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
+                                    <div className="rounded-xl border border-border/40 bg-background/70 p-3.5">
+                                        <h4 className="mb-3 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                                            <ClipboardList className="h-3.5 w-3.5" />
+                                            Send approved template
+                                        </h4>
+                                        <div className="space-y-3">
+                                            <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select template" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {sendableTemplates.length ? sendableTemplates.map((template) => (
+                                                        <SelectItem key={template.key} value={template.key}>
+                                                            {template.name}
+                                                        </SelectItem>
+                                                    )) : (
+                                                        <SelectItem value="__none__" disabled>
+                                                            No templates available
+                                                        </SelectItem>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                            <Textarea
+                                                value={templateVariables}
+                                                onChange={(e) => setTemplateVariables(e.target.value)}
+                                                rows={5}
+                                                placeholder='{"customer_name":"Amina"}'
+                                                className="resize-none font-mono text-xs"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full rounded-full"
+                                                onClick={submitTemplate}
+                                                disabled={sendTemplate.isPending || !selectedTemplate}
+                                            >
+                                                {sendTemplate.isPending ? (
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                ) : null}
+                                                Send template
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
                             </aside>
                         </div>
 
                         {/* Reply forms */}
                         {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
-                            <div className="border-t border-border/40 px-5 py-4">
-                                <div className="grid gap-4 lg:grid-cols-2">
+                            <div className="shrink-0 border-t border-border/40 bg-background/95 px-5 py-3.5">
+                                <div className="grid gap-3">
                                     <div className="space-y-2.5">
                                         <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                                             <span className="inline-block h-1.5 w-1.5 rounded-full bg-brand-deep/50 dark:bg-brand-gold-600/50" />
@@ -802,7 +807,7 @@ function InboxTab() {
                                                 value={draft}
                                                 onChange={(e) => setDraft(e.target.value)}
                                                 placeholder="Type a reply…"
-                                                rows={3}
+                                                rows={2}
                                                 className="resize-none pr-12"
                                                 onKeyDown={(e) => {
                                                     if (e.key === "Enter" && !e.shiftKey) {
@@ -826,58 +831,13 @@ function InboxTab() {
                                             </Button>
                                         </div>
                                     </div>
-
-                                    <div className="space-y-2.5">
-                                        <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
-                                            Send approved template
-                                        </label>
-                                        <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select template" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {sendableTemplates.length ? sendableTemplates.map((template) => (
-                                                    <SelectItem key={template.key} value={template.key}>
-                                                        {template.name}
-                                                    </SelectItem>
-                                                )) : (
-                                                    <SelectItem value="__none__" disabled>
-                                                        No templates available
-                                                    </SelectItem>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                        <div className="flex gap-2">
-                                            <Textarea
-                                                value={templateVariables}
-                                                onChange={(e) => setTemplateVariables(e.target.value)}
-                                                rows={3}
-                                                placeholder='{"customer_name":"Amina"}'
-                                                className="flex-1 resize-none font-mono text-xs"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                className="self-end rounded-full"
-                                                onClick={submitTemplate}
-                                                disabled={sendTemplate.isPending || !selectedTemplate}
-                                            >
-                                                {sendTemplate.isPending ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    "Send"
-                                                )}
-                                            </Button>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         )}
                     </>
                 )}
-            </GlassCard>
+                </section>
+            </div>
         </div>
     )
 }
