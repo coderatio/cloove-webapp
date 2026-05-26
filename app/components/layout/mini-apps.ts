@@ -20,6 +20,7 @@ import {
     Bot,
     ClipboardList,
     Plug,
+    GitBranch,
 } from "lucide-react"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
 import { NAV_GROUPS } from "@/app/domains/workspace/nav/nav-definitions"
@@ -77,6 +78,7 @@ export const MINI_APPS: MiniAppDef[] = [
             { id: "overview", label: "Overview", icon: PanelsTopLeft, href: "/whatsapp?tab=overview" },
             { id: "inbox", label: "Inbox", icon: MessageSquare, href: "/whatsapp?tab=inbox" },
             { id: "templates", label: "Templates", icon: ClipboardList, href: "/whatsapp?tab=templates" },
+            { id: "flows", label: "Flows", icon: GitBranch, href: "/whatsapp?tab=flows" },
             { id: "connections", label: "Connections", icon: Plug, href: "/whatsapp?tab=connections" },
             { id: "automation", label: "Automation", icon: Bot, href: "/whatsapp?tab=automation" },
         ],
@@ -304,6 +306,15 @@ export function isMiniAppItemActive(
 
     // Query-param-based route (PersistedTabs): check base path + all query params match
     if (!pathname.startsWith(basePath)) return false
+
+    if (pathname !== basePath && pathname.startsWith(basePath + "/")) {
+        const subPath = pathname.slice(basePath.length + 1)
+        const firstSegment = subPath.split("/")[0]
+
+        if (firstSegment && hrefParamKeys.some((key) => hrefParams[key] === firstSegment)) {
+            return true
+        }
+    }
 
     for (const [key, value] of Object.entries(hrefParams)) {
         if (searchParams.get(key) !== value) return false

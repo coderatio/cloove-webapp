@@ -197,6 +197,34 @@ nextjs-portal>* {
   box-sizing: border-box;
 }
 
+:where(
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"],
+  summary
+):not(:disabled):not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+:where(
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"]
+):disabled,
+:where(
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"]
+)[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
