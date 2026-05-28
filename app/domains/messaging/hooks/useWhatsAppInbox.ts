@@ -43,6 +43,7 @@ export interface WhatsAppInboxMessage {
     template_key: string | null
     template_name: string | null
     template_variables: Record<string, unknown> | null
+    payload: Record<string, unknown> | null
     sent_at: string | null
     delivered_at: string | null
     read_at: string | null
@@ -224,7 +225,7 @@ export function useWhatsAppTemplates(params?: {
     status?: "draft" | "published" | "archived" | "all"
 }) {
     return useQuery({
-        queryKey: [QUERY_KEYS.templates, params],
+        queryKey: [...QUERY_KEYS.templates, params],
         queryFn: async () => {
             const response = await apiClient.get<ApiResponse<WhatsAppTemplateSummary[]>>(
                 "/whatsapp/templates",
@@ -249,7 +250,7 @@ export function useWhatsAppTemplates(params?: {
 
 export function useWhatsAppTemplateStats() {
     return useQuery({
-        queryKey: [QUERY_KEYS.templateStats],
+        queryKey: QUERY_KEYS.templateStats,
         queryFn: () => apiClient.get<WhatsAppTemplateStats>("/whatsapp/templates/stats"),
         enabled: false,
     })
@@ -257,7 +258,7 @@ export function useWhatsAppTemplateStats() {
 
 export function useWhatsAppTemplateStatsForNumber(businessWhatsappNumberId: string | null) {
     return useQuery({
-        queryKey: [QUERY_KEYS.templateStats, businessWhatsappNumberId],
+        queryKey: [...QUERY_KEYS.templateStats, businessWhatsappNumberId],
         queryFn: () =>
             apiClient.get<WhatsAppTemplateStats>("/whatsapp/templates/stats", {
                 business_whatsapp_number_id: String(businessWhatsappNumberId),
@@ -299,7 +300,7 @@ export function useTestSendTemplate() {
 
 export function useWhatsAppFlows(businessWhatsappNumberId: string | null) {
     return useQuery({
-        queryKey: [QUERY_KEYS.flows, businessWhatsappNumberId],
+        queryKey: [...QUERY_KEYS.flows, businessWhatsappNumberId],
         queryFn: async () => {
             const response = await apiClient.get<ApiResponse<WhatsAppFlowSummary[]>>(
                 "/whatsapp/flows",
@@ -318,7 +319,7 @@ export function useWhatsAppFlows(businessWhatsappNumberId: string | null) {
 
 export function useWhatsAppFlowStats(businessWhatsappNumberId: string | null) {
     return useQuery({
-        queryKey: [QUERY_KEYS.flowStats, businessWhatsappNumberId],
+        queryKey: [...QUERY_KEYS.flowStats, businessWhatsappNumberId],
         queryFn: () =>
             apiClient.get<WhatsAppFlowStats>("/whatsapp/flows/stats", {
                 business_whatsapp_number_id: String(businessWhatsappNumberId),

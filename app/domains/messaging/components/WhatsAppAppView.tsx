@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
@@ -20,6 +20,7 @@ import {
     X,
 } from "lucide-react"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
+import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { Button } from "@/app/components/ui/button"
 import { Textarea } from "@/app/components/ui/textarea"
 import { Input } from "@/app/components/ui/input"
@@ -156,6 +157,57 @@ function parseTemplateComponents(components: Array<Record<string, unknown>> | nu
             }))
             : [],
     }
+}
+
+function normalizeTemplateVariables(value: unknown) {
+    if (!Array.isArray(value)) return []
+
+    return value
+        .map((variable) => ({
+            key: typeof variable?.key === "string" ? variable.key.trim() : "",
+            required: variable?.required === true,
+        }))
+        .filter((variable) => variable.key)
+}
+
+function normalizeTemplateButtons(value: unknown) {
+    if (!Array.isArray(value)) return []
+
+    return value
+        .map((button) => ({
+            type: String(button?.type || "QUICK_REPLY").toUpperCase(),
+            text: typeof button?.text === "string" ? button.text.trim() : "",
+            url: typeof button?.url === "string" ? button.url.trim() : "",
+            phone_number: typeof button?.phone_number === "string" ? button.phone_number.trim() : "",
+            flow_id: typeof button?.flow_id === "string" ? button.flow_id.trim() : "",
+            flow_action: button?.flow_action === "data_exchange" ? "data_exchange" : "navigate",
+            navigate_screen: typeof button?.navigate_screen === "string" ? button.navigate_screen.trim() : "",
+        }))
+        .filter((button) => button.text)
+}
+
+function templateFormSnapshot(input: {
+    numberId: string
+    name: string
+    category: string
+    language: string
+    headerText: string
+    footerText: string
+    content: string
+    variables: unknown
+    buttons: unknown
+}) {
+    return JSON.stringify({
+        numberId: input.numberId,
+        name: input.name.trim(),
+        category: input.category,
+        language: input.language.trim().toLowerCase(),
+        headerText: input.headerText.trim(),
+        footerText: input.footerText.trim(),
+        content: input.content.trim(),
+        variables: normalizeTemplateVariables(input.variables),
+        buttons: normalizeTemplateButtons(input.buttons),
+    })
 }
 
 function buildLocalTemplateReadiness(input: {
@@ -363,15 +415,17 @@ function TemplatesTab() {
     const debouncedSearch = useDebounce(search, 300)
     const { data: numbers } = useWhatsAppNumbers()
     const [selectedNumberId, setSelectedNumberId] = useState("")
-    const { data: flows } = useWhatsAppFlows(selectedNumberId || null)
+    const [templateNumberIdInput, setTemplateNumberIdInput] = useState("")
+    const activeNumberId = selectedNumberId || numbers?.[0]?.id || ""
+    const { data: flows } = useWhatsAppFlows(templateNumberIdInput || activeNumberId || null)
     const templatesQuery = useWhatsAppTemplates({
-        businessWhatsappNumberId: selectedNumberId || null,
+        businessWhatsappNumberId: activeNumberId || null,
         page,
         limit: 8,
         search: debouncedSearch,
         status,
     })
-    const stats = useWhatsAppTemplateStatsForNumber(selectedNumberId || null)
+    const stats = useWhatsAppTemplateStatsForNumber(activeNumberId || null)
     const createTemplate = useCreateWhatsAppTemplate()
     const updateTemplate = useUpdateWhatsAppTemplate()
     const publishTemplate = usePublishWhatsAppTemplate()
@@ -392,22 +446,13 @@ function TemplatesTab() {
     const [variablesJson, setVariablesJson] = useState("{}")
     const [showTestSend, setShowTestSend] = useState(true)
     const [sheetOpen, setSheetOpen] = useState(false)
+    const [templateToPublish, setTemplateToPublish] = useState<WhatsAppTemplateSummary | null>(null)
 
     const templates = templatesQuery.data?.data ?? []
     const templateMeta = templatesQuery.data?.meta
     const publishedFlows = (flows?.data ?? []).filter(
         (flow: WhatsAppFlowSummary) => flow.status === "PUBLISHED" && flow.is_active
     )
-
-    useEffect(() => {
-        if (!selectedNumberId && numbers?.[0]?.id) {
-            setSelectedNumberId(numbers[0].id)
-        }
-    }, [numbers, selectedNumberId])
-
-    useEffect(() => {
-        setPage(1)
-    }, [debouncedSearch, status])
 
     const resetForm = () => {
         setEditingTemplate(null)
@@ -419,6 +464,7 @@ function TemplatesTab() {
         setTemplateContentInput("")
         setTemplateVariableInput("[]")
         setTemplateButtonInput("[]")
+        setTemplateNumberIdInput(activeNumberId)
     }
 
     const handleNewClick = () => {
@@ -432,6 +478,7 @@ function TemplatesTab() {
         setTemplateCategoryInput(template.category)
         setTemplateLanguageInput(template.language || "en")
         setTemplateContentInput(template.content)
+        setTemplateNumberIdInput(template.business_whatsapp_number_id || activeNumberId)
         setTemplateVariableInput(JSON.stringify(template.variables ?? [], null, 2))
         const parsed = parseTemplateComponents(template.components)
         setTemplateHeaderTextInput(parsed.headerText)
@@ -471,6 +518,33 @@ function TemplatesTab() {
         } catch { /* ignore parse errors */ }
         return []
     })()
+
+    const currentTemplateFormSnapshot = templateFormSnapshot({
+        numberId: templateNumberIdInput,
+        name: templateNameInput,
+        category: templateCategoryInput,
+        language: templateLanguageInput,
+        headerText: templateHeaderTextInput,
+        footerText: templateFooterTextInput,
+        content: templateContentInput,
+        variables: variableRows,
+        buttons: buttonRows,
+    })
+    const initialTemplateFormSnapshot = editingTemplate
+        ? templateFormSnapshot({
+            numberId: editingTemplate.business_whatsapp_number_id || activeNumberId,
+            name: editingTemplate.name,
+            category: editingTemplate.category,
+            language: editingTemplate.language || "en",
+            headerText: parseTemplateComponents(editingTemplate.components).headerText,
+            footerText: parseTemplateComponents(editingTemplate.components).footerText,
+            content: editingTemplate.content,
+            variables: editingTemplate.variables ?? [],
+            buttons: parseTemplateComponents(editingTemplate.components).buttons,
+        })
+        : null
+    const hasTemplateFormChanges =
+        !editingTemplate || currentTemplateFormSnapshot !== initialTemplateFormSnapshot
 
     const updateVariableRows = (rows: Array<{ key: string; required: boolean }>) => {
         setTemplateVariableInput(JSON.stringify(rows, null, 2))
@@ -519,8 +593,10 @@ function TemplatesTab() {
 
     const generatedTemplateKey = buildTemplateKey(templateNameInput)
 
-    useEffect(() => {
-        const placeholders = extractTemplatePlaceholders(templateContentInput)
+    const updateTemplateContent = (content: string) => {
+        setTemplateContentInput(content)
+
+        const placeholders = extractTemplatePlaceholders(content)
         if (!placeholders.length) return
 
         const existingKeys = new Set(
@@ -534,7 +610,7 @@ function TemplatesTab() {
             ...variableRows,
             ...missingKeys.map((key) => ({ key, required: false })),
         ])
-    }, [templateContentInput, variableRows])
+    }
 
     const submitTemplateForm = async () => {
         try {
@@ -552,7 +628,7 @@ function TemplatesTab() {
             if (editingTemplate) {
                 await updateTemplate.mutateAsync({
                     id: editingTemplate.id,
-                    businessWhatsappNumberId: selectedNumberId,
+                    businessWhatsappNumberId: templateNumberIdInput,
                     key: editingTemplate.key,
                     name: templateNameInput,
                     category: templateCategoryInput,
@@ -567,7 +643,7 @@ function TemplatesTab() {
                 toast.success("Template updated")
             } else {
                 await createTemplate.mutateAsync({
-                    businessWhatsappNumberId: selectedNumberId,
+                    businessWhatsappNumberId: templateNumberIdInput,
                     key: generatedTemplateKey,
                     name: templateNameInput,
                     category: templateCategoryInput,
@@ -581,6 +657,7 @@ function TemplatesTab() {
                 })
                 toast.success("Template created")
             }
+            setSelectedNumberId(templateNumberIdInput)
             resetForm()
             setSheetOpen(false)
         } catch (error) {
@@ -591,7 +668,7 @@ function TemplatesTab() {
     const submit = async () => {
         try {
             await sendTemplate.mutateAsync({
-                businessWhatsappNumberId: selectedNumberId,
+                businessWhatsappNumberId: activeNumberId,
                 phone,
                 customerName,
                 templateKey,
@@ -603,6 +680,21 @@ function TemplatesTab() {
         }
     }
 
+    const confirmPublishTemplate = async () => {
+        if (!templateToPublish) return
+
+        try {
+            await publishTemplate.mutateAsync({
+                id: templateToPublish.id,
+                businessWhatsappNumberId: activeNumberId,
+            })
+            toast.success(templateToPublish.status === "published" ? "Template pushed to Meta" : "Template published")
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to publish template")
+            throw error
+        }
+    }
+
     const metricCards = [
         { label: "Total", value: stats.data?.total ?? 0 },
         { label: "Draft", value: stats.data?.draft ?? 0 },
@@ -611,7 +703,10 @@ function TemplatesTab() {
         { label: "Sendable", value: stats.data?.sendable ?? 0 },
     ]
 
-    const noNumberSelected = !selectedNumberId
+    const noNumberSelected = !activeNumberId
+    const noTemplateNumberSelected = !templateNumberIdInput
+    const canChangeTemplateNumber = !editingTemplate || editingTemplate.status !== "published"
+    const isPendingMetaTemplate = editingTemplate?.meta_status === "pending"
 
     return (
         <div className="space-y-10">
@@ -661,7 +756,7 @@ function TemplatesTab() {
                     {/* Filters */}
                     <GlassCard className="mb-4 p-4">
                         <div className="flex flex-col gap-3 lg:flex-row">
-                            <Select value={selectedNumberId} onValueChange={setSelectedNumberId}>
+                            <Select value={activeNumberId} onValueChange={setSelectedNumberId}>
                                 <SelectTrigger className="w-full lg:w-64">
                                     <SelectValue placeholder="Select WhatsApp number" />
                                 </SelectTrigger>
@@ -677,12 +772,21 @@ function TemplatesTab() {
                                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value)
+                                        setPage(1)
+                                    }}
                                     placeholder="Search templates"
                                     className="pl-9"
                                 />
                             </div>
-                            <Select value={status} onValueChange={(value) => setStatus(value as typeof status)}>
+                            <Select
+                                value={status}
+                                onValueChange={(value) => {
+                                    setStatus(value as typeof status)
+                                    setPage(1)
+                                }}
+                            >
                                 <SelectTrigger className="w-full lg:w-44">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
@@ -768,25 +872,15 @@ function TemplatesTab() {
                                             <PencilLine className="mr-1.5 h-3.5 w-3.5" />
                                             Edit
                                         </Button>
-                                        {template.status !== "published" ? (
+                                        {template.status !== "published" || !template.meta_template_name ? (
                                             <Button
                                                 type="button"
                                                 size="sm"
                                                 className="rounded-full text-xs"
-                                                onClick={async () => {
-                                                    try {
-                                                        await publishTemplate.mutateAsync({
-                                                            id: template.id,
-                                                            businessWhatsappNumberId: selectedNumberId,
-                                                        })
-                                                        toast.success("Template published")
-                                                    } catch (error) {
-                                                        toast.error(error instanceof Error ? error.message : "Failed to publish template")
-                                                    }
-                                                }}
+                                                onClick={() => setTemplateToPublish(template)}
                                                 disabled={publishTemplate.isPending}
                                             >
-                                                Publish
+                                                {template.status === "published" ? "Push to Meta" : "Publish"}
                                             </Button>
                                         ) : null}
                                         {template.status !== "archived" ? (
@@ -799,7 +893,7 @@ function TemplatesTab() {
                                                     try {
                                                         await archiveTemplate.mutateAsync({
                                                             id: template.id,
-                                                            businessWhatsappNumberId: selectedNumberId,
+                                                            businessWhatsappNumberId: activeNumberId,
                                                         })
                                                         toast.success("Template archived")
                                                     } catch (error) {
@@ -956,6 +1050,40 @@ function TemplatesTab() {
                     </SideSheetStickyHeader>
                     <SideSheetBody>
                         <div className="space-y-5">
+                            {isPendingMetaTemplate ? (
+                                <div className="rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-100">
+                                    <p className="font-medium text-foreground">Meta review is pending</p>
+                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                        This version has already been submitted to Meta and is waiting for review. If you save changes, the template returns to draft and must be published again as a new Meta submission.
+                                    </p>
+                                </div>
+                            ) : null}
+                            <div>
+                                <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
+                                    Linked WhatsApp number
+                                </label>
+                                <Select
+                                    value={templateNumberIdInput}
+                                    onValueChange={setTemplateNumberIdInput}
+                                    disabled={!canChangeTemplateNumber}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select WhatsApp number" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {numbers?.map((number) => (
+                                            <SelectItem key={number.id} value={number.id}>
+                                                {formatWhatsAppNumberLabel(number)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {!canChangeTemplateNumber ? (
+                                    <p className="mt-1.5 text-xs text-muted-foreground/70">
+                                        Published templates keep their linked number.
+                                    </p>
+                                ) : null}
+                            </div>
                             <div>
                                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                                     Template name
@@ -964,7 +1092,7 @@ function TemplatesTab() {
                                     value={templateNameInput}
                                     onChange={(e) => setTemplateNameInput(e.target.value)}
                                     placeholder="Order Confirmation"
-                                    disabled={noNumberSelected}
+                                    disabled={noTemplateNumberSelected}
                                 />
                                 {!editingTemplate && generatedTemplateKey ? (
                                     <p className="mt-1.5 text-xs text-muted-foreground/70">
@@ -978,7 +1106,7 @@ function TemplatesTab() {
                                         Category
                                     </label>
                                     <Select value={templateCategoryInput} onValueChange={(value) => setTemplateCategoryInput(value as typeof templateCategoryInput)}>
-                                        <SelectTrigger disabled={noNumberSelected}>
+                                        <SelectTrigger disabled={noTemplateNumberSelected}>
                                             <SelectValue placeholder="Category" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -993,7 +1121,7 @@ function TemplatesTab() {
                                         Language
                                     </label>
                                     <Select value={templateLanguageInput} onValueChange={setTemplateLanguageInput}>
-                                        <SelectTrigger disabled={noNumberSelected}>
+                                        <SelectTrigger disabled={noTemplateNumberSelected}>
                                             <SelectValue placeholder="Select language" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -1014,7 +1142,7 @@ function TemplatesTab() {
                                     value={templateHeaderTextInput}
                                     onChange={(e) => setTemplateHeaderTextInput(e.target.value)}
                                     placeholder="Order update"
-                                    disabled={noNumberSelected}
+                                    disabled={noTemplateNumberSelected}
                                 />
                             </div>
                             <div>
@@ -1023,16 +1151,16 @@ function TemplatesTab() {
                                 </label>
                                 <Textarea
                                     value={templateContentInput}
-                                    onChange={(e) => setTemplateContentInput(e.target.value)}
+                                    onChange={(e) => updateTemplateContent(e.target.value)}
                                     rows={5}
                                     placeholder="Hi {{customer_name}}, your order has been confirmed!"
                                     className="font-mono text-sm"
-                                    disabled={noNumberSelected}
+                                    disabled={noTemplateNumberSelected}
                                 />
                                 <p className="mt-1.5 grid grid-cols-[14px_minmax(0,1fr)] items-start gap-x-1.5 text-xs leading-relaxed text-muted-foreground/70">
                                     <Info className="mt-0.5 h-3 w-3 shrink-0" />
                                     <span>
-                                        Use <code className="rounded bg-muted/60 px-1 font-mono text-[11px]">{`{{variable_name}}`}</code> for placeholders. The same name must exist as a variable key below.
+                                        Use <code className="rounded bg-muted/60 px-1 font-mono text-[11px]">{`{{variable_name}}`}</code> for placeholders. Cloove converts them to Meta&apos;s numbered format when publishing.
                                     </span>
                                 </p>
                             </div>
@@ -1044,7 +1172,7 @@ function TemplatesTab() {
                                     value={templateFooterTextInput}
                                     onChange={(e) => setTemplateFooterTextInput(e.target.value)}
                                     placeholder="Reply STOP to opt out"
-                                    disabled={noNumberSelected}
+                                    disabled={noTemplateNumberSelected}
                                 />
                             </div>
                             <div>
@@ -1058,7 +1186,7 @@ function TemplatesTab() {
                                     </span>
                                 </p>
                                 <div className="space-y-2">
-                                    {variableRows.length === 0 && !noNumberSelected && (
+                                    {variableRows.length === 0 && !noTemplateNumberSelected && (
                                         <p className="py-2 text-center text-xs text-muted-foreground/50">
                                             No variables yet — add one below.
                                         </p>
@@ -1070,12 +1198,12 @@ function TemplatesTab() {
                                                 onChange={(e) => updateVariableKey(index, e.target.value)}
                                                 placeholder="variable_name"
                                                 className="flex-1 font-mono text-sm"
-                                                disabled={noNumberSelected}
+                                                disabled={noTemplateNumberSelected}
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => toggleVariableRequired(index)}
-                                                disabled={noNumberSelected}
+                                                disabled={noTemplateNumberSelected}
                                                 aria-label={variable.required ? "Mark as optional" : "Mark as required"}
                                                 className={`flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors ${variable.required
                                                     ? "border-brand-deep/30 bg-brand-deep/[0.06] text-brand-deep dark:border-brand-gold-600/30 dark:bg-brand-gold-600/10 dark:text-brand-gold-300"
@@ -1089,7 +1217,7 @@ function TemplatesTab() {
                                             <button
                                                 type="button"
                                                 onClick={() => removeVariableRow(index)}
-                                                disabled={noNumberSelected}
+                                                disabled={noTemplateNumberSelected}
                                                 aria-label="Remove variable"
                                                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/60 text-muted-foreground/50 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-30 dark:hover:border-red-500/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                                             >
@@ -1098,7 +1226,7 @@ function TemplatesTab() {
                                         </div>
                                     ))}
                                 </div>
-                                {!noNumberSelected && (
+                                {!noTemplateNumberSelected && (
                                     <button
                                         type="button"
                                         onClick={addVariableRow}
@@ -1123,7 +1251,7 @@ function TemplatesTab() {
                                                         updateButtonField(index, "type", value)
                                                     }
                                                 >
-                                                    <SelectTrigger disabled={noNumberSelected}>
+                                                    <SelectTrigger disabled={noTemplateNumberSelected}>
                                                         <SelectValue placeholder="Button type" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -1139,7 +1267,7 @@ function TemplatesTab() {
                                                         updateButtonField(index, "text", e.target.value)
                                                     }
                                                     placeholder="Button text"
-                                                    disabled={noNumberSelected}
+                                                    disabled={noTemplateNumberSelected}
                                                 />
                                                 {button.type === "URL" ? (
                                                     <Input
@@ -1149,7 +1277,7 @@ function TemplatesTab() {
                                                         }
                                                         placeholder="https://example.com"
                                                         className="sm:col-span-2"
-                                                        disabled={noNumberSelected}
+                                                        disabled={noTemplateNumberSelected}
                                                     />
                                                 ) : null}
                                                 {button.type === "PHONE_NUMBER" ? (
@@ -1160,7 +1288,7 @@ function TemplatesTab() {
                                                         }
                                                         placeholder="+2348012345678"
                                                         className="sm:col-span-2"
-                                                        disabled={noNumberSelected}
+                                                        disabled={noTemplateNumberSelected}
                                                     />
                                                 ) : null}
                                                 {button.type === "FLOW" ? (
@@ -1171,7 +1299,7 @@ function TemplatesTab() {
                                                                 updateButtonField(index, "flow_id", value)
                                                             }
                                                         >
-                                                            <SelectTrigger className="sm:col-span-2" disabled={noNumberSelected}>
+                                                            <SelectTrigger className="sm:col-span-2" disabled={noTemplateNumberSelected}>
                                                                 <SelectValue placeholder="Select business flow" />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -1189,7 +1317,7 @@ function TemplatesTab() {
                                                             }
                                                             placeholder="Screen id (optional)"
                                                             className="sm:col-span-2"
-                                                            disabled={noNumberSelected}
+                                                            disabled={noTemplateNumberSelected}
                                                         />
                                                     </>
                                                 ) : null}
@@ -1197,7 +1325,7 @@ function TemplatesTab() {
                                             <button
                                                 type="button"
                                                 onClick={() => removeButtonRow(index)}
-                                                disabled={noNumberSelected}
+                                                disabled={noTemplateNumberSelected}
                                                 className="mt-3 text-xs font-medium text-red-600 dark:text-red-400"
                                             >
                                                 Remove button
@@ -1211,7 +1339,7 @@ function TemplatesTab() {
                                     <button
                                         type="button"
                                         onClick={addButtonRow}
-                                        disabled={noNumberSelected}
+                                        disabled={noTemplateNumberSelected}
                                         className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                                     >
                                         <Plus className="h-3.5 w-3.5" />
@@ -1257,7 +1385,8 @@ function TemplatesTab() {
                             disabled={
                                 createTemplate.isPending ||
                                 updateTemplate.isPending ||
-                                noNumberSelected ||
+                                noTemplateNumberSelected ||
+                                (editingTemplate && !hasTemplateFormChanges) ||
                                 (!editingTemplate && !generatedTemplateKey) ||
                                 !templateNameInput.trim() ||
                                 !templateContentInput.trim()
@@ -1271,6 +1400,22 @@ function TemplatesTab() {
                     </SideSheetFooter>
                 </SideSheetContent>
             </SideSheet>
+            <ConfirmDialog
+                open={!!templateToPublish}
+                onOpenChange={(open) => {
+                    if (!open) setTemplateToPublish(null)
+                }}
+                onConfirm={confirmPublishTemplate}
+                title={templateToPublish?.status === "published" ? "Push template to Meta?" : "Publish template?"}
+                description={
+                    templateToPublish?.status === "published"
+                        ? `This will submit "${templateToPublish.name}" to Meta for review. It can only be sent after Meta approves it.`
+                        : `This will submit "${templateToPublish?.name ?? "this template"}" to Meta for review and lock its linked WhatsApp number after publishing.`
+                }
+                confirmText={templateToPublish?.status === "published" ? "Push to Meta" : "Publish"}
+                variant="primary"
+                isLoading={publishTemplate.isPending}
+            />
         </div>
     )
 }

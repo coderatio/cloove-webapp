@@ -6,10 +6,14 @@ import {
     Bot,
     CheckCircle2,
     ClipboardList,
+    FileText,
+    GitBranch,
     Inbox,
     Loader2,
     MessageSquare,
     MoreHorizontal,
+    MousePointerClick,
+    PackageCheck,
     Search,
     SendHorizonal,
     UserRound,
@@ -30,6 +34,7 @@ import {
     useWhatsAppConversation,
     useWhatsAppConversations,
     useWhatsAppTemplates,
+    type WhatsAppInboxMessage,
 } from "@/app/domains/messaging/hooks/useWhatsAppInbox"
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -54,6 +59,273 @@ function getInitial(name: string) {
     return name.charAt(0).toUpperCase()
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return !!value && typeof value === "object" && !Array.isArray(value)
+}
+
+function stringValue(value: unknown) {
+    return typeof value === "string" ? value : ""
+}
+
+function payloadEntries(payload: unknown) {
+    if (!isRecord(payload)) return []
+    return Object.entries(payload)
+        .filter(([, value]) => value !== null && value !== undefined && value !== "")
+        .slice(0, 8)
+}
+
+function formatPayloadValue(value: unknown): string {
+    if (typeof value === "string") return value
+    if (typeof value === "number" || typeof value === "boolean") return String(value)
+    if (Array.isArray(value)) return value.map(formatPayloadValue).join(", ")
+    if (isRecord(value)) return JSON.stringify(value)
+    return ""
+}
+
+function parseReplyFallback(text: string | null) {
+    const match = text?.match(/^(.*)\s+\(([^)]+)\)$/)
+    if (!match) return null
+    return { title: match[1].trim(), id: match[2].trim() }
+}
+
+function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage; isOutbound: boolean }) {
+    const payload = message.payload
+    const payloadType = stringValue(payload?.type)
+    const reply = isRecord(payload?.reply) ? payload.reply : null
+    const flowData = isRecord(payload?.data) ? payload.data : payloadType === "flow_response" ? payload : null
+    const order = isRecord(payload?.order) ? payload.order : null
+    const location = isRecord(payload?.location) ? payload.location : null
+    const sections = Array.isArray(payload?.sections) ? payload.sections.filter(isRecord) : []
+    const buttons = Array.isArray(payload?.buttons) ? payload.buttons.filter(isRecord) : []
+    const fallbackReply = parseReplyFallback(message.text)
+    const subtleText = isOutbound ? "text-white/70" : "text-muted-foreground"
+    const cardClass = isOutbound
+        ? "border-white/15 bg-white/10 text-white"
+        : "border-border/40 bg-background/80 text-foreground"
+    const actionClass = isOutbound
+        ? "border-white/15 bg-white/10 text-white/90"
+        : "border-border/50 bg-muted/20 text-foreground"
+
+    if (message.message_type === "template") {
+        return (
+            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <ClipboardList className="h-3.5 w-3.5" />
+                    Template
+                </div>
+                <p className="text-sm font-medium">{message.template_name || message.template_key || "Template message"}</p>
+                {message.text && <p className={`mt-1 text-sm leading-6 ${subtleText}`}>{message.text}</p>}
+                {payloadEntries(message.template_variables).length > 0 && (
+                    <div className="mt-2 space-y-1 border-t border-current/10 pt-2">
+                        {payloadEntries(message.template_variables).map(([key, value]) => (
+                            <div key={key} className="flex gap-2 text-[11px]">
+                                <span className={subtleText}>{key}</span>
+                                <span className="ml-auto max-w-40 truncate font-medium">{formatPayloadValue(value)}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    if (payloadType === "button_reply" || payloadType === "list_reply" || fallbackReply) {
+        const title = stringValue(reply?.title) || fallbackReply?.title || message.text || "Selected option"
+        const id = stringValue(reply?.id) || fallbackReply?.id
+        return (
+            <div className={`min-w-56 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <MousePointerClick className="h-3.5 w-3.5" />
+                    {payloadType === "list_reply" ? "List selection" : "Button selection"}
+                </div>
+                <p className="text-sm font-medium">{title}</p>
+                {id && <p className={`mt-1 break-all font-mono text-[11px] ${subtleText}`}>{id}</p>}
+                {stringValue(reply?.description) && (
+                    <p className={`mt-1 text-xs leading-5 ${subtleText}`}>{stringValue(reply?.description)}</p>
+                )}
+            </div>
+        )
+    }
+
+    if (payloadType === "interactive_button") {
+        return (
+            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <MousePointerClick className="h-3.5 w-3.5" />
+                    Buttons sent
+                </div>
+                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                <div className="mt-2 space-y-1.5">
+                    {buttons.map((button, index) => (
+                        <div key={`${stringValue(button.id)}-${index}`} className={`rounded-lg border px-2.5 py-1.5 text-xs ${actionClass}`}>
+                            <span className="font-medium">{stringValue(button.title) || stringValue(button.text) || "Button"}</span>
+                            {stringValue(button.id) && <span className={`ml-2 font-mono text-[10px] ${subtleText}`}>{stringValue(button.id)}</span>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    if (payloadType === "interactive_list" || payloadType === "interactive_product_list") {
+        const isProductList = payloadType === "interactive_product_list"
+        const visibleSections = sections.slice(0, 3).map((section) => {
+            const rows = Array.isArray(section.rows)
+                ? section.rows.filter(isRecord)
+                : Array.isArray(section.product_items)
+                  ? section.product_items.filter(isRecord)
+                  : []
+
+            return { section, rows }
+        })
+        const productCount = visibleSections.reduce((total, section) => total + section.rows.length, 0)
+
+        return (
+            <div className={`min-w-72 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <ClipboardList className="h-3.5 w-3.5" />
+                    {isProductList ? "Product list sent" : "List sent"}
+                </div>
+                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                {stringValue(payload?.buttonText) && (
+                    <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
+                        {stringValue(payload?.buttonText)}
+                    </div>
+                )}
+                <div className="mt-2 space-y-2">
+                    {isProductList ? (
+                        <div className={`rounded-lg border px-2.5 py-2 text-xs ${actionClass}`}>
+                            <p className="font-medium">
+                                {productCount || "Catalog"} {productCount === 1 ? "item" : "items"} included
+                            </p>
+                            {visibleSections.length > 0 && (
+                                <p className={`mt-0.5 ${subtleText}`}>
+                                    {visibleSections
+                                        .map(({ section, rows }) => {
+                                            const title = stringValue(section.title) || "Catalog"
+                                            return `${title} (${rows.length})`
+                                        })
+                                        .join(" · ")}
+                                </p>
+                            )}
+                        </div>
+                    ) : (
+                        visibleSections.map(({ section, rows }, sectionIndex) => {
+                            return (
+                                <div key={`${stringValue(section.title)}-${sectionIndex}`} className="space-y-1">
+                                    <p className={`text-[10px] font-semibold uppercase ${subtleText}`}>{stringValue(section.title) || "Section"}</p>
+                                    {rows.slice(0, 4).map((row, rowIndex) => (
+                                        <div key={`${rowIndex}-${formatPayloadValue(row.id)}`} className={`rounded-lg border px-2.5 py-1.5 text-xs ${actionClass}`}>
+                                            <span className="font-medium">{stringValue(row.title) || "Item"}</span>
+                                            {stringValue(row.description) && <p className={`mt-0.5 text-[11px] ${subtleText}`}>{stringValue(row.description)}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        })
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    if (payloadType === "interactive_flow") {
+        return (
+            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <GitBranch className="h-3.5 w-3.5" />
+                    Flow sent
+                </div>
+                <p className="text-sm font-medium">{stringValue(payload?.screenName) || "WhatsApp flow"}</p>
+                {message.text && <p className={`mt-1 whitespace-pre-wrap text-sm leading-6 ${subtleText}`}>{message.text}</p>}
+                <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
+                    {stringValue(payload?.ctaText) || "Continue"}
+                </div>
+                {stringValue(payload?.flowId) && <p className={`mt-2 break-all font-mono text-[10px] ${subtleText}`}>{stringValue(payload?.flowId)}</p>}
+            </div>
+        )
+    }
+
+    if (payloadType === "interactive_cta_url") {
+        return (
+            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <MousePointerClick className="h-3.5 w-3.5" />
+                    CTA sent
+                </div>
+                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
+                    {stringValue(payload?.displayText) || "Open"}
+                </div>
+                {stringValue(payload?.url) && <p className={`mt-2 break-all text-[11px] ${subtleText}`}>{stringValue(payload?.url)}</p>}
+            </div>
+        )
+    }
+
+    if (payloadType === "interactive_location_request") {
+        return (
+            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <FileText className="h-3.5 w-3.5" />
+                    Location request sent
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-6">{message.text || stringValue(payload?.body) || "Please share your location."}</p>
+                <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
+                    Send location
+                </div>
+            </div>
+        )
+    }
+
+    if (payloadType === "flow_response" && flowData) {
+        return (
+            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <GitBranch className="h-3.5 w-3.5" />
+                    Flow response
+                </div>
+                <div className="space-y-1.5">
+                    {payloadEntries(flowData).map(([key, value]) => (
+                        <div key={key} className="rounded-lg bg-current/[0.04] px-2 py-1.5">
+                            <p className={`text-[10px] uppercase ${subtleText}`}>{key.replace(/_/g, " ")}</p>
+                            <p className="mt-0.5 break-words text-xs font-medium">{formatPayloadValue(value)}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    if (payloadType === "order" && order) {
+        const items = Array.isArray(order.items) ? order.items : []
+        return (
+            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <PackageCheck className="h-3.5 w-3.5" />
+                    Catalog order
+                </div>
+                {message.text && <p className="text-sm">{message.text}</p>}
+                <p className={`mt-1 text-xs ${subtleText}`}>{items.length} item{items.length === 1 ? "" : "s"} selected</p>
+            </div>
+        )
+    }
+
+    if (payloadType === "location" && location) {
+        return (
+            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
+                    <FileText className="h-3.5 w-3.5" />
+                    Location
+                </div>
+                <p className="text-sm font-medium">{stringValue(location.name) || "Shared location"}</p>
+                {stringValue(location.address) && <p className={`mt-1 text-xs ${subtleText}`}>{stringValue(location.address)}</p>}
+            </div>
+        )
+    }
+
+    return <p className="whitespace-pre-wrap text-sm leading-6">{message.text || "(No message text)"}</p>
+}
+
 // ─── The Inbox Tab ──────────────────────────────────────────────────────────
 
 function InboxTab() {
@@ -68,7 +340,8 @@ function InboxTab() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    const detail = useWhatsAppConversation(selectedId)
+    const activeConversationId = selectedId ?? conversations?.[0]?.id ?? null
+    const detail = useWhatsAppConversation(activeConversationId)
     const selected = detail.data
     const templates = useWhatsAppTemplates({
         page: 1,
@@ -83,12 +356,6 @@ function InboxTab() {
     const sendMessage = useSendConversationMessage()
     const sendTemplate = useSendConversationTemplate()
     const sendableTemplates = (templates.data?.data ?? []).filter((template) => template.can_send)
-
-    useEffect(() => {
-        if (!selectedId && conversations?.[0]?.id) {
-            setSelectedId(conversations[0].id)
-        }
-    }, [conversations, selectedId])
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -106,9 +373,9 @@ function InboxTab() {
 
     const submitMessage = async () => {
         const text = draft.trim()
-        if (!selectedId || !text) return
+        if (!activeConversationId || !text) return
         try {
-            await sendMessage.mutateAsync({ id: selectedId, text })
+            await sendMessage.mutateAsync({ id: activeConversationId, text })
             setDraft("")
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Failed to send message")
@@ -116,11 +383,11 @@ function InboxTab() {
     }
 
     const submitTemplate = async () => {
-        if (!selectedId || !selectedTemplate) return
+        if (!activeConversationId || !selectedTemplate) return
         try {
             const variables = JSON.parse(templateVariables || "{}") as Record<string, unknown>
             await sendTemplate.mutateAsync({
-                id: selectedId,
+                id: activeConversationId,
                 templateKey: selectedTemplate,
                 variables,
             })
@@ -192,7 +459,7 @@ function InboxTab() {
                     ) : filteredConversations.length ? (
                         <div className="py-1">
                             {filteredConversations.map((conversation) => {
-                                const isSelected = selectedId === conversation.id
+                                const isSelected = activeConversationId === conversation.id
                                 const initial = getInitial(
                                     conversation.customer_name || conversation.customer_phone
                                 )
@@ -479,9 +746,7 @@ function InboxTab() {
                                                                   : "rounded-2xl"
                                                     }`}
                                                 >
-                                                    <p className="text-sm leading-6">
-                                                        {message.text || "(No message text)"}
-                                                    </p>
+                                                    <MessageContent message={message} isOutbound={isOutbound} />
                                                 </div>
                                                 <div className="mt-0.5 flex items-center gap-2 px-1">
                                                     <span
