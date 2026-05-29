@@ -17,6 +17,56 @@ export interface Plan {
     features: string[]
 }
 
+export interface BillingAddon {
+    id: string
+    slug: string
+    name: string
+    description: string | null
+    monthlyPrice: number
+    yearlyPrice: number
+    currency: string
+    featureKey: string
+    metadata?: Record<string, unknown> | null
+    isActive: boolean
+}
+
+export interface ActiveAddon {
+    id: string
+    slug: string
+    name: string
+    featureKey: string
+    status: string
+    interval: "monthly" | "yearly"
+    quantity: number
+    amount: number
+    currency: string
+    startsAt: string
+    endsAt: string | null
+}
+
+export interface BillingAddonSelection {
+    slug: string
+    businessId: string
+    quantity?: number
+}
+
+export interface QuoteLineItem {
+    kind: "plan" | "addon"
+    interval: "monthly" | "yearly"
+    currency: string
+    totalAmount: number
+    unitAmount?: number
+    quantity?: number
+    planId?: string
+    planSlug?: string
+    planName?: string
+    businessId?: string
+    slug?: string
+    name?: string
+    featureKey?: string
+    description?: string | null
+}
+
 export interface Subscription {
     id: string
     planId: string
@@ -33,6 +83,7 @@ export interface Subscription {
 export interface SubscriptionResponse {
     currentPlan: Plan | null
     subscription: Subscription | null
+    activeAddons: ActiveAddon[]
     paymentMethod?: {
         type: string
         last4: string
@@ -50,7 +101,11 @@ export interface SubscriptionResponse {
 
 export interface SubscriptionQuote {
     baseAmount: number
+    addonAmount: number
+    totalAmount: number
     currency: string
+    planLine: QuoteLineItem | null
+    addonLines: QuoteLineItem[]
     wallet: {
         businessId: string
         balance: number
@@ -59,10 +114,20 @@ export interface SubscriptionQuote {
     } | null
 }
 
-export const useSubscriptionPlans = () => {
+export interface SubscriptionPlansResponse {
+    plans: Plan[]
+    addons: BillingAddon[]
+}
+
+export const useSubscriptionPlans = (billingBusinessId?: string | null) => {
+    const effectiveId = billingBusinessId ?? storage.getActiveBusinessId()
     return useQuery({
-        queryKey: ["subscription-plans"],
-        queryFn: () => apiClient.get<Plan[]>("/subscriptions/plans"),
+        queryKey: ["subscription-plans", effectiveId ?? ""],
+        queryFn: () =>
+            apiClient.get<SubscriptionPlansResponse>("/subscriptions/plans", undefined, {
+                businessIdOverride: effectiveId ?? undefined,
+            }),
+        enabled: !!effectiveId,
     })
 }
 
@@ -81,8 +146,9 @@ export const useCurrentSubscription = (billingBusinessId?: string | null) => {
 }
 
 export interface InitiateSubscriptionPayload {
-    planSlug: string
+    planSlug?: string | null
     interval: "monthly" | "yearly"
+    addons?: BillingAddonSelection[]
     channel?: string
     metadata?: Record<string, unknown>
     businessIdOverride?: string | null
@@ -112,22 +178,24 @@ export const useInitiateSubscription = () => {
 export const useSubscriptionQuote = (
     planSlug: string | null,
     interval: "monthly" | "yearly" | null,
+    addons: BillingAddonSelection[] = [],
     billingBusinessId?: string | null,
     enabled = true
 ) => {
     const effectiveId = billingBusinessId ?? storage.getActiveBusinessId()
     return useQuery({
-        queryKey: ["subscription-quote", effectiveId ?? "", planSlug ?? "", interval ?? ""],
+        queryKey: ["subscription-quote", effectiveId ?? "", planSlug ?? "", interval ?? "", JSON.stringify(addons)],
         queryFn: () =>
             apiClient.get<SubscriptionQuote>(
                 "/subscriptions/quote",
                 {
-                    planSlug: planSlug!,
-                    interval: interval!,
+                    ...(planSlug ? { planSlug } : {}),
+                    ...(interval ? { interval } : {}),
+                    ...(addons.length ? { addons: JSON.stringify(addons) } : {}),
                 },
                 { businessIdOverride: effectiveId ?? undefined }
             ),
-        enabled: !!effectiveId && !!planSlug && !!interval && enabled,
+        enabled: !!effectiveId && (!!planSlug || addons.length > 0) && !!interval && enabled,
     })
 }
 
@@ -137,8 +205,9 @@ export const usePaySubscriptionFromWallet = () => {
     const { refreshBusinesses } = useBusiness()
     return useMutation({
         mutationFn: (payload: {
-            planSlug: string
+            planSlug?: string | null
             interval: "monthly" | "yearly"
+            addons?: BillingAddonSelection[]
             pin: string
             businessIdOverride?: string | null
         }) => {
@@ -261,6 +330,7 @@ export interface BillingHistoryItem {
     description: string
     status: 'Paid' | 'Pending' | 'Failed'
     reference: string
+    lineItems: QuoteLineItem[]
 }
 
 export const useBillingHistory = (billingBusinessId?: string | null) => {

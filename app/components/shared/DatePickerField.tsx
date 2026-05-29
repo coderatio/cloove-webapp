@@ -112,7 +112,7 @@ export function DatePickerField({
                     </DrawerBody>
                     <DrawerFooter>
                         <DrawerClose asChild>
-                            <Button className="w-full rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-sm h-12 shadow-lg">
+                            <Button className="w-full rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold text-sm h-12 shadow-lg">
                                 Done
                             </Button>
                         </DrawerClose>

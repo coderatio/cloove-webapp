@@ -652,13 +652,13 @@ export function TransactionDetailsDrawer({
                                 {onApproveManually && status === "Pending" ? (
                                     <Button
                                         onClick={onApproveManually}
-                                        className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:hover:text-brand-deep font-bold shadow-xl"
+                                        className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep font-bold shadow-xl"
                                     >
                                         Approve Manually
                                     </Button>
                                 ) : (
                                     <DrawerClose asChild>
-                                        <Button className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:hover:bg-brand-gold/80 dark:text-brand-deep dark:hover:text-brand-deep font-bold shadow-xl">
+                                        <Button className="flex-1 h-14 rounded-3xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 dark:text-brand-deep dark:hover:text-brand-deep font-bold shadow-xl">
                                             Close
                                         </Button>
                                     </DrawerClose>

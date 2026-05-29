@@ -43,7 +43,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
                                 className={cn(
                                     "relative flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap",
                                     isActive
-                                        ? "text-brand-cream bg-brand-deep dark:bg-brand-gold dark:text-brand-deep shadow-lg shadow-brand-deep/10"
+                                        ? "text-brand-cream bg-brand-deep dark:bg-brand-gold-700 dark:text-white shadow-lg shadow-brand-deep/10"
                                         : "text-brand-deep/60 dark:text-brand-cream/60 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >

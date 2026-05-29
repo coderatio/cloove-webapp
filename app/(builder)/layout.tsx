@@ -67,7 +67,7 @@ function BuilderContent({ children }: { children: React.ReactNode }) {
                     </Button>
                     <Button
                         onClick={saveAndPublish}
-                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep h-10 px-8 font-bold text-xs shadow-lg hover:scale-105 transition-all"
+                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white h-10 px-8 font-bold text-xs shadow-lg hover:scale-105 transition-all"
                     >
                         Publish
                     </Button>

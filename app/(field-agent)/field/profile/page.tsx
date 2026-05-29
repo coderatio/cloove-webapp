@@ -175,7 +175,7 @@ export default function ProfilePage() {
                                         onClick={handleSave}
                                         disabled={isSaving}
                                         size="sm"
-                                        className="rounded-xl h-10 px-4 bg-brand-gold text-brand-deep font-bold"
+                                        className="rounded-xl h-10 px-4 bg-brand-gold-700 text-white font-bold"
                                     >
                                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                     </Button>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
                             <div className="flex flex-wrap justify-center md:justify-start gap-4">
                                 <Button
                                     onClick={handleEdit}
-                                    className="rounded-2xl px-6 h-11 bg-brand-deep text-brand-cream dark:bg-brand-gold dark:text-brand-deep"
+                                    className="rounded-2xl px-6 h-11 bg-brand-deep text-brand-cream dark:bg-brand-gold-700 dark:text-white"
                                 >
                                     <Edit2 className="w-4 h-4 mr-2" />
                                     Edit Profile

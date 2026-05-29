@@ -158,7 +158,7 @@ export function CheckoutPaymentStep({
           </div>
           <div className="h-1.5 bg-brand-deep/5 dark:bg-white/5 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-brand-gold rounded-full"
+              className="h-full bg-brand-gold-700 rounded-full"
               style={{ width: `${progress * 100}%` }}
               transition={{ duration: 0.5 }}
             />
@@ -276,7 +276,7 @@ export function CheckoutPaymentStep({
           <Button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="rounded-2xl h-14 w-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-bold gap-2 shadow-xl"
+            className="rounded-2xl h-14 w-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-bold gap-2 shadow-xl"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? "Checking..." : "I've sent the money"}

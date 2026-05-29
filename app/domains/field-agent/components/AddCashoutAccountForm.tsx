@@ -241,7 +241,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                     <Button
                         type="submit"
                         disabled={!isValid}
-                        className="w-full h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
+                        className="w-full h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
                     >
                         <ShieldCheck className="w-4 h-4 mr-2" />
                         Authorize & Save

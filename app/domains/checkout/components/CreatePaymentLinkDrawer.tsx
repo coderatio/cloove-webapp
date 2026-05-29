@@ -168,7 +168,7 @@ export function CreatePaymentLinkDrawer({
                                         className={cn(
                                             "h-10 rounded-[14px] text-[11px] font-bold uppercase tracking-wider transition-all duration-300",
                                             expiresIn === opt.value
-                                                ? "bg-brand-deep text-brand-gold shadow-lg dark:bg-brand-gold dark:text-brand-deep"
+                                                ? "bg-brand-deep text-brand-gold shadow-lg dark:bg-brand-gold-700 dark:text-white"
                                                 : "text-brand-accent/60 dark:text-brand-cream/60 hover:bg-white/50 dark:hover:bg-white/5"
                                         )}
                                     >
@@ -269,7 +269,7 @@ export function CreatePaymentLinkDrawer({
                     <Button
                         onClick={handleSubmit}
                         disabled={!title.trim() || amount <= 0 || isPending}
-                        className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold text-base gap-2"
+                        className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold text-base gap-2"
                     >
                         {isPending ? (
                             <Loader2 className="w-5 h-5 animate-spin" />

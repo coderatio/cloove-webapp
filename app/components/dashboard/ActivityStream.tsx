@@ -70,7 +70,7 @@ const ActivityEmptyState = () => {
 
                 <div className="pt-4">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
-                        <div className="w-1 h-1 rounded-full bg-brand-gold animate-pulse" />
+                        <div className="w-1 h-1 rounded-full bg-brand-gold-700 animate-pulse" />
                         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Awakening System</span>
                     </div>
                 </div>

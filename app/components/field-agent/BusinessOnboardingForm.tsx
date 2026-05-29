@@ -246,7 +246,7 @@ export function BusinessOnboardingForm() {
                                                 <div className={cn(
                                                     "w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 relative z-10",
                                                     formData.businessType === value
-                                                        ? "bg-brand-gold text-white shadow-lg shadow-brand-gold/20"
+                                                        ? "bg-brand-gold-700 text-white shadow-lg shadow-brand-gold/20"
                                                         : "bg-brand-deep/5 text-brand-deep/30 dark:bg-white/5 dark:text-brand-cream/20 group-hover:scale-110"
                                                 )}>
                                                     <Icon className="w-5 h-5" />
@@ -264,7 +264,7 @@ export function BusinessOnboardingForm() {
                                                 {formData.businessType === value && (
                                                     <motion.div 
                                                         layoutId="check-bubble"
-                                                        className="absolute top-4 right-4 w-6 h-6 bg-brand-gold rounded-full flex items-center justify-center"
+                                                        className="absolute top-4 right-4 w-6 h-6 bg-brand-gold-700 rounded-full flex items-center justify-center"
                                                     >
                                                         <Check className="w-3.5 h-3.5 text-white stroke-3" />
                                                     </motion.div>
@@ -436,7 +436,7 @@ export function BusinessOnboardingForm() {
                         <Button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className="bg-brand-gold text-brand-deep hover:bg-brand-gold/90 rounded-2xl h-14 px-12 font-black uppercase tracking-widest shadow-xl shadow-brand-gold/10 hover:-translate-y-1 active:translate-y-0 transition-all"
+                            className="bg-brand-gold-700 text-white hover:bg-brand-gold-800 rounded-2xl h-14 px-12 font-black uppercase tracking-widest shadow-xl shadow-brand-gold/10 hover:-translate-y-1 active:translate-y-0 transition-all"
                         >
                             {isSubmitting ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />
@@ -475,7 +475,7 @@ export function BusinessOnboardingForm() {
                         <Button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className="flex-2 bg-brand-gold text-brand-deep rounded-[24px] h-16 font-black uppercase tracking-widest shadow-2xl shadow-brand-gold/30 active:scale-95 transition-all text-lg"
+                            className="flex-2 bg-brand-gold-700 text-white rounded-[24px] h-16 font-black uppercase tracking-widest shadow-2xl shadow-brand-gold/30 active:scale-95 transition-all text-lg"
                         >
                             {isSubmitting ? (
                                 <Loader2 className="w-6 h-6 animate-spin" />

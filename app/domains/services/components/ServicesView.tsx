@@ -85,7 +85,7 @@ export function ServicesView() {
                     </p>
                     <Button
                         onClick={openCreate}
-                        className="rounded-full bg-brand-deep text-brand-gold-300 dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 h-11 px-6"
+                        className="rounded-full bg-brand-deep text-brand-gold-300 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 h-11 px-6"
                     >
                         Add your first service
                     </Button>

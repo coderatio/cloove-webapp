@@ -521,7 +521,7 @@ export function CustomersView() {
                         )}
                     >
                         {owing !== "—" && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-brand-gold-700 animate-pulse" />
                         )}
                         {owing}
                     </span>
@@ -978,7 +978,7 @@ export function CustomersView() {
                                     <Button
                                         type="submit"
                                         disabled={isFormPending}
-                                        className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl"
+                                        className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold shadow-xl"
                                     >
                                         {isFormPending ? (
                                             <Loader2 className="w-5 h-5 animate-spin" />

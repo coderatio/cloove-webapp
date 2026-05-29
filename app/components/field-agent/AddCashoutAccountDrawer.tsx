@@ -287,7 +287,7 @@ export function AddCashoutAccountDrawer({
                             <Button
                                 onClick={handleContinue}
                                 disabled={!isValid}
-                                className="w-full h-14 bg-brand-gold text-brand-deep hover:bg-brand-gold/90 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-gold/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                className="w-full h-14 bg-brand-gold-700 text-white hover:bg-brand-gold-800 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-gold/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                             >
                                 Save Account
                             </Button>

@@ -39,7 +39,7 @@ export default function OfflinePage() {
                                 Retry
                             </Button>
                             <Link href="/">
-                                <Button className="w-full h-12 bg-brand-gold hover:bg-brand-gold/80 text-brand-deep font-bold text-xs shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                                <Button className="w-full h-12 bg-brand-gold-700 hover:bg-brand-gold-800 text-brand-deep font-bold text-xs shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
                                     <Home className="w-4 h-4 mr-2" />
                                     Home
                                 </Button>

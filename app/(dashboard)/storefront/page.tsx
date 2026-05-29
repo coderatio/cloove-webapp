@@ -81,7 +81,7 @@ export default function StorefrontOverview() {
                             <Button
                                 size="sm"
                                 onClick={handleCopy}
-                                className="h-9 px-4 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold shadow-lg hover:scale-105 transition-all"
+                                className="h-9 px-4 rounded-xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep font-bold shadow-lg hover:scale-105 transition-all"
                             >
                                 {isCopied ? "Copied!" : "Copy"}
                             </Button>

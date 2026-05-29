@@ -141,7 +141,7 @@ export function CashoutAccountManager({
                     </div>
                     <Button
                         onClick={() => setIsAdding(true)}
-                        className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold rounded-xl"
+                        className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold rounded-xl"
                     >
                         Add First Account
                     </Button>
@@ -159,7 +159,7 @@ export function CashoutAccountManager({
                             <div className="flex items-center gap-4">
                                 <div className={cn(
                                     "h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                    account.isDefault ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40"
+                                    account.isDefault ? "bg-brand-gold-700 text-white" : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40"
                                 )}>
                                     <Building2 className="w-6 h-6" />
                                 </div>

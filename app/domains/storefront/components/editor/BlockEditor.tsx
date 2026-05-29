@@ -130,7 +130,7 @@ export function BlockEditor({ block, onUpdate, onUpdateConfig }: BlockEditorProp
                 {activeTab === tab && (
                   <motion.div
                     layoutId="activeTabBadge"
-                    className="absolute inset-0 bg-white dark:bg-brand-gold rounded-xl shadow-sm"
+                    className="absolute inset-0 bg-white dark:bg-brand-gold-700 rounded-xl shadow-sm"
                     initial={false}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />

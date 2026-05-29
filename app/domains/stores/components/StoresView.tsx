@@ -202,7 +202,7 @@ export function StoresView() {
                     </div>
                     <Button
                         onClick={() => setIsAddOpen(true)}
-                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/80 hover:scale-105 transition-all shadow-lg"
+                        className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 hover:scale-105 transition-all shadow-lg"
                     >
                         <Plus className="w-4 h-4 mr-2" />
                         Add New Store

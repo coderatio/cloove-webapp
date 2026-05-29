@@ -42,29 +42,34 @@ export function ManagementHeader({
 }: ManagementHeaderProps) {
     const isMobile = useIsMobile()
     return (
-        <div className={cn("space-y-5", className)}>
-            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-                <div>
-                    <h1 className="mb-2 text-3xl font-semibold tracking-tight text-foreground md:text-[2.5rem]">
+        <header
+            className={cn(
+                "rounded-[1.75rem] border border-brand-deep/5 bg-white/72 px-4 py-4 shadow-sm shadow-brand-deep/[0.025] backdrop-blur dark:border-white/8 dark:bg-white/[0.035] sm:px-5",
+                className
+            )}
+        >
+            <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                <div className="min-w-0">
+                    <h1 className="text-2xl font-semibold leading-none tracking-tight text-foreground md:text-[2rem]">
                         {title}
                     </h1>
                     {description && (
-                        <p className="max-w-2xl text-base text-muted-foreground">
+                        <p className="mt-1.5 max-w-3xl text-sm leading-5 text-muted-foreground">
                             {description}
                         </p>
                     )}
                 </div>
                 {(extraActions || (addButtonLabel && onAddClick)) && (
                     <div className={cn(
-                        "items-center gap-3",
-                        mobileFloatingAction && isMobile ? "mt-4 md:mt-0 w-full block" : "flex"
+                        "shrink-0 items-center gap-2",
+                        mobileFloatingAction && isMobile ? "w-full block md:w-auto" : "flex"
                     )}>
                         {extraActions}
                         {addButtonLabel && onAddClick && (
                             <Button
                                 onClick={onAddClick}
                                 className={cn(
-                                    "h-11 rounded-full px-5 font-semibold text-white shadow-sm transition-colors hover:text-white [&_svg]:text-white",
+                                    "h-9 rounded-full px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:text-white [&_svg]:text-white",
                                     mobileFloatingAction && isMobile && "fixed top-15 right-6 z-50 h-14 w-14 p-0 md:static md:h-12 md:w-auto md:px-6 md:rounded-full shadow-2xl md:shadow-lg"
                                 )}
                             >
@@ -77,17 +82,17 @@ export function ManagementHeader({
             </div>
 
             {searchValue !== undefined && onSearchChange && (
-                <div className="flex items-center gap-3">
+                <div className="mt-4 flex flex-col gap-2 border-t border-brand-deep/5 pt-4 dark:border-white/8 sm:flex-row sm:items-center">
                     <div className="relative flex-1 group">
-                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                            <Search className="w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
+                        <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
+                            <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
                         </div>
                         <input
                             type="text"
                             value={searchValue}
                             onChange={(e) => onSearchChange(e.target.value)}
                             placeholder={searchPlaceholder}
-                            className="w-full rounded-2xl border border-border bg-background pl-10 pr-4 py-3 text-foreground transition-all placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/15"
+                            className="h-10 w-full rounded-2xl border border-brand-deep/8 bg-white/80 px-4 pl-10 text-sm text-foreground shadow-sm shadow-brand-deep/[0.02] transition-all placeholder:text-muted-foreground focus:border-brand-deep/20 focus:outline-none focus:ring-2 focus:ring-brand-gold/15 dark:border-white/10 dark:bg-white/[0.04]"
                         />
                     </div>
                     {filterGroups && onFilterSelectionChange && onFilterClear && (
@@ -100,6 +105,6 @@ export function ManagementHeader({
                     )}
                 </div>
             )}
-        </div>
+        </header>
     )
 }

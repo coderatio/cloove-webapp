@@ -81,7 +81,7 @@ export default function StorefrontPages() {
                 </div>
                 <Button
                     onClick={handleCreate}
-                    className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep dark:hover:bg-brand-gold/90 dark:hover:text-brand-deep font-bold px-6 h-10 shadow-lg hover:scale-105 transition-all w-full md:w-auto"
+                    className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep font-bold px-6 h-10 shadow-lg hover:scale-105 transition-all w-full md:w-auto"
                 >
                     <Plus className="w-4 h-4 mr-2" />
                     New Page

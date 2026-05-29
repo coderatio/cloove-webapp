@@ -83,7 +83,7 @@ export function BankSelector({ onSelect, selectedBankName, provider, className, 
                                     <div className={cn(
                                         "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-xs font-bold transition-colors shadow-sm",
                                         isSelected
-                                            ? "bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep"
+                                            ? "bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white"
                                             : "bg-white dark:bg-white/10 text-brand-deep/60 dark:text-brand-cream/60 group-hover:text-brand-deep dark:group-hover:text-brand-cream"
                                     )} style={{ fontFamily: 'var(--font-serif)' }}>
                                         {initials}
@@ -104,7 +104,7 @@ export function BankSelector({ onSelect, selectedBankName, provider, className, 
                                     </div>
 
                                     {isSelected && (
-                                        <div className="h-6 w-6 rounded-full bg-brand-gold flex items-center justify-center text-brand-deep shadow-sm animate-in zoom-in spin-in-12 duration-300">
+                                        <div className="h-6 w-6 rounded-full bg-brand-gold-700 flex items-center justify-center text-brand-deep shadow-sm animate-in zoom-in spin-in-12 duration-300">
                                             <Check className="h-3 w-3" strokeWidth={3} />
                                         </div>
                                     )}

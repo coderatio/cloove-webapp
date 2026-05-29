@@ -182,7 +182,7 @@ export function SetupGuideDrawer() {
 
 function StepNumber({ n }: { n: number }) {
   return (
-    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep text-xs font-bold">
+    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white text-xs font-bold">
       {n}
     </span>
   )

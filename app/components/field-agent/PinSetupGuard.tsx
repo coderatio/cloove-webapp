@@ -96,7 +96,7 @@ export function PinSetupGuard({ children }: { children: React.ReactNode }) {
                 <Button
                     onClick={handleSetPin}
                     disabled={isSubmitting || pin.length !== 4}
-                    className="w-full h-14 rounded-2xl bg-brand-gold text-brand-deep hover:text-brand-cream font-black uppercase tracking-widest shadow-xl shadow-brand-gold/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                    className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white hover:text-brand-cream font-black uppercase tracking-widest shadow-xl shadow-brand-gold/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                 >
                     {isSubmitting ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

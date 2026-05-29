@@ -381,7 +381,7 @@ export default function WalletPage() {
                                                     >
                                                         <div className={cn(
                                                             "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                                                            selectedAccount?.id === account.id ? "bg-brand-gold text-brand-deep" : "bg-brand-deep/10 dark:bg-white/10 text-brand-deep/40 dark:text-brand-cream/40"
+                                                            selectedAccount?.id === account.id ? "bg-brand-gold-700 text-white" : "bg-brand-deep/10 dark:bg-white/10 text-brand-deep/40 dark:text-brand-cream/40"
                                                         )}>
                                                             <Building2 className="w-5 h-5" />
                                                         </div>

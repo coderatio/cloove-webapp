@@ -116,6 +116,14 @@
   --color-input: var(--color-cloove-border);
   --color-ring: var(--color-cloove-green);
 
+  /* Sidebar semantic colors */
+  --color-brand-deep: #0b3d2e;
+  --color-brand-gold: #f97316;
+  --color-cream: #fdfcf8;
+  --color-text-primary: #111827;
+  --color-cloove-border: #dde7e2;
+  --color-surface: #ffffff;
+
   --color-brand-deep: #0b3d2e;
   --color-brand-green: #125741;
   --color-brand-gold: #f97316;
@@ -125,6 +133,10 @@
   --color-brand-accent: #335b4f;
   --color-brand-emerald: #2b6a58;
   --color-brand-emerald-light: #4e8373;
+
+  /* Semantic sidebar colors */
+  --color-cream: #fdfcf8;
+  --color-text-primary: #111827;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -185,6 +197,34 @@ nextjs-portal>* {
   box-sizing: border-box;
 }
 
+:where(
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"],
+  summary
+):not(:disabled):not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+:where(
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"]
+):disabled,
+:where(
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"]
+)[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
@@ -197,6 +237,20 @@ body {
   background: var(--background);
   line-height: 1.6;
   letter-spacing: -0.01em;
+}
+
+.app-content-pattern {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.58)),
+    radial-gradient(circle at 1px 1px, rgba(11, 61, 46, 0.055) 1px, transparent 0);
+  background-size: auto, 22px 22px;
+}
+
+.dark .app-content-pattern {
+  background-image:
+    linear-gradient(180deg, rgba(9, 9, 11, 0.72), rgba(9, 9, 11, 0.9)),
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

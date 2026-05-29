@@ -285,7 +285,7 @@ function AIPopover({
                 <Button onClick={() => setOpen(false)} variant="ghost" size="sm" className="rounded-xl px-4 h-9 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
                   Cancel
                 </Button>
-                <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} size="sm" className="rounded-xl px-5 h-9 bg-brand-green hover:bg-brand-green/90 dark:bg-brand-gold dark:hover:bg-brand-gold/90 text-white dark:text-brand-deep shadow-sm">
+                <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} size="sm" className="rounded-xl px-5 h-9 bg-brand-green hover:bg-brand-green/90 dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 text-white dark:text-brand-deep shadow-sm">
                   {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
                   Generate
                 </Button>

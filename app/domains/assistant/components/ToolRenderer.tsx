@@ -99,7 +99,7 @@ export function ToolRenderer({ part, addToolResult }: ToolRendererProps) {
                         <div className="flex gap-2">
                             <Button
                                 size="sm"
-                                className="flex-1 bg-brand-gold text-brand-deep font-bold hover:bg-brand-gold/90 transition-all duration-300"
+                                className="flex-1 bg-brand-gold-700 text-white font-bold hover:bg-brand-gold-800 transition-all duration-300"
                                 onClick={() =>
                                     addToolResult({
                                         toolCallId: approvalPart.toolCallId,

@@ -289,7 +289,7 @@ export function VerificationLevelForm({
                 <Button
                     onClick={onSubmit}
                     disabled={isPending}
-                    className="w-full md:flex-1 h-14 rounded-2xl bg-brand-gold px-8 hover:bg-brand-gold/90 text-brand-deep font-bold uppercase tracking-[0.2em] text-[11px] shadow-[0_8px_32px_rgba(212,175,55,0.15)] hover:shadow-[0_12px_48px_rgba(212,175,55,0.3)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-500"
+                    className="w-full md:flex-1 h-14 rounded-2xl bg-brand-gold-700 px-8 hover:bg-brand-gold-800 text-brand-deep font-bold uppercase tracking-[0.2em] text-[11px] shadow-[0_8px_32px_rgba(212,175,55,0.15)] hover:shadow-[0_12px_48px_rgba(212,175,55,0.3)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-500"
                 >
                     {isPending ? (
                         <div className="flex items-center justify-center gap-3">

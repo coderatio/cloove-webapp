@@ -144,7 +144,7 @@ export function VendorDetailDrawer({
                             {vendor.outstanding > 0 && (
                                 <Button
                                     onClick={() => onRecordPayable(vendor)}
-                                    className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold"
+                                    className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold"
                                 >
                                     <Plus className="w-4 h-4 mr-2" />
                                     Record Payable
@@ -247,7 +247,7 @@ export function VendorDetailDrawer({
                         </Button>
                         <Button
                             onClick={() => onRecordPayable(vendor)}
-                            className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold shadow-xl"
+                            className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold shadow-xl"
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             Record Payable

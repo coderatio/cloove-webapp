@@ -179,7 +179,7 @@ export function RecordPaymentDrawer({
                         form="record-payment-form"
                         type="submit"
                         disabled={isSubmitting || amount <= 0}
-                        className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         {isSubmitting ? (
                             <Loader2 className="w-5 h-5 animate-spin mr-2" />

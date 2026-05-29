@@ -30,6 +30,7 @@ import {
   Bell,
   Plus,
   ChevronDown,
+  ChevronRight,
   Plug,
 } from "lucide-react"
 import {
@@ -61,13 +62,18 @@ import { WhatsAppNumberLogsSheet } from "./WhatsAppNumberLogsSheet"
 import { AgentProfileSection } from "./AgentProfileSection"
 import { WhatsAppNotificationMessageInput } from "./WhatsAppNotificationMessageInput"
 import { useBusiness } from "@/app/components/BusinessProvider"
+import { useFeature } from "@/app/hooks/useFeature"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
+import { OperatingHoursBuilder } from "@/app/components/shared/OperatingHoursBuilder"
 
 interface WhatsAppSettingsProps {
   onDirtyChange?: (isDirty: boolean) => void
   onSavingChange?: (isSaving: boolean) => void
   saveTrigger?: number
+  initialTab?: "connections" | "general" | "notifications" | "ai"
+  allowedTabs?: Array<"connections" | "general" | "notifications" | "ai">
+  stackSections?: boolean
 }
 
 interface EmbeddedSignupRuntimeConfig {
@@ -178,7 +184,15 @@ function mergeOrderNotifications(
   }
 }
 
-export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }: WhatsAppSettingsProps) {
+export function WhatsAppSettings({
+  onDirtyChange,
+  onSavingChange,
+  saveTrigger,
+  initialTab = "connections",
+  allowedTabs,
+  stackSections = false,
+}: WhatsAppSettingsProps) {
+  const hasWhitelabelWhatsapp = useFeature("hasWhitelabelWhatsapp")
   const { data: numbers, isLoading: numbersLoading } = useWhatsAppNumbers()
   const { data: goSettingsData, isLoading: settingsLoading } = useGoSettings()
   const updateGoSettings = useUpdateGoSettings()
@@ -213,6 +227,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
   const layoutPresetId = useLayoutPresetId()
   const showOrderNotificationsTab = layoutPresetId === "restaurant"
+  const visibleTabs = allowedTabs ?? ["connections", "general", "notifications", "ai"]
+  const canShowConnections = visibleTabs.includes("connections")
+  const canShowGeneral = visibleTabs.includes("general")
+  const canShowNotifications = showOrderNotificationsTab && visibleTabs.includes("notifications")
+  const canShowAi = visibleTabs.includes("ai")
 
   const [localSettings, setLocalSettings] = useState<Partial<GoSettings>>({
     display_name: "",
@@ -236,7 +255,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
   })
 
   type SettingsTab = "connections" | "general" | "notifications" | "ai"
-  const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>("connections")
+  const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>(initialTab)
   const [showManualConnect, setShowManualConnect] = useState(false)
   const resolvedSettingsTab: SettingsTab =
     !showOrderNotificationsTab && activeSettingsTab === "notifications"
@@ -255,6 +274,10 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
   const [isDirty, setIsDirty] = useState(false)
   const [showAddAnother, setShowAddAnother] = useState(false)
+
+  useEffect(() => {
+    setActiveSettingsTab(initialTab)
+  }, [initialTab])
 
   useEffect(() => {
     onSavingChange?.(updateGoSettings.isPending)
@@ -357,6 +380,46 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
       message: warning || "WhatsApp connection saved successfully.",
     })
 
+  if (!hasWhitelabelWhatsapp) {
+    return (
+      <div className="mx-auto max-w-3xl rounded-[2rem] border border-brand-gold/20 bg-white p-8 shadow-sm dark:bg-slate-950/40 md:p-10">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold">
+            <MessageSquare className="h-7 w-7" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold text-brand-deep dark:text-brand-cream">
+              WhatsApp white-label is a paid business add-on
+            </h2>
+            <p className="mx-auto max-w-2xl text-sm leading-relaxed text-brand-deep/60 dark:text-brand-cream/60">
+              Free and trial access do not include WhatsApp number setup. Purchase the WhatsApp add-on in Billing to
+              connect and manage a branded business number for this workspace.
+            </p>
+          </div>
+          <Button
+            asChild
+            className="h-auto min-h-14 rounded-[1.4rem] bg-brand-deep px-5 py-3 text-brand-gold-300 shadow-[0_18px_40px_rgba(11,61,46,0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-deep/92 hover:text-brand-gold-200 hover:shadow-[0_22px_44px_rgba(11,61,46,0.22)] dark:bg-brand-gold-700 dark:text-white dark:shadow-[0_18px_40px_rgba(245,158,11,0.18)] dark:hover:bg-brand-gold-800"
+          >
+            <a
+              href="/settings?tab=billing&addon=whatsapp_whitelabel_number"
+              className="inline-flex items-center gap-4"
+            >
+              <span className="text-left">
+                <span className="block text-base font-semibold leading-none">Unlock WhatsApp in Billing</span>
+                <span className="mt-1 block text-xs font-medium uppercase tracking-[0.18em] text-brand-gold-300/75 dark:text-brand-deep/70">
+                  Business add-on
+                </span>
+              </span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold-300/15 text-brand-gold-300 dark:bg-brand-deep/10 dark:text-brand-deep">
+                <ChevronRight className="h-4 w-4" />
+              </span>
+            </a>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   if (numbersLoading || settingsLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -367,13 +430,25 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
 
   const isGeneralAvailable =
     !!primaryActiveNumber && primaryActiveNumber.status === WhatsAppNumberStatusValue.ACTIVE
+  const showConnectionsSection = stackSections ? canShowConnections : resolvedSettingsTab === "connections"
+  const showGeneralSection = stackSections
+    ? canShowGeneral && isGeneralAvailable
+    : resolvedSettingsTab === "general" && isGeneralAvailable
+  const showNotificationsSection = stackSections
+    ? canShowNotifications && isGeneralAvailable
+    : resolvedSettingsTab === "notifications" && isGeneralAvailable
+  const showAiSection = stackSections
+    ? canShowAi && isGeneralAvailable
+    : resolvedSettingsTab === "ai" && isGeneralAvailable
   const tabBorder =
     "pb-3 text-sm font-medium transition-colors relative shrink-0 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
 
   return (
     <div className="min-w-0 max-w-4xl space-y-6 pb-16">
-      <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+10rem)] z-10 -mx-4 border-b border-slate-200 bg-background/85 backdrop-blur supports-backdrop-filter:bg-background/70 md:top-26 md:mx-0 dark:border-slate-800">
+      {visibleTabs.length > 1 && !stackSections ? (
+      <div className="sticky top-[calc(var(--subscription-banner-offset,0px)+3.5rem)] z-10 -mx-4 border-b border-slate-200 bg-background/95 backdrop-blur md:top-0 md:mx-0 dark:border-slate-800">
        <div className="scrollbar-none flex min-w-0 flex-nowrap gap-x-6 overflow-x-auto px-4 pt-2 md:px-0">
+        {canShowConnections ? (
         <button
           onClick={() => setActiveSettingsTab("connections")}
           className={`${tabBorder} ${
@@ -390,6 +465,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
           )}
         </button>
+        ) : null}
+        {canShowGeneral ? (
         <button
           onClick={() => isGeneralAvailable && setActiveSettingsTab("general")}
           disabled={!isGeneralAvailable}
@@ -407,7 +484,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
           )}
         </button>
-        {showOrderNotificationsTab && (
+        ) : null}
+        {canShowNotifications ? (
           <button
             onClick={() => isGeneralAvailable && setActiveSettingsTab("notifications")}
             disabled={!isGeneralAvailable}
@@ -425,7 +503,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
             )}
           </button>
-        )}
+        ) : null}
+        {canShowAi ? (
         <button
           onClick={() => isGeneralAvailable && setActiveSettingsTab("ai")}
           disabled={!isGeneralAvailable}
@@ -443,11 +522,13 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-deep dark:bg-brand-cream rounded-t-full" />
           )}
         </button>
+        ) : null}
        </div>
       </div>
+      ) : null}
 
       <div className="mt-6">
-        {resolvedSettingsTab === "connections" && (
+        {showConnectionsSection && (
           <div className="space-y-4">
             {livingNumbers.length + suspendedNumbers.length > 0 && (
               <div className="flex justify-end">
@@ -626,7 +707,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
           </div>
         )}
 
-        {resolvedSettingsTab === "general" && isGeneralAvailable && (
+        {showGeneralSection && (
               <div className="space-y-8">
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -747,7 +828,7 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
               </div>
             )}
 
-        {resolvedSettingsTab === "notifications" && isGeneralAvailable && (
+        {showNotificationsSection && (
           <div className="space-y-8">
             <OrderNotificationsCard
               settings={mergeOrderNotifications(localSettings.order_notifications)}
@@ -756,8 +837,8 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
           </div>
         )}
 
-        {resolvedSettingsTab === "ai" && isGeneralAvailable && (
-              <div className="space-y-8">
+        {showAiSection && (
+          <div className="space-y-8">
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
                     AI Personality
@@ -798,12 +879,11 @@ export function WhatsAppSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                   </h3>
                   <SettingsCard className="divide-y divide-slate-100 dark:divide-slate-800/60">
                     <div className="pb-6">
-                      <SettingTextarea
+                      <OperatingHoursBuilder
                         label="Operating Hours"
-                        placeholder="E.g. 'Monday–Friday: 9am–6pm, Saturday: 10am–4pm, Sunday: Closed'"
                         value={localSettings.operating_hours ?? ""}
                         onChange={(v) => handleChange("operating_hours", v)}
-                        rows={2}
+                        description="Used by WhatsApp AI when customers ask if you are open or when they need availability guidance."
                       />
                     </div>
 

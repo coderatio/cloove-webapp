@@ -153,7 +153,7 @@ export function VerificationStepCard({
                                             "w-full md:w-auto h-12 md:h-14 px-8 md:px-10 rounded-xl md:rounded-2xl font-bold uppercase tracking-widest transition-all duration-500 group flex items-center justify-center gap-2",
                                             isLocked
                                                 ? "bg-brand-deep/5 text-brand-deep/20 dark:bg-white/5 dark:text-white/20 border-transparent cursor-not-allowed"
-                                                : "bg-brand-gold text-brand-deep hover:shadow-[0_12px_32px_rgba(212,175,55,0.25)] hover:-translate-y-0.5 hover:bg-brand-gold/80"
+                                                : "bg-brand-gold-700 text-white hover:shadow-[0_12px_32px_rgba(212,175,55,0.25)] hover:-translate-y-0.5 hover:bg-brand-gold-800"
                                         )}
                                     >
                                         {isLocked ? (

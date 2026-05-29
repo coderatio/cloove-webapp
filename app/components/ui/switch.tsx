@@ -22,24 +22,35 @@ export function Switch({ id, checked, defaultChecked, onCheckedChange, disabled,
         }
     }, [checked])
 
-    const toggle = () => {
+    const toggle = React.useCallback(() => {
         if (disabled) return
         const newState = !isOn
-        if (checked === undefined) {
-            setIsOn(newState)
-        }
+        setIsOn(newState)
         onCheckedChange?.(newState)
-    }
+    }, [disabled, isOn, onCheckedChange])
+
+    const handleKeyDown = React.useCallback(
+        (e: React.KeyboardEvent) => {
+            if (disabled) return
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                toggle()
+            }
+        },
+        [disabled, toggle]
+    )
 
     return (
         <div
             id={id}
             role="switch"
             aria-checked={isOn}
+            tabIndex={disabled ? -1 : 0}
             onClick={toggle}
+            onKeyDown={handleKeyDown}
             className={cn(
-                "relative h-7 w-12 cursor-pointer rounded-full border border-slate-300 bg-slate-200 p-1 transition-colors dark:border-slate-700 dark:bg-slate-800",
-                isOn && "border-brand-gold bg-brand-gold dark:border-brand-gold dark:bg-brand-gold",
+                "relative h-7 w-12 cursor-pointer rounded-full border border-brand-deep/10 bg-brand-deep/8 p-1 transition-colors shadow-inner shadow-brand-deep/[0.025] dark:border-white/12 dark:bg-white/10 dark:shadow-black/20",
+                isOn && "border-brand-gold bg-brand-gold-700 shadow-none dark:border-brand-gold dark:bg-brand-gold-700",
                 disabled && "opacity-50 cursor-not-allowed",
                 className
             )}
@@ -49,7 +60,7 @@ export function Switch({ id, checked, defaultChecked, onCheckedChange, disabled,
                 animate={{ x: isOn ? 20 : 0 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 className={cn(
-                    "h-5 w-5 rounded-full bg-white shadow-sm"
+                    "h-5 w-5 rounded-full bg-white shadow-sm ring-1 ring-black/[0.03] pointer-events-none dark:bg-white dark:ring-white/10"
                 )}
             />
         </div>

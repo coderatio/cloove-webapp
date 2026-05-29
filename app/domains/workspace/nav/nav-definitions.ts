@@ -10,7 +10,10 @@ import {
     Home,
     LayoutGrid,
     Link2,
+    Code2,
+    MessageSquare,
     Package,
+    Phone,
     Receipt,
     ShieldCheck,
     ShoppingBag,
@@ -34,6 +37,8 @@ export type NavRouteId =
     | "restaurant_bar"
     | "finance"
     | "payment_links"
+    | "voice"
+    | "whatsapp"
     | "customers"
     | "debts"
     | "expenses"
@@ -43,6 +48,7 @@ export type NavRouteId =
     | "activity"
     | "storefront"
     | "staff"
+    | "developer"
 
 /** Keys merged into `business.features` (plan + feature_flags) */
 export type PlanFeatureKey =
@@ -50,6 +56,7 @@ export type PlanFeatureKey =
     | "hasDebts"
     | "hasAdvancedAnalytics"
     | "hasApiAccess"
+    | "hasWhitelabelWhatsapp"
     | "canHaveCustomDomain"
 
 /** Optional module visibility in feature_flags; default visible when absent */
@@ -60,6 +67,7 @@ export type ModuleFeatureKey =
     | "module_staff"
     | "module_expenses"
     | "module_debts"
+    | "module_voice"
 
 export interface NavItemDef {
     id: NavRouteId
@@ -177,6 +185,22 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 ],
             },
             {
+                id: "voice",
+                href: "/voice",
+                icon: Phone,
+                defaultLabel: "Voice",
+                permission: "VIEW_VOICE_CALLS",
+                moduleFeatureKey: "module_voice",
+            },
+            {
+                id: "whatsapp",
+                href: "/whatsapp",
+                icon: MessageSquare,
+                defaultLabel: "WhatsApp",
+                permission: "VIEW_WHATSAPP_CONVERSATIONS",
+                planFeatureKey: "hasWhitelabelWhatsapp",
+            },
+            {
                 id: "customers",
                 href: "/customers",
                 icon: Users,
@@ -257,6 +281,13 @@ export const NAV_GROUPS: NavGroupDef[] = [
                 defaultLabel: "Staff",
                 permission: "MANAGE_STAFF",
                 moduleFeatureKey: "module_staff",
+            },
+            {
+                id: "developer",
+                href: "/developer",
+                icon: Code2,
+                defaultLabel: "Developer",
+                permission: "MANAGE_DEVELOPER_KEYS",
             },
         ],
     },

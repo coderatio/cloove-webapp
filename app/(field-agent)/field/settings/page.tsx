@@ -95,7 +95,7 @@ export default function SettingsPage() {
                                     disabled={isLoading}
                                     className={cn(
                                         "w-10 h-5 rounded-full p-1 transition-colors duration-300 shrink-0 disabled:opacity-50",
-                                        notifications[item.id] ? "bg-brand-gold" : "bg-brand-deep/10 dark:bg-white/10"
+                                        notifications[item.id] ? "bg-brand-gold-700" : "bg-brand-deep/10 dark:bg-white/10"
                                     )}
                                 >
                                     <div className={cn(
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                                 <p className="text-sm text-brand-cream/60">Manage where your commissions are deposited.</p>
                             </div>
                         </div>
-                        <Button variant="outline" className="rounded-2xl h-14 px-8 border-brand-gold/50 text-brand-gold hover:bg-brand-gold hover:text-brand-deep transition-all font-bold" asChild>
+                        <Button variant="outline" className="rounded-2xl h-14 px-8 border-brand-gold/50 text-brand-gold hover:bg-brand-gold-800 hover:text-brand-deep transition-all font-bold" asChild>
                             <Link href="/field/wallet">Open Wallet</Link>
                         </Button>
                     </div>

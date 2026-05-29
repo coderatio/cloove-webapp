@@ -32,6 +32,7 @@ type ModuleToggleKey =
     | "module_staff"
     | "module_expenses"
     | "module_debts"
+    | "module_voice"
 
 const PLAN_FEATURE_ROWS: {
     key: PlanFeatureToggleKey
@@ -111,6 +112,12 @@ const MODULE_ROWS: {
             key: "module_referrals",
             title: "Refer & earn",
             description: "Referral program entry in the sidebar.",
+            group: "Navigation",
+        },
+        {
+            key: "module_voice",
+            title: "Voice",
+            description: "Voice agent operations, call logs, and transfers.",
             group: "Navigation",
         },
     ]
@@ -266,7 +273,7 @@ export function WorkspaceSettings() {
                                         {preset.label}
                                     </span>
                                     {selected && (
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold text-white">
+                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold-700 text-white">
                                             <Check className="h-3.5 w-3.5" />
                                         </span>
                                     )}

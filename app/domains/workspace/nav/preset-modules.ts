@@ -21,6 +21,10 @@ export interface RecommendedModuleMeta {
 }
 
 const MODULE_META: Record<ModuleFeatureKey, { title: string; description: string }> = {
+    module_voice: {
+        title: "Voice",
+        description: "Run AI-handled calls, review transcripts, and manage transfers to staff.",
+    },
     module_expenses: {
         title: "Expenses in navigation",
         description: "Track rent, fuel, and supplier costs—common for Nigerian SMBs juggling cash and transfers.",

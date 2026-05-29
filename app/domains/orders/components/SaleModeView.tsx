@@ -147,7 +147,7 @@ function CreativeLoader() {
                     className="absolute inset-0 rounded-full bg-brand-gold/20 blur-xl"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-12 w-12 rounded-2xl bg-brand-deep dark:bg-brand-gold flex items-center justify-center shadow-2xl relative z-10">
+                    <div className="h-12 w-12 rounded-2xl bg-brand-deep dark:bg-brand-gold-700 flex items-center justify-center shadow-2xl relative z-10">
                         <Layers className="h-6 w-6 text-brand-gold dark:text-brand-deep animate-pulse" />
                     </div>
                 </div>
@@ -985,7 +985,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                     >
                                         <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
                                         {totalItems > 0 && (
-                                            <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[10px] font-black shadow-lg">
+                                            <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold-700 text-white flex items-center justify-center text-[10px] font-black shadow-lg">
                                                 {totalItems}
                                             </span>
                                         )}
@@ -1283,7 +1283,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                             >
                                 <Layers className="h-5 w-5" />
                                 {queuedSales.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-brand-gold text-brand-deep flex items-center justify-center text-[9px] font-black shadow-lg">
+                                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-brand-gold-700 text-white flex items-center justify-center text-[9px] font-black shadow-lg">
                                         {queuedSales.length}
                                     </span>
                                 )}

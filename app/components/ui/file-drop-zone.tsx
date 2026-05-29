@@ -92,7 +92,7 @@ export function FileDropZone({
                 <div className={cn(
                     "mx-auto w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500",
                     isDragging
-                        ? "bg-brand-gold text-brand-deep scale-110 rotate-3"
+                        ? "bg-brand-gold-700 text-white scale-110 rotate-3"
                         : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60 group-hover:scale-110 group-hover:-rotate-3"
                 )}>
                     {isDragging ? <UploadCloud className="w-8 h-8" /> : <FileText className="w-8 h-8" />}

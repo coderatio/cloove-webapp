@@ -1849,7 +1849,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold"
+                  className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold"
                   onClick={handleBarOrderSubmit}
                   disabled={barItems.length === 0 || isRecording}
                 >
@@ -1901,7 +1901,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep font-bold"
+                  className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold"
                   onClick={handleBarEditSave}
                   disabled={!barEditLabel.trim() || barAction.updateLabel.isPending}
                 >
@@ -2012,8 +2012,8 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
         className={cn(
           "md:hidden fixed bottom-24 right-4 z-40 h-12 w-12 rounded-full shadow-xl backdrop-blur-sm transition-all",
           isZenMode
-            ? "bg-brand-deep/90 text-brand-gold hover:bg-brand-deep dark:bg-brand-gold/90 dark:text-brand-deep dark:hover:text-brand-deep border border-brand-gold/20 dark:hover:bg-brand-gold"
-            : "bg-white/90 border border-brand-deep/10 text-brand-deep-950 hover:bg-white/80 dark:bg-brand-gold/90 dark:text-brand-deep dark:border-brand-gold/20 dark:hover:text-brand-deep dark:hover:bg-brand-gold"
+            ? "bg-brand-deep/90 text-brand-gold hover:bg-brand-deep dark:bg-brand-gold/90 dark:text-brand-deep dark:hover:text-brand-deep border border-brand-gold/20 dark:hover:bg-brand-gold-800"
+            : "bg-white/90 border border-brand-deep/10 text-brand-deep-950 hover:bg-white/80 dark:bg-brand-gold/90 dark:text-brand-deep dark:border-brand-gold/20 dark:hover:text-brand-deep dark:hover:bg-brand-gold-800"
         )}
       >
         {isZenMode ? (

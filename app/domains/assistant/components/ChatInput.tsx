@@ -445,7 +445,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                 className={cn(
                                     "h-10 w-10 rounded-full transition-all duration-300 shrink-0 mb-0.5",
                                     canSend
-                                        ? "bg-brand-gold text-brand-deep hover:bg-brand-gold/90 shadow-md"
+                                        ? "bg-brand-gold-700 text-white hover:bg-brand-gold-800 shadow-md"
                                         : "bg-zinc-100 text-zinc-400 dark:bg-white/10 dark:text-white/30"
                                 )}
                             >

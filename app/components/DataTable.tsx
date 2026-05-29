@@ -27,6 +27,34 @@ interface DataTableProps<T> {
     }
 }
 
+function getPageNumbers(currentPage: number, totalPages: number): (number | "...")[] {
+    if (totalPages <= 7) {
+        return Array.from({ length: totalPages }, (_, i) => i + 1)
+    }
+
+    const pages: Set<number | "..."> = new Set()
+
+    pages.add(1)
+
+    if (currentPage > 3) {
+        pages.add("...")
+    }
+
+    const start = Math.max(2, currentPage - 1)
+    const end = Math.min(totalPages - 1, currentPage + 1)
+    for (let i = start; i <= end; i++) {
+        pages.add(i)
+    }
+
+    if (currentPage < totalPages - 2) {
+        pages.add("...")
+    }
+
+    pages.add(totalPages)
+
+    return Array.from(pages)
+}
+
 export default function DataTable<T extends { id: string | number }>({
     columns,
     data,
@@ -83,8 +111,8 @@ export default function DataTable<T extends { id: string | number }>({
                                     key={String(col.key)}
                                     style={col.width ? { width: col.width } : undefined}
                                     className={cn(
-                                        "text-left text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 px-6 py-4 border-b border-brand-deep/5 dark:border-white/5 whitespace-nowrap",
-                                        "border-b border-border px-6 py-4 text-left text-[10px] font-bold uppercase tracking-widest whitespace-nowrap text-muted-foreground",
+                                        "text-left text-[10px] font-bold uppercase text-brand-accent/40 dark:text-brand-cream/40 px-6 py-4 border-b border-brand-deep/5 dark:border-white/5 whitespace-nowrap",
+                                        "border-b border-border px-6 py-4 text-left text-[10px] font-bold uppercase whitespace-nowrap text-muted-foreground",
                                         !col.width && "min-w-[120px]",
                                         col.headerClassName
                                     )}
@@ -165,19 +193,27 @@ export default function DataTable<T extends { id: string | number }>({
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        <div className="flex items-center gap-1 mx-2">
-                            {Array.from({ length: totalPages }).map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setCurrentPage(i + 1)}
-                                    className={cn(
-                                        "w-2 h-2 rounded-full transition-all duration-300",
-                                        currentPage === i + 1
-                                            ? "w-4 bg-primary"
-                                            : "bg-muted-foreground/20 hover:bg-muted-foreground/40"
-                                    )}
-                                />
-                            ))}
+                        <div className="flex items-center gap-1">
+                            {getPageNumbers(currentPage, totalPages).map((page, i) =>
+                                page === "..." ? (
+                                    <span key={`ellipsis-${i}`} className="px-1 text-[11px] text-muted-foreground/40 select-none">
+                                        …
+                                    </span>
+                                ) : (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={cn(
+                                            "flex h-8 min-w-[32px] items-center justify-center rounded-lg px-2 text-[13px] font-medium transition-all duration-150",
+                                            currentPage === page
+                                                ? "bg-brand-deep text-brand-gold-300 shadow-sm dark:bg-brand-gold-700 dark:text-white"
+                                                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                        )}
+                                    >
+                                        {page}
+                                    </button>
+                                )
+                            )}
                         </div>
                         <Button
                             variant="outline"

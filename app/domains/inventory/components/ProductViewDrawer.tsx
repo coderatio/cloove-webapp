@@ -244,7 +244,7 @@ export function ProductViewDrawer({
                                                 <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${(count / item.stock) * 100}%` }}
-                                                    className="h-full bg-brand-gold"
+                                                    className="h-full bg-brand-gold-700"
                                                 />
                                             </div>
                                             <span className="text-sm font-bold text-brand-deep dark:text-brand-cream">{count}</span>
@@ -356,7 +356,7 @@ export function ProductViewDrawer({
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <Button
-                        className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep shadow-lg hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px] font-bold"
+                        className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white shadow-lg hover:scale-[1.02] transition-all uppercase tracking-widest text-[10px] font-bold"
                         onClick={() => {
                             onEdit?.(item)
                             onOpenChange(false)

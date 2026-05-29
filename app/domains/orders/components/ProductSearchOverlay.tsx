@@ -233,7 +233,7 @@ export function ProductSearchOverlay({
                                 </span>
                                 {isLoading && (
                                     <div className="flex items-center gap-2 text-brand-gold animate-pulse">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-bounce" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-brand-gold-700 animate-bounce" />
                                         <span className="text-[9px]">Searching backend...</span>
                                     </div>
                                 )}

@@ -94,7 +94,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                                 <Button
                                     type="submit"
                                     disabled={isSubmitting || !newName.trim()}
-                                    className="rounded-2xl h-[50px] px-6 bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep shadow-lg hover:scale-[1.02] transition-all"
+                                    className="rounded-2xl h-[50px] px-6 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white shadow-lg hover:scale-[1.02] transition-all"
                                 >
                                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                                     <span className="hidden sm:inline ml-1 uppercase tracking-widest text-[10px] font-bold">Add</span>

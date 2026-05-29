@@ -376,7 +376,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
               <Button
                 type="submit"
                 disabled={bankTransfer.isPending || !selectedProvider || payAmount <= 0}
-                className="rounded-2xl h-14 sm:h-16 w-full bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-bold text-sm gap-2 shadow-xl"
+                className="rounded-2xl h-14 sm:h-16 w-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-bold text-sm gap-2 shadow-xl"
               >
                 {bankTransfer.isPending ? (
                   <>

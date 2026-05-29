@@ -72,7 +72,7 @@ export function PaymentLinkDialog({ isOpen, onClose, link, isLoading }: Props) {
             <div className="flex gap-3">
               <Button
                 onClick={copyLink}
-                className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold/90 font-semibold gap-2"
+                className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold gap-2"
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copied ? "Copied" : "Copy"}
