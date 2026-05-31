@@ -18,6 +18,7 @@ import {
     BookText,
     MessageSquare,
     Bot,
+    KeyRound,
     ClipboardList,
     Plug,
     GitBranch,
@@ -49,6 +50,7 @@ export interface MiniAppItem {
     label: string
     icon: LucideIcon
     href: string
+    permission?: string
 }
 
 export interface MiniAppDef {
@@ -79,6 +81,7 @@ export const MINI_APPS: MiniAppDef[] = [
         items: [
             { id: "overview", label: "Overview", icon: PanelsTopLeft, href: "/whatsapp?tab=overview" },
             { id: "inbox", label: "Inbox", icon: MessageSquare, href: "/whatsapp/inbox" },
+            { id: "otps", label: "OTPs", icon: KeyRound, href: "/whatsapp?tab=otps", permission: "VIEW_WHATSAPP_OTPS" },
             { id: "templates", label: "Templates", icon: ClipboardList, href: "/whatsapp?tab=templates" },
             { id: "flows", label: "Flows", icon: GitBranch, href: "/whatsapp?tab=flows" },
             { id: "connections", label: "Connections", icon: Plug, href: "/whatsapp?tab=connections" },
