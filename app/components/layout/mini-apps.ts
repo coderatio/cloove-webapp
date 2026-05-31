@@ -21,6 +21,8 @@ import {
     ClipboardList,
     Plug,
     GitBranch,
+    BadgePercent,
+    Truck,
 } from "lucide-react"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
 import { NAV_GROUPS } from "@/app/domains/workspace/nav/nav-definitions"
@@ -111,6 +113,8 @@ export const MINI_APPS: MiniAppDef[] = [
             { id: "orders", label: "Orders", icon: ShoppingBag, href: "/orders" },
             { id: "customers", label: "Customers", icon: Users, href: "/customers" },
             { id: "payment-links", label: "Payment Links", icon: Link2, href: "/finance/payment-links" },
+            { id: "discount-codes", label: "Discount Codes", icon: BadgePercent, href: "/orders/discount-codes" },
+            { id: "delivery-fees", label: "Delivery Fees", icon: Truck, href: "/orders/delivery-fees" },
         ],
         /** Items resolved from the nav tree (preset-aware: restaurant, school, etc.) */
         navChildIds: [
@@ -300,6 +304,7 @@ export function isMiniAppItemActive(
     if (hrefParamKeys.length === 0) {
         // Direct route: exact match or sub-path
         if (basePath === "/") return pathname === "/"
+        if (basePath === "/orders") return pathname === "/orders"
         if (basePath === "/developer") return pathname === "/developer"
         return pathname === basePath || pathname.startsWith(basePath + "/")
     }

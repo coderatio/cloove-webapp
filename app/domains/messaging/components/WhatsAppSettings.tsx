@@ -241,6 +241,7 @@ export function WhatsAppSettings({
     ai_enabled: true,
     qr_ordering_enabled: false,
     human_handoff_enabled: false,
+    human_handoff_phone: "",
     show_powered_by_cloove: true,
     ai_instructions: "",
     business_info: "",
@@ -295,6 +296,7 @@ export function WhatsAppSettings({
         ai_enabled: s.ai_enabled ?? true,
         qr_ordering_enabled: s.qr_ordering_enabled ?? false,
         human_handoff_enabled: s.human_handoff_enabled ?? false,
+        human_handoff_phone: s.human_handoff_phone ?? "",
         show_powered_by_cloove: s.show_powered_by_cloove ?? true,
         ai_instructions: s.ai_instructions ?? "",
         business_info: s.business_info ?? "",
@@ -717,7 +719,7 @@ export function WhatsAppSettings({
                   <SettingsCard className="space-y-6">
                     <div className="space-y-2 max-w-xl">
                       <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Display Name
+                        WhatsApp Display Name
                       </label>
                       <Input
                         value={primaryActiveNumber?.display_name ?? ""}
@@ -726,6 +728,20 @@ export function WhatsAppSettings({
                       />
                       <p className="text-sm text-slate-500 dark:text-slate-300">
                         Managed on Meta. Update your verified name in your WhatsApp Business settings.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 max-w-xl">
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Bot Name
+                      </label>
+                      <Input
+                        value={localSettings.display_name ?? ""}
+                        onChange={(e) => handleChange("display_name", e.target.value)}
+                        placeholder="e.g. Scoops assistant"
+                      />
+                      <p className="text-sm text-slate-500 dark:text-slate-300">
+                        Used in customer-facing bot copy and fallbacks.
                       </p>
                     </div>
 
@@ -814,6 +830,18 @@ export function WhatsAppSettings({
                         checked={localSettings.human_handoff_enabled ?? false}
                         onChange={(v) => handleChange("human_handoff_enabled", v)}
                       />
+                      {localSettings.human_handoff_enabled ? (
+                        <div className="mt-3 max-w-xl space-y-2">
+                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Human WhatsApp Number
+                          </label>
+                          <Input
+                            value={localSettings.human_handoff_phone ?? ""}
+                            onChange={(e) => handleChange("human_handoff_phone", e.target.value)}
+                            placeholder="2348012345678"
+                          />
+                        </div>
+                      ) : null}
                     </div>
                     <div className="px-3 py-3.5 sm:px-5 sm:py-5">
                       <SettingToggle

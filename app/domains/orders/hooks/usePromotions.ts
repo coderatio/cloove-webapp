@@ -9,7 +9,13 @@ export interface Promotion {
     description: string | null
     type: 'PERCENTAGE' | 'FIXED'
     value: number
+    code: string | null
     scope: 'specific_products' | 'all_stores' | 'specific_stores'
+    firstOrderOnly: boolean
+    usageLimit: number | null
+    usageCount: number
+    minimumSubtotal: number | null
+    maximumDiscountAmount: number | null
     badgeLabel: string | null
     isActive: boolean
     startsAt: string | null

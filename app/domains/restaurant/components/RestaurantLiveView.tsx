@@ -39,6 +39,7 @@ import {
   type RestaurantTable,
 } from "../hooks/useRestaurantOps"
 import { useRecordSale } from "@/app/domains/orders/hooks/useRecordSale"
+import { useOrders } from "@/app/domains/orders/hooks/useOrders"
 import { useGoSettings } from "@/app/domains/messaging/hooks/useWhatsAppSettings"
 import { QuickProductPicker, type PickedItem } from "@/app/components/shared/QuickProductPicker"
 import { cn } from "@/app/lib/utils"
@@ -658,6 +659,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   })
   const barAction = useBarTicketActions()
   const { recordSale, isRecording } = useRecordSale()
+  const { orders: incomingOrders = [] } = useOrders(1, 10, {
+    automation: ["AUTOMATED"],
+  })
   const [barOrderOpen, setBarOrderOpen] = React.useState(false)
   const [barEditTicket, setBarEditTicket] = React.useState<BarTicket | null>(null)
   const [barEditLabel, setBarEditLabel] = React.useState("")
@@ -722,6 +726,23 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   React.useEffect(() => {
     if (messagePresetMatch) setActiveMessagePresetId(messagePresetMatch.id)
   }, [messagePresetMatch])
+
+  const seenIncomingOrderIdsRef = React.useRef<Set<string> | null>(null)
+  React.useEffect(() => {
+    if (!incomingOrders.length) return
+    const ids = new Set(incomingOrders.map((order) => order.id))
+    if (!seenIncomingOrderIdsRef.current) {
+      seenIncomingOrderIdsRef.current = ids
+      return
+    }
+    const nextOrder = incomingOrders.find((order) => !seenIncomingOrderIdsRef.current?.has(order.id))
+    seenIncomingOrderIdsRef.current = ids
+    if (!nextOrder) return
+    toast.info(`New restaurant order${nextOrder.shortCode ? ` #${nextOrder.shortCode}` : ""}`, {
+      description: "Check orders and send it to kitchen.",
+      duration: Infinity,
+    })
+  }, [incomingOrders])
 
   const kitchenWhatsAppPreviewContext = React.useMemo(() => {
     if (!messagingTicket) return undefined
