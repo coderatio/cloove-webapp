@@ -32,6 +32,7 @@ import {
   ChevronDown,
   ChevronRight,
   Plug,
+  Save,
 } from "lucide-react"
 import {
   useWhatsAppNumbers,
@@ -287,7 +288,6 @@ export function WhatsAppSettings({
   useEffect(() => {
     if (goSettingsData) {
       const s = goSettingsData as GoSettings
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalSettings({
         display_name: s.display_name ?? "",
         welcome_message: s.welcome_message ?? "",
@@ -322,7 +322,7 @@ export function WhatsAppSettings({
         capabilities: capabilities_overrides ?? null,
       })
     }
-  }, [saveTrigger])
+  }, [saveTrigger, isDirty, localSettings, updateGoSettings])
 
   useEffect(() => {
     let cancelled = false
@@ -360,6 +360,20 @@ export function WhatsAppSettings({
     setLocalSettings((prev) => ({ ...prev, [key]: value }))
     setIsDirty(true)
     onDirtyChange?.(true)
+  }
+
+  const buildSettingsPayload = () => {
+    const { capabilities_overrides, ...rest } = localSettings
+    return {
+      ...rest,
+      capabilities: capabilities_overrides ?? null,
+    }
+  }
+
+  const handleSaveSettings = async () => {
+    await updateGoSettings.mutateAsync(buildSettingsPayload())
+    setIsDirty(false)
+    onDirtyChange?.(false)
   }
 
   const handleGenerateContent = async (
@@ -442,6 +456,7 @@ export function WhatsAppSettings({
   const showAiSection = stackSections
     ? canShowAi && isGeneralAvailable
     : resolvedSettingsTab === "ai" && isGeneralAvailable
+  const showSettingsSaveBar = isGeneralAvailable && (showGeneralSection || showNotificationsSection || showAiSection)
   const tabBorder =
     "pb-3 text-sm font-medium transition-colors relative shrink-0 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
 
@@ -978,6 +993,29 @@ export function WhatsAppSettings({
           </div>
         )}
       </div>
+
+      {showSettingsSaveBar ? (
+        <div className="sticky bottom-4 z-20">
+          <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg shadow-slate-900/5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-500 dark:text-slate-300">
+              {isDirty ? "You have unsaved WhatsApp settings." : "WhatsApp settings are up to date."}
+            </p>
+            <Button
+              type="button"
+              onClick={() => void handleSaveSettings()}
+              disabled={!isDirty || updateGoSettings.isPending}
+              className="h-10 rounded-xl bg-brand-deep px-4 text-white hover:bg-brand-deep/90 disabled:opacity-50 dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800"
+            >
+              {updateGoSettings.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Save changes
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
