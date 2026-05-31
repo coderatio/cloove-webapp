@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { format } from "date-fns"
 import { BadgePercent, CalendarClock, History, Loader2, PencilLine, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
@@ -72,6 +72,13 @@ function toDateTimeLocal(value: string | null | undefined) {
     return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
+function newDiscountCodeDraft(): DiscountCodeDraft {
+    return {
+        ...EMPTY_DRAFT,
+        startsAt: toDateTimeLocal(new Date().toISOString()),
+    }
+}
+
 function toApiDate(value: string) {
     if (!value) return null
     const date = new Date(value)
@@ -107,6 +114,8 @@ function draftFromCode(code?: DiscountCode | null): DiscountCodeDraft {
 }
 
 function toPayload(draft: DiscountCodeDraft): DiscountCodeInput {
+    const startsAt = draft.startsAt || toDateTimeLocal(new Date().toISOString())
+
     return {
         code: draft.code.trim(),
         name: draft.name.trim() || null,
@@ -117,7 +126,7 @@ function toPayload(draft: DiscountCodeDraft): DiscountCodeInput {
         usageLimit: draft.usageLimit.trim() ? Number(draft.usageLimit) : null,
         minimumSubtotal: draft.minimumSubtotal.trim() ? Number(draft.minimumSubtotal) : null,
         maximumDiscountAmount: draft.maximumDiscountAmount.trim() ? Number(draft.maximumDiscountAmount) : null,
-        startsAt: toApiDate(draft.startsAt),
+        startsAt: toApiDate(startsAt),
         endsAt: toApiDate(draft.endsAt),
     }
 }
@@ -149,12 +158,6 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
     const [usageTarget, setUsageTarget] = useState<DiscountCode | null>(null)
     const { data: usages = [], isLoading: usagesLoading } = useDiscountCodeUsages(usageTarget?.id ?? null)
 
-    useEffect(() => {
-        if (!editingId) return
-        const next = discountCodes.find((code) => code.id === editingId)
-        if (next) setDraft(draftFromCode(next))
-    }, [discountCodes, editingId])
-
     const selectedCode = useMemo(
         () => discountCodes.find((code) => code.id === editingId) ?? null,
         [discountCodes, editingId]
@@ -164,7 +167,7 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
         if (!canManage) return
         setSheetMode("create")
         setEditingId(null)
-        setDraft(EMPTY_DRAFT)
+        setDraft(newDiscountCodeDraft())
         setSheetOpen(true)
     }
 
