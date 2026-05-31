@@ -196,6 +196,50 @@ export function OrdersView() {
         academicTermId: layoutPreset === "school" && filterState.academicTermId ? filterState.academicTermId : undefined,
     })
 
+    const seenOrderIdsRef = React.useRef<Set<string> | null>(null)
+    React.useEffect(() => {
+        if (!orders.length) return
+        const currentIds = new Set(orders.map((order) => order.id))
+        if (!seenOrderIdsRef.current) {
+            seenOrderIdsRef.current = currentIds
+            return
+        }
+
+        const newAutomated = orders.find(
+            (order) =>
+                !seenOrderIdsRef.current?.has(order.id) &&
+                (order.isAutomated || order.channel === "STOREFRONT" || order.channel === "WHATSAPP")
+        )
+        seenOrderIdsRef.current = currentIds
+        if (!newAutomated) return
+
+        try {
+            const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext
+            if (AudioContextCtor) {
+                const audio = new AudioContextCtor()
+                const oscillator = audio.createOscillator()
+                const gain = audio.createGain()
+                oscillator.connect(gain)
+                gain.connect(audio.destination)
+                oscillator.frequency.value = 880
+                gain.gain.value = 0.05
+                oscillator.start()
+                oscillator.stop(audio.currentTime + 0.35)
+            }
+        } catch {
+            // Browsers may block sound until the page has user activation.
+        }
+
+        toast.info(`New order${newAutomated.shortCode ? ` #${newAutomated.shortCode}` : ""}`, {
+            description: "Open the order to stop checking it.",
+            duration: Infinity,
+            action: {
+                label: "View",
+                onClick: () => setViewingOrder(newAutomated),
+            },
+        })
+    }, [orders])
+
     const { printReceipt } = useReceiptPrinter()
     const kitchenAction = useKitchenTicketActions()
     const kitchenSendCurrency = kitchenOrder?.currency ?? activeBusiness?.currency ?? "NGN"

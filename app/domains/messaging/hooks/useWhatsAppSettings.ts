@@ -104,7 +104,14 @@ export interface GoSettings {
   return_policy: string | null
   qr_ordering_enabled: boolean
   human_handoff_enabled: boolean
+  human_handoff_phone?: string | null
   show_powered_by_cloove: boolean
+  checkout_delivery_fee?: {
+    enabled: boolean
+    flat_fee: number
+    free_delivery_threshold?: number | null
+    label?: string | null
+  } | null
   agent_profile?: AgentProfile
   capabilities?: AgentCapabilitiesSummary
   capabilities_overrides?: Partial<AgentCapabilitiesSummary> | null

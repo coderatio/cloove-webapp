@@ -74,6 +74,7 @@ export function useOrders(
         queryFn: () => apiClient.get<OrdersResponse>('/sales', params, { fullResponse: true }),
         enabled: !!businessId,
         staleTime: 30000, // 30 seconds
+        refetchInterval: 15000,
     })
 
     const deleteOrderMutation = useMutation({

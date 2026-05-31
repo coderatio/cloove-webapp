@@ -250,9 +250,24 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
             isDirty
         ) {
             lastHandledSaveTrigger.current = saveTrigger
-            updateSettings.mutate(localConfigs)
+            void (async () => {
+                try {
+                    await updateSettings.mutateAsync(localConfigs)
+                    setIsDirty(false)
+                    onDirtyChange?.(false)
+                } catch {
+                    // mutations already toast errors
+                }
+            })()
         }
-    }, [canManageSalesSettings, isDirty, localConfigs, saveTrigger, updateSettings])
+    }, [
+        canManageSalesSettings,
+        isDirty,
+        localConfigs,
+        onDirtyChange,
+        saveTrigger,
+        updateSettings,
+    ])
 
     const handleConfigChange = (
         key: keyof typeof localConfigs,
