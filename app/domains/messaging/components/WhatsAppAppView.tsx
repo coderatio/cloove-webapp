@@ -9,18 +9,21 @@ import {
     CheckCircle2,
     ChevronDown,
     ClipboardList,
-    GitBranch,
+    Copy,
     Info,
+    KeyRound,
     Loader2,
+    Lock,
     MessageSquare,
-    PanelsTopLeft,
     PencilLine,
     Plus,
+    RefreshCw,
     Search,
     X,
 } from "lucide-react"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
+import { PasswordConfirmDialog } from "@/app/components/shared/PasswordConfirmDialog"
 import { Button } from "@/app/components/ui/button"
 import { Textarea } from "@/app/components/ui/textarea"
 import { Input } from "@/app/components/ui/input"
@@ -40,6 +43,7 @@ import {
 } from "@/app/components/ui/side-sheet"
 import { formatPhoneNumber } from "@/app/lib/utils"
 import { useDebounce } from "@/app/hooks/useDebounce"
+import { usePermission } from "@/app/hooks/usePermission"
 import { WhatsAppSettings } from "@/app/domains/messaging/components/WhatsAppSettings"
 import { FlowsTab } from "@/app/domains/messaging/components/FlowsTab"
 import { useWhatsAppNumbers } from "@/app/domains/messaging/hooks/useWhatsAppSettings"
@@ -51,18 +55,24 @@ import {
     useUpdateWhatsAppTemplate,
     useWhatsAppFlows,
     useWhatsAppOverview,
+    useWhatsAppOtps,
     useWhatsAppTemplateStatsForNumber,
     useWhatsAppTemplates,
+    type WhatsAppOtpCandidate,
     type WhatsAppTemplateSummary,
     type WhatsAppFlowSummary,
 } from "@/app/domains/messaging/hooks/useWhatsAppInbox"
 
-type WhatsAppTab = "overview" | "templates" | "flows" | "connections" | "automation"
+type WhatsAppTab = "overview" | "otps" | "templates" | "flows" | "connections" | "automation"
 
 const TAB_COPY: Record<WhatsAppTab, { title: string; description: string }> = {
     overview: {
         title: "WhatsApp",
         description: "Operational visibility across inbox activity, AI coverage, and connected numbers.",
+    },
+    otps: {
+        title: "OTPs",
+        description: "Password-protected recovery view for recent OTPs received by connected numbers.",
     },
     templates: {
         title: "Templates",
@@ -82,7 +92,7 @@ const TAB_COPY: Record<WhatsAppTab, { title: string; description: string }> = {
     },
 }
 
-const VALID_TABS: WhatsAppTab[] = ["overview", "templates", "flows", "connections", "automation"]
+const VALID_TABS: WhatsAppTab[] = ["overview", "otps", "templates", "flows", "connections", "automation"]
 
 const TEMPLATE_LANGUAGE_OPTIONS = [
     { value: "en", label: "English" },
@@ -276,8 +286,12 @@ function buildLocalTemplateReadiness(input: {
 
 export function WhatsAppAppView() {
     const searchParams = useSearchParams()
+    const { can } = usePermission()
     const tabParam = searchParams.get("tab")
-    const activeTab: WhatsAppTab = isValidTab(tabParam) ? tabParam : "overview"
+    const requestedTab: WhatsAppTab = isValidTab(tabParam) ? tabParam : "overview"
+    const activeTab: WhatsAppTab = requestedTab === "otps" && !can("VIEW_WHATSAPP_OTPS")
+        ? "overview"
+        : requestedTab
     const tabCopy = TAB_COPY[activeTab]
 
     return (
@@ -288,6 +302,7 @@ export function WhatsAppAppView() {
             />
 
             {activeTab === "overview" && <OverviewTab />}
+            {activeTab === "otps" && <OtpsTab />}
             {activeTab === "templates" && <TemplatesTab />}
             {activeTab === "flows" && <FlowsTab />}
             {activeTab === "connections" && (
@@ -405,6 +420,177 @@ function OverviewTab() {
                 </GlassCard>
             </section>
         </div>
+    )
+}
+
+function OtpsTab() {
+    const [verified, setVerified] = useState(false)
+    const [passwordOpen, setPasswordOpen] = useState(false)
+    const otps = useWhatsAppOtps(verified)
+
+    const needsPassword =
+        otps.error &&
+        typeof otps.error === "object" &&
+        "statusCode" in otps.error &&
+        (otps.error as { statusCode?: number }).statusCode === 403
+
+    const unlocked = verified && !needsPassword
+
+    async function copyCode(code: string) {
+        try {
+            await navigator.clipboard.writeText(code)
+            toast.success("OTP copied")
+        } catch {
+            toast.error("Failed to copy OTP")
+        }
+    }
+
+    return (
+        <section className="space-y-5">
+            <PasswordConfirmDialog
+                open={passwordOpen}
+                onOpenChange={setPasswordOpen}
+                onSuccess={() => {
+                    setVerified(true)
+                    setPasswordOpen(false)
+                    void otps.refetch()
+                }}
+                title="Confirm to view OTPs"
+                description="Enter your password to view recent OTPs received by connected WhatsApp numbers."
+            />
+
+            {!unlocked ? (
+                <GlassCard className="flex flex-col items-center gap-4 px-6 py-12 text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/20">
+                        <Lock className="h-6 w-6 text-muted-foreground/50" />
+                    </div>
+                    <div>
+                        <h2 className="text-base font-semibold">Password required</h2>
+                        <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+                            OTPs are sensitive. Confirm your account password to unlock recent
+                            codes for this session.
+                        </p>
+                    </div>
+                    <Button className="h-10 rounded-xl px-5" onClick={() => setPasswordOpen(true)}>
+                        <KeyRound className="mr-2 h-4 w-4" />
+                        View OTPs
+                    </Button>
+                </GlassCard>
+            ) : (
+                <GlassCard className="overflow-hidden p-0">
+                    <div className="flex flex-col gap-3 border-b border-border/40 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 className="text-sm font-semibold">Recent OTPs</h2>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                OTP candidates received in the last 24 hours.
+                            </p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            className="h-9 rounded-xl px-3 text-xs"
+                            onClick={() => void otps.refetch()}
+                            disabled={otps.isFetching}
+                        >
+                            <RefreshCw className={`mr-2 h-3.5 w-3.5 ${otps.isFetching ? "animate-spin" : ""}`} />
+                            Refresh
+                        </Button>
+                    </div>
+
+                    {otps.isLoading ? (
+                        <div className="space-y-3 px-5 py-6">
+                            {Array.from({ length: 4 }).map((_, index) => (
+                                <Skeleton key={index} className="h-16 rounded-xl" />
+                            ))}
+                        </div>
+                    ) : otps.data?.length ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[760px] text-left text-sm">
+                                <thead className="border-b border-border/40 bg-muted/20 text-[11px] uppercase tracking-wide text-muted-foreground">
+                                    <tr>
+                                        <th className="px-5 py-3">Code</th>
+                                        <th className="px-5 py-3">Connected number</th>
+                                        <th className="px-5 py-3">Sender</th>
+                                        <th className="px-5 py-3">Received</th>
+                                        <th className="px-5 py-3">Expires</th>
+                                        <th className="px-5 py-3">Preview</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/35">
+                                    {otps.data.map((otp) => (
+                                        <OtpRow
+                                            key={otp.id}
+                                            otp={otp}
+                                            onCopy={() => void copyCode(otp.code)}
+                                        />
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-3 px-5 py-12 text-center">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-muted/20">
+                                <KeyRound className="h-5 w-5 text-muted-foreground/40" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">No recent OTPs</p>
+                                <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                                    OTP-like inbound messages from connected numbers will appear here
+                                    for 24 hours.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </GlassCard>
+            )}
+        </section>
+    )
+}
+
+function OtpRow({ otp, onCopy }: { otp: WhatsAppOtpCandidate; onCopy: () => void }) {
+    const receivedAt = new Date(otp.received_at)
+    const expiresAt = new Date(otp.expires_at)
+    const sender = otp.customer_name
+        ? `${otp.customer_name} (${formatPhoneNumber(otp.sender_phone, { spaced: true }) || otp.sender_phone})`
+        : formatPhoneNumber(otp.sender_phone, { spaced: true }) || otp.sender_phone
+
+    return (
+        <tr className="transition-colors hover:bg-muted/15">
+            <td className="px-5 py-4">
+                <div className="flex items-center gap-2">
+                    <code className="rounded-lg bg-muted/40 px-2.5 py-1.5 text-sm font-semibold tracking-wide">
+                        {otp.code}
+                    </code>
+                    <button
+                        type="button"
+                        onClick={onCopy}
+                        aria-label="Copy OTP"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 text-muted-foreground transition-colors hover:bg-muted/35 hover:text-foreground"
+                    >
+                        <Copy className="h-3.5 w-3.5" />
+                    </button>
+                </div>
+            </td>
+            <td className="px-5 py-4 text-sm text-foreground">
+                {otp.number_label || "Connected number"}
+            </td>
+            <td className="px-5 py-4 text-sm text-muted-foreground">{sender}</td>
+            <td className="px-5 py-4 text-sm text-muted-foreground">
+                {formatDistanceToNow(receivedAt, { addSuffix: true })}
+            </td>
+            <td className="px-5 py-4">
+                <Badge
+                    variant="outline"
+                    className="rounded-full border-emerald-200 text-emerald-700"
+                >
+                    {formatDistanceToNow(expiresAt, { addSuffix: true })}
+                </Badge>
+            </td>
+            <td className="max-w-xs px-5 py-4">
+                <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">
+                    {otp.text_preview}
+                </p>
+            </td>
+        </tr>
     )
 }
 
@@ -1416,25 +1602,6 @@ function TemplatesTab() {
                 variant="primary"
                 isLoading={publishTemplate.isPending}
             />
-        </div>
-    )
-}
-
-function LoadingCard({ label }: { label: string }) {
-    return (
-        <GlassCard className="flex items-center gap-3 p-5">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <p className="text-sm text-muted-foreground">{label}</p>
-        </GlassCard>
-    )
-}
-
-function LoadingRows() {
-    return (
-        <div className="space-y-2">
-            {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-20 animate-pulse rounded-2xl bg-muted/40" />
-            ))}
         </div>
     )
 }

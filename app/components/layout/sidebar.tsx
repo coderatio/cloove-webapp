@@ -119,8 +119,10 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     // Compute mini app items, resolving nav-child items from the preset-aware nav tree
     const miniAppItems = useMemo(() => {
         if (!activeMiniApp) return []
-        return resolveMiniAppItems(activeMiniApp, navGroups)
-    }, [activeMiniApp, navGroups])
+        return resolveMiniAppItems(activeMiniApp, navGroups).filter(
+            (item) => !item.permission || can(item.permission)
+        )
+    }, [activeMiniApp, navGroups, can])
 
     const launchMiniApp = useCallback((navItemId: string, href: string) => {
         const miniApp = findMiniAppByNavItemId(navItemId)

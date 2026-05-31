@@ -57,6 +57,18 @@ export interface WhatsAppInboxConversationDetail extends WhatsAppInboxConversati
     messages: WhatsAppInboxMessage[]
 }
 
+export interface WhatsAppOtpCandidate {
+    id: string
+    code: string
+    text_preview: string
+    sender_phone: string
+    customer_name: string | null
+    business_whatsapp_number_id: string
+    number_label: string | null
+    received_at: string
+    expires_at: string
+}
+
 export interface WhatsAppTemplateSummary {
     id: string
     key: string
@@ -139,6 +151,7 @@ const QUERY_KEYS = {
     overview: ["whatsapp", "overview"],
     conversations: ["whatsapp", "conversations"],
     conversation: (id: string | null) => ["whatsapp", "conversations", id],
+    otps: ["whatsapp", "otps"],
     templates: ["whatsapp", "templates"],
     templateStats: ["whatsapp", "template-stats"],
     flows: ["whatsapp", "flows"],
@@ -166,6 +179,16 @@ export function useWhatsAppConversation(id: string | null) {
         queryFn: () => apiClient.get<WhatsAppInboxConversationDetail>(`/whatsapp/conversations/${id}`),
         enabled: !!id,
         refetchInterval: id ? 8_000 : false,
+    })
+}
+
+export function useWhatsAppOtps(enabled: boolean) {
+    return useQuery({
+        queryKey: QUERY_KEYS.otps,
+        queryFn: () => apiClient.get<WhatsAppOtpCandidate[]>("/whatsapp/otps"),
+        enabled,
+        retry: false,
+        refetchOnWindowFocus: false,
     })
 }
 
