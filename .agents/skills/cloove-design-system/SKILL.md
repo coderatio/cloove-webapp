@@ -30,6 +30,8 @@ The Cloove palette is inspired by natural forest depths with a warm orange actio
 | **Brand Cream** | `#ffffff` | Card and page surfaces in light mode, primary text in dark mode |
 | **Brand Accent** | `#335b4f` | Borders, muted text, subdued UI accents |
 
+Treat `brand-gold` as Cloove's secondary/action color in product UI. It should appear as a warm operational layer alongside Brand Deep/Green: icon wells, active badges, subtle panel tints, key CTAs, focus rings, hover borders, progress states, and small status highlights. Do not reserve it only for marketing flourishes, but also do not flood entire screens with orange; use it to guide attention and mark action.
+
 `brand-gold` is an orange scale in `app/globals.css`:
 - `brand-gold-300`: `#fdba74`
 - `brand-gold-400`: `#fb923c`

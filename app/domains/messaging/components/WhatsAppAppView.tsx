@@ -1,11 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
 import {
+    AlertTriangle,
     Archive,
+    Bot,
     CheckCircle2,
     ChevronDown,
     ClipboardList,
@@ -16,9 +19,13 @@ import {
     Lock,
     MessageSquare,
     PencilLine,
+    Phone,
     Plus,
     RefreshCw,
     Search,
+    ShieldCheck,
+    UserRound,
+    Wifi,
     X,
 } from "lucide-react"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
@@ -53,6 +60,7 @@ import {
     usePublishWhatsAppTemplate,
     useTestSendTemplate,
     useUpdateWhatsAppTemplate,
+    useWhatsAppConversations,
     useWhatsAppFlows,
     useWhatsAppOverview,
     useWhatsAppOtps,
@@ -317,108 +325,321 @@ export function WhatsAppAppView() {
 
 function OverviewTab() {
     const { data, isLoading } = useWhatsAppOverview()
+    const conversations = useWhatsAppConversations()
+    const numbers = useWhatsAppNumbers()
+    const isOverviewLoading = isLoading || conversations.isLoading || numbers.isLoading
+    const conversationRows = conversations.data ?? []
+    const numberRows = numbers.data ?? []
+    const activeNumbers = numberRows.filter((number) => number.status === "active")
+    const attentionConversations = conversationRows.filter((conversation) =>
+        conversation.unread_count > 0 ||
+        conversation.mode === "human" ||
+        conversation.status === "pending_customer"
+    )
+    const recentConversations = [...conversationRows]
+        .sort((a, b) => {
+            const aTime = new Date(a.updated_at || a.last_inbound_at || a.last_outbound_at || 0).getTime()
+            const bTime = new Date(b.updated_at || b.last_inbound_at || b.last_outbound_at || 0).getTime()
+            return bTime - aTime
+        })
+        .slice(0, 4)
+    const aiCoverage = data?.openConversations
+        ? Math.round(((data.aiManagedConversations ?? 0) / data.openConversations) * 100)
+        : 0
+    const unhealthyNumbers = numberRows.filter((number) =>
+        ["failed", "suspended"].includes(number.status)
+    )
 
     const metrics = [
-        { label: "Open chats", value: data?.openConversations ?? 0 },
-        { label: "Human takeover", value: data?.humanManagedConversations ?? 0 },
-        { label: "AI managed", value: data?.aiManagedConversations ?? 0 },
-        { label: "Unread", value: data?.unreadMessages ?? 0 },
-        { label: "Connected numbers", value: data?.connectedNumbers ?? 0 },
+        {
+            label: "Open chats",
+            value: data?.openConversations ?? 0,
+            icon: MessageSquare,
+            detail: `${attentionConversations.length} need attention`,
+        },
+        {
+            label: "AI coverage",
+            value: `${aiCoverage}%`,
+            icon: Bot,
+            detail: `${data?.aiManagedConversations ?? 0} handled by AI`,
+        },
+        {
+            label: "Human takeover",
+            value: data?.humanManagedConversations ?? 0,
+            icon: UserRound,
+            detail: "Active staff-managed chats",
+        },
+        {
+            label: "Unread",
+            value: data?.unreadMessages ?? 0,
+            icon: AlertTriangle,
+            detail: "Customer messages pending",
+        },
     ]
 
     return (
-        <div className="space-y-10">
-            {/* Metrics bar */}
-            <section>
-                <div className="mb-4 flex items-center gap-2">
-                    <div className="h-1 w-6 rounded-full bg-brand-deep/20 dark:bg-brand-gold-700/40" />
-                    <h2 className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-                        At a glance
-                    </h2>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                    {isLoading ? (
-                        Array.from({ length: 5 }).map((_, index) => (
-                            <GlassCard key={index} className="p-5">
-                                <Skeleton className="h-4 w-24" />
-                                <Skeleton className="mt-3 h-10 w-16 rounded-xl" />
-                            </GlassCard>
-                        ))
-                    ) : (
-                        metrics.map((metric) => (
-                            <GlassCard key={metric.label} className="p-5">
-                                <p className="text-sm text-muted-foreground">{metric.label}</p>
-                                <p className="mt-2 text-3xl font-semibold tabular-nums">
-                                    {metric.value}
-                                </p>
-                            </GlassCard>
-                        ))
-                    )}
-                </div>
-            </section>
-
-            {/* Recent activity */}
-            <section>
-                <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-muted/30">
-                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                        <h2 className="text-sm font-semibold text-foreground">Recent activity</h2>
-                        <p className="text-xs text-muted-foreground">Latest WhatsApp interactions across all numbers</p>
-                    </div>
-                </div>
-                <GlassCard className="divide-y divide-border/40 overflow-hidden p-0">
-                    {isLoading ? (
-                        Array.from({ length: 5 }).map((_, index) => (
-                            <div key={index} className="px-5 py-4">
-                                <div className="flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2.5">
-                                        <Skeleton className="h-2 w-2 rounded-full" />
-                                        <Skeleton className="h-4 w-28" />
-                                    </div>
-                                    <Skeleton className="h-3 w-16" />
-                                </div>
-                                <Skeleton className="mt-3 h-4 w-full" />
-                                <Skeleton className="mt-2 h-4 w-3/4" />
+        <div className="space-y-6">
+            <section className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
+                <GlassCard className="border-brand-gold/15 bg-linear-to-br from-white via-white to-brand-gold/[0.045] p-5 md:p-6 dark:border-brand-gold/20 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-brand-gold/[0.08]">
+                    <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                        <div>
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-brand-gold">
+                                <ShieldCheck className="h-4 w-4" />
+                                Command center
                             </div>
-                        ))
-                    ) : data?.recentMessages?.length ? data.recentMessages.map((message) => (
-                        <div key={message.id} className="px-5 py-4 transition-colors hover:bg-muted/20">
-                            <div className="flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2.5">
-                                    <div className={`h-2 w-2 rounded-full ${message.sender_type === "customer"
-                                        ? "bg-emerald-500"
-                                        : message.sender_type === "ai"
-                                            ? "bg-blue-500"
-                                            : "bg-amber-500"
-                                        }`} />
-                                    <p className="text-sm font-medium">
-                                        {message.sender_type === "customer"
-                                            ? "Customer"
-                                            : message.sender_type === "ai"
-                                                ? "AI Assistant"
-                                                : message.sender_type.charAt(0).toUpperCase() + message.sender_type.slice(1)}
-                                    </p>
-                                </div>
-                                <span className="text-xs text-muted-foreground">
-                                    {message.created_at
-                                        ? formatDistanceToNow(new Date(message.created_at), { addSuffix: true })
-                                        : "just now"}
-                                </span>
-                            </div>
-                            <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                                {message.text || "No preview available."}
+                            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                                WhatsApp is handling customer conversations.
+                            </h2>
+                            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                                Monitor handoffs, unread messages, number health, and automation coverage without exposing raw webhook or button payloads.
                             </p>
                         </div>
-                    )) : (
-                        <div className="flex flex-col items-center gap-2 px-5 py-10 text-center">
-                            <MessageSquare className="h-6 w-6 text-muted-foreground/40" />
-                            <p className="text-sm text-muted-foreground">No WhatsApp activity yet.</p>
+                        <div className="flex flex-wrap gap-2">
+                            <Button asChild variant="outline" size="sm" className="rounded-full border-brand-gold/25 hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream">
+                                <Link href="/whatsapp?tab=connections">
+                                    <Wifi className="mr-2 h-4 w-4" />
+                                    Connections
+                                </Link>
+                            </Button>
+                            <Button asChild size="sm" className="rounded-full bg-brand-deep text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800">
+                                <Link href="/whatsapp?tab=automation">
+                                    <Bot className="mr-2 h-4 w-4" />
+                                    Automation
+                                </Link>
+                            </Button>
                         </div>
-                    )}
+                    </div>
+
+                    <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        {isOverviewLoading ? (
+                            Array.from({ length: 4 }).map((_, index) => (
+                                <div key={index} className="rounded-[22px] border border-border/70 bg-muted/20 p-4">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="mt-4 h-8 w-16 rounded-xl" />
+                                    <Skeleton className="mt-3 h-3 w-28" />
+                                </div>
+                            ))
+                        ) : (
+                            metrics.map((metric) => {
+                                const Icon = metric.icon
+                                return (
+                                    <div key={metric.label} className="rounded-[22px] border border-border/70 bg-background/75 p-4 transition-colors hover:border-brand-gold/25 hover:bg-brand-gold/[0.035] dark:hover:border-brand-gold/25 dark:hover:bg-brand-gold/[0.06]">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <p className="text-sm text-muted-foreground">{metric.label}</p>
+                                            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
+                                                <Icon className="h-4 w-4" />
+                                            </span>
+                                        </div>
+                                        <p className="mt-3 text-3xl font-semibold tabular-nums text-foreground">
+                                            {metric.value}
+                                        </p>
+                                        <p className="mt-1 text-xs text-muted-foreground">{metric.detail}</p>
+                                    </div>
+                                )
+                            })
+                        )}
+                    </div>
+                </GlassCard>
+
+                <GlassCard className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 className="text-sm font-semibold text-foreground">Number health</h2>
+                            <p className="mt-1 text-xs text-muted-foreground">Connected sender readiness</p>
+                        </div>
+                        <Badge
+                            variant={unhealthyNumbers.length ? "outline" : "secondary"}
+                            className="rounded-full border-brand-gold/20 bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                        >
+                            {activeNumbers.length}/{numberRows.length || data?.connectedNumbers || 0} active
+                        </Badge>
+                    </div>
+
+                    <div className="mt-5 space-y-3">
+                        {isOverviewLoading ? (
+                            Array.from({ length: 3 }).map((_, index) => (
+                                <div key={index} className="rounded-2xl border border-border/70 p-3">
+                                    <Skeleton className="h-4 w-32" />
+                                    <Skeleton className="mt-2 h-3 w-24" />
+                                </div>
+                            ))
+                        ) : numberRows.length ? (
+                            numberRows.slice(0, 3).map((number) => {
+                                const isActive = number.status === "active"
+                                return (
+                                    <div key={number.id} className="rounded-2xl border border-border/70 bg-background/70 p-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-medium text-foreground">
+                                                    {number.display_name || number.verified_name || "WhatsApp number"}
+                                                </p>
+                                                <p className="mt-1 truncate text-xs text-muted-foreground">
+                                                    {formatPhoneNumber(number.display_phone_number || number.phone_number, { spaced: true }) || number.phone_number}
+                                                </p>
+                                            </div>
+                                            <Badge
+                                                variant={isActive ? "secondary" : "outline"}
+                                                className={
+                                                    isActive
+                                                        ? "shrink-0 rounded-full bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                                                        : "shrink-0 rounded-full capitalize"
+                                                }
+                                            >
+                                                {number.status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                )
+                            })
+                        ) : (
+                            <div className="rounded-2xl border border-dashed border-border p-5 text-center">
+                                <Phone className="mx-auto h-5 w-5 text-muted-foreground/50" />
+                                <p className="mt-2 text-sm text-muted-foreground">No WhatsApp number connected.</p>
+                            </div>
+                        )}
+                    </div>
                 </GlassCard>
             </section>
+
+            <section className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+                <GlassCard className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 className="text-sm font-semibold text-foreground">Needs attention</h2>
+                            <p className="mt-1 text-xs text-muted-foreground">Unread, handoff, or customer-waiting conversations</p>
+                        </div>
+                        <Badge variant="outline" className="rounded-full">
+                            {attentionConversations.length}
+                        </Badge>
+                    </div>
+
+                    <div className="mt-5 space-y-3">
+                        {isOverviewLoading ? (
+                            Array.from({ length: 3 }).map((_, index) => (
+                                <div key={index} className="rounded-[22px] border border-border/70 p-4">
+                                    <Skeleton className="h-4 w-36" />
+                                    <Skeleton className="mt-3 h-3 w-full" />
+                                </div>
+                            ))
+                        ) : attentionConversations.length ? (
+                            attentionConversations.slice(0, 4).map((conversation) => (
+                                <ConversationSignalCard key={conversation.id} conversation={conversation} />
+                            ))
+                        ) : (
+                            <div className="rounded-[22px] border border-brand-gold/20 bg-brand-gold/[0.06] p-5 text-sm text-brand-deep dark:border-brand-gold/20 dark:bg-brand-gold/10 dark:text-brand-gold-200">
+                                No conversations currently need staff attention.
+                            </div>
+                        )}
+                    </div>
+                </GlassCard>
+
+                <GlassCard className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 className="text-sm font-semibold text-foreground">Conversation queue</h2>
+                            <p className="mt-1 text-xs text-muted-foreground">Sanitized customer context, not raw webhook activity</p>
+                        </div>
+                        <Button asChild variant="outline" size="sm" className="rounded-full border-brand-gold/25 hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream">
+                            <Link href="/whatsapp/inbox">
+                                Open inbox
+                            </Link>
+                        </Button>
+                    </div>
+
+                    <div className="mt-5 space-y-3">
+                        {isOverviewLoading ? (
+                            Array.from({ length: 4 }).map((_, index) => (
+                                <div key={index} className="rounded-[22px] border border-border/70 p-4">
+                                    <Skeleton className="h-4 w-40" />
+                                    <Skeleton className="mt-3 h-3 w-full" />
+                                </div>
+                            ))
+                        ) : recentConversations.length ? (
+                            recentConversations.map((conversation) => (
+                                <ConversationSignalCard key={conversation.id} conversation={conversation} compact />
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center gap-2 rounded-[22px] border border-dashed border-border px-5 py-10 text-center">
+                                <MessageSquare className="h-6 w-6 text-muted-foreground/40" />
+                                <p className="text-sm text-muted-foreground">No open WhatsApp conversations yet.</p>
+                            </div>
+                        )}
+                    </div>
+                </GlassCard>
+            </section>
+        </div>
+    )
+}
+
+function ConversationSignalCard({
+    conversation,
+    compact = false,
+}: {
+    conversation: {
+        customer_name: string | null
+        customer_phone: string
+        mode: "ai" | "human"
+        status: "open" | "pending_customer" | "resolved" | "closed"
+        unread_count: number
+        last_customer_message: string | null
+        last_ai_reply: string | null
+        number_label: string | null
+        updated_at: string | null
+        last_inbound_at: string | null
+        last_outbound_at: string | null
+    }
+    compact?: boolean
+}) {
+    const customer = conversation.customer_name || formatPhoneNumber(conversation.customer_phone, { spaced: true }) || "Customer"
+    const preview = conversation.last_customer_message || conversation.last_ai_reply || "No recent message summary available."
+    const timestamp = conversation.updated_at || conversation.last_inbound_at || conversation.last_outbound_at
+    const modeLabel = conversation.mode === "human" ? "Human" : "AI"
+    const statusLabel = conversation.status.replace("_", " ")
+
+    return (
+        <div className="rounded-[22px] border border-border/70 bg-background/70 p-4 transition-colors hover:border-brand-gold/25 hover:bg-brand-gold/[0.035] dark:hover:border-brand-gold/25 dark:hover:bg-brand-gold/[0.06]">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-semibold text-foreground">{customer}</p>
+                        {conversation.unread_count > 0 ? (
+                            <Badge variant="outline" className="rounded-full border-brand-gold/25 bg-brand-gold/10 text-[10px] text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
+                                {conversation.unread_count} unread
+                            </Badge>
+                        ) : null}
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                        {preview}
+                    </p>
+                </div>
+                <Badge
+                    variant={conversation.mode === "ai" ? "secondary" : "outline"}
+                    className={
+                        conversation.mode === "ai"
+                            ? "shrink-0 rounded-full bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                            : "shrink-0 rounded-full"
+                    }
+                >
+                    {modeLabel}
+                </Badge>
+            </div>
+            {!compact ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                    <span className="capitalize">{statusLabel}</span>
+                    {conversation.number_label ? (
+                        <>
+                            <span>•</span>
+                            <span>{conversation.number_label}</span>
+                        </>
+                    ) : null}
+                    {timestamp ? (
+                        <>
+                            <span>•</span>
+                            <span>{formatDistanceToNow(new Date(timestamp), { addSuffix: true })}</span>
+                        </>
+                    ) : null}
+                </div>
+            ) : null}
         </div>
     )
 }
