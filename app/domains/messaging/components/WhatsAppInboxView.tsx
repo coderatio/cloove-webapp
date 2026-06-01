@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import {
+    ArrowLeft,
     Bot,
     CheckCircle2,
     ClipboardList,
@@ -11,9 +12,10 @@ import {
     Inbox,
     Loader2,
     MessageSquare,
-    MoreHorizontal,
     MousePointerClick,
     PackageCheck,
+    PanelRightClose,
+    PanelRightOpen,
     Search,
     SendHorizonal,
     UserRound,
@@ -34,6 +36,7 @@ import {
     useWhatsAppConversation,
     useWhatsAppConversations,
     useWhatsAppTemplates,
+    type WhatsAppInboxConversation,
     type WhatsAppInboxMessage,
 } from "@/app/domains/messaging/hooks/useWhatsAppInbox"
 
@@ -53,6 +56,35 @@ function formatConversationDate(dateStr: string) {
     if (days === 1) return "Yesterday"
     if (days < 7) return date.toLocaleDateString([], { weekday: "short" })
     return date.toLocaleDateString([], { month: "short", day: "numeric" })
+}
+
+function formatMessageDate(dateStr: string) {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const yesterday = new Date(now)
+    yesterday.setDate(now.getDate() - 1)
+
+    if (date.toDateString() === now.toDateString()) return "Today"
+    if (date.toDateString() === yesterday.toDateString()) return "Yesterday"
+    return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+}
+
+function latestConversationActivity(conversation: WhatsAppInboxConversation) {
+    return Math.max(
+        conversation.last_inbound_at ? new Date(conversation.last_inbound_at).getTime() : 0,
+        conversation.last_outbound_at ? new Date(conversation.last_outbound_at).getTime() : 0,
+        conversation.updated_at ? new Date(conversation.updated_at).getTime() : 0
+    )
+}
+
+function latestConversationActivityIso(conversation: WhatsAppInboxConversation) {
+    const candidates = [
+        conversation.last_inbound_at,
+        conversation.last_outbound_at,
+        conversation.updated_at,
+    ].filter((value): value is string => !!value)
+
+    return candidates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null
 }
 
 function getInitial(name: string) {
@@ -88,6 +120,50 @@ function parseReplyFallback(text: string | null) {
     return { title: match[1].trim(), id: match[2].trim() }
 }
 
+function ConversationAvatar({
+    name,
+    mode,
+    unreadCount = 0,
+    size = "md",
+}: {
+    name: string
+    mode: "ai" | "human"
+    unreadCount?: number
+    size?: "sm" | "md" | "lg"
+}) {
+    const sizeClass = size === "lg" ? "h-11 w-11 text-sm" : size === "sm" ? "h-9 w-9 text-xs" : "h-10 w-10 text-sm"
+    const modeClass = mode === "human"
+        ? "bg-brand-gold/10 text-brand-gold ring-brand-gold/20 dark:bg-brand-gold/15 dark:text-brand-gold-300"
+        : "bg-brand-deep/10 text-brand-deep ring-brand-deep/10 dark:bg-brand-gold/10 dark:text-brand-gold-300 dark:ring-brand-gold/15"
+
+    return (
+        <div className={`relative flex shrink-0 items-center justify-center rounded-2xl font-semibold ring-1 ${sizeClass} ${modeClass}`}>
+            {getInitial(name)}
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-950" />
+            {unreadCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-gold px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-950">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+            )}
+        </div>
+    )
+}
+
+function ModePill({ mode }: { mode: "ai" | "human" }) {
+    return (
+        <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                mode === "human"
+                    ? "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                    : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+            }`}
+        >
+            {mode === "human" ? <UserRound className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+            {mode}
+        </span>
+    )
+}
+
 function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage; isOutbound: boolean }) {
     const payload = message.payload
     const payloadType = stringValue(payload?.type)
@@ -108,7 +184,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (message.message_type === "template") {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <ClipboardList className="h-3.5 w-3.5" />
                     Template
@@ -133,7 +209,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         const title = stringValue(reply?.title) || fallbackReply?.title || message.text || "Selected option"
         const id = stringValue(reply?.id) || fallbackReply?.id
         return (
-            <div className={`min-w-56 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-56 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     {payloadType === "list_reply" ? "List selection" : "Button selection"}
@@ -149,7 +225,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_button") {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     Buttons sent
@@ -181,7 +257,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         const productCount = visibleSections.reduce((total, section) => total + section.rows.length, 0)
 
         return (
-            <div className={`min-w-72 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-72 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <ClipboardList className="h-3.5 w-3.5" />
                     {isProductList ? "Product list sent" : "List sent"}
@@ -231,7 +307,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_flow") {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <GitBranch className="h-3.5 w-3.5" />
                     Flow sent
@@ -248,7 +324,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_cta_url") {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     CTA sent
@@ -264,7 +340,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_location_request") {
         return (
-            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-60 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <FileText className="h-3.5 w-3.5" />
                     Location request sent
@@ -279,7 +355,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "flow_response" && flowData) {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <GitBranch className="h-3.5 w-3.5" />
                     Flow response
@@ -299,7 +375,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
     if (payloadType === "order" && order) {
         const items = Array.isArray(order.items) ? order.items : []
         return (
-            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-60 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <PackageCheck className="h-3.5 w-3.5" />
                     Catalog order
@@ -312,7 +388,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "location" && location) {
         return (
-            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+            <div className={`min-w-60 rounded-[18px] border p-3 ${cardClass}`}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <FileText className="h-3.5 w-3.5" />
                     Location
@@ -361,7 +437,10 @@ function InboxTab() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }, [selected?.messages])
 
-    const filteredConversations = (conversations ?? []).filter((conversation) => {
+    const sortedConversations = [...(conversations ?? [])].sort(
+        (a, b) => latestConversationActivity(b) - latestConversationActivity(a)
+    )
+    const filteredConversations = sortedConversations.filter((conversation) => {
         const query = search.trim().toLowerCase()
         if (!query) return true
         return (
@@ -370,6 +449,9 @@ function InboxTab() {
             conversation.number_label?.toLowerCase().includes(query)
         )
     })
+    const unreadConversationCount = conversations?.filter((conversation) => conversation.unread_count > 0).length ?? 0
+    const humanConversationCount = conversations?.filter((conversation) => conversation.mode === "human").length ?? 0
+    const openConversationCount = conversations?.filter((conversation) => conversation.status === "open").length ?? 0
 
     const submitMessage = async () => {
         const text = draft.trim()
@@ -417,7 +499,7 @@ function InboxTab() {
                             </p>
                         </div>
                         <span className="rounded-full border border-brand-gold/15 bg-brand-gold/10 px-2.5 py-1 text-xs font-semibold text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
-                            {conversations?.filter((conversation) => conversation.unread_count > 0).length ?? 0} unread
+                            {unreadConversationCount} unread
                         </span>
                     </div>
                     {/* Search */}
@@ -440,6 +522,20 @@ function InboxTab() {
                                 <X className="h-3 w-3" />
                             </button>
                         )}
+                    </div>
+                    <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5">
+                        {[
+                            ["Open", openConversationCount],
+                            ["Unread", unreadConversationCount],
+                            ["Human", humanConversationCount],
+                        ].map(([label, count]) => (
+                            <span
+                                key={label}
+                                className="shrink-0 rounded-full border border-border/50 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+                            >
+                                {label} <span className="text-foreground">{count}</span>
+                            </span>
+                        ))}
                     </div>
                 </div>
 
@@ -465,12 +561,8 @@ function InboxTab() {
                         <div className="space-y-1.5 p-2.5">
                             {filteredConversations.map((conversation) => {
                                 const isSelected = activeConversationId === conversation.id
-                                const initial = getInitial(
-                                    conversation.customer_name || conversation.customer_phone
-                                )
-                                const isHuman = conversation.mode === "human"
-                                const lastMsgTime =
-                                    conversation.last_inbound_at || conversation.last_outbound_at
+                                const lastMsgTime = latestConversationActivityIso(conversation)
+                                const customerLabel = conversation.customer_name || conversation.customer_phone
                                 return (
                                     <button
                                         key={conversation.id}
@@ -484,29 +576,18 @@ function InboxTab() {
                                         }`}
                                     >
                                         {/* Avatar */}
-                                        <div
-                                            className={`relative mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${
-                                                isHuman
-                                                    ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/20 dark:bg-brand-gold/15 dark:text-brand-gold-300"
-                                                    : "bg-brand-deep/10 text-brand-deep ring-1 ring-brand-deep/10 dark:bg-brand-gold/10 dark:text-brand-gold-300 dark:ring-brand-gold/15"
-                                            }`}
-                                        >
-                                            {initial}
-                                            {conversation.unread_count > 0 && (
-                                                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-gold px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-950">
-                                                    {conversation.unread_count > 9
-                                                        ? "9+"
-                                                        : conversation.unread_count}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <ConversationAvatar
+                                            name={customerLabel}
+                                            mode={conversation.mode}
+                                            unreadCount={conversation.unread_count}
+                                            size="lg"
+                                        />
 
                                         {/* Content */}
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-2">
                                                 <p className="truncate text-sm font-semibold text-foreground">
-                                                    {conversation.customer_name ||
-                                                        conversation.customer_phone}
+                                                    {customerLabel}
                                                 </p>
                                                 {lastMsgTime && (
                                                     <span className="shrink-0 text-[10px] font-medium text-muted-foreground/60">
@@ -519,15 +600,7 @@ function InboxTab() {
                                                     {conversation.number_label || "WhatsApp"}
                                                 </span>
                                                 <span className="text-border">·</span>
-                                                <span
-                                                    className={`font-medium ${
-                                                        isHuman
-                                                            ? "text-brand-gold dark:text-brand-gold-300"
-                                                            : "text-emerald-600 dark:text-emerald-400"
-                                                    }`}
-                                                >
-                                                    {conversation.mode}
-                                                </span>
+                                                <ModePill mode={conversation.mode} />
                                             </div>
                                             <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-muted-foreground/70">
                                                 {conversation.last_customer_message ||
@@ -584,35 +657,26 @@ function InboxTab() {
                                         type="button"
                                         onClick={() => setSelectedId(null)}
                                         aria-label="Close conversation"
-                                        className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground/50 transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
+                                        className="flex h-8 w-8 items-center justify-center rounded-2xl text-muted-foreground/50 transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
                                     >
-                                        <X className="h-4 w-4" />
+                                        <ArrowLeft className="h-4 w-4" />
                                     </button>
-                                    <div
-                                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${
-                                            selected.mode === "human"
-                                                ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/20 dark:bg-brand-gold/15 dark:text-brand-gold-300"
-                                                : "bg-brand-deep/10 text-brand-deep ring-1 ring-brand-deep/10 dark:bg-brand-gold/10 dark:text-brand-gold-300 dark:ring-brand-gold/15"
-                                        }`}
-                                    >
-                                        {getInitial(
-                                            selected.customer_name || selected.customer_phone
-                                        )}
-                                    </div>
+                                    <ConversationAvatar
+                                        name={selected.customer_name || selected.customer_phone}
+                                        mode={selected.mode}
+                                        unreadCount={selected.unread_count}
+                                        size="lg"
+                                    />
                                     <div className="min-w-0">
                                         <h3 className="truncate text-sm font-semibold leading-tight">
                                             {selected.customer_name || selected.customer_phone}
                                         </h3>
-                                        <p className="truncate text-[11px] text-muted-foreground/60">
-                                            {selected.customer_phone}
-                                            {selected.number_label && (
-                                                <>
-                                                    {" "}
-                                                    <span className="text-border/50">·</span>{" "}
-                                                    {selected.number_label}
-                                                </>
-                                            )}
-                                        </p>
+                                        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                                            <ModePill mode={selected.mode} />
+                                            <span className="truncate text-[11px] text-muted-foreground/60">
+                                                {selected.number_label || selected.customer_phone}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -628,7 +692,7 @@ function InboxTab() {
                                                     className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
                                                     <UserRound className="h-3.5 w-3.5" />
-                                                    Take over
+                                                    <span className="hidden sm:inline">Take over</span>
                                                 </button>
                                             ) : (
                                                 <button
@@ -639,7 +703,7 @@ function InboxTab() {
                                                     className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
                                                     <Bot className="h-3.5 w-3.5" />
-                                                    AI mode
+                                                    <span className="hidden sm:inline">AI mode</span>
                                                 </button>
                                             )}
                                             <button
@@ -650,7 +714,7 @@ function InboxTab() {
                                                 className="flex h-9 items-center gap-1.5 rounded-full border border-border/50 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                             >
                                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                                Resolve
+                                                <span className="hidden sm:inline">Resolve</span>
                                             </button>
                                         </>
                                     )}
@@ -664,7 +728,7 @@ function InboxTab() {
                                                 : "border-border/50 bg-background text-muted-foreground hover:bg-brand-gold/10 hover:text-brand-gold"
                                         }`}
                                     >
-                                        <MoreHorizontal className="h-3.5 w-3.5" />
+                                        {sidebarOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
                                     </button>
                                 </div>
                             </div>
@@ -700,9 +764,13 @@ function InboxTab() {
                             }`}
                         >
                             {/* Messages */}
-                            <div className="min-h-0 space-y-1 overflow-y-auto bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.045),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.24))] px-4 py-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.08),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))]">
+                            <div className="min-h-0 space-y-2 overflow-y-auto bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.045),transparent_34%),radial-gradient(circle_at_1px_1px,rgba(11,61,46,0.055)_1px,transparent_0),linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.24))] bg-[length:auto,22px_22px,auto] px-4 py-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.08),transparent_34%),radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.045)_1px,transparent_0),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))]">
                                 {selected.messages.map((message, idx) => {
                                     const isOutbound = message.direction === "outbound"
+                                    const previousMessage = selected.messages[idx - 1]
+                                    const currentDate = message.created_at ? new Date(message.created_at).toDateString() : ""
+                                    const previousDate = previousMessage?.created_at ? new Date(previousMessage.created_at).toDateString() : ""
+                                    const showDateSeparator = !!currentDate && currentDate !== previousDate
                                     const isFirst =
                                         idx === 0 ||
                                         selected.messages[idx - 1]?.sender_type !==
@@ -714,59 +782,68 @@ function InboxTab() {
                                     const showSender =
                                         isFirst && message.sender_type !== "customer"
                                     return (
-                                        <div
-                                            key={message.id}
-                                            className={`flex animate-fade-in ${
-                                                isOutbound ? "justify-end" : "justify-start"
-                                            }`}
-                                            style={{ animationDelay: `${idx * 15}ms` }}
-                                        >
-                                            <div
-                                                className={`flex max-w-[80%] flex-col ${
-                                                    isOutbound ? "items-end" : "items-start"
-                                                }`}
-                                            >
-                                                {showSender && (
-                                                    <span className="mb-0.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/40">
-                                                        {message.sender_type === "ai"
-                                                            ? "AI Assistant"
-                                                            : message.sender_type.charAt(0).toUpperCase() +
-                                                              message.sender_type.slice(1)}
+                                        <div key={message.id} className="space-y-2">
+                                            {showDateSeparator ? (
+                                                <div className="flex justify-center">
+                                                    <span className="rounded-full border border-brand-gold/15 bg-white/85 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm dark:bg-slate-950/75">
+                                                        {message.created_at ? formatMessageDate(message.created_at) : ""}
                                                     </span>
-                                                )}
+                                                </div>
+                                            ) : null}
+                                            <div
+                                                className={`flex animate-fade-in ${
+                                                    isOutbound ? "justify-end" : "justify-start"
+                                                }`}
+                                                style={{ animationDelay: `${idx * 15}ms` }}
+                                            >
                                                 <div
-                                                    className={`relative px-3.5 py-2 ${
-                                                        isOutbound
-                                                            ? "bg-brand-deep text-white shadow-sm shadow-brand-deep/10 ring-1 ring-brand-gold/15"
-                                                            : "border border-border/50 bg-white/80 shadow-sm shadow-slate-950/[0.025] dark:bg-white/[0.045]"
-                                                    } ${
-                                                        isFirst && isOutbound
-                                                            ? "rounded-2xl rounded-br-md"
-                                                            : isFirst && !isOutbound
-                                                              ? "rounded-2xl rounded-bl-md"
-                                                              : isLast && isOutbound
-                                                                ? "rounded-2xl rounded-tr-md"
-                                                                : isLast && !isOutbound
-                                                                  ? "rounded-2xl rounded-tl-md"
-                                                                  : "rounded-2xl"
+                                                    className={`flex max-w-[88%] flex-col sm:max-w-[76%] ${
+                                                        isOutbound ? "items-end" : "items-start"
                                                     }`}
                                                 >
-                                                    <MessageContent message={message} isOutbound={isOutbound} />
-                                                </div>
-                                                <div className="mt-0.5 flex items-center gap-2 px-1">
-                                                    <span
-                                                        className={`text-[10px] font-medium ${
+                                                    {showSender && (
+                                                        <span className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/45">
+                                                            {message.sender_type === "ai"
+                                                                ? "AI Assistant"
+                                                                : message.sender_type.charAt(0).toUpperCase() +
+                                                                  message.sender_type.slice(1)}
+                                                        </span>
+                                                    )}
+                                                    <div
+                                                        className={`relative px-3.5 py-2.5 ${
                                                             isOutbound
-                                                                ? "text-right"
-                                                                : "text-left"
-                                                        } text-muted-foreground/40`}
+                                                                ? "bg-brand-deep text-white shadow-sm shadow-brand-deep/10 ring-1 ring-brand-gold/15"
+                                                                : "border border-border/50 bg-white/90 shadow-sm shadow-slate-950/[0.035] dark:bg-white/[0.055]"
+                                                        } ${
+                                                            isFirst && isOutbound
+                                                                ? "rounded-[22px] rounded-br-md"
+                                                                : isFirst && !isOutbound
+                                                                  ? "rounded-[22px] rounded-bl-md"
+                                                                  : isLast && isOutbound
+                                                                    ? "rounded-[22px] rounded-tr-md"
+                                                                    : isLast && !isOutbound
+                                                                      ? "rounded-[22px] rounded-tl-md"
+                                                                      : "rounded-[22px]"
+                                                        }`}
                                                     >
-                                                        {message.created_at
-                                                            ? formatMessageTime(message.created_at)
-                                                            : ""}
-                                                        {message.delivery_status &&
-                                                            ` · ${message.delivery_status}`}
-                                                    </span>
+                                                        <MessageContent message={message} isOutbound={isOutbound} />
+                                                    </div>
+                                                    <div className="mt-1 flex items-center gap-2 px-1">
+                                                        <span
+                                                            className={`text-[10px] font-medium ${
+                                                                isOutbound
+                                                                    ? "text-right"
+                                                                    : "text-left"
+                                                            } text-muted-foreground/45`}
+                                                        >
+                                                            {message.created_at
+                                                                ? formatMessageTime(message.created_at)
+                                                                : ""}
+                                                            {isOutbound && message.delivery_status
+                                                                ? ` · ${message.delivery_status}`
+                                                                : ""}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -878,7 +955,7 @@ function InboxTab() {
                                                     value={selectedTemplate}
                                                     onValueChange={setSelectedTemplate}
                                                 >
-                                                    <SelectTrigger className="h-9 rounded-xl border-brand-gold/15 text-xs focus:ring-brand-gold/20">
+                                                    <SelectTrigger className="h-9 rounded-2xl border-brand-gold/15 text-xs focus:ring-brand-gold/20">
                                                         <SelectValue placeholder="Select template" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -909,7 +986,7 @@ function InboxTab() {
                                                     rows={3}
                                                     placeholder='{"customer_name":"Amina"}'
                                                     aria-label="Template variables"
-                                                    className="min-h-0 w-full resize-none rounded-xl border border-border/40 bg-muted/10 px-2.5 py-1.5 font-mono text-[11px] outline-none placeholder:text-muted-foreground/30 focus:border-brand-gold/30 focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5"
+                                                    className="min-h-0 w-full resize-none rounded-2xl border border-border/40 bg-muted/10 px-2.5 py-1.5 font-mono text-[11px] outline-none placeholder:text-muted-foreground/30 focus:border-brand-gold/30 focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5"
                                                 />
                                                 <button
                                                     type="button"
@@ -917,7 +994,7 @@ function InboxTab() {
                                                     disabled={
                                                         sendTemplate.isPending || !selectedTemplate
                                                     }
-                                                    className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-deep px-3 py-2 text-[11px] font-medium text-brand-gold-300 transition-opacity hover:opacity-90 disabled:opacity-40 dark:bg-brand-gold-700 dark:text-white"
+                                                    className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-deep px-3 py-2 text-[11px] font-medium text-brand-gold-300 transition-opacity hover:opacity-90 disabled:opacity-40 dark:bg-brand-gold-700 dark:text-white"
                                                 >
                                                     {sendTemplate.isPending ? (
                                                         <Loader2 className="h-3 w-3 animate-spin" />
