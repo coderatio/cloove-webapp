@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Activity, LayoutGrid, ChefHat, GlassWater, RefreshCw } from "lucide-react"
+import { Activity, LayoutGrid, ChefHat, GlassWater, RefreshCw, Bell } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 import {
   Select,
@@ -21,6 +21,7 @@ const TABS = [
   { href: "/restaurant/tables", label: "Tables", icon: LayoutGrid },
   { href: "/restaurant/kitchen", label: "Kitchen", icon: ChefHat },
   { href: "/restaurant/bar", label: "Bar", icon: GlassWater },
+  { href: "/restaurant/settings", label: "Settings", icon: Bell },
 ] as const
 
 export function RestaurantNavTabs() {

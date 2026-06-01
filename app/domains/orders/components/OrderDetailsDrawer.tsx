@@ -123,13 +123,24 @@ export function OrderDetailsDrawer({
                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 ml-1">Itemized List</h3>
                             <GlassCard className="divide-y divide-brand-deep/5 dark:divide-white/5 border-brand-deep/5 rounded-3xl before:rounded-3xl">
                                 {order.items?.map((item, idx) => (
-                                    <div key={idx} className="p-4 flex justify-between items-center">
-                                        <div>
-                                            <p className="font-medium text-brand-deep dark:text-brand-cream">{item.productName}</p>
-                                            <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">
-                                                {Number(item.quantity)} {Number(item.quantity) === 1 ? 'unit' : 'units'} x{" "}
-                                                <CurrencyText value={formatCurrency(item.price, { currency: currencyCode })} />
-                                            </p>
+                                    <div key={idx} className="p-4 flex justify-between items-center gap-3">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            {item.imageUrl ? (
+                                                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-brand-deep/5 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5">
+                                                    <img
+                                                        src={item.imageUrl}
+                                                        alt={item.productName}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                </div>
+                                            ) : null}
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-brand-deep dark:text-brand-cream">{item.productName}</p>
+                                                <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40">
+                                                    {Number(item.quantity)} {Number(item.quantity) === 1 ? 'unit' : 'units'} x{" "}
+                                                    <CurrencyText value={formatCurrency(item.price, { currency: currencyCode })} />
+                                                </p>
+                                            </div>
                                         </div>
                                         <p className="font-serif font-medium text-brand-deep dark:text-brand-cream">
                                             <CurrencyText value={formatCurrency(item.total, { currency: currencyCode })} />

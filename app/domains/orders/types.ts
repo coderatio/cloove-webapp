@@ -7,6 +7,7 @@ export interface OrderItem {
     quantity: number
     price: number
     total: number
+    imageUrl?: string | null
 }
 
 export interface Order {

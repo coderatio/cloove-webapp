@@ -11,9 +11,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
     return (
         <Sonner
             theme={theme as ToasterProps["theme"]}
-            className="toaster group"
+            className="toaster group !z-[100]"
             richColors
             expand={true}
+            offset={{ top: 24, right: 24, bottom: 24, left: 24 }}
+            mobileOffset={{ top: "calc(var(--subscription-banner-offset, 0px) + 4.5rem)", right: 16, left: 16, bottom: 16 }}
             toastOptions={{
                 classNames: {
                     toast: "group toast sonner-toast",

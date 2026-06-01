@@ -39,7 +39,8 @@ import {
   type RestaurantTable,
 } from "../hooks/useRestaurantOps"
 import { useRecordSale } from "@/app/domains/orders/hooks/useRecordSale"
-import { useOrders } from "@/app/domains/orders/hooks/useOrders"
+import { useOrder } from "@/app/domains/orders/hooks/useOrders"
+import { OrderDetailsDrawer } from "@/app/domains/orders/components/OrderDetailsDrawer"
 import { useGoSettings } from "@/app/domains/messaging/hooks/useWhatsAppSettings"
 import { QuickProductPicker, type PickedItem } from "@/app/components/shared/QuickProductPicker"
 import { cn } from "@/app/lib/utils"
@@ -70,6 +71,7 @@ import {
   Minimize2,
   MessageSquare,
   Loader2,
+  ExternalLink,
 } from "lucide-react"
 import { ZenModeContext } from "@/app/components/layout/AppLayout"
 import { formatCurrency } from "@/app/lib/formatters"
@@ -321,11 +323,13 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
   ticket,
   onAdvance,
   onMessage,
+  onOpenDetails,
   isPending,
 }: {
   ticket: KitchenTicket
   onAdvance: (id: string, status: KitchenTicket["status"]) => void
   onMessage: (ticket: KitchenTicket) => void
+  onOpenDetails: (ticket: KitchenTicket) => void
   isPending: boolean
 }) {
   const idx = KITCHEN_FLOW.indexOf(ticket.status)
@@ -335,9 +339,18 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
   return (
     <div
       className={cn(
-        "rounded-3xl border p-3.5 space-y-2.5 transition-colors duration-200",
+        "rounded-3xl border p-3.5 space-y-2.5 transition-colors duration-200 cursor-pointer hover:border-brand-accent/20 dark:hover:border-white/15",
         getUrgencyClass(ticket.createdAt, ticket.status)
       )}
+      onClick={() => onOpenDetails(ticket)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          onOpenDetails(ticket)
+        }
+      }}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
@@ -345,14 +358,37 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
           <p className="text-[10px] text-brand-accent/50 dark:text-brand-cream/40 font-mono mt-0.5">
             #{ticket.saleId?.slice(0, 8) ?? "N/A"}
           </p>
+          {ticket.customerName ? (
+            <p className="text-[11px] text-brand-accent/55 dark:text-brand-cream/45 truncate mt-1">
+              {ticket.customerName}
+            </p>
+          ) : null}
         </div>
         <div className="flex items-center gap-1">
+          {ticket.saleId ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 rounded-lg text-brand-accent/40 hover:text-brand-accent/80 dark:text-brand-cream/40 dark:hover:text-brand-cream/80"
+              onClick={(event) => {
+                event.stopPropagation()
+                onOpenDetails(ticket)
+              }}
+              disabled={isPending}
+              title="View order details"
+            >
+              <ExternalLink className="h-3 w-3" />
+            </Button>
+          ) : null}
           {ticket.saleId && (
             <Button
               variant="ghost"
               size="icon"
               className="h-6 w-6 rounded-lg text-brand-accent/40 hover:text-brand-accent/80 dark:text-brand-cream/40 dark:hover:text-brand-cream/80"
-              onClick={() => onMessage(ticket)}
+              onClick={(event) => {
+                event.stopPropagation()
+                onMessage(ticket)
+              }}
               disabled={isPending}
               title="Send WhatsApp message"
             >
@@ -369,7 +405,10 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
             size="sm"
             variant="ghost"
             className="flex-none h-8 w-8 rounded-xl border border-brand-accent/10 dark:border-white/10 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream hover:border-brand-accent/30 dark:hover:border-white/20 transition-all p-0"
-            onClick={() => onAdvance(ticket.id, prev)}
+            onClick={(event) => {
+              event.stopPropagation()
+              onAdvance(ticket.id, prev)
+            }}
             disabled={isPending}
             title={`Move back to ${STATUS_CONFIG[prev].label}`}
           >
@@ -389,7 +428,10 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
               "bg-brand-deep dark:bg-white/10 hover:bg-brand-deep/90 text-white hover:text-white dark:text-brand-cream border-transparent"
             )}
             variant="ghost"
-            onClick={() => onAdvance(ticket.id, next)}
+            onClick={(event) => {
+              event.stopPropagation()
+              onAdvance(ticket.id, next)
+            }}
             disabled={isPending}
           >
             <span>{STATUS_CONFIG[next].label}</span>
@@ -659,9 +701,6 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   })
   const barAction = useBarTicketActions()
   const { recordSale, isRecording } = useRecordSale()
-  const { orders: incomingOrders = [] } = useOrders(1, 10, {
-    automation: ["AUTOMATED"],
-  })
   const [barOrderOpen, setBarOrderOpen] = React.useState(false)
   const [barEditTicket, setBarEditTicket] = React.useState<BarTicket | null>(null)
   const [barEditLabel, setBarEditLabel] = React.useState("")
@@ -714,7 +753,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const [tableTab, setTableTab] = React.useState("active")
   const [sessionTab, setSessionTab] = React.useState<"active" | "closed">("active")
   const [messagingTicket, setMessagingTicket] = React.useState<KitchenTicket | null>(null)
+  const [detailTicket, setDetailTicket] = React.useState<KitchenTicket | null>(null)
   const [messageBody, setMessageBody] = React.useState("")
+  const { order: detailOrder, isLoading: detailOrderLoading } = useOrder(detailTicket?.saleId ?? null)
   /** Keeps the template tab highlighted while the user edits away from an exact preset body match */
   const [activeMessagePresetId, setActiveMessagePresetId] = React.useState<string | null>(null)
   const messagePresetMatch = React.useMemo(() => {
@@ -726,23 +767,6 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   React.useEffect(() => {
     if (messagePresetMatch) setActiveMessagePresetId(messagePresetMatch.id)
   }, [messagePresetMatch])
-
-  const seenIncomingOrderIdsRef = React.useRef<Set<string> | null>(null)
-  React.useEffect(() => {
-    if (!incomingOrders.length) return
-    const ids = new Set(incomingOrders.map((order) => order.id))
-    if (!seenIncomingOrderIdsRef.current) {
-      seenIncomingOrderIdsRef.current = ids
-      return
-    }
-    const nextOrder = incomingOrders.find((order) => !seenIncomingOrderIdsRef.current?.has(order.id))
-    seenIncomingOrderIdsRef.current = ids
-    if (!nextOrder) return
-    toast.info(`New restaurant order${nextOrder.shortCode ? ` #${nextOrder.shortCode}` : ""}`, {
-      description: "Check orders and send it to kitchen.",
-      duration: Infinity,
-    })
-  }, [incomingOrders])
 
   const kitchenWhatsAppPreviewContext = React.useMemo(() => {
     if (!messagingTicket) return undefined
@@ -831,6 +855,8 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               toast.success(
                 `Moved to ${STATUS_CONFIG[status].label}. WhatsApp sent${notification.customerName ? ` to ${notification.customerName}` : ""}.`
               )
+            } else if (notification?.status === "failed") {
+              toast.error(`Moved to ${STATUS_CONFIG[status].label}. WhatsApp failed.`)
             } else if (notification?.reason && notification.reason !== "auto_send_disabled") {
               toast.message(`Moved to ${STATUS_CONFIG[status].label}. WhatsApp not sent.`)
             }
@@ -839,6 +865,13 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
       ),
     [kitchenAction.advance]
   )
+  const openDetailDrawer = React.useCallback((ticket: KitchenTicket) => {
+    if (!ticket.saleId) return
+    setDetailTicket(ticket)
+  }, [])
+  const closeDetailDrawer = React.useCallback(() => {
+    setDetailTicket(null)
+  }, [])
   const openMessageDrawer = React.useCallback(
     (ticket: KitchenTicket) => {
       setMessagingTicket(ticket)
@@ -856,12 +889,19 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
   const handleSendTicketMessage = async () => {
     if (!messagingTicket) return
     try {
-      await kitchenAction.sendMessage.mutateAsync({
+      const result = await kitchenAction.sendMessage.mutateAsync({
         id: messagingTicket.id,
         body: messageBody,
         ...(messagePresetMatch ? { presetId: messagePresetMatch.id } : {}),
       })
-      toast.success("WhatsApp message sent")
+      if (result?.status === "sent") {
+        toast.success(
+          `WhatsApp message sent${result.customerName ? ` to ${result.customerName}` : ""}.`
+        )
+      } else {
+        toast.error("WhatsApp message failed")
+        return
+      }
       closeMessageDrawer()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to send WhatsApp message")
@@ -1741,6 +1781,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                             ticket={ticket}
                             onAdvance={handleAdvanceTicket}
                             onMessage={openMessageDrawer}
+                            onOpenDetails={openDetailDrawer}
                             isPending={kitchenAction.advance.isPending}
                           />
                         ))
@@ -1753,6 +1794,15 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
           )}
         </GlassCard>
       )}
+
+      <OrderDetailsDrawer
+        order={detailOrder}
+        open={!!detailTicket}
+        onOpenChange={(open) => {
+          if (!open) closeDetailDrawer()
+        }}
+        isLoading={detailOrderLoading}
+      />
 
       {/* Bar Board */}
       {showBar && (
