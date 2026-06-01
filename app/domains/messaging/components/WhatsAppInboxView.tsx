@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import {
     ArrowLeft,
@@ -120,6 +120,82 @@ function parseReplyFallback(text: string | null) {
     return { title: match[1].trim(), id: match[2].trim() }
 }
 
+function isWordChar(value: string | undefined) {
+    return !!value && /[A-Za-z0-9]/.test(value)
+}
+
+function canOpenWhatsAppMark(text: string, index: number, marker: string) {
+    const next = text[index + marker.length]
+    if (!next || /\s/.test(next)) return false
+    if (marker === "_" && isWordChar(text[index - 1])) return false
+    return true
+}
+
+function findWhatsAppMarkClose(text: string, start: number, marker: string) {
+    for (let i = start + marker.length; i < text.length; i += 1) {
+        if (!text.startsWith(marker, i)) continue
+        const previous = text[i - 1]
+        const next = text[i + marker.length]
+        if (!previous || /\s/.test(previous)) continue
+        if (marker === "_" && isWordChar(next)) continue
+        return i
+    }
+    return -1
+}
+
+function renderWhatsAppInline(text: string, keyPrefix = "wa"): ReactNode[] {
+    const nodes: ReactNode[] = []
+    let buffer = ""
+    let index = 0
+
+    const pushBuffer = () => {
+        if (!buffer) return
+        nodes.push(buffer)
+        buffer = ""
+    }
+
+    const markers = [
+        { marker: "```", render: (children: ReactNode, key: string) => <code key={key} className="rounded bg-current/10 px-1 py-px font-mono text-[0.92em]">{children}</code> },
+        { marker: "`", render: (children: ReactNode, key: string) => <code key={key} className="rounded bg-current/10 px-1 py-px font-mono text-[0.92em]">{children}</code> },
+        { marker: "*", render: (children: ReactNode, key: string) => <strong key={key} className="font-semibold">{children}</strong> },
+        { marker: "_", render: (children: ReactNode, key: string) => <em key={key}>{children}</em> },
+        { marker: "~", render: (children: ReactNode, key: string) => <s key={key}>{children}</s> },
+    ]
+
+    while (index < text.length) {
+        const match = markers.find(({ marker }) => text.startsWith(marker, index))
+        if (!match || !canOpenWhatsAppMark(text, index, match.marker)) {
+            buffer += text[index]
+            index += 1
+            continue
+        }
+
+        const close = findWhatsAppMarkClose(text, index, match.marker)
+        if (close === -1) {
+            buffer += text[index]
+            index += 1
+            continue
+        }
+
+        pushBuffer()
+        const inner = text.slice(index + match.marker.length, close)
+        const key = `${keyPrefix}-${index}`
+        nodes.push(match.render(renderWhatsAppInline(inner, key), key))
+        index = close + match.marker.length
+    }
+
+    pushBuffer()
+    return nodes
+}
+
+function WhatsAppMarkdownText({ text, className }: { text: string; className?: string }) {
+    return (
+        <p className={`whitespace-pre-wrap break-words ${className ?? ""}`}>
+            {renderWhatsAppInline(text)}
+        </p>
+    )
+}
+
 function ConversationAvatar({
     name,
     mode,
@@ -179,18 +255,19 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         ? "border-brand-gold/20 bg-white/10 text-white"
         : "border-brand-gold/15 bg-white/80 text-foreground dark:bg-white/[0.04]"
     const actionClass = isOutbound
-        ? "border-brand-gold/20 bg-brand-gold/10 text-brand-gold-100"
-        : "border-brand-gold/15 bg-brand-gold/[0.06] text-foreground"
+        ? "break-words border-brand-gold/20 bg-brand-gold/10 text-brand-gold-100"
+        : "break-words border-brand-gold/15 bg-brand-gold/[0.06] text-foreground"
+    const contentCardClass = `w-full min-w-0 max-w-full overflow-hidden rounded-[18px] border p-3 break-words ${cardClass}`
 
     if (message.message_type === "template") {
         return (
-            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <ClipboardList className="h-3.5 w-3.5" />
                     Template
                 </div>
                 <p className="text-sm font-medium">{message.template_name || message.template_key || "Template message"}</p>
-                {message.text && <p className={`mt-1 text-sm leading-6 ${subtleText}`}>{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className={`mt-1 text-sm leading-6 ${subtleText}`} />}
                 {payloadEntries(message.template_variables).length > 0 && (
                     <div className="mt-2 space-y-1 border-t border-current/10 pt-2">
                         {payloadEntries(message.template_variables).map(([key, value]) => (
@@ -209,7 +286,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         const title = stringValue(reply?.title) || fallbackReply?.title || message.text || "Selected option"
         const id = stringValue(reply?.id) || fallbackReply?.id
         return (
-            <div className={`min-w-56 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     {payloadType === "list_reply" ? "List selection" : "Button selection"}
@@ -225,17 +302,17 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_button") {
         return (
-            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     Buttons sent
                 </div>
-                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
                 <div className="mt-2 space-y-1.5">
                     {buttons.map((button, index) => (
                         <div key={`${stringValue(button.id)}-${index}`} className={`rounded-lg border px-2.5 py-1.5 text-xs ${actionClass}`}>
                             <span className="font-medium">{stringValue(button.title) || stringValue(button.text) || "Button"}</span>
-                            {stringValue(button.id) && <span className={`ml-2 font-mono text-[10px] ${subtleText}`}>{stringValue(button.id)}</span>}
+                            {stringValue(button.id) && <span className={`ml-2 break-all font-mono text-[10px] ${subtleText}`}>{stringValue(button.id)}</span>}
                         </div>
                     ))}
                 </div>
@@ -257,12 +334,12 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         const productCount = visibleSections.reduce((total, section) => total + section.rows.length, 0)
 
         return (
-            <div className={`min-w-72 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <ClipboardList className="h-3.5 w-3.5" />
                     {isProductList ? "Product list sent" : "List sent"}
                 </div>
-                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
                 {stringValue(payload?.buttonText) && (
                     <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
                         {stringValue(payload?.buttonText)}
@@ -307,13 +384,13 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_flow") {
         return (
-            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <GitBranch className="h-3.5 w-3.5" />
                     Flow sent
                 </div>
                 <p className="text-sm font-medium">{stringValue(payload?.screenName) || "WhatsApp flow"}</p>
-                {message.text && <p className={`mt-1 whitespace-pre-wrap text-sm leading-6 ${subtleText}`}>{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className={`mt-1 text-sm leading-6 ${subtleText}`} />}
                 <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
                     {stringValue(payload?.ctaText) || "Continue"}
                 </div>
@@ -324,12 +401,12 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_cta_url") {
         return (
-            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     CTA sent
                 </div>
-                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
                 <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
                     {stringValue(payload?.displayText) || "Open"}
                 </div>
@@ -340,12 +417,12 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_location_request") {
         return (
-            <div className={`min-w-60 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <FileText className="h-3.5 w-3.5" />
                     Location request sent
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-6">{message.text || stringValue(payload?.body) || "Please share your location."}</p>
+                <WhatsAppMarkdownText text={message.text || stringValue(payload?.body) || "Please share your location."} className="text-sm leading-6" />
                 <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
                     Send location
                 </div>
@@ -355,7 +432,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "flow_response" && flowData) {
         return (
-            <div className={`min-w-64 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <GitBranch className="h-3.5 w-3.5" />
                     Flow response
@@ -375,12 +452,12 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
     if (payloadType === "order" && order) {
         const items = Array.isArray(order.items) ? order.items : []
         return (
-            <div className={`min-w-60 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <PackageCheck className="h-3.5 w-3.5" />
                     Catalog order
                 </div>
-                {message.text && <p className="text-sm">{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm" />}
                 <p className={`mt-1 text-xs ${subtleText}`}>{items.length} item{items.length === 1 ? "" : "s"} selected</p>
             </div>
         )
@@ -388,7 +465,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "location" && location) {
         return (
-            <div className={`min-w-60 rounded-[18px] border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <FileText className="h-3.5 w-3.5" />
                     Location
@@ -399,7 +476,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         )
     }
 
-    return <p className="whitespace-pre-wrap text-sm leading-6">{message.text || "(No message text)"}</p>
+    return <WhatsAppMarkdownText text={message.text || "(No message text)"} className="text-sm leading-6" />
 }
 
 // ─── The Inbox Tab ──────────────────────────────────────────────────────────
@@ -797,7 +874,7 @@ function InboxTab() {
                                                 style={{ animationDelay: `${idx * 15}ms` }}
                                             >
                                                 <div
-                                                    className={`flex max-w-[88%] flex-col sm:max-w-[76%] ${
+                                                    className={`flex min-w-0 max-w-[88%] flex-col sm:max-w-[76%] ${
                                                         isOutbound ? "items-end" : "items-start"
                                                     }`}
                                                 >
@@ -810,7 +887,7 @@ function InboxTab() {
                                                         </span>
                                                     )}
                                                     <div
-                                                        className={`relative px-3.5 py-2.5 ${
+                                                        className={`relative max-w-full overflow-hidden px-3.5 py-2.5 ${
                                                             isOutbound
                                                                 ? "bg-brand-deep text-white shadow-sm shadow-brand-deep/10 ring-1 ring-brand-gold/15"
                                                                 : "border border-border/50 bg-white/90 shadow-sm shadow-slate-950/[0.035] dark:bg-white/[0.055]"
