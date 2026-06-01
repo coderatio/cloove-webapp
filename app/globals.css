@@ -939,6 +939,23 @@ h6 {
   background: rgba(255, 255, 255, 0.1) !important;
 }
 
+[data-sonner-toast]:has(.cloove-order-alert-toast) {
+  width: auto !important;
+  border: 0 !important;
+  border-left: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+.dark [data-sonner-toast]:has(.cloove-order-alert-toast) {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    STREAMDOWN — Table overrides to match Cloove design system
    ─────────────────────────────────────────────────────────────────────────────

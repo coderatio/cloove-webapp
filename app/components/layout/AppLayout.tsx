@@ -26,6 +26,7 @@ import { TermsGate } from "../shared/TermsGate"
 import { useAuth } from "../providers/auth-provider"
 import { usePermission } from "@/app/hooks/usePermission"
 import { StoreProvider } from "../../domains/stores/providers/StoreProvider"
+import { GlobalOrderAlertProvider } from "@/app/domains/orders/providers/GlobalOrderAlertProvider"
 
 import { storage } from "@/app/lib/storage"
 
@@ -227,7 +228,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         <TermsGate>
                             <BusinessGuard>
                                 <StoreProvider>
-                                    {children}
+                                    <GlobalOrderAlertProvider>{children}</GlobalOrderAlertProvider>
                                 </StoreProvider>
                             </BusinessGuard>
                         </TermsGate>

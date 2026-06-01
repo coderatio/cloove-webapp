@@ -63,6 +63,7 @@ export interface AgentCapabilitiesSummary {
 }
 
 export type RestaurantOrderStage = "queued" | "preparing" | "ready" | "served"
+export type RestaurantNewOrderSound = "off" | "chime" | "bell"
 
 export interface OrderNotificationMessage {
   enabled: boolean
@@ -81,6 +82,7 @@ export interface OrderNotificationsSettings {
   restaurant: {
     enabled: boolean
     auto_send_on_stage_change: boolean
+    new_order_sound: RestaurantNewOrderSound
     stage_messages: Record<RestaurantOrderStage, OrderNotificationMessage>
     manual_presets: OrderNotificationPreset[]
   }

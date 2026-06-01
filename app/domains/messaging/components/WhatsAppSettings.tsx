@@ -52,6 +52,7 @@ import {
   type GoSettings,
   type GoSettingsContentField,
   type OrderNotificationsSettings,
+  type RestaurantNewOrderSound,
   type RestaurantOrderStage,
   WhatsAppNumberStatusValue,
   WhatsAppCatalogSyncStatus,
@@ -62,6 +63,7 @@ import { ConnectWhatsAppForm } from "./ConnectWhatsAppForm"
 import { WhatsAppNumberLogsSheet } from "./WhatsAppNumberLogsSheet"
 import { AgentProfileSection } from "./AgentProfileSection"
 import { WhatsAppNotificationMessageInput } from "./WhatsAppNotificationMessageInput"
+import { playRestaurantNewOrderSound } from "@/app/domains/restaurant/lib/new-order-sound"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useFeature } from "@/app/hooks/useFeature"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
@@ -131,6 +133,7 @@ const DEFAULT_ORDER_NOTIFICATIONS: OrderNotificationsSettings = {
   restaurant: {
     enabled: true,
     auto_send_on_stage_change: true,
+    new_order_sound: "chime",
     stage_messages: {
       queued: {
         enabled: true,
@@ -163,6 +166,16 @@ const DEFAULT_ORDER_NOTIFICATIONS: OrderNotificationsSettings = {
     ],
   },
 }
+
+const NEW_ORDER_SOUND_OPTIONS: Array<{
+  value: RestaurantNewOrderSound
+  label: string
+  description: string
+}> = [
+  { value: "off", label: "Off", description: "No sound when a new order comes in." },
+  { value: "chime", label: "Chime", description: "Short two-tone alert for new orders." },
+  { value: "bell", label: "Bell", description: "Softer three-note alert for front-of-house use." },
+]
 
 function mergeOrderNotifications(
   settings?: OrderNotificationsSettings | null
@@ -259,9 +272,13 @@ export function WhatsAppSettings({
   type SettingsTab = "connections" | "general" | "notifications" | "ai"
   const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>(initialTab)
   const [showManualConnect, setShowManualConnect] = useState(false)
+  const hasConnectedPrimaryNumber =
+    !!primaryActiveNumber && primaryActiveNumber.status === WhatsAppNumberStatusValue.ACTIVE
   const resolvedSettingsTab: SettingsTab =
     !showOrderNotificationsTab && activeSettingsTab === "notifications"
       ? "general"
+      : !hasConnectedPrimaryNumber && canShowConnections && activeSettingsTab !== "connections"
+        ? "connections"
       : activeSettingsTab
   const [manualConnectAlert, setManualConnectAlert] = useState<{
     tone: "success" | "warning"
@@ -444,8 +461,7 @@ export function WhatsAppSettings({
     )
   }
 
-  const isGeneralAvailable =
-    !!primaryActiveNumber && primaryActiveNumber.status === WhatsAppNumberStatusValue.ACTIVE
+  const isGeneralAvailable = hasConnectedPrimaryNumber
   const showConnectionsSection = stackSections ? canShowConnections : resolvedSettingsTab === "connections"
   const showGeneralSection = stackSections
     ? canShowGeneral && isGeneralAvailable
@@ -840,21 +856,24 @@ export function WhatsAppSettings({
                     </div>
                     <div className="px-3 py-3.5 sm:px-5 sm:py-5">
                       <SettingToggle
-                        label="Human Handoff"
-                        description="Transfer conversations to a human when AI cannot help."
+                        label='Contact Us button'
+                        description='When customers tap "Contact us" on WhatsApp, open a direct chat to your team number.'
                         checked={localSettings.human_handoff_enabled ?? false}
                         onChange={(v) => handleChange("human_handoff_enabled", v)}
                       />
                       {localSettings.human_handoff_enabled ? (
                         <div className="mt-3 max-w-xl space-y-2">
                           <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Human WhatsApp Number
+                            Contact us WhatsApp number
                           </label>
                           <Input
                             value={localSettings.human_handoff_phone ?? ""}
                             onChange={(e) => handleChange("human_handoff_phone", e.target.value)}
                             placeholder="2348012345678"
                           />
+                          <p className="text-sm text-slate-500 dark:text-slate-300">
+                            Customers will receive a WhatsApp button that opens a chat to this number.
+                          </p>
                         </div>
                       ) : null}
                     </div>
@@ -1123,6 +1142,40 @@ function OrderNotificationsCard({
               updateRestaurant({ auto_send_on_stage_change })
             }
           />
+        </div>
+
+        <div className="border-t border-slate-100 pt-5 dark:border-slate-800/60">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              New order sound
+            </label>
+            <Select
+              value={settings.restaurant.new_order_sound}
+              onValueChange={(value) => {
+                const sound = value as RestaurantNewOrderSound
+                updateRestaurant({ new_order_sound: sound })
+                playRestaurantNewOrderSound(sound)
+              }}
+            >
+              <SelectTrigger className="max-w-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {NEW_ORDER_SOUND_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {
+                NEW_ORDER_SOUND_OPTIONS.find(
+                  (option) => option.value === settings.restaurant.new_order_sound
+                )?.description
+              }
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-3">
