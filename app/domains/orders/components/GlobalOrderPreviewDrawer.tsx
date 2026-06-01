@@ -46,6 +46,7 @@ interface GlobalOrderPreviewDrawerProps {
   onOpenChange: (open: boolean) => void
   onViewOrders: () => void
   isRestaurantPreset: boolean
+  allowSendToKitchen?: boolean
   isSendingToKitchen: boolean
   onSendToKitchen: (input: { station: string; status: KitchenTicket["status"] }) => Promise<void>
 }
@@ -56,6 +57,7 @@ export function GlobalOrderPreviewDrawer({
   onOpenChange,
   onViewOrders,
   isRestaurantPreset,
+  allowSendToKitchen = true,
   isSendingToKitchen,
   onSendToKitchen,
 }: GlobalOrderPreviewDrawerProps) {
@@ -75,7 +77,7 @@ export function GlobalOrderPreviewDrawer({
   const currency = order.currency ?? "NGN"
   const topItems = order.items?.slice(0, 4) ?? []
   const remainingItems = Math.max(0, (order.items?.length ?? 0) - topItems.length)
-  const canSendToKitchen = isRestaurantPreset && !order.kitchenTicketId
+  const canSendToKitchen = isRestaurantPreset && allowSendToKitchen && !order.kitchenTicketId
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>

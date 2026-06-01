@@ -17,11 +17,12 @@ import { playRestaurantNewOrderSound } from "@/app/domains/restaurant/lib/new-or
 import { GlobalOrderPreviewDrawer } from "@/app/domains/orders/components/GlobalOrderPreviewDrawer"
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
-import { BellRing, ChevronRight, ShoppingBag, UtensilsCrossed, X } from "lucide-react"
+import { BellRing, ChevronRight, FlaskConical, ShoppingBag, UtensilsCrossed, X } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 
 const CHANNEL_NAME = "cloove-global-order-alerts"
 const GLOBAL_NEW_ORDERS_TOAST_ID = "cloove-global-new-orders-toast"
+const DEV_PREVIEW_ORDER_PREFIX = "__dev_preview__:"
 
 function isIncomingCustomerOrder(order: Order): boolean {
   return order.isAutomated === true || order.channel === "STOREFRONT" || order.channel === "WHATSAPP"
@@ -31,10 +32,112 @@ function orderAlertKey(businessId: string, orderId: string) {
   return `${businessId}:${orderId}`
 }
 
+function isDevPreviewOrder(order: Pick<Order, "id"> | null | undefined) {
+  return !!order?.id?.startsWith(DEV_PREVIEW_ORDER_PREFIX)
+}
+
+function buildDevPreviewOrders(currency: string): Order[] {
+  const baseTime = Date.now()
+  return [
+    {
+      id: `${DEV_PREVIEW_ORDER_PREFIX}${baseTime}-1`,
+      shortCode: "DEV101",
+      date: new Date(baseTime).toISOString(),
+      summary: "BBQ Chicken Sliders + 1 more",
+      items: [
+        {
+          productName: "BBQ Chicken Sliders",
+          quantity: 1,
+          price: 5580,
+          total: 5580,
+        },
+        {
+          productName: "Citrus Cola",
+          quantity: 1,
+          price: 1400,
+          total: 1400,
+        },
+      ],
+      totalAmount: 6980,
+      currency,
+      customer: "Josiah",
+      amountPaid: 0,
+      paymentMethod: "Bank transfer",
+      status: "PENDING",
+      channel: "WHATSAPP",
+      notes: "Developer preview order.",
+      isAutomated: true,
+      serviceMode: "TAKEAWAY",
+    },
+    {
+      id: `${DEV_PREVIEW_ORDER_PREFIX}${baseTime}-2`,
+      shortCode: "DEV102",
+      date: new Date(baseTime).toISOString(),
+      summary: "Pepperoni Pizza + 2 more",
+      items: [
+        {
+          productName: "Pepperoni Pizza",
+          quantity: 1,
+          price: 12500,
+          total: 12500,
+        },
+        {
+          productName: "Garlic Bread",
+          quantity: 1,
+          price: 3200,
+          total: 3200,
+        },
+        {
+          productName: "Lemonade",
+          quantity: 2,
+          price: 1800,
+          total: 3600,
+        },
+      ],
+      totalAmount: 19300,
+      currency,
+      customer: "Ada",
+      amountPaid: 0,
+      paymentMethod: "Pay at counter",
+      status: "PENDING",
+      channel: "STOREFRONT",
+      notes: "Developer preview order.",
+      isAutomated: true,
+      serviceMode: "DINE_IN",
+      tableLabel: "12",
+    },
+    {
+      id: `${DEV_PREVIEW_ORDER_PREFIX}${baseTime}-3`,
+      shortCode: "DEV103",
+      date: new Date(baseTime).toISOString(),
+      summary: "Chicken Alfredo Pasta",
+      items: [
+        {
+          productName: "Chicken Alfredo Pasta",
+          quantity: 1,
+          price: 9200,
+          total: 9200,
+        },
+      ],
+      totalAmount: 9200,
+      currency,
+      customer: "Mary",
+      amountPaid: 0,
+      paymentMethod: "Card",
+      status: "PENDING",
+      channel: "WHATSAPP",
+      notes: "Developer preview order.",
+      isAutomated: true,
+      serviceMode: "TAKEAWAY",
+    },
+  ]
+}
+
 export function GlobalOrderAlertProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { activeBusiness } = useBusiness()
   const businessId = activeBusiness?.id ?? null
+  const isDevPreviewEnabled = process.env.NODE_ENV !== "production"
   const isRestaurantPreset = activeBusiness?.layoutPreset === "restaurant"
   const { data: goSettings } = useGoSettings()
   const sound = goSettings?.order_notifications?.restaurant.new_order_sound ?? "chime"
@@ -68,8 +171,8 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
   }, [])
 
   const previewOrder = React.useMemo(
-    () => orders.find((order) => order.id === previewOrderId) ?? null,
-    [orders, previewOrderId]
+    () => orders.find((order) => order.id === previewOrderId) ?? queuedOrders.find((order) => order.id === previewOrderId) ?? null,
+    [orders, previewOrderId, queuedOrders]
   )
 
   const openPreview = React.useCallback((order: Order) => {
@@ -83,6 +186,17 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
   const clearQueuedOrders = React.useCallback(() => {
     setQueuedOrders([])
   }, [])
+
+  const triggerDeveloperToastPreview = React.useCallback(() => {
+    const previewOrders = buildDevPreviewOrders(activeBusiness?.currency ?? "NGN")
+    setQueuedOrders((current) => {
+      const nonPreviewOrders = current.filter((order) => !isDevPreviewOrder(order))
+      return [...previewOrders, ...nonPreviewOrders]
+    })
+    if (isRestaurantPreset) {
+      playRestaurantNewOrderSound(sound)
+    }
+  }, [activeBusiness?.currency, isRestaurantPreset, sound])
 
   const handleViewOrders = React.useCallback(() => {
     setPreviewOrderId(null)
@@ -102,8 +216,13 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
         onSuccess?: () => void
       }
     ) => {
+      if (isDevPreviewOrder(order)) {
+        toast.message("Developer preview only. Create a real order to test kitchen dispatch.")
+        return
+      }
+
       if (order.kitchenTicketId) {
-        toast.message("This order is already in the kitchen flow.")
+        toast.message("This order is now sent to the kitchen.")
         return
       }
 
@@ -223,8 +342,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
       () => (
         <div
           className={cn(
-            "relative w-[min(94vw,34rem)] overflow-hidden rounded-[26px] border border-slate-200/80 bg-white/95 p-4 shadow-[0_24px_70px_-28px_rgba(15,23,42,0.28)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/92",
-            "before:absolute before:inset-y-0 before:left-0 before:w-1.5 before:bg-emerald-500"
+            "cloove-order-alert-toast relative w-[min(94vw,34rem)] overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_20px_60px_-28px_rgba(15,23,42,0.38)] ring-1 ring-black/[0.02] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950"
           )}
         >
           <button
@@ -236,112 +354,122 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
             <X className="h-4 w-4" />
           </button>
 
-          <div className="pr-10">
-            <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              <BellRing className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-300" />
-              <span>New orders</span>
-              <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[11px]">
-                {visibleQueuedOrders.length}
-              </Badge>
+          <div className="border-b border-slate-200/70 px-4 py-3 pr-12 dark:border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/15">
+                <BellRing className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-950 dark:text-slate-100">
+                    New orders
+                  </p>
+                  <Badge variant="secondary" className="rounded-full px-2 py-0 text-[11px]">
+                    {visibleQueuedOrders.length}
+                  </Badge>
+                </div>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  Review recent incoming orders without leaving this page.
+                </p>
+              </div>
             </div>
+          </div>
 
-            <div className="mt-3 space-y-3">
+          <div className="p-2">
+            <div className="space-y-1.5">
               {displayedOrders.map((order) => {
                 const total = formatCurrency(Number(order.totalAmount || 0), {
                   currency: order.currency ?? activeBusiness?.currency ?? "NGN",
                 })
                 const leadItem = order.items?.[0]
                 const extraItems = Math.max(0, (order.items?.length ?? 0) - 1)
-                const description = [
-                  order.customer || "Walk-in customer",
-                  total,
-                  leadItem?.productName
-                    ? `${leadItem.productName}${extraItems > 0 ? ` + ${extraItems} more` : ""}`
-                    : order.summary || "Open preview for details",
-                ]
-                  .filter(Boolean)
-                  .join(" • ")
+                const itemSummary = leadItem?.productName
+                  ? `${leadItem.productName}${extraItems > 0 ? ` + ${extraItems} more` : ""}`
+                  : order.summary || "Open preview for details"
 
                 return (
                   <div
                     key={order.id}
-                    className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-slate-900/70"
+                    className="group rounded-3xl border border-transparent p-2.5 transition-colors hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/[0.03]"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 dark:border-white/10 dark:bg-slate-900">
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 dark:border-white/10 dark:bg-slate-900">
                         {leadItem?.imageUrl ? (
                           <Image
                             src={leadItem.imageUrl}
                             alt={leadItem.productName || "Order item"}
                             fill
-                            sizes="68px"
+                            sizes="48px"
                             className="object-cover"
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-emerald-600 dark:text-emerald-300">
-                            <ShoppingBag className="h-5 w-5" />
+                            <ShoppingBag className="h-4.5 w-4.5" />
                           </div>
                         )}
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-slate-950 dark:text-slate-100">
                             Order{order.shortCode ? ` #${order.shortCode}` : ""}
                           </p>
                           {order.serviceMode ? (
-                            <Badge variant="secondary" className="rounded-full px-2.5 py-0.5 text-[11px]">
+                            <Badge variant="outline" className="shrink-0 rounded-full px-2 py-0 text-[10px] uppercase tracking-normal">
                               {order.serviceMode.replace("_", " ")}
                             </Badge>
                           ) : null}
                         </div>
 
-                        <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                          {description}
+                        <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                          {order.customer || "Walk-in customer"} • {total}
                         </p>
+                        <p className="mt-0.5 truncate text-xs font-medium text-slate-700 dark:text-slate-300">
+                          {itemSummary}
+                        </p>
+                      </div>
 
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <Button
+                          size="sm"
+                          className="h-8 rounded-full bg-emerald-600 px-3 text-xs text-white hover:bg-emerald-700"
+                          onClick={() => {
+                            removeQueuedOrder(order.id)
+                            openPreview(order)
+                          }}
+                        >
+                          Preview
+                          <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                        </Button>
+                        {isRestaurantPreset && !order.kitchenTicketId ? (
                           <Button
                             size="sm"
-                            className="h-9 rounded-full bg-emerald-600 px-4 text-white hover:bg-emerald-700"
+                            variant="outline"
+                            disabled={sendingToastOrderId === order.id}
+                            className="h-8 rounded-full border-slate-200 px-3 text-xs dark:border-white/10"
                             onClick={() => {
-                              removeQueuedOrder(order.id)
-                              openPreview(order)
+                              setSendingToastOrderId(order.id)
+                              void sendOrderToKitchen(order, {
+                                station: "kitchen",
+                                status: "queued",
+                                onSuccess: () => {
+                                  setSendingToastOrderId((current) =>
+                                    current === order.id ? null : current
+                                  )
+                                  removeQueuedOrder(order.id)
+                                },
+                              })
+                                .finally(() => {
+                                  setSendingToastOrderId((current) =>
+                                    current === order.id ? null : current
+                                  )
+                                })
                             }}
                           >
-                            Preview
-                            <ChevronRight className="ml-1.5 h-4 w-4" />
+                            <UtensilsCrossed className="mr-1 h-3.5 w-3.5" />
+                            {sendingToastOrderId === order.id ? "Sending..." : "Send to kitchen"}
                           </Button>
-                          {isRestaurantPreset && !order.kitchenTicketId ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={sendingToastOrderId === order.id}
-                              className="h-9 rounded-full border-slate-200 px-4 dark:border-white/10"
-                              onClick={() => {
-                                setSendingToastOrderId(order.id)
-                                void sendOrderToKitchen(order, {
-                                  station: "kitchen",
-                                  status: "queued",
-                                  onSuccess: () => {
-                                    setSendingToastOrderId((current) =>
-                                      current === order.id ? null : current
-                                    )
-                                    removeQueuedOrder(order.id)
-                                  },
-                                })
-                                  .finally(() => {
-                                    setSendingToastOrderId((current) =>
-                                      current === order.id ? null : current
-                                    )
-                                  })
-                              }}
-                            >
-                              <UtensilsCrossed className="mr-1.5 h-4 w-4" />
-                              {sendingToastOrderId === order.id ? "Sending..." : "Send to kitchen"}
-                            </Button>
-                          ) : null}
-                        </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -350,7 +478,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
             </div>
 
             {remainingCount > 0 ? (
-              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
+              <p className="px-2.5 pb-1.5 pt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
                 +{remainingCount} more order{remainingCount === 1 ? "" : "s"} waiting
               </p>
             ) : null}
@@ -377,12 +505,27 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
   return (
     <>
       {children}
+      {isDevPreviewEnabled ? (
+        <div className="pointer-events-none fixed bottom-6 right-6 z-[90]">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={triggerDeveloperToastPreview}
+            className="pointer-events-auto h-10 rounded-full border-slate-200 bg-white/95 px-4 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-950/92"
+          >
+            <FlaskConical className="mr-2 h-4 w-4" />
+            Preview toast
+          </Button>
+        </div>
+      ) : null}
       <GlobalOrderPreviewDrawer
         order={previewOrder}
         open={!!previewOrderId}
         onOpenChange={(open) => !open && setPreviewOrderId(null)}
         onViewOrders={handleViewOrders}
         isRestaurantPreset={isRestaurantPreset}
+        allowSendToKitchen={!isDevPreviewOrder(previewOrder)}
         isSendingToKitchen={kitchenAction.create.isPending}
         onSendToKitchen={handleSendToKitchen}
       />
