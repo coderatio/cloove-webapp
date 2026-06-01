@@ -100,11 +100,11 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
     const fallbackReply = parseReplyFallback(message.text)
     const subtleText = isOutbound ? "text-white/70" : "text-muted-foreground"
     const cardClass = isOutbound
-        ? "border-white/15 bg-white/10 text-white"
-        : "border-border/40 bg-background/80 text-foreground"
+        ? "border-brand-gold/20 bg-white/10 text-white"
+        : "border-brand-gold/15 bg-white/80 text-foreground dark:bg-white/[0.04]"
     const actionClass = isOutbound
-        ? "border-white/15 bg-white/10 text-white/90"
-        : "border-border/50 bg-muted/20 text-foreground"
+        ? "border-brand-gold/20 bg-brand-gold/10 text-brand-gold-100"
+        : "border-brand-gold/15 bg-brand-gold/[0.06] text-foreground"
 
     if (message.message_type === "template") {
         return (
@@ -397,33 +397,38 @@ function InboxTab() {
     }
 
     return (
-        <div className="flex h-full min-h-0 overflow-hidden rounded-2xl border border-border/60 bg-background shadow-sm">
+        <div className="flex h-full min-h-0 overflow-hidden rounded-[32px] border border-brand-gold/15 bg-linear-to-br from-white via-white to-brand-gold/[0.035] shadow-[0_24px_80px_-44px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.02] dark:border-brand-gold/20 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-brand-gold/[0.08]">
             {/* ── Conversation list ──────────────────────────────────── */}
             <section
-                className={`flex h-full min-h-0 flex-col overflow-hidden border-r border-border/40 bg-muted/[0.06] transition-all duration-300 ${
-                    selected ? "hidden xl:flex xl:w-[340px]" : "flex-1 xl:w-[340px]"
+                className={`flex h-full min-h-0 flex-col overflow-hidden border-r border-brand-gold/10 bg-white/75 transition-all duration-300 dark:bg-slate-950/55 ${
+                    selected ? "hidden xl:flex xl:w-[380px]" : "flex-1 xl:w-[380px]"
                 }`}
             >
                 {/* Header */}
-                <div className="shrink-0 border-b border-border/30 px-3 py-3">
-                    <div className="flex items-center gap-2.5 px-1">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-deep/10">
-                            <Inbox className="h-3.5 w-3.5 text-brand-deep/70" />
+                <div className="shrink-0 border-b border-brand-gold/10 px-4 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/15 dark:bg-brand-gold/15 dark:text-brand-gold-300">
+                            <Inbox className="h-4 w-4" />
                         </div>
-                        <h2 className="text-sm font-semibold tracking-tight">Inbox</h2>
-                        <span className="ml-auto text-[11px] font-medium text-muted-foreground/60">
-                            {filteredConversations.length}
+                        <div className="min-w-0 flex-1">
+                            <h2 className="text-base font-semibold tracking-tight text-foreground">Inbox</h2>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                {filteredConversations.length} conversation{filteredConversations.length === 1 ? "" : "s"}
+                            </p>
+                        </div>
+                        <span className="rounded-full border border-brand-gold/15 bg-brand-gold/10 px-2.5 py-1 text-xs font-semibold text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
+                            {conversations?.filter((conversation) => conversation.unread_count > 0).length ?? 0} unread
                         </span>
                     </div>
                     {/* Search */}
-                    <div className="relative mt-2.5">
-                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+                    <div className="relative mt-4">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
                         <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by name or number…"
                             aria-label="Search conversations"
-                            className="h-8 w-full rounded-lg border border-border/40 bg-white/60 pl-8 pr-2.5 text-xs outline-none placeholder:text-muted-foreground/40 focus:border-brand-deep/20 focus:bg-white dark:bg-white/5 dark:focus:bg-white/10"
+                            className="h-11 w-full rounded-2xl border border-border/50 bg-white/80 pl-10 pr-3 text-sm outline-none placeholder:text-muted-foreground/40 transition-colors focus:border-brand-gold/35 focus:bg-white focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5 dark:focus:bg-white/10"
                         />
                         {search && (
                             <button
@@ -441,10 +446,10 @@ function InboxTab() {
                 {/* List */}
                 <div className="min-h-0 flex-1 overflow-y-auto">
                     {isLoading ? (
-                        <div className="space-y-1 p-2">
+                        <div className="space-y-2 p-3">
                             {Array.from({ length: 6 }).map((_, i) => (
-                                <div key={i} className="flex items-start gap-2.5 rounded-xl p-2.5">
-                                    <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+                                <div key={i} className="flex items-start gap-3 rounded-[22px] p-3">
+                                    <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
                                     <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">
                                         <div className="flex items-center justify-between gap-2">
                                             <Skeleton className="h-3.5 w-28" />
@@ -457,7 +462,7 @@ function InboxTab() {
                             ))}
                         </div>
                     ) : filteredConversations.length ? (
-                        <div className="py-1">
+                        <div className="space-y-1.5 p-2.5">
                             {filteredConversations.map((conversation) => {
                                 const isSelected = activeConversationId === conversation.id
                                 const initial = getInitial(
@@ -472,23 +477,23 @@ function InboxTab() {
                                         type="button"
                                         onClick={() => setSelectedId(conversation.id)}
                                         aria-current={isSelected ? "true" : undefined}
-                                        className={`group flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all duration-150 ${
+                                        className={`group flex w-full items-start gap-3 rounded-[22px] border px-3 py-3 text-left transition-all duration-200 ${
                                             isSelected
-                                                ? "bg-brand-deep/[0.06]"
-                                                : "hover:bg-muted/30"
+                                                ? "border-brand-gold/30 bg-brand-gold/[0.07] shadow-sm shadow-brand-gold/5"
+                                                : "border-transparent hover:border-brand-gold/15 hover:bg-brand-gold/[0.035]"
                                         }`}
                                     >
                                         {/* Avatar */}
                                         <div
-                                            className={`relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                                            className={`relative mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${
                                                 isHuman
-                                                    ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
-                                                    : "bg-brand-deep/10 text-brand-deep/70 dark:bg-brand-gold-700/20 dark:text-brand-gold-300"
+                                                    ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/20 dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                                                    : "bg-brand-deep/10 text-brand-deep ring-1 ring-brand-deep/10 dark:bg-brand-gold/10 dark:text-brand-gold-300 dark:ring-brand-gold/15"
                                             }`}
                                         >
                                             {initial}
                                             {conversation.unread_count > 0 && (
-                                                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-deep px-1 text-[9px] font-bold text-white ring-2 ring-background dark:bg-brand-gold-600 dark:text-brand-deep-900">
+                                                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-gold px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-950">
                                                     {conversation.unread_count > 9
                                                         ? "9+"
                                                         : conversation.unread_count}
@@ -499,17 +504,17 @@ function InboxTab() {
                                         {/* Content */}
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-2">
-                                                <p className="truncate text-sm font-medium">
+                                                <p className="truncate text-sm font-semibold text-foreground">
                                                     {conversation.customer_name ||
                                                         conversation.customer_phone}
                                                 </p>
                                                 {lastMsgTime && (
-                                                    <span className="shrink-0 text-[10px] font-medium text-muted-foreground/50">
+                                                    <span className="shrink-0 text-[10px] font-medium text-muted-foreground/60">
                                                         {formatConversationDate(lastMsgTime)}
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+                                            <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground/70">
                                                 <span className="truncate">
                                                     {conversation.number_label || "WhatsApp"}
                                                 </span>
@@ -517,14 +522,14 @@ function InboxTab() {
                                                 <span
                                                     className={`font-medium ${
                                                         isHuman
-                                                            ? "text-amber-600 dark:text-amber-400"
+                                                            ? "text-brand-gold dark:text-brand-gold-300"
                                                             : "text-emerald-600 dark:text-emerald-400"
                                                     }`}
                                                 >
                                                     {conversation.mode}
                                                 </span>
                                             </div>
-                                            <p className="mt-0.5 line-clamp-1 text-[12px] leading-5 text-muted-foreground/70">
+                                            <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-muted-foreground/70">
                                                 {conversation.last_customer_message ||
                                                     conversation.context_summary ||
                                                     "No messages yet"}
@@ -536,7 +541,7 @@ function InboxTab() {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center gap-3 px-5 py-16 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border/50 bg-muted/20">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-gold/20 bg-brand-gold/10">
                                 <MessageSquare className="h-5 w-5 text-muted-foreground/40" />
                             </div>
                             <div>
@@ -553,12 +558,12 @@ function InboxTab() {
             </section>
 
             {/* ── Message detail ─────────────────────────────────────── */}
-            <section className="flex flex-1 flex-col overflow-hidden bg-background">
+            <section className="flex flex-1 flex-col overflow-hidden bg-background/70">
                 {!selected ? (
                     <div className="flex h-full items-center justify-center p-8">
                         <div className="max-w-xs space-y-3 text-center">
-                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-border/50 bg-muted/20">
-                                <MessageSquare className="h-6 w-6 text-muted-foreground/30" />
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-gold/20 bg-brand-gold/10">
+                                <MessageSquare className="h-6 w-6 text-brand-gold/70" />
                             </div>
                             <p className="text-base font-semibold text-foreground">
                                 Select a conversation
@@ -572,22 +577,22 @@ function InboxTab() {
                 ) : (
                     <>
                         {/* ── Conversation header ──────────────────── */}
-                        <div className="shrink-0 border-b border-border/30 bg-background/95 px-4 py-2.5">
+                        <div className="shrink-0 border-b border-brand-gold/10 bg-white/85 px-4 py-3 backdrop-blur dark:bg-slate-950/70">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex min-w-0 flex-1 items-center gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setSelectedId(null)}
                                         aria-label="Close conversation"
-                                        className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/50 transition-colors hover:bg-muted/40 hover:text-muted-foreground xl:hidden"
+                                        className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground/50 transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
                                     <div
-                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${
                                             selected.mode === "human"
-                                                ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
-                                                : "bg-brand-deep/10 text-brand-deep/70 dark:bg-brand-gold-700/20 dark:text-brand-gold-300"
+                                                ? "bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/20 dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                                                : "bg-brand-deep/10 text-brand-deep ring-1 ring-brand-deep/10 dark:bg-brand-gold/10 dark:text-brand-gold-300 dark:ring-brand-gold/15"
                                         }`}
                                     >
                                         {getInitial(
@@ -620,7 +625,7 @@ function InboxTab() {
                                                     onClick={() =>
                                                         takeover.mutate({ id: selected.id })
                                                     }
-                                                    className="flex h-8 items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                                    className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
                                                     <UserRound className="h-3.5 w-3.5" />
                                                     Take over
@@ -631,7 +636,7 @@ function InboxTab() {
                                                     onClick={() =>
                                                         returnToAi.mutate({ id: selected.id })
                                                     }
-                                                    className="flex h-8 items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                                    className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
                                                     <Bot className="h-3.5 w-3.5" />
                                                     AI mode
@@ -642,7 +647,7 @@ function InboxTab() {
                                                 onClick={() =>
                                                     resolveConversation.mutate({ id: selected.id })
                                                 }
-                                                className="flex h-8 items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                                className="flex h-9 items-center gap-1.5 rounded-full border border-border/50 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                             >
                                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                                 Resolve
@@ -653,10 +658,10 @@ function InboxTab() {
                                         type="button"
                                         onClick={() => setSidebarOpen((p) => !p)}
                                         aria-label={sidebarOpen ? "Close details panel" : "Open details panel"}
-                                        className={`hidden h-8 w-8 items-center justify-center rounded-lg border border-border/50 transition-colors xl:flex ${
+                                        className={`hidden h-9 w-9 items-center justify-center rounded-full border transition-colors xl:flex ${
                                             sidebarOpen
-                                                ? "bg-brand-deep/10 text-brand-deep/70"
-                                                : "bg-background text-muted-foreground hover:bg-muted/40"
+                                                ? "border-brand-gold/20 bg-brand-gold/10 text-brand-gold"
+                                                : "border-border/50 bg-background text-muted-foreground hover:bg-brand-gold/10 hover:text-brand-gold"
                                         }`}
                                     >
                                         <MoreHorizontal className="h-3.5 w-3.5" />
@@ -667,7 +672,7 @@ function InboxTab() {
 
                         {/* ── AI paused banner ──────────────────────── */}
                         {selected.mode === "human" && (
-                            <div className="mx-4 mt-3 animate-fade-in rounded-xl border border-amber-200/50 bg-amber-50/80 px-3.5 py-2.5 text-xs leading-5 text-amber-800 dark:border-amber-500/15 dark:bg-amber-500/8 dark:text-amber-200/80">
+                            <div className="mx-4 mt-3 animate-fade-in rounded-2xl border border-brand-gold/20 bg-brand-gold/[0.07] px-3.5 py-2.5 text-xs leading-5 text-brand-deep dark:bg-brand-gold/10 dark:text-brand-gold-200">
                                 <div className="flex items-start gap-2">
                                     <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                     <span>
@@ -677,7 +682,7 @@ function InboxTab() {
                                             onClick={() =>
                                                 returnToAi.mutate({ id: selected.id })
                                             }
-                                            className="font-medium underline underline-offset-2 transition-colors hover:text-amber-900 dark:hover:text-amber-100"
+                                            className="font-medium underline underline-offset-2 transition-colors hover:text-brand-gold"
                                         >
                                             Resume AI
                                         </button>
@@ -695,7 +700,7 @@ function InboxTab() {
                             }`}
                         >
                             {/* Messages */}
-                            <div className="min-h-0 space-y-1 overflow-y-auto px-4 py-4">
+                            <div className="min-h-0 space-y-1 overflow-y-auto bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.045),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.24))] px-4 py-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.08),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))]">
                                 {selected.messages.map((message, idx) => {
                                     const isOutbound = message.direction === "outbound"
                                     const isFirst =
@@ -732,8 +737,8 @@ function InboxTab() {
                                                 <div
                                                     className={`relative px-3.5 py-2 ${
                                                         isOutbound
-                                                            ? "bg-brand-deep text-white shadow-sm"
-                                                            : "border border-border/40 bg-muted/20"
+                                                            ? "bg-brand-deep text-white shadow-sm shadow-brand-deep/10 ring-1 ring-brand-gold/15"
+                                                            : "border border-border/50 bg-white/80 shadow-sm shadow-slate-950/[0.025] dark:bg-white/[0.045]"
                                                     } ${
                                                         isFirst && isOutbound
                                                             ? "rounded-2xl rounded-br-md"
@@ -777,11 +782,11 @@ function InboxTab() {
 
                             {/* ── Sidebar ────────────────────────────── */}
                             {sidebarOpen && (
-                                <aside className="min-h-0 overflow-y-auto border-t border-border/30 bg-muted/[0.04] p-3 xl:border-l xl:border-t-0">
+                                <aside className="min-h-0 overflow-y-auto border-t border-brand-gold/10 bg-white/65 p-3 dark:bg-slate-950/45 xl:border-l xl:border-t-0">
                                     {/* Details card */}
-                                    <div className="rounded-xl border border-border/40 bg-background/80 p-3">
+                                    <div className="rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
                                         <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-brand-deep/40" />
+                                            <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
                                             Details
                                         </h4>
                                         <dl className="space-y-2 text-xs">
@@ -792,10 +797,10 @@ function InboxTab() {
                                                         className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
                                                             selected.status === "open" ||
                                                             selected.status === "pending_customer"
-                                                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                                                ? "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
                                                                 : selected.status === "resolved"
                                                                   ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                                                                  : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                                                                  : "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
                                                         }`}
                                                     >
                                                         {(selected.status === "open" ||
@@ -812,7 +817,7 @@ function InboxTab() {
                                                 <dd
                                                     className={`text-xs font-medium capitalize ${
                                                         selected.mode === "human"
-                                                            ? "text-amber-600 dark:text-amber-400"
+                                                            ? "text-brand-gold dark:text-brand-gold-300"
                                                             : "text-emerald-600 dark:text-emerald-400"
                                                     }`}
                                                 >
@@ -854,7 +859,7 @@ function InboxTab() {
                                                         userId: user.id,
                                                     })
                                                 }
-                                                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border/40 bg-background/80 px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
+                                                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-brand-gold/20 bg-background/80 px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                             >
                                                 <UserRound className="h-3.5 w-3.5" />
                                                 Assign to me
@@ -863,9 +868,9 @@ function InboxTab() {
 
                                     {/* Template sender */}
                                     {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
-                                        <div className="mt-2.5 rounded-xl border border-border/40 bg-background/80 p-3">
+                                        <div className="mt-2.5 rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
                                             <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-                                                <ClipboardList className="h-3.5 w-3.5" />
+                                                <ClipboardList className="h-3.5 w-3.5 text-brand-gold" />
                                                 Send template
                                             </h4>
                                             <div className="space-y-2">
@@ -873,7 +878,7 @@ function InboxTab() {
                                                     value={selectedTemplate}
                                                     onValueChange={setSelectedTemplate}
                                                 >
-                                                    <SelectTrigger className="h-8 rounded-lg text-xs">
+                                                    <SelectTrigger className="h-9 rounded-xl border-brand-gold/15 text-xs focus:ring-brand-gold/20">
                                                         <SelectValue placeholder="Select template" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -904,7 +909,7 @@ function InboxTab() {
                                                     rows={3}
                                                     placeholder='{"customer_name":"Amina"}'
                                                     aria-label="Template variables"
-                                                    className="min-h-0 w-full resize-none rounded-lg border border-border/40 bg-muted/10 px-2.5 py-1.5 font-mono text-[11px] outline-none placeholder:text-muted-foreground/30 focus:border-brand-deep/20 dark:bg-white/5"
+                                                    className="min-h-0 w-full resize-none rounded-xl border border-border/40 bg-muted/10 px-2.5 py-1.5 font-mono text-[11px] outline-none placeholder:text-muted-foreground/30 focus:border-brand-gold/30 focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5"
                                                 />
                                                 <button
                                                     type="button"
@@ -912,7 +917,7 @@ function InboxTab() {
                                                     disabled={
                                                         sendTemplate.isPending || !selectedTemplate
                                                     }
-                                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-deep px-3 py-1.5 text-[11px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                                                    className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-deep px-3 py-2 text-[11px] font-medium text-brand-gold-300 transition-opacity hover:opacity-90 disabled:opacity-40 dark:bg-brand-gold-700 dark:text-white"
                                                 >
                                                     {sendTemplate.isPending ? (
                                                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -930,7 +935,7 @@ function InboxTab() {
 
                         {/* ── Reply form ─────────────────────────────── */}
                         {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
-                            <div className="shrink-0 border-t border-border/30 bg-background/98 px-4 py-3">
+                            <div className="shrink-0 border-t border-brand-gold/10 bg-white/85 px-4 py-3 backdrop-blur dark:bg-slate-950/75">
                                 <div className="mx-auto flex max-w-3xl items-end gap-2">
                                     <div className="relative flex-1">
                                         <textarea
@@ -939,7 +944,7 @@ function InboxTab() {
                                             placeholder="Type a reply…"
                                             rows={1}
                                             aria-label="Reply message"
-                                            className="min-h-[44px] w-full resize-none rounded-xl border border-border/50 bg-muted/10 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/40 focus:border-brand-deep/20 focus:bg-background dark:bg-white/5"
+                                            className="min-h-[46px] w-full resize-none rounded-2xl border border-border/50 bg-muted/10 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/40 focus:border-brand-gold/30 focus:bg-background focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5"
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter" && !e.shiftKey) {
                                                     e.preventDefault()
@@ -952,7 +957,7 @@ function InboxTab() {
                                         type="button"
                                         onClick={submitMessage}
                                         disabled={sendMessage.isPending || !draft.trim()}
-                                        className="flex h-[44px] w-[44px] shrink-0 items-center justify-center self-center rounded-xl bg-brand-deep text-white transition-all hover:opacity-90 disabled:opacity-30"
+                                        className="flex h-[46px] w-[46px] shrink-0 items-center justify-center self-center rounded-2xl bg-brand-deep text-brand-gold-300 transition-all hover:opacity-90 disabled:opacity-30 dark:bg-brand-gold-700 dark:text-white"
                                     >
                                         {sendMessage.isPending ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
