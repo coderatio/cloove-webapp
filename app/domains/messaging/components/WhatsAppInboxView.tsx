@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import {
+    ArrowLeft,
     Bot,
     CheckCircle2,
     ClipboardList,
@@ -11,9 +12,10 @@ import {
     Inbox,
     Loader2,
     MessageSquare,
-    MoreHorizontal,
     MousePointerClick,
     PackageCheck,
+    PanelRightClose,
+    PanelRightOpen,
     Search,
     SendHorizonal,
     UserRound,
@@ -34,6 +36,7 @@ import {
     useWhatsAppConversation,
     useWhatsAppConversations,
     useWhatsAppTemplates,
+    type WhatsAppInboxConversation,
     type WhatsAppInboxMessage,
 } from "@/app/domains/messaging/hooks/useWhatsAppInbox"
 
@@ -53,6 +56,35 @@ function formatConversationDate(dateStr: string) {
     if (days === 1) return "Yesterday"
     if (days < 7) return date.toLocaleDateString([], { weekday: "short" })
     return date.toLocaleDateString([], { month: "short", day: "numeric" })
+}
+
+function formatMessageDate(dateStr: string) {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const yesterday = new Date(now)
+    yesterday.setDate(now.getDate() - 1)
+
+    if (date.toDateString() === now.toDateString()) return "Today"
+    if (date.toDateString() === yesterday.toDateString()) return "Yesterday"
+    return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+}
+
+function latestConversationActivity(conversation: WhatsAppInboxConversation) {
+    return Math.max(
+        conversation.last_inbound_at ? new Date(conversation.last_inbound_at).getTime() : 0,
+        conversation.last_outbound_at ? new Date(conversation.last_outbound_at).getTime() : 0,
+        conversation.updated_at ? new Date(conversation.updated_at).getTime() : 0
+    )
+}
+
+function latestConversationActivityIso(conversation: WhatsAppInboxConversation) {
+    const candidates = [
+        conversation.last_inbound_at,
+        conversation.last_outbound_at,
+        conversation.updated_at,
+    ].filter((value): value is string => !!value)
+
+    return candidates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null
 }
 
 function getInitial(name: string) {
@@ -88,6 +120,126 @@ function parseReplyFallback(text: string | null) {
     return { title: match[1].trim(), id: match[2].trim() }
 }
 
+function isWordChar(value: string | undefined) {
+    return !!value && /[A-Za-z0-9]/.test(value)
+}
+
+function canOpenWhatsAppMark(text: string, index: number, marker: string) {
+    const next = text[index + marker.length]
+    if (!next || /\s/.test(next)) return false
+    if (marker === "_" && isWordChar(text[index - 1])) return false
+    return true
+}
+
+function findWhatsAppMarkClose(text: string, start: number, marker: string) {
+    for (let i = start + marker.length; i < text.length; i += 1) {
+        if (!text.startsWith(marker, i)) continue
+        const previous = text[i - 1]
+        const next = text[i + marker.length]
+        if (!previous || /\s/.test(previous)) continue
+        if (marker === "_" && isWordChar(next)) continue
+        return i
+    }
+    return -1
+}
+
+function renderWhatsAppInline(text: string, keyPrefix = "wa"): ReactNode[] {
+    const nodes: ReactNode[] = []
+    let buffer = ""
+    let index = 0
+
+    const pushBuffer = () => {
+        if (!buffer) return
+        nodes.push(buffer)
+        buffer = ""
+    }
+
+    const markers = [
+        { marker: "```", render: (children: ReactNode, key: string) => <code key={key} className="rounded bg-current/10 px-1 py-px font-mono text-[0.92em]">{children}</code> },
+        { marker: "`", render: (children: ReactNode, key: string) => <code key={key} className="rounded bg-current/10 px-1 py-px font-mono text-[0.92em]">{children}</code> },
+        { marker: "*", render: (children: ReactNode, key: string) => <strong key={key} className="font-semibold">{children}</strong> },
+        { marker: "_", render: (children: ReactNode, key: string) => <em key={key}>{children}</em> },
+        { marker: "~", render: (children: ReactNode, key: string) => <s key={key}>{children}</s> },
+    ]
+
+    while (index < text.length) {
+        const match = markers.find(({ marker }) => text.startsWith(marker, index))
+        if (!match || !canOpenWhatsAppMark(text, index, match.marker)) {
+            buffer += text[index]
+            index += 1
+            continue
+        }
+
+        const close = findWhatsAppMarkClose(text, index, match.marker)
+        if (close === -1) {
+            buffer += text[index]
+            index += 1
+            continue
+        }
+
+        pushBuffer()
+        const inner = text.slice(index + match.marker.length, close)
+        const key = `${keyPrefix}-${index}`
+        nodes.push(match.render(renderWhatsAppInline(inner, key), key))
+        index = close + match.marker.length
+    }
+
+    pushBuffer()
+    return nodes
+}
+
+function WhatsAppMarkdownText({ text, className }: { text: string; className?: string }) {
+    return (
+        <p className={`whitespace-pre-wrap break-words ${className ?? ""}`}>
+            {renderWhatsAppInline(text)}
+        </p>
+    )
+}
+
+function ConversationAvatar({
+    name,
+    mode,
+    unreadCount = 0,
+    size = "md",
+}: {
+    name: string
+    mode: "ai" | "human"
+    unreadCount?: number
+    size?: "sm" | "md" | "lg"
+}) {
+    const sizeClass = size === "lg" ? "h-11 w-11 text-sm" : size === "sm" ? "h-9 w-9 text-xs" : "h-10 w-10 text-sm"
+    const modeClass = mode === "human"
+        ? "bg-brand-gold/10 text-brand-gold ring-brand-gold/20 dark:bg-brand-gold/15 dark:text-brand-gold-300"
+        : "bg-brand-deep/10 text-brand-deep ring-brand-deep/10 dark:bg-brand-gold/10 dark:text-brand-gold-300 dark:ring-brand-gold/15"
+
+    return (
+        <div className={`relative flex shrink-0 items-center justify-center rounded-2xl font-semibold ring-1 ${sizeClass} ${modeClass}`}>
+            {getInitial(name)}
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-slate-950" />
+            {unreadCount > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-gold px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-950">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+            )}
+        </div>
+    )
+}
+
+function ModePill({ mode }: { mode: "ai" | "human" }) {
+    return (
+        <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                mode === "human"
+                    ? "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                    : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+            }`}
+        >
+            {mode === "human" ? <UserRound className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+            {mode}
+        </span>
+    )
+}
+
 function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage; isOutbound: boolean }) {
     const payload = message.payload
     const payloadType = stringValue(payload?.type)
@@ -100,21 +252,22 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
     const fallbackReply = parseReplyFallback(message.text)
     const subtleText = isOutbound ? "text-white/70" : "text-muted-foreground"
     const cardClass = isOutbound
-        ? "border-white/15 bg-white/10 text-white"
-        : "border-border/40 bg-background/80 text-foreground"
+        ? "border-brand-gold/20 bg-white/10 text-white"
+        : "border-brand-gold/15 bg-white/80 text-foreground dark:bg-white/[0.04]"
     const actionClass = isOutbound
-        ? "border-white/15 bg-white/10 text-white/90"
-        : "border-border/50 bg-muted/20 text-foreground"
+        ? "break-words border-brand-gold/20 bg-brand-gold/10 text-brand-gold-100"
+        : "break-words border-brand-gold/15 bg-brand-gold/[0.06] text-foreground"
+    const contentCardClass = `w-full min-w-0 max-w-full overflow-hidden rounded-[18px] border p-3 break-words ${cardClass}`
 
     if (message.message_type === "template") {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <ClipboardList className="h-3.5 w-3.5" />
                     Template
                 </div>
                 <p className="text-sm font-medium">{message.template_name || message.template_key || "Template message"}</p>
-                {message.text && <p className={`mt-1 text-sm leading-6 ${subtleText}`}>{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className={`mt-1 text-sm leading-6 ${subtleText}`} />}
                 {payloadEntries(message.template_variables).length > 0 && (
                     <div className="mt-2 space-y-1 border-t border-current/10 pt-2">
                         {payloadEntries(message.template_variables).map(([key, value]) => (
@@ -133,7 +286,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         const title = stringValue(reply?.title) || fallbackReply?.title || message.text || "Selected option"
         const id = stringValue(reply?.id) || fallbackReply?.id
         return (
-            <div className={`min-w-56 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     {payloadType === "list_reply" ? "List selection" : "Button selection"}
@@ -149,17 +302,17 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_button") {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     Buttons sent
                 </div>
-                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
                 <div className="mt-2 space-y-1.5">
                     {buttons.map((button, index) => (
                         <div key={`${stringValue(button.id)}-${index}`} className={`rounded-lg border px-2.5 py-1.5 text-xs ${actionClass}`}>
                             <span className="font-medium">{stringValue(button.title) || stringValue(button.text) || "Button"}</span>
-                            {stringValue(button.id) && <span className={`ml-2 font-mono text-[10px] ${subtleText}`}>{stringValue(button.id)}</span>}
+                            {stringValue(button.id) && <span className={`ml-2 break-all font-mono text-[10px] ${subtleText}`}>{stringValue(button.id)}</span>}
                         </div>
                     ))}
                 </div>
@@ -181,12 +334,12 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         const productCount = visibleSections.reduce((total, section) => total + section.rows.length, 0)
 
         return (
-            <div className={`min-w-72 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <ClipboardList className="h-3.5 w-3.5" />
                     {isProductList ? "Product list sent" : "List sent"}
                 </div>
-                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
                 {stringValue(payload?.buttonText) && (
                     <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
                         {stringValue(payload?.buttonText)}
@@ -231,13 +384,13 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_flow") {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <GitBranch className="h-3.5 w-3.5" />
                     Flow sent
                 </div>
                 <p className="text-sm font-medium">{stringValue(payload?.screenName) || "WhatsApp flow"}</p>
-                {message.text && <p className={`mt-1 whitespace-pre-wrap text-sm leading-6 ${subtleText}`}>{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className={`mt-1 text-sm leading-6 ${subtleText}`} />}
                 <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
                     {stringValue(payload?.ctaText) || "Continue"}
                 </div>
@@ -248,12 +401,12 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_cta_url") {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <MousePointerClick className="h-3.5 w-3.5" />
                     CTA sent
                 </div>
-                {message.text && <p className="whitespace-pre-wrap text-sm leading-6">{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
                 <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
                     {stringValue(payload?.displayText) || "Open"}
                 </div>
@@ -264,12 +417,12 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "interactive_location_request") {
         return (
-            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <FileText className="h-3.5 w-3.5" />
                     Location request sent
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-6">{message.text || stringValue(payload?.body) || "Please share your location."}</p>
+                <WhatsAppMarkdownText text={message.text || stringValue(payload?.body) || "Please share your location."} className="text-sm leading-6" />
                 <div className={`mt-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium ${actionClass}`}>
                     Send location
                 </div>
@@ -279,7 +432,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "flow_response" && flowData) {
         return (
-            <div className={`min-w-64 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <GitBranch className="h-3.5 w-3.5" />
                     Flow response
@@ -299,12 +452,12 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
     if (payloadType === "order" && order) {
         const items = Array.isArray(order.items) ? order.items : []
         return (
-            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <PackageCheck className="h-3.5 w-3.5" />
                     Catalog order
                 </div>
-                {message.text && <p className="text-sm">{message.text}</p>}
+                {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm" />}
                 <p className={`mt-1 text-xs ${subtleText}`}>{items.length} item{items.length === 1 ? "" : "s"} selected</p>
             </div>
         )
@@ -312,7 +465,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
 
     if (payloadType === "location" && location) {
         return (
-            <div className={`min-w-60 rounded-xl border p-3 ${cardClass}`}>
+            <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
                     <FileText className="h-3.5 w-3.5" />
                     Location
@@ -323,7 +476,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         )
     }
 
-    return <p className="whitespace-pre-wrap text-sm leading-6">{message.text || "(No message text)"}</p>
+    return <WhatsAppMarkdownText text={message.text || "(No message text)"} className="text-sm leading-6" />
 }
 
 // ─── The Inbox Tab ──────────────────────────────────────────────────────────
@@ -361,7 +514,10 @@ function InboxTab() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
     }, [selected?.messages])
 
-    const filteredConversations = (conversations ?? []).filter((conversation) => {
+    const sortedConversations = [...(conversations ?? [])].sort(
+        (a, b) => latestConversationActivity(b) - latestConversationActivity(a)
+    )
+    const filteredConversations = sortedConversations.filter((conversation) => {
         const query = search.trim().toLowerCase()
         if (!query) return true
         return (
@@ -370,6 +526,9 @@ function InboxTab() {
             conversation.number_label?.toLowerCase().includes(query)
         )
     })
+    const unreadConversationCount = conversations?.filter((conversation) => conversation.unread_count > 0).length ?? 0
+    const humanConversationCount = conversations?.filter((conversation) => conversation.mode === "human").length ?? 0
+    const openConversationCount = conversations?.filter((conversation) => conversation.status === "open").length ?? 0
 
     const submitMessage = async () => {
         const text = draft.trim()
@@ -397,33 +556,38 @@ function InboxTab() {
     }
 
     return (
-        <div className="flex h-full min-h-0 overflow-hidden rounded-2xl border border-border/60 bg-background shadow-sm">
+        <div className="flex h-full min-h-0 overflow-hidden rounded-[32px] border border-brand-gold/15 bg-linear-to-br from-white via-white to-brand-gold/[0.035] shadow-[0_24px_80px_-44px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.02] dark:border-brand-gold/20 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-brand-gold/[0.08]">
             {/* ── Conversation list ──────────────────────────────────── */}
             <section
-                className={`flex h-full min-h-0 flex-col overflow-hidden border-r border-border/40 bg-muted/[0.06] transition-all duration-300 ${
-                    selected ? "hidden xl:flex xl:w-[340px]" : "flex-1 xl:w-[340px]"
+                className={`flex h-full min-h-0 flex-col overflow-hidden border-r border-brand-gold/10 bg-white/75 transition-all duration-300 dark:bg-slate-950/55 ${
+                    selected ? "hidden xl:flex xl:w-[380px]" : "flex-1 xl:w-[380px]"
                 }`}
             >
                 {/* Header */}
-                <div className="shrink-0 border-b border-border/30 px-3 py-3">
-                    <div className="flex items-center gap-2.5 px-1">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-deep/10">
-                            <Inbox className="h-3.5 w-3.5 text-brand-deep/70" />
+                <div className="shrink-0 border-b border-brand-gold/10 px-4 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/15 dark:bg-brand-gold/15 dark:text-brand-gold-300">
+                            <Inbox className="h-4 w-4" />
                         </div>
-                        <h2 className="text-sm font-semibold tracking-tight">Inbox</h2>
-                        <span className="ml-auto text-[11px] font-medium text-muted-foreground/60">
-                            {filteredConversations.length}
+                        <div className="min-w-0 flex-1">
+                            <h2 className="text-base font-semibold tracking-tight text-foreground">Inbox</h2>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                {filteredConversations.length} conversation{filteredConversations.length === 1 ? "" : "s"}
+                            </p>
+                        </div>
+                        <span className="rounded-full border border-brand-gold/15 bg-brand-gold/10 px-2.5 py-1 text-xs font-semibold text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
+                            {unreadConversationCount} unread
                         </span>
                     </div>
                     {/* Search */}
-                    <div className="relative mt-2.5">
-                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/50" />
+                    <div className="relative mt-4">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
                         <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search by name or number…"
                             aria-label="Search conversations"
-                            className="h-8 w-full rounded-lg border border-border/40 bg-white/60 pl-8 pr-2.5 text-xs outline-none placeholder:text-muted-foreground/40 focus:border-brand-deep/20 focus:bg-white dark:bg-white/5 dark:focus:bg-white/10"
+                            className="h-11 w-full rounded-2xl border border-border/50 bg-white/80 pl-10 pr-3 text-sm outline-none placeholder:text-muted-foreground/40 transition-colors focus:border-brand-gold/35 focus:bg-white focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5 dark:focus:bg-white/10"
                         />
                         {search && (
                             <button
@@ -436,15 +600,29 @@ function InboxTab() {
                             </button>
                         )}
                     </div>
+                    <div className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5">
+                        {[
+                            ["Open", openConversationCount],
+                            ["Unread", unreadConversationCount],
+                            ["Human", humanConversationCount],
+                        ].map(([label, count]) => (
+                            <span
+                                key={label}
+                                className="shrink-0 rounded-full border border-border/50 bg-background/80 px-2.5 py-1 text-[11px] font-medium text-muted-foreground"
+                            >
+                                {label} <span className="text-foreground">{count}</span>
+                            </span>
+                        ))}
+                    </div>
                 </div>
 
                 {/* List */}
                 <div className="min-h-0 flex-1 overflow-y-auto">
                     {isLoading ? (
-                        <div className="space-y-1 p-2">
+                        <div className="space-y-2 p-3">
                             {Array.from({ length: 6 }).map((_, i) => (
-                                <div key={i} className="flex items-start gap-2.5 rounded-xl p-2.5">
-                                    <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+                                <div key={i} className="flex items-start gap-3 rounded-[22px] p-3">
+                                    <Skeleton className="h-11 w-11 shrink-0 rounded-2xl" />
                                     <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">
                                         <div className="flex items-center justify-between gap-2">
                                             <Skeleton className="h-3.5 w-28" />
@@ -457,74 +635,51 @@ function InboxTab() {
                             ))}
                         </div>
                     ) : filteredConversations.length ? (
-                        <div className="py-1">
+                        <div className="space-y-1.5 p-2.5">
                             {filteredConversations.map((conversation) => {
                                 const isSelected = activeConversationId === conversation.id
-                                const initial = getInitial(
-                                    conversation.customer_name || conversation.customer_phone
-                                )
-                                const isHuman = conversation.mode === "human"
-                                const lastMsgTime =
-                                    conversation.last_inbound_at || conversation.last_outbound_at
+                                const lastMsgTime = latestConversationActivityIso(conversation)
+                                const customerLabel = conversation.customer_name || conversation.customer_phone
                                 return (
                                     <button
                                         key={conversation.id}
                                         type="button"
                                         onClick={() => setSelectedId(conversation.id)}
                                         aria-current={isSelected ? "true" : undefined}
-                                        className={`group flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-all duration-150 ${
+                                        className={`group flex w-full items-start gap-3 rounded-[22px] border px-3 py-3 text-left transition-all duration-200 ${
                                             isSelected
-                                                ? "bg-brand-deep/[0.06]"
-                                                : "hover:bg-muted/30"
+                                                ? "border-brand-gold/30 bg-brand-gold/[0.07] shadow-sm shadow-brand-gold/5"
+                                                : "border-transparent hover:border-brand-gold/15 hover:bg-brand-gold/[0.035]"
                                         }`}
                                     >
                                         {/* Avatar */}
-                                        <div
-                                            className={`relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                                                isHuman
-                                                    ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
-                                                    : "bg-brand-deep/10 text-brand-deep/70 dark:bg-brand-gold-700/20 dark:text-brand-gold-300"
-                                            }`}
-                                        >
-                                            {initial}
-                                            {conversation.unread_count > 0 && (
-                                                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-deep px-1 text-[9px] font-bold text-white ring-2 ring-background dark:bg-brand-gold-600 dark:text-brand-deep-900">
-                                                    {conversation.unread_count > 9
-                                                        ? "9+"
-                                                        : conversation.unread_count}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <ConversationAvatar
+                                            name={customerLabel}
+                                            mode={conversation.mode}
+                                            unreadCount={conversation.unread_count}
+                                            size="lg"
+                                        />
 
                                         {/* Content */}
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-2">
-                                                <p className="truncate text-sm font-medium">
-                                                    {conversation.customer_name ||
-                                                        conversation.customer_phone}
+                                                <p className="truncate text-sm font-semibold text-foreground">
+                                                    {customerLabel}
                                                 </p>
                                                 {lastMsgTime && (
-                                                    <span className="shrink-0 text-[10px] font-medium text-muted-foreground/50">
+                                                    <span className="shrink-0 text-[10px] font-medium text-muted-foreground/60">
                                                         {formatConversationDate(lastMsgTime)}
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+                                            <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground/70">
                                                 <span className="truncate">
                                                     {conversation.number_label || "WhatsApp"}
                                                 </span>
                                                 <span className="text-border">·</span>
-                                                <span
-                                                    className={`font-medium ${
-                                                        isHuman
-                                                            ? "text-amber-600 dark:text-amber-400"
-                                                            : "text-emerald-600 dark:text-emerald-400"
-                                                    }`}
-                                                >
-                                                    {conversation.mode}
-                                                </span>
+                                                <ModePill mode={conversation.mode} />
                                             </div>
-                                            <p className="mt-0.5 line-clamp-1 text-[12px] leading-5 text-muted-foreground/70">
+                                            <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-muted-foreground/70">
                                                 {conversation.last_customer_message ||
                                                     conversation.context_summary ||
                                                     "No messages yet"}
@@ -536,7 +691,7 @@ function InboxTab() {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center gap-3 px-5 py-16 text-center">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border/50 bg-muted/20">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-gold/20 bg-brand-gold/10">
                                 <MessageSquare className="h-5 w-5 text-muted-foreground/40" />
                             </div>
                             <div>
@@ -553,12 +708,12 @@ function InboxTab() {
             </section>
 
             {/* ── Message detail ─────────────────────────────────────── */}
-            <section className="flex flex-1 flex-col overflow-hidden bg-background">
+            <section className="flex flex-1 flex-col overflow-hidden bg-background/70">
                 {!selected ? (
                     <div className="flex h-full items-center justify-center p-8">
                         <div className="max-w-xs space-y-3 text-center">
-                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-border/50 bg-muted/20">
-                                <MessageSquare className="h-6 w-6 text-muted-foreground/30" />
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-gold/20 bg-brand-gold/10">
+                                <MessageSquare className="h-6 w-6 text-brand-gold/70" />
                             </div>
                             <p className="text-base font-semibold text-foreground">
                                 Select a conversation
@@ -572,42 +727,33 @@ function InboxTab() {
                 ) : (
                     <>
                         {/* ── Conversation header ──────────────────── */}
-                        <div className="shrink-0 border-b border-border/30 bg-background/95 px-4 py-2.5">
+                        <div className="shrink-0 border-b border-brand-gold/10 bg-white/85 px-4 py-3 backdrop-blur dark:bg-slate-950/70">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex min-w-0 flex-1 items-center gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setSelectedId(null)}
                                         aria-label="Close conversation"
-                                        className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/50 transition-colors hover:bg-muted/40 hover:text-muted-foreground xl:hidden"
+                                        className="flex h-8 w-8 items-center justify-center rounded-2xl text-muted-foreground/50 transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
                                     >
-                                        <X className="h-4 w-4" />
+                                        <ArrowLeft className="h-4 w-4" />
                                     </button>
-                                    <div
-                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                                            selected.mode === "human"
-                                                ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
-                                                : "bg-brand-deep/10 text-brand-deep/70 dark:bg-brand-gold-700/20 dark:text-brand-gold-300"
-                                        }`}
-                                    >
-                                        {getInitial(
-                                            selected.customer_name || selected.customer_phone
-                                        )}
-                                    </div>
+                                    <ConversationAvatar
+                                        name={selected.customer_name || selected.customer_phone}
+                                        mode={selected.mode}
+                                        unreadCount={selected.unread_count}
+                                        size="lg"
+                                    />
                                     <div className="min-w-0">
                                         <h3 className="truncate text-sm font-semibold leading-tight">
                                             {selected.customer_name || selected.customer_phone}
                                         </h3>
-                                        <p className="truncate text-[11px] text-muted-foreground/60">
-                                            {selected.customer_phone}
-                                            {selected.number_label && (
-                                                <>
-                                                    {" "}
-                                                    <span className="text-border/50">·</span>{" "}
-                                                    {selected.number_label}
-                                                </>
-                                            )}
-                                        </p>
+                                        <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                                            <ModePill mode={selected.mode} />
+                                            <span className="truncate text-[11px] text-muted-foreground/60">
+                                                {selected.number_label || selected.customer_phone}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -620,10 +766,10 @@ function InboxTab() {
                                                     onClick={() =>
                                                         takeover.mutate({ id: selected.id })
                                                     }
-                                                    className="flex h-8 items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                                    className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
                                                     <UserRound className="h-3.5 w-3.5" />
-                                                    Take over
+                                                    <span className="hidden sm:inline">Take over</span>
                                                 </button>
                                             ) : (
                                                 <button
@@ -631,10 +777,10 @@ function InboxTab() {
                                                     onClick={() =>
                                                         returnToAi.mutate({ id: selected.id })
                                                     }
-                                                    className="flex h-8 items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                                    className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
                                                     <Bot className="h-3.5 w-3.5" />
-                                                    AI mode
+                                                    <span className="hidden sm:inline">AI mode</span>
                                                 </button>
                                             )}
                                             <button
@@ -642,10 +788,10 @@ function InboxTab() {
                                                 onClick={() =>
                                                     resolveConversation.mutate({ id: selected.id })
                                                 }
-                                                className="flex h-8 items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                                                className="flex h-9 items-center gap-1.5 rounded-full border border-border/50 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                             >
                                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                                Resolve
+                                                <span className="hidden sm:inline">Resolve</span>
                                             </button>
                                         </>
                                     )}
@@ -653,13 +799,13 @@ function InboxTab() {
                                         type="button"
                                         onClick={() => setSidebarOpen((p) => !p)}
                                         aria-label={sidebarOpen ? "Close details panel" : "Open details panel"}
-                                        className={`hidden h-8 w-8 items-center justify-center rounded-lg border border-border/50 transition-colors xl:flex ${
+                                        className={`hidden h-9 w-9 items-center justify-center rounded-full border transition-colors xl:flex ${
                                             sidebarOpen
-                                                ? "bg-brand-deep/10 text-brand-deep/70"
-                                                : "bg-background text-muted-foreground hover:bg-muted/40"
+                                                ? "border-brand-gold/20 bg-brand-gold/10 text-brand-gold"
+                                                : "border-border/50 bg-background text-muted-foreground hover:bg-brand-gold/10 hover:text-brand-gold"
                                         }`}
                                     >
-                                        <MoreHorizontal className="h-3.5 w-3.5" />
+                                        {sidebarOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
                                     </button>
                                 </div>
                             </div>
@@ -667,7 +813,7 @@ function InboxTab() {
 
                         {/* ── AI paused banner ──────────────────────── */}
                         {selected.mode === "human" && (
-                            <div className="mx-4 mt-3 animate-fade-in rounded-xl border border-amber-200/50 bg-amber-50/80 px-3.5 py-2.5 text-xs leading-5 text-amber-800 dark:border-amber-500/15 dark:bg-amber-500/8 dark:text-amber-200/80">
+                            <div className="mx-4 mt-3 animate-fade-in rounded-2xl border border-brand-gold/20 bg-brand-gold/[0.07] px-3.5 py-2.5 text-xs leading-5 text-brand-deep dark:bg-brand-gold/10 dark:text-brand-gold-200">
                                 <div className="flex items-start gap-2">
                                     <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                     <span>
@@ -677,7 +823,7 @@ function InboxTab() {
                                             onClick={() =>
                                                 returnToAi.mutate({ id: selected.id })
                                             }
-                                            className="font-medium underline underline-offset-2 transition-colors hover:text-amber-900 dark:hover:text-amber-100"
+                                            className="font-medium underline underline-offset-2 transition-colors hover:text-brand-gold"
                                         >
                                             Resume AI
                                         </button>
@@ -695,9 +841,13 @@ function InboxTab() {
                             }`}
                         >
                             {/* Messages */}
-                            <div className="min-h-0 space-y-1 overflow-y-auto px-4 py-4">
+                            <div className="min-h-0 space-y-2 overflow-y-auto bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.045),transparent_34%),radial-gradient(circle_at_1px_1px,rgba(11,61,46,0.055)_1px,transparent_0),linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.24))] bg-[length:auto,22px_22px,auto] px-4 py-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.08),transparent_34%),radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.045)_1px,transparent_0),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))]">
                                 {selected.messages.map((message, idx) => {
                                     const isOutbound = message.direction === "outbound"
+                                    const previousMessage = selected.messages[idx - 1]
+                                    const currentDate = message.created_at ? new Date(message.created_at).toDateString() : ""
+                                    const previousDate = previousMessage?.created_at ? new Date(previousMessage.created_at).toDateString() : ""
+                                    const showDateSeparator = !!currentDate && currentDate !== previousDate
                                     const isFirst =
                                         idx === 0 ||
                                         selected.messages[idx - 1]?.sender_type !==
@@ -709,59 +859,68 @@ function InboxTab() {
                                     const showSender =
                                         isFirst && message.sender_type !== "customer"
                                     return (
-                                        <div
-                                            key={message.id}
-                                            className={`flex animate-fade-in ${
-                                                isOutbound ? "justify-end" : "justify-start"
-                                            }`}
-                                            style={{ animationDelay: `${idx * 15}ms` }}
-                                        >
-                                            <div
-                                                className={`flex max-w-[80%] flex-col ${
-                                                    isOutbound ? "items-end" : "items-start"
-                                                }`}
-                                            >
-                                                {showSender && (
-                                                    <span className="mb-0.5 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/40">
-                                                        {message.sender_type === "ai"
-                                                            ? "AI Assistant"
-                                                            : message.sender_type.charAt(0).toUpperCase() +
-                                                              message.sender_type.slice(1)}
+                                        <div key={message.id} className="space-y-2">
+                                            {showDateSeparator ? (
+                                                <div className="flex justify-center">
+                                                    <span className="rounded-full border border-brand-gold/15 bg-white/85 px-3 py-1 text-[11px] font-medium text-muted-foreground shadow-sm dark:bg-slate-950/75">
+                                                        {message.created_at ? formatMessageDate(message.created_at) : ""}
                                                     </span>
-                                                )}
+                                                </div>
+                                            ) : null}
+                                            <div
+                                                className={`flex animate-fade-in ${
+                                                    isOutbound ? "justify-end" : "justify-start"
+                                                }`}
+                                                style={{ animationDelay: `${idx * 15}ms` }}
+                                            >
                                                 <div
-                                                    className={`relative px-3.5 py-2 ${
-                                                        isOutbound
-                                                            ? "bg-brand-deep text-white shadow-sm"
-                                                            : "border border-border/40 bg-muted/20"
-                                                    } ${
-                                                        isFirst && isOutbound
-                                                            ? "rounded-2xl rounded-br-md"
-                                                            : isFirst && !isOutbound
-                                                              ? "rounded-2xl rounded-bl-md"
-                                                              : isLast && isOutbound
-                                                                ? "rounded-2xl rounded-tr-md"
-                                                                : isLast && !isOutbound
-                                                                  ? "rounded-2xl rounded-tl-md"
-                                                                  : "rounded-2xl"
+                                                    className={`flex min-w-0 max-w-[88%] flex-col sm:max-w-[76%] ${
+                                                        isOutbound ? "items-end" : "items-start"
                                                     }`}
                                                 >
-                                                    <MessageContent message={message} isOutbound={isOutbound} />
-                                                </div>
-                                                <div className="mt-0.5 flex items-center gap-2 px-1">
-                                                    <span
-                                                        className={`text-[10px] font-medium ${
+                                                    {showSender && (
+                                                        <span className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/45">
+                                                            {message.sender_type === "ai"
+                                                                ? "AI Assistant"
+                                                                : message.sender_type.charAt(0).toUpperCase() +
+                                                                  message.sender_type.slice(1)}
+                                                        </span>
+                                                    )}
+                                                    <div
+                                                        className={`relative max-w-full overflow-hidden px-3.5 py-2.5 ${
                                                             isOutbound
-                                                                ? "text-right"
-                                                                : "text-left"
-                                                        } text-muted-foreground/40`}
+                                                                ? "bg-brand-deep text-white shadow-sm shadow-brand-deep/10 ring-1 ring-brand-gold/15"
+                                                                : "border border-border/50 bg-white/90 shadow-sm shadow-slate-950/[0.035] dark:bg-white/[0.055]"
+                                                        } ${
+                                                            isFirst && isOutbound
+                                                                ? "rounded-[22px] rounded-br-md"
+                                                                : isFirst && !isOutbound
+                                                                  ? "rounded-[22px] rounded-bl-md"
+                                                                  : isLast && isOutbound
+                                                                    ? "rounded-[22px] rounded-tr-md"
+                                                                    : isLast && !isOutbound
+                                                                      ? "rounded-[22px] rounded-tl-md"
+                                                                      : "rounded-[22px]"
+                                                        }`}
                                                     >
-                                                        {message.created_at
-                                                            ? formatMessageTime(message.created_at)
-                                                            : ""}
-                                                        {message.delivery_status &&
-                                                            ` · ${message.delivery_status}`}
-                                                    </span>
+                                                        <MessageContent message={message} isOutbound={isOutbound} />
+                                                    </div>
+                                                    <div className="mt-1 flex items-center gap-2 px-1">
+                                                        <span
+                                                            className={`text-[10px] font-medium ${
+                                                                isOutbound
+                                                                    ? "text-right"
+                                                                    : "text-left"
+                                                            } text-muted-foreground/45`}
+                                                        >
+                                                            {message.created_at
+                                                                ? formatMessageTime(message.created_at)
+                                                                : ""}
+                                                            {isOutbound && message.delivery_status
+                                                                ? ` · ${message.delivery_status}`
+                                                                : ""}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -777,11 +936,11 @@ function InboxTab() {
 
                             {/* ── Sidebar ────────────────────────────── */}
                             {sidebarOpen && (
-                                <aside className="min-h-0 overflow-y-auto border-t border-border/30 bg-muted/[0.04] p-3 xl:border-l xl:border-t-0">
+                                <aside className="min-h-0 overflow-y-auto border-t border-brand-gold/10 bg-white/65 p-3 dark:bg-slate-950/45 xl:border-l xl:border-t-0">
                                     {/* Details card */}
-                                    <div className="rounded-xl border border-border/40 bg-background/80 p-3">
+                                    <div className="rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
                                         <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-brand-deep/40" />
+                                            <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
                                             Details
                                         </h4>
                                         <dl className="space-y-2 text-xs">
@@ -792,10 +951,10 @@ function InboxTab() {
                                                         className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
                                                             selected.status === "open" ||
                                                             selected.status === "pending_customer"
-                                                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                                                ? "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
                                                                 : selected.status === "resolved"
                                                                   ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                                                                  : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+                                                                  : "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
                                                         }`}
                                                     >
                                                         {(selected.status === "open" ||
@@ -812,7 +971,7 @@ function InboxTab() {
                                                 <dd
                                                     className={`text-xs font-medium capitalize ${
                                                         selected.mode === "human"
-                                                            ? "text-amber-600 dark:text-amber-400"
+                                                            ? "text-brand-gold dark:text-brand-gold-300"
                                                             : "text-emerald-600 dark:text-emerald-400"
                                                     }`}
                                                 >
@@ -854,7 +1013,7 @@ function InboxTab() {
                                                         userId: user.id,
                                                     })
                                                 }
-                                                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border/40 bg-background/80 px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
+                                                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-brand-gold/20 bg-background/80 px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                             >
                                                 <UserRound className="h-3.5 w-3.5" />
                                                 Assign to me
@@ -863,9 +1022,9 @@ function InboxTab() {
 
                                     {/* Template sender */}
                                     {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
-                                        <div className="mt-2.5 rounded-xl border border-border/40 bg-background/80 p-3">
+                                        <div className="mt-2.5 rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
                                             <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-                                                <ClipboardList className="h-3.5 w-3.5" />
+                                                <ClipboardList className="h-3.5 w-3.5 text-brand-gold" />
                                                 Send template
                                             </h4>
                                             <div className="space-y-2">
@@ -873,7 +1032,7 @@ function InboxTab() {
                                                     value={selectedTemplate}
                                                     onValueChange={setSelectedTemplate}
                                                 >
-                                                    <SelectTrigger className="h-8 rounded-lg text-xs">
+                                                    <SelectTrigger className="h-9 rounded-2xl border-brand-gold/15 text-xs focus:ring-brand-gold/20">
                                                         <SelectValue placeholder="Select template" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -904,7 +1063,7 @@ function InboxTab() {
                                                     rows={3}
                                                     placeholder='{"customer_name":"Amina"}'
                                                     aria-label="Template variables"
-                                                    className="min-h-0 w-full resize-none rounded-lg border border-border/40 bg-muted/10 px-2.5 py-1.5 font-mono text-[11px] outline-none placeholder:text-muted-foreground/30 focus:border-brand-deep/20 dark:bg-white/5"
+                                                    className="min-h-0 w-full resize-none rounded-2xl border border-border/40 bg-muted/10 px-2.5 py-1.5 font-mono text-[11px] outline-none placeholder:text-muted-foreground/30 focus:border-brand-gold/30 focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5"
                                                 />
                                                 <button
                                                     type="button"
@@ -912,7 +1071,7 @@ function InboxTab() {
                                                     disabled={
                                                         sendTemplate.isPending || !selectedTemplate
                                                     }
-                                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-deep px-3 py-1.5 text-[11px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                                                    className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-deep px-3 py-2 text-[11px] font-medium text-brand-gold-300 transition-opacity hover:opacity-90 disabled:opacity-40 dark:bg-brand-gold-700 dark:text-white"
                                                 >
                                                     {sendTemplate.isPending ? (
                                                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -930,7 +1089,7 @@ function InboxTab() {
 
                         {/* ── Reply form ─────────────────────────────── */}
                         {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
-                            <div className="shrink-0 border-t border-border/30 bg-background/98 px-4 py-3">
+                            <div className="shrink-0 border-t border-brand-gold/10 bg-white/85 px-4 py-3 backdrop-blur dark:bg-slate-950/75">
                                 <div className="mx-auto flex max-w-3xl items-end gap-2">
                                     <div className="relative flex-1">
                                         <textarea
@@ -939,7 +1098,7 @@ function InboxTab() {
                                             placeholder="Type a reply…"
                                             rows={1}
                                             aria-label="Reply message"
-                                            className="min-h-[44px] w-full resize-none rounded-xl border border-border/50 bg-muted/10 px-3.5 py-3 text-sm outline-none placeholder:text-muted-foreground/40 focus:border-brand-deep/20 focus:bg-background dark:bg-white/5"
+                                            className="min-h-[46px] w-full resize-none rounded-2xl border border-border/50 bg-muted/10 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/40 focus:border-brand-gold/30 focus:bg-background focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5"
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter" && !e.shiftKey) {
                                                     e.preventDefault()
@@ -952,7 +1111,7 @@ function InboxTab() {
                                         type="button"
                                         onClick={submitMessage}
                                         disabled={sendMessage.isPending || !draft.trim()}
-                                        className="flex h-[44px] w-[44px] shrink-0 items-center justify-center self-center rounded-xl bg-brand-deep text-white transition-all hover:opacity-90 disabled:opacity-30"
+                                        className="flex h-[46px] w-[46px] shrink-0 items-center justify-center self-center rounded-2xl bg-brand-deep text-brand-gold-300 transition-all hover:opacity-90 disabled:opacity-30 dark:bg-brand-gold-700 dark:text-white"
                                     >
                                         {sendMessage.isPending ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />

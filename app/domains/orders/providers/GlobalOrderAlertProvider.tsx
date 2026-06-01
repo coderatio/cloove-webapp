@@ -17,7 +17,7 @@ import { playRestaurantNewOrderSound } from "@/app/domains/restaurant/lib/new-or
 import { GlobalOrderPreviewDrawer } from "@/app/domains/orders/components/GlobalOrderPreviewDrawer"
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
-import { BellRing, ChevronRight, FlaskConical, ShoppingBag, UtensilsCrossed, X } from "lucide-react"
+import { BellRing, ChevronRight, Eye, FlaskConical, ShoppingBag, UtensilsCrossed, X } from "lucide-react"
 import { cn } from "@/app/lib/utils"
 
 const CHANNEL_NAME = "cloove-global-order-alerts"
@@ -390,16 +390,16 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                 return (
                   <div
                     key={order.id}
-                    className="group rounded-3xl border border-transparent p-2.5 transition-colors hover:border-slate-200 hover:bg-slate-50 dark:hover:border-white/10 dark:hover:bg-white/[0.03]"
+                    className="group rounded-[22px] border border-transparent p-2 transition-colors hover:border-slate-200 hover:bg-slate-50 sm:p-2.5 dark:hover:border-white/10 dark:hover:bg-white/[0.03]"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 dark:border-white/10 dark:bg-slate-900">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 sm:h-12 sm:w-12 dark:border-white/10 dark:bg-slate-900">
                         {leadItem?.imageUrl ? (
                           <Image
                             src={leadItem.imageUrl}
                             alt={leadItem.productName || "Order item"}
                             fill
-                            sizes="48px"
+                            sizes="(max-width: 640px) 44px, 48px"
                             className="object-cover"
                           />
                         ) : (
@@ -415,7 +415,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                             Order{order.shortCode ? ` #${order.shortCode}` : ""}
                           </p>
                           {order.serviceMode ? (
-                            <Badge variant="outline" className="shrink-0 rounded-full px-2 py-0 text-[10px] uppercase tracking-normal">
+                            <Badge variant="outline" className="hidden shrink-0 rounded-full px-2 py-0 text-[10px] uppercase tracking-normal sm:inline-flex">
                               {order.serviceMode.replace("_", " ")}
                             </Badge>
                           ) : null}
@@ -429,24 +429,29 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                         </p>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-1.5">
+                      <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
                         <Button
                           size="sm"
-                          className="h-8 rounded-full bg-emerald-600 px-3 text-xs text-white hover:bg-emerald-700"
+                          aria-label={`Preview order${order.shortCode ? ` #${order.shortCode}` : ""}`}
+                          title="Preview"
+                          className="h-9 w-9 rounded-full bg-emerald-600 px-0 text-xs text-white hover:bg-emerald-700 sm:h-8 sm:w-auto sm:px-3"
                           onClick={() => {
                             removeQueuedOrder(order.id)
                             openPreview(order)
                           }}
                         >
-                          Preview
-                          <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                          <Eye className="h-4 w-4 sm:hidden" />
+                          <span className="hidden sm:inline">Preview</span>
+                          <ChevronRight className="ml-1 hidden h-3.5 w-3.5 sm:block" />
                         </Button>
                         {isRestaurantPreset && !order.kitchenTicketId ? (
                           <Button
                             size="sm"
                             variant="outline"
+                            aria-label={`Send order${order.shortCode ? ` #${order.shortCode}` : ""} to kitchen`}
+                            title="Send to kitchen"
                             disabled={sendingToastOrderId === order.id}
-                            className="h-8 rounded-full border-slate-200 px-3 text-xs dark:border-white/10"
+                            className="h-9 w-9 rounded-full border-slate-200 px-0 text-xs sm:h-8 sm:w-auto sm:px-3 dark:border-white/10"
                             onClick={() => {
                               setSendingToastOrderId(order.id)
                               void sendOrderToKitchen(order, {
@@ -466,8 +471,10 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                                 })
                             }}
                           >
-                            <UtensilsCrossed className="mr-1 h-3.5 w-3.5" />
-                            {sendingToastOrderId === order.id ? "Sending..." : "Send to kitchen"}
+                            <UtensilsCrossed className="h-4 w-4 sm:mr-1 sm:h-3.5 sm:w-3.5" />
+                            <span className="hidden sm:inline">
+                              {sendingToastOrderId === order.id ? "Sending..." : "Send to kitchen"}
+                            </span>
                           </Button>
                         ) : null}
                       </div>

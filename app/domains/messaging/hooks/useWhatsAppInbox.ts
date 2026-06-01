@@ -1,6 +1,7 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useBusiness } from "@/app/components/BusinessProvider"
 import { apiClient, type ApiResponse } from "@/app/lib/api-client"
 
 export interface WhatsAppInboxOverview {
@@ -148,45 +149,73 @@ export interface WhatsAppTemplateListMeta {
 }
 
 const QUERY_KEYS = {
-    overview: ["whatsapp", "overview"],
-    conversations: ["whatsapp", "conversations"],
-    conversation: (id: string | null) => ["whatsapp", "conversations", id],
-    otps: ["whatsapp", "otps"],
-    templates: ["whatsapp", "templates"],
-    templateStats: ["whatsapp", "template-stats"],
-    flows: ["whatsapp", "flows"],
-    flowStats: ["whatsapp", "flow-stats"],
+    overview: (businessId?: string) => ["whatsapp", "overview", businessId].filter(Boolean),
+    conversations: (businessId?: string) => ["whatsapp", "conversations", businessId].filter(Boolean),
+    conversation: (id: string | null, businessId?: string) => ["whatsapp", "conversations", businessId, id].filter(Boolean),
+    otps: (businessId?: string) => ["whatsapp", "otps", businessId].filter(Boolean),
+    templates: (businessId?: string) => ["whatsapp", "templates", businessId].filter(Boolean),
+    templateStats: (businessId?: string) => ["whatsapp", "template-stats", businessId].filter(Boolean),
+    flows: (businessId?: string) => ["whatsapp", "flows", businessId].filter(Boolean),
+    flowStats: (businessId?: string) => ["whatsapp", "flow-stats", businessId].filter(Boolean),
 }
 
 export function useWhatsAppOverview() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: QUERY_KEYS.overview,
-        queryFn: () => apiClient.get<WhatsAppInboxOverview>("/whatsapp/overview"),
+        queryKey: QUERY_KEYS.overview(businessId),
+        queryFn: () =>
+            apiClient.get<WhatsAppInboxOverview>("/whatsapp/overview", undefined, {
+                businessIdOverride: businessId,
+            }),
+        enabled: !!businessId,
     })
 }
 
 export function useWhatsAppConversations() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: QUERY_KEYS.conversations,
-        queryFn: () => apiClient.get<WhatsAppInboxConversation[]>("/whatsapp/conversations"),
+        queryKey: QUERY_KEYS.conversations(businessId),
+        queryFn: () =>
+            apiClient.get<WhatsAppInboxConversation[]>("/whatsapp/conversations", undefined, {
+                businessIdOverride: businessId,
+            }),
+        enabled: !!businessId,
         refetchInterval: 10_000,
+        refetchOnWindowFocus: true,
     })
 }
 
 export function useWhatsAppConversation(id: string | null) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: QUERY_KEYS.conversation(id),
-        queryFn: () => apiClient.get<WhatsAppInboxConversationDetail>(`/whatsapp/conversations/${id}`),
-        enabled: !!id,
+        queryKey: QUERY_KEYS.conversation(id, businessId),
+        queryFn: () =>
+            apiClient.get<WhatsAppInboxConversationDetail>(`/whatsapp/conversations/${id}`, undefined, {
+                businessIdOverride: businessId,
+            }),
+        enabled: !!id && !!businessId,
         refetchInterval: id ? 8_000 : false,
+        refetchOnWindowFocus: true,
     })
 }
 
 export function useWhatsAppOtps(enabled: boolean) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: QUERY_KEYS.otps,
-        queryFn: () => apiClient.get<WhatsAppOtpCandidate[]>("/whatsapp/otps"),
-        enabled,
+        queryKey: QUERY_KEYS.otps(businessId),
+        queryFn: () =>
+            apiClient.get<WhatsAppOtpCandidate[]>("/whatsapp/otps", undefined, {
+                businessIdOverride: businessId,
+            }),
+        enabled: enabled && !!businessId,
         retry: false,
         refetchOnWindowFocus: false,
     })
@@ -197,18 +226,22 @@ function useConversationMutation<TVariables>(
     bodyBuilder?: (variables: TVariables) => unknown
 ) {
     const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
 
     return useMutation({
         mutationFn: (variables: TVariables) =>
-            apiClient.post(endpointBuilder(variables), bodyBuilder ? bodyBuilder(variables) : {}),
+            apiClient.post(endpointBuilder(variables), bodyBuilder ? bodyBuilder(variables) : {}, {
+                businessIdOverride: businessId,
+            }),
         onSuccess: (_data, variables) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.overview })
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.conversations })
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.overview(businessId) })
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.conversations(businessId) })
             const id = typeof variables === "object" && variables && "id" in (variables as object)
                 ? String((variables as { id?: string }).id ?? "")
                 : ""
             if (id) {
-                queryClient.invalidateQueries({ queryKey: QUERY_KEYS.conversation(id) })
+                queryClient.invalidateQueries({ queryKey: QUERY_KEYS.conversation(id, businessId) })
             }
         },
     })
@@ -247,8 +280,11 @@ export function useWhatsAppTemplates(params?: {
     search?: string
     status?: "draft" | "published" | "archived" | "all"
 }) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: [...QUERY_KEYS.templates, params],
+        queryKey: [...QUERY_KEYS.templates(businessId), params],
         queryFn: async () => {
             const response = await apiClient.get<ApiResponse<WhatsAppTemplateSummary[]>>(
                 "/whatsapp/templates",
@@ -259,7 +295,7 @@ export function useWhatsAppTemplates(params?: {
                     ...(params?.search ? { search: params.search } : {}),
                     ...(params?.status && params.status !== "all" ? { status: params.status } : {}),
                 },
-                { fullResponse: true }
+                { fullResponse: true, businessIdOverride: businessId }
             )
 
             return {
@@ -267,26 +303,39 @@ export function useWhatsAppTemplates(params?: {
                 meta: (response.meta ?? {}) as unknown as WhatsAppTemplateListMeta,
             }
         },
-        enabled: !!params?.businessWhatsappNumberId,
+        enabled: !!params?.businessWhatsappNumberId && !!businessId,
     })
 }
 
 export function useWhatsAppTemplateStats() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: QUERY_KEYS.templateStats,
-        queryFn: () => apiClient.get<WhatsAppTemplateStats>("/whatsapp/templates/stats"),
+        queryKey: QUERY_KEYS.templateStats(businessId),
+        queryFn: () =>
+            apiClient.get<WhatsAppTemplateStats>("/whatsapp/templates/stats", undefined, {
+                businessIdOverride: businessId,
+            }),
         enabled: false,
     })
 }
 
 export function useWhatsAppTemplateStatsForNumber(businessWhatsappNumberId: string | null) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: [...QUERY_KEYS.templateStats, businessWhatsappNumberId],
+        queryKey: [...QUERY_KEYS.templateStats(businessId), businessWhatsappNumberId],
         queryFn: () =>
-            apiClient.get<WhatsAppTemplateStats>("/whatsapp/templates/stats", {
-                business_whatsapp_number_id: String(businessWhatsappNumberId),
-            }),
-        enabled: !!businessWhatsappNumberId,
+            apiClient.get<WhatsAppTemplateStats>(
+                "/whatsapp/templates/stats",
+                {
+                    business_whatsapp_number_id: String(businessWhatsappNumberId),
+                },
+                { businessIdOverride: businessId }
+            ),
+        enabled: !!businessWhatsappNumberId && !!businessId,
     })
 }
 
@@ -299,6 +348,9 @@ export function useSendConversationTemplate() {
 
 export function useTestSendTemplate() {
     const queryClient = useQueryClient()
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useMutation({
         mutationFn: (input: {
             businessWhatsappNumberId: string
@@ -313,22 +365,27 @@ export function useTestSendTemplate() {
                 customer_name: input.customerName ?? null,
                 template_key: input.templateKey,
                 variables: input.variables,
+            }, {
+                businessIdOverride: businessId,
             }),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.overview })
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.conversations })
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.overview(businessId) })
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.conversations(businessId) })
         },
     })
 }
 
 export function useWhatsAppFlows(businessWhatsappNumberId: string | null) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: [...QUERY_KEYS.flows, businessWhatsappNumberId],
+        queryKey: [...QUERY_KEYS.flows(businessId), businessWhatsappNumberId],
         queryFn: async () => {
             const response = await apiClient.get<ApiResponse<WhatsAppFlowSummary[]>>(
                 "/whatsapp/flows",
                 { business_whatsapp_number_id: String(businessWhatsappNumberId) },
-                { fullResponse: true }
+                { fullResponse: true, businessIdOverride: businessId }
             )
 
             return {
@@ -336,29 +393,36 @@ export function useWhatsAppFlows(businessWhatsappNumberId: string | null) {
                 meta: (response.meta ?? {}) as unknown as WhatsAppFlowListMeta,
             }
         },
-        enabled: !!businessWhatsappNumberId,
+        enabled: !!businessWhatsappNumberId && !!businessId,
     })
 }
 
 export function useWhatsAppFlowStats(businessWhatsappNumberId: string | null) {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
     return useQuery({
-        queryKey: [...QUERY_KEYS.flowStats, businessWhatsappNumberId],
+        queryKey: [...QUERY_KEYS.flowStats(businessId), businessWhatsappNumberId],
         queryFn: () =>
-            apiClient.get<WhatsAppFlowStats>("/whatsapp/flows/stats", {
-                business_whatsapp_number_id: String(businessWhatsappNumberId),
-            }),
-        enabled: !!businessWhatsappNumberId,
+            apiClient.get<WhatsAppFlowStats>(
+                "/whatsapp/flows/stats",
+                {
+                    business_whatsapp_number_id: String(businessWhatsappNumberId),
+                },
+                { businessIdOverride: businessId }
+            ),
+        enabled: !!businessWhatsappNumberId && !!businessId,
     })
 }
 
 function invalidateTemplateQueries(queryClient: ReturnType<typeof useQueryClient>) {
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templates })
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.templateStats })
+    queryClient.invalidateQueries({ queryKey: ["whatsapp", "templates"] })
+    queryClient.invalidateQueries({ queryKey: ["whatsapp", "template-stats"] })
 }
 
 function invalidateFlowQueries(queryClient: ReturnType<typeof useQueryClient>) {
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.flows })
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.flowStats })
+    queryClient.invalidateQueries({ queryKey: ["whatsapp", "flows"] })
+    queryClient.invalidateQueries({ queryKey: ["whatsapp", "flow-stats"] })
 }
 
 export function useCreateWhatsAppTemplate() {
