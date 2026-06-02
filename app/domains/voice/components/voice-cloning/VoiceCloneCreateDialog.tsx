@@ -19,7 +19,7 @@ import { uploadService } from "@/app/lib/upload/upload-service"
 import { useCreateVoiceClone } from "@/app/domains/voice/hooks/useVoice"
 import { VoiceSampleRecorder } from "./VoiceSampleRecorder"
 
-type CloneProvider = "elevenlabs" | "cartesia" | "openai"
+type CloneProvider = "elevenlabs" | "cartesia"
 
 const PROVIDER_OPTIONS: Array<{
     id: CloneProvider
@@ -28,13 +28,7 @@ const PROVIDER_OPTIONS: Array<{
 }> = [
     { id: "elevenlabs", label: "ElevenLabs", hint: "Instant clone, highly natural" },
     { id: "cartesia", label: "Cartesia", hint: "Fast, low-latency clone" },
-    { id: "openai", label: "OpenAI", hint: "Needs a consent recording" },
 ]
-
-// OpenAI requires a separate consent recording of the speaker reading this
-// exact phrase. Kept in sync with OPENAI_VOICE_CONSENT_PHRASE on the API.
-const OPENAI_CONSENT_PHRASE =
-    "I am the owner of this voice and I consent to OpenAI using this voice to create a synthetic voice model."
 
 const ACCEPTED_AUDIO = ["audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg", "audio/webm", "audio/flac"]
 const MAX_SAMPLE_MB = 25
@@ -51,7 +45,6 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
     const [provider, setProvider] = React.useState<CloneProvider>("elevenlabs")
     const [recordedFile, setRecordedFile] = React.useState<File | null>(null)
     const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([])
-    const [consentRecording, setConsentRecording] = React.useState<File | null>(null)
     const [consent, setConsent] = React.useState(false)
     const [submitting, setSubmitting] = React.useState(false)
     const fileInputRef = React.useRef<HTMLInputElement>(null)
@@ -61,7 +54,6 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
         setProvider("elevenlabs")
         setRecordedFile(null)
         setUploadedFiles([])
-        setConsentRecording(null)
         setConsent(false)
         setSubmitting(false)
     }
@@ -92,13 +84,7 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
         [recordedFile, uploadedFiles]
     )
 
-    const needsConsentRecording = provider === "openai"
-    const canSubmit =
-        name.trim().length >= 2 &&
-        samples.length > 0 &&
-        consent &&
-        (!needsConsentRecording || consentRecording !== null) &&
-        !submitting
+    const canSubmit = name.trim().length >= 2 && samples.length > 0 && consent && !submitting
 
     const handleSubmit = async () => {
         if (!canSubmit) return
@@ -108,18 +94,11 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
             for (const file of samples) {
                 urls.push(await uploadService.uploadFile(file))
             }
-            const consentSampleUrl =
-                needsConsentRecording && consentRecording
-                    ? await uploadService.uploadFile(consentRecording)
-                    : undefined
             await createClone.mutateAsync({
                 name: name.trim(),
                 tts_provider: provider,
                 sample_urls: urls,
                 consent_accepted: consent,
-                ...(consentSampleUrl
-                    ? { consent_sample_url: consentSampleUrl, language: "en" }
-                    : {}),
             })
             handleOpenChange(false)
         } catch (error) {
@@ -153,7 +132,7 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
 
                     <div className="space-y-2">
                         <Label>Provider</Label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-2">
                             {PROVIDER_OPTIONS.map((option) => {
                                 const active = provider === option.id
                                 return (
@@ -231,28 +210,6 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
                             </ul>
                         )}
                     </div>
-
-                    {needsConsentRecording && (
-                        <div className="space-y-2 rounded-2xl border border-brand-gold/20 bg-brand-gold/[0.04] p-3.5">
-                            <div className="space-y-1">
-                                <Label className="text-brand-deep dark:text-brand-cream">
-                                    Consent recording
-                                </Label>
-                                <p className="text-[11px] leading-relaxed text-brand-accent/70 dark:text-brand-cream/55">
-                                    OpenAI requires the speaker to read this exact phrase aloud, recorded
-                                    separately from the voice sample:
-                                </p>
-                            </div>
-                            <p className="rounded-xl bg-brand-deep/[0.04] px-3 py-2 text-xs font-medium italic text-brand-deep dark:bg-white/[0.04] dark:text-brand-cream">
-                                “{OPENAI_CONSENT_PHRASE}”
-                            </p>
-                            <VoiceSampleRecorder onSample={setConsentRecording} disabled={submitting} />
-                            <p className="text-[11px] leading-relaxed text-brand-accent/55 dark:text-brand-cream/40">
-                                Custom voices are limited to eligible OpenAI organisations; creation will
-                                fail if your account is not approved.
-                            </p>
-                        </div>
-                    )}
 
                     <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-brand-gold/15 bg-brand-gold/[0.05] p-3.5">
                         <span

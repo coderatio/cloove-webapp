@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/app/components/ui/button"
 import { Loader2, CheckCircle2, XCircle, ArrowRight } from "lucide-react"
@@ -22,8 +22,15 @@ export default function SubscriptionVerifyPage() {
         hasVerificationParams ? "verifying" : "error"
     )
 
+    // Verify exactly once per tx_ref. Guards against React StrictMode's
+    // double-invoked effect (dev) and any re-render that changes a dependency's
+    // identity, so the backend never receives a duplicate verify request.
+    const verifiedRef = useRef<string | null>(null)
+
     useEffect(() => {
         if (!transaction_id || !tx_ref) return
+        if (verifiedRef.current === tx_ref) return
+        verifiedRef.current = tx_ref
         verifyPayment(
             { transaction_id, tx_ref },
             {

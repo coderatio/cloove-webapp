@@ -375,7 +375,14 @@ export const useDownloadReceipt = () => {
 
 export const useVerifyPayment = () => {
     return useMutation({
+        // `fullResponse` keeps the { success, message, data } envelope. Without it
+        // apiClient unwraps to `data` (the provider payload, which has no `success`
+        // field), so the verify page would always read `success` as undefined.
         mutationFn: (params: { transaction_id: string, tx_ref: string }) =>
-            apiClient.get<{ success: boolean, message: string }>("/subscriptions/verify", params as any),
+            apiClient.get<{ success: boolean; message: string; data?: unknown }>(
+                "/subscriptions/verify",
+                params as Record<string, string>,
+                { fullResponse: true }
+            ),
     })
 }
