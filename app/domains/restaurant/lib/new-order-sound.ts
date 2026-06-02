@@ -1,7 +1,35 @@
 import type { RestaurantNewOrderSound } from "@/app/domains/messaging/hooks/useWhatsAppSettings"
 
-export function playRestaurantNewOrderSound(sound: RestaurantNewOrderSound) {
+const uploadedAudioCache = new Map<string, HTMLAudioElement>()
+
+export function preloadRestaurantNewOrderSound(url?: string | null) {
+  if (!url || typeof window === "undefined") return
+  if (uploadedAudioCache.has(url)) return
+
+  const audio = new Audio(url)
+  audio.preload = "auto"
+  audio.load()
+  uploadedAudioCache.set(url, audio)
+}
+
+function playUploadedSound(url?: string | null) {
+  if (!url) return
+
+  preloadRestaurantNewOrderSound(url)
+  const cached = uploadedAudioCache.get(url)
+  const audio = cached ? (cached.cloneNode(true) as HTMLAudioElement) : new Audio(url)
+  audio.currentTime = 0
+  void audio.play().catch(() => {
+    // Browsers may block audio until a user gesture happens on the page.
+  })
+}
+
+export function playRestaurantNewOrderSound(sound: RestaurantNewOrderSound, customUrl?: string | null) {
   if (sound === "off" || typeof window === "undefined") return
+  if (sound === "custom") {
+    playUploadedSound(customUrl)
+    return
+  }
 
   try {
     const AudioContextCtor = window.AudioContext || (window as typeof window & {

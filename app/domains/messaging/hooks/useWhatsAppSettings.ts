@@ -63,7 +63,7 @@ export interface AgentCapabilitiesSummary {
 }
 
 export type RestaurantOrderStage = "queued" | "preparing" | "ready" | "served"
-export type RestaurantNewOrderSound = "off" | "chime" | "bell"
+export type RestaurantNewOrderSound = "off" | "chime" | "bell" | "custom"
 
 export interface OrderNotificationMessage {
   enabled: boolean
@@ -83,6 +83,7 @@ export interface OrderNotificationsSettings {
     enabled: boolean
     auto_send_on_stage_change: boolean
     new_order_sound: RestaurantNewOrderSound
+    new_order_sound_url?: string | null
     stage_messages: Record<RestaurantOrderStage, OrderNotificationMessage>
     manual_presets: OrderNotificationPreset[]
   }
@@ -113,6 +114,14 @@ export interface GoSettings {
     flat_fee: number
     free_delivery_threshold?: number | null
     label?: string | null
+    area_fees_enabled?: boolean
+    areas?: Array<{
+      id: string
+      name: string
+      fee: number
+      enabled: boolean
+      sort_order?: number | null
+    }>
   } | null
   agent_profile?: AgentProfile
   capabilities?: AgentCapabilitiesSummary
