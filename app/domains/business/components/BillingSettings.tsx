@@ -8,6 +8,8 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { ListCard } from "@/app/components/ui/list-card"
 import { PlanCard } from "@/app/components/billing/PlanCard"
 import { AddonCard } from "@/app/components/billing/AddonCard"
+import { HorizontalScroller } from "@/app/components/ui/horizontal-scroller"
+import { DotBadge, type DotBadgeTone } from "@/app/components/ui/dot-badge"
 import { Button } from "@/app/components/ui/button"
 import { AlertCircle, Copy, CreditCard, Download, Loader2, FileText, ChevronRight, KeyRound, Lock, MessageCircleMore, PhoneCall, Wallet, X } from "lucide-react"
 import { Switch } from "@/app/components/ui/switch"
@@ -70,7 +72,7 @@ const getAddonMaxQuantity = (addon: BillingAddon) => {
     return Math.floor(parsed)
 }
 
-const getAddonPresentation = (addon: BillingAddon) => {
+const getAddonPresentation = (addon: Pick<BillingAddon, "slug" | "featureKey">) => {
     if (addon.slug === "whatsapp_whitelabel_number" || addon.featureKey === "hasWhitelabelWhatsapp") {
         return {
             icon: MessageCircleMore,
@@ -97,6 +99,23 @@ const formatSubscriptionStatusLabel = (raw: string) => {
     if (!normalized) return "Inactive"
     const lower = normalized.toLowerCase()
     return lower.charAt(0).toUpperCase() + lower.slice(1)
+}
+
+const getSubscriptionStatusTone = (raw: string): DotBadgeTone => {
+    switch (raw.toLowerCase()) {
+        case "active":
+            return "success"
+        case "trialing":
+            return "info"
+        case "past_due":
+            return "warning"
+        case "canceled":
+        case "cancelled":
+        case "expired":
+            return "danger"
+        default:
+            return "neutral"
+    }
 }
 
 
@@ -609,71 +628,92 @@ export function BillingSettings() {
 
                 {(subData?.activeAddons?.length ?? 0) > 0 ? (
                     <GlassCard className="p-5">
-                        <div className="flex flex-wrap gap-3">
-                            {subData?.activeAddons.map((addon) => (
-                                <div
-                                    key={addon.id}
-                                    className="min-w-[220px] rounded-2xl border border-emerald-500/15 bg-emerald-500/5 px-4 py-3"
-                                >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div>
-                                            <p className="font-semibold text-brand-deep dark:text-brand-cream">{addon.name}</p>
-                                            <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50">
+                        <HorizontalScroller ariaLabel="Active add-ons" fadeFromClassName="from-card">
+                            {subData?.activeAddons.map((addon) => {
+                                const presentation = getAddonPresentation(addon)
+                                const Icon = presentation.icon
+                                return (
+                                    <div
+                                        key={addon.id}
+                                        className="flex w-[300px] shrink-0 snap-start flex-col gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4 dark:border-emerald-500/20"
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span
+                                                className={cn(
+                                                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                                                    presentation.iconClassName
+                                                )}
+                                            >
+                                                <Icon className="h-4 w-4" />
+                                            </span>
+                                            <DotBadge
+                                                tone={getSubscriptionStatusTone(addon.status)}
+                                                pulse={addon.status.toLowerCase() === "active"}
+                                            >
+                                                {formatSubscriptionStatusLabel(addon.status)}
+                                            </DotBadge>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="font-serif text-lg leading-snug text-brand-deep line-clamp-2 dark:text-brand-cream">
+                                                {addon.name}
+                                            </p>
+                                            <p className="text-xs text-brand-deep/55 dark:text-brand-cream/55">
                                                 Qty {addon.quantity} · {addon.interval}
                                             </p>
                                         </div>
-                                        <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                                            {addon.status}
-                                        </span>
+                                        <p className="mt-auto text-xs text-brand-deep/55 dark:text-brand-cream/55">
+                                            {addon.endsAt
+                                                ? `Active until ${new Date(addon.endsAt).toLocaleDateString()}`
+                                                : "Active on this business"}
+                                        </p>
                                     </div>
-                                    <p className="mt-2 text-xs text-brand-deep/55 dark:text-brand-cream/55">
-                                        {addon.endsAt
-                                            ? `Active until ${new Date(addon.endsAt).toLocaleDateString()}`
-                                            : "Active on this business"}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
+                                )
+                            })}
+                        </HorizontalScroller>
                     </GlassCard>
                 ) : null}
 
                 {addonsCatalog.length > 0 ? (
-                    <div className="grid gap-4 lg:grid-cols-2">
+                    <HorizontalScroller ariaLabel="Available add-ons" className="px-0.5">
                         {addonsCatalog.map((addon) => {
                             const selectedQuantity = getSelectedAddonQuantity(addon.slug)
                             const maxQuantity = getAddonMaxQuantity(addon)
                             const price = billingCycle === "yearly" ? addon.yearlyPrice : addon.monthlyPrice
                             const presentation = getAddonPresentation(addon)
                             return (
-                                <AddonCard
+                                <div
                                     key={addon.id}
-                                    icon={presentation.icon}
-                                    iconClassName={presentation.iconClassName}
-                                    name={addon.name}
-                                    description={addon.description}
-                                    priceLabel={`${formatPrice(price, addon.currency)} / ${billingCycle === "yearly" ? "year" : "month"}`}
-                                    selected={selectedQuantity > 0}
-                                    quantity={Math.max(1, selectedQuantity || 1)}
-                                    maxQuantity={maxQuantity}
-                                    isActive={Boolean(activeAddonMap.get(addon.slug))}
-                                    onToggle={() =>
-                                        selectedQuantity > 0
-                                            ? upsertAddonSelection(addon, 0)
-                                            : addAddonToSelection(addon)
-                                    }
-                                    onIncrease={() =>
-                                        upsertAddonSelection(
-                                            addon,
-                                            Math.min(maxQuantity, Math.max(1, selectedQuantity || 1) + 1)
-                                        )
-                                    }
-                                    onDecrease={() =>
-                                        upsertAddonSelection(addon, Math.max(0, (selectedQuantity || 1) - 1))
-                                    }
-                                />
+                                    className="flex w-[clamp(280px,82vw,380px)] shrink-0 snap-start [&>*]:w-full"
+                                >
+                                    <AddonCard
+                                        icon={presentation.icon}
+                                        iconClassName={presentation.iconClassName}
+                                        name={addon.name}
+                                        description={addon.description}
+                                        priceLabel={`${formatPrice(price, addon.currency)} / ${billingCycle === "yearly" ? "year" : "month"}`}
+                                        selected={selectedQuantity > 0}
+                                        quantity={Math.max(1, selectedQuantity || 1)}
+                                        maxQuantity={maxQuantity}
+                                        isActive={Boolean(activeAddonMap.get(addon.slug))}
+                                        onToggle={() =>
+                                            selectedQuantity > 0
+                                                ? upsertAddonSelection(addon, 0)
+                                                : addAddonToSelection(addon)
+                                        }
+                                        onIncrease={() =>
+                                            upsertAddonSelection(
+                                                addon,
+                                                Math.min(maxQuantity, Math.max(1, selectedQuantity || 1) + 1)
+                                            )
+                                        }
+                                        onDecrease={() =>
+                                            upsertAddonSelection(addon, Math.max(0, (selectedQuantity || 1) - 1))
+                                        }
+                                    />
+                                </div>
                             )
                         })}
-                    </div>
+                    </HorizontalScroller>
                 ) : (
                     <GlassCard className="p-5 md:p-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
