@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Mic, Trash2, Loader2, AlertCircle } from "lucide-react"
+import { Plus, Mic, Trash2, Loader2, AlertCircle, ChevronRight } from "lucide-react"
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
+import { GlassCard } from "@/app/components/ui/glass-card"
+import { useFeature } from "@/app/hooks/useFeature"
 import {
     useVoiceClones,
     useDeleteVoiceClone,
@@ -15,7 +17,6 @@ import { VoiceCloneCreateDialog } from "./VoiceCloneCreateDialog"
 const PROVIDER_LABELS: Record<VoiceCloneItem["ttsProvider"], string> = {
     elevenlabs: "ElevenLabs",
     cartesia: "Cartesia",
-    openai: "OpenAI",
 }
 
 function StatusBadge({ status }: { status: VoiceCloneStatus }) {
@@ -32,11 +33,54 @@ function StatusBadge({ status }: { status: VoiceCloneStatus }) {
 }
 
 export function VoiceCloneManager() {
-    const clonesQuery = useVoiceClones()
+    const hasVoiceCloning = useFeature("hasVoiceCloning")
+    const clonesQuery = useVoiceClones({ enabled: hasVoiceCloning })
     const deleteClone = useDeleteVoiceClone()
     const [dialogOpen, setDialogOpen] = React.useState(false)
 
     const clones = clonesQuery.data ?? []
+
+    if (!hasVoiceCloning) {
+        return (
+            <GlassCard className="mx-auto max-w-3xl border-brand-gold/20 p-8 md:p-10">
+                <div className="space-y-4 text-center">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold">
+                        <Mic className="h-7 w-7" />
+                    </div>
+                    <div className="space-y-2">
+                        <h2 className="font-serif text-2xl text-brand-deep dark:text-brand-cream">
+                            Voice Cloning is a paid add-on
+                        </h2>
+                        <p className="mx-auto max-w-2xl text-sm leading-relaxed text-brand-deep/60 dark:text-brand-cream/60">
+                            Activate the Voice Cloning add-on in Billing to clone your own voice and use
+                            custom voices across your AI voice agents.
+                        </p>
+                    </div>
+                    <Button
+                        asChild
+                        className="h-auto min-h-14 rounded-[1.4rem] bg-brand-deep px-5 py-3 text-brand-gold-300 shadow-[0_18px_40px_rgba(11,61,46,0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
+                    >
+                        <a
+                            href="/settings?tab=billing&addon=voice_cloning"
+                            className="inline-flex items-center gap-4"
+                        >
+                            <span className="text-left">
+                                <span className="block text-base font-semibold leading-none">
+                                    Unlock Voice Cloning in Billing
+                                </span>
+                                <span className="mt-1 block text-xs font-medium uppercase tracking-[0.18em] text-brand-gold-300/75 dark:text-brand-deep/70">
+                                    Business add-on
+                                </span>
+                            </span>
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold-300/15 text-brand-gold-300 dark:bg-brand-deep/10 dark:text-brand-deep">
+                                <ChevronRight className="h-4 w-4" />
+                            </span>
+                        </a>
+                    </Button>
+                </div>
+            </GlassCard>
+        )
+    }
 
     return (
         <div className="max-w-3xl space-y-6">

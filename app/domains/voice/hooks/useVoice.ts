@@ -663,7 +663,7 @@ export interface VoiceCloneItem {
     id: string
     businessId: string
     name: string
-    ttsProvider: "elevenlabs" | "cartesia" | "openai"
+    ttsProvider: "elevenlabs" | "cartesia"
     providerVoiceId: string | null
     status: VoiceCloneStatus
     errorMessage: string | null
@@ -675,26 +675,23 @@ export interface VoiceCloneItem {
 
 export interface CreateVoiceClonePayload {
     name: string
-    tts_provider: "elevenlabs" | "cartesia" | "openai"
+    tts_provider: "elevenlabs" | "cartesia"
     sample_urls: string[]
     consent_accepted: boolean
-    /** OpenAI-only: consent recording of the speaker reading the approved phrase. */
-    consent_sample_url?: string
-    language?: string
 }
 
 const voiceCloneKeys = {
     list: ["voice", "voice-clones"],
 }
 
-export function useVoiceClones() {
+export function useVoiceClones(options: { enabled?: boolean } = {}) {
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
     return useQuery({
         queryKey: voiceCloneKeys.list,
         queryFn: () => apiClient.get<VoiceCloneItem[]>("/voice/voice-clones"),
-        enabled: !!businessId,
+        enabled: !!businessId && options.enabled !== false,
         staleTime: 30 * 1000,
     })
 }
