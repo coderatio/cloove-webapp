@@ -1295,6 +1295,11 @@ function VoiceGrid({
                                 >
                                     <div className="flex items-center gap-2">
                                         <p className="truncate text-sm font-semibold">{voice.name}</p>
+                                        {voice.isCustomClone && (
+                                            <span className="rounded-full bg-brand-gold/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-brand-gold-600 dark:text-brand-gold-300">
+                                                Cloned
+                                            </span>
+                                        )}
                                         {voice.tier === "premium" && (
                                             <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700 dark:text-amber-300">
                                                 Premium
