@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, type ChangeEvent } from "react"
 import { Input } from "@/app/components/ui/input"
 import { Switch } from "@/app/components/ui/switch"
 import { Button } from "@/app/components/ui/button"
@@ -33,6 +33,8 @@ import {
   ChevronRight,
   Plug,
   Save,
+  UploadCloud,
+  Trash2,
 } from "lucide-react"
 import {
   useWhatsAppNumbers,
@@ -63,12 +65,14 @@ import { ConnectWhatsAppForm } from "./ConnectWhatsAppForm"
 import { WhatsAppNumberLogsSheet } from "./WhatsAppNumberLogsSheet"
 import { AgentProfileSection } from "./AgentProfileSection"
 import { WhatsAppNotificationMessageInput } from "./WhatsAppNotificationMessageInput"
-import { playRestaurantNewOrderSound } from "@/app/domains/restaurant/lib/new-order-sound"
+import { playRestaurantNewOrderSound, preloadRestaurantNewOrderSound } from "@/app/domains/restaurant/lib/new-order-sound"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { useFeature } from "@/app/hooks/useFeature"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { OperatingHoursBuilder } from "@/app/components/shared/OperatingHoursBuilder"
+import { uploadService } from "@/app/lib/upload/upload-service"
+import { toast } from "sonner"
 
 interface WhatsAppSettingsProps {
   onDirtyChange?: (isDirty: boolean) => void
@@ -134,6 +138,7 @@ const DEFAULT_ORDER_NOTIFICATIONS: OrderNotificationsSettings = {
     enabled: true,
     auto_send_on_stage_change: true,
     new_order_sound: "chime",
+    new_order_sound_url: null,
     stage_messages: {
       queued: {
         enabled: true,
@@ -175,6 +180,7 @@ const NEW_ORDER_SOUND_OPTIONS: Array<{
   { value: "off", label: "Off", description: "No sound when a new order comes in." },
   { value: "chime", label: "Chime", description: "Short two-tone alert for new orders." },
   { value: "bell", label: "Bell", description: "Softer three-note alert for front-of-house use." },
+  { value: "custom", label: "Custom", description: "Use a sound file uploaded by your team." },
 ]
 
 function mergeOrderNotifications(
@@ -1097,6 +1103,8 @@ function OrderNotificationsCard({
   onChange: (settings: OrderNotificationsSettings) => void
 }) {
   const stages = Object.keys(ORDER_STAGE_LABELS) as RestaurantOrderStage[]
+  const customSoundInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingSound, setIsUploadingSound] = useState(false)
   const update = (next: Partial<OrderNotificationsSettings>) => onChange({ ...settings, ...next })
   const updateRestaurant = (next: Partial<OrderNotificationsSettings["restaurant"]>) =>
     onChange({ ...settings, restaurant: { ...settings.restaurant, ...next } })
@@ -1118,6 +1126,49 @@ function OrderNotificationsCard({
     })
 
   const { businessName } = useBusiness()
+  const customSoundUrl = settings.restaurant.new_order_sound_url ?? null
+
+  useEffect(() => {
+    if (settings.restaurant.new_order_sound === "custom") {
+      preloadRestaurantNewOrderSound(customSoundUrl)
+    }
+  }, [customSoundUrl, settings.restaurant.new_order_sound])
+
+  const handleSoundUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    if (!file.type.startsWith("audio/")) {
+      toast.error("Upload an audio file, such as MP3, WAV, OGG, M4A, or WebM.")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Sound file must be 5MB or smaller.")
+      return
+    }
+
+    try {
+      setIsUploadingSound(true)
+      const url = await uploadService.uploadFile(file)
+      preloadRestaurantNewOrderSound(url)
+      updateRestaurant({ new_order_sound: "custom", new_order_sound_url: url })
+      toast.success("New order sound uploaded.")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not upload sound.")
+    } finally {
+      setIsUploadingSound(false)
+    }
+  }
+
+  const testSound = () => {
+    if (settings.restaurant.new_order_sound === "custom" && !customSoundUrl) {
+      toast.error("Upload a sound file first.")
+      return
+    }
+    playRestaurantNewOrderSound(settings.restaurant.new_order_sound, customSoundUrl)
+  }
 
   return (
     <section className="space-y-4">
@@ -1153,8 +1204,12 @@ function OrderNotificationsCard({
               value={settings.restaurant.new_order_sound}
               onValueChange={(value) => {
                 const sound = value as RestaurantNewOrderSound
+                if (sound === "custom" && !customSoundUrl) {
+                  customSoundInputRef.current?.click()
+                  return
+                }
                 updateRestaurant({ new_order_sound: sound })
-                playRestaurantNewOrderSound(sound)
+                playRestaurantNewOrderSound(sound, customSoundUrl)
               }}
             >
               <SelectTrigger className="max-w-sm">
@@ -1175,6 +1230,59 @@ function OrderNotificationsCard({
                 )?.description
               }
             </p>
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <input
+                ref={customSoundInputRef}
+                type="file"
+                accept="audio/*"
+                className="hidden"
+                onChange={handleSoundUpload}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                disabled={isUploadingSound}
+                onClick={() => customSoundInputRef.current?.click()}
+              >
+                {isUploadingSound ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                )}
+                {customSoundUrl ? "Replace sound" : "Upload sound"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={testSound}
+              >
+                <Bell className="mr-2 h-4 w-4" />
+                Test sound
+              </Button>
+              {customSoundUrl ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-red-600 hover:text-red-700 dark:text-red-400"
+                  onClick={() =>
+                    updateRestaurant({ new_order_sound: "chime", new_order_sound_url: null })
+                  }
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove upload
+                </Button>
+              ) : null}
+            </div>
+            {customSoundUrl ? (
+              <p className="max-w-xl truncate text-xs text-slate-500 dark:text-slate-400">
+                Uploaded sound: {customSoundUrl}
+              </p>
+            ) : null}
           </div>
         </div>
 

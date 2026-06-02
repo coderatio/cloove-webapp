@@ -13,7 +13,10 @@ import {
   type KitchenTicket,
 } from "@/app/domains/restaurant/hooks/useRestaurantOps"
 import { useGoSettings } from "@/app/domains/messaging/hooks/useWhatsAppSettings"
-import { playRestaurantNewOrderSound } from "@/app/domains/restaurant/lib/new-order-sound"
+import {
+  playRestaurantNewOrderSound,
+  preloadRestaurantNewOrderSound,
+} from "@/app/domains/restaurant/lib/new-order-sound"
 import { GlobalOrderPreviewDrawer } from "@/app/domains/orders/components/GlobalOrderPreviewDrawer"
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
@@ -141,6 +144,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
   const isRestaurantPreset = activeBusiness?.layoutPreset === "restaurant"
   const { data: goSettings } = useGoSettings()
   const sound = goSettings?.order_notifications?.restaurant.new_order_sound ?? "chime"
+  const customSoundUrl = goSettings?.order_notifications?.restaurant.new_order_sound_url ?? null
   const { orders = [] } = useOrders(1, 10, { automation: ["AUTOMATED"] })
   const kitchenAction = useKitchenTicketActions()
 
@@ -150,6 +154,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
   const seenByBusinessRef = React.useRef<Record<string, Set<string>>>({})
   const announcedKeysRef = React.useRef<Set<string>>(new Set())
   const broadcastRef = React.useRef<BroadcastChannel | null>(null)
+  const lastSoundCountRef = React.useRef(0)
 
   React.useEffect(() => {
     if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return
@@ -193,10 +198,11 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
       const nonPreviewOrders = current.filter((order) => !isDevPreviewOrder(order))
       return [...previewOrders, ...nonPreviewOrders]
     })
-    if (isRestaurantPreset) {
-      playRestaurantNewOrderSound(sound)
-    }
-  }, [activeBusiness?.currency, isRestaurantPreset, sound])
+  }, [activeBusiness?.currency])
+
+  React.useEffect(() => {
+    if (sound === "custom") preloadRestaurantNewOrderSound(customSoundUrl)
+  }, [customSoundUrl, sound])
 
   const handleViewOrders = React.useCallback(() => {
     setPreviewOrderId(null)
@@ -314,11 +320,8 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
         const knownIds = new Set(current.map((order) => order.id))
         return [...current, ...nextOrders.filter((order) => !knownIds.has(order.id))]
       })
-      if (isRestaurantPreset) {
-        playRestaurantNewOrderSound(sound)
-      }
     }
-  }, [announceOrder, businessId, isRestaurantPreset, orders, sound])
+  }, [announceOrder, businessId, orders])
 
   const visibleQueuedOrders = React.useMemo(() => {
     return queuedOrders
@@ -332,6 +335,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
   React.useEffect(() => {
     if (visibleQueuedOrders.length === 0) {
       toast.dismiss(GLOBAL_NEW_ORDERS_TOAST_ID)
+      lastSoundCountRef.current = 0
       return
     }
 
@@ -498,14 +502,21 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
         position: "top-center",
       }
     )
+
+    if (isRestaurantPreset && visibleQueuedOrders.length > lastSoundCountRef.current) {
+      playRestaurantNewOrderSound(sound, customSoundUrl)
+    }
+    lastSoundCountRef.current = visibleQueuedOrders.length
   }, [
     activeBusiness?.currency,
     clearQueuedOrders,
+    customSoundUrl,
     isRestaurantPreset,
     openPreview,
     removeQueuedOrder,
     sendingToastOrderId,
     sendOrderToKitchen,
+    sound,
     visibleQueuedOrders,
   ])
 

@@ -9,9 +9,22 @@ class VercelBlobProvider implements UploadProvider {
         const newBlob = await upload(file.name, file, {
             access: 'public',
             handleUploadUrl: '/api/upload',
+            contentType: getUploadContentType(file),
         });
         return newBlob.url;
     }
+}
+
+function getUploadContentType(file: File): string {
+    const extension = file.name.split('.').pop()?.toLowerCase()
+
+    if (extension === 'mp3' || extension === 'mpa') return 'audio/mpeg'
+    if (extension === 'm4a') return 'audio/mp4'
+    if (extension === 'wav') return 'audio/wav'
+    if (extension === 'ogg') return 'audio/ogg'
+    if (extension === 'webm') return 'audio/webm'
+
+    return file.type || 'application/octet-stream'
 }
 
 class MockUploadProvider implements UploadProvider {
@@ -34,14 +47,14 @@ class CloudinaryProvider implements UploadProvider {
         this.uploadPreset = uploadPreset
     }
 
-    async upload(file: File): Promise<string> { // Changed uploadFile to upload to match interface
+    async upload(file: File): Promise<string> {
         const formData = new FormData()
         formData.append('file', file)
         formData.append('upload_preset', this.uploadPreset)
-        // Optional: Add folder or tags here if needed in the future
+        const resourceType = file.type.startsWith('audio/') ? 'auto' : 'image'
 
         const response = await fetch(
-            `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`,
+            `https://api.cloudinary.com/v1_1/${this.cloudName}/${resourceType}/upload`,
             {
                 method: 'POST',
                 body: formData,

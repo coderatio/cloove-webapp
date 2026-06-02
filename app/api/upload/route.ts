@@ -17,7 +17,21 @@ export async function POST(request: Request): Promise<NextResponse> {
                 // }
 
                 return {
-                    allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+                    allowedContentTypes: [
+                        'image/jpeg',
+                        'image/png',
+                        'image/gif',
+                        'image/webp',
+                        'audio/*',
+                        'audio/mpeg',
+                        'audio/mpa',
+                        'audio/mp3',
+                        'audio/wav',
+                        'audio/x-wav',
+                        'audio/ogg',
+                        'audio/webm',
+                        'audio/mp4',
+                    ],
                     tokenPayload: JSON.stringify({
                         // optional, sent to your server on upload completion
                         // userId: session.user.id,
