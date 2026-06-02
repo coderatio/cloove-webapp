@@ -24,6 +24,7 @@ import {
     GitBranch,
     BadgePercent,
     Truck,
+    Mic,
 } from "lucide-react"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
 import { NAV_GROUPS } from "@/app/domains/workspace/nav/nav-definitions"
@@ -99,6 +100,7 @@ export const MINI_APPS: MiniAppDef[] = [
             { id: "overview", label: "Overview", icon: PanelsTopLeft, href: "/voice?voiceTab=overview" },
             { id: "requests", label: "Requests", icon: MapPinned, href: "/voice?voiceTab=requests" },
             { id: "ai-agents", label: "AI Agents", icon: Sparkles, href: "/voice?voiceTab=ai-agents" },
+            { id: "voice-cloning", label: "Voice Cloning", icon: Mic, href: "/voice?voiceTab=voice-cloning" },
             { id: "calls", label: "Calls", icon: AudioLines, href: "/voice?voiceTab=calls" },
             { id: "transfer", label: "Transfer", icon: PhoneForwarded, href: "/voice?voiceTab=transfer" },
             { id: "spend", label: "Spend", icon: Receipt, href: "/voice?voiceTab=charges" },

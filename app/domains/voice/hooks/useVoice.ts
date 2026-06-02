@@ -614,6 +614,7 @@ export interface VoiceSpeechVoiceItem {
     gender: "female" | "male" | "neutral" | null
     previewUrl: string | null
     tier: "standard" | "premium"
+    isCustomClone?: boolean
 }
 
 export interface VoiceSpeechVoiceGroupItem {
@@ -653,6 +654,83 @@ export function useVoiceSpeechProviders() {
         queryFn: () => apiClient.get<VoiceSpeechProviderItem[]>("/voice/speech-providers"),
         enabled: !!businessId,
         staleTime: 10 * 60 * 1000,
+    })
+}
+
+export type VoiceCloneStatus = "pending" | "processing" | "ready" | "failed"
+
+export interface VoiceCloneItem {
+    id: string
+    businessId: string
+    name: string
+    ttsProvider: "elevenlabs" | "cartesia" | "openai"
+    providerVoiceId: string | null
+    status: VoiceCloneStatus
+    errorMessage: string | null
+    sampleUrls: string[]
+    consentAccepted: boolean
+    createdAt: string
+    updatedAt: string | null
+}
+
+export interface CreateVoiceClonePayload {
+    name: string
+    tts_provider: "elevenlabs" | "cartesia" | "openai"
+    sample_urls: string[]
+    consent_accepted: boolean
+    /** OpenAI-only: consent recording of the speaker reading the approved phrase. */
+    consent_sample_url?: string
+    language?: string
+}
+
+const voiceCloneKeys = {
+    list: ["voice", "voice-clones"],
+}
+
+export function useVoiceClones() {
+    const { activeBusiness } = useBusiness()
+    const businessId = activeBusiness?.id
+
+    return useQuery({
+        queryKey: voiceCloneKeys.list,
+        queryFn: () => apiClient.get<VoiceCloneItem[]>("/voice/voice-clones"),
+        enabled: !!businessId,
+        staleTime: 30 * 1000,
+    })
+}
+
+export function useCreateVoiceClone() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: (payload: CreateVoiceClonePayload) =>
+            apiClient.post<VoiceCloneItem>("/voice/voice-clones", payload),
+        onSuccess: (clone) => {
+            if (clone.status === "ready") toast.success("Voice clone created")
+            else if (clone.status === "failed")
+                toast.error(clone.errorMessage ?? "Voice cloning failed")
+            else toast.success("Voice clone submitted — processing")
+            void queryClient.invalidateQueries({ queryKey: voiceCloneKeys.list })
+            // Cloned voices appear in the speech-provider picker, so refresh it.
+            void queryClient.invalidateQueries({ queryKey: speechProviderKeys.list })
+        },
+        onError: (error: { message?: string }) =>
+            toast.error(error.message ?? "Failed to create voice clone"),
+    })
+}
+
+export function useDeleteVoiceClone() {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: (id: string) => apiClient.delete(`/voice/voice-clones/${id}`),
+        onSuccess: () => {
+            toast.success("Voice clone deleted")
+            void queryClient.invalidateQueries({ queryKey: voiceCloneKeys.list })
+            void queryClient.invalidateQueries({ queryKey: speechProviderKeys.list })
+        },
+        onError: (error: { message?: string }) =>
+            toast.error(error.message ?? "Failed to delete voice clone"),
     })
 }
 

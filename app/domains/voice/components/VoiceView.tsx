@@ -30,6 +30,7 @@ import { VoiceOutboundCallComposer } from "@/app/domains/voice/components/VoiceO
 import { VoiceProviderCredentialsForm } from "@/app/domains/voice/components/VoiceProviderCredentialsForm"
 import { VoiceNumberRequestWizard } from "@/app/domains/voice/components/VoiceNumberRequestWizard"
 import { AiAgentsList } from "@/app/domains/voice/components/ai-agents/AiAgentsList"
+import { VoiceCloneManager } from "@/app/domains/voice/components/voice-cloning/VoiceCloneManager"
 import { VoiceTransferTargetsForm } from "@/app/domains/voice/components/VoiceTransferTargetsForm"
 import { VoiceAgentSettingsForm } from "@/app/domains/voice/components/VoiceAgentSettingsForm"
 import { useDebounce } from "@/app/hooks/useDebounce"
@@ -872,6 +873,8 @@ export function VoiceView() {
             )}
 
             {activeTab === "ai-agents" && <AiAgentsList />}
+
+            {activeTab === "voice-cloning" && <VoiceCloneManager />}
 
             {activeTab === "requests" && (
                 <GlassCard className="rounded-[2rem] border-black/5 p-5 space-y-5 dark:border-white/10">
