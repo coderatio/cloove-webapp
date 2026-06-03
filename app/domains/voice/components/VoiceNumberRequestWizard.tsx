@@ -8,9 +8,10 @@ import {
     ArrowRight,
     CheckCircle2,
     ChevronRight,
+    Clock,
     Loader2,
+    PackageCheck,
     Phone,
-    Search,
     ShieldCheck,
     Sparkles,
     Wallet,
@@ -32,12 +33,11 @@ import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 import { cn } from "@/app/lib/utils"
 import {
     useCreateVoiceNumberRequest,
+    useNumberPoolAvailability,
     useNumberRequestEligibility,
     useNumberRequestPricing,
-    useNumberSearch,
     useVoiceAiAgents,
     useVoiceProviders,
-    type VoiceAvailableNumber,
     type VoiceProviderOption,
 } from "@/app/domains/voice/hooks/useVoice"
 
@@ -81,18 +81,12 @@ export function VoiceNumberRequestWizard({
     const [aiAgentId, setAiAgentId] = useState<string | null>(null)
     const [label, setLabel] = useState<string>("")
     const [notes, setNotes] = useState<string>("")
-    const [searchContains, setSearchContains] = useState<string>("")
-    const [searchResults, setSearchResults] = useState<VoiceAvailableNumber[]>([])
-    const [selectedNumber, setSelectedNumber] = useState<VoiceAvailableNumber | null>(null)
 
     useEffect(() => {
         if (open) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setStep("gate")
             setMode("basic")
-            setSearchResults([])
-            setSelectedNumber(null)
-            setSearchContains("")
         }
     }, [open])
 
@@ -136,7 +130,7 @@ export function VoiceNumberRequestWizard({
         quantity,
     })
     const aiAgentsQuery = useVoiceAiAgents()
-    const numberSearch = useNumberSearch()
+    const availabilityQuery = useNumberPoolAvailability(providerId || undefined)
     const createRequest = useCreateVoiceNumberRequest()
 
     const eligibility = eligibilityQuery.data
@@ -144,26 +138,20 @@ export function VoiceNumberRequestWizard({
     const aiAgents = aiAgentsQuery.data ?? []
     const isEligible = eligibility?.isEligible === true
 
+    // How many numbers we currently hold in the pool for the chosen
+    // country + type. `0` means the request will join the waitlist.
+    const availableStock = useMemo(() => {
+        const rows = availabilityQuery.data ?? []
+        const match = rows.find(
+            (r) => r.countryCode === countryCode && r.numberType === numberType
+        )
+        return match?.available ?? 0
+    }, [availabilityQuery.data, countryCode, numberType])
+
     const canAdvanceFromGate = isEligible
     const canAdvanceFromMode = Boolean(providerId && countryCode)
     const canAdvanceFromPricing = Boolean(pricing)
     const canSubmit = canAdvanceFromPricing && isEligible
-
-    const handleSearch = async () => {
-        if (!providerId || !countryCode) return
-        try {
-            const results = await numberSearch.mutateAsync({
-                provider: providerId,
-                countryCode,
-                numberType,
-                contains: searchContains || undefined,
-                limit: 10,
-            })
-            setSearchResults(results)
-        } catch {
-            setSearchResults([])
-        }
-    }
 
     const handleSubmit = async () => {
         if (!canSubmit) return
@@ -252,14 +240,8 @@ export function VoiceNumberRequestWizard({
                                     onQuantityChange={setQuantity}
                                     label={label}
                                     onLabelChange={setLabel}
-                                    supportsLiveSearch={Boolean(selectedProvider)}
-                                    searchContains={searchContains}
-                                    onSearchContainsChange={setSearchContains}
-                                    onSearch={handleSearch}
-                                    searchResults={searchResults}
-                                    selectedNumber={selectedNumber}
-                                    onSelectNumber={setSelectedNumber}
-                                    isSearching={numberSearch.isPending}
+                                    availableStock={availableStock}
+                                    isCheckingStock={availabilityQuery.isLoading}
                                 />
                             )}
                             {step === "pricing" && (
@@ -295,7 +277,7 @@ export function VoiceNumberRequestWizard({
                                             : "Default AI agent will be assigned")
                                     }
                                     pricing={pricing ?? null}
-                                    selectedNumber={selectedNumber}
+                                    availableStock={availableStock}
                                 />
                             )}
                         </motion.div>
@@ -305,11 +287,11 @@ export function VoiceNumberRequestWizard({
                 <div className="border-t border-black/5 px-6 py-4 dark:border-white/5">
                     <div className="flex items-center justify-between gap-3">
                         <span className="text-xs text-muted-foreground">
-                            {step === "gate" && "Confirm your account is ready to order numbers."}
-                            {step === "mode" && (mode === "basic" ? "Pick a country and we'll do the rest." : "Pick the exact number type and quantity.")}
-                            {step === "pricing" && "Review the upfront cost before confirming."}
+                            {step === "gate" && "Confirm your account is ready to get a number."}
+                            {step === "mode" && (mode === "basic" ? "Pick a country and we'll assign a number." : "Pick the exact number type and quantity.")}
+                            {step === "pricing" && "You're only charged once a number is assigned."}
                             {step === "agent" && "Optionally pre-link an AI agent for this number."}
-                            {step === "confirm" && "We'll debit your wallet and start provisioning."}
+                            {step === "confirm" && (availableStock > 0 ? "We'll assign a number and debit your wallet." : "We'll add you to the waitlist — no charge yet.")}
                         </span>
                         <div className="flex items-center gap-2">
                             {step !== "gate" && (
@@ -339,7 +321,7 @@ export function VoiceNumberRequestWizard({
                                     {createRequest.isPending ? (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     ) : null}
-                                    Confirm & pay
+                                    {availableStock > 0 ? "Confirm & pay" : "Join waitlist"}
                                 </Button>
                             )}
                         </div>
@@ -494,14 +476,8 @@ function ModeStep({
     onQuantityChange,
     label,
     onLabelChange,
-    supportsLiveSearch,
-    searchContains,
-    onSearchContainsChange,
-    onSearch,
-    searchResults,
-    selectedNumber,
-    onSelectNumber,
-    isSearching,
+    availableStock,
+    isCheckingStock,
 }: {
     mode: WizardMode
     onModeChange: (v: WizardMode) => void
@@ -516,14 +492,8 @@ function ModeStep({
     onQuantityChange: (v: number) => void
     label: string
     onLabelChange: (v: string) => void
-    supportsLiveSearch: boolean
-    searchContains: string
-    onSearchContainsChange: (v: string) => void
-    onSearch: () => void
-    searchResults: VoiceAvailableNumber[]
-    selectedNumber: VoiceAvailableNumber | null
-    onSelectNumber: (n: VoiceAvailableNumber | null) => void
-    isSearching: boolean
+    availableStock: number
+    isCheckingStock: boolean
 }) {
     const selectedProvider = providers.find((p) => p.id === providerId) ?? null
     const countries = selectedProvider?.supportedCountries ?? []
@@ -618,55 +588,47 @@ function ModeStep({
                 </div>
             </div>
 
-            {mode === "advanced" && supportsLiveSearch && (
-                <div className="space-y-3 rounded-2xl border border-brand-deep/5 bg-brand-deep/[0.025] p-4 dark:border-white/10 dark:bg-white/[0.035]">
-                    <div className="flex items-center gap-2">
-                        <Search className="h-4 w-4" />
-                        <h4 className="text-sm font-semibold text-brand-deep dark:text-brand-cream">Preview available numbers</h4>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            placeholder="Filter by digits (optional)"
-                            value={searchContains}
-                            onChange={(e) => onSearchContainsChange(e.target.value)}
-                            className="rounded-2xl border-brand-deep/8 bg-white/70 dark:border-white/10 dark:bg-white/5"
-                        />
-                        <Button type="button" onClick={onSearch} disabled={isSearching} className="rounded-full">
-                            {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
-                        </Button>
-                    </div>
-                    {searchResults.length > 0 && (
-                        <ul className="space-y-1">
-                            {searchResults.slice(0, 8).map((n) => (
-                                <li key={n.phoneNumber}>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            onSelectNumber(
-                                                selectedNumber?.phoneNumber === n.phoneNumber ? null : n
-                                            )
-                                        }
-                                        className={cn(
-                                            "flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors",
-                                            selectedNumber?.phoneNumber === n.phoneNumber
-                                                ? "border-brand-green/35 bg-brand-green/[0.045] text-brand-deep ring-1 ring-inset ring-brand-green/15 dark:border-brand-green/35 dark:bg-brand-green/[0.08] dark:text-brand-cream"
-                                                : "border-brand-deep/5 bg-white/60 hover:border-brand-deep/10 hover:bg-brand-deep/[0.035] dark:border-white/8 dark:bg-white/[0.035] dark:hover:bg-white/[0.06]"
-                                        )}
-                                    >
-                                        <span className="font-mono">{n.phoneNumber}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {n.region || n.numberType}
-                                        </span>
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                        Live search is a preview — the actual number assigned during provisioning may differ if it gets taken.
+            {countryCode && <StockIndicator available={availableStock} isLoading={isCheckingStock} />}
+        </div>
+    )
+}
+
+/**
+ * Shows how many numbers we currently hold in the pool for the chosen
+ * country + type. When empty, explains the waitlist path — the request can
+ * still be submitted and is auto-assigned the moment we load stock.
+ */
+function StockIndicator({ available, isLoading }: { available: number; isLoading: boolean }) {
+    if (isLoading) {
+        return <Skeleton className="h-16 w-full rounded-2xl" />
+    }
+    if (available > 0) {
+        return (
+            <div className="flex items-start gap-3 rounded-2xl border border-brand-green/20 bg-brand-green/[0.045] p-4 dark:border-brand-green/25 dark:bg-brand-green/[0.08]">
+                <PackageCheck className="mt-0.5 h-5 w-5 text-brand-green dark:text-brand-green-300" />
+                <div className="space-y-0.5">
+                    <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                        {available} {available === 1 ? "number" : "numbers"} ready to assign
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                        We&apos;ll assign one from our verified pool the instant you confirm.
                     </p>
                 </div>
-            )}
+            </div>
+        )
+    }
+    return (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+            <Clock className="mt-0.5 h-5 w-5 text-amber-600" />
+            <div className="space-y-0.5">
+                <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                    None in stock right now
+                </p>
+                <p className="text-sm text-muted-foreground">
+                    You can still submit — we&apos;ll add you to the waitlist and assign a number
+                    automatically as soon as stock arrives. You won&apos;t be charged until then.
+                </p>
+            </div>
         </div>
     )
 }
@@ -726,7 +688,7 @@ function PricingStep({
             <SectionHeader
                 icon={Wallet}
                 title="Pricing preview"
-                description="We debit setup fee + the first month's rental upfront. Refunded on provisioning failure."
+                description="Setup fee + the first month's rental. You're only charged once a number is assigned to you."
             />
 
             <div className="rounded-2xl border border-brand-deep/5 bg-brand-deep/[0.025] p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.035]">
@@ -886,7 +848,7 @@ function ConfirmStep({
     notes,
     selectedAgentName,
     pricing,
-    selectedNumber,
+    availableStock,
 }: {
     provider: VoiceProviderOption | null
     countryCode: string
@@ -896,17 +858,22 @@ function ConfirmStep({
     notes: string
     selectedAgentName: string
     pricing: import("@/app/domains/voice/hooks/useVoice").VoiceNumberPricing | null
-    selectedNumber: VoiceAvailableNumber | null
+    availableStock: number
 }) {
     const countryName =
         provider?.supportedCountries.find((c) => c.code === countryCode)?.name ?? countryCode
+    const inStock = availableStock > 0
 
     return (
         <div className="space-y-4">
             <SectionHeader
                 icon={CheckCircle2}
-                title="Confirm your order"
-                description="We'll debit your wallet and start provisioning. You'll get notified the moment your number is live."
+                title="Confirm your request"
+                description={
+                    inStock
+                        ? "We'll assign a verified number from our pool and debit your wallet. You'll be notified the moment it's live."
+                        : "No numbers are in stock right now — we'll add you to the waitlist and assign one automatically. You won't be charged until then."
+                }
             />
 
             <div className="space-y-3 rounded-2xl border border-brand-deep/5 bg-brand-deep/[0.025] p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.035]">
@@ -914,9 +881,6 @@ function ConfirmStep({
                 <ConfirmRow label="Country" value={countryName} />
                 <ConfirmRow label="Number type" value={numberType.replace("_", " ")} />
                 <ConfirmRow label="Quantity" value={String(quantity)} />
-                {selectedNumber && (
-                    <ConfirmRow label="Preferred number" value={<span className="font-mono">{selectedNumber.phoneNumber}</span>} />
-                )}
                 {label && <ConfirmRow label="Label" value={label} />}
                 <ConfirmRow label="AI agent" value={selectedAgentName} />
                 {notes && <ConfirmRow label="Notes" value={notes} />}
@@ -924,7 +888,9 @@ function ConfirmStep({
 
             {pricing && (
                 <div className="flex items-center justify-between rounded-2xl border border-brand-green/20 bg-brand-green/[0.045] p-4 dark:border-brand-green/25 dark:bg-brand-green/[0.08]">
-                    <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream">Wallet debit on confirm</span>
+                    <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
+                        {inStock ? "Wallet debit on confirm" : "Charged on assignment"}
+                    </span>
                     <span className="text-lg font-bold text-brand-deep dark:text-brand-cream">
                         <CurrencyDisplay value={pricing.totalUpfrontDebit} currency={pricing.currency} />
                     </span>

@@ -881,16 +881,11 @@ export interface VoiceNumberOffer {
     currency: string
 }
 
-export interface VoiceAvailableNumber {
-    phoneNumber: string
-    countryIso: string
+export interface VoiceNumberAvailability {
+    provider: string
+    countryCode: string
     numberType: string
-    region?: string | null
-    rateCenter?: string | null
-    monthlyCost?: number | null
-    setupCost?: number | null
-    currency?: string | null
-    metadata?: Record<string, unknown> | null
+    available: number
 }
 
 export interface UseNumberRequestEligibilityParams {
@@ -952,28 +947,20 @@ export function useVoiceNumberOffers(provider?: string) {
     })
 }
 
-export interface UseNumberSearchParams {
-    provider?: string
-    countryCode?: string
-    numberType?: string
-    areaCode?: string | null
-    contains?: string | null
-    limit?: number
-}
-
-export function useNumberSearch() {
-    return useMutation({
-        mutationFn: (params: UseNumberSearchParams) =>
-            apiClient.post<VoiceAvailableNumber[]>("/voice/number-search", {
-                provider: params.provider,
-                country_code: params.countryCode,
-                number_type: params.numberType ?? "local",
-                area_code: params.areaCode ?? undefined,
-                contains: params.contains ?? undefined,
-                limit: params.limit ?? 10,
+/**
+ * In-stock counts for a provider, grouped by (country, type). Drives the
+ * wizard's "N available" badge and the waitlist messaging — numbers are
+ * assigned from our internal pool, so there is no live carrier search.
+ */
+export function useNumberPoolAvailability(provider?: string) {
+    return useQuery({
+        queryKey: ["voice", "number-availability", provider],
+        queryFn: () =>
+            apiClient.get<VoiceNumberAvailability[]>("/voice/number-availability", {
+                provider: provider!,
             }),
-        onError: (error: { message?: string }) =>
-            toast.error(error.message ?? "No numbers available right now. Try a different country or type."),
+        enabled: !!provider,
+        staleTime: 30 * 1000,
     })
 }
 
