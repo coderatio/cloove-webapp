@@ -392,14 +392,22 @@ export function VoiceView() {
         () => (numberRequestsQuery.data ?? []).filter((request) => request.status === "approved"),
         [numberRequestsQuery.data]
     )
+    // "Pending" covers anything still in flight: waitlisted (`pending`) and
+    // mid-assignment (`provisioning`). History is everything terminal.
     const pendingRequests = useMemo(
-        () => (numberRequestsQuery.data ?? []).filter((request) => request.status === "pending"),
+        () =>
+            (numberRequestsQuery.data ?? []).filter(
+                (request) => request.status === "pending" || request.status === "provisioning"
+            ),
         [numberRequestsQuery.data]
     )
     const historyRequests = useMemo(
         () =>
             (numberRequestsQuery.data ?? []).filter(
-                (request) => request.status !== "approved" && request.status !== "pending"
+                (request) =>
+                    request.status !== "approved" &&
+                    request.status !== "pending" &&
+                    request.status !== "provisioning"
             ),
         [numberRequestsQuery.data]
     )
@@ -967,7 +975,7 @@ export function VoiceView() {
                                 ) : (
                                     <RequestTabEmptyState
                                         title="No pending requests"
-                                        description="New provisioning requests will appear here while they are waiting for review."
+                                        description="Requests being assigned a number — or waiting on the waitlist for stock — appear here."
                                     />
                                 )
                             ) : null}
@@ -1643,7 +1651,7 @@ function NumberRequestRow({
                         </div>
                         <div className="flex shrink-0 items-center gap-2 sm:flex-row-reverse">
                             <StatusChip tone={meta.tone} label={meta.label} />
-                            {request.status === "pending" ? (
+                            {request.status === "pending" || request.status === "provisioning" ? (
                                 <Button
                                     type="button"
                                     variant="outline"
