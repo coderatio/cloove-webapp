@@ -3,18 +3,8 @@
 import { useState, Suspense } from "react"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { Button } from "@/app/components/ui/button"
-import {
-    User,
-    Building2,
-    ShieldCheck,
-    Lock,
-    Save,
-    CreditCard,
-    Loader2,
-    Printer,
-    LayoutTemplate,
-    ShoppingCart,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { UserIcon as User, Building02Icon as Building2, SecurityCheckIcon as ShieldCheck, LockIcon as Lock, SaveIcon as Save, CreditCardIcon as CreditCard, Loading03Icon as Loader2, PrinterIcon as Printer, DashboardSquare02Icon as LayoutTemplate, ShoppingCart01Icon as ShoppingCart } from "@hugeicons/core-free-icons"
 import { motion, AnimatePresence } from "framer-motion"
 import { BillingSettings } from "@/app/domains/business/components/BillingSettings"
 import { VerificationSettings } from "@/app/domains/business/components/VerificationSettings"
@@ -136,12 +126,12 @@ function SettingsContent() {
                         >
                             {isSaving ? (
                                 <>
-                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="w-5 h-5 mr-2 animate-spin" />
                                     Saving...
                                 </>
                             ) : (
                                 <>
-                                    <Save className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={Save} className="w-4 h-4 mr-2" />
                                     Save Changes
                                 </>
                             )}
@@ -156,7 +146,7 @@ function SettingsContent() {
 export default function SettingsPage() {
     return (
         <PageTransition>
-            <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-8 h-8 animate-spin text-brand-gold" /></div>}>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><HugeiconsIcon icon={Loader2} className="w-8 h-8 animate-spin text-brand-gold" /></div>}>
                 <PermissionGuard>
                     <SettingsContent />
                 </PermissionGuard>

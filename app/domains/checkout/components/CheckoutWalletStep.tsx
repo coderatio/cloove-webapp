@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
-import { Copy, Check, Building2, ShieldCheck, CheckCircle2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CopyIcon as Copy, CheckIcon as Check, Building02Icon as Building2, SecurityCheckIcon as ShieldCheck, CheckmarkCircle02Icon as CheckCircle2 } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { Button } from "@/app/components/ui/button"
 import { CheckoutBusinessHeader } from "./CheckoutBusinessHeader"
@@ -61,7 +62,7 @@ export function CheckoutWalletStep({ checkout }: Props) {
       {accounts.length === 0 ? (
         <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-brand-deep/10 dark:border-white/10 rounded-3xl p-8 text-center space-y-3 shadow-sm dark:shadow-none max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mx-auto">
-            <Building2 className="w-8 h-8 text-brand-accent/30 dark:text-white/30" />
+            <HugeiconsIcon icon={Building2} className="w-8 h-8 text-brand-accent/30 dark:text-white/30" />
           </div>
           <p className="text-brand-accent/50 dark:text-white/50 text-sm">
             No payment accounts available at the moment.
@@ -91,7 +92,7 @@ export function CheckoutWalletStep({ checkout }: Props) {
                           }`}
                       >
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-brand-gold/10 dark:bg-brand-gold/15' : 'bg-brand-deep/5 dark:bg-white/5'}`}>
-                          <Building2 className={`w-4 h-4 ${isSelected ? 'text-brand-gold' : 'text-brand-accent/40 dark:text-white/40'}`} />
+                          <HugeiconsIcon icon={Building2} className={`w-4 h-4 ${isSelected ? 'text-brand-gold' : 'text-brand-accent/40 dark:text-white/40'}`} />
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <p className={`text-sm font-medium leading-tight ${isSelected ? 'text-brand-deep dark:text-brand-cream' : 'text-brand-accent/60 dark:text-white/60'}`}>
@@ -100,7 +101,7 @@ export function CheckoutWalletStep({ checkout }: Props) {
                           <p className="text-brand-accent/25 dark:text-white/25 text-[10px]">Bank Transfer</p>
                         </div>
                         {isSelected && (
-                          <CheckCircle2 className="w-4 h-4 text-brand-green dark:text-brand-gold shrink-0" />
+                          <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4 text-brand-green dark:text-brand-gold shrink-0" />
                         )}
                       </Button>
                     )
@@ -128,7 +129,7 @@ export function CheckoutWalletStep({ checkout }: Props) {
             ))}
 
             <div className="flex items-center justify-center gap-1.5 mt-6">
-              <ShieldCheck className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
+              <HugeiconsIcon icon={ShieldCheck} className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
               <p className="text-brand-accent/30 dark:text-white/30 text-xs">
                 Secured by CloovePay
               </p>
@@ -161,7 +162,7 @@ function WalletAccountCard({ account, index }: { account: CheckoutDepositAccount
         {/* Header: Bank Name + Copy All (desktop) */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-brand-accent/40 dark:text-white/40" />
+            <HugeiconsIcon icon={Building2} className="w-5 h-5 text-brand-accent/40 dark:text-white/40" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-brand-accent/40 dark:text-white/40 text-xs">Bank</p>
@@ -176,9 +177,9 @@ function WalletAccountCard({ account, index }: { account: CheckoutDepositAccount
             className="hidden md:flex h-9 rounded-xl bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-[10px] font-bold uppercase tracking-wider px-3"
           >
             {copiedField === "Details" ? (
-              <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />
+              <HugeiconsIcon icon={Check} className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />
             ) : (
-              <Copy className="w-3.5 h-3.5 mr-1.5" />
+              <HugeiconsIcon icon={Copy} className="w-3.5 h-3.5 mr-1.5" />
             )}
             Copy All
           </Button>
@@ -199,9 +200,9 @@ function WalletAccountCard({ account, index }: { account: CheckoutDepositAccount
             className="w-10 h-10 rounded-xl"
           >
             {copiedField === "Account number" ? (
-              <Check className="w-4 h-4 text-emerald-500" />
+              <HugeiconsIcon icon={Check} className="w-4 h-4 text-emerald-500" />
             ) : (
-              <Copy className="w-4 h-4" />
+              <HugeiconsIcon icon={Copy} className="w-4 h-4" />
             )}
           </Button>
         </div>
@@ -240,9 +241,9 @@ function WalletAccountCard({ account, index }: { account: CheckoutDepositAccount
             className="flex-1 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-xs font-bold uppercase tracking-wider"
           >
             {copiedField === "Details" ? (
-              <Check className="w-3.5 h-3.5 mr-2 text-emerald-500" />
+              <HugeiconsIcon icon={Check} className="w-3.5 h-3.5 mr-2 text-emerald-500" />
             ) : (
-              <Copy className="w-3.5 h-3.5 mr-2" />
+              <HugeiconsIcon icon={Copy} className="w-3.5 h-3.5 mr-2" />
             )}
             Copy All
           </Button>

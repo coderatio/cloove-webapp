@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react'
-import { Check, ChevronsUpDown, Search, X } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check, UnfoldMoreIcon as ChevronsUpDown, Search01Icon as Search, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from '@/app/lib/utils'
 import { Button } from '@/app/components/ui/button'
 import {
@@ -90,7 +91,7 @@ export function SearchableSelect({
                         </span>
                     )}
                 </div>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                <HugeiconsIcon icon={ChevronsUpDown} className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
         )
     }
@@ -113,7 +114,7 @@ export function SearchableSelect({
                 <div className="flex flex-col max-h-[300px]">
                     {/* Search Input */}
                     <div className="flex items-center border-b border-brand-deep/5 dark:border-brand-cream/10 px-3 py-2 sticky top-0 bg-white dark:bg-brand-deep-800 z-10">
-                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 dark:text-brand-cream/60" />
+                        <HugeiconsIcon icon={Search} className="mr-2 h-4 w-4 shrink-0 opacity-50 dark:text-brand-cream/60" />
                         <input
                             className="flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground dark:placeholder:text-brand-cream/40 disabled:cursor-not-allowed disabled:opacity-50 dark:text-brand-cream"
                             placeholder={searchPlaceholder}
@@ -128,7 +129,7 @@ export function SearchableSelect({
                                 className="ml-1 opacity-50 hover:opacity-100 dark:text-brand-cream/60"
                                 type="button"
                             >
-                                <X className="h-4 w-4" />
+                                <HugeiconsIcon icon={X} className="h-4 w-4" />
                             </button>
                         )}
                     </div>
@@ -170,7 +171,7 @@ export function SearchableSelect({
                                                     ? "text-brand-deep dark:text-brand-cream"
                                                     : "opacity-0"
                                             )}>
-                                                <Check className={cn("h-4 w-4")} />
+                                                <HugeiconsIcon icon={Check} className={cn("h-4 w-4")} />
                                             </div>
                                             {option.icon && <span className="mr-2 text-muted-foreground">{option.icon}</span>}
                                             <span className="flex-1 truncate">{option.label}</span>

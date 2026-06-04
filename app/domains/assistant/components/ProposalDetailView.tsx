@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, type ReactElement } from "react"
-import { FileText, Download, Loader2, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { File01Icon as FileText, Download01Icon as Download, Loading03Icon as Loader2, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Markdown } from "@/app/components/ui/markdown"
 import { DocumentEditor } from "@/app/components/ui/document-editor"
@@ -88,7 +89,7 @@ export function ProposalDetailView({
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="h-10 w-10 rounded-xl bg-brand-green/20 flex items-center justify-center text-brand-green shrink-0">
-                                <FileText className="w-5 h-5" />
+                                <HugeiconsIcon icon={FileText} className="w-5 h-5" />
                             </div>
                             <div className="min-w-0">
                                 <h2 className="text-lg font-serif font-semibold text-brand-deep dark:text-brand-cream truncate">
@@ -117,7 +118,7 @@ export function ProposalDetailView({
                         // Live streaming preview
                         <div className="space-y-3">
                             <div className="flex items-center gap-1.5 text-xs text-brand-green/70">
-                                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                                <HugeiconsIcon icon={Sparkles} className="w-3.5 h-3.5 animate-pulse" />
                                 <span>Writing proposal…</span>
                             </div>
                             <div className="text-sm text-brand-deep/80 dark:text-brand-cream/80 leading-relaxed">
@@ -144,9 +145,9 @@ export function ProposalDetailView({
                             className="border border-brand-green/20 text-brand-green hover:bg-brand-green/5"
                         >
                             {isGeneratingPdf ? (
-                                <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-3.5 h-3.5 mr-2 animate-spin" />
                             ) : (
-                                <Download className="w-3.5 h-3.5 mr-2" />
+                                <HugeiconsIcon icon={Download} className="w-3.5 h-3.5 mr-2" />
                             )}
                             Generate PDF
                         </Button>

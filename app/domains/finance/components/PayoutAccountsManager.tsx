@@ -3,19 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import {
-    Building2,
-    MoreVertical,
-    CheckCircle2,
-    Trash2,
-    Star,
-    Plus,
-    Loader2,
-    Lock,
-    X,
-    AlertCircle,
-    ArrowLeft
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, MoreVerticalIcon as MoreVertical, CheckmarkCircle02Icon as CheckCircle2, Delete02Icon as Trash2, StarIcon as Star, PlusSignIcon as Plus, Loading03Icon as Loader2, LockIcon as Lock, Cancel01Icon as X, AlertCircleIcon as AlertCircle, ArrowLeft01Icon as ArrowLeft } from "@hugeicons/core-free-icons"
 import {
     usePayoutAccounts,
     useDeletePayoutAccount,
@@ -92,7 +81,7 @@ export function PayoutAccountsManager({
                             onClick={onClose}
                             className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
                         >
-                            <ArrowLeft className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
+                            <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
                         </Button>
                     )}
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-brand-cream/80 pl-1">
@@ -111,7 +100,7 @@ export function PayoutAccountsManager({
                             : "bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 border-brand-gold/20"
                     )}
                 >
-                    <Plus className="w-4 h-4" />
+                    <HugeiconsIcon icon={Plus} className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">
                         {isLimitReached ? "Limit Reached" : "Add New"}
                     </span>
@@ -120,7 +109,7 @@ export function PayoutAccountsManager({
 
             {isLimitReached && !isAdding && (
                 <div className="flex items-center gap-2 p-3 rounded-2xl bg-brand-gold/5 border border-brand-gold/10 animate-in fade-in slide-in-from-top-2">
-                    <AlertCircle className="w-3.5 h-3.5 text-brand-gold-900 dark:text-brand-gold" />
+                    <HugeiconsIcon icon={AlertCircle} className="w-3.5 h-3.5 text-brand-gold-900 dark:text-brand-gold" />
                     <p className="text-[9px] font-black uppercase tracking-widest text-brand-gold-900 dark:text-brand-gold">
                         Maximum of 3 payout accounts reached.
                     </p>
@@ -129,13 +118,13 @@ export function PayoutAccountsManager({
 
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                    <Loader2 className="w-10 h-10 animate-spin text-brand-gold/40" />
+                    <HugeiconsIcon icon={Loader2} className="w-10 h-10 animate-spin text-brand-gold/40" />
                     <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-brand-accent/40">Securing your vault...</p>
                 </div>
             ) : accounts.length === 0 ? (
                 <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10">
                     <div className="w-16 h-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                        <Building2 className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                        <HugeiconsIcon icon={Building2} className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
                     </div>
                     <div className="space-y-1">
                         <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">No payout accounts found</p>
@@ -163,7 +152,7 @@ export function PayoutAccountsManager({
                                     "h-12 w-12 rounded-2xl flex items-center justify-center transition-all duration-500",
                                     account.isDefault ? "bg-brand-gold-200 text-brand-deep" : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40"
                                 )}>
-                                    <Building2 className="w-6 h-6" />
+                                    <HugeiconsIcon icon={Building2} className="w-6 h-6" />
                                 </div>
                                 <div className="space-y-0.5">
                                     <div className="flex items-center gap-2">
@@ -180,7 +169,7 @@ export function PayoutAccountsManager({
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-brand-deep/5 dark:hover:bg-white/5">
-                                        <MoreVertical className="w-4 h-4 text-brand-deep/40 dark:text-white/40" />
+                                        <HugeiconsIcon icon={MoreVertical} className="w-4 h-4 text-brand-deep/40 dark:text-white/40" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48 bg-white/90 dark:bg-brand-deep/90 backdrop-blur-xl border-brand-accent/10 rounded-2xl p-1 shadow-2xl">
@@ -189,7 +178,7 @@ export function PayoutAccountsManager({
                                             onClick={() => setConfirmAction({ id: account.id, type: 'default' })}
                                             className="gap-2 p-3 focus:bg-brand-gold/10 focus:text-brand-gold rounded-xl cursor-pointer"
                                         >
-                                            <Star className="w-4 h-4" />
+                                            <HugeiconsIcon icon={Star} className="w-4 h-4" />
                                             <span className="text-xs font-bold uppercase tracking-wider">Set as Default</span>
                                         </DropdownMenuItem>
                                     )}
@@ -197,7 +186,7 @@ export function PayoutAccountsManager({
                                         onClick={() => setConfirmAction({ id: account.id, type: 'delete' })}
                                         className="gap-2 p-3 focus:bg-rose-500/10 focus:text-rose-500 rounded-xl cursor-pointer text-rose-500"
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                                         <span className="text-xs font-bold uppercase tracking-wider">Remove Account</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -217,7 +206,7 @@ export function PayoutAccountsManager({
                                 "mx-auto w-12 h-12 rounded-2xl flex items-center justify-center mb-2",
                                 confirmAction.type === 'delete' ? "bg-rose-500/10 text-rose-500" : "bg-brand-gold/10 text-brand-gold"
                             )}>
-                                {confirmAction.type === 'delete' ? <Trash2 className="w-6 h-6" /> : <Star className="w-6 h-6" />}
+                                {confirmAction.type === 'delete' ? <HugeiconsIcon icon={Trash2} className="w-6 h-6" /> : <HugeiconsIcon icon={Star} className="w-6 h-6" />}
                             </div>
                             <div className="space-y-1">
                                 <h4 className="font-bold text-brand-deep dark:text-brand-cream uppercase tracking-wider">
@@ -228,7 +217,7 @@ export function PayoutAccountsManager({
                                 </p>
                             </div>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/20 dark:text-white/20" />
+                                <HugeiconsIcon icon={Lock} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/20 dark:text-white/20" />
                                 <Input
                                     type="password"
                                     inputMode="numeric"
@@ -256,7 +245,7 @@ export function PayoutAccountsManager({
                                         confirmAction.type === 'delete' ? "bg-rose-600 text-white" : "bg-brand-gold-700 dark:bg-brand-gold-400 dark:text-brand-deep shadow-lg"
                                     )}
                                 >
-                                    {(deleteAccount.isPending || setDefaultAccount.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm'}
+                                    {(deleteAccount.isPending || setDefaultAccount.isPending) ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" /> : 'Confirm'}
                                 </Button>
                             </div>
                         </div>

@@ -13,17 +13,8 @@ import {
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Badge } from "@/app/components/ui/badge"
-import {
-    ReceiptText,
-    Copy,
-    Trash2,
-    RefreshCw,
-    AlertCircle,
-    CheckCircle2,
-    Clock,
-    XCircle,
-    Link2
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ReceiptTextIcon as ReceiptText, CopyIcon as Copy, Delete02Icon as Trash2, RefreshIcon as RefreshCw, AlertCircleIcon as AlertCircle, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, CancelCircleIcon as XCircle, Link02Icon as Link2 } from "@hugeicons/core-free-icons"
 import { Order, OrderStatus } from "../types"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -230,7 +221,7 @@ export function OrderDetailsDrawer({
                                                     }}
                                                     className="text-brand-gold hover:text-brand-gold/80 transition-colors"
                                                 >
-                                                    <Copy className="w-2.5 h-2.5" />
+                                                    <HugeiconsIcon icon={Copy} className="w-2.5 h-2.5" />
                                                 </button>
                                             </div>
                                             <p className="text-sm font-mono font-medium text-brand-deep dark:text-brand-cream tracking-wider">{order.deposit.virtualAccountNumber}</p>
@@ -247,7 +238,7 @@ export function OrderDetailsDrawer({
                                                     }}
                                                     className="text-brand-gold hover:text-brand-gold/80 transition-colors"
                                                 >
-                                                    <Copy className="w-2.5 h-2.5" />
+                                                    <HugeiconsIcon icon={Copy} className="w-2.5 h-2.5" />
                                                 </button>
                                             </div>
                                             <p className="text-[11px] font-mono text-brand-deep/60 dark:text-brand-cream/60 truncate">{order.deposit.paymentReference}</p>
@@ -267,7 +258,7 @@ export function OrderDetailsDrawer({
                                 className="flex-1 rounded-2xl h-14 border-brand-deep/5"
                                 onClick={() => onPrintReceipt?.(order)}
                             >
-                                <ReceiptText className="w-4 h-4 mr-2" />
+                                <HugeiconsIcon icon={ReceiptText} className="w-4 h-4 mr-2" />
                                 Print Receipt
                             </Button>
                             <DrawerClose asChild>
@@ -286,7 +277,7 @@ export function OrderDetailsDrawer({
                                 }}
                                 className="w-full rounded-2xl h-12 border-brand-gold/20 text-brand-gold hover:bg-brand-gold/5 dark:border-brand-gold/20 dark:text-brand-gold"
                             >
-                                <Link2 className="w-4 h-4 mr-2" />
+                                <HugeiconsIcon icon={Link2} className="w-4 h-4 mr-2" />
                                 Generate Payment Link
                             </Button>
                         )}
@@ -306,7 +297,7 @@ export function OrderDetailsDrawer({
                                             disabled={isUpdating}
                                             className="flex items-center justify-center gap-2 w-full h-14 text-xs font-bold text-amber-600 hover:text-amber-700 transition-all uppercase tracking-widest border-amber-600/10 rounded-2xl"
                                         >
-                                            <RefreshCw className={cn("w-4 h-4", isUpdating && "animate-spin")} />
+                                            <HugeiconsIcon icon={RefreshCw} className={cn("w-4 h-4", isUpdating && "animate-spin")} />
                                             {isUpdating ? "Cancelling..." : `Cancel ${recordLabel}`}
                                         </Button>
                                     ) : null}
@@ -321,7 +312,7 @@ export function OrderDetailsDrawer({
                                     disabled={isDeleting}
                                     className="flex items-center justify-center gap-2 w-full h-14 text-xs font-bold text-rose-500/60 hover:text-rose-500 hover:bg-rose-500/5 transition-all uppercase tracking-widest disabled:opacity-50 rounded-2xl"
                                 >
-                                    <Trash2 className={cn("w-4 h-4", isDeleting && "animate-spin")} />
+                                    <HugeiconsIcon icon={Trash2} className={cn("w-4 h-4", isDeleting && "animate-spin")} />
                                     {isDeleting ? "Deleting..." : `Cancel & Delete ${recordLabel}`}
                                 </Button>
                             )}

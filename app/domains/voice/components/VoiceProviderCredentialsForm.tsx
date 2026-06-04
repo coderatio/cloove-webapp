@@ -6,7 +6,8 @@ import { Label } from "@/app/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Switch } from "@/app/components/ui/switch"
-import { Headphones, Loader2, Phone } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { HeadphonesIcon as Headphones, Loading03Icon as Loader2, CallIcon as Phone } from "@hugeicons/core-free-icons"
 import type { VoiceProviderOption } from "@/app/domains/voice/hooks/useVoice"
 
 type NumberForm = {
@@ -258,7 +259,7 @@ export function VoiceProviderCredentialsForm({
                 disabled={isPending || !canSubmit}
                 className="rounded-full"
             >
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {isPending ? <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {isUpdateMode ? "Save changes" : "Save number"}
             </Button>
         </div>
@@ -273,7 +274,7 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Phone; title: string
     return (
         <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
-                <Icon className="h-5 w-5" />
+                <HugeiconsIcon icon={Icon} className="h-5 w-5" />
             </div>
             <h2 className="text-lg font-semibold">{title}</h2>
         </div>

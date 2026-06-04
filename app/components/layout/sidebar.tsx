@@ -5,16 +5,8 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-    ChevronRight,
-    Settings,
-    LogOut,
-    Gift,
-    PanelLeft,
-    Sun,
-    Moon,
-    ChevronLeft,
-} from 'lucide-react'
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { ChevronRightIcon as ChevronRight, Settings01Icon as Settings, Logout01Icon as LogOut, GiftIcon as Gift, PanelLeftIcon as PanelLeft, Sun01Icon as Sun, MoonIcon as Moon, ChevronLeftIcon as ChevronLeft } from "@hugeicons/core-free-icons"
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import { cn } from '@/app/lib/utils'
@@ -318,7 +310,7 @@ function Header({ isCollapsed, isDark, onToggle }: HeaderProps) {
                                     onClick={onToggle}
                                     className="h-7 w-7 shrink-0 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                                 >
-                                    <PanelLeft className="h-4 w-4" />
+                                    <HugeiconsIcon icon={PanelLeft} className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent side="right">Collapse</TooltipContent>
@@ -340,7 +332,7 @@ function Header({ isCollapsed, isDark, onToggle }: HeaderProps) {
                                     onClick={onToggle}
                                     className="h-6 w-6 shrink-0 rounded-full bg-background border border-border shadow-sm text-muted-foreground hover:bg-muted hover:text-foreground"
                                 >
-                                    <PanelLeft className="h-3 w-3" />
+                                    <HugeiconsIcon icon={PanelLeft} className="h-3 w-3" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent side="right">Expand</TooltipContent>
@@ -361,11 +353,11 @@ interface NavGroupProps {
             id?: string
             href: string
             label: string
-            icon: React.ComponentType<{ className?: string }>
+            icon: IconSvgElement
             children?: Array<{
                 href: string
                 label: string
-                icon: React.ComponentType<{ className?: string }>
+                icon: IconSvgElement
                 permission?: string
             }>
         }>
@@ -433,11 +425,11 @@ interface NavItemProps {
         id?: string
         href: string
         label: string
-        icon: React.ComponentType<{ className?: string }>
+        icon: IconSvgElement
         children?: Array<{
             href: string
             label: string
-            icon: React.ComponentType<{ className?: string }>
+            icon: IconSvgElement
             permission?: string
         }>
     }
@@ -499,7 +491,7 @@ function NavItem({
                                 isCollapsed ? 'justify-center' : 'flex-1 min-w-0'
                             )}
                         >
-                            <Icon
+                            <HugeiconsIcon icon={Icon}
                                 className={cn(
                                     'shrink-0 transition-colors',
                                     isCollapsed ? 'h-[18px] w-[18px]' : 'h-[18px] w-[18px]',
@@ -531,7 +523,7 @@ function NavItem({
                                 }}
                                 className="ml-auto p-1 rounded-md text-muted-foreground hover:bg-background/50 transition-colors"
                             >
-                                <ChevronRight
+                                <HugeiconsIcon icon={ChevronRight}
                                     className={cn(
                                         'h-3.5 w-3.5 transition-transform duration-200',
                                         isExpanded && 'rotate-90'
@@ -614,7 +606,7 @@ function NavItem({
                                                         : 'bg-border group-hover:bg-muted-foreground/50'
                                                 )}
                                             />
-                                            <ChildIcon className="h-3.5 w-3.5 shrink-0" />
+                                            <HugeiconsIcon icon={ChildIcon} className="h-3.5 w-3.5 shrink-0" />
                                             <span className="truncate">{child.label}</span>
                                         </Link>
                                     )
@@ -652,7 +644,7 @@ function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollap
                             className="group relative flex h-10 w-10 items-center justify-center mx-auto rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream"
                             aria-label="Back to main navigation"
                         >
-                            <ChevronLeft className="h-[18px] w-[18px] shrink-0" />
+                            <HugeiconsIcon icon={ChevronLeft} className="h-[18px] w-[18px] shrink-0" />
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -687,7 +679,7 @@ function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollap
                                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream'
                                         )}
                                     >
-                                        <Icon className="h-[18px] w-[18px] shrink-0" />
+                                        <HugeiconsIcon icon={Icon} className="h-[18px] w-[18px] shrink-0" />
                                         {isActive && (
                                             <motion.div
                                                 layoutId="miniAppActiveIndicator"
@@ -723,9 +715,9 @@ function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollap
                     className="group flex w-full cursor-pointer items-center gap-3 rounded-none px-3 py-2.5 text-left transition-colors hover:bg-muted dark:hover:bg-white/7"
                     aria-label="Back to main navigation"
                 >
-                    <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+                    <HugeiconsIcon icon={ChevronLeft} className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300">
-                        <miniApp.icon className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={miniApp.icon} className="h-3.5 w-3.5" />
                     </div>
                     <span className="flex-1 truncate text-sm font-semibold text-foreground">
                         {miniApp.title}
@@ -760,7 +752,7 @@ function MiniAppPanel({ miniApp, items, pathname, searchParams, onBack, isCollap
                                         : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream'
                                 )}
                             >
-                                <Icon
+                                <HugeiconsIcon icon={Icon}
                                     className={cn(
                                         'h-[18px] w-[18px] shrink-0 transition-colors',
                                         isActive
@@ -860,7 +852,7 @@ function Footer({
                                         onClick={() => setIsMenuOpen(false)}
                                         className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                     >
-                                        <Settings className="h-4 w-4" />
+                                        <HugeiconsIcon icon={Settings} className="h-4 w-4" />
                                         Settings
                                     </Link>
                                     <button
@@ -871,9 +863,9 @@ function Footer({
                                         className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                     >
                                         {theme === 'dark' ? (
-                                            <Sun className="h-4 w-4" />
+                                            <HugeiconsIcon icon={Sun} className="h-4 w-4" />
                                         ) : (
-                                            <Moon className="h-4 w-4" />
+                                            <HugeiconsIcon icon={Moon} className="h-4 w-4" />
                                         )}
                                         {theme === 'dark' ? 'Light mode' : 'Dark mode'}
                                     </button>
@@ -885,7 +877,7 @@ function Footer({
                                         }}
                                         className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
                                     >
-                                        <LogOut className="h-4 w-4" />
+                                        <HugeiconsIcon icon={LogOut} className="h-4 w-4" />
                                         Log out
                                     </button>
                                 </div>
@@ -931,7 +923,7 @@ function Footer({
 // FooterLink Component
 interface FooterLinkProps {
     href: string
-    icon: React.ComponentType<{ className?: string }>
+    icon: IconSvgElement
     label: string
     isActive: boolean
     isCollapsed: boolean
@@ -951,7 +943,7 @@ function FooterLink({ href, icon: Icon, label, isActive, isCollapsed }: FooterLi
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:hover:bg-white/7 dark:hover:text-brand-cream'
                     )}
                 >
-                    <Icon className={cn('shrink-0', isCollapsed ? 'h-[18px] w-[18px]' : 'h-[18px] w-[18px]')} />
+                    <HugeiconsIcon icon={Icon} className={cn('shrink-0', isCollapsed ? 'h-[18px] w-[18px]' : 'h-[18px] w-[18px]')} />
                     <AnimatePresence mode="wait">
                         {!isCollapsed && (
                             <motion.span

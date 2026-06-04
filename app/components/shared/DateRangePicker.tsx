@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Calendar as CalendarIcon, X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Calendar01Icon as CalendarIcon, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { DateRange } from "react-day-picker"
 import { format, parseISO } from "date-fns"
 
@@ -72,7 +73,7 @@ export function DateRangePicker({
                 date && "border-brand-green/30 dark:border-brand-gold/30 bg-brand-green/5 dark:bg-brand-gold/5 text-brand-deep dark:text-brand-cream"
             )}
         >
-            <CalendarIcon className="mr-2 h-4 w-4" />
+            <HugeiconsIcon icon={CalendarIcon} className="mr-2 h-4 w-4" />
             {date?.from ? (
                 date.to ? (
                     <>

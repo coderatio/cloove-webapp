@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Save, Sun, Moon, Monitor, X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowLeft01Icon as ArrowLeft, SaveIcon as Save, Sun01Icon as Sun, MoonIcon as Moon, ComputerIcon as Monitor, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
 
@@ -24,7 +25,7 @@ export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePre
       {!dismissed && (
         <div className="md:hidden bg-brand-gold/10 border-b border-brand-gold/20">
           <div className="px-3 py-2.5 flex items-center gap-3">
-            <Monitor className="w-4 h-4 text-brand-gold shrink-0" />
+            <HugeiconsIcon icon={Monitor} className="w-4 h-4 text-brand-gold shrink-0" />
             <p className="text-[11px] font-medium text-brand-deep/70 dark:text-brand-cream/70 flex-1 leading-snug">
               The page editor works best on a tablet or desktop.
             </p>
@@ -32,7 +33,7 @@ export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePre
               onClick={() => setDismissed(true)}
               className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-brand-deep/40 dark:text-brand-cream/40 hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors"
             >
-              <X className="w-3.5 h-3.5" />
+              <HugeiconsIcon icon={X} className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -41,7 +42,7 @@ export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePre
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
           <Link href="/storefront/pages">
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full shrink-0">
-              <ArrowLeft className="w-4 h-4" />
+              <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4" />
             </Button>
           </Link>
           <div className="h-5 w-px bg-brand-deep/10 dark:bg-white/10 shrink-0 hidden md:block" />
@@ -62,7 +63,7 @@ export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePre
             onClick={onTogglePreviewMode}
             className={cn("rounded-full h-9 gap-1.5 md:gap-2 text-xs font-medium px-2 md:px-3", isPreviewMode && "bg-brand-green/10 text-brand-green")}
           >
-            <Sun className="w-3.5 h-3.5" />
+            <HugeiconsIcon icon={Sun} className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{isPreviewMode ? "Exit preview" : "Preview"}</span>
           </Button>
 
@@ -74,7 +75,7 @@ export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePre
             onClick={onTogglePreviewDark}
             className="rounded-full h-9 gap-1.5 md:gap-2 text-xs font-medium px-2 md:px-3"
           >
-            {previewDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            {previewDark ? <HugeiconsIcon icon={Sun} className="w-3.5 h-3.5" /> : <HugeiconsIcon icon={Moon} className="w-3.5 h-3.5" />}
             <span className="hidden sm:inline">{previewDark ? "Light" : "Dark"}</span>
           </Button>
 
@@ -83,7 +84,7 @@ export function EditorHeader({ title, isSaving, onSave, previewDark, onTogglePre
             disabled={isSaving}
             className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold px-3 md:px-6 h-9 gap-1.5 md:gap-2 shadow-lg hover:scale-105 transition-all duration-300"
           >
-            <Save className="w-3.5 h-3.5" />
+            <HugeiconsIcon icon={Save} className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{isSaving ? "Saving…" : "Save"}</span>
           </Button>
         </div>

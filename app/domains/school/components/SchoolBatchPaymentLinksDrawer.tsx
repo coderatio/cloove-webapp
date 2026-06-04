@@ -15,7 +15,8 @@ import { Button } from "@/app/components/ui/button"
 import { Textarea } from "@/app/components/ui/textarea"
 import { Label } from "@/app/components/ui/label"
 import { useBatchSalePaymentLinks } from "@/app/domains/checkout/hooks/useBatchSalePaymentLinks"
-import { Copy, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CopyIcon as Copy, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 
 function parseSaleIds(raw: string): string[] {
@@ -95,7 +96,7 @@ export function SchoolBatchPaymentLinksDrawer({
                     </div>
                     {batch.isPending ? (
                         <div className="flex items-center gap-2 text-sm text-brand-deep/70 dark:text-brand-cream/70">
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" />
                             Creating links…
                         </div>
                     ) : null}
@@ -113,7 +114,7 @@ export function SchoolBatchPaymentLinksDrawer({
                                     className="rounded-full"
                                     onClick={() => void copyAll()}
                                 >
-                                    <Copy className="h-3.5 w-3.5 mr-1.5" />
+                                    <HugeiconsIcon icon={Copy} className="h-3.5 w-3.5 mr-1.5" />
                                     Copy URLs
                                 </Button>
                             </div>

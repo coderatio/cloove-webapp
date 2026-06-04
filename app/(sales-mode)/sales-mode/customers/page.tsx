@@ -3,7 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Crown, Mail, Phone, Search, ShieldAlert, User, Users } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { CrownIcon as Crown, Mail01Icon as Mail, CallIcon as Phone, Search01Icon as Search, SecurityWarningIcon as ShieldAlert, UserIcon as User, UserMultiple02Icon as Users } from "@hugeicons/core-free-icons"
 import { Input } from "@/app/components/ui/input"
 import { useCustomers, type Customer } from "@/app/domains/customers/hooks/useCustomers"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
@@ -70,7 +71,7 @@ export default function SalesModeCustomersPage() {
           </div>
 
           <div className="mt-4 relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40" />
+            <HugeiconsIcon icon={Search} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40" />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -120,7 +121,7 @@ function SummaryCard({
 }: {
   label: string
   value: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: IconSvgElement
   tone?: "default" | "gold" | "warn"
 }) {
   const iconClass = tone === "gold"
@@ -134,7 +135,7 @@ function SummaryCard({
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-accent/50 dark:text-brand-cream/50">{label}</p>
       <div className="mt-1.5 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">{value}</p>
-        <Icon className={cn("h-4 w-4", iconClass)} />
+        <HugeiconsIcon icon={Icon} className={cn("h-4 w-4", iconClass)} />
       </div>
     </article>
   )
@@ -151,7 +152,7 @@ function CustomerRow({ customer }: { customer: Customer }) {
             <p className="truncate text-base font-semibold text-brand-deep dark:text-brand-cream">{customer.name}</p>
             {customer.isVip ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-brand-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-brand-gold">
-                <Crown className="h-3 w-3" /> VIP
+                <HugeiconsIcon icon={Crown} className="h-3 w-3" /> VIP
               </span>
             ) : null}
             {hasDebt ? (
@@ -165,18 +166,18 @@ function CustomerRow({ customer }: { customer: Customer }) {
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-brand-accent/65 dark:text-brand-cream/65">
           <span className="inline-flex items-center gap-1">
-            <User className="h-3.5 w-3.5" />
+            <HugeiconsIcon icon={User} className="h-3.5 w-3.5" />
             Owing {customer.owing}
           </span>
           {customer.phoneNumber ? (
             <span className="inline-flex items-center gap-1">
-              <Phone className="h-3.5 w-3.5" />
+              <HugeiconsIcon icon={Phone} className="h-3.5 w-3.5" />
               {customer.phoneNumber}
             </span>
           ) : null}
           {customer.email ? (
             <span className="inline-flex items-center gap-1">
-              <Mail className="h-3.5 w-3.5" />
+              <HugeiconsIcon icon={Mail} className="h-3.5 w-3.5" />
               {customer.email}
             </span>
           ) : null}

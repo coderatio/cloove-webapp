@@ -4,15 +4,8 @@ import { useState, useEffect } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import {
-    User,
-    Lock,
-    Smartphone,
-    Mail,
-    Save,
-    Loader2,
-    ShieldCheck,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { UserIcon as User, LockIcon as Lock, SmartPhone01Icon as Smartphone, Mail01Icon as Mail, SaveIcon as Save, Loading03Icon as Loader2, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import {
     Drawer,
@@ -102,7 +95,7 @@ export function ProfileSettings() {
                                         readOnly
                                         className="h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 border-transparent opacity-60"
                                     />
-                                    {emailLocked && <Lock className="w-4 h-4 shrink-0 text-brand-deep/30 dark:text-white/30" />}
+                                    {emailLocked && <HugeiconsIcon icon={Lock} className="w-4 h-4 shrink-0 text-brand-deep/30 dark:text-white/30" />}
                                 </div>
                             </div>
                         </div>
@@ -124,7 +117,7 @@ export function ProfileSettings() {
                                 Full Name
                             </label>
                             <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-accent/40" />
+                                <HugeiconsIcon icon={User} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-accent/40" />
                                 <Input
                                     value={formData.fullName}
                                     onChange={(e) => !bvnVerified && setFormData({ ...formData, fullName: e.target.value })}
@@ -137,7 +130,7 @@ export function ProfileSettings() {
                                     )}
                                 />
                                 {bvnVerified && (
-                                    <ShieldCheck className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/60" />
+                                    <HugeiconsIcon icon={ShieldCheck} className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/60" />
                                 )}
                             </div>
                             {bvnVerified && (
@@ -153,13 +146,13 @@ export function ProfileSettings() {
                                 Phone Number
                             </label>
                             <div className="relative">
-                                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-accent/40" />
+                                <HugeiconsIcon icon={Smartphone} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-accent/40" />
                                 <Input
                                     value={user?.phoneNumber || ""}
                                     readOnly
                                     className="pl-12 pr-12 h-14 rounded-2xl text-lg bg-brand-deep/5 dark:bg-white/5 border-transparent opacity-60 cursor-not-allowed dark:text-brand-cream"
                                 />
-                                <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/30 dark:text-white/30" />
+                                <HugeiconsIcon icon={Lock} className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/30 dark:text-white/30" />
                             </div>
                         </div>
 
@@ -169,7 +162,7 @@ export function ProfileSettings() {
                                 Email Address
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-accent/40" />
+                                <HugeiconsIcon icon={Mail} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-accent/40" />
                                 <Input
                                     type="email"
                                     value={formData.email}
@@ -185,8 +178,8 @@ export function ProfileSettings() {
                                 />
                                 {emailLocked && (
                                     emailVerified
-                                        ? <ShieldCheck className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/60" />
-                                        : <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/30 dark:text-white/30" />
+                                        ? <HugeiconsIcon icon={ShieldCheck} className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/60" />
+                                        : <HugeiconsIcon icon={Lock} className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/30 dark:text-white/30" />
                                 )}
                             </div>
                             {emailLocked && !emailVerified && (
@@ -203,7 +196,7 @@ export function ProfileSettings() {
 
                         {/* Info banner — only when phone is the only locked item */}
                         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-sm flex gap-3">
-                            <Lock className="w-5 h-5 shrink-0 mt-0.5" />
+                            <HugeiconsIcon icon={Lock} className="w-5 h-5 shrink-0 mt-0.5" />
                             <p>To update your phone number, please contact support for security verification.</p>
                         </div>
                     </div>
@@ -215,10 +208,10 @@ export function ProfileSettings() {
                             className="h-14 w-full rounded-2xl text-lg font-semibold shadow-sm"
                         >
                             {updateProfile.isPending ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                             ) : (
                                 <>
-                                    <Save className="w-5 h-5 mr-2" />
+                                    <HugeiconsIcon icon={Save} className="w-5 h-5 mr-2" />
                                     Save Changes
                                 </>
                             )}

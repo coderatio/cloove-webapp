@@ -16,17 +16,8 @@ import {
     SelectValue,
 } from "@/app/components/ui/select"
 import { Switch } from "@/app/components/ui/switch"
-import {
-    Building2,
-    Search,
-    Phone,
-    Mail,
-    Shield,
-    Save,
-    UserCog,
-    Trash2,
-    Loader2
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, Search01Icon as Search, CallIcon as Phone, Mail01Icon as Mail, SecurityIcon as Shield, SaveIcon as Save, UserSettings01Icon as UserCog, Delete02Icon as Trash2, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { apiClient } from "@/app/lib/api-client"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
@@ -346,7 +337,7 @@ export function StaffView() {
                 {activeTab === "staff" && (
                     <div className="space-y-4">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-accent/35 pointer-events-none" />
+                            <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-accent/35 pointer-events-none" />
                             <Input
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -376,7 +367,7 @@ export function StaffView() {
                             {!isLoading && filteredStaff.length === 0 && (
                                 <GlassCard className="p-12 text-center space-y-4">
                                     <div className="mx-auto w-16 h-16 rounded-full bg-brand-deep/5 flex items-center justify-center">
-                                        <Search className="w-8 h-8 text-brand-accent/20" />
+                                        <HugeiconsIcon icon={Search} className="w-8 h-8 text-brand-accent/20" />
                                     </div>
                                     <div>
                                         <h3 className="text-lg font-medium text-brand-deep dark:text-brand-cream">No staff found</h3>
@@ -418,7 +409,7 @@ export function StaffView() {
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-brand-deep dark:text-brand-cream pl-1">Email Address</label>
                                         <div className="relative">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/40" />
+                                            <HugeiconsIcon icon={Mail} className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/40" />
                                             <Input
                                                 type="email"
                                                 placeholder="e.g. blessing@example.com"
@@ -432,7 +423,7 @@ export function StaffView() {
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-brand-deep dark:text-brand-cream pl-1">WhatsApp Number</label>
                                         <div className="relative">
-                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/40" />
+                                            <HugeiconsIcon icon={Phone} className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/40" />
                                             <Input
                                                 placeholder="+234..."
                                                 value={phoneNumber}
@@ -458,7 +449,7 @@ export function StaffView() {
                                         <GlassCard className="p-5 border-dashed border-brand-gold/25 bg-brand-gold/5 dark:bg-brand-gold/8">
                                             <div className="flex items-start gap-3">
                                                 <div className="h-10 w-10 rounded-xl bg-brand-gold/15 text-brand-gold flex items-center justify-center shrink-0">
-                                                    <Building2 className="h-4 w-4" />
+                                                    <HugeiconsIcon icon={Building2} className="h-4 w-4" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
@@ -517,7 +508,7 @@ export function StaffView() {
                                                 "w-10 h-10 rounded-xl mb-3 flex items-center justify-center transition-colors",
                                                 role === r ? "bg-brand-gold-700 text-white" : "bg-brand-deep/5 text-brand-accent/40 dark:text-white/40"
                                             )}>
-                                                {r === 'ACCOUNTANT' ? <Shield className="w-5 h-5" /> : <UserCog className="w-5 h-5" />}
+                                                {r === 'ACCOUNTANT' ? <HugeiconsIcon icon={Shield} className="w-5 h-5" /> : <HugeiconsIcon icon={UserCog} className="w-5 h-5" />}
                                             </div>
                                             <div className="font-bold text-sm tracking-wide">{r}</div>
                                             <div className={cn(
@@ -621,9 +612,9 @@ export function StaffView() {
                                         className="flex-2 h-12 rounded-xl px-8 font-semibold shadow-sm"
                                     >
                                         {isSaving ? (
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            <HugeiconsIcon icon={Loader2} className="w-4 h-4 mr-2 animate-spin" />
                                         ) : (
-                                            <Save className="w-4 h-4 mr-2" />
+                                            <HugeiconsIcon icon={Save} className="w-4 h-4 mr-2" />
                                         )}
                                         {editingStaff ? "Save Changes" : "Send Invite"}
                                     </Button>
@@ -656,7 +647,7 @@ export function StaffView() {
                                             variant="ghost"
                                             className="w-full h-12 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 font-bold"
                                         >
-                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            <HugeiconsIcon icon={Trash2} className="w-4 h-4 mr-2" />
                                             Remove Staff
                                         </Button>
                                     </div>

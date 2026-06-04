@@ -1,6 +1,7 @@
 "use client"
 
-import { Loader2, RotateCcw, Send } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, ReloadIcon as RotateCcw, SentIcon as Send } from "@hugeicons/core-free-icons"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -30,11 +31,11 @@ export function WebhookDeliveriesPanel({ appId }: { appId?: string | null }) {
                 <p className="text-sm text-muted-foreground">Track webhook events Cloove has sent to your callback URLs.</p>
             </div>
             {deliveries.isLoading ? (
-                <div className="flex h-40 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                <div className="flex h-40 items-center justify-center"><HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" /></div>
             ) : rows.length === 0 ? (
                 <div className="p-10 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-3xl bg-brand-deep/5 text-muted-foreground dark:bg-white/7">
-                        <Send className="h-5 w-5" />
+                        <HugeiconsIcon icon={Send} className="h-5 w-5" />
                     </div>
                     <p className="mt-3 text-sm font-medium">No webhook deliveries yet</p>
                     <p className="text-sm text-muted-foreground">Deliveries will appear here when subscribed events are sent to your callback URLs.</p>
@@ -72,7 +73,7 @@ export function WebhookDeliveriesPanel({ appId }: { appId?: string | null }) {
                                             disabled={delivery.status === "pending" || resend.isPending}
                                             onClick={() => resend.mutate(delivery.id)}
                                         >
-                                            <RotateCcw className="mr-2 h-4 w-4" /> Resend
+                                            <HugeiconsIcon icon={RotateCcw} className="mr-2 h-4 w-4" /> Resend
                                         </Button>
                                     </td>
                                 </tr>

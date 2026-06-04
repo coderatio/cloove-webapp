@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { Upload, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Upload01Icon as Upload, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
 import { uploadService } from "@/app/lib/upload/upload-service"
@@ -105,7 +106,7 @@ export function ImageUrlField({ value, onChange, placeholder = "https://… or u
               transition={{ duration: reduceMotion ? 0 : 0.15 }}
               className="flex items-center gap-1.5"
             >
-              <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+              <HugeiconsIcon icon={Loader2} className="w-3.5 h-3.5 animate-spin shrink-0" />
               <span>Uploading</span>
             </motion.span>
           ) : (
@@ -117,7 +118,7 @@ export function ImageUrlField({ value, onChange, placeholder = "https://… or u
               transition={{ duration: reduceMotion ? 0 : 0.15 }}
               className="flex items-center gap-1.5"
             >
-              <Upload className="w-3.5 h-3.5 shrink-0" />
+              <HugeiconsIcon icon={Upload} className="w-3.5 h-3.5 shrink-0" />
               <span>Upload</span>
             </motion.span>
           )}

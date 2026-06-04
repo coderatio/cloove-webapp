@@ -4,12 +4,8 @@ import React, { useState } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import {
-    Key,
-    ShieldAlert,
-    ShieldCheck,
-    Loader2
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Key01Icon as Key, SecurityWarningIcon as ShieldAlert, SecurityCheckIcon as ShieldCheck, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
@@ -61,7 +57,7 @@ export default function SecurityPage() {
             <GlassCard className="p-8">
                 <div className="flex items-center gap-3 mb-8">
                     <div className="w-10 h-10 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
-                        <Key className="w-5 h-5" />
+                        <HugeiconsIcon icon={Key} className="w-5 h-5" />
                     </div>
                     <h3 className="text-xl font-serif font-medium">Change Password</h3>
                 </div>
@@ -91,7 +87,7 @@ export default function SecurityPage() {
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
-                            <ShieldCheck className="w-5 h-5" />
+                            <HugeiconsIcon icon={ShieldCheck} className="w-5 h-5" />
                         </div>
                         <h3 className="text-xl font-serif font-medium">Transaction PIN</h3>
                     </div>
@@ -104,7 +100,7 @@ export default function SecurityPage() {
 
                 <div className="bg-brand-gold/5 border border-brand-gold/10 rounded-2xl p-6 mb-8 flex items-start gap-4">
                     <div className="w-8 h-8 rounded-lg bg-brand-deep flex items-center justify-center text-brand-gold shrink-0">
-                        <ShieldAlert className="w-4 h-4" />
+                        <HugeiconsIcon icon={ShieldAlert} className="w-4 h-4" />
                     </div>
                     <div>
                         <p className="text-xs font-bold text-brand-deep leading-relaxed">
@@ -162,7 +158,7 @@ export default function SecurityPage() {
                         disabled={isSubmittingPin || !pinData.newPin || (user?.hasTransactionPin && !pinData.currentPin)}
                         className="w-full md:w-auto rounded-2xl px-12 h-16 md:h-14 bg-brand-gold-700 text-white font-black uppercase tracking-widest shadow-xl shadow-brand-gold/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                     >
-                        {isSubmittingPin ? <Loader2 className="w-5 h-5 animate-spin" /> : (user?.hasTransactionPin ? "Change PIN" : "Set Transaction PIN")}
+                        {isSubmittingPin ? <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" /> : (user?.hasTransactionPin ? "Change PIN" : "Set Transaction PIN")}
                     </Button>
                 </div>
             </GlassCard>
@@ -170,7 +166,7 @@ export default function SecurityPage() {
             <GlassCard className="p-8 border-brand-deep/5 dark:border-white/5 bg-brand-deep/5 dark:bg-white/5">
                 <div className="flex items-center gap-6">
                     <div className="w-12 h-12 rounded-xl bg-brand-deep/10 dark:bg-white/10 flex items-center justify-center text-brand-deep/40 dark:text-brand-cream/40">
-                        <ShieldAlert className="w-6 h-6" />
+                        <HugeiconsIcon icon={ShieldAlert} className="w-6 h-6" />
                     </div>
                     <div>
                         <h4 className="font-bold text-sm">Security Policy</h4>

@@ -6,7 +6,8 @@ import { Button } from "@/app/components/ui/button"
 import { ColorPicker } from "@/app/components/ui/color-picker"
 import { RichTextEditor } from "./RichTextEditor"
 import { ImageUrlField } from "./ImageUrlField"
-import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff, ChevronDown } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PlusSignIcon as Plus, Delete02Icon as Trash2, TextAlignLeftIcon as AlignLeft, TextAlignCenterIcon as AlignCenter, TextAlignRightIcon as AlignRight, EyeIcon as Eye, EyeOffIcon as EyeOff, ChevronDownIcon as ChevronDown } from "@hugeicons/core-free-icons"
 import { Accordion } from "@base-ui/react/accordion"
 import { Switch } from "@/app/components/ui/switch"
 import { cn } from "@/app/lib/utils"
@@ -178,7 +179,7 @@ function AppearanceAccordion({ block, onUpdateConfig }: { block: BlockSection; o
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Background
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -193,7 +194,7 @@ function AppearanceAccordion({ block, onUpdateConfig }: { block: BlockSection; o
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Layout
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -209,7 +210,7 @@ function AppearanceAccordion({ block, onUpdateConfig }: { block: BlockSection; o
           <Accordion.Header>
             <Accordion.Trigger className={accordionTriggerClass}>
               Typography
-              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+              <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
             </Accordion.Trigger>
           </Accordion.Header>
           <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -227,7 +228,7 @@ function AppearanceAccordion({ block, onUpdateConfig }: { block: BlockSection; o
           <Accordion.Header>
             <Accordion.Trigger className={accordionTriggerClass}>
               Buttons
-              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+              <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
             </Accordion.Trigger>
           </Accordion.Header>
           <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -642,7 +643,7 @@ function HeroEditor({ data, set, setNested }: { data: Record<string, unknown>; s
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Headline & media
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -665,7 +666,7 @@ function HeroEditor({ data, set, setNested }: { data: Record<string, unknown>; s
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Primary button
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -687,7 +688,7 @@ function HeroEditor({ data, set, setNested }: { data: Record<string, unknown>; s
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Secondary button
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -709,7 +710,7 @@ function HeroEditor({ data, set, setNested }: { data: Record<string, unknown>; s
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Layout
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -752,7 +753,7 @@ function CtaEditor({ data, set, setNested }: { data: Record<string, unknown>; se
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Content
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -772,7 +773,7 @@ function CtaEditor({ data, set, setNested }: { data: Record<string, unknown>; se
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Button
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -794,7 +795,7 @@ function CtaEditor({ data, set, setNested }: { data: Record<string, unknown>; se
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Style
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -831,7 +832,7 @@ function FaqEditor({ data, onUpdate }: { data: Record<string, unknown>; onUpdate
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Section title
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -846,7 +847,7 @@ function FaqEditor({ data, onUpdate }: { data: Record<string, unknown>; onUpdate
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Questions
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -860,13 +861,13 @@ function FaqEditor({ data, onUpdate }: { data: Record<string, unknown>; onUpdate
                       <Textarea value={item.answer ?? ""} onChange={(e) => updateItem(i, "answer", e.target.value)} placeholder="Answer" className="min-h-[60px] resize-none" />
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-0.5">
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
               ))}
               <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
-                <Plus className="w-3.5 h-3.5" /> Add question
+                <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5" /> Add question
               </Button>
             </EditorSection>
           </div>
@@ -892,7 +893,7 @@ function TestimonialsEditor({ data, onUpdate }: { data: Record<string, unknown>;
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Section title
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -907,7 +908,7 @@ function TestimonialsEditor({ data, onUpdate }: { data: Record<string, unknown>;
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Testimonials
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -924,13 +925,13 @@ function TestimonialsEditor({ data, onUpdate }: { data: Record<string, unknown>;
                       </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-1">
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
               ))}
               <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
-                <Plus className="w-3.5 h-3.5" /> Add testimonial
+                <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5" /> Add testimonial
               </Button>
             </EditorSection>
           </div>
@@ -956,7 +957,7 @@ function GridFeaturesEditor({ data, onUpdate }: { data: Record<string, unknown>;
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Section
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -982,7 +983,7 @@ function GridFeaturesEditor({ data, onUpdate }: { data: Record<string, unknown>;
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Features
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -995,12 +996,12 @@ function GridFeaturesEditor({ data, onUpdate }: { data: Record<string, unknown>;
                     <Input value={item.description ?? ""} onChange={(e) => updateItem(i, "description", e.target.value)} placeholder="Description" className="h-9 text-xs" />
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => removeItem(i)} className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 mt-0.5">
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               ))}
               <Button variant="outline" size="sm" onClick={addItem} className="rounded-lg text-xs gap-1.5">
-                <Plus className="w-3.5 h-3.5" /> Add feature
+                <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5" /> Add feature
               </Button>
             </EditorSection>
           </div>
@@ -1017,7 +1018,7 @@ function ContactEditor({ data, set }: { data: Record<string, unknown>; set: (k: 
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Content
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1037,7 +1038,7 @@ function ContactEditor({ data, set }: { data: Record<string, unknown>; set: (k: 
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Options
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1075,7 +1076,7 @@ function ImageGalleryEditor({ data, onUpdate, set }: { data: Record<string, unkn
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Gallery
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1101,7 +1102,7 @@ function ImageGalleryEditor({ data, onUpdate, set }: { data: Record<string, unkn
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Images
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1111,12 +1112,12 @@ function ImageGalleryEditor({ data, onUpdate, set }: { data: Record<string, unkn
                 <div key={i} className="flex items-center gap-2 mb-2">
                   <ImageUrlField value={url ?? ""} onChange={(newUrl) => updateImage(i, newUrl)} placeholder="Paste URL or upload" className="flex-1 min-w-0" />
                   <Button variant="ghost" size="icon" onClick={() => removeImage(i)} className="h-9 w-9 shrink-0 text-red-400 hover:text-red-500">
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               ))}
               <Button variant="outline" size="sm" onClick={addImage} className="rounded-lg text-xs gap-1.5">
-                <Plus className="w-3.5 h-3.5" /> Add image
+                <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5" /> Add image
               </Button>
             </EditorSection>
           </div>
@@ -1147,7 +1148,7 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Content
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1225,7 +1226,7 @@ function ProductListingEditor({ data, set }: { data: Record<string, unknown>; se
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Features & Filters
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1445,7 +1446,7 @@ function PromotionBannerEditor({
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Promotion
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1470,7 +1471,7 @@ function PromotionBannerEditor({
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Banner
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1520,7 +1521,7 @@ function ImageEditor({ data, set }: { data: Record<string, unknown>; set: (k: st
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Image details
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1543,7 +1544,7 @@ function ImageEditor({ data, set }: { data: Record<string, unknown>; set: (k: st
         <Accordion.Header>
           <Accordion.Trigger className={accordionTriggerClass}>
             Display
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
           </Accordion.Trigger>
         </Accordion.Header>
         <Accordion.Panel className={cn("px-4 pb-4", accordionPanelClass)}>
@@ -1719,10 +1720,10 @@ function GridLayoutEditor({ data, onUpdate }: { data: Record<string, unknown>; o
                               className="h-6 w-6 text-brand-deep/50 dark:text-white/50 hover:text-brand-deep dark:hover:text-white"
                               title={block.config.hidden ? "Show section" : "Hide section"}
                             >
-                              {block.config.hidden ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                              {block.config.hidden ? <HugeiconsIcon icon={EyeOff} className="w-3 h-3" /> : <HugeiconsIcon icon={Eye} className="w-3 h-3" />}
                             </Button>
                             <Button variant="ghost" size="icon" onClick={() => removeNestedBlock(cIdx, block.id)} className="h-6 w-6 text-red-400 hover:text-red-500">
-                              <Trash2 className="w-3 h-3" />
+                              <HugeiconsIcon icon={Trash2} className="w-3 h-3" />
                             </Button>
                           </div>
                         </div>
@@ -1748,7 +1749,7 @@ function GridLayoutEditor({ data, onUpdate }: { data: Record<string, unknown>; o
                           onClick={() => addBlockToColumn(cIdx, type as any)}
                           className="h-7 text-[10px] px-2 rounded-md gap-1"
                         >
-                          <Plus className="w-2.5 h-2.5" /> {meta.label}
+                          <HugeiconsIcon icon={Plus} className="w-2.5 h-2.5" /> {meta.label}
                         </Button>
                       ))}
                     </div>
@@ -1779,7 +1780,6 @@ function SectionSpacingEditor({
     { value: "md", label: "Medium" },
     { value: "lg", label: "Large" },
   ]
-
 
   return (
     <div className="grid grid-cols-2 gap-4 p-4 border-t border-brand-deep/5 dark:border-white/5">
@@ -1862,7 +1862,7 @@ function SectionTextAlignEditor({
             className="rounded-lg text-xs"
             title="Left align"
           >
-            <AlignLeft className="w-4 h-4 mr-1.5 opacity-60" /> Left
+            <HugeiconsIcon icon={AlignLeft} className="w-4 h-4 mr-1.5 opacity-60" /> Left
           </Button>
           <Button
             variant={textAlign === "center" ? "base" : "ghost"}
@@ -1871,7 +1871,7 @@ function SectionTextAlignEditor({
             className="rounded-lg text-xs"
             title="Center align"
           >
-            <AlignCenter className="w-4 h-4 mr-1.5 opacity-60" /> Center
+            <HugeiconsIcon icon={AlignCenter} className="w-4 h-4 mr-1.5 opacity-60" /> Center
           </Button>
           <Button
             variant={textAlign === "right" ? "base" : "ghost"}
@@ -1880,7 +1880,7 @@ function SectionTextAlignEditor({
             className="rounded-lg text-xs"
             title="Right align"
           >
-            <AlignRight className="w-4 h-4 mr-1.5 opacity-60" /> Right
+            <HugeiconsIcon icon={AlignRight} className="w-4 h-4 mr-1.5 opacity-60" /> Right
           </Button>
         </div>
       </EditorSection>

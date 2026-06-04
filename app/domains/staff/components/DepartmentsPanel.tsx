@@ -2,15 +2,8 @@
 
 import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-    Plus,
-    Building2,
-    Users,
-    Pencil,
-    Trash2,
-    Loader2,
-    Search,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PlusSignIcon as Plus, Building02Icon as Building2, UserMultiple02Icon as Users, PencilIcon as Pencil, Delete02Icon as Trash2, Loading03Icon as Loader2, Search01Icon as Search } from "@hugeicons/core-free-icons"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -57,7 +50,7 @@ function DeptAvatar({ name }: { name: string }) {
                 g
             )}
         >
-            {initials || <Building2 className="w-4 h-4" />}
+            {initials || <HugeiconsIcon icon={Building2} className="w-4 h-4" />}
         </div>
     )
 }
@@ -134,7 +127,7 @@ function DeptCard({
 
                     {/* Member count pill */}
                     <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/6 dark:border-white/6">
-                        <Users className="w-3 h-3 text-brand-accent/50 dark:text-brand-cream/40" />
+                        <HugeiconsIcon icon={Users} className="w-3 h-3 text-brand-accent/50 dark:text-brand-cream/40" />
                         <span className="text-[11px] font-semibold text-brand-accent/70 dark:text-brand-cream/60 tabular-nums">
                             {dept.memberCount}
                         </span>
@@ -151,7 +144,7 @@ function DeptCard({
                             className="h-8 w-8 rounded-xl text-brand-accent/50 hover:text-brand-deep dark:text-brand-cream/40 dark:hover:text-brand-cream"
                             onClick={onEdit}
                         >
-                            <Pencil className="w-3.5 h-3.5" />
+                            <HugeiconsIcon icon={Pencil} className="w-3.5 h-3.5" />
                         </Button>
                         <Button
                             variant="ghost"
@@ -159,7 +152,7 @@ function DeptCard({
                             className="h-8 w-8 rounded-xl text-red-400/60 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
                             onClick={onDelete}
                         >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
                         </Button>
                     </div>
                 </div>
@@ -190,10 +183,10 @@ function DeptEmptyState({
         >
             <div className="relative">
                 <div className="w-16 h-16 rounded-3xl bg-brand-gold/8 dark:bg-brand-gold/10 border border-brand-gold/15 flex items-center justify-center shadow-inner">
-                    <Building2 className="w-7 h-7 text-brand-gold/60" />
+                    <HugeiconsIcon icon={Building2} className="w-7 h-7 text-brand-gold/60" />
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-xl bg-brand-cream dark:bg-brand-deep border border-brand-gold/20 flex items-center justify-center shadow-sm">
-                    <Plus className="w-3 h-3 text-brand-gold" />
+                    <HugeiconsIcon icon={Plus} className="w-3 h-3 text-brand-gold" />
                 </div>
             </div>
             <div className="space-y-1.5 max-w-xs">
@@ -210,7 +203,7 @@ function DeptEmptyState({
                 className="rounded-full mt-1"
                 onClick={onAdd}
             >
-                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5 mr-1.5" />
                 {buttonLabel}
             </Button>
         </motion.div>
@@ -303,7 +296,7 @@ export function DepartmentsPanel() {
                 <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-brand-deep/5 dark:border-white/6">
                     <div className="flex items-start gap-3.5">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gold/12 mt-0.5">
-                            <Building2 className="h-4 w-4 text-brand-gold" />
+                            <HugeiconsIcon icon={Building2} className="h-4 w-4 text-brand-gold" />
                         </div>
                         <div>
                             <div className="flex items-center gap-2.5">
@@ -333,7 +326,7 @@ export function DepartmentsPanel() {
                         className="rounded-full shrink-0"
                         onClick={openCreate}
                     >
-                        <Plus className="w-3.5 h-3.5 mr-1.5" />
+                        <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5 mr-1.5" />
                         Add
                     </Button>
                 </div>
@@ -350,7 +343,7 @@ export function DepartmentsPanel() {
                                 transition={{ duration: 0.2 }}
                             >
                                 <div className="relative mb-1">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-deep/30 dark:text-brand-cream/30 pointer-events-none" />
+                                    <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-deep/30 dark:text-brand-cream/30 pointer-events-none" />
                                     <Input
                                         className="pl-9 h-9 text-sm rounded-xl bg-brand-deep/3 dark:bg-white/3 border-brand-deep/8 dark:border-white/8"
                                         placeholder="Search departments…"
@@ -484,7 +477,7 @@ export function DepartmentsPanel() {
                             disabled={!name.trim() || isSaving}
                             className="h-13 rounded-2xl"
                         >
-                            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            {isSaving && <HugeiconsIcon icon={Loader2} className="w-4 h-4 mr-2 animate-spin" />}
                             {editing ? "Save Changes" : "Create Department"}
                         </Button>
                     </DrawerFooter>

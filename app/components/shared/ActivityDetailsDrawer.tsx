@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { ExternalLink } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ExternalLinkIcon as ExternalLink } from "@hugeicons/core-free-icons"
 import {
     Drawer,
     DrawerContent,
@@ -230,7 +231,7 @@ export function ActivityDetailsDrawer({ activity, open, onOpenChange }: Activity
                                         className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-2xl bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-sm font-semibold text-brand-deep dark:text-brand-cream transition-colors"
                                     >
                                         {moduleLink.label}
-                                        <ExternalLink className="w-4 h-4" />
+                                        <HugeiconsIcon icon={ExternalLink} className="w-4 h-4" />
                                     </Link>
                                 )}
                             </div>

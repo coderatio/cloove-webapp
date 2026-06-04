@@ -2,12 +2,12 @@
 
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
-import { LucideIcon } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 
 interface AgentStatCardProps {
     title: string
     value: string | number
-    icon: LucideIcon
+    icon: IconSvgElement
     trend?: {
         value: number
         isPositive: boolean
@@ -23,7 +23,7 @@ export function AgentStatCard({ title, value, icon: Icon, trend, className }: Ag
 
             <div className="relative flex items-start justify-between mb-8">
                 <div className="w-14 h-14 rounded-[20px] bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/10 dark:border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                    <Icon className="w-7 h-7 text-brand-gold" />
+                    <HugeiconsIcon icon={Icon} className="w-7 h-7 text-brand-gold" />
                 </div>
                 {trend && (
                     <div className={cn(

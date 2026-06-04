@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import Image from "next/image"
-import { AlertTriangle, ArrowLeft, Delete, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Alert02Icon as AlertTriangle, ArrowLeft01Icon as ArrowLeft, Delete01Icon as Delete, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { useSalesModeLogin } from "@/app/domains/auth/hooks/useSalesModeLogin"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -212,7 +213,7 @@ export default function SalesModeLoginPage() {
                                         onClick={businessBackspace}
                                         className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white"
                                     >
-                                        <Delete className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Delete} className="w-4 h-4" />
                                     </Button>
                                 </div>
                                 <p className="text-center text-[11px] text-white/50">
@@ -220,7 +221,7 @@ export default function SalesModeLoginPage() {
                                 </p>
                                 {error && (
                                     <div className="rounded-2xl border border-red-400/25 bg-red-500/10 px-3 py-2.5 flex items-start gap-2.5">
-                                        <AlertTriangle className="w-4 h-4 mt-0.5 text-red-300 shrink-0" />
+                                        <HugeiconsIcon icon={AlertTriangle} className="w-4 h-4 mt-0.5 text-red-300 shrink-0" />
                                         <div className="min-w-0">
                                             <p className="text-[11px] font-semibold text-red-200">Couldn&apos;t verify business code</p>
                                             <p className="text-xs text-red-200/90 leading-relaxed">{error}</p>
@@ -229,7 +230,7 @@ export default function SalesModeLoginPage() {
                                 )}
                                 {isLoading && (
                                     <div className="flex items-center justify-center gap-2 text-sm text-emerald-300">
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
                                         Validating business...
                                     </div>
                                 )}
@@ -317,7 +318,7 @@ export default function SalesModeLoginPage() {
                                             onClick={backspace}
                                             className="h-14 rounded-2xl border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white"
                                         >
-                                            <Delete className="w-4 h-4" />
+                                            <HugeiconsIcon icon={Delete} className="w-4 h-4" />
                                         </Button>
                                     </div>
                                     <p className="text-center text-[11px] text-white/50">
@@ -325,7 +326,7 @@ export default function SalesModeLoginPage() {
                                     </p>
                                     {error && (
                                         <div className="rounded-2xl border border-red-400/25 bg-red-500/10 px-3 py-2.5 flex items-start gap-2.5">
-                                            <AlertTriangle className="w-4 h-4 mt-0.5 text-red-300 shrink-0" />
+                                            <HugeiconsIcon icon={AlertTriangle} className="w-4 h-4 mt-0.5 text-red-300 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-[11px] font-semibold text-red-200">PIN login failed</p>
                                                 <p className="text-xs text-red-200/90 leading-relaxed">{error}</p>
@@ -339,7 +340,7 @@ export default function SalesModeLoginPage() {
 
                     <div className={step === "pin" ? "px-6 pb-6" : ""}>
                         <Link href="/login" className="inline-flex items-center text-xs text-emerald-300/75 hover:text-white">
-                            <ArrowLeft className="w-3 h-3 mr-1.5" />
+                            <HugeiconsIcon icon={ArrowLeft} className="w-3 h-3 mr-1.5" />
                             Back to Login
                         </Link>
                     </div>

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Filter, Check, CalendarIcon, ChevronsUpDown } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { FilterIcon as Filter, CheckIcon as Check, Calendar03Icon as CalendarIcon, UnfoldMoreIcon as ChevronsUpDown } from "@hugeicons/core-free-icons"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
 import { cn } from "@/app/lib/utils"
@@ -99,7 +100,7 @@ export function OrderFilterPanel({ config, value, onChange, onClear }: OrderFilt
                 activeCount > 0 && !isOpen && "border-primary/25 bg-primary/8"
             )}
         >
-            <Filter className={cn("w-4 h-4 transition-transform", isOpen && "scale-110")} />
+            <HugeiconsIcon icon={Filter} className={cn("w-4 h-4 transition-transform", isOpen && "scale-110")} />
             {activeCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-sm">
                     {activeCount}
@@ -157,7 +158,7 @@ export function OrderFilterPanel({ config, value, onChange, onClear }: OrderFilt
                                                         {selected.length}
                                                     </span>
                                                 )}
-                                                <ChevronsUpDown className="w-3.5 h-3.5 opacity-40" />
+                                                <HugeiconsIcon icon={ChevronsUpDown} className="w-3.5 h-3.5 opacity-40" />
                                             </div>
                                         </button>
                                     )}
@@ -180,7 +181,7 @@ export function OrderFilterPanel({ config, value, onChange, onClear }: OrderFilt
                                             )}
                                         >
                                             <span className="text-sm font-medium">{option.label}</span>
-                                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                                            {isSelected && <HugeiconsIcon icon={Check} className="w-3.5 h-3.5 shrink-0" />}
                                         </button>
                                     )
                                 })}
@@ -211,7 +212,7 @@ export function OrderFilterPanel({ config, value, onChange, onClear }: OrderFilt
                     </div>
                     {dateRange?.from && (
                         <div className="mx-2 mb-3 flex items-center gap-2 rounded-xl bg-primary/8 px-3 py-2">
-                            <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <HugeiconsIcon icon={CalendarIcon} className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                             <span className="text-xs font-medium text-foreground">
                                 {format(dateRange.from, "MMM d")}
                                 {dateRange.to && dateRange.to.getTime() !== dateRange.from.getTime()

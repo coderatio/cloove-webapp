@@ -20,7 +20,8 @@ import {
 import { GlobalOrderPreviewDrawer } from "@/app/domains/orders/components/GlobalOrderPreviewDrawer"
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
-import { BellRing, ChevronRight, Eye, FlaskConical, ShoppingBag, UtensilsCrossed, X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BellRingIcon as BellRing, ChevronRightIcon as ChevronRight, EyeIcon as Eye, FlaskConicalIcon as FlaskConical, ShoppingBag01Icon as ShoppingBag, Restaurant01Icon as UtensilsCrossed, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 const CHANNEL_NAME = "cloove-global-order-alerts"
@@ -355,13 +356,13 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
             onClick={clearQueuedOrders}
             className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-white/10 dark:hover:text-slate-200"
           >
-            <X className="h-4 w-4" />
+            <HugeiconsIcon icon={X} className="h-4 w-4" />
           </button>
 
           <div className="border-b border-slate-200/70 px-4 py-3 pr-12 dark:border-white/10">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-400/15">
-                <BellRing className="h-4 w-4" />
+                <HugeiconsIcon icon={BellRing} className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -408,7 +409,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-emerald-600 dark:text-emerald-300">
-                            <ShoppingBag className="h-4.5 w-4.5" />
+                            <HugeiconsIcon icon={ShoppingBag} className="h-4.5 w-4.5" />
                           </div>
                         )}
                       </div>
@@ -444,9 +445,9 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                             openPreview(order)
                           }}
                         >
-                          <Eye className="h-4 w-4 sm:hidden" />
+                          <HugeiconsIcon icon={Eye} className="h-4 w-4 sm:hidden" />
                           <span className="hidden sm:inline">Preview</span>
-                          <ChevronRight className="ml-1 hidden h-3.5 w-3.5 sm:block" />
+                          <HugeiconsIcon icon={ChevronRight} className="ml-1 hidden h-3.5 w-3.5 sm:block" />
                         </Button>
                         {isRestaurantPreset && !order.kitchenTicketId ? (
                           <Button
@@ -475,7 +476,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                                 })
                             }}
                           >
-                            <UtensilsCrossed className="h-4 w-4 sm:mr-1 sm:h-3.5 sm:w-3.5" />
+                            <HugeiconsIcon icon={UtensilsCrossed} className="h-4 w-4 sm:mr-1 sm:h-3.5 sm:w-3.5" />
                             <span className="hidden sm:inline">
                               {sendingToastOrderId === order.id ? "Sending..." : "Send to kitchen"}
                             </span>
@@ -532,7 +533,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
             onClick={triggerDeveloperToastPreview}
             className="pointer-events-auto h-10 rounded-full border-slate-200 bg-white/95 px-4 shadow-lg backdrop-blur dark:border-white/10 dark:bg-slate-950/92"
           >
-            <FlaskConical className="mr-2 h-4 w-4" />
+            <HugeiconsIcon icon={FlaskConical} className="mr-2 h-4 w-4" />
             Preview toast
           </Button>
         </div>

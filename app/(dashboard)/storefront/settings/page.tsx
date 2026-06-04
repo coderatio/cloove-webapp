@@ -5,7 +5,8 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Switch } from "@/app/components/ui/switch"
 import { Input } from "@/app/components/ui/input"
-import { AtSign, Globe, Instagram, Phone, Save, Twitter, MessageCircle, Search, Megaphone, ImageIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AtSignIcon as AtSign, GlobeIcon as Globe, InstagramIcon as Instagram, CallIcon as Phone, SaveIcon as Save, TwitterIcon as Twitter, BubbleChatIcon as MessageCircle, Search01Icon as Search, Megaphone01Icon as Megaphone, Image01Icon as ImageIcon } from "@hugeicons/core-free-icons"
 import { useStorefrontSettings, useUpdateStorefrontSettings } from "@/app/domains/storefront/hooks/useStorefrontSettings"
 
 export default function StorefrontSettings() {
@@ -141,7 +142,7 @@ export default function StorefrontSettings() {
                     <div className="flex items-center justify-between py-2">
                         <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
-                                <Phone className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                <HugeiconsIcon icon={Phone} className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
                                 <span className="font-medium text-brand-deep dark:text-brand-cream">Show Phone Number</span>
                             </div>
                             <p className="text-xs text-brand-accent/60 dark:text-white/40">Allow customers to call you directly.</p>
@@ -162,7 +163,7 @@ export default function StorefrontSettings() {
                     <div className="flex items-center justify-between py-2">
                         <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
-                                <AtSign className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                <HugeiconsIcon icon={AtSign} className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
                                 <span className="font-medium text-brand-deep dark:text-brand-cream">Show Email Address</span>
                             </div>
                             <p className="text-xs text-brand-accent/60 dark:text-white/40">Display email for support inquiries.</p>
@@ -184,7 +185,7 @@ export default function StorefrontSettings() {
                     <div className="flex items-center justify-between py-2">
                         <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
-                                <MessageCircle className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                <HugeiconsIcon icon={MessageCircle} className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
                                 <span className="font-medium text-brand-deep dark:text-brand-cream">Enable WhatsApp Chat</span>
                             </div>
                             <p className="text-xs text-brand-accent/60 dark:text-white/40">Add a floating WhatsApp button to your store.</p>
@@ -210,7 +211,7 @@ export default function StorefrontSettings() {
                 <GlassCard className="p-6 md:p-8 space-y-6">
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 flex items-center gap-2">
-                            <Search className="w-3.5 h-3.5" /> Meta Title
+                            <HugeiconsIcon icon={Search} className="w-3.5 h-3.5" /> Meta Title
                         </label>
                         <Input
                             value={metaTitle}
@@ -230,7 +231,7 @@ export default function StorefrontSettings() {
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 flex items-center gap-2">
-                            <ImageIcon className="w-3.5 h-3.5" /> Meta Image URL
+                            <HugeiconsIcon icon={ImageIcon} className="w-3.5 h-3.5" /> Meta Image URL
                         </label>
                         <Input
                             value={metaImageUrl}
@@ -258,7 +259,7 @@ export default function StorefrontSettings() {
                     <div className="flex items-center justify-between py-2">
                         <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
-                                <Megaphone className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                <HugeiconsIcon icon={Megaphone} className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
                                 <span className="font-medium text-brand-deep dark:text-brand-cream">Show announcement bar</span>
                             </div>
                             <p className="text-xs text-brand-accent/60 dark:text-white/40">Display a message at the top of your storefront.</p>
@@ -291,7 +292,7 @@ export default function StorefrontSettings() {
                 <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Social Profiles</h2>
                 <GlassCard className="p-6 md:p-8 space-y-4">
                     <div className="relative">
-                        <Instagram className="absolute left-4 top-3.5 w-5 h-5 text-brand-accent/40" />
+                        <HugeiconsIcon icon={Instagram} className="absolute left-4 top-3.5 w-5 h-5 text-brand-accent/40" />
                         <Input
                             placeholder="Instagram Username"
                             value={instagram}
@@ -300,7 +301,7 @@ export default function StorefrontSettings() {
                         />
                     </div>
                     <div className="relative">
-                        <Twitter className="absolute left-4 top-3.5 w-5 h-5 text-brand-accent/40" />
+                        <HugeiconsIcon icon={Twitter} className="absolute left-4 top-3.5 w-5 h-5 text-brand-accent/40" />
                         <Input
                             placeholder="Twitter Handle"
                             value={twitter}
@@ -309,7 +310,7 @@ export default function StorefrontSettings() {
                         />
                     </div>
                     <div className="relative">
-                        <Globe className="absolute left-4 top-3.5 w-5 h-5 text-brand-accent/40" />
+                        <HugeiconsIcon icon={Globe} className="absolute left-4 top-3.5 w-5 h-5 text-brand-accent/40" />
                         <Input
                             placeholder="Website URL"
                             value={website}
@@ -320,15 +321,13 @@ export default function StorefrontSettings() {
                 </GlassCard>
             </section>
 
-
-
             <div className="sticky bottom-4 flex justify-end">
                 <Button
                     onClick={handleSave}
                     disabled={updateSettings.isPending}
                     className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep font-bold px-8 h-14 shadow-xl hover:scale-105 transition-all"
                 >
-                    <Save className="w-4 h-4 mr-2" />
+                    <HugeiconsIcon icon={Save} className="w-4 h-4 mr-2" />
                     {updateSettings.isPending ? 'Saving...' : 'Save Configuration'}
                 </Button>
             </div>

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Mic, Square, Trash2, Play, Pause } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Mic01Icon as Mic, SquareIcon as Square, Delete02Icon as Trash2, PlayIcon as Play, PauseIcon as Pause } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
@@ -110,7 +111,7 @@ export function VoiceSampleRecorder({ onSample, disabled }: VoiceSampleRecorderP
                                 : "bg-brand-gold/10 text-brand-gold"
                         )}
                     >
-                        <Mic className={cn("h-5 w-5", isRecording && "animate-pulse")} />
+                        <HugeiconsIcon icon={Mic} className={cn("h-5 w-5", isRecording && "animate-pulse")} />
                     </div>
                     <div className="text-sm">
                         <p className="font-medium text-foreground">
@@ -130,16 +131,16 @@ export function VoiceSampleRecorder({ onSample, disabled }: VoiceSampleRecorderP
                     {previewUrl && !isRecording && (
                         <>
                             <Button type="button" variant="ghost" size="icon" onClick={togglePlayback}>
-                                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                                {isPlaying ? <HugeiconsIcon icon={Pause} className="h-4 w-4" /> : <HugeiconsIcon icon={Play} className="h-4 w-4" />}
                             </Button>
                             <Button type="button" variant="ghost" size="icon" onClick={clearRecording}>
-                                <Trash2 className="h-4 w-4" />
+                                <HugeiconsIcon icon={Trash2} className="h-4 w-4" />
                             </Button>
                         </>
                     )}
                     {isRecording ? (
                         <Button type="button" variant="destructive" size="sm" onClick={stopRecording}>
-                            <Square className="mr-1.5 h-3.5 w-3.5" /> Stop
+                            <HugeiconsIcon icon={Square} className="mr-1.5 h-3.5 w-3.5" /> Stop
                         </Button>
                     ) : (
                         <Button
@@ -149,7 +150,7 @@ export function VoiceSampleRecorder({ onSample, disabled }: VoiceSampleRecorderP
                             onClick={startRecording}
                             disabled={disabled}
                         >
-                            <Mic className="mr-1.5 h-3.5 w-3.5" /> {previewUrl ? "Re-record" : "Record"}
+                            <HugeiconsIcon icon={Mic} className="mr-1.5 h-3.5 w-3.5" /> {previewUrl ? "Re-record" : "Record"}
                         </Button>
                     )}
                 </div>

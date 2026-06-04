@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, type ReactElement } from "react"
-import { ThumbsDown } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ThumbsDownIcon as ThumbsDown } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -67,7 +68,7 @@ export function FeedbackPopover({ messageId, isActive, onSubmit }: FeedbackPopov
                         isActive && "text-rose-500 bg-rose-500/10"
                     )}
                 >
-                    <ThumbsDown className="w-3.5 h-3.5" />
+                    <HugeiconsIcon icon={ThumbsDown} className="w-3.5 h-3.5" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent

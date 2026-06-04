@@ -13,7 +13,7 @@ export interface AgentDefinition {
         accent: string
         glow: string
     }
-    /** lucide-react icon name hint (rendered in component) */
+    /** icon hint (rendered in component) */
     iconType: "proposal" | "invoice"
 }
 

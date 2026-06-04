@@ -3,7 +3,8 @@
 import * as React from "react"
 import { Dialog as BaseDialogPrimitive } from "@base-ui/react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { useMediaQuery } from "@/app/hooks/useMediaQuery"
 
@@ -177,7 +178,7 @@ const DialogContent = React.forwardRef<
                                                     mobile ? "right-4 top-4" : "right-6 top-6",
                                                 )}
                                             >
-                                                <X className="h-5 w-5" />
+                                                <HugeiconsIcon icon={X} className="h-5 w-5" />
                                                 <span className="sr-only">Close</span>
                                             </BaseDialogPrimitive.Close>
                                         )}
@@ -269,7 +270,7 @@ const DialogCloseButton = React.forwardRef<
         )}
         {...props}
     >
-        <X className="h-5 w-5" />
+        <HugeiconsIcon icon={X} className="h-5 w-5" />
         <span className="sr-only">Close</span>
     </BaseDialogPrimitive.Close>
 ))

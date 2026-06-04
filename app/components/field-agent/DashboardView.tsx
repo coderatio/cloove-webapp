@@ -8,17 +8,8 @@ import { useFieldAgentWallet } from "@/app/domains/field-agent/hooks/useFieldAge
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
 import { AgentStatCard } from "./AgentStatCard"
 import { cn } from "@/app/lib/utils"
-import {
-    Users,
-    TrendingUp,
-    Wallet,
-    ArrowUpRight,
-    Building2,
-    CheckCircle2,
-    Clock,
-    UserPlus,
-    Sparkles
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { UserMultiple02Icon as Users, TradeUpIcon as TrendingUp, Wallet01Icon as Wallet, ArrowUpRight01Icon as ArrowUpRight, Building02Icon as Building2, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, UserAdd01Icon as UserPlus, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import Link from "next/link"
@@ -127,7 +118,7 @@ export function DashboardView() {
                     <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
                         <div>
                             <div className="flex items-center gap-3 mb-2">
-                                <TrendingUp className="w-5 h-5 text-brand-gold" />
+                                <HugeiconsIcon icon={TrendingUp} className="w-5 h-5 text-brand-gold" />
                                 <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">Earnings Performance</h3>
                             </div>
                             <p className="text-sm text-brand-deep/40 dark:text-brand-cream/40 font-medium">Your monthly commission earnings and growth.</p>
@@ -153,7 +144,7 @@ export function DashboardView() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="w-16 h-16 bg-brand-gold/10 rounded-full flex items-center justify-center mb-6"
                                 >
-                                    <TrendingUp className="w-8 h-8 text-brand-gold/40" />
+                                    <HugeiconsIcon icon={TrendingUp} className="w-8 h-8 text-brand-gold/40" />
                                 </motion.div>
                                 <h4 className="text-xl font-serif font-medium text-brand-deep/60 dark:text-brand-cream/60 mb-2">Awaiting Performance Data</h4>
                                 <p className="text-sm text-brand-deep/30 dark:text-brand-cream/30 max-w-sm mx-auto font-medium leading-relaxed">
@@ -192,7 +183,7 @@ export function DashboardView() {
                                                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">{payload[0].payload.month}</p>
                                                         <p className="text-xl font-serif text-brand-gold">{fmt(payload[0].value as number)}</p>
                                                         <div className="mt-2 flex items-center gap-2">
-                                                            <Sparkles className="w-3 h-3 text-brand-gold animate-pulse" />
+                                                            <HugeiconsIcon icon={Sparkles} className="w-3 h-3 text-brand-gold animate-pulse" />
                                                             <span className="text-[10px] font-bold uppercase text-white/30 tracking-wider">Acquisition Peak</span>
                                                         </div>
                                                     </div>
@@ -221,7 +212,7 @@ export function DashboardView() {
                     <div className="flex items-center justify-between mb-10 px-1">
                         <h3 className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">Recent Activity</h3>
                         <div className="p-2 bg-brand-deep/5 dark:bg-white/5 rounded-xl">
-                            <Clock className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30" />
+                            <HugeiconsIcon icon={Clock} className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30" />
                         </div>
                     </div>
 
@@ -233,7 +224,7 @@ export function DashboardView() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="w-14 h-14 bg-brand-gold/10 rounded-full flex items-center justify-center mb-6"
                                 >
-                                    <Building2 className="w-7 h-7 text-brand-gold/40" />
+                                    <HugeiconsIcon icon={Building2} className="w-7 h-7 text-brand-gold/40" />
                                 </motion.div>
                                 <h4 className="text-xl font-serif font-medium text-brand-deep/60 dark:text-brand-cream/60 mb-2">Awaiting Your First Merchant</h4>
                                 <p className="text-[11px] text-brand-deep/30 dark:text-brand-cream/30 max-w-[200px] mx-auto font-medium leading-relaxed">
@@ -247,7 +238,7 @@ export function DashboardView() {
                                         "w-12 h-12 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 shadow-lg shadow-black/5",
                                         biz.status === 'active' ? "bg-green-500/10 text-green-600" : "bg-brand-gold/10 text-brand-gold"
                                     )}>
-                                        {biz.status === 'active' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                        {biz.status === 'active' ? <HugeiconsIcon icon={CheckCircle2} className="w-5 h-5" /> : <HugeiconsIcon icon={Clock} className="w-5 h-5" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-bold text-brand-deep dark:text-brand-cream truncate group-hover:text-brand-gold transition-colors">{biz.name}</p>
@@ -271,7 +262,7 @@ export function DashboardView() {
                         <Button variant="outline" className="w-full mt-10 rounded-2xl h-14 border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-all font-bold text-brand-deep/60 dark:text-brand-cream/60 group shadow-sm active:translate-y-1" asChild>
                             <Link href="/field/businesses">
                                 {businesses.length < 4 ? "View Portfolio Details" : "Review All Merchants"}
-                                <ArrowUpRight className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                <HugeiconsIcon icon={ArrowUpRight} className="w-5 h-5 ml-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                             </Link>
                         </Button>
                     )}
@@ -286,7 +277,7 @@ export function DashboardView() {
                 <div className="relative p-8 md:p-14 flex flex-col lg:flex-row items-center justify-between gap-12">
                     <div className="max-w-2xl text-center lg:text-left">
                         <div className="inline-flex items-center gap-3 px-4 py-2 bg-brand-gold/10 rounded-full border border-brand-gold/20 mb-6">
-                            <Sparkles className="w-4 h-4 text-brand-gold animate-pulse" />
+                            <HugeiconsIcon icon={Sparkles} className="w-4 h-4 text-brand-gold animate-pulse" />
                             <span className="text-[10px] font-black uppercase text-brand-gold tracking-[0.2em]">Daily Goal</span>
                         </div>
                         <h2 className="text-3xl md:text-5xl font-serif font-medium text-white mb-6 leading-tight">Onboard a New <span className="text-brand-gold">Merchant</span></h2>
@@ -301,7 +292,7 @@ export function DashboardView() {
                         asChild
                     >
                         <Link href="/field/onboard">
-                            <UserPlus className="w-5 h-5 md:w-6 md:h-6 mr-3 md:mr-4" />
+                            <HugeiconsIcon icon={UserPlus} className="w-5 h-5 md:w-6 md:h-6 mr-3 md:mr-4" />
                             Start Onboarding
                         </Link>
                     </Button>

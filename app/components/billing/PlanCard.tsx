@@ -1,7 +1,8 @@
 "use client"
 
 import { Button } from "@/app/components/ui/button"
-import { Check, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
@@ -41,7 +42,7 @@ export function PlanCard({
     }).format(price)
 
     const getButtonText = () => {
-        if (isLoading) return <Loader2 className="w-4 h-4 animate-spin" />
+        if (isLoading) return <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
         if (isCurrent) return "Current Plan"
 
         const planPrice = Number(price)
@@ -105,7 +106,7 @@ export function PlanCard({
                             "mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0",
                             isRecommended ? "bg-brand-gold/20 text-brand-gold" : "bg-brand-deep/10 dark:bg-white/10 text-brand-deep dark:text-brand-cream"
                         )}>
-                            <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                            <HugeiconsIcon icon={Check} className="w-2.5 h-2.5" strokeWidth={3} />
                         </div>
                         <span className="text-brand-deep/80 dark:text-brand-cream/80">{feature}</span>
                     </div>

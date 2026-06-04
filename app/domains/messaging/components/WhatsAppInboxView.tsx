@@ -2,25 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
-import {
-    ArrowLeft,
-    Bot,
-    CheckCircle2,
-    ClipboardList,
-    FileText,
-    GitBranch,
-    Inbox,
-    Loader2,
-    MessageSquare,
-    MousePointerClick,
-    PackageCheck,
-    PanelRightClose,
-    PanelRightOpen,
-    Search,
-    SendHorizonal,
-    UserRound,
-    X,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowLeft01Icon as ArrowLeft, BotIcon as Bot, CheckmarkCircle02Icon as CheckCircle2, ClipboardListIcon as ClipboardList, File01Icon as FileText, GitBranchIcon as GitBranch, InboxIcon as Inbox, Loading03Icon as Loader2, Message01Icon as MessageSquare, Cursor02Icon as MousePointerClick, PackageDeliveredIcon as PackageCheck, PanelRightCloseIcon as PanelRightClose, PanelRightOpenIcon as PanelRightOpen, Search01Icon as Search, SentIcon as SendHorizonal, UserIcon as UserRound, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
 import { Skeleton } from "@/app/components/ui/skeleton"
@@ -274,7 +257,7 @@ function ModePill({ mode }: { mode: "ai" | "human" }) {
                     : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
             }`}
         >
-            {mode === "human" ? <UserRound className="h-3 w-3" /> : <Bot className="h-3 w-3" />}
+            {mode === "human" ? <HugeiconsIcon icon={UserRound} className="h-3 w-3" /> : <HugeiconsIcon icon={Bot} className="h-3 w-3" />}
             {mode}
         </span>
     )
@@ -303,7 +286,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <ClipboardList className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={ClipboardList} className="h-3.5 w-3.5" />
                     Template
                 </div>
                 <p className="text-sm font-medium">{message.template_name || message.template_key || "Template message"}</p>
@@ -328,7 +311,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <MousePointerClick className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={MousePointerClick} className="h-3.5 w-3.5" />
                     {payloadType === "list_reply" ? "List selection" : "Button selection"}
                 </div>
                 <p className="text-sm font-medium">{title}</p>
@@ -344,7 +327,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <MousePointerClick className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={MousePointerClick} className="h-3.5 w-3.5" />
                     Buttons sent
                 </div>
                 {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
@@ -376,7 +359,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <ClipboardList className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={ClipboardList} className="h-3.5 w-3.5" />
                     {isProductList ? "Product list sent" : "List sent"}
                 </div>
                 {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
@@ -426,7 +409,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <GitBranch className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={GitBranch} className="h-3.5 w-3.5" />
                     Flow sent
                 </div>
                 <p className="text-sm font-medium">{stringValue(payload?.screenName) || "WhatsApp flow"}</p>
@@ -443,7 +426,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <MousePointerClick className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={MousePointerClick} className="h-3.5 w-3.5" />
                     CTA sent
                 </div>
                 {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm leading-6" />}
@@ -459,7 +442,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <FileText className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={FileText} className="h-3.5 w-3.5" />
                     Location request sent
                 </div>
                 <WhatsAppMarkdownText text={message.text || stringValue(payload?.body) || "Please share your location."} className="text-sm leading-6" />
@@ -474,7 +457,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <GitBranch className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={GitBranch} className="h-3.5 w-3.5" />
                     Flow response
                 </div>
                 <div className="space-y-1.5">
@@ -494,7 +477,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <PackageCheck className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={PackageCheck} className="h-3.5 w-3.5" />
                     Catalog order
                 </div>
                 {message.text && <WhatsAppMarkdownText text={message.text} className="text-sm" />}
@@ -507,7 +490,7 @@ function MessageContent({ message, isOutbound }: { message: WhatsAppInboxMessage
         return (
             <div className={contentCardClass}>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase">
-                    <FileText className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={FileText} className="h-3.5 w-3.5" />
                     Location
                 </div>
                 <p className="text-sm font-medium">{stringValue(location.name) || "Shared location"}</p>
@@ -647,7 +630,7 @@ function InboxTab() {
                 <div className="shrink-0 border-b border-brand-gold/10 px-4 py-4">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-gold/10 text-brand-gold ring-1 ring-brand-gold/15 dark:bg-brand-gold/15 dark:text-brand-gold-300">
-                            <Inbox className="h-4 w-4" />
+                            <HugeiconsIcon icon={Inbox} className="h-4 w-4" />
                         </div>
                         <div className="min-w-0 flex-1">
                             <h2 className="text-base font-semibold tracking-tight text-foreground">Inbox</h2>
@@ -661,7 +644,7 @@ function InboxTab() {
                     </div>
                     {/* Search */}
                     <div className="relative mt-4">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+                        <HugeiconsIcon icon={Search} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
                         <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -676,7 +659,7 @@ function InboxTab() {
                                 aria-label="Clear search"
                                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground"
                             >
-                                <X className="h-3 w-3" />
+                                <HugeiconsIcon icon={X} className="h-3 w-3" />
                             </button>
                         )}
                     </div>
@@ -772,7 +755,7 @@ function InboxTab() {
                     ) : (
                         <div className="flex flex-col items-center gap-3 px-5 py-16 text-center">
                             <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-gold/20 bg-brand-gold/10">
-                                <MessageSquare className="h-5 w-5 text-muted-foreground/40" />
+                                <HugeiconsIcon icon={MessageSquare} className="h-5 w-5 text-muted-foreground/40" />
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-foreground">
@@ -793,7 +776,7 @@ function InboxTab() {
                     <div className="flex h-full items-center justify-center p-8">
                         <div className="max-w-xs space-y-3 text-center">
                             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-gold/20 bg-brand-gold/10">
-                                <MessageSquare className="h-6 w-6 text-brand-gold/70" />
+                                <HugeiconsIcon icon={MessageSquare} className="h-6 w-6 text-brand-gold/70" />
                             </div>
                             <p className="text-base font-semibold text-foreground">
                                 Select a conversation
@@ -816,7 +799,7 @@ function InboxTab() {
                                         aria-label="Close conversation"
                                         className="flex h-8 w-8 items-center justify-center rounded-2xl text-muted-foreground/50 transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
                                     >
-                                        <ArrowLeft className="h-4 w-4" />
+                                        <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" />
                                     </button>
                                     <ConversationAvatar
                                         name={selected.customer_name || selected.customer_phone}
@@ -848,7 +831,7 @@ function InboxTab() {
                                                     }
                                                     className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
-                                                    <UserRound className="h-3.5 w-3.5" />
+                                                    <HugeiconsIcon icon={UserRound} className="h-3.5 w-3.5" />
                                                     <span className="hidden sm:inline">Take over</span>
                                                 </button>
                                             ) : (
@@ -859,7 +842,7 @@ function InboxTab() {
                                                     }
                                                     className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
-                                                    <Bot className="h-3.5 w-3.5" />
+                                                    <HugeiconsIcon icon={Bot} className="h-3.5 w-3.5" />
                                                     <span className="hidden sm:inline">AI mode</span>
                                                 </button>
                                             )}
@@ -870,7 +853,7 @@ function InboxTab() {
                                                 }
                                                 className="flex h-9 items-center gap-1.5 rounded-full border border-border/50 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                             >
-                                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                                <HugeiconsIcon icon={CheckCircle2} className="h-3.5 w-3.5" />
                                                 <span className="hidden sm:inline">Resolve</span>
                                             </button>
                                         </>
@@ -885,7 +868,7 @@ function InboxTab() {
                                                 : "border-border/50 bg-background text-muted-foreground hover:bg-brand-gold/10 hover:text-brand-gold"
                                         }`}
                                     >
-                                        {sidebarOpen ? <PanelRightClose className="h-3.5 w-3.5" /> : <PanelRightOpen className="h-3.5 w-3.5" />}
+                                        {sidebarOpen ? <HugeiconsIcon icon={PanelRightClose} className="h-3.5 w-3.5" /> : <HugeiconsIcon icon={PanelRightOpen} className="h-3.5 w-3.5" />}
                                     </button>
                                 </div>
                             </div>
@@ -895,7 +878,7 @@ function InboxTab() {
                         {selected.mode === "human" && (
                             <div className="mx-4 mt-3 animate-fade-in rounded-2xl border border-brand-gold/20 bg-brand-gold/[0.07] px-3.5 py-2.5 text-xs leading-5 text-brand-deep dark:bg-brand-gold/10 dark:text-brand-gold-200">
                                 <div className="flex items-start gap-2">
-                                    <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                    <HugeiconsIcon icon={Bot} className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                     <span>
                                         AI responses are paused for this conversation.{" "}
                                         <button
@@ -1008,7 +991,7 @@ function InboxTab() {
                                 })}
                                 {detail.isLoading && (
                                     <div className="flex items-center justify-center py-8">
-                                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/50" />
+                                        <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin text-muted-foreground/50" />
                                     </div>
                                 )}
                                 <div ref={messagesEndRef} />
@@ -1095,7 +1078,7 @@ function InboxTab() {
                                                 }
                                                 className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-brand-gold/20 bg-background/80 px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                             >
-                                                <UserRound className="h-3.5 w-3.5" />
+                                                <HugeiconsIcon icon={UserRound} className="h-3.5 w-3.5" />
                                                 Assign to me
                                             </button>
                                         )}
@@ -1104,7 +1087,7 @@ function InboxTab() {
                                     {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
                                         <div className="mt-2.5 rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
                                             <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-                                                <ClipboardList className="h-3.5 w-3.5 text-brand-gold" />
+                                                <HugeiconsIcon icon={ClipboardList} className="h-3.5 w-3.5 text-brand-gold" />
                                                 Send template
                                             </h4>
                                             <div className="space-y-2">
@@ -1190,9 +1173,9 @@ function InboxTab() {
                                                     className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-deep px-3 py-2 text-[11px] font-medium text-brand-gold-300 transition-opacity hover:opacity-90 disabled:opacity-40 dark:bg-brand-gold-700 dark:text-white"
                                                 >
                                                     {sendTemplate.isPending ? (
-                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                        <HugeiconsIcon icon={Loader2} className="h-3 w-3 animate-spin" />
                                                     ) : (
-                                                        <SendHorizonal className="h-3 w-3" />
+                                                        <HugeiconsIcon icon={SendHorizonal} className="h-3 w-3" />
                                                     )}
                                                     Send template
                                                 </button>
@@ -1230,9 +1213,9 @@ function InboxTab() {
                                         className="flex h-[46px] w-[46px] shrink-0 items-center justify-center self-center rounded-2xl bg-brand-deep text-brand-gold-300 transition-all hover:opacity-90 disabled:opacity-30 dark:bg-brand-gold-700 dark:text-white"
                                     >
                                         {sendMessage.isPending ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" />
                                         ) : (
-                                            <SendHorizonal className="h-4 w-4" />
+                                            <HugeiconsIcon icon={SendHorizonal} className="h-4 w-4" />
                                         )}
                                     </button>
                                 </div>

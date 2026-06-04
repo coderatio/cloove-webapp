@@ -1,22 +1,8 @@
 "use client"
 
 import * as React from "react"
-import {
-    ArrowUpRight,
-    ArrowDownRight,
-    RefreshCcw,
-    CheckCircle2,
-    Clock,
-    XCircle,
-    Banknote,
-    Copy,
-    CreditCard,
-    Globe,
-    Share2,
-    FileText,
-    Image as ImageIcon,
-    Ban,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowUpRight01Icon as ArrowUpRight, ArrowDownRight01Icon as ArrowDownRight, RefreshIcon as RefreshCcw, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, CancelCircleIcon as XCircle, BanknoteIcon as Banknote, CopyIcon as Copy, CreditCardIcon as CreditCard, GlobeIcon as Globe, Share02Icon as Share2, File01Icon as FileText, Image01Icon as ImageIcon, BanIcon as Ban } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { toPng } from "html-to-image"
 import { cn } from "@/app/lib/utils"
@@ -208,9 +194,9 @@ export function TransactionDetailsDrawer({
                                     )}
                                 >
                                     {tx?.type === "Credit" ? (
-                                        <ArrowDownRight className="w-3 h-3" />
+                                        <HugeiconsIcon icon={ArrowDownRight} className="w-3 h-3" />
                                     ) : (
-                                        <ArrowUpRight className="w-3 h-3" />
+                                        <HugeiconsIcon icon={ArrowUpRight} className="w-3 h-3" />
                                     )}
                                     {tx?.type === "Credit" ? "Inbound Payment" : "Outbound Transfer"}
                                 </div>
@@ -271,10 +257,10 @@ export function TransactionDetailsDrawer({
                                                 )}
                                             >
                                                 {status === "Cleared" && (
-                                                    <CheckCircle2 className="w-7 h-7" />
+                                                    <HugeiconsIcon icon={CheckCircle2} className="w-7 h-7" />
                                                 )}
                                                 {isPendingOrProcessing && (
-                                                    <Clock
+                                                    <HugeiconsIcon icon={Clock}
                                                         className={cn(
                                                             "w-7 h-7",
                                                             status === "Processing" && "animate-pulse"
@@ -282,13 +268,13 @@ export function TransactionDetailsDrawer({
                                                     />
                                                 )}
                                                 {status === "Failed" && (
-                                                    <XCircle className="w-7 h-7" />
+                                                    <HugeiconsIcon icon={XCircle} className="w-7 h-7" />
                                                 )}
                                                 {isCancelled && (
-                                                    <Ban className="w-7 h-7" />
+                                                    <HugeiconsIcon icon={Ban} className="w-7 h-7" />
                                                 )}
                                                 {!status || (!["Cleared", "Pending", "Processing", "Failed", "Cancelled"].includes(status)) && (
-                                                    <Clock className="w-7 h-7 opacity-70" />
+                                                    <HugeiconsIcon icon={Clock} className="w-7 h-7 opacity-70" />
                                                 )}
                                             </div>
                                             <div>
@@ -309,7 +295,7 @@ export function TransactionDetailsDrawer({
                                                 disabled={isRequerying}
                                                 className="h-10 rounded-xl border-brand-gold/30 text-brand-gold hover:bg-brand-gold/10 px-4"
                                             >
-                                                <RefreshCcw
+                                                <HugeiconsIcon icon={RefreshCcw}
                                                     className={cn(
                                                         "w-4 h-4 mr-2",
                                                         isRequerying && "animate-spin"
@@ -370,7 +356,7 @@ export function TransactionDetailsDrawer({
                                                     toast.success("ID copied to clipboard")
                                                 }}
                                             >
-                                                <Copy className="w-3.5 h-3.5" />
+                                                <HugeiconsIcon icon={Copy} className="w-3.5 h-3.5" />
                                             </Button>
                                         </div>
 
@@ -381,7 +367,7 @@ export function TransactionDetailsDrawer({
                                                 </p>
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center">
-                                                        <CreditCard className="w-3 h-3 text-brand-gold" />
+                                                        <HugeiconsIcon icon={CreditCard} className="w-3 h-3 text-brand-gold" />
                                                     </div>
                                                     <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
                                                         {tx?.method}
@@ -398,7 +384,7 @@ export function TransactionDetailsDrawer({
                                                             {stores.find((s) => s.id === tx?.storeId)
                                                                 ?.name ?? "Main Branch"}
                                                         </p>
-                                                        <Globe className="w-3 h-3 text-emerald-500" />
+                                                        <HugeiconsIcon icon={Globe} className="w-3 h-3 text-emerald-500" />
                                                     </div>
                                                 </div>
                                             )}
@@ -617,7 +603,7 @@ export function TransactionDetailsDrawer({
                                             disabled={isGeneratingPdf || isGeneratingImage}
                                             className="flex-1 h-14 rounded-3xl border-brand-deep/10 dark:border-white/10 font-bold flex items-center justify-center gap-3 transition-all duration-300 hover:bg-brand-deep/5"
                                         >
-                                            <Share2 className={cn("w-4 h-4", (isGeneratingPdf || isGeneratingImage) && "animate-pulse")} />
+                                            <HugeiconsIcon icon={Share2} className={cn("w-4 h-4", (isGeneratingPdf || isGeneratingImage) && "animate-pulse")} />
                                             {isGeneratingPdf || isGeneratingImage ? "Generating..." : "Receipt"}
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -627,7 +613,7 @@ export function TransactionDetailsDrawer({
                                             className="rounded-xl h-12 flex items-center gap-3 cursor-pointer hover:bg-brand-deep/5 focus:bg-brand-deep/5"
                                         >
                                             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                                                <ImageIcon className="w-4 h-4" />
+                                                <HugeiconsIcon icon={ImageIcon} className="w-4 h-4" />
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-sm">Share as Image</span>
@@ -639,7 +625,7 @@ export function TransactionDetailsDrawer({
                                             className="rounded-xl h-12 flex items-center gap-3 cursor-pointer hover:bg-brand-deep/5 focus:bg-brand-deep/5"
                                         >
                                             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600">
-                                                <FileText className="w-4 h-4" />
+                                                <HugeiconsIcon icon={FileText} className="w-4 h-4" />
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-sm">Share as PDF</span>

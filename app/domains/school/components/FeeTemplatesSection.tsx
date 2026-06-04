@@ -3,23 +3,8 @@
 import * as React from "react"
 import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-    Plus,
-    Trash2,
-    Loader2,
-    FileText,
-    Users,
-    Pencil,
-    Play,
-    Archive,
-    CheckCircle2,
-    Clock,
-    AlertCircle,
-    Search,
-    CalendarDays,
-    Layers,
-    CircleDot,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PlusSignIcon as Plus, Delete02Icon as Trash2, Loading03Icon as Loader2, File01Icon as FileText, UserMultiple02Icon as Users, PencilIcon as Pencil, PlayIcon as Play, ArchiveIcon as Archive, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, AlertCircleIcon as AlertCircle, Search01Icon as Search, CalendarDaysIcon as CalendarDays, Layers01Icon as Layers, CircleDotIcon as CircleDot } from "@hugeicons/core-free-icons"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -113,15 +98,15 @@ function TemplateProgressBar({ templateId }: { templateId: string }) {
             {/* Stats row */}
             <div className="flex items-center gap-4 flex-wrap">
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-brand-accent/60 dark:text-brand-cream/50">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3 text-emerald-500" />
                     <span className="font-semibold tabular-nums text-emerald-700 dark:text-emerald-400/80">{data.paid}</span> paid
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-brand-accent/60 dark:text-brand-cream/50">
-                    <Clock className="w-3 h-3 text-amber-400" />
+                    <HugeiconsIcon icon={Clock} className="w-3 h-3 text-amber-400" />
                     <span className="font-semibold tabular-nums text-amber-600 dark:text-amber-400/80">{data.partial}</span> partial
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-brand-accent/60 dark:text-brand-cream/50">
-                    <AlertCircle className="w-3 h-3 text-brand-deep/30 dark:text-brand-cream/30" />
+                    <HugeiconsIcon icon={AlertCircle} className="w-3 h-3 text-brand-deep/30 dark:text-brand-cream/30" />
                     <span className="font-semibold tabular-nums">{data.unpaid}</span> unpaid
                 </span>
                 <span className="ml-auto text-[11px] font-semibold text-brand-accent/50 dark:text-brand-cream/40 tabular-nums">
@@ -221,19 +206,19 @@ function TemplateCard({
                             <div className="flex items-center gap-3 flex-wrap">
                                 {template.academicTerm && (
                                     <span className="inline-flex items-center gap-1 text-[11px] text-brand-accent/50 dark:text-brand-cream/40">
-                                        <CalendarDays className="w-3 h-3" />
+                                        <HugeiconsIcon icon={CalendarDays} className="w-3 h-3" />
                                         {template.academicTerm.name}
                                     </span>
                                 )}
                                 {template.scope === "DEPARTMENT" && template.department && (
                                     <span className="inline-flex items-center gap-1 text-[11px] text-brand-accent/50 dark:text-brand-cream/40">
-                                        <Users className="w-3 h-3" />
+                                        <HugeiconsIcon icon={Users} className="w-3 h-3" />
                                         {template.department.name}
                                     </span>
                                 )}
                                 {template.scope === "ALL" && (
                                     <span className="inline-flex items-center gap-1 text-[11px] text-brand-accent/40 dark:text-brand-cream/35">
-                                        <Layers className="w-3 h-3" />
+                                        <HugeiconsIcon icon={Layers} className="w-3 h-3" />
                                         All students
                                     </span>
                                 )}
@@ -264,7 +249,7 @@ function TemplateCard({
                                     key={item.id}
                                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-brand-deep/4 dark:bg-white/5 border border-brand-deep/6 dark:border-white/6 text-[10px] text-brand-accent/60 dark:text-brand-cream/50"
                                 >
-                                    <CircleDot className="w-2.5 h-2.5 text-brand-gold/50" />
+                                    <HugeiconsIcon icon={CircleDot} className="w-2.5 h-2.5 text-brand-gold/50" />
                                     {item.name}
                                 </span>
                             ))}
@@ -291,9 +276,9 @@ function TemplateCard({
                                 disabled={isApplying}
                             >
                                 {isApplying ? (
-                                    <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="w-3 h-3 mr-1.5 animate-spin" />
                                 ) : (
-                                    <Play className="w-3 h-3 mr-1.5" />
+                                    <HugeiconsIcon icon={Play} className="w-3 h-3 mr-1.5" />
                                 )}
                                 {template.status === "DRAFT" ? "Apply to students" : "Re-apply"}
                             </Button>
@@ -305,7 +290,7 @@ function TemplateCard({
                             className="h-7 text-[11px] rounded-full px-2.5 text-brand-accent/50 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream"
                             onClick={onEdit}
                         >
-                            <Pencil className="w-3 h-3 mr-1" />
+                            <HugeiconsIcon icon={Pencil} className="w-3 h-3 mr-1" />
                             Edit
                         </Button>
 
@@ -316,7 +301,7 @@ function TemplateCard({
                                 className="h-7 text-[11px] rounded-full px-2.5 text-brand-accent/40 dark:text-brand-cream/35"
                                 onClick={onArchive}
                             >
-                                <Archive className="w-3 h-3 mr-1" />
+                                <HugeiconsIcon icon={Archive} className="w-3 h-3 mr-1" />
                                 Archive
                             </Button>
                         )}
@@ -328,7 +313,7 @@ function TemplateCard({
                                 className="h-7 text-[11px] rounded-full px-2.5 text-red-400/60 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 ml-auto"
                                 onClick={onDelete}
                             >
-                                <Trash2 className="w-3 h-3 mr-1" />
+                                <HugeiconsIcon icon={Trash2} className="w-3 h-3 mr-1" />
                                 Delete
                             </Button>
                         )}
@@ -394,11 +379,11 @@ function TemplatesEmptyState({
         >
             <div className="relative">
                 <div className="w-14 h-14 rounded-3xl bg-brand-gold/8 dark:bg-brand-gold/10 border border-brand-gold/15 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-brand-gold/60" />
+                    <HugeiconsIcon icon={FileText} className="w-6 h-6 text-brand-gold/60" />
                 </div>
                 {cta && (
                     <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-xl bg-brand-cream dark:bg-brand-deep border border-brand-gold/20 flex items-center justify-center">
-                        <Plus className="w-2.5 h-2.5 text-brand-gold" />
+                        <HugeiconsIcon icon={Plus} className="w-2.5 h-2.5 text-brand-gold" />
                     </div>
                 )}
             </div>
@@ -412,7 +397,7 @@ function TemplatesEmptyState({
             </div>
             {cta && (
                 <Button size="sm" variant="secondary" className="rounded-full" onClick={onAdd}>
-                    <Plus className="w-3.5 h-3.5 mr-1.5" />
+                    <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5 mr-1.5" />
                     {cta}
                 </Button>
             )}
@@ -479,7 +464,7 @@ function ItemRow({
                 onClick={onRemove}
                 disabled={!canRemove}
             >
-                <Trash2 className="w-3.5 h-3.5" />
+                <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
             </Button>
         </motion.div>
     )
@@ -743,7 +728,7 @@ export function FeeTemplatesSection() {
                 <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-brand-deep/5 dark:border-white/6">
                     <div className="flex items-start gap-3.5">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gold/12 mt-0.5">
-                            <FileText className="h-4 w-4 text-brand-gold" />
+                            <HugeiconsIcon icon={FileText} className="h-4 w-4 text-brand-gold" />
                         </div>
                         <div>
                             <div className="flex items-center gap-2.5">
@@ -768,7 +753,7 @@ export function FeeTemplatesSection() {
                         className="rounded-full shrink-0"
                         onClick={openCreate}
                     >
-                        <Plus className="h-3.5 w-3.5 mr-1.5" />
+                        <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5 mr-1.5" />
                         New template
                     </Button>
                 </div>
@@ -786,7 +771,7 @@ export function FeeTemplatesSection() {
                                     transition={{ duration: 0.2 }}
                                 >
                                     <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-deep/30 dark:text-brand-cream/30 pointer-events-none" />
+                                        <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-deep/30 dark:text-brand-cream/30 pointer-events-none" />
                                         <Input
                                             className="pl-9 h-9 text-sm rounded-xl bg-brand-deep/3 dark:bg-white/3 border-brand-deep/8 dark:border-white/8"
                                             placeholder="Search templates…"
@@ -925,7 +910,7 @@ export function FeeTemplatesSection() {
                                                 <span className="truncate">
                                                     {selectedDueDate ? format(selectedDueDate, "dd/MM/yyyy") : "dd/mm/yyyy"}
                                                 </span>
-                                                <CalendarDays className="ml-auto h-4 w-4 opacity-70" />
+                                                <HugeiconsIcon icon={CalendarDays} className="ml-auto h-4 w-4 opacity-70" />
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden" align="start">
@@ -1061,7 +1046,7 @@ export function FeeTemplatesSection() {
                                 className="rounded-full bg-white dark:bg-brand-deep border-dashed mt-2 text-brand-accent/50 dark:text-brand-cream/80 hover:text-brand-deep dark:hover:text-brand-cream"
                                 onClick={addItem}
                             >
-                                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                                <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5 mr-1.5" />
                                 Add fee item
                             </Button>
                         </div>
@@ -1073,7 +1058,7 @@ export function FeeTemplatesSection() {
                             disabled={!name.trim() || isSaving}
                             className="h-13 rounded-2xl"
                         >
-                            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                            {isSaving && <HugeiconsIcon icon={Loader2} className="w-4 h-4 mr-2 animate-spin" />}
                             {editing ? "Save Changes" : "Create Template"}
                         </Button>
                     </DrawerFooter>

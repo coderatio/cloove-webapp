@@ -20,7 +20,8 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
-import { GripVertical } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { GripVerticalIcon as GripVertical } from "@hugeicons/core-free-icons"
 
 export interface SortableBlockListProps<T extends { id: string }> {
   items: T[]
@@ -74,7 +75,7 @@ function SortableRow<T extends { id: string }>({
           aria-label="Drag to reorder"
         >
           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-lg pointer-events-none">
-            <GripVertical className="w-4 h-4" />
+            <HugeiconsIcon icon={GripVertical} className="w-4 h-4" />
           </Button>
         </div>
       )}

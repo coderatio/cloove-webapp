@@ -1,20 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState, type ReactElement } from "react"
-import {
-    ArrowUp,
-    Camera,
-    File,
-    FileSpreadsheet,
-    FileText,
-    Image,
-    Loader2,
-    Plus,
-    Sparkles,
-    Square,
-    Upload,
-    X,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowUp01Icon as ArrowUp, Camera01Icon as Camera, File01Icon as File, FileSpreadsheetIcon as FileSpreadsheet, File01Icon as FileText, Image01Icon as Image, Loading03Icon as Loader2, PlusSignIcon as Plus, SparklesIcon as Sparkles, SquareIcon as Square, Upload01Icon as Upload, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -76,15 +64,15 @@ function isFileAccepted(file: File): boolean {
 function getFileIcon(file: File): ReactElement {
     const ext = getFileExtension(file.name)
     if (file.type.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp"].includes(ext)) {
-        return <Image className="h-4 w-4" />
+        return <HugeiconsIcon icon={Image} className="h-4 w-4" />
     }
     if (["csv", "xlsx", "xls"].includes(ext)) {
-        return <FileSpreadsheet className="h-4 w-4" />
+        return <HugeiconsIcon icon={FileSpreadsheet} className="h-4 w-4" />
     }
     if (ext === "pdf") {
-        return <FileText className="h-4 w-4" />
+        return <HugeiconsIcon icon={FileText} className="h-4 w-4" />
     }
-    return <File className="h-4 w-4" />
+    return <HugeiconsIcon icon={File} className="h-4 w-4" />
 }
 
 function getAnalysisLabel(isAllowed: boolean, isEnabled: boolean): string {
@@ -308,7 +296,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                     {activeAgentType && (
                         <div className="flex items-center gap-2">
                             <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60 border border-brand-deep/10 dark:border-white/10">
-                                <Sparkles className="w-3 h-3" />
+                                <HugeiconsIcon icon={Sparkles} className="w-3 h-3" />
                                 Agent mode — refine your document
                             </span>
                         </div>
@@ -348,7 +336,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                             className="h-5 w-5 rounded-full text-brand-accent/40 hover:text-red-500 hover:bg-red-50 dark:text-brand-cream/30 dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-colors"
                                             aria-label={`Remove ${file.name}`}
                                         >
-                                            <X className="h-3 w-3" />
+                                            <HugeiconsIcon icon={X} className="h-3 w-3" />
                                         </Button>
                                     </div>
                                 )
@@ -372,7 +360,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                     disabled={disabled || isUploading || files.length >= MAX_ATTACHMENTS}
                                 >
                                     <button type="button" aria-label="Attach files">
-                                        <Plus className="h-4 w-4" />
+                                        <HugeiconsIcon icon={Plus} className="h-4 w-4" />
                                     </button>
                                 </Button>
                             </DropdownMenuTrigger>
@@ -384,7 +372,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                             className="w-full justify-start gap-4 h-auto py-3 px-4 rounded-xl hover:bg-brand-green/5 dark:hover:bg-brand-gold/5"
                                         >
                                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold shrink-0">
-                                                <Camera className="h-5 w-5" />
+                                                <HugeiconsIcon icon={Camera} className="h-5 w-5" />
                                             </div>
                                             <div className="flex flex-col items-start overflow-hidden">
                                                 <span className="font-medium text-[15px]">Open Camera</span>
@@ -399,7 +387,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                             className="w-full justify-start gap-4 h-auto py-3 px-4 rounded-xl hover:bg-brand-green/5 dark:hover:bg-brand-gold/5"
                                         >
                                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-deep/5 text-brand-deep dark:bg-white/5 dark:text-brand-cream shrink-0">
-                                                <Upload className="h-5 w-5" />
+                                                <HugeiconsIcon icon={Upload} className="h-5 w-5" />
                                             </div>
                                             <div className="flex flex-col items-start overflow-hidden">
                                                 <span className="font-medium text-[15px]">Upload File</span>
@@ -435,7 +423,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                 className="h-10 w-10 rounded-full transition-all duration-300 shrink-0 mb-0.5 bg-red-500 text-white hover:bg-red-600 shadow-md"
                                 aria-label="Stop generating"
                             >
-                                <Square className="h-4 w-4" />
+                                <HugeiconsIcon icon={Square} className="h-4 w-4" />
                             </Button>
                         ) : (
                             <Button
@@ -449,7 +437,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                         : "bg-zinc-100 text-zinc-400 dark:bg-white/10 dark:text-white/30"
                                 )}
                             >
-                                {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
+                                {isUploading ? <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" /> : <HugeiconsIcon icon={ArrowUp} className="h-5 w-5" />}
                             </Button>
                         )}
                     </div>
@@ -476,7 +464,7 @@ export function ChatInput({ onSend, disabled = false, isStreaming = false, onSto
                                 aria-pressed={analysisAllowed && analysisEnabled}
                                 disabled={!analysisAllowed}
                             >
-                                <Sparkles className="h-3 w-3" />
+                                <HugeiconsIcon icon={Sparkles} className="h-3 w-3" />
                                 {getAnalysisLabel(analysisAllowed, analysisEnabled)}
                             </Button>
                         )}

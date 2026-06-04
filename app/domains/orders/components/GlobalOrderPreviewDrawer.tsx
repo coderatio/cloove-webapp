@@ -23,7 +23,8 @@ import {
 import { formatCurrency } from "@/app/lib/formatters"
 import { Order } from "@/app/domains/orders/types"
 import { type KitchenTicket } from "@/app/domains/restaurant/hooks/useRestaurantOps"
-import { ExternalLink, Store, UtensilsCrossed } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ExternalLinkIcon as ExternalLink, Store01Icon as Store, Restaurant01Icon as UtensilsCrossed } from "@hugeicons/core-free-icons"
 
 const KITCHEN_INITIAL_STATUS_OPTIONS: Array<{ value: KitchenTicket["status"]; label: string }> = [
   { value: "queued", label: "Queued" },
@@ -130,7 +131,7 @@ export function GlobalOrderPreviewDrawer({
 
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-              <Store className="h-4 w-4" />
+              <HugeiconsIcon icon={Store} className="h-4 w-4" />
               Order items
             </div>
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800">
@@ -170,7 +171,7 @@ export function GlobalOrderPreviewDrawer({
           {canSendToKitchen ? (
             <div className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
               <div className="flex items-center gap-2 text-sm font-medium text-amber-900 dark:text-amber-200">
-                <UtensilsCrossed className="h-4 w-4" />
+                <HugeiconsIcon icon={UtensilsCrossed} className="h-4 w-4" />
                 Send to kitchen from here
               </div>
 
@@ -241,7 +242,7 @@ export function GlobalOrderPreviewDrawer({
         <DrawerFooter className="flex-row flex-wrap justify-between gap-2">
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={onViewOrders} className="rounded-full">
-              <ExternalLink className="mr-2 h-4 w-4" />
+              <HugeiconsIcon icon={ExternalLink} className="mr-2 h-4 w-4" />
               Open Orders
             </Button>
           </div>
@@ -252,7 +253,7 @@ export function GlobalOrderPreviewDrawer({
                 disabled={!station.trim() || isSendingToKitchen}
                 className="rounded-full"
               >
-                <UtensilsCrossed className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={UtensilsCrossed} className="mr-2 h-4 w-4" />
                 {isSendingToKitchen ? "Sending..." : "Send to kitchen"}
               </Button>
             ) : null}

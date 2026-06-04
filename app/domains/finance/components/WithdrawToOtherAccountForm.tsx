@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Building2, Search, Check, Loader2, ArrowLeft, Save } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, Search01Icon as Search, CheckIcon as Check, Loading03Icon as Loader2, ArrowLeft01Icon as ArrowLeft, SaveIcon as Save } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
@@ -96,7 +97,7 @@ export function WithdrawToOtherAccountForm({ onBack, onConfirm }: WithdrawToOthe
                             onClick={() => step === "details" ? setStep("bank") : onBack()}
                             className="h-10 w-10 rounded-full bg-brand-deep/5 dark:bg-white/5 cursor-pointer"
                         >
-                            <ArrowLeft className="w-5 h-5 text-brand-deep/40 dark:text-brand-cream/40" />
+                            <HugeiconsIcon icon={ArrowLeft} className="w-5 h-5 text-brand-deep/40 dark:text-brand-cream/40" />
                         </Button>
                         <div>
                             <h4 className="text-lg font-serif font-bold text-brand-deep dark:text-brand-cream">
@@ -166,12 +167,12 @@ export function WithdrawToOtherAccountForm({ onBack, onConfirm }: WithdrawToOthe
                                                 />
                                                 {resolveAccountMutation.isPending && (
                                                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                        <Loader2 className="w-5 h-5 animate-spin text-brand-gold" />
+                                                        <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin text-brand-gold" />
                                                     </div>
                                                 )}
                                                 {!resolveAccountMutation.isPending && accountName && (
                                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center animate-in zoom-in">
-                                                        <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                                                        <HugeiconsIcon icon={Check} className="w-3.5 h-3.5 text-white" strokeWidth={3} />
                                                     </div>
                                                 )}
                                             </div>
@@ -193,7 +194,7 @@ export function WithdrawToOtherAccountForm({ onBack, onConfirm }: WithdrawToOthe
                                         <div className="p-4 rounded-3xl bg-brand-deep/3 dark:bg-white/3 border border-brand-deep/5 dark:border-white/5 flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="h-10 w-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                                    <Save className="w-5 h-5" />
+                                                    <HugeiconsIcon icon={Save} className="w-5 h-5" />
                                                 </div>
                                                 <div>
                                                     <div className="text-xs font-bold text-brand-deep dark:text-brand-cream">Save to my accounts</div>

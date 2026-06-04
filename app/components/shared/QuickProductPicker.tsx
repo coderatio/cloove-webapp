@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Minus, Plus, Search, Package } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { MinusSignIcon as Minus, PlusSignIcon as Plus, Search01Icon as Search, PackageIcon as Package } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -116,7 +117,7 @@ export function QuickProductPicker({
         <div className="flex flex-col gap-3">
             {/* Search */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-accent/40 dark:text-brand-cream/30 pointer-events-none" />
+                <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-accent/40 dark:text-brand-cream/30 pointer-events-none" />
                 <Input
                     placeholder="Search products..."
                     value={search}
@@ -154,7 +155,7 @@ export function QuickProductPicker({
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="py-8 flex flex-col items-center text-center">
-                    <Package className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
+                    <HugeiconsIcon icon={Package} className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
                     <p className="text-sm text-brand-accent/40 dark:text-brand-cream/40">No products found</p>
                 </div>
             ) : (
@@ -249,7 +250,7 @@ export function QuickProductPicker({
                                         onClick={() => decrement(item.productId)}
                                         className="h-6 w-6 rounded-lg border border-brand-accent/10 dark:border-white/10 text-brand-accent/50 dark:text-brand-cream/50"
                                     >
-                                        <Minus className="h-2.5 w-2.5" />
+                                        <HugeiconsIcon icon={Minus} className="h-2.5 w-2.5" />
                                     </Button>
                                     <span className="text-sm font-bold text-brand-deep dark:text-brand-cream w-4 text-center">
                                         {item.quantity}
@@ -261,7 +262,7 @@ export function QuickProductPicker({
                                         onClick={() => increment(item.productId, item.productName, item.price)}
                                         className="h-6 w-6 rounded-lg border border-brand-accent/10 dark:border-white/10 text-brand-accent/50 dark:text-brand-cream/50"
                                     >
-                                        <Plus className="h-2.5 w-2.5" />
+                                        <HugeiconsIcon icon={Plus} className="h-2.5 w-2.5" />
                                     </Button>
                                     <span className="text-[11px] font-bold text-brand-accent/60 dark:text-brand-cream/50 w-16 text-right">
                                         {formatCurrency(item.price * item.quantity, { currency })}

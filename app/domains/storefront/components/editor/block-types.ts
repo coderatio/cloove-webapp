@@ -1,18 +1,5 @@
-import {
-  Layout,
-  Type,
-  MousePointerClick,
-  HelpCircle,
-  Quote,
-  Grid3X3,
-  Mail,
-  Image,
-  ShoppingBag,
-  Star,
-  Tag,
-  Megaphone,
-  type LucideIcon,
-} from "lucide-react"
+import type { IconSvgElement } from "@hugeicons/react"
+import { Layout01Icon as Layout, TextFontIcon as Type, Cursor02Icon as MousePointerClick, HelpCircleIcon as HelpCircle, QuoteDownIcon as Quote, GridIcon as Grid3X3, Mail01Icon as Mail, Image01Icon as Image, ShoppingBag01Icon as ShoppingBag, StarIcon as Star, Tag01Icon as Tag, Megaphone01Icon as Megaphone } from "@hugeicons/core-free-icons"
 
 export type BlockType =
   | "hero"
@@ -120,7 +107,7 @@ const DEFAULT_CONFIG: BlockConfig = {
 
 export const BLOCK_META: Record<
   BlockType,
-  { label: string; icon: LucideIcon; description: string; creatable: boolean }
+  { label: string; icon: IconSvgElement; description: string; creatable: boolean }
 > = {
   hero: { label: "Hero", icon: Layout, description: "Full-width banner with title and CTA", creatable: true },
   rich_text: { label: "Rich Text", icon: Type, description: "Formatted text with headings, lists, links", creatable: true },

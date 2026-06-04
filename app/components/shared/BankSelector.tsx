@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Check, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon as Search, CheckIcon as Check, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { Input } from "@/app/components/ui/input"
 import { cn } from "@/app/lib/utils"
 import { useBanks } from "@/app/domains/finance/hooks/useFinance"
@@ -36,7 +37,7 @@ export function BankSelector({ onSelect, selectedBankName, provider, className, 
     if (isLoading) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4">
-                <Loader2 className="w-8 h-8 animate-spin text-brand-gold" />
+                <HugeiconsIcon icon={Loader2} className="w-8 h-8 animate-spin text-brand-gold" />
                 <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30">Loading banks...</p>
             </div>
         )
@@ -46,7 +47,7 @@ export function BankSelector({ onSelect, selectedBankName, provider, className, 
         <div className={cn("flex flex-col h-full space-y-4 pt-2", className)}>
             <div className="-mx-2 px-2">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-deep/40 dark:text-brand-cream/40" />
+                    <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-deep/40 dark:text-brand-cream/40" />
                     <Input
                         placeholder="Search bank..."
                         value={searchQuery}
@@ -105,7 +106,7 @@ export function BankSelector({ onSelect, selectedBankName, provider, className, 
 
                                     {isSelected && (
                                         <div className="h-6 w-6 rounded-full bg-brand-gold-700 flex items-center justify-center text-brand-deep shadow-sm animate-in zoom-in spin-in-12 duration-300">
-                                            <Check className="h-3 w-3" strokeWidth={3} />
+                                            <HugeiconsIcon icon={Check} className="h-3 w-3" strokeWidth={3} />
                                         </div>
                                     )}
                                 </button>

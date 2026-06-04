@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Calendar01Icon as CalendarIcon } from "@hugeicons/core-free-icons"
 import { format, parseISO, isValid } from "date-fns"
 
 import { cn } from "@/app/lib/utils"
@@ -77,7 +78,7 @@ export function DatePickerField({
                 label && "border-brand-green/30 dark:border-brand-gold/30 bg-brand-green/5 dark:bg-brand-gold/5 text-brand-deep dark:text-brand-cream"
             )}
         >
-            <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+            <HugeiconsIcon icon={CalendarIcon} className="mr-2 h-4 w-4 shrink-0" />
             <span className="truncate">{label ?? placeholder}</span>
         </Button>
     )

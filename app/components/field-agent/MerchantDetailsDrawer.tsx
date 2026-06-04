@@ -12,16 +12,8 @@ import {
     DrawerFooter
 } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
-import {
-    CheckCircle2,
-    Clock,
-    Phone,
-    Mail,
-    ExternalLink,
-    Shield,
-    Copy,
-    Check,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, CallIcon as Phone, Mail01Icon as Mail, ExternalLinkIcon as ExternalLink, SecurityIcon as Shield, CopyIcon as Copy, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { OnboardedBusiness } from "@/app/domains/field-agent/hooks/useFieldAgentBusinesses"
 import { useFieldAgentWallet } from "@/app/domains/field-agent/hooks/useFieldAgentWallet"
@@ -57,7 +49,7 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
                             "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
                             business.status === 'active' ? "bg-green-500/10 text-green-600" : "bg-brand-gold/10 text-brand-gold"
                         )}>
-                            {business.status === 'active' ? <CheckCircle2 className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+                            {business.status === 'active' ? <HugeiconsIcon icon={CheckCircle2} className="w-6 h-6" /> : <HugeiconsIcon icon={Clock} className="w-6 h-6" />}
                         </div>
                         <div className="flex-1 min-w-0">
                             <DrawerTitle>{business.name}</DrawerTitle>
@@ -77,8 +69,8 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
                                             {business.shortCode}
                                         </span>
                                         {copied
-                                            ? <Check className="w-3 h-3 text-green-500 shrink-0" />
-                                            : <Copy className="w-3 h-3 text-brand-deep/20 dark:text-brand-cream/20 group-hover:text-brand-deep/50 dark:group-hover:text-brand-cream/50 shrink-0 transition-colors" />
+                                            ? <HugeiconsIcon icon={Check} className="w-3 h-3 text-green-500 shrink-0" />
+                                            : <HugeiconsIcon icon={Copy} className="w-3 h-3 text-brand-deep/20 dark:text-brand-cream/20 group-hover:text-brand-deep/50 dark:group-hover:text-brand-cream/50 shrink-0 transition-colors" />
                                         }
                                     </button>
                                 )}
@@ -110,7 +102,7 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
                         <div className="grid grid-cols-1 gap-3">
                             <div className="flex items-center gap-4 p-4 rounded-2xl border border-brand-deep/5 bg-white/50 dark:bg-white/5">
                                 <div className="p-2 bg-brand-deep/5 dark:bg-white/5 rounded-lg text-brand-deep/40 dark:text-brand-cream/40">
-                                    <Shield className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Shield} className="w-4 h-4" />
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-brand-deep/80 dark:text-brand-cream/80">{business.ownerName}</p>
@@ -119,7 +111,7 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
                             </div>
                             <div className="flex items-center gap-4 p-4 rounded-2xl border border-brand-deep/5 bg-white/50 dark:bg-white/5">
                                 <div className="p-2 bg-brand-deep/5 dark:bg-white/5 rounded-lg text-brand-deep/40 dark:text-brand-cream/40">
-                                    <Phone className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Phone} className="w-4 h-4" />
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-brand-deep/80 dark:text-brand-cream/80">{business.phone}</p>
@@ -192,11 +184,11 @@ export function MerchantDetailsDrawer({ business, isOpen, onOpenChange }: Mercha
 
                 <DrawerFooter className="bg-brand-deep/5 dark:bg-white/5 flex-row gap-3">
                     <Button variant="outline" className="flex-1 rounded-2xl h-12 bg-white/50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-all font-bold group">
-                        <Mail className="w-4 h-4 mr-2 text-brand-deep/40 group-hover:text-brand-gold" />
+                        <HugeiconsIcon icon={Mail} className="w-4 h-4 mr-2 text-brand-deep/40 group-hover:text-brand-gold" />
                         Send Receipt
                     </Button>
                     <Button className="flex-1 rounded-2xl h-12 bg-brand-deep hover:bg-brand-deep/90 text-white font-bold group">
-                        <ExternalLink className="w-4 h-4 mr-2" />
+                        <HugeiconsIcon icon={ExternalLink} className="w-4 h-4 mr-2" />
                         View Live
                     </Button>
                 </DrawerFooter>
@@ -256,7 +248,7 @@ function MilestoneRow({
                             : "bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/10 text-brand-deep/10 dark:text-brand-cream/10"
                 )}>
                     {done ? (
-                        <Check className="w-5 h-5 stroke-3" />
+                        <HugeiconsIcon icon={Check} className="w-5 h-5 stroke-3" />
                     ) : (
                         <span className="text-[10px] font-black">{active ? "!!" : "..."}</span>
                     )}

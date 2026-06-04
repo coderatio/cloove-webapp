@@ -46,33 +46,8 @@ import { QuickProductPicker, type PickedItem } from "@/app/components/shared/Qui
 import { cn } from "@/app/lib/utils"
 import { CapacityStepper } from "@/app/domains/restaurant/components/CapacityStepper"
 import { useRestaurantRefreshInterval } from "@/app/domains/restaurant/hooks/useRestaurantRefreshInterval"
-import {
-  UtensilsCrossed,
-  ChefHat,
-  GlassWater,
-  Armchair,
-  CheckCircle2,
-  Clock,
-  Users,
-  Plus,
-  Circle,
-  ArrowLeft,
-  ArrowRight,
-  Zap,
-  TableProperties,
-  ToggleLeft,
-  ToggleRight,
-  Trash2,
-  PencilLine,
-  Archive,
-  RotateCcw,
-  ChevronRight,
-  Maximize2,
-  Minimize2,
-  MessageSquare,
-  Loader2,
-  ExternalLink,
-} from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { Restaurant01Icon as UtensilsCrossed, ChefHatIcon as ChefHat, GlassWaterIcon as GlassWater, ArmchairIcon as Armchair, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, UserMultiple02Icon as Users, PlusSignIcon as Plus, CircleIcon as Circle, ArrowLeft01Icon as ArrowLeft, ArrowRight01Icon as ArrowRight, ZapIcon as Zap, Table02Icon as TableProperties, ToggleOffIcon as ToggleLeft, ToggleOnIcon as ToggleRight, Delete02Icon as Trash2, PencilEdit01Icon as PencilLine, ArchiveIcon as Archive, ReloadIcon as RotateCcw, ChevronRightIcon as ChevronRight, Maximize01Icon as Maximize2, Minimize01Icon as Minimize2, Message01Icon as MessageSquare, Loading03Icon as Loader2, ExternalLinkIcon as ExternalLink } from "@hugeicons/core-free-icons"
 import { ZenModeContext } from "@/app/components/layout/AppLayout"
 import { formatCurrency } from "@/app/lib/formatters"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -93,7 +68,7 @@ const DEFAULT_MANUAL_PRESETS = [
 
 const STATUS_CONFIG: Record<
   KitchenTicket["status"],
-  { label: string; color: string; bg: string; border: string; icon: React.ElementType; dotColor: string }
+  { label: string; color: string; bg: string; border: string; icon: IconSvgElement; dotColor: string }
 > = {
   queued: {
     label: "Queued",
@@ -133,7 +108,7 @@ const BAR_FLOW: BarTicket["status"][] = ["ordered", "making", "ready", "served"]
 
 const BAR_STATUS_CONFIG: Record<
   BarTicket["status"],
-  { label: string; color: string; bg: string; border: string; icon: React.ElementType; dotColor: string }
+  { label: string; color: string; bg: string; border: string; icon: IconSvgElement; dotColor: string }
 > = {
   ordered: {
     label: "Ordered",
@@ -261,7 +236,7 @@ const BarTicketCard = React.memo(function BarTicketCard({
                 className="h-6 w-6 rounded-lg text-brand-accent/30 hover:text-brand-accent/70 dark:text-brand-cream/30 dark:hover:text-brand-cream/70 hover:bg-black/5 dark:hover:bg-white/10"
                 title="Edit order"
               >
-                <PencilLine className="h-3 w-3" />
+                <HugeiconsIcon icon={PencilLine} className="h-3 w-3" />
               </Button>
               <Button
                 variant="ghost"
@@ -270,7 +245,7 @@ const BarTicketCard = React.memo(function BarTicketCard({
                 className="h-6 w-6 rounded-lg text-red-400/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
                 title="Cancel order"
               >
-                <Trash2 className="h-3 w-3" />
+                <HugeiconsIcon icon={Trash2} className="h-3 w-3" />
               </Button>
             </>
           )}
@@ -286,7 +261,7 @@ const BarTicketCard = React.memo(function BarTicketCard({
             onClick={() => onAdvance(ticket.id, prev)}
             disabled={isPending}
           >
-            <ArrowLeft className="h-3 w-3" />
+            <HugeiconsIcon icon={ArrowLeft} className="h-3 w-3" />
           </Button>
         )}
         {next ? (
@@ -306,11 +281,11 @@ const BarTicketCard = React.memo(function BarTicketCard({
             disabled={isPending}
           >
             <span>{BAR_STATUS_CONFIG[next].label}</span>
-            <ArrowRight className="h-3 w-3 ml-1.5" />
+            <HugeiconsIcon icon={ArrowRight} className="h-3 w-3 ml-1.5" />
           </Button>
         ) : (
           <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent/40 dark:text-brand-cream/30">
-            <CheckCircle2 className="h-3 w-3" />
+            <HugeiconsIcon icon={CheckCircle2} className="h-3 w-3" />
             Complete
           </div>
         )}
@@ -377,7 +352,7 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
               disabled={isPending}
               title="View order details"
             >
-              <ExternalLink className="h-3 w-3" />
+              <HugeiconsIcon icon={ExternalLink} className="h-3 w-3" />
             </Button>
           ) : null}
           {ticket.saleId && (
@@ -392,7 +367,7 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
               disabled={isPending}
               title="Send WhatsApp message"
             >
-              <MessageSquare className="h-3 w-3" />
+              <HugeiconsIcon icon={MessageSquare} className="h-3 w-3" />
             </Button>
           )}
           <ElapsedBadge createdAt={ticket.createdAt} status={ticket.status} />
@@ -412,7 +387,7 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
             disabled={isPending}
             title={`Move back to ${STATUS_CONFIG[prev].label}`}
           >
-            <ArrowLeft className="h-3 w-3" />
+            <HugeiconsIcon icon={ArrowLeft} className="h-3 w-3" />
           </Button>
         )}
         {next ? (
@@ -435,11 +410,11 @@ const KitchenTicketCard = React.memo(function KitchenTicketCard({
             disabled={isPending}
           >
             <span>{STATUS_CONFIG[next].label}</span>
-            <ArrowRight className="h-3 w-3 ml-1.5" />
+            <HugeiconsIcon icon={ArrowRight} className="h-3 w-3 ml-1.5" />
           </Button>
         ) : (
           <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-accent/40 dark:text-brand-cream/30">
-            <CheckCircle2 className="h-3 w-3" />
+            <HugeiconsIcon icon={CheckCircle2} className="h-3 w-3" />
             Complete
           </div>
         )}
@@ -483,7 +458,7 @@ const TableSessionCard = React.memo(function TableSessionCard({
             </p>
           </div>
           <div className="flex items-center gap-1.5 mt-1">
-            <Users className="h-3 w-3 text-brand-accent/40 dark:text-brand-cream/40" />
+            <HugeiconsIcon icon={Users} className="h-3 w-3 text-brand-accent/40 dark:text-brand-cream/40" />
             <span className="text-xs text-brand-accent/60 dark:text-brand-cream/50">
               {session.covers} {session.covers === 1 ? "cover" : "covers"}
             </span>
@@ -504,7 +479,7 @@ const TableSessionCard = React.memo(function TableSessionCard({
       {isOpen && (
         <div className="flex items-center justify-between pt-1 border-t border-brand-accent/5 dark:border-white/5">
           <span className="text-[10px] text-brand-accent/40 dark:text-brand-cream/30 flex items-center gap-1">
-            <Clock className="h-3 w-3" />
+            <HugeiconsIcon icon={Clock} className="h-3 w-3" />
             {openedMins < 60
               ? `${openedMins}m open`
               : `${Math.floor(openedMins / 60)}h ${openedMins % 60}m open`}
@@ -573,7 +548,7 @@ const RegisteredTableCard = React.memo(function RegisteredTableCard({
           disabled={isTogglePending || isDeletePending}
           title="Edit table"
         >
-          <PencilLine className="h-3.5 w-3.5 text-brand-accent/50 dark:text-brand-cream/50" />
+          <HugeiconsIcon icon={PencilLine} className="h-3.5 w-3.5 text-brand-accent/50 dark:text-brand-cream/50" />
         </Button>
         <Button
           size="sm"
@@ -584,9 +559,9 @@ const RegisteredTableCard = React.memo(function RegisteredTableCard({
           title={table.isActive ? "Disable table" : "Enable table"}
         >
           {table.isActive ? (
-            <ToggleRight className="h-4 w-4 text-emerald-500" />
+            <HugeiconsIcon icon={ToggleRight} className="h-4 w-4 text-emerald-500" />
           ) : (
-            <ToggleLeft className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/30" />
+            <HugeiconsIcon icon={ToggleLeft} className="h-4 w-4 text-brand-accent/30 dark:text-brand-cream/30" />
           )}
         </Button>
         <Button
@@ -597,7 +572,7 @@ const RegisteredTableCard = React.memo(function RegisteredTableCard({
           disabled={isDeletePending}
           title="Remove table"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>
@@ -640,7 +615,7 @@ const ArchivedTableCard = React.memo(function ArchivedTableCard({
             disabled={isRestorePending || isDeletePending || confirming}
             title="Permanently delete table"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
           </Button>
           <Button
             size="sm"
@@ -650,7 +625,7 @@ const ArchivedTableCard = React.memo(function ArchivedTableCard({
             disabled={isRestorePending || isDeletePending || confirming}
             title="Restore table"
           >
-            <RotateCcw className="h-3.5 w-3.5" />
+            <HugeiconsIcon icon={RotateCcw} className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -1219,7 +1194,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               </div>
             ) : historySessions.length === 0 ? (
               <div className="py-10 flex flex-col items-center text-center">
-                <Armchair className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
+                <HugeiconsIcon icon={Armchair} className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
                 <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">
                   No closed sessions yet
                 </p>
@@ -1256,9 +1231,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
           )}
         >
           {isZenMode ? (
-            <Minimize2 key="zen-on-desktop" className="h-4 w-4" />
+            <HugeiconsIcon icon={Minimize2} key="zen-on-desktop" className="h-4 w-4" />
           ) : (
-            <Maximize2 key="zen-off-desktop" className="h-4 w-4" />
+            <HugeiconsIcon icon={Maximize2} key="zen-off-desktop" className="h-4 w-4" />
           )}
         </Button>
       </div>
@@ -1337,7 +1312,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                     {metric.label}
                   </p>
                   <div className={cn("h-7 w-7 rounded-xl flex items-center justify-center", metric.bg)}>
-                    <Icon className={cn("h-3.5 w-3.5", metric.accent)} />
+                    <HugeiconsIcon icon={Icon} className={cn("h-3.5 w-3.5", metric.accent)} />
                   </div>
                 </div>
                 <p className="text-3xl font-serif text-brand-deep dark:text-brand-cream tabular-nums leading-none">
@@ -1417,7 +1392,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   onClick={() => setIsHistoryOpen(true)}
                 >
                   View history
-                  <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                  <HugeiconsIcon icon={ChevronRight} className="ml-1 h-3.5 w-3.5" />
                 </Button>
               )}
             </div>
@@ -1434,7 +1409,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                 </div>
               ) : visibleSessions.length === 0 ? (
                 <div className="py-10 flex flex-col items-center text-center">
-                  <Armchair className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
+                  <HugeiconsIcon icon={Armchair} className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
                   <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">
                     {sessionTab === "active" ? "No active sessions" : "No closed sessions"}
                   </p>
@@ -1498,9 +1473,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   className="h-10 px-4 rounded-xl text-xs font-bold"
                 >
                   {tableCrud.createTable.isPending ? (
-                    <Circle className="h-3 w-3 animate-spin" />
+                    <HugeiconsIcon icon={Circle} className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Plus className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5" />
                   )}
                   <span className="ml-1.5">{tableCrud.createTable.isPending ? "Adding…" : "Add"}</span>
                 </Button>
@@ -1543,7 +1518,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                           : "text-brand-deep/60 dark:text-brand-cream/60 hover:bg-white/50 dark:hover:bg-white/5"
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                       <span>{tab.label}</span>
                       <span
                         className={cn(
@@ -1573,7 +1548,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                 </div>
               ) : currentTables.length === 0 ? (
                 <div className="py-8 flex flex-col items-center text-center">
-                  <TableProperties className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
+                  <HugeiconsIcon icon={TableProperties} className="h-8 w-8 text-brand-accent/20 dark:text-brand-cream/20 mb-2" />
                   <p className="text-sm text-brand-accent/50 dark:text-brand-cream/40">
                     {tableTab === "archived" ? "No archived tables" : "No tables registered yet"}
                   </p>
@@ -1685,9 +1660,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               disabled={!messageBody.trim() || kitchenAction.sendMessage.isPending}
             >
               {kitchenAction.sendMessage.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <MessageSquare className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={MessageSquare} className="mr-2 h-4 w-4" />
               )}
               Send
             </Button>
@@ -1708,7 +1683,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               </p>
             </div>
             <div className="flex items-center gap-1.5 bg-blue-100/60 dark:bg-blue-950/30 px-2.5 py-1 rounded-full">
-              <ChefHat className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+              <HugeiconsIcon icon={ChefHat} className="h-3 w-3 text-blue-600 dark:text-blue-400" />
               <span className="text-[9px] font-black uppercase tracking-widest text-blue-700 dark:text-blue-400">
                 Kitchen
               </span>
@@ -1723,7 +1698,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
             </div>
           ) : tickets.length === 0 ? (
             <div className="py-12 flex flex-col items-center text-center">
-              <UtensilsCrossed className="h-10 w-10 text-brand-accent/15 dark:text-brand-cream/15 mb-3" />
+              <HugeiconsIcon icon={UtensilsCrossed} className="h-10 w-10 text-brand-accent/15 dark:text-brand-cream/15 mb-3" />
               <p className="text-base font-serif text-brand-deep dark:text-brand-cream">All clear</p>
               <p className="text-xs text-brand-accent/40 dark:text-brand-cream/30 mt-1">
                 No kitchen tickets yet. They appear here when items are sent to the kitchen.
@@ -1747,7 +1722,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div className={cn("flex items-center gap-1.5", cfg.color)}>
-                        <Icon className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={Icon} className="h-3.5 w-3.5" />
                         <span className="text-[10px] font-black uppercase tracking-widest">
                           {cfg.label}
                         </span>
@@ -1873,7 +1848,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                               : "border-brand-accent/8 dark:border-white/8 bg-white dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40"
                           )}
                         >
-                          <Icon className="h-3.5 w-3.5" />
+                          <HugeiconsIcon icon={Icon} className="h-3.5 w-3.5" />
                           {cfg.label}
                         </Button>
                       )
@@ -1998,7 +1973,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                 title="Shortcuts: N (new), Ctrl/Cmd+Enter (submit), R (refresh), Esc (close)"
                 className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-slate-500/10 hover:bg-slate-500/18 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider"
               >
-                <Plus className="h-3 w-3" />
+                <HugeiconsIcon icon={Plus} className="h-3 w-3" />
                 New order
               </Button>
             </div>
@@ -2011,7 +1986,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
               </div>
             ) : barTickets.length === 0 ? (
               <div className="py-12 flex flex-col items-center text-center">
-                <GlassWater className="h-10 w-10 text-brand-accent/15 dark:text-brand-cream/15 mb-3" />
+                <HugeiconsIcon icon={GlassWater} className="h-10 w-10 text-brand-accent/15 dark:text-brand-cream/15 mb-3" />
                 <p className="text-base font-serif text-brand-deep dark:text-brand-cream">All clear</p>
                 <p className="text-xs text-brand-accent/40 dark:text-brand-cream/30 mt-1">
                   No bar orders yet. Tap "New order" to add one.
@@ -2035,7 +2010,7 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
                     >
                       <div className="flex items-center justify-between mb-1">
                         <div className={cn("flex items-center gap-1.5", cfg.color)}>
-                          <Icon className="h-3.5 w-3.5" />
+                          <HugeiconsIcon icon={Icon} className="h-3.5 w-3.5" />
                           <span className="text-[10px] font-black uppercase tracking-widest">
                             {cfg.label}
                           </span>
@@ -2088,9 +2063,9 @@ export function RestaurantLiveView({ mode = "all" }: { mode?: "all" | "tables" |
         )}
       >
         {isZenMode ? (
-          <Minimize2 key="zen-on-mobile" className="h-5 w-5" />
+          <HugeiconsIcon icon={Minimize2} key="zen-on-mobile" className="h-5 w-5" />
         ) : (
-          <Maximize2 key="zen-off-mobile" className="h-5 w-5" />
+          <HugeiconsIcon icon={Maximize2} key="zen-off-mobile" className="h-5 w-5" />
         )}
       </Button>
     </div>

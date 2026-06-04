@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react"
 import { format } from "date-fns"
-import { BadgePercent, CalendarClock, History, Loader2, PencilLine, Plus, Trash2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BadgePercentIcon as BadgePercent, CalendarClockIcon as CalendarClock, HistoryIcon as History, Loading03Icon as Loader2, PencilEdit01Icon as PencilLine, PlusSignIcon as Plus, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
@@ -219,7 +220,7 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
             <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                     <h3 className="flex items-center gap-2 text-lg font-medium text-brand-deep dark:text-brand-cream">
-                        <BadgePercent className="h-5 w-5 text-brand-gold" />
+                        <HugeiconsIcon icon={BadgePercent} className="h-5 w-5 text-brand-gold" />
                         Code builder
                     </h3>
                     <p className="mt-1 text-sm text-brand-accent/60 dark:text-white/40">
@@ -227,7 +228,7 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
                     </p>
                 </div>
                 <Button type="button" variant="outline" disabled={!canManage} onClick={startCreate} className="rounded-full">
-                    <Plus className="mr-2 h-4 w-4" />
+                    <HugeiconsIcon icon={Plus} className="mr-2 h-4 w-4" />
                     New code
                 </Button>
             </div>
@@ -421,7 +422,7 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
                                     disabled={!canManage || busy}
                                     onClick={() => setDeleteTarget(selectedCode)}
                                 >
-                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={Trash2} className="mr-2 h-4 w-4" />
                                     Delete
                                 </Button>
                             ) : null}
@@ -431,7 +432,7 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
                                 Cancel
                             </Button>
                             <Button form="discount-code-form" type="submit" disabled={!canManage || busy} className="rounded-full">
-                                {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {busy && <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />}
                                 {sheetMode === "edit" ? "Update code" : "Create code"}
                             </Button>
                         </div>
@@ -450,7 +451,7 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
                     <SideSheetBody className="space-y-3">
                         {usagesLoading ? (
                             <div className="flex items-center justify-center py-10">
-                                <Loader2 className="h-5 w-5 animate-spin text-brand-gold" />
+                                <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin text-brand-gold" />
                             </div>
                         ) : usages.length === 0 ? (
                             <div className="rounded-2xl border border-brand-deep/10 bg-white/50 p-5 text-sm text-brand-accent/60 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/45">
@@ -487,7 +488,7 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
 
             {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-5 w-5 animate-spin text-brand-gold" />
+                    <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin text-brand-gold" />
                 </div>
             ) : discountCodes.length === 0 ? (
                 <GlassCard className="p-6 text-sm text-brand-accent/60 dark:text-white/40">
@@ -521,13 +522,13 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
                                     </div>
                                     <div className="flex flex-wrap gap-3 text-xs text-brand-accent/50 dark:text-white/40">
                                         <span className="inline-flex items-center gap-1">
-                                            <CalendarClock className="h-3.5 w-3.5" />
+                                            <HugeiconsIcon icon={CalendarClock} className="h-3.5 w-3.5" />
                                             {code.startsAt
                                                 ? `Starts ${format(new Date(code.startsAt), "PPp")}`
                                                 : "Starts immediately"}
                                         </span>
                                         <span className="inline-flex items-center gap-1">
-                                            <CalendarClock className="h-3.5 w-3.5" />
+                                            <HugeiconsIcon icon={CalendarClock} className="h-3.5 w-3.5" />
                                             {code.endsAt ? `Ends ${format(new Date(code.endsAt), "PPp")}` : "No end date"}
                                         </span>
                                     </div>
@@ -535,11 +536,11 @@ export function DiscountCodesManager({ canManage = true }: DiscountCodesManagerP
 
                                 <div className="flex shrink-0 items-center gap-2">
                                     <Button type="button" variant="ghost" size="sm" onClick={() => setUsageTarget(code)}>
-                                        <History className="mr-2 h-4 w-4" />
+                                        <HugeiconsIcon icon={History} className="mr-2 h-4 w-4" />
                                         Logs
                                     </Button>
                                     <Button type="button" variant="outline" size="sm" disabled={!canManage} onClick={() => startEdit(code)}>
-                                        <PencilLine className="mr-2 h-4 w-4" />
+                                        <HugeiconsIcon icon={PencilLine} className="mr-2 h-4 w-4" />
                                         Edit
                                     </Button>
                                 </div>

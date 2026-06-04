@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, ArrowRight, Loader2, Mail, Lock, CheckCircle2, Shield } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowLeft01Icon as ArrowLeft, ArrowRight01Icon as ArrowRight, Loading03Icon as Loader2, Mail01Icon as Mail, LockIcon as Lock, CheckmarkCircle02Icon as CheckCircle2, SecurityIcon as Shield } from "@hugeicons/core-free-icons"
 import { apiClient, ApiError, ApiResponse } from "@/app/lib/api-client"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -76,7 +77,7 @@ export default function ForgotPasswordPage() {
                     {status === "success" ? (
                             <GlassCard className="rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
                                 <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-300/10 text-emerald-300">
-                                    <CheckCircle2 className="h-6 w-6" />
+                                    <HugeiconsIcon icon={CheckCircle2} className="h-6 w-6" />
                                 </div>
                                 <h2 className="mb-3 text-xl font-semibold tracking-tight text-white">Check your messages</h2>
                                 <p className="mb-6 text-sm leading-relaxed text-white/60">
@@ -94,7 +95,7 @@ export default function ForgotPasswordPage() {
                                     href="/login"
                                     className="mb-5 inline-flex items-center text-xs font-medium text-white/55 hover:text-white"
                                 >
-                                    <ArrowLeft className="mr-1.5 h-3 w-3" />
+                                    <HugeiconsIcon icon={ArrowLeft} className="mr-1.5 h-3 w-3" />
                                     Back to login
                                 </Link>
 
@@ -107,7 +108,7 @@ export default function ForgotPasswordPage() {
                                                 </label>
                                                 <div className="relative group">
                                                     <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                                        <Mail className="w-4 h-4" />
+                                                        <HugeiconsIcon icon={Mail} className="w-4 h-4" />
                                                     </div>
                                                     <input
                                                         type="text"
@@ -136,7 +137,7 @@ export default function ForgotPasswordPage() {
                                                     </label>
                                                     <div className="relative group">
                                                         <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                                            <Mail className="w-4 h-4" />
+                                                            <HugeiconsIcon icon={Mail} className="w-4 h-4" />
                                                         </div>
                                                         <input
                                                             type="email"
@@ -155,12 +156,12 @@ export default function ForgotPasswordPage() {
                                                             Transaction PIN
                                                         </label>
                                                         <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase text-white/55">
-                                                            <Shield className="w-3 h-3" /> Identity Verification
+                                                            <HugeiconsIcon icon={Shield} className="w-3 h-3" /> Identity Verification
                                                         </span>
                                                     </div>
                                                     <div className="relative group">
                                                         <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                                            <Lock className="w-4 h-4" />
+                                                            <HugeiconsIcon icon={Lock} className="w-4 h-4" />
                                                         </div>
                                                         <input
                                                             type="password"
@@ -191,11 +192,11 @@ export default function ForgotPasswordPage() {
                                         className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45 [&_svg]:text-white"
                                     >
                                         {isLoading ? (
-                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                                         ) : (
                                             <>
                                                 {status === "idle" ? "Request Reset Link" : "Set Email & Verify"}
-                                                <ArrowRight className="ml-2 h-4 w-4" />
+                                                <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4" />
                                             </>
                                         )}
                                     </Button>

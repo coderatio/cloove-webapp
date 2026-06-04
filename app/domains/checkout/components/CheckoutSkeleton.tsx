@@ -1,4 +1,5 @@
-import { ShieldCheck } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 
 export function CheckoutSkeleton() {
   return (
@@ -27,7 +28,7 @@ export function CheckoutSkeleton() {
         </div>
       </div>
       <div className="flex items-center justify-center gap-1.5 mt-6">
-        <ShieldCheck className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
+        <HugeiconsIcon icon={ShieldCheck} className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
         <p className="text-brand-accent/30 dark:text-white/30 text-xs">
           Secured by Cloove
         </p>

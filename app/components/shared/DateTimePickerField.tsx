@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { CalendarIcon, Clock } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Calendar03Icon as CalendarIcon, Clock01Icon as Clock } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Calendar } from "@/app/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover"
@@ -112,7 +113,7 @@ export function DateTimePickerField({
                             !date && "text-brand-accent/45 dark:text-brand-cream/40"
                         )}
                     >
-                        <CalendarIcon className="mr-3 h-4 w-4 shrink-0 opacity-50" />
+                        <HugeiconsIcon icon={CalendarIcon} className="mr-3 h-4 w-4 shrink-0 opacity-50" />
                         <span className="truncate">{date ? format(date, "PP") : placeholder}</span>
                     </Button>
                 </PopoverTrigger>
@@ -143,7 +144,7 @@ export function DateTimePickerField({
                             disabled={disabled}
                             className="group relative h-12 w-full justify-between rounded-2xl border-brand-deep/10 bg-white/55 pl-11 pr-4 text-base font-medium dark:border-white/10 dark:bg-white/5"
                         >
-                            <Clock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/35 transition-colors group-focus:text-brand-gold/60 dark:text-brand-cream/35" />
+                            <HugeiconsIcon icon={Clock} className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/35 transition-colors group-focus:text-brand-gold/60 dark:text-brand-cream/35" />
                             <span className="text-brand-deep dark:text-brand-cream">{selectedHour ?? hour}</span>
                             <span className="text-xs font-medium text-brand-accent/45 dark:text-brand-cream/45">Hour</span>
                         </Button>

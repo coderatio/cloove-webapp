@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Activity, BarChart3, ChevronRight, Code2, Copy, ExternalLink, KeyRound, Terminal, Zap, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Activity03Icon as Activity, BarChartIcon as BarChart3, ChevronRightIcon as ChevronRight, CodeIcon as Code2, CopyIcon as Copy, ExternalLinkIcon as ExternalLink, Key01Icon as KeyRound, TerminalIcon as Terminal, ZapIcon as Zap, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { Button } from "@/app/components/ui/button"
@@ -87,7 +88,7 @@ export function DeveloperView() {
             <section className="rounded-3xl border border-brand-deep/6 bg-white/70 p-6 shadow-sm shadow-brand-deep/[0.025] dark:border-white/8 dark:bg-white/[0.035]">
                 <div className="flex items-center gap-2.5">
                     <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-brand-deep/5 text-brand-deep dark:bg-white/7 dark:text-brand-cream">
-                        <Terminal className="h-4 w-4" />
+                        <HugeiconsIcon icon={Terminal} className="h-4 w-4" />
                     </span>
                     <h2 className="text-base font-semibold tracking-tight">Quick start</h2>
                 </div>
@@ -110,7 +111,7 @@ export function DeveloperView() {
                 <div className="mt-4 flex flex-wrap gap-2">
                     <Link href="/developer/apps">
                         <Button className="rounded-2xl" size="sm">
-                            <KeyRound className="mr-2 h-4 w-4" /> Create API key
+                            <HugeiconsIcon icon={KeyRound} className="mr-2 h-4 w-4" /> Create API key
                         </Button>
                     </Link>
                     <Link href="/developer/usage">
@@ -130,7 +131,7 @@ export function DeveloperView() {
                             href="/developer/apps"
                             className="flex items-center gap-1 text-sm font-medium text-brand-deep transition-colors hover:text-brand-deep/70"
                         >
-                            View all <ChevronRight className="h-3.5 w-3.5" />
+                            View all <HugeiconsIcon icon={ChevronRight} className="h-3.5 w-3.5" />
                         </Link>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -150,7 +151,7 @@ export function DeveloperView() {
                         </div>
                     ) : (apps ?? []).length === 0 ? (
                         <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-brand-deep/8 bg-white/40 p-6 text-center dark:border-white/10">
-                            <Code2 className="h-8 w-8 text-muted-foreground" />
+                            <HugeiconsIcon icon={Code2} className="h-8 w-8 text-muted-foreground" />
                             <div>
                                 <p className="text-sm font-medium">No apps yet</p>
                                 <p className="text-xs text-muted-foreground">
@@ -183,7 +184,7 @@ export function DeveloperView() {
                                             className="mt-0.5 inline-flex items-center gap-1 rounded-lg text-xs text-muted-foreground transition-colors hover:text-foreground"
                                         >
                                             <span className="font-mono">{app.id.slice(0, 8)}…</span>
-                                            <Copy className="h-2.5 w-2.5" />
+                                            <HugeiconsIcon icon={Copy} className="h-2.5 w-2.5" />
                                         </button>
                                         <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                                             <span className={`h-1.5 w-1.5 rounded-full ${app.environment === "live" ? "bg-emerald-500" : "bg-amber-500"}`} />
@@ -191,7 +192,7 @@ export function DeveloperView() {
                                         </p>
                                     </div>
                                     <div className="flex shrink-0 items-center gap-2">
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                                        <HugeiconsIcon icon={ChevronRight} className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                                     </div>
                                 </Link>
                             ))}
@@ -215,7 +216,7 @@ export function DeveloperView() {
                             href="/developer/events"
                             className="flex items-center gap-1 text-sm font-medium text-brand-deep transition-colors hover:text-brand-deep/70"
                         >
-                            View all <ChevronRight className="h-3.5 w-3.5" />
+                            View all <HugeiconsIcon icon={ChevronRight} className="h-3.5 w-3.5" />
                         </Link>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">Latest developer events across all apps.</p>
@@ -227,7 +228,7 @@ export function DeveloperView() {
                             ))
                         ) : recentEvents.length === 0 ? (
                             <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-brand-deep/8 bg-white/40 p-6 text-center dark:border-white/10">
-                                <Activity className="h-8 w-8 text-muted-foreground" />
+                                <HugeiconsIcon icon={Activity} className="h-8 w-8 text-muted-foreground" />
                                 <div>
                                     <p className="text-sm font-medium">No activity yet</p>
                                     <p className="text-xs text-muted-foreground">
@@ -251,7 +252,7 @@ export function DeveloperView() {
                                                 {event.ipAddress ? ` · ${event.ipAddress}` : ""}
                                             </p>
                                         </div>
-                                        <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                        <HugeiconsIcon icon={ExternalLink} className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                     </div>
                                 </button>
                             ))
@@ -283,7 +284,7 @@ function MetricCard({
         <div className="rounded-3xl border border-brand-deep/6 bg-white/70 p-4 shadow-sm shadow-brand-deep/[0.025] dark:border-white/8 dark:bg-white/[0.035]">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-brand-deep/5 text-brand-deep dark:bg-white/7 dark:text-brand-cream">
-                    <Icon className="h-4 w-4" />
+                    <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                 </span>
                 {label}
             </div>

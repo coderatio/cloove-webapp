@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { SuggestionChips } from "./SuggestionChips"
 import { welcomeSuggestions } from "../data/mockData"
 
@@ -20,7 +21,7 @@ export function ChatWelcome({ onSuggestionSelect }: ChatWelcomeProps) {
                 className="flex flex-col items-center mb-10"
             >
                 <div className="h-16 w-16 rounded-2xl bg-linear-to-br from-brand-gold/20 to-brand-gold/5 border border-brand-gold/20 flex items-center justify-center mb-6 shadow-lg shadow-brand-gold/5">
-                    <Sparkles className="h-7 w-7 text-brand-gold" />
+                    <HugeiconsIcon icon={Sparkles} className="h-7 w-7 text-brand-gold" />
                 </div>
                 <h1 className="font-serif text-3xl md:text-4xl font-medium text-brand-deep dark:text-brand-cream text-center mb-3">
                     Cloove Intelligence

@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { CalendarRange, Plus, Trash2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CalendarRangeIcon as CalendarRange, PlusSignIcon as Plus, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { DatePickerField } from "@/app/components/shared/DatePickerField"
 import { InsightWhisper } from "@/app/components/dashboard/InsightWhisper"
@@ -166,7 +167,7 @@ export function SchoolAcademicCalendarPanel({ showIntro = true }: { showIntro?: 
         <section className={showIntro ? "space-y-6" : "space-y-6"}>
             {showIntro ? (
                 <div className="flex items-start gap-3">
-                    <CalendarRange className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
+                    <HugeiconsIcon icon={CalendarRange} className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
                     <div>
                         <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">School years & terms</h2>
                         <p className="text-sm text-brand-deep/65 dark:text-brand-cream/65 mt-1 max-w-2xl">
@@ -267,7 +268,7 @@ export function SchoolAcademicCalendarPanel({ showIntro = true }: { showIntro?: 
                                 disabled={createSession.isPending || !canManage}
                                 className="h-[46px] w-full sm:w-auto rounded-full transition-all duration-300"
                             >
-                                <Plus className="h-4 w-4 mr-2" />
+                                <HugeiconsIcon icon={Plus} className="h-4 w-4 mr-2" />
                                 Add year
                             </Button>
                         </div>
@@ -351,7 +352,7 @@ export function SchoolAcademicCalendarPanel({ showIntro = true }: { showIntro?: 
                                 disabled={createTerm.isPending || !sessions.length || !canManage}
                                 className="h-[46px] w-full sm:w-auto rounded-full transition-all duration-300"
                             >
-                                <Plus className="h-4 w-4 mr-2" />
+                                <HugeiconsIcon icon={Plus} className="h-4 w-4 mr-2" />
                                 Add term
                             </Button>
                         </div>
@@ -415,7 +416,7 @@ export function SchoolAcademicCalendarPanel({ showIntro = true }: { showIntro?: 
                                                     }
                                                     disabled={deleteSession.isPending || !canManage}
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <HugeiconsIcon icon={Trash2} className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                             <ul className="mt-3 flex flex-col gap-2">
@@ -451,7 +452,7 @@ export function SchoolAcademicCalendarPanel({ showIntro = true }: { showIntro?: 
                                                                 }
                                                                 disabled={deleteTerm.isPending || !canManage}
                                                             >
-                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
                                                             </Button>
                                                         </li>
                                                     )

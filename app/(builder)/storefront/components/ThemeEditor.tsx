@@ -1,7 +1,8 @@
 "use client"
 
 import React from "react"
-import { Palette, Type, Image as ImageIcon, Check } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PaintBoardIcon as Palette, TextFontIcon as Type, Image01Icon as ImageIcon, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { StorefrontConfig } from "../../../domains/storefront/types"
 import { Label } from "@/app/components/ui/label"
@@ -26,7 +27,7 @@ export function ThemeEditor({ config, onUpdate }: ThemeEditorProps) {
         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="space-y-4">
                 <div className="flex items-center gap-2 opacity-40">
-                    <Palette className="w-3.5 h-3.5" />
+                    <HugeiconsIcon icon={Palette} className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">Color Palette</span>
                 </div>
 
@@ -44,7 +45,7 @@ export function ThemeEditor({ config, onUpdate }: ThemeEditorProps) {
                             style={{ backgroundColor: color.hex }}
                         >
                             {config.primaryColor === color.hex && (
-                                <Check className="w-4 h-4 text-white" />
+                                <HugeiconsIcon icon={Check} className="w-4 h-4 text-white" />
                             )}
                             <div className="absolute -bottom-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                                 <span className="text-[8px] font-bold uppercase tracking-widest bg-brand-deep text-white px-2 py-0.5 rounded-full">
@@ -58,7 +59,7 @@ export function ThemeEditor({ config, onUpdate }: ThemeEditorProps) {
 
             <div className="space-y-4">
                 <div className="flex items-center gap-2 opacity-40">
-                    <Type className="w-3.5 h-3.5" />
+                    <HugeiconsIcon icon={Type} className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">Typography</span>
                 </div>
 
@@ -87,13 +88,13 @@ export function ThemeEditor({ config, onUpdate }: ThemeEditorProps) {
 
             <div className="space-y-4">
                 <div className="flex items-center gap-2 opacity-40">
-                    <ImageIcon className="w-3.5 h-3.5" />
+                    <HugeiconsIcon icon={ImageIcon} className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">Brand Assets</span>
                 </div>
 
                 <div className="p-6 rounded-3xl border-2 border-dashed border-brand-deep/5 bg-brand-deep/5 hover:border-brand-green/20 transition-all flex flex-col items-center justify-center gap-3 text-center group cursor-pointer">
                     <div className="w-12 h-12 rounded-2xl bg-white dark:bg-white/5 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <ImageIcon className="w-6 h-6 text-brand-accent/40" />
+                        <HugeiconsIcon icon={ImageIcon} className="w-6 h-6 text-brand-accent/40" />
                     </div>
                     <div className="space-y-1">
                         <p className="text-xs font-bold text-brand-deep dark:text-brand-cream">Upload Logo</p>
@@ -104,7 +105,7 @@ export function ThemeEditor({ config, onUpdate }: ThemeEditorProps) {
 
             <div className="pt-4">
                 <Button className="w-full rounded-full h-12 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-none font-bold">
-                    <Check className="w-4 h-4 mr-2" />
+                    <HugeiconsIcon icon={Check} className="w-4 h-4 mr-2" />
                     Save Theme
                 </Button>
             </div>

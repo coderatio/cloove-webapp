@@ -2,16 +2,8 @@
 
 import React, { useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
-import {
-    LayoutTemplate,
-    Layers,
-    Palette,
-    Maximize2,
-    Undo2,
-    Redo2,
-    History as HistoryIcon,
-    Search
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { DashboardSquare02Icon as LayoutTemplate, Layers01Icon as Layers, PaintBoardIcon as Palette, Maximize01Icon as Maximize2, UndoIcon as Undo2, RedoIcon as Redo2, HistoryIcon, Search01Icon as Search } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { cn } from "@/app/lib/utils"
@@ -142,7 +134,7 @@ export default function StorefrontEditorPage() {
                                     : "text-brand-accent/40 hover:text-brand-deep hover:bg-brand-deep/5"
                             )}
                         >
-                            <tab.icon className="w-5 h-5" />
+                            <HugeiconsIcon icon={tab.icon} className="w-5 h-5" />
                             <span className="text-[10px] font-bold uppercase tracking-widest">{tab.label}</span>
                         </button>
                     ))}
@@ -152,7 +144,7 @@ export default function StorefrontEditorPage() {
                     {activeTab === 'add' && (
                         <div className="space-y-6">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/40" />
+                                <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/40" />
                                 <Input
                                     placeholder="Search sections..."
                                     className="pl-9 h-10 rounded-xl bg-brand-deep/5 border-transparent focus:bg-white focus:ring-brand-green/20"
@@ -216,18 +208,18 @@ export default function StorefrontEditorPage() {
                 {/* Canvas Floating Controls */}
                 <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-brand-deep/5 dark:border-white/5 rounded-full p-1.5 flex items-center gap-1 shadow-2xl">
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-brand-accent/40 hover:text-brand-deep">
-                        <Undo2 className="w-4 h-4" />
+                        <HugeiconsIcon icon={Undo2} className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-brand-accent/40 hover:text-brand-deep">
-                        <Redo2 className="w-4 h-4" />
-                    </Button>
-                    <div className="h-4 w-px bg-brand-deep/10 mx-1" />
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-brand-accent/40 hover:text-brand-deep">
-                        <HistoryIcon className="w-4 h-4" />
+                        <HugeiconsIcon icon={Redo2} className="w-4 h-4" />
                     </Button>
                     <div className="h-4 w-px bg-brand-deep/10 mx-1" />
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-brand-accent/40 hover:text-brand-deep">
-                        <Maximize2 className="w-4 h-4" />
+                        <HugeiconsIcon icon={HistoryIcon} className="w-4 h-4" />
+                    </Button>
+                    <div className="h-4 w-px bg-brand-deep/10 mx-1" />
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-brand-accent/40 hover:text-brand-deep">
+                        <HugeiconsIcon icon={Maximize2} className="w-4 h-4" />
                     </Button>
                 </div>
             </div>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Download } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Cancel01Icon as X, Download01Icon as Download } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import Image from "next/image"
@@ -109,7 +110,7 @@ export function InstallBanner() {
                                     onClick={handleInstall}
                                     className="h-9 md:h-10 bg-brand-deep dark:bg-brand-gold-700 text-white dark:text-brand-deep hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 px-4 md:px-6 rounded-xl font-medium text-xs md:text-sm"
                                 >
-                                    <Download className="w-3.5 h-3.5 mr-2" />
+                                    <HugeiconsIcon icon={Download} className="w-3.5 h-3.5 mr-2" />
                                     Install
                                 </Button>
 
@@ -117,7 +118,7 @@ export function InstallBanner() {
                                     onClick={handleDismiss}
                                     className="h-9 w-9 flex items-center justify-center rounded-xl text-brand-deep/40 dark:text-brand-cream/40 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                                 >
-                                    <X className="w-4 h-4" />
+                                    <HugeiconsIcon icon={X} className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>

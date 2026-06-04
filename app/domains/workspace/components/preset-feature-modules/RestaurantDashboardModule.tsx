@@ -1,6 +1,6 @@
 "use client"
 
-import { UtensilsCrossed, ShoppingBag, Users, Package, Activity, ChefHat, LayoutGrid } from "lucide-react"
+import { Restaurant01Icon as UtensilsCrossed, ShoppingBag01Icon as ShoppingBag, UserMultiple02Icon as Users, PackageIcon as Package, Activity03Icon as Activity, ChefHatIcon as ChefHat, LayoutGridIcon as LayoutGrid } from "@hugeicons/core-free-icons"
 import type { PresetPageCopy } from "@/app/domains/workspace/copy/preset-page-copy"
 import { usePermission } from "@/app/hooks/usePermission"
 import { ModuleShell } from "./ModuleShell"

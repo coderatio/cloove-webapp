@@ -2,13 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-    Home,
-    MessageSquare,
-    FileText,
-    Users,
-    Package,
-} from 'lucide-react'
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { Home01Icon as Home, Message01Icon as MessageSquare, File01Icon as FileText, UserMultiple02Icon as Users, PackageIcon as Package } from "@hugeicons/core-free-icons"
 import * as Tooltip from '@radix-ui/react-tooltip'
 
 const navItems = [
@@ -26,7 +21,7 @@ function NavLink({
     isActive,
 }: {
     href: string
-    icon: React.ComponentType<{ className?: string; strokeWidth?: number }>
+    icon: IconSvgElement
     label: string
     isActive: boolean
 }) {
@@ -47,7 +42,7 @@ function NavLink({
                         aria-current={isActive ? 'page' : undefined}
                         aria-label={label}
                     >
-                        <Icon className="w-[22px] h-[22px]" strokeWidth={1.5} />
+                        <HugeiconsIcon icon={Icon} className="w-[22px] h-[22px]" strokeWidth={1.5} />
                     </Link>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>

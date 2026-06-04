@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { ShieldAlert, ShieldCheck, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SecurityWarningIcon as ShieldAlert, SecurityCheckIcon as ShieldCheck, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
@@ -62,7 +63,7 @@ export function PinSetupGuard({ children }: { children: React.ReactNode }) {
                 {/* Icon */}
                 <div className="flex justify-center">
                     <div className="w-20 h-20 rounded-2xl bg-brand-gold/10 flex items-center justify-center">
-                        <ShieldAlert className="w-10 h-10 text-brand-gold" />
+                        <HugeiconsIcon icon={ShieldAlert} className="w-10 h-10 text-brand-gold" />
                     </div>
                 </div>
 
@@ -99,10 +100,10 @@ export function PinSetupGuard({ children }: { children: React.ReactNode }) {
                     className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white hover:text-brand-cream font-black uppercase tracking-widest shadow-xl shadow-brand-gold/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                 >
                     {isSubmitting ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                     ) : (
                         <>
-                            <ShieldCheck className="w-4 h-4 mr-2" />
+                            <HugeiconsIcon icon={ShieldCheck} className="w-4 h-4 mr-2" />
                             Activate Dashboard
                         </>
                     )}

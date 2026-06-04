@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { AlertCircle, CheckCircle2, Loader2, Mail, Eye, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon as AlertCircle, CheckmarkCircle02Icon as CheckCircle2, Loading03Icon as Loader2, Mail01Icon as Mail, EyeIcon as Eye, EyeOffIcon as EyeOff } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
@@ -108,7 +109,7 @@ function VerifyEmailContent() {
     if (initializing) {
         return (
             <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-deep-950 p-4">
-                <Loader2 className="h-6 w-6 animate-spin text-emerald-300" />
+                <HugeiconsIcon icon={Loader2} className="h-6 w-6 animate-spin text-emerald-300" />
             </div>
         )
     }
@@ -117,7 +118,7 @@ function VerifyEmailContent() {
         return (
             <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-deep-950 p-4">
                 <GlassCard className="w-full max-w-[420px] rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
-                    <AlertCircle className="mx-auto mb-4 h-10 w-10 text-red-300" aria-hidden />
+                    <HugeiconsIcon icon={AlertCircle} className="mx-auto mb-4 h-10 w-10 text-red-300" aria-hidden />
                     <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Invalid or expired link</h1>
                     <p className="mb-6 text-sm text-white/60">
                         This verification link is invalid or has expired. Request a new one from the app.
@@ -136,7 +137,7 @@ function VerifyEmailContent() {
         return (
             <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-deep-950 p-4">
                 <GlassCard className="w-full max-w-[420px] rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
-                    <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-emerald-300" />
+                    <HugeiconsIcon icon={CheckCircle2} className="mx-auto mb-4 h-10 w-10 text-emerald-300" />
                     <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Email verified</h1>
                     <p className="mb-6 text-sm text-white/60">
                         You can now log in to your dashboard.
@@ -154,7 +155,7 @@ function VerifyEmailContent() {
     return (
         <div className="flex min-h-dvh flex-col items-center justify-center bg-brand-deep-950 p-4">
             <GlassCard className="w-full max-w-[420px] rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
-                <Mail className="mx-auto mb-4 h-10 w-10 text-emerald-300" />
+                <HugeiconsIcon icon={Mail} className="mx-auto mb-4 h-10 w-10 text-emerald-300" />
                 <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">Verify your email</h1>
                 {emailMasked ? (
                     <p className="mb-6 text-sm text-white/60">Verifying {emailMasked}</p>
@@ -185,7 +186,7 @@ function VerifyEmailContent() {
                                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-white/55 hover:bg-transparent hover:text-white"
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                 >
-                                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                                    {showPassword ? <HugeiconsIcon icon={EyeOff} className="size-4" /> : <HugeiconsIcon icon={Eye} className="size-4" />}
                                 </Button>
                             </div>
                         </div>
@@ -195,7 +196,7 @@ function VerifyEmailContent() {
                         disabled={loading}
                         className="h-12 w-full min-w-[180px] rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white disabled:opacity-45"
                     >
-                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify email"}
+                        {loading ? <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" /> : "Verify email"}
                     </Button>
                 </form>
             </GlassCard>
@@ -208,7 +209,7 @@ export default function VerifyEmailPage() {
         <Suspense
             fallback={
                 <div className="flex min-h-dvh items-center justify-center bg-brand-deep-950">
-                    <Loader2 className="h-6 w-6 animate-spin text-emerald-300" />
+                    <HugeiconsIcon icon={Loader2} className="h-6 w-6 animate-spin text-emerald-300" />
                 </div>
             }
         >

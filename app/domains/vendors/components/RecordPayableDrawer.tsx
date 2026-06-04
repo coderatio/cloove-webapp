@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, CalendarIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, Calendar03Icon as CalendarIcon } from "@hugeicons/core-free-icons"
 import { format } from "date-fns"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -120,7 +121,7 @@ export function RecordPayableDrawer({
                                             !dueAt && "text-brand-accent/40 dark:text-brand-cream/40"
                                         )}
                                     >
-                                        <CalendarIcon className="mr-3 h-4 w-4 opacity-40" />
+                                        <HugeiconsIcon icon={CalendarIcon} className="mr-3 h-4 w-4 opacity-40" />
                                         {dueAt ? format(dueAt, "MMM d, yyyy") : "Select due date"}
                                     </Button>
                                 </PopoverTrigger>
@@ -155,7 +156,7 @@ export function RecordPayableDrawer({
                             className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold shadow-xl"
                         >
                             {isSubmitting ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                             ) : (
                                 "Record Payable"
                             )}

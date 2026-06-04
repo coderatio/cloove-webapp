@@ -3,7 +3,8 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
-import { Check, ChevronsUpDown, Copy, LayoutGrid, Plus } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check, UnfoldMoreIcon as ChevronsUpDown, CopyIcon as Copy, LayoutGridIcon as LayoutGrid, PlusSignIcon as Plus } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -114,7 +115,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                 "mr-2 flex h-6 w-6 items-center justify-center rounded-md shrink-0",
                                 isDark ? "bg-primary/18 text-primary-foreground" : "bg-brand-green-100 text-brand-green-800"
                             )}>
-                                <LayoutGrid className="h-3.5 w-3.5" />
+                                <HugeiconsIcon icon={LayoutGrid} className="h-3.5 w-3.5" />
                             </div>
                             <div className="flex-1 text-left overflow-hidden">
                                 <span className="block truncate">{business.name}</span>
@@ -125,11 +126,11 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                         isDark ? "text-white/40 hover:text-white/75" : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
-                                    {copiedSlug === business.code ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
+                                    {copiedSlug === business.code ? <HugeiconsIcon icon={Check} className="h-2.5 w-2.5" /> : <HugeiconsIcon icon={Copy} className="h-2.5 w-2.5" />}
                                     {business.code}
                                 </span>
                             </div>
-                            {activeBusiness?.id === business.id && <Check className={cn("ml-auto h-4 w-4", isDark ? "text-primary-foreground" : "text-foreground")} />}
+                            {activeBusiness?.id === business.id && <HugeiconsIcon icon={Check} className={cn("ml-auto h-4 w-4", isDark ? "text-primary-foreground" : "text-foreground")} />}
                         </button>
                             )
                         })()
@@ -166,7 +167,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                 "mr-2 flex h-7 w-7 items-center justify-center rounded-md shrink-0",
                                 isDark ? "bg-primary/18 text-primary-foreground" : "bg-brand-green-100 text-brand-green-800"
                             )}>
-                                <Plus className="h-3.5 w-3.5" />
+                                <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5" />
                             </div>
                             <span className="flex-1 text-left">Add business</span>
                         </button>
@@ -197,7 +198,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                         "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
                         isDark ? "bg-primary/20 text-primary-foreground shadow-black/20" : "bg-brand-green-100 text-brand-green-800"
                     )}>
-                        <LayoutGrid className="h-4 w-4" />
+                        <HugeiconsIcon icon={LayoutGrid} className="h-4 w-4" />
                     </div>
                     {!isCollapsed && (
                         <>
@@ -208,7 +209,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                 )}>Business</span>
                                 <span className="truncate text-sm font-bold leading-none">{activeBusiness?.name || 'Select Business'}</span>
                             </div>
-                            <ChevronsUpDown className={cn("h-4 w-4 shrink-0", isDark ? "opacity-50" : "text-muted-foreground")} />
+                            <HugeiconsIcon icon={ChevronsUpDown} className={cn("h-4 w-4 shrink-0", isDark ? "opacity-50" : "text-muted-foreground")} />
                         </>
                     )}
                 </button>
@@ -222,9 +223,9 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
                 <button className="flex cursor-pointer items-center gap-2 rounded-full border border-border bg-white/50 px-3 py-1.5 text-sm font-medium text-foreground shadow-sm ring-1 ring-black/5 backdrop-blur-sm dark:bg-white/5 dark:text-brand-cream dark:ring-white/5">
-                    <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground dark:text-primary-foreground" />
+                    <HugeiconsIcon icon={LayoutGrid} className="h-3.5 w-3.5 text-muted-foreground dark:text-primary-foreground" />
                     <span className="max-w-[100px] truncate">{activeBusiness?.name || 'Select Business'}</span>
-                    <ChevronsUpDown className="h-3 w-3 opacity-40 dark:opacity-50" />
+                    <HugeiconsIcon icon={ChevronsUpDown} className="h-3 w-3 opacity-40 dark:opacity-50" />
                 </button>
             </DrawerTrigger>
             <DrawerContent>
@@ -251,7 +252,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                 )}
                             >
                                 <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary-foreground shadow-lg">
-                                    <LayoutGrid className="h-6 w-6" />
+                                    <HugeiconsIcon icon={LayoutGrid} className="h-6 w-6" />
                                 </div>
                                 <div className="flex-1 text-left">
                                     <h3 className="font-bold text-foreground dark:text-brand-cream">{business.name}</h3>
@@ -259,13 +260,13 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                         onClick={(e) => copySlug(e, business.code)}
                                         className="inline-flex cursor-copy items-center gap-1 text-xs uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground dark:text-brand-cream/50 dark:hover:text-brand-cream/80"
                                     >
-                                        {copiedSlug === business.code ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                        {copiedSlug === business.code ? <HugeiconsIcon icon={Check} className="h-3 w-3" /> : <HugeiconsIcon icon={Copy} className="h-3 w-3" />}
                                         {business.code}
                                     </p>
                                 </div>
                                 {activeBusiness?.id === business.id && (
                                     <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                        <Check className="h-5 w-5" />
+                                        <HugeiconsIcon icon={Check} className="h-5 w-5" />
                                     </div>
                                 )}
                             </button>
@@ -279,7 +280,7 @@ export function BusinessSwitcher({ isCollapsed = false }: { isCollapsed?: boolea
                                 className="flex w-full cursor-pointer items-center gap-4 rounded-2xl p-4 transition-all hover:bg-black/5 dark:hover:bg-white/5 border border-dashed border-brand-deep/20 dark:border-white/20 mt-2"
                             >
                                 <div className="h-12 w-12 rounded-xl bg-brand-gold/20 flex items-center justify-center text-brand-gold">
-                                    <Plus className="h-6 w-6" />
+                                    <HugeiconsIcon icon={Plus} className="h-6 w-6" />
                                 </div>
                                 <div className="flex-1 text-left">
                                     <h3 className="font-bold text-foreground dark:text-brand-cream">Add business</h3>

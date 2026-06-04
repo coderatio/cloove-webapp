@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react'
-import { Trash2, Edit3, DollarSign, Package, Tag, AlertCircle, FolderOpen } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Delete02Icon as Trash2, Edit03Icon as Edit3, DollarSignIcon as DollarSign, PackageIcon as Package, Tag01Icon as Tag, AlertCircleIcon as AlertCircle, FolderOpenIcon as FolderOpen, Store01Icon as StoreIcon } from "@hugeicons/core-free-icons"
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { cn } from '@/app/lib/utils'
 import { MoneyInput } from '@/app/components/ui/money-input'
@@ -10,7 +11,6 @@ import { MultiSelect } from '@/app/components/ui/multi-select'
 import { ImageUpload } from '@/app/components/ui/image-upload'
 import { SearchableSelect } from '@/app/components/ui/searchable-select'
 import { Store } from '@/app/domains/stores/providers/StoreProvider'
-import { Store as StoreIcon } from 'lucide-react'
 
 export interface ExtractedProduct {
     id: string
@@ -75,7 +75,7 @@ export function ProductExtractionCard({
                                 onClick={() => onRemove(product.id)}
                                 className="p-2 rounded-xl cursor-pointer text-rose-500 dark:text-rose-400 hover:bg-rose-500/10 dark:hover:bg-rose-400/20 transition-colors sm:opacity-0 group-hover:opacity-100"
                             >
-                                <Trash2 className="w-4 h-4" />
+                                <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                             </button>
                         </div>
 
@@ -89,7 +89,7 @@ export function ProductExtractionCard({
                         {/* Category Input + Selector */}
                         <div className="space-y-2">
                             <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                <FolderOpen className="w-3 h-3" /> Category
+                                <HugeiconsIcon icon={FolderOpen} className="w-3 h-3" /> Category
                             </label>
 
                             <input
@@ -117,7 +117,7 @@ export function ProductExtractionCard({
                         <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-1 col-span-3 sm:col-span-1">
                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                    <Tag className="w-3 h-3" /> Price
+                                    <HugeiconsIcon icon={Tag} className="w-3 h-3" /> Price
                                 </label>
                                 <div className="flex items-center gap-1 border-b border-transparent hover:border-brand-deep/10 dark:hover:border-white/10 transition-colors">
                                     <span className="text-sm font-medium text-brand-deep dark:text-brand-gold">{currency}</span>
@@ -132,7 +132,7 @@ export function ProductExtractionCard({
 
                             <div className="space-y-1 col-span-2 sm:col-span-1">
                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                    <Package className="w-3 h-3" /> SKU
+                                    <HugeiconsIcon icon={Package} className="w-3 h-3" /> SKU
                                 </label>
                                 <input
                                     value={product.sku}
@@ -163,7 +163,7 @@ export function ProductExtractionCard({
 
                         <div className="space-y-2 pt-2 border-t border-brand-deep/5 dark:border-white/5">
                             <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                <StoreIcon className="w-3 h-3" /> Targeted Branches
+                                <HugeiconsIcon icon={StoreIcon} className="w-3 h-3" /> Targeted Branches
                             </label>
                             <MultiSelect
                                 options={stores.map(s => ({ label: s.name, value: s.id }))}
@@ -178,7 +178,7 @@ export function ProductExtractionCard({
                             <div className="flex flex-col gap-1.5 pt-2 border-t border-rose-500/10 dark:border-rose-400/20">
                                 {product.errors?.map((err, i) => (
                                     <div key={i} className="flex items-center gap-2 text-rose-500 dark:text-rose-300 text-[10px] font-medium">
-                                        <AlertCircle className="w-3 h-3" />
+                                        <HugeiconsIcon icon={AlertCircle} className="w-3 h-3" />
                                         {err}
                                     </div>
                                 ))}

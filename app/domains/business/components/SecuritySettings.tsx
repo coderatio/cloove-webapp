@@ -5,18 +5,8 @@ import Link from "next/link"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import {
-    Lock,
-    ExternalLink,
-    Loader2,
-    Eye,
-    EyeOff,
-    ChevronRight,
-    Clock3,
-    Monitor,
-    MapPin,
-    ShieldCheck,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { LockIcon as Lock, ExternalLinkIcon as ExternalLink, Loading03Icon as Loader2, EyeIcon as Eye, EyeOffIcon as EyeOff, ChevronRightIcon as ChevronRight, Clock01Icon as Clock3, ComputerIcon as Monitor, MapPinIcon as MapPin, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import {
     Drawer,
@@ -299,7 +289,7 @@ export function SecuritySettings() {
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Lock className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                <HugeiconsIcon icon={Lock} className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
                                 <span className="font-medium text-brand-deep dark:text-brand-cream">Transaction PIN</span>
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase">Active</span>
                             </div>
@@ -313,7 +303,7 @@ export function SecuritySettings() {
                             className="rounded-xl px-4 text-xs font-bold border-brand-deep/20 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
                         >
                             Change PIN
-                            <ChevronRight className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
                         </Button>
                     </div>
                     <div className="h-px bg-brand-deep/5 dark:bg-white/5" />
@@ -330,7 +320,7 @@ export function SecuritySettings() {
                             className="rounded-xl px-4 text-xs font-bold border-brand-deep/20 hover:bg-brand-deep/5 dark:border-white/10 dark:hover:bg-white/5"
                         >
                             Update Password
-                            <ChevronRight className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 ml-2 text-brand-deep/30 dark:text-brand-cream/40" />
                         </Button>
                     </div>
                 </GlassCard>
@@ -342,7 +332,7 @@ export function SecuritySettings() {
                     <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <Clock3 className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                <HugeiconsIcon icon={Clock3} className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
                                 <span className="font-medium text-brand-deep dark:text-brand-cream">Session expiration</span>
                             </div>
                             <p className="text-xs text-brand-accent/60 dark:text-white/40">
@@ -400,7 +390,7 @@ export function SecuritySettings() {
                         disabled={updateBusinessSettings.isPending || !canManageSessionPolicy}
                         className="w-full sm:w-auto rounded-xl"
                     >
-                        {updateBusinessSettings.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Session Policy"}
+                        {updateBusinessSettings.isPending ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" /> : "Save Session Policy"}
                     </Button>
                 </GlassCard>
             </section>
@@ -411,7 +401,7 @@ export function SecuritySettings() {
                     <div className="grid gap-4 xl:grid-cols-[0.95fr_0.95fr_1.2fr]">
                         <div className="rounded-2xl border border-brand-deep/5 bg-white/50 p-4 dark:border-white/5 dark:bg-white/5">
                             <div className="flex items-center gap-2 text-brand-deep/60 dark:text-brand-cream/60">
-                                <MapPin className="h-4 w-4" />
+                                <HugeiconsIcon icon={MapPin} className="h-4 w-4" />
                                 <span className="text-sm">Current Session</span>
                             </div>
                             <p className="mt-4 text-lg font-semibold text-brand-deep dark:text-brand-cream">{currentLocation}</p>
@@ -420,7 +410,7 @@ export function SecuritySettings() {
 
                         <div className="rounded-2xl border border-brand-deep/5 bg-white/50 p-4 dark:border-white/5 dark:bg-white/5">
                             <div className="flex items-center gap-2 text-brand-deep/60 dark:text-brand-cream/60">
-                                <Monitor className="h-4 w-4" />
+                                <HugeiconsIcon icon={Monitor} className="h-4 w-4" />
                                 <span className="text-sm">Device</span>
                             </div>
                             <p className="mt-4 text-lg font-semibold text-brand-deep dark:text-brand-cream">{currentBrowser} on {currentOs}</p>
@@ -436,12 +426,12 @@ export function SecuritySettings() {
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-2">
-                                            <ShieldCheck className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
+                                            <HugeiconsIcon icon={ShieldCheck} className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
                                             <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
                                                 Recent security activity
                                             </p>
                                         </div>
-                                        {isSecurityActivityLoading && <Loader2 className="h-4 w-4 animate-spin text-brand-deep/40 dark:text-brand-cream/50" />}
+                                        {isSecurityActivityLoading && <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin text-brand-deep/40 dark:text-brand-cream/50" />}
                                     </div>
 
                                     <div className="space-y-1">
@@ -462,7 +452,7 @@ export function SecuritySettings() {
                                     onClick={() => setIsViewingActivity(true)}
                                     className="w-full justify-center rounded-xl border-brand-deep/15 bg-white/70 text-xs font-bold text-brand-deep hover:bg-brand-deep/5 dark:border-white/10 dark:bg-white/[0.04] dark:text-brand-gold dark:hover:bg-white/[0.06]"
                                 >
-                                    View All Activity <ExternalLink className="ml-2 h-3 w-3" />
+                                    View All Activity <HugeiconsIcon icon={ExternalLink} className="ml-2 h-3 w-3" />
                                 </Button>
                             </div>
                         </div>
@@ -494,7 +484,7 @@ export function SecuritySettings() {
                                         onClick={() => setShowCurrentPin(!showCurrentPin)}
                                         className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
                                     >
-                                        {showCurrentPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        {showCurrentPin ? <HugeiconsIcon icon={EyeOff} className="w-5 h-5" /> : <HugeiconsIcon icon={Eye} className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
@@ -514,7 +504,7 @@ export function SecuritySettings() {
                                         onClick={() => setShowNewPin(!showNewPin)}
                                         className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
                                     >
-                                        {showNewPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        {showNewPin ? <HugeiconsIcon icon={EyeOff} className="w-5 h-5" /> : <HugeiconsIcon icon={Eye} className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
@@ -533,7 +523,7 @@ export function SecuritySettings() {
                                         onClick={() => setShowConfirmPin(!showConfirmPin)}
                                         className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
                                     >
-                                        {showConfirmPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        {showConfirmPin ? <HugeiconsIcon icon={EyeOff} className="w-5 h-5" /> : <HugeiconsIcon icon={Eye} className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
@@ -545,7 +535,7 @@ export function SecuritySettings() {
                             disabled={changePin.isPending}
                             className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                         >
-                            {changePin.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update PIN"}
+                            {changePin.isPending ? <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" /> : "Update PIN"}
                         </Button>
                     </DrawerFooter>
                 </DrawerContent>
@@ -574,7 +564,7 @@ export function SecuritySettings() {
                                         onClick={() => setShowCurrentPass(!showCurrentPass)}
                                         className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
                                     >
-                                        {showCurrentPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        {showCurrentPass ? <HugeiconsIcon icon={EyeOff} className="w-5 h-5" /> : <HugeiconsIcon icon={Eye} className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
@@ -593,7 +583,7 @@ export function SecuritySettings() {
                                         onClick={() => setShowNewPass(!showNewPass)}
                                         className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
                                     >
-                                        {showNewPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        {showNewPass ? <HugeiconsIcon icon={EyeOff} className="w-5 h-5" /> : <HugeiconsIcon icon={Eye} className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
@@ -611,7 +601,7 @@ export function SecuritySettings() {
                                         onClick={() => setShowConfirmPass(!showConfirmPass)}
                                         className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-brand-accent/40 hover:text-brand-accent/60 transition-colors"
                                     >
-                                        {showConfirmPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        {showConfirmPass ? <HugeiconsIcon icon={EyeOff} className="w-5 h-5" /> : <HugeiconsIcon icon={Eye} className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>
@@ -623,7 +613,7 @@ export function SecuritySettings() {
                             disabled={changePassword.isPending}
                             className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                         >
-                            {changePassword.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update Password"}
+                            {changePassword.isPending ? <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" /> : "Update Password"}
                         </Button>
                     </DrawerFooter>
                 </DrawerContent>
@@ -660,7 +650,7 @@ export function SecuritySettings() {
 
                             {isSecurityActivityLoading ? (
                                 <div className="flex items-center justify-center py-10 text-brand-accent/55 dark:text-white/45">
-                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" />
                                 </div>
                             ) : recentSecurityActivity.length > 0 ? (
                                 <div className="space-y-3">
@@ -679,7 +669,7 @@ export function SecuritySettings() {
                         <Button asChild variant="outline" className="w-full rounded-2xl">
                             <Link href="/activity">
                                 Open Business Activity
-                                <ExternalLink className="ml-2 h-4 w-4" />
+                                <HugeiconsIcon icon={ExternalLink} className="ml-2 h-4 w-4" />
                             </Link>
                         </Button>
                     </DrawerFooter>

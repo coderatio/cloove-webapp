@@ -1,6 +1,7 @@
 "use client"
 
-import { Lightbulb } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BulbIcon as Lightbulb } from "@hugeicons/core-free-icons"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Switch } from "@/app/components/ui/switch"
 import type { LayoutPresetId } from "@/app/domains/workspace/nav/layout-presets"
@@ -43,7 +44,7 @@ export function PresetModuleRecommendations({
     return (
         <section className="space-y-4">
             <div className="flex items-start gap-3">
-                <Lightbulb className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
+                <HugeiconsIcon icon={Lightbulb} className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
                 <div>
                     <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">
                         Recommended for your layout

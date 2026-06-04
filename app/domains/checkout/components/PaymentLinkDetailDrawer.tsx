@@ -13,7 +13,8 @@ import {
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Label } from "@/app/components/ui/label"
-import { Copy, XCircle, ExternalLink } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CopyIcon as Copy, CancelCircleIcon as XCircle, ExternalLinkIcon as ExternalLink } from "@hugeicons/core-free-icons"
 import { formatCurrency, formatDate } from "@/app/lib/formatters"
 import { cn } from "@/app/lib/utils"
 import { PaymentLink, statusConfig, targetTypeConfig } from "./PaymentLinkTypes"
@@ -125,7 +126,7 @@ export function PaymentLinkDetailDrawer({
                                             onClick={() => window.open(`${origin}/pay/${link.reference}`, "_blank")}
                                             className="h-10 w-10 p-0 rounded-xl hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-accent dark:text-brand-cream group"
                                         >
-                                            <ExternalLink className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" />
+                                            <HugeiconsIcon icon={ExternalLink} className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" />
                                         </Button>
                                     </div>
                                 </div>
@@ -141,7 +142,7 @@ export function PaymentLinkDetailDrawer({
                             onClick={onCopy}
                             className="flex-1 h-14 sm:h-14 py-4 rounded-2xl border-brand-deep/10 dark:border-white/10 dark:text-brand-cream font-medium gap-2"
                         >
-                            <Copy className="w-4 h-4" />
+                            <HugeiconsIcon icon={Copy} className="w-4 h-4" />
                             Copy Link
                         </Button>
                         {link.status === "ACTIVE" && (
@@ -150,7 +151,7 @@ export function PaymentLinkDetailDrawer({
                                 onClick={onCancel}
                                 className="flex-1 h-16 sm:h-14 py-4 rounded-2xl bg-rose-500 text-white hover:bg-rose-600 font-bold shadow-xl shadow-rose-500/10 gap-2"
                             >
-                                <XCircle className="w-4 h-4" />
+                                <HugeiconsIcon icon={XCircle} className="w-4 h-4" />
                                 Cancel Link
                             </Button>
                         )}

@@ -12,30 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select"
-import {
-  Loader2,
-  Phone,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  XCircle,
-  Unplug,
-  RotateCcw,
-  MessageSquare,
-  Bot,
-  Shield,
-  Briefcase,
-  PackageCheck,
-  RefreshCw,
-  Bell,
-  Plus,
-  ChevronDown,
-  ChevronRight,
-  Plug,
-  Save,
-  UploadCloud,
-  Trash2,
-} from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { Loading03Icon as Loader2, CallIcon as Phone, CheckmarkCircle02Icon as CheckCircle2, AlertCircleIcon as AlertCircle, Clock01Icon as Clock, CancelCircleIcon as XCircle, ElectricPlugsIcon as Unplug, ReloadIcon as RotateCcw, Message01Icon as MessageSquare, BotIcon as Bot, SecurityIcon as Shield, Briefcase01Icon as Briefcase, PackageDeliveredIcon as PackageCheck, RefreshIcon as RefreshCw, BellIcon as Bell, PlusSignIcon as Plus, ChevronDownIcon as ChevronDown, ChevronRightIcon as ChevronRight, PlugSocketIcon as Plug, SaveIcon as Save, CloudUploadIcon as UploadCloud, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
 import {
   useWhatsAppNumbers,
   useWhatsAppNumberStatus,
@@ -89,7 +67,7 @@ interface EmbeddedSignupRuntimeConfig {
   error: string | null
 }
 
-const STATUS_CONFIG: Record<WhatsAppNumberStatusValue, { label: string; icon: React.ElementType; color: string }> = {
+const STATUS_CONFIG: Record<WhatsAppNumberStatusValue, { label: string; icon: IconSvgElement; color: string }> = {
   [WhatsAppNumberStatusValue.ACTIVE]: { label: "Connected", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400" },
   [WhatsAppNumberStatusValue.PENDING]: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
   [WhatsAppNumberStatusValue.VERIFYING]: { label: "Verifying...", icon: Clock, color: "text-amber-600 dark:text-amber-400" },
@@ -426,7 +404,7 @@ export function WhatsAppSettings({
       <div className="mx-auto max-w-3xl rounded-[2rem] border border-brand-gold/20 bg-white p-8 shadow-sm dark:bg-slate-950/40 md:p-10">
         <div className="space-y-4 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold">
-            <MessageSquare className="h-7 w-7" />
+            <HugeiconsIcon icon={MessageSquare} className="h-7 w-7" />
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold text-brand-deep dark:text-brand-cream">
@@ -452,7 +430,7 @@ export function WhatsAppSettings({
                 </span>
               </span>
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold-300/15 text-brand-gold-300 dark:bg-brand-deep/10 dark:text-brand-deep">
-                <ChevronRight className="h-4 w-4" />
+                <HugeiconsIcon icon={ChevronRight} className="h-4 w-4" />
               </span>
             </a>
           </Button>
@@ -464,7 +442,7 @@ export function WhatsAppSettings({
   if (numbersLoading || settingsLoading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+        <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin text-slate-400" />
       </div>
     )
   }
@@ -499,7 +477,7 @@ export function WhatsAppSettings({
           }`}
         >
           <div className="flex items-center gap-2">
-            <Plug className="w-4 h-4" />
+            <HugeiconsIcon icon={Plug} className="w-4 h-4" />
             Connections
           </div>
           {resolvedSettingsTab === "connections" && (
@@ -518,7 +496,7 @@ export function WhatsAppSettings({
           }`}
         >
           <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
+            <HugeiconsIcon icon={MessageSquare} className="w-4 h-4" />
             General Settings
           </div>
           {resolvedSettingsTab === "general" && (
@@ -537,7 +515,7 @@ export function WhatsAppSettings({
             }`}
           >
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
+              <HugeiconsIcon icon={Bell} className="w-4 h-4" />
               Order notifications
             </div>
             {resolvedSettingsTab === "notifications" && (
@@ -556,7 +534,7 @@ export function WhatsAppSettings({
           }`}
         >
           <div className="flex items-center gap-2">
-            <Bot className="w-4 h-4" />
+            <HugeiconsIcon icon={Bot} className="w-4 h-4" />
             AI Assistant
           </div>
           {resolvedSettingsTab === "ai" && (
@@ -582,9 +560,9 @@ export function WhatsAppSettings({
                   className="rounded-full"
                 >
                   {resyncConfig.isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <RefreshCw className="mr-2 h-4 w-4" />
+                    <HugeiconsIcon icon={RefreshCw} className="mr-2 h-4 w-4" />
                   )}
                   Resync All
                 </Button>
@@ -597,7 +575,7 @@ export function WhatsAppSettings({
                   <div className="space-y-2 sm:max-w-xl">
                     <div className="flex items-center gap-3">
                       <div className="flex h-11 w-11 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-                        <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        <HugeiconsIcon icon={MessageSquare} className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-slate-900 dark:text-slate-100">
@@ -690,7 +668,7 @@ export function WhatsAppSettings({
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
                     <div className="space-y-1">
                       <h3 className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
-                        <Plus className="h-4 w-4" />
+                        <HugeiconsIcon icon={Plus} className="h-4 w-4" />
                         Add another number
                       </h3>
                       <p className="text-sm text-slate-500 dark:text-slate-300">
@@ -752,7 +730,7 @@ export function WhatsAppSettings({
               <div className="space-y-8">
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <Briefcase className="w-5 h-5 text-slate-400" />
+                    <HugeiconsIcon icon={Briefcase} className="w-5 h-5 text-slate-400" />
                     Branding & Messaging
                   </h3>
                   <SettingsCard className="space-y-6">
@@ -842,7 +820,7 @@ export function WhatsAppSettings({
 
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-slate-400" />
+                    <HugeiconsIcon icon={Shield} className="w-5 h-5 text-slate-400" />
                     Features
                   </h3>
                   <SettingsCard className="space-y-0 divide-y divide-slate-100 dark:divide-slate-800/60 p-0">
@@ -1034,9 +1012,9 @@ export function WhatsAppSettings({
               className="h-10 rounded-xl bg-brand-deep px-4 text-white hover:bg-brand-deep/90 disabled:opacity-50 dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800"
             >
               {updateGoSettings.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Save className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={Save} className="mr-2 h-4 w-4" />
               )}
               Save changes
             </Button>
@@ -1083,7 +1061,7 @@ function EmbeddedSignupConfigNotice({
           : "border-red-100 bg-red-50/80 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300"
       } ${className}`}
     >
-      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+      <HugeiconsIcon icon={AlertCircle} className="mt-0.5 h-4 w-4 shrink-0" />
       <p>{message}</p>
     </div>
   )
@@ -1175,7 +1153,7 @@ function OrderNotificationsCard({
   return (
     <section className="space-y-4">
       <h3 className="flex items-center gap-2 text-lg font-medium text-slate-900 dark:text-slate-100">
-        <MessageSquare className="h-5 w-5 text-slate-400" />
+        <HugeiconsIcon icon={MessageSquare} className="h-5 w-5 text-slate-400" />
         Order Notifications
       </h3>
       <SettingsCard className="space-y-6">
@@ -1249,9 +1227,9 @@ function OrderNotificationsCard({
                 onClick={() => customSoundInputRef.current?.click()}
               >
                 {isUploadingSound ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <UploadCloud className="mr-2 h-4 w-4" />
+                  <HugeiconsIcon icon={UploadCloud} className="mr-2 h-4 w-4" />
                 )}
                 {customSoundUrl ? "Replace sound" : "Upload sound"}
               </Button>
@@ -1262,7 +1240,7 @@ function OrderNotificationsCard({
                 className="rounded-full"
                 onClick={testSound}
               >
-                <Bell className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={Bell} className="mr-2 h-4 w-4" />
                 Test sound
               </Button>
               {customSoundUrl ? (
@@ -1275,7 +1253,7 @@ function OrderNotificationsCard({
                     updateRestaurant({ new_order_sound: "chime", new_order_sound_url: null })
                   }
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <HugeiconsIcon icon={Trash2} className="mr-2 h-4 w-4" />
                   Remove upload
                 </Button>
               ) : null}
@@ -1421,7 +1399,7 @@ function WhatsAppCatalogPanel({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-              <PackageCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <HugeiconsIcon icon={PackageCheck} className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -1440,9 +1418,9 @@ function WhatsAppCatalogPanel({
             className="h-11 w-full shrink-0 rounded-full px-5 sm:w-auto"
           >
             {isRunning ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <HugeiconsIcon icon={RefreshCw} className="mr-2 h-4 w-4" />
             )}
             {isFailed ? "Retry" : "Sync Now"}
           </Button>
@@ -1457,7 +1435,7 @@ function WhatsAppCatalogPanel({
           )}
           {customerErrorMessage ? (
             <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm leading-6 text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <HugeiconsIcon icon={AlertCircle} className="mt-0.5 h-4 w-4 shrink-0" />
               <div className="space-y-1">
                 <p className="font-medium">Catalog setup needs attention</p>
                 <p>{customerErrorMessage}</p>
@@ -1608,7 +1586,7 @@ function CatalogStatusBadge({ status }: { status: WhatsAppCatalogStatus["sync_st
     [WhatsAppCatalogSyncStatus.SYNCED]: "Synced",
     [WhatsAppCatalogSyncStatus.FAILED]: "Failed",
   }
-  const icons: Record<WhatsAppCatalogSyncStatus, React.ElementType> = {
+  const icons: Record<WhatsAppCatalogSyncStatus, IconSvgElement> = {
     [WhatsAppCatalogSyncStatus.PENDING]: Clock,
     [WhatsAppCatalogSyncStatus.SYNCING]: Loader2,
     [WhatsAppCatalogSyncStatus.SYNCED]: CheckCircle2,
@@ -1618,7 +1596,7 @@ function CatalogStatusBadge({ status }: { status: WhatsAppCatalogStatus["sync_st
 
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${styles[status]}`}>
-      <Icon className={`h-3.5 w-3.5 ${status === WhatsAppCatalogSyncStatus.SYNCING ? "animate-spin" : ""}`} />
+      <HugeiconsIcon icon={Icon} className={`h-3.5 w-3.5 ${status === WhatsAppCatalogSyncStatus.SYNCING ? "animate-spin" : ""}`} />
       {labels[status]}
     </span>
   )
@@ -1713,7 +1691,7 @@ function ConnectedNumberCard({
         aria-expanded={isOpen}
       >
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-          <Phone className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          <HugeiconsIcon icon={Phone} className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -1725,9 +1703,9 @@ function ConnectedNumberCard({
               title={config.label}
             >
               {isPending ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <HugeiconsIcon icon={Loader2} className="h-3 w-3 animate-spin" />
               ) : (
-                <StatusIcon className="h-3 w-3" />
+                <HugeiconsIcon icon={StatusIcon} className="h-3 w-3" />
               )}
               {config.label}
             </span>
@@ -1746,7 +1724,7 @@ function ConnectedNumberCard({
             </p>
           )}
         </div>
-        <ChevronDown
+        <HugeiconsIcon icon={ChevronDown}
           className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
@@ -1775,7 +1753,7 @@ function ConnectedNumberCard({
 
           {number.status === WhatsAppNumberStatusValue.FAILED && (
             <div className="flex items-start gap-3 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+              <HugeiconsIcon icon={AlertCircle} className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
               <p className="text-sm leading-6 text-red-800 dark:text-red-300">
                 Verification failed. Check the logs below and reconnect with Meta after fixing the issue.
               </p>
@@ -1797,9 +1775,9 @@ function ConnectedNumberCard({
                 className="h-10 w-full justify-center rounded-full sm:w-auto"
               >
                 {checkStatus.isPending && checkStatus.variables === number.id ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <HugeiconsIcon icon={RefreshCw} className="mr-2 h-4 w-4" />
                 )}
                 Check status
               </Button>
@@ -1810,7 +1788,7 @@ function ConnectedNumberCard({
                   onClick={() => setShowManualReconnect((prev) => !prev)}
                   className="h-10 w-full justify-center rounded-full sm:w-auto"
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <HugeiconsIcon icon={RefreshCw} className="mr-2 h-4 w-4" />
                   {showManualReconnect ? "Hide config form" : "Update Config"}
                 </Button>
               ) : (
@@ -1842,7 +1820,7 @@ function ConnectedNumberCard({
                   onClick={() => setShowDisconnectConfirm(true)}
                   className="h-10 w-full rounded-full px-4 text-red-600 hover:bg-red-50 hover:text-red-700 sm:ml-auto sm:w-auto dark:text-red-400 dark:hover:bg-red-500/10"
                 >
-                  <Unplug className="mr-2 h-4 w-4" />
+                  <HugeiconsIcon icon={Unplug} className="mr-2 h-4 w-4" />
                   Disconnect
                 </Button>
               ) : null}
@@ -1879,7 +1857,7 @@ function ConnectedNumberCard({
             showDisconnectConfirm && (
               <div className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50/80 p-4 dark:border-red-500/20 dark:bg-red-500/10 sm:flex-row sm:items-center">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+                  <HugeiconsIcon icon={AlertCircle} className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
                   <p className="text-sm leading-6 text-red-800 dark:text-red-300">
                     Disconnect this number only if you want Cloove to stop handling messages for it.
                   </p>
@@ -1902,7 +1880,7 @@ function ConnectedNumberCard({
                     disabled={isDisconnecting}
                     className="w-full rounded-full bg-red-600 text-white shadow-sm hover:bg-red-700 sm:w-auto"
                   >
-                    {isDisconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
+                    {isDisconnecting ? <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" /> : "Confirm Disconnect"}
                   </Button>
                 </div>
               </div>
@@ -1969,7 +1947,7 @@ function SuspendedNumberCard({
         aria-expanded={isOpen}
       >
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-          <Phone className="h-5 w-5 text-slate-400" />
+          <HugeiconsIcon icon={Phone} className="h-5 w-5 text-slate-400" />
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -1977,7 +1955,7 @@ function SuspendedNumberCard({
               {phoneLabel}
             </p>
             <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              <AlertCircle className="h-3 w-3" />
+              <HugeiconsIcon icon={AlertCircle} className="h-3 w-3" />
               Disconnected
             </span>
             <span className="rounded-full border border-slate-200 px-2 py-0.5 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
@@ -1990,7 +1968,7 @@ function SuspendedNumberCard({
             </p>
           )}
         </div>
-        <ChevronDown
+        <HugeiconsIcon icon={ChevronDown}
           className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
@@ -1998,7 +1976,7 @@ function SuspendedNumberCard({
       {isOpen && (
         <div className="space-y-4 border-t border-slate-100 p-5 dark:border-slate-800/80">
           <div className="flex flex-col gap-3 rounded-lg border border-amber-100 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10 sm:flex-row sm:items-center">
-            <AlertCircle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <HugeiconsIcon icon={AlertCircle} className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
             <p className="flex-1 text-sm text-amber-800 dark:text-amber-300">
               This number is disconnected. Reconnect to resume AI messaging.
             </p>
@@ -2019,7 +1997,7 @@ function SuspendedNumberCard({
                 onClick={() => setShowManualReconnect((prev) => !prev)}
                 className="h-10 rounded-full"
               >
-                <RotateCcw className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={RotateCcw} className="mr-2 h-4 w-4" />
                 {showManualReconnect ? "Hide config form" : "Update config"}
               </Button>
             )}
@@ -2028,7 +2006,7 @@ function SuspendedNumberCard({
               disabled={isRestoring}
               className="h-10 rounded-full bg-brand-deep text-brand-cream shadow-sm hover:bg-brand-deep/90"
             >
-              {isRestoring ? <Loader2 className="h-4 w-4 animate-spin" /> : "Restore"}
+              {isRestoring ? <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" /> : "Restore"}
             </Button>
             <Button
               type="button"

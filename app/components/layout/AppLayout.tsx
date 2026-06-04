@@ -9,14 +9,14 @@ import { BusinessSwitcher } from "../shared/BusinessSwitcher"
 import { usePathname } from "next/navigation"
 import { useIsTablet } from "../../hooks/useMediaQuery"
 
-
 interface AppLayoutProps {
     children: React.ReactNode
 }
 
 import Link from "next/link"
 import { useTheme } from "next-themes"
-import { Settings, LogOut, Sun, Moon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Settings01Icon as Settings, Logout01Icon as LogOut, Sun01Icon as Sun, MoonIcon as Moon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { BusinessGuard } from "../shared/BusinessGuard"
@@ -73,7 +73,6 @@ export default function AppLayout({ children }: AppLayoutProps) {
         if (!mounted || isTablet) return
         storage.setSidebarCollapsed(isCollapsed)
     }, [isCollapsed, isTablet, mounted])
-
 
     const pathname = usePathname()
     const isAssistantPage = pathname?.startsWith("/assistant")
@@ -185,7 +184,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                                         onClick={() => setIsProfileMenuOpen(false)}
                                                         className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     >
-                                                        <Settings className="h-3.5 w-3.5" />
+                                                        <HugeiconsIcon icon={Settings} className="h-3.5 w-3.5" />
                                                         Settings
                                                     </Link>
                                                     <button
@@ -195,7 +194,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                                         }}
                                                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                                                     >
-                                                        {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                                                        {theme === "dark" ? <HugeiconsIcon icon={Sun} className="h-3.5 w-3.5" /> : <HugeiconsIcon icon={Moon} className="h-3.5 w-3.5" />}
                                                         {theme === "dark" ? "Light Mode" : "Dark Mode"}
                                                     </button>
                                                     <div className="mx-2 my-1 h-px bg-border" />
@@ -206,7 +205,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                                         }}
                                                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
                                                     >
-                                                        <LogOut className="h-3.5 w-3.5" />
+                                                        <HugeiconsIcon icon={LogOut} className="h-3.5 w-3.5" />
                                                         Log Out
                                                     </button>
                                                 </div>

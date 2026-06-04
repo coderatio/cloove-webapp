@@ -2,7 +2,8 @@
 
 import { type ElementType, useEffect, useRef, useState } from "react"
 import { Button } from "@/app/components/ui/button"
-import { Loader2, MessageSquare } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { Loading03Icon as Loader2, WhatsappIcon as WhatsApp } from "@hugeicons/core-free-icons"
 import { useConnectWhatsAppNumber } from "../hooks/useWhatsAppSettings"
 import { toast } from "sonner"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -33,7 +34,7 @@ interface EmbeddedSignupButtonProps {
   connectingLabel?: string
   className?: string
   containerClassName?: string
-  icon?: ElementType
+  icon?: IconSvgElement
   showStatusMessage?: boolean
 }
 
@@ -44,7 +45,7 @@ export function EmbeddedSignupButton({
   connectingLabel = "Connecting…",
   className,
   containerClassName = "w-full space-y-2",
-  icon: Icon = MessageSquare,
+  icon: Icon = WhatsApp,
   showStatusMessage = true,
 }: EmbeddedSignupButtonProps) {
   const connectNumber = useConnectWhatsAppNumber()
@@ -294,12 +295,12 @@ export function EmbeddedSignupButton({
       >
         {connectNumber.isPending ? (
           <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <HugeiconsIcon icon={Loader2} className="w-4 h-4 mr-2 animate-spin" />
             {connectingLabel}
           </>
         ) : (
           <>
-            <Icon className="w-4 h-4 mr-2" />
+            <HugeiconsIcon icon={Icon} className="w-4 h-4 mr-2" />
             {label}
           </>
         )}

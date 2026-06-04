@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react'
-import { UploadCloud, X, Loader2, Image as ImageIcon } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CloudUploadIcon as UploadCloud, Cancel01Icon as X, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { cn } from '@/app/lib/utils'
 import { toast } from 'sonner'
 import { uploadService } from '@/app/lib/upload/upload-service'
@@ -100,7 +101,7 @@ export function ImageUpload({ value = [], onChange, disabled, maxFiles = 5 }: Im
                             disabled={disabled}
                             className="absolute cursor-pointer top-2 right-2 p-1.5 rounded-full bg-rose-500/90 text-white sm:opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-600 focus:opacity-100"
                         >
-                            <X className="w-3.5 h-3.5" />
+                            <HugeiconsIcon icon={X} className="w-3.5 h-3.5" />
                         </button>
                     </div>
                 ))}
@@ -117,13 +118,13 @@ export function ImageUpload({ value = [], onChange, disabled, maxFiles = 5 }: Im
                     >
                         {isUploading ? (
                             <>
-                                <Loader2 className="w-6 h-6 animate-spin text-brand-accent/60" />
+                                <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin text-brand-accent/60" />
                                 <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60 font-medium">{progress}%</span>
                             </>
                         ) : (
                             <>
                                 <div className="p-2.5 rounded-full bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60">
-                                    <UploadCloud className="w-5 h-5" />
+                                    <HugeiconsIcon icon={UploadCloud} className="w-5 h-5" />
                                 </div>
                                 <div className="text-center px-2">
                                     <span className="text-xs font-medium text-brand-deep/70 dark:text-brand-cream/70">

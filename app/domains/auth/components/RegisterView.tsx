@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Mail, Phone, ArrowRight, Loader2, Eye, EyeOff, CheckCircle2, Sparkles, MessageCircle, ExternalLink } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { Mail01Icon as Mail, CallIcon as Phone, ArrowRight01Icon as ArrowRight, Loading03Icon as Loader2, EyeIcon as Eye, EyeOffIcon as EyeOff, CheckmarkCircle02Icon as CheckCircle2, SparklesIcon as Sparkles, BubbleChatIcon as MessageCircle, ExternalLinkIcon as ExternalLink, Briefcase01Icon as Briefcase, UserMultiple02Icon as Users, SecurityCheckIcon as ShieldCheck, ZapIcon as Zap, GlobeIcon as Globe, SparklesIcon as Sparkle } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Label } from "@/app/components/ui/label"
@@ -14,7 +15,6 @@ import { useCountries } from "@/app/hooks/useCountries"
 import type { CountryDetail } from "@/app/components/ui/country-selector"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
-import { Briefcase, Users, ShieldCheck, Zap, Globe, Sparkle, type LucideIcon } from "lucide-react"
 
 const BOT_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER?.replace(/\D/g, "") ?? ""
 const BOT_DISPLAY = process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER ?? ""
@@ -128,7 +128,7 @@ export function RegisterView() {
                     <div className="relative h-12 w-12 opacity-90">
                         <Image src="/images/logo-white.png" alt="Cloove" fill className="object-contain" priority />
                     </div>
-                    <Loader2 className="w-9 h-9 animate-spin text-brand-gold" aria-label="Loading" />
+                    <HugeiconsIcon icon={Loader2} className="w-9 h-9 animate-spin text-brand-gold" aria-label="Loading" />
                     <p className="text-[11px] uppercase tracking-[0.35em] text-brand-cream/40 font-medium">
                         Preparing registration
                     </p>
@@ -143,7 +143,7 @@ export function RegisterView() {
                 <RegisterBackdrop />
                 <GlassCard className="relative z-10 max-w-md rounded-[28px] border-white/10 bg-white/[0.045] p-8 text-center shadow-sm">
                     <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-                        <Sparkles className="h-5 w-5 text-brand-gold/80" aria-hidden />
+                        <HugeiconsIcon icon={Sparkles} className="h-5 w-5 text-brand-gold/80" aria-hidden />
                     </div>
                     <h1 className="font-serif text-2xl sm:text-3xl text-brand-cream font-medium tracking-tight mb-3">
                         Signup is paused
@@ -174,9 +174,9 @@ export function RegisterView() {
                         <div className="mb-8 flex justify-center">
                             <div className="flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
                                 {isEmail ? (
-                                    <Mail className="size-8 text-emerald-300" />
+                                    <HugeiconsIcon icon={Mail} className="size-8 text-emerald-300" />
                                 ) : (
-                                    <CheckCircle2 className="size-8 text-emerald-300" />
+                                    <HugeiconsIcon icon={CheckCircle2} className="size-8 text-emerald-300" />
                                 )}
                             </div>
                         </div>
@@ -209,14 +209,14 @@ export function RegisterView() {
                                             {BOT_DISPLAY}
                                         </p>
                                     </div>
-                                    <ExternalLink className="h-4 w-4 shrink-0 text-white/45" />
+                                    <HugeiconsIcon icon={ExternalLink} className="h-4 w-4 shrink-0 text-white/45" />
                                 </a>
                                 <Button
                                     asChild
                                     className="h-12 w-full rounded-2xl bg-[#25D366] font-semibold text-white hover:bg-[#22c55e]"
                                 >
                                     <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
-                                        <MessageCircle className="size-5 mr-2" />
+                                        <HugeiconsIcon icon={MessageCircle} className="size-5 mr-2" />
                                         Open in WhatsApp
                                     </a>
                                 </Button>
@@ -232,7 +232,7 @@ export function RegisterView() {
                         >
                             <Link href="/login" className="flex items-center gap-2 justify-center">
                                 {isEmail ? "Enter Workspace" : "I'll do this later — go to login"}
-                                <ArrowRight className="size-4" />
+                                <HugeiconsIcon icon={ArrowRight} className="size-4" />
                             </Link>
                         </Button>
                     </GlassCard>
@@ -284,7 +284,7 @@ export function RegisterView() {
                                                 key={feat.text}
                                                 className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-white/60"
                                             >
-                                                <feat.icon className="size-3 text-emerald-300/70" />
+                                                <HugeiconsIcon icon={feat.icon} className="size-3 text-emerald-300/70" />
                                                 {feat.text}
                                             </div>
                                         ))}
@@ -320,7 +320,7 @@ export function RegisterView() {
                                         onClick={() => setStep(0)}
                                         className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300/70 hover:text-white"
                                     >
-                                        <ArrowRight className="size-3 rotate-180" />
+                                        <HugeiconsIcon icon={ArrowRight} className="size-3 rotate-180" />
                                         Back to selection
                                     </button>
                                     
@@ -340,7 +340,7 @@ export function RegisterView() {
 
                                     <div className="hidden items-center gap-4 rounded-[24px] border border-white/10 bg-white/[0.04] p-5 lg:flex">
                                         <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/20">
-                                            <Sparkle className="size-5 text-emerald-300" />
+                                            <HugeiconsIcon icon={Sparkle} className="size-5 text-emerald-300" />
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-sm font-semibold text-white">Selected role</p>
@@ -379,7 +379,7 @@ export function RegisterView() {
                                                             : "text-white/45 hover:bg-white/[0.05] hover:text-white"
                                                     )}
                                                 >
-                                                    <Mail className="size-3.5" />
+                                                    <HugeiconsIcon icon={Mail} className="size-3.5" />
                                                     Email
                                                 </Button>
                                                 <Button
@@ -393,7 +393,7 @@ export function RegisterView() {
                                                             : "text-white/45 hover:bg-white/[0.05] hover:text-white"
                                                     )}
                                                 >
-                                                    <Phone className="size-3.5" />
+                                                    <HugeiconsIcon icon={Phone} className="size-3.5" />
                                                     Phone
                                                 </Button>
                                             </div>
@@ -497,7 +497,7 @@ export function RegisterView() {
                                                         onClick={() => setShowPassword(!showPassword)}
                                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70"
                                                     >
-                                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                        {showPassword ? <HugeiconsIcon icon={EyeOff} size={16} /> : <HugeiconsIcon icon={Eye} size={16} />}
                                                     </button>
                                                 </div>
                                             </div>
@@ -553,11 +553,11 @@ export function RegisterView() {
                                                 className="h-12 w-full rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
                                             >
                                                 {isSubmitting ? (
-                                                    <Loader2 className="animate-spin size-5" />
+                                                    <HugeiconsIcon icon={Loader2} className="animate-spin size-5" />
                                                 ) : (
                                                     <span className="flex items-center gap-2">
                                                         Continue
-                                                        <ArrowRight className="size-4" />
+                                                        <HugeiconsIcon icon={ArrowRight} className="size-4" />
                                                     </span>
                                                 )}
                                             </Button>
@@ -582,7 +582,7 @@ export function RegisterView() {
 interface RoleCardProps {
     title: string
     description: string
-    icon: LucideIcon
+    icon: IconSvgElement
     onClick: () => void
     badge?: string
 }
@@ -594,7 +594,7 @@ function RoleCard({ title, description, icon: Icon, onClick, badge }: RoleCardPr
             className="group relative flex flex-col items-start overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.045] p-6 text-left hover:bg-white/[0.07]"
         >
             <div className="absolute right-5 top-5">
-                <ArrowRight className="size-4 -rotate-45 text-white/35" />
+                <HugeiconsIcon icon={ArrowRight} className="size-4 -rotate-45 text-white/35" />
             </div>
 
             {badge && (
@@ -604,7 +604,7 @@ function RoleCard({ title, description, icon: Icon, onClick, badge }: RoleCardPr
             )}
 
             <div className="mb-6 flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-primary/20">
-                <Icon className="size-6 text-emerald-300" />
+                <HugeiconsIcon icon={Icon} className="size-6 text-emerald-300" />
             </div>
 
             <h3 className="mb-3 text-xl font-semibold tracking-tight text-white">

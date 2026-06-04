@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Search, Plus } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon as Search, PlusSignIcon as Plus } from "@hugeicons/core-free-icons"
 import { Button } from "../ui/button"
 import { cn } from "../../lib/utils"
 import { FilterPopover, FilterGroup } from "./FilterPopover"
@@ -73,7 +74,7 @@ export function ManagementHeader({
                                     mobileFloatingAction && isMobile && "fixed top-15 right-6 z-50 h-14 w-14 p-0 md:static md:h-12 md:w-auto md:px-6 md:rounded-full shadow-2xl md:shadow-lg"
                                 )}
                             >
-                                <Plus className={cn("mr-2 h-4 w-4", mobileFloatingAction && isMobile && "m-0 h-6 w-6 md:mr-2 md:h-4 md:w-4")} />
+                                <HugeiconsIcon icon={Plus} className={cn("mr-2 h-4 w-4", mobileFloatingAction && isMobile && "m-0 h-6 w-6 md:mr-2 md:h-4 md:w-4")} />
                                 <span className={cn(mobileFloatingAction && isMobile && "hidden md:inline")}>{addButtonLabel}</span>
                             </Button>
                         )}
@@ -85,7 +86,7 @@ export function ManagementHeader({
                 <div className="mt-4 flex flex-col gap-2 border-t border-brand-deep/5 pt-4 dark:border-white/8 sm:flex-row sm:items-center">
                     <div className="relative flex-1 group">
                         <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
-                            <Search className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
+                            <HugeiconsIcon icon={Search} className="h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
                         </div>
                         <input
                             type="text"

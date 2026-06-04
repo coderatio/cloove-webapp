@@ -15,7 +15,8 @@ import { Label } from '@/app/components/ui/label'
 import { Order } from '../types'
 import { formatCurrency } from '@/app/lib/formatters'
 import { CurrencyText } from '@/app/components/shared/CurrencyText'
-import { Check, Loader2, Wallet, Banknote, CreditCard, Receipt, CheckCircle2 } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check, Loading03Icon as Loader2, Wallet01Icon as Wallet, BanknoteIcon as Banknote, CreditCardIcon as CreditCard, Invoice01Icon as Receipt, CheckmarkCircle02Icon as CheckCircle2 } from "@hugeicons/core-free-icons"
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { cn } from '@/app/lib/utils'
 import { useBusiness } from '@/app/components/BusinessProvider'
@@ -143,11 +144,11 @@ export function RecordPaymentDrawer({
                                                     : "bg-white dark:bg-[#021a12] border-brand-deep/5 dark:border-white/5 text-brand-accent/60 hover:border-brand-deep/20"
                                             )}
                                         >
-                                            <Icon className="w-5 h-5" />
+                                            <HugeiconsIcon icon={Icon} className="w-5 h-5" />
                                             <span className="text-[10px] font-bold uppercase">{m.label}</span>
                                             {isSelected && (
                                                 <div className="absolute top-2 right-2">
-                                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                                    <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3 text-emerald-600" />
                                                 </div>
                                             )}
                                         </Button>
@@ -160,7 +161,7 @@ export function RecordPaymentDrawer({
                         <div className="p-4 rounded-2xl bg-brand-gold/5 border border-brand-gold/10 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                    <Receipt className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Receipt} className="w-4 h-4" />
                                 </div>
                                 <span className="text-xs font-medium text-brand-accent/60">Remaining balance after payment</span>
                             </div>
@@ -182,9 +183,9 @@ export function RecordPaymentDrawer({
                         className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         {isSubmitting ? (
-                            <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                            <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin mr-2" />
                         ) : (
-                            <Check className="w-5 h-5 mr-2" />
+                            <HugeiconsIcon icon={Check} className="w-5 h-5 mr-2" />
                         )}
                         {amount >= remainingBalance ? "Record Full Payment" : "Record Partial Payment"}
                     </Button>

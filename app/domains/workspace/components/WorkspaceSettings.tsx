@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react"
 import Link from "next/link"
-import { Check, LayoutTemplate, Lock } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check, DashboardSquare02Icon as LayoutTemplate, LockIcon as Lock } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Switch } from "@/app/components/ui/switch"
@@ -233,7 +234,7 @@ export function WorkspaceSettings() {
         <div className="space-y-10">
             <section className="space-y-4">
                 <div className="flex items-start gap-3">
-                    <LayoutTemplate className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
+                    <HugeiconsIcon icon={LayoutTemplate} className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
                     <div>
                         <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">
                             Business layout
@@ -274,7 +275,7 @@ export function WorkspaceSettings() {
                                     </span>
                                     {selected && (
                                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-gold-700 text-white">
-                                            <Check className="h-3.5 w-3.5" />
+                                            <HugeiconsIcon icon={Check} className="h-3.5 w-3.5" />
                                         </span>
                                     )}
                                     {busy && (
@@ -348,7 +349,7 @@ export function WorkspaceSettings() {
                                                     {row.title}
                                                 </span>
                                                 {!allowed && (
-                                                    <Lock className="h-3.5 w-3.5 text-brand-deep/40 dark:text-brand-cream/40" />
+                                                    <HugeiconsIcon icon={Lock} className="h-3.5 w-3.5 text-brand-deep/40 dark:text-brand-cream/40" />
                                                 )}
                                             </div>
                                             <p className="text-sm text-brand-deep/60 dark:text-brand-cream/60">

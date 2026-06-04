@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Wallet, Building2, Check, Lock, Loader2, X, AlertCircle, Plus, Settings2, CheckCircle2, ShieldCheck, ArrowRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Wallet01Icon as Wallet, Building02Icon as Building2, CheckIcon as Check, LockIcon as Lock, Loading03Icon as Loader2, Cancel01Icon as X, AlertCircleIcon as AlertCircle, PlusSignIcon as Plus, Settings02Icon as Settings2, CheckmarkCircle02Icon as CheckCircle2, SecurityCheckIcon as ShieldCheck, ArrowRight01Icon as ArrowRight } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import {
@@ -123,8 +124,6 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         }
     }
 
-
-
     const handleWithdraw = async (pin: string) => {
         if (!canContinue) return
         try {
@@ -190,15 +189,13 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
         }
     }, [isOpen, step])
 
-
-
     const symbol = currencySymbol(currencyCode)
 
     const renderContent = () => {
         if (verificationLoading) {
             return (
                 <DrawerBody className="p-4 flex items-center justify-center min-h-[300px] no-scrollbar">
-                    <Loader2 className="w-6 h-6 animate-spin text-brand-gold" />
+                    <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin text-brand-gold" />
                 </DrawerBody>
             )
         }
@@ -208,10 +205,10 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                 <DrawerBody className="p-4 flex-1 overflow-y-auto no-scrollbar flex flex-col items-center text-center space-y-8 animate-in fade-in zoom-in-95 duration-700">
                     <div className="relative">
                         <div className="w-24 h-24 rounded-3xl bg-brand-gold/10 flex items-center justify-center">
-                            <ShieldCheck className="w-12 h-12 text-brand-gold" />
+                            <HugeiconsIcon icon={ShieldCheck} className="w-12 h-12 text-brand-gold" />
                         </div>
                         <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-brand-deep dark:bg-brand-cream flex items-center justify-center shadow-lg">
-                            <Lock className="w-5 h-5 text-brand-gold dark:text-brand-deep" />
+                            <HugeiconsIcon icon={Lock} className="w-5 h-5 text-brand-gold dark:text-brand-deep" />
                         </div>
                     </div>
                     <div className="space-y-3">
@@ -246,7 +243,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                             {["Withdraw funds to your bank account", "Full access to wallet features", "Higher transaction limits"].map((benefit, i) => (
                                 <div key={i} className="flex items-start gap-3">
                                     <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center shrink-0 mt-0.5">
-                                        <Check className="w-3 h-3 text-brand-gold" />
+                                        <HugeiconsIcon icon={Check} className="w-3 h-3 text-brand-gold" />
                                     </div>
                                     <p className="text-sm text-brand-deep/80 dark:text-brand-cream/80 text-left leading-snug">
                                         {benefit}
@@ -264,7 +261,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                             className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                         >
                             Start Verification
-                            <ArrowRight className="w-5 h-5" />
+                            <HugeiconsIcon icon={ArrowRight} className="w-5 h-5" />
                         </Button>
                     </div>
                 </DrawerBody>
@@ -308,12 +305,12 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                     <div className="flex items-center justify-between px-1">
                                         {amountError ? (
                                             <div className="text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 text-rose-500 animate-in slide-in-from-left-2">
-                                                <AlertCircle className="w-3 h-3" />
+                                                <HugeiconsIcon icon={AlertCircle} className="w-3 h-3" />
                                                 {amountError.text}
                                             </div>
                                         ) : amountNum > 0 ? (
                                             <div className="flex items-center gap-1.5 h-4 animate-in fade-in">
-                                                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                                <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3 text-emerald-500" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/60">
                                                     Fee: {walletLoading ? "Calculating…" : <CurrencyText value={formatCurrency(fee, { currency: currencyCode })} />}
                                                 </span>
@@ -351,14 +348,14 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                         onClick={() => setStep("manage_payouts")}
                                         className="text-[10px] cursor-pointer font-black text-brand-gold hover:text-brand-gold/80 uppercase tracking-widest flex items-center gap-1 transition-all"
                                     >
-                                        <Settings2 className="w-3 h-3" />
+                                        <HugeiconsIcon icon={Settings2} className="w-3 h-3" />
                                         Manage
                                     </button>
                                 </div>
 
                                 {payoutAccounts.length === 0 && !accountsLoading ? (
                                     <div className="py-8 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/3 dark:bg-white/3 rounded-3xl border border-dashed border-brand-gold/20">
-                                        <Building2 className="w-8 h-8 text-brand-gold/40" />
+                                        <HugeiconsIcon icon={Building2} className="w-8 h-8 text-brand-gold/40" />
                                         <p className="text-[10px] text-brand-deep/40 dark:text-white/30 uppercase tracking-widest font-black">No saved accounts</p>
                                     </div>
                                 ) : (
@@ -375,7 +372,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                             >
                                                 <div className="flex items-center gap-4 min-w-0">
                                                     <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
-                                                        <Building2 className="w-5 h-5" />
+                                                        <HugeiconsIcon icon={Building2} className="w-5 h-5" />
                                                     </div>
                                                     <div className="text-left min-w-0">
                                                         <div className="flex items-center gap-2">
@@ -385,7 +382,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                                         <span className="text-[10px] font-mono text-brand-deep/40 dark:text-white/40">{account.accountNumber} • {account.accountName}</span>
                                                     </div>
                                                 </div>
-                                                <ArrowRight className="w-4 h-4 text-brand-gold/40 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                                                <HugeiconsIcon icon={ArrowRight} className="w-4 h-4 text-brand-gold/40 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                                             </button>
                                         ))}
                                     </div>
@@ -436,7 +433,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 onClick={() => setStep("other_account_form")}
                                 className="w-full h-18 bg-white dark:bg-white/5 border-2 border-dashed border-brand-gold/30 text-brand-gold font-black uppercase tracking-widest text-[10px] rounded-3xl hover:bg-brand-gold/5 transition-all flex items-center justify-center gap-3 shadow-sm hover:shadow-md"
                             >
-                                <Plus className="w-5 h-5" />
+                                <HugeiconsIcon icon={Plus} className="w-5 h-5" />
                                 Transfer to New Account
                             </Button>
                         </DrawerFooter>
@@ -462,7 +459,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                 <div className="text-center space-y-6">
                                     <div className="mx-auto w-20 h-20 rounded-4xl bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-2 group relative">
                                         <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full animate-pulse" />
-                                        <ShieldCheck className="w-10 h-10 relative z-10" />
+                                        <HugeiconsIcon icon={ShieldCheck} className="w-10 h-10 relative z-10" />
                                     </div>
                                     <div className="space-y-2">
                                         <h4 className="text-2xl font-serif font-black text-brand-deep dark:text-white tracking-tight">Confirm Details</h4>
@@ -495,7 +492,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                                     <div className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-white/20">Destination Account</div>
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-2xl bg-brand-gold/20 flex items-center justify-center">
-                                            <Building2 className="w-5 h-5 text-brand-gold" />
+                                            <HugeiconsIcon icon={Building2} className="w-5 h-5 text-brand-gold" />
                                         </div>
                                         <div>
                                             <div className="text-xs font-black text-brand-deep dark:text-white uppercase truncate">
@@ -556,7 +553,7 @@ export function WithdrawDrawer({ isOpen, onOpenChange, currencyCode, initialStep
                             }}
                             className="h-10 w-10 rounded-full bg-brand-deep/5 cursor-pointer dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-brand-accent/40 dark:text-brand-cream/40 transition-colors shrink-0"
                         >
-                            <X className="w-5 h-5 text-brand-deep/40 dark:text-brand-cream/40" />
+                            <HugeiconsIcon icon={X} className="w-5 h-5 text-brand-deep/40 dark:text-brand-cream/40" />
                         </Button>
                     </div>
                 </DrawerHeader>

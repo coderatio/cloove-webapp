@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Search, Barcode, Plus, Package, X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon as Search, BarcodeIcon as Barcode, PlusSignIcon as Plus, PackageIcon as Package, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { Product } from "../hooks/useInventory"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -192,7 +193,7 @@ export function ProductSearchOverlay({
                         {/* Header / Search Area */}
                         <div className="flex items-center gap-4 border-b border-brand-accent/5 dark:border-white/5 px-6 h-24 shrink-0 bg-white dark:bg-brand-deep-950 relative z-30">
                             <div className="relative flex-1 flex items-center">
-                                <Search className="absolute left-0 h-6 w-6 text-brand-accent/40 dark:text-brand-cream/40" />
+                                <HugeiconsIcon icon={Search} className="absolute left-0 h-6 w-6 text-brand-accent/40 dark:text-brand-cream/40" />
                                 <input
                                     ref={inputRef}
                                     type="text"
@@ -209,7 +210,7 @@ export function ProductSearchOverlay({
                                 />
                             </div>
                             <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-brand-gold/10 text-brand-gold dark:text-brand-gold text-[10px] font-black uppercase tracking-[0.2em] border border-brand-gold/30 shadow-sm whitespace-nowrap shrink-0">
-                                <Barcode className="h-4 w-4" />
+                                <HugeiconsIcon icon={Barcode} className="h-4 w-4" />
                                 <span className="hidden sm:inline">Scan Active</span>
                             </div>
                             <Button
@@ -218,7 +219,7 @@ export function ProductSearchOverlay({
                                 onClick={onClose}
                                 className="h-10 w-10 rounded-xl hover:bg-rose-500/10 text-brand-accent/40 dark:text-brand-cream/40 hover:text-rose-500 transition-all shrink-0 ml-2"
                             >
-                                <X className="h-5 w-5" />
+                                <HugeiconsIcon icon={X} className="h-5 w-5" />
                             </Button>
                         </div>
 
@@ -275,7 +276,7 @@ export function ProductSearchOverlay({
                                                     {product.image ? (
                                                         <img src={product.image} alt={product.product} className="h-full w-full object-cover" />
                                                     ) : (
-                                                        <Package className="h-6 w-6 text-brand-accent/20 dark:text-brand-cream/20" />
+                                                        <HugeiconsIcon icon={Package} className="h-6 w-6 text-brand-accent/20 dark:text-brand-cream/20" />
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
@@ -317,7 +318,7 @@ export function ProductSearchOverlay({
                                     ))
                                 ) : (
                                     <div className="py-24 flex flex-col items-center justify-center text-brand-accent/30 dark:text-brand-cream/30">
-                                        <Package className="h-16 w-16 mb-6 opacity-10" />
+                                        <HugeiconsIcon icon={Package} className="h-16 w-16 mb-6 opacity-10" />
                                         <p className="text-xl font-serif tracking-tight">No match found</p>
                                     </div>
                                 )}

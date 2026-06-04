@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Copy, Check, RefreshCw, ArrowLeft, Building2, Clock, ShieldCheck } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CopyIcon as Copy, CheckIcon as Check, RefreshIcon as RefreshCw, ArrowLeft01Icon as ArrowLeft, Building02Icon as Building2, Clock01Icon as Clock, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -149,7 +150,7 @@ export function CheckoutPaymentStep({
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1.5 text-brand-accent/40 dark:text-white/40">
-              <Clock className="w-3.5 h-3.5" />
+              <HugeiconsIcon icon={Clock} className="w-3.5 h-3.5" />
               <span>Time remaining</span>
             </div>
             <span className={`font-jakarta font-semibold ${isExpired ? 'text-red-500 dark:text-red-400' : 'text-brand-gold'}`}>
@@ -169,7 +170,7 @@ export function CheckoutPaymentStep({
         <div className="bg-brand-deep/3 dark:bg-white/3 rounded-2xl border border-brand-deep/5 dark:border-white/5 p-4 space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-brand-accent/40 dark:text-white/40" />
+              <HugeiconsIcon icon={Building2} className="w-5 h-5 text-brand-accent/40 dark:text-white/40" />
             </div>
             <div>
               <p className="text-brand-accent/40 dark:text-white/40 text-xs">Bank</p>
@@ -191,9 +192,9 @@ export function CheckoutPaymentStep({
               className="w-10 h-10 rounded-xl"
             >
               {copied ? (
-                <Check className="w-4 h-4 text-emerald-500" />
+                <HugeiconsIcon icon={Check} className="w-4 h-4 text-emerald-500" />
               ) : (
-                <Copy className="w-4 h-4" />
+                <HugeiconsIcon icon={Copy} className="w-4 h-4" />
               )}
             </Button>
           </div>
@@ -278,7 +279,7 @@ export function CheckoutPaymentStep({
             disabled={isRefreshing}
             className="rounded-2xl h-14 w-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-bold gap-2 shadow-xl"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <HugeiconsIcon icon={RefreshCw} className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? "Checking..." : "I've sent the money"}
           </Button>
 
@@ -288,14 +289,14 @@ export function CheckoutPaymentStep({
             disabled={isCancelling}
             className="w-full h-12 rounded-2xl gap-2"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4" />
             {isCancelling ? "Cancelling..." : "Cancel payment"}
           </Button>
         </div>
       </div>
 
       <div className="flex items-center justify-center gap-1.5 mt-6">
-        <ShieldCheck className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
+        <HugeiconsIcon icon={ShieldCheck} className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
         <p className="text-brand-accent/30 dark:text-white/30 text-xs">
           Secured by Cloove
         </p>

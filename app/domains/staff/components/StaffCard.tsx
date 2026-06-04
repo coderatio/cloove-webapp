@@ -2,7 +2,8 @@
 
 import { cn } from "@/app/lib/utils"
 import { motion } from "framer-motion"
-import { Phone, Mail, Shield, Clock, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CallIcon as Phone, Mail01Icon as Mail, SecurityIcon as Shield, Clock01Icon as Clock, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import type { StaffMember } from "../hooks/useStaff"
 
 interface StaffCardProps {
@@ -99,19 +100,19 @@ export function StaffCard({ member, onClick, delay = 0 }: StaffCardProps) {
                                 {member.user.fullName || 'Unnamed'}
                             </h3>
                             {isOwner && (
-                                <Sparkles className="w-3.5 h-3.5 text-brand-gold shrink-0" />
+                                <HugeiconsIcon icon={Sparkles} className="w-3.5 h-3.5 text-brand-gold shrink-0" />
                             )}
                         </div>
 
                         {/* Contact row */}
                         <div className="flex items-center gap-3 flex-wrap">
                             <span className="inline-flex items-center gap-1.5 text-[12px] text-brand-accent/50 dark:text-brand-cream/40">
-                                <Phone className="w-3 h-3" />
+                                <HugeiconsIcon icon={Phone} className="w-3 h-3" />
                                 <span className="font-mono tracking-tight">{member.user.phoneNumber}</span>
                             </span>
                             {member.user.email && (
                                 <span className="inline-flex items-center gap-1.5 text-[12px] text-brand-accent/50 dark:text-brand-cream/40 truncate">
-                                    <Mail className="w-3 h-3 shrink-0" />
+                                    <HugeiconsIcon icon={Mail} className="w-3 h-3 shrink-0" />
                                     <span className="truncate">{member.user.email}</span>
                                 </span>
                             )}
@@ -129,7 +130,7 @@ export function StaffCard({ member, onClick, delay = 0 }: StaffCardProps) {
                                     ? "bg-brand-deep/5 text-brand-deep/70 border border-brand-deep/10 dark:bg-white/5 dark:text-brand-cream/60 dark:border-white/8"
                                     : "bg-brand-accent/5 text-brand-accent/60 border border-brand-accent/10 dark:bg-white/5 dark:text-brand-cream/50 dark:border-white/8"
                         )}>
-                            {isOwner && <Shield className="w-3 h-3" />}
+                            {isOwner && <HugeiconsIcon icon={Shield} className="w-3 h-3" />}
                             {roleLabels[member.role] || member.role}
                         </div>
 
@@ -141,7 +142,7 @@ export function StaffCard({ member, onClick, delay = 0 }: StaffCardProps) {
                         )}>
                             {isPending ? (
                                 <>
-                                    <Clock className="w-3 h-3" />
+                                    <HugeiconsIcon icon={Clock} className="w-3 h-3" />
                                     <span>Pending Invitation</span>
                                 </>
                             ) : (

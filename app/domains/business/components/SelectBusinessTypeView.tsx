@@ -4,7 +4,8 @@ import { useState, Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import Image from "next/image"
-import { Loader2, AlertCircle } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, AlertCircleIcon as AlertCircle } from "@hugeicons/core-free-icons"
 import { BusinessTypeSelector, type BusinessType } from "./BusinessTypeSelector"
 import { Button } from "@/app/components/ui/button"
 import { apiClient } from "@/app/lib/api-client"
@@ -47,7 +48,7 @@ function SelectBusinessTypeContent() {
                 <div className="relative z-10 w-full max-w-md">
                     <div className="space-y-6 rounded-[28px] border border-border bg-card p-6 shadow-sm sm:p-8">
                         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10">
-                            <AlertCircle className="h-8 w-8 text-red-500" />
+                            <HugeiconsIcon icon={AlertCircle} className="h-8 w-8 text-red-500" />
                         </div>
                         <h2 className="text-2xl font-semibold tracking-tight text-foreground">Setup incomplete</h2>
                         <p className="text-muted-foreground">
@@ -103,7 +104,7 @@ function SelectBusinessTypeContent() {
                     >
                         {isSubmitting ? (
                             <div className="flex items-center gap-3">
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                                 <span className="tracking-wide">Saving...</span>
                             </div>
                         ) : (

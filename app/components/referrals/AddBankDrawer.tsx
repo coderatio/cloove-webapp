@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import { Building2, Loader2, CheckCircle2, AlertCircle, ChevronsUpDown, ArrowLeft } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, Loading03Icon as Loader2, CheckmarkCircle02Icon as CheckCircle2, AlertCircleIcon as AlertCircle, UnfoldMoreIcon as ChevronsUpDown, ArrowLeft01Icon as ArrowLeft } from "@hugeicons/core-free-icons"
 import { BankSelector, type Bank } from "@/app/components/shared/BankSelector"
 
 export interface AddBankDetails {
@@ -85,7 +86,7 @@ export function AddBankDrawer({
                         {view === "form" ? (
                             <>
                                 <div className="mx-auto bg-brand-deep/5 dark:bg-white/5 p-3 rounded-full w-fit mb-4">
-                                    <Building2 className="w-6 h-6 text-brand-deep dark:text-brand-cream" />
+                                    <HugeiconsIcon icon={Building2} className="w-6 h-6 text-brand-deep dark:text-brand-cream" />
                                 </div>
                                 <DrawerTitle className="text-center text-xl font-serif text-brand-deep dark:text-brand-cream">
                                     Add Bank Account
@@ -102,7 +103,7 @@ export function AddBankDrawer({
                                     onClick={() => setView("form")}
                                     className="-ml-4 h-10 w-10 rounded-full bg-brand-deep/5 dark:bg-white/5"
                                 >
-                                    <ArrowLeft className="w-5 h-5 text-brand-deep dark:text-brand-cream" />
+                                    <HugeiconsIcon icon={ArrowLeft} className="w-5 h-5 text-brand-deep dark:text-brand-cream" />
                                 </Button>
                                 <DrawerTitle className="text-xl font-serif text-brand-deep dark:text-brand-cream">
                                     Select Bank
@@ -125,7 +126,7 @@ export function AddBankDrawer({
                                             <span className={details.bankName ? "" : "text-muted-foreground"}>
                                                 {details.bankName || "Select your bank..."}
                                             </span>
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            <HugeiconsIcon icon={ChevronsUpDown} className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                         </Button>
                                     </div>
 
@@ -145,17 +146,17 @@ export function AddBankDrawer({
                                             <label className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">Account Name</label>
                                             {isResolving && (
                                                 <span className="text-xs text-brand-gold flex items-center gap-1">
-                                                    <Loader2 className="w-3 h-3 animate-spin" /> Resolving...
+                                                    <HugeiconsIcon icon={Loader2} className="w-3 h-3 animate-spin" /> Resolving...
                                                 </span>
                                             )}
                                             {details.accountName && (
                                                 <span className="text-xs text-green-500 flex items-center gap-1">
-                                                    <CheckCircle2 className="w-3 h-3" /> Verified
+                                                    <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3" /> Verified
                                                 </span>
                                             )}
                                             {resolveError && (
                                                 <span className="text-xs text-red-500 flex items-center gap-1">
-                                                    <AlertCircle className="w-3 h-3" /> {resolveError}
+                                                    <HugeiconsIcon icon={AlertCircle} className="w-3 h-3" /> {resolveError}
                                                 </span>
                                             )}
                                         </div>

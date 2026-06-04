@@ -2,33 +2,8 @@
 
 import * as React from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
-import {
-    Search,
-    ShoppingCart,
-    Plus,
-    Minus,
-    Trash2,
-    CreditCard,
-    Banknote,
-    ArrowRight,
-    ReceiptText,
-    CheckCircle2,
-    ArrowLeft,
-    Barcode,
-    ChevronLeft,
-    ChevronRight,
-    ChevronDown,
-    SlidersHorizontal,
-    User,
-    UserPlus,
-    X,
-    ArrowBigUpDash,
-    UsersRoundIcon,
-    UserSearchIcon,
-    Layers,
-    History,
-    Tag
-} from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PackageIcon as Box, Search01Icon as Search, ShoppingCart01Icon as ShoppingCart, PlusSignIcon as Plus, MinusSignIcon as Minus, Delete02Icon as Trash2, CreditCardIcon as CreditCard, BanknoteIcon as Banknote, ArrowRight01Icon as ArrowRight, ReceiptTextIcon as ReceiptText, CheckmarkCircle02Icon as CheckCircle2, ArrowLeft01Icon as ArrowLeft, BarcodeIcon as Barcode, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, ChevronDownIcon as ChevronDown, SlidersHorizontalIcon as SlidersHorizontal, UserIcon as User, UserAdd01Icon as UserPlus, Cancel01Icon as X, ArrowUp01Icon as ArrowBigUpDash, UserGroupIcon as UsersRoundIcon, UserSearch01Icon as UserSearchIcon, Layers01Icon as Layers, HistoryIcon as History, Tag01Icon as Tag } from "@hugeicons/core-free-icons"
 import {
     Select,
     SelectContent,
@@ -113,26 +88,6 @@ function useDebounce<T>(value: T, delay?: number): T {
     return debouncedValue
 }
 
-function Box(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-            <path d="m3.3 7 8.7 5 8.7-5" />
-            <path d="M12 22V12" />
-        </svg>
-    )
-}
 
 function CreativeLoader() {
     return (
@@ -148,7 +103,7 @@ function CreativeLoader() {
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="h-12 w-12 rounded-2xl bg-brand-deep dark:bg-brand-gold-700 flex items-center justify-center shadow-2xl relative z-10">
-                        <Layers className="h-6 w-6 text-brand-gold dark:text-brand-deep animate-pulse" />
+                        <HugeiconsIcon icon={Layers} className="h-6 w-6 text-brand-gold dark:text-brand-deep animate-pulse" />
                     </div>
                 </div>
 
@@ -180,7 +135,7 @@ function CreativeLoader() {
                             }}
                             className="bg-white/40 dark:bg-white/5 p-2 rounded-xl backdrop-blur-md border border-brand-accent/10"
                         >
-                            <Icon className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
+                            <HugeiconsIcon icon={Icon} className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
                         </motion.div>
                     </motion.div>
                 ))}
@@ -261,7 +216,7 @@ const ProductGrid = React.memo(({
                             animate={{ opacity: 1 }}
                             className="col-span-full py-24 flex flex-col items-center justify-center text-brand-accent/40 dark:text-brand-cream/30"
                         >
-                            <Layers className="h-20 w-20 mb-6 opacity-20" />
+                            <HugeiconsIcon icon={Layers} className="h-20 w-20 mb-6 opacity-20" />
                             <p className="text-2xl font-serif tracking-tight text-brand-deep dark:text-brand-cream">No items found</p>
                             <p className="text-sm mt-2">{search ? `No results for "${search}"` : 'Your catalog is empty'}</p>
                         </motion.div>
@@ -528,7 +483,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                 // Re-focus the mobile input so consecutive scans work seamlessly
                 requestAnimationFrame(() => mobileInputRef.current?.focus())
                 toast.success(`Added ${exactMatch.product} via scan`, {
-                    icon: <Barcode className="h-4 w-4" />,
+                    icon: <HugeiconsIcon icon={Barcode} className="h-4 w-4" />,
                     duration: 1500
                 })
             }
@@ -691,7 +646,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
 
         toast.success("Sale parked successfully", {
             description: selectedCustomer ? `Saved for ${selectedCustomer.name}` : "Saved for walk-in customer",
-            icon: <Layers className="h-4 w-4" />
+            icon: <HugeiconsIcon icon={Layers} className="h-4 w-4" />
         })
 
         // Clear active cart
@@ -771,7 +726,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
         setIsQueueDrawerOpen(false)
 
         toast.info("Sale recalled", {
-            icon: <History className="h-4 w-4" />
+            icon: <HugeiconsIcon icon={History} className="h-4 w-4" />
         })
     }
 
@@ -792,7 +747,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        <UsersRoundIcon className="h-4 w-4 shrink-0 opacity-80" />
+                        <HugeiconsIcon icon={UsersRoundIcon} className="h-4 w-4 shrink-0 opacity-80" />
                         Dine-in
                     </button>
                     <button
@@ -805,7 +760,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                 : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        <ArrowBigUpDash className="h-4 w-4 shrink-0 opacity-80" />
+                        <HugeiconsIcon icon={ArrowBigUpDash} className="h-4 w-4 shrink-0 opacity-80" />
                         Takeaway
                     </button>
                 </div>
@@ -957,7 +912,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                         size="icon"
                                         className="rounded-2xl h-12 w-12 group border-brand-deep/15 dark:border-white/5 bg-white dark:bg-brand-deep-800 hover:bg-brand-gold/10 dark:hover:bg-brand-deep-900 hover:border-brand-deep-800/15 transition-all duration-500"
                                     >
-                                        <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                                        <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
                                     </Button>
                                 </Link>
                                 <div>
@@ -983,7 +938,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                         onClick={() => setMobileView('cart')}
                                         className="rounded-2xl h-12 w-12 bg-white/40 dark:bg-white/5 relative"
                                     >
-                                        <ShoppingCart className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
+                                        <HugeiconsIcon icon={ShoppingCart} className="h-5 w-5 text-brand-accent dark:text-brand-cream" />
                                         {totalItems > 0 && (
                                             <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-brand-gold-700 text-white flex items-center justify-center text-[10px] font-black shadow-lg">
                                                 {totalItems}
@@ -1004,7 +959,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                 onClick={() => setIsSearchOpen(true)}
                             >
                                 <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
-                                    <Search className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-hover:text-brand-deep dark:group-hover:text-brand-cream transition-colors" />
+                                    <HugeiconsIcon icon={Search} className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-hover:text-brand-deep dark:group-hover:text-brand-cream transition-colors" />
                                 </div>
                                 <div className="pl-11 pr-6 h-12 bg-white dark:bg-white/5 border border-brand-accent/10 dark:border-white/10 rounded-[14px] flex items-center text-brand-accent/40 dark:text-brand-cream/40 text-[13px] font-medium select-none w-full group-hover:border-brand-accent/30 dark:group-hover:border-white/30 transition-all shadow-xs">
                                     Search catalog or scan... <span className="ml-auto text-[10px] font-bold bg-brand-accent/5 dark:bg-white/5 px-2 py-0.5 rounded-md border border-brand-accent/10">/</span>
@@ -1014,7 +969,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                             {/* Mobile: Inline Search Input */}
                             <div className="relative flex lg:hidden items-center group">
                                 <div className="absolute left-4 inset-y-0 flex items-center pointer-events-none">
-                                    <Search className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-focus-within:text-brand-deep dark:group-focus-within:text-brand-cream transition-colors" />
+                                    <HugeiconsIcon icon={Search} className="h-4 w-4 text-brand-accent/40 dark:text-brand-cream/40 group-focus-within:text-brand-deep dark:group-focus-within:text-brand-cream transition-colors" />
                                 </div>
                                 <input
                                     ref={mobileInputRef}
@@ -1074,7 +1029,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                         </p>
                                     </div>
                                     <div className="inline-flex items-center gap-2 rounded-xl border border-brand-accent/15 dark:border-white/10 bg-background/70 px-2.5 py-1.5">
-                                        <SlidersHorizontal className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        <HugeiconsIcon icon={SlidersHorizontal} className="h-4 w-4 shrink-0 text-muted-foreground" />
                                         <span className="text-xs font-semibold text-foreground">Adjust</span>
                                         <span className="ml-0.5 rounded-md border border-brand-accent/15 bg-brand-accent/5 px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
                                             O
@@ -1133,7 +1088,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                         size="icon"
                                         className="rounded-lg h-8 w-8 hover:bg-brand-gold/10 transition-all duration-500"
                                     >
-                                        <ArrowLeft className="h-4 w-4" />
+                                        <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" />
                                     </Button>
                                 </Link>
                             </div>}
@@ -1146,7 +1101,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                     disabled={currentPage === 1}
                                     className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
                                 >
-                                    <ChevronLeft className="h-3 w-3 lg:mr-1.5" />
+                                    <HugeiconsIcon icon={ChevronLeft} className="h-3 w-3 lg:mr-1.5" />
                                     <span className="hidden lg:inline">Previous</span>
                                 </Button>
 
@@ -1183,7 +1138,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                     className="rounded-lg px-2 lg:px-3 hover:bg-brand-gold/5 transition-all text-[10px] font-bold uppercase tracking-widest h-8"
                                 >
                                     <span className="hidden lg:inline">Next</span>
-                                    <ChevronRight className="h-3 w-3 lg:ml-1.5" />
+                                    <HugeiconsIcon icon={ChevronRight} className="h-3 w-3 lg:ml-1.5" />
                                 </Button>
                             </div>
                         </div>
@@ -1203,7 +1158,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                         >
                             <div className="flex items-center gap-4">
                                 <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center">
-                                    <ShoppingCart className="h-5 w-5" />
+                                    <HugeiconsIcon icon={ShoppingCart} className="h-5 w-5" />
                                 </div>
                                 <div className="text-left">
                                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Complete Sale</p>
@@ -1212,7 +1167,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-xs font-bold uppercase tracking-widest mr-2">{totalItems} Items</span>
-                                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                <HugeiconsIcon icon={ArrowRight} className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                             </div>
                         </Button>
                     </motion.div>
@@ -1234,11 +1189,11 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                 onClick={() => setMobileView('catalog')}
                                 className="h-12 w-12 rounded-xl text-brand-accent hover:text-brand-accent dark:text-brand-cream lg:hidden hover:bg-brand-accent/10 transition-all shadow-sm border border-brand-accent/5"
                             >
-                                <ArrowLeft className="h-5 w-5" />
+                                <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
                             </Button>
 
                             <div className="hidden lg:flex h-10 w-10 rounded-[14px] border border-brand-accent/15 bg-brand-cream/60 dark:bg-brand-accent items-center justify-center text-brand-deep dark:text-brand-gold shadow-sm shadow-brand-deep/20">
-                                <ShoppingCart className="h-4 w-4" />
+                                <HugeiconsIcon icon={ShoppingCart} className="h-4 w-4" />
                             </div>
                             <div>
                                 <h3 className="font-serif text-xl lg:text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Checkout</h3>
@@ -1258,7 +1213,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                         <p className="text-[10px] font-bold uppercase tracking-widest leading-none opacity-40 dark:opacity-60">Client</p>
                                         <p className="text-xs font-black leading-tight">{selectedCustomer?.name?.split(' ')[0] || 'Client'}</p>
                                     </div>
-                                    <User className="h-4 w-4" />
+                                    <HugeiconsIcon icon={User} className="h-4 w-4" />
                                 </Button>
                             ) : (
                                 <Button
@@ -1267,7 +1222,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                     onClick={() => setIsCustomerSearchOpen(!isCustomerSearchOpen)}
                                     className="size-12 rounded-[16px] bg-white dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40 hover:text-brand-accent hover:bg-white/80 transition-all border border-brand-accent/5 dark:border-white/5 shadow-sm"
                                 >
-                                    <UsersRoundIcon className="h-5 w-5" />
+                                    <HugeiconsIcon icon={UsersRoundIcon} className="h-5 w-5" />
                                 </Button>
                             )}
 
@@ -1281,7 +1236,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                     queuedSales.length > 0 && "text-brand-gold border-brand-gold/20"
                                 )}
                             >
-                                <Layers className="h-5 w-5" />
+                                <HugeiconsIcon icon={Layers} className="h-5 w-5" />
                                 {queuedSales.length > 0 && (
                                     <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-brand-gold-700 text-white flex items-center justify-center text-[9px] font-black shadow-lg">
                                         {queuedSales.length}
@@ -1304,7 +1259,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-3">
                                         <div className="h-10 w-10 rounded-xl bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-gold">
-                                            <UserSearchIcon className="h-5 w-5" />
+                                            <HugeiconsIcon icon={UserSearchIcon} className="h-5 w-5" />
                                         </div>
                                         <h4 className="font-serif text-2xl text-brand-deep dark:text-brand-cream tracking-tight">Customer Search</h4>
                                     </div>
@@ -1314,13 +1269,13 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                         onClick={() => setIsCustomerSearchOpen(false)}
                                         className="h-10 w-10 rounded-xl bg-brand-accent/5 dark:bg-white/5 hover:bg-rose-500/10 dark:hover:bg-rose-500/20 text-brand-accent/60 dark:text-brand-cream/60 hover:text-rose-500 transition-all"
                                     >
-                                        <X className="h-5 w-5" />
+                                        <HugeiconsIcon icon={X} className="h-5 w-5" />
                                     </Button>
                                 </div>
 
                                 <div className="relative group px-0.5">
                                     <div className="absolute left-6 inset-y-0 flex items-center pointer-events-none">
-                                        <Search className="h-5 w-5 text-brand-accent/30 dark:text-brand-cream/30 group-focus-within:text-brand-gold transition-colors" />
+                                        <HugeiconsIcon icon={Search} className="h-5 w-5 text-brand-accent/30 dark:text-brand-cream/30 group-focus-within:text-brand-gold transition-colors" />
                                     </div>
                                     <Input
                                         autoFocus
@@ -1351,7 +1306,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                                     <div className="flex items-center justify-between w-full">
                                                         <div className="flex items-center gap-4">
                                                             <div className="h-12 w-12 rounded-2xl bg-brand-accent/5 dark:bg-white/10 flex items-center justify-center text-brand-accent dark:text-brand-cream group-hover:bg-brand-accent/10 dark:group-hover:bg-brand-accent/20 transition-colors shadow-sm">
-                                                                <User className="h-5 w-5" />
+                                                                <HugeiconsIcon icon={User} className="h-5 w-5" />
                                                             </div>
                                                             <div>
                                                                 <h4 className="font-bold text-brand-deep dark:text-brand-cream group-hover:text-brand-accent dark:group-hover:text-brand-gold transition-colors">{customer.name}</h4>
@@ -1362,7 +1317,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                                             {customer.recentPurchases && (
                                                                 <span className="text-[10px] font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-1 rounded-lg border border-brand-gold/20">{customer.recentPurchases} orders</span>
                                                             )}
-                                                            <ChevronRight className="h-5 w-5 text-brand-accent/20 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
+                                                            <HugeiconsIcon icon={ChevronRight} className="h-5 w-5 text-brand-accent/20 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
                                                         </div>
                                                     </div>
                                                 </Button>
@@ -1388,7 +1343,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-12 w-12 rounded-xl bg-brand-accent/10 dark:bg-brand-accent/30 flex items-center justify-center text-brand-accent dark:text-brand-cream shadow-inner">
-                                                        <UserPlus className="h-6 w-6" />
+                                                        <HugeiconsIcon icon={UserPlus} className="h-6 w-6" />
                                                     </div>
                                                     <div>
                                                         <p className="text-[10px] font-bold text-brand-accent dark:text-brand-gold uppercase tracking-[0.2em] mb-1">Add as new customer</p>
@@ -1415,7 +1370,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                 className="h-full flex flex-col items-center justify-center text-center py-20"
                             >
                                 <div className="mb-6 h-20 w-20 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center border border-brand-accent/5 dark:border-white/5">
-                                    <ShoppingCart className="h-8 w-8 text-brand-accent/30 dark:text-brand-cream/30" />
+                                    <HugeiconsIcon icon={ShoppingCart} className="h-8 w-8 text-brand-accent/30 dark:text-brand-cream/30" />
                                 </div>
                                 <h4 className="font-semibold text-lg text-brand-deep/60 dark:text-brand-cream/60 mb-1 tracking-tight">Cart is empty</h4>
                                 <p className="text-[13px] text-brand-accent/40 dark:text-brand-cream/30 px-8">Select items to begin recording.</p>
@@ -1449,7 +1404,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                                         onClick={() => updateQuantity(item.id, -1)}
                                                         className="h-6 w-6 flex items-center justify-center text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-deep hover:bg-black/5 rounded-[6px] transition-all"
                                                     >
-                                                        <Minus className="h-3 w-3" />
+                                                        <HugeiconsIcon icon={Minus} className="h-3 w-3" />
                                                     </Button>
                                                     <span className="w-5 text-center text-[13px] font-semibold text-brand-deep dark:text-brand-cream tabular-nums">{item.quantity}</span>
                                                     <Button
@@ -1458,7 +1413,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                                         onClick={() => updateQuantity(item.id, 1)}
                                                         className="h-6 w-6 flex items-center justify-center text-brand-accent/60 dark:text-brand-cream/60 hover:text-brand-deep hover:bg-black/5 rounded-[6px] transition-all"
                                                     >
-                                                        <Plus className="h-3 w-3" />
+                                                        <HugeiconsIcon icon={Plus} className="h-3 w-3" />
                                                     </Button>
                                                 </div>
                                                 <p className="text-[12px] text-brand-accent/40 dark:text-brand-cream/30 font-medium tracking-wide">
@@ -1516,7 +1471,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                     onClick={() => setShowExtras(!showExtras)}
                                     className="h-6 px-1.5 -mr-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-brand-accent/40 dark:text-brand-cream/40 hover:bg-brand-deep/5"
                                 >
-                                    <ChevronDown className={cn("h-3 w-3 transition-transform duration-300", showExtras && "rotate-180")} />
+                                    <HugeiconsIcon icon={ChevronDown} className={cn("h-3 w-3 transition-transform duration-300", showExtras && "rotate-180")} />
                                 </Button>
                             </div>
                         </div>
@@ -1547,7 +1502,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                                             className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                                                             aria-label="Remove promotion"
                                                         >
-                                                            <X className="w-3 h-3" />
+                                                            <HugeiconsIcon icon={X} className="w-3 h-3" />
                                                         </button>
                                                     </div>
                                                 ) : (
@@ -1589,7 +1544,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                                                     >
                                                         <SelectTrigger className="w-8 h-8 px-0 justify-center border-brand-accent/10 dark:border-white/10 dark:bg-white/5 rounded-md hover:bg-white/50 dark:hover:bg-white/10 transition-colors [&>svg:last-child]:hidden [&>span]:hidden" aria-label="Apply promotion">
                                                             <SelectValue placeholder="Promo" />
-                                                            <Tag className="w-3.5 h-3.5 text-brand-accent/60 dark:text-brand-cream/60" />
+                                                            <HugeiconsIcon icon={Tag} className="w-3.5 h-3.5 text-brand-accent/60 dark:text-brand-cream/60" />
                                                         </SelectTrigger>
                                                         <SelectContent align="end">
                                                             <SelectItem value="none">Custom amount</SelectItem>
@@ -1688,7 +1643,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                             disabled={cart.length === 0}
                             title="Print Receipt"
                         >
-                            <ReceiptText className="h-5 w-5" />
+                            <HugeiconsIcon icon={ReceiptText} className="h-5 w-5" />
                         </Button>
                         <Button
                             variant="outline"
@@ -1697,7 +1652,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                             disabled={cart.length === 0}
                             title="Queue Sale"
                         >
-                            <Layers className="h-5 w-5" />
+                            <HugeiconsIcon icon={Layers} className="h-5 w-5" />
                         </Button>
                         <Button
                             className="h-12 flex-1 rounded-[14px] bg-brand-deep dark:bg-white text-white dark:text-brand-deep font-semibold text-base hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 border-none group relative overflow-hidden disabled:opacity-50"
@@ -1706,7 +1661,7 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                         >
                             {isRecording ? (
                                 <motion.div key="loader" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }}>
-                                    <ArrowRight className="h-5 w-5" />
+                                    <HugeiconsIcon icon={ArrowRight} className="h-5 w-5" />
                                 </motion.div>
                             ) : (
                                 <motion.span key="text" className="inline-flex items-center">
@@ -1726,7 +1681,6 @@ export function SaleModeView({ embedded = false }: { embedded?: boolean }) {
                 onRecall={handleRecallSale}
                 onRemove={removeQueuedSale}
             />
-
 
             {/* Global Refinements */}
             <style jsx global>{`

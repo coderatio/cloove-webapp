@@ -1,6 +1,7 @@
 "use client"
 
-import { ArrowDownLeft, ArrowUpRight, ShoppingBag, CreditCard, UserPlus, ChevronRight, PackageSearch, Sparkles, ArrowRight, Wallet } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowDownLeft01Icon as ArrowDownLeft, ArrowUpRight01Icon as ArrowUpRight, ShoppingBag01Icon as ShoppingBag, CreditCardIcon as CreditCard, UserAdd01Icon as UserPlus, ChevronRightIcon as ChevronRight, PackageSearchIcon as PackageSearch, SparklesIcon as Sparkles, ArrowRight01Icon as ArrowRight, Wallet01Icon as Wallet } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "../ui/glass-card"
 import Link from "next/link"
@@ -34,19 +35,19 @@ interface ActivityStreamProps {
 export const ActivityIcon = ({ type }: { type: ActivityItem['type'] }) => {
     switch (type) {
         case 'sale':
-            return <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full"><ShoppingBag className="w-4 h-4" /></div>
+            return <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full"><HugeiconsIcon icon={ShoppingBag} className="w-4 h-4" /></div>
         case 'payment':
-            return <div className="p-2 bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/20 dark:text-brand-gold rounded-full"><CreditCard className="w-4 h-4" /></div>
+            return <div className="p-2 bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/20 dark:text-brand-gold rounded-full"><HugeiconsIcon icon={CreditCard} className="w-4 h-4" /></div>
         case 'debt':
-            return <div className="p-2 bg-danger/10 text-danger dark:bg-danger/20 dark:text-red-400 rounded-full"><ArrowDownLeft className="w-4 h-4" /></div>
+            return <div className="p-2 bg-danger/10 text-danger dark:bg-danger/20 dark:text-red-400 rounded-full"><HugeiconsIcon icon={ArrowDownLeft} className="w-4 h-4" /></div>
         case 'customer':
-            return <div className="p-2 bg-brand-accent/10 text-brand-accent dark:bg-brand-gold/10 dark:text-brand-gold rounded-full"><UserPlus className="w-4 h-4" /></div>
+            return <div className="p-2 bg-brand-accent/10 text-brand-accent dark:bg-brand-gold/10 dark:text-brand-gold rounded-full"><HugeiconsIcon icon={UserPlus} className="w-4 h-4" /></div>
         case 'inventory':
-            return <div className="p-2 bg-brand-blue/10 text-brand-blue dark:bg-brand-gold/10 dark:text-brand-gold rounded-full"><PackageSearch className="w-4 h-4" /></div>
+            return <div className="p-2 bg-brand-blue/10 text-brand-blue dark:bg-brand-gold/10 dark:text-brand-gold rounded-full"><HugeiconsIcon icon={PackageSearch} className="w-4 h-4" /></div>
         case 'deposit':
-            return <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full"><Wallet className="w-4 h-4" /></div>
+            return <div className="p-2 bg-brand-green/10 text-brand-green dark:bg-brand-green/20 dark:text-brand-cream rounded-full"><HugeiconsIcon icon={Wallet} className="w-4 h-4" /></div>
         case 'withdrawal':
-            return <div className="p-2 bg-brand-accent/10 text-brand-accent dark:bg-brand-accent/20 dark:text-brand-gold rounded-full"><ArrowUpRight className="w-4 h-4" /></div>
+            return <div className="p-2 bg-brand-accent/10 text-brand-accent dark:bg-brand-accent/20 dark:text-brand-gold rounded-full"><HugeiconsIcon icon={ArrowUpRight} className="w-4 h-4" /></div>
     }
 }
 
@@ -56,7 +57,7 @@ const ActivityEmptyState = () => {
             <div className="relative mb-6">
                 <div className="relative h-20 w-20 rounded-[28px] bg-white/40 dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex items-center justify-center group">
                     <div className="absolute inset-0 rounded-[28px] bg-linear-to-tr from-brand-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                    <Sparkles className="w-8 h-8 text-brand-gold transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12" />
+                    <HugeiconsIcon icon={Sparkles} className="w-8 h-8 text-brand-gold transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12" />
                 </div>
             </div>
 
@@ -87,7 +88,7 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
                 {activities.length > 0 && (
                     <Link href="/activity" className="flex items-center gap-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">
                         <span>View all</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <HugeiconsIcon icon={ArrowRight} className="w-4 h-4" />
                     </Link>
                 )}
             </div>
@@ -122,7 +123,7 @@ export function ActivityStream({ activities, onOrderClick, onFinanceClick, class
                                             <CurrencyText value={`${item.type === 'withdrawal' || item.type === 'debt' ? '-' : item.type === 'sale' || item.type === 'payment' || item.type === 'deposit' ? '+' : ''}${item.amount}`} />
                                         </div>
                                     )}
-                                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-foreground/80" />
+                                    <HugeiconsIcon icon={ChevronRight} className="h-4 w-4 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-foreground/80" />
                                 </div>
                             </div>
                         )

@@ -3,14 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import {
-    Archive,
-    Copy,
-    GitBranch,
-    PencilLine,
-    Plus,
-    Search,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArchiveIcon as Archive, CopyIcon as Copy, GitBranchIcon as GitBranch, PencilEdit01Icon as PencilLine, PlusSignIcon as Plus, Search01Icon as Search } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -291,7 +285,7 @@ export function FlowsTab() {
                         </SelectContent>
                     </Select>
                     <div className="relative flex-1">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <HugeiconsIcon icon={Search} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -305,7 +299,7 @@ export function FlowsTab() {
                         className="rounded-full"
                         onClick={() => router.push(`/whatsapp/flows/new?numberId=${selectedNumberId}`)}
                     >
-                        <Plus className="mr-1.5 h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={Plus} className="mr-1.5 h-3.5 w-3.5" />
                         New flow
                     </Button>
                 </div>
@@ -349,7 +343,7 @@ export function FlowsTab() {
             <section>
                 <div className="mb-5 flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-muted/30">
-                        <GitBranch className="h-4 w-4 text-muted-foreground" />
+                        <HugeiconsIcon icon={GitBranch} className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
                         <h2 className="text-sm font-semibold text-foreground">Available flows</h2>
@@ -363,7 +357,7 @@ export function FlowsTab() {
                     {!selectedNumberId ? (
                         <GlassCard className="flex flex-col items-center gap-3 px-5 py-12 text-center">
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-muted/30">
-                                <GitBranch className="h-6 w-6 text-muted-foreground/50" />
+                                <HugeiconsIcon icon={GitBranch} className="h-6 w-6 text-muted-foreground/50" />
                             </div>
                             <p className="text-sm font-medium text-foreground">Select a WhatsApp number</p>
                             <p className="max-w-sm text-xs text-muted-foreground">
@@ -420,7 +414,7 @@ export function FlowsTab() {
                                             className="rounded-full text-xs"
                                             onClick={() => router.push(`/whatsapp/flows/${flow.id}?numberId=${selectedNumberId}`)}
                                         >
-                                            <PencilLine className="mr-1.5 h-3.5 w-3.5" />
+                                            <HugeiconsIcon icon={PencilLine} className="mr-1.5 h-3.5 w-3.5" />
                                             Edit
                                         </Button>
                                         {flow.status !== "PUBLISHED" && (
@@ -461,7 +455,7 @@ export function FlowsTab() {
                                                     }
                                                 }}
                                             >
-                                                <Archive className="mr-1.5 h-3.5 w-3.5" />
+                                                <HugeiconsIcon icon={Archive} className="mr-1.5 h-3.5 w-3.5" />
                                                 Archive
                                             </Button>
                                         )}
@@ -484,7 +478,7 @@ export function FlowsTab() {
                                                 }
                                             }}
                                         >
-                                            <Copy className="mr-1.5 h-3.5 w-3.5" />
+                                            <HugeiconsIcon icon={Copy} className="mr-1.5 h-3.5 w-3.5" />
                                             Duplicate
                                         </Button>
                                     </div>
@@ -494,7 +488,7 @@ export function FlowsTab() {
                     ) : (
                         <GlassCard className="flex flex-col items-center gap-3 px-5 py-12 text-center">
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-muted/30">
-                                <GitBranch className="h-6 w-6 text-muted-foreground/50" />
+                                <HugeiconsIcon icon={GitBranch} className="h-6 w-6 text-muted-foreground/50" />
                             </div>
                             <p className="text-sm font-medium text-foreground">No flows yet</p>
                             <p className="max-w-sm text-xs text-muted-foreground">
@@ -510,7 +504,7 @@ export function FlowsTab() {
                                     className="mt-1 rounded-full"
                                     onClick={() => router.push(`/whatsapp/flows/new?numberId=${selectedNumberId}`)}
                                 >
-                                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                                    <HugeiconsIcon icon={Plus} className="mr-1.5 h-3.5 w-3.5" />
                                     Create flow
                                 </Button>
                             )}

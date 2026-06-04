@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Clipboard, Copy, Eye, EyeOff, Loader2, Lock, ShieldCheck } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ClipboardIcon as Clipboard, CopyIcon as Copy, EyeIcon as Eye, EyeOffIcon as EyeOff, Loading03Icon as Loader2, LockIcon as Lock, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import {
@@ -115,7 +116,7 @@ export function PasswordConfirmDialog({
                     <>
                         <DialogHeader className="px-6 pt-6 pb-3 sm:px-7 sm:pt-7">
                             <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
-                                <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                                <HugeiconsIcon icon={ShieldCheck} className="h-5 w-5 text-emerald-500" />
                                 {revealTitle}
                             </DialogTitle>
                             <DialogDescription className="mt-2 text-sm leading-6">
@@ -134,7 +135,7 @@ export function PasswordConfirmDialog({
                                         variant="outline"
                                         onClick={() => void copyExtra()}
                                     >
-                                        <Copy className="mr-2 h-4 w-4" />
+                                        <HugeiconsIcon icon={Copy} className="mr-2 h-4 w-4" />
                                         {revealedExtra.copyLabel ?? "Copy"}
                                     </Button>
                                 </div>
@@ -150,9 +151,9 @@ export function PasswordConfirmDialog({
                                     onClick={() => void copyValue()}
                                 >
                                     {copied ? (
-                                        <><Clipboard className="mr-2 h-4 w-4" /> Copied</>
+                                        <><HugeiconsIcon icon={Clipboard} className="mr-2 h-4 w-4" /> Copied</>
                                     ) : (
-                                        <><Copy className="mr-2 h-4 w-4" /> Copy secret</>
+                                        <><HugeiconsIcon icon={Copy} className="mr-2 h-4 w-4" /> Copy secret</>
                                     )}
                                 </Button>
                             </div>
@@ -170,7 +171,7 @@ export function PasswordConfirmDialog({
                     <>
                         <DialogHeader className="px-6 pt-6 pb-3 sm:px-7 sm:pt-7">
                             <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
-                                <Lock className="h-5 w-5 text-muted-foreground" />
+                                <HugeiconsIcon icon={Lock} className="h-5 w-5 text-muted-foreground" />
                                 {title}
                             </DialogTitle>
                             <DialogDescription className="mt-2 text-sm leading-6">
@@ -194,7 +195,7 @@ export function PasswordConfirmDialog({
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     tabIndex={-1}
                                 >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    {showPassword ? <HugeiconsIcon icon={EyeOff} className="h-4 w-4" /> : <HugeiconsIcon icon={Eye} className="h-4 w-4" />}
                                 </button>
                             </div>
                             {error && (
@@ -215,9 +216,9 @@ export function PasswordConfirmDialog({
                                 onClick={() => void handleSubmit()}
                             >
                                 {isVerifying ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    <ShieldCheck className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={ShieldCheck} className="mr-2 h-4 w-4" />
                                 )}
                                 Confirm
                             </Button>

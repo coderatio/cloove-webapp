@@ -1,6 +1,7 @@
 "use client"
 
-import { Pill, Package, Users, Banknote, ClipboardCheck, ShieldCheck, Wallet } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PillIcon as Pill, PackageIcon as Package, UserMultiple02Icon as Users, BanknoteIcon as Banknote, ClipboardCheckIcon as ClipboardCheck, SecurityCheckIcon as ShieldCheck, Wallet01Icon as Wallet } from "@hugeicons/core-free-icons"
 import type { PresetPageCopy } from "@/app/domains/workspace/copy/preset-page-copy"
 import { usePermission } from "@/app/hooks/usePermission"
 import { ModuleShell } from "./ModuleShell"
@@ -28,7 +29,7 @@ export function PharmacyDashboardModule({ pageCopy }: { pageCopy: PresetPageCopy
             />
             <div className="mt-4 rounded-2xl border border-brand-deep/6 bg-brand-deep/2 px-3 py-3 dark:border-white/10 dark:bg-white/3">
                 <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-deep/50 dark:text-brand-cream/50">
-                    <ClipboardCheck className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={ClipboardCheck} className="h-3.5 w-3.5" />
                     Daily discipline
                 </p>
                 <ul className="space-y-1.5 text-sm text-brand-deep/80 dark:text-brand-cream/80">

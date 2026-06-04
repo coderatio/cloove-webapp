@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sparkles, Menu, X, LogOut, LayoutGrid, Gift, ArrowLeft, ChevronRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SparklesIcon as Sparkles, Menu01Icon as Menu, Cancel01Icon as X, Logout01Icon as LogOut, LayoutGridIcon as LayoutGrid, GiftIcon as Gift, ArrowLeft01Icon as ArrowLeft, ChevronRightIcon as ChevronRight } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import {
     Drawer,
@@ -19,6 +20,12 @@ import { Button } from "../ui/button"
 import { toast } from "sonner"
 import { useWorkspaceNav } from "@/app/domains/workspace/hooks/useWorkspaceNav"
 import { useBusiness } from "../BusinessProvider"
+import { findMiniAppByNavItemId, resolveMiniAppItems, isMiniAppItemActive } from "./mini-apps"
+import type { ResolvedNavItem } from "@/app/domains/workspace/nav/build-nav-model"
+import type { IconSvgElement } from "@hugeicons/react"
+
+/** A drawer submenu entry — covers both nav children and mini-app sub-tabs. */
+type MoreSubItem = { id?: string; href: string; label: string; icon: IconSvgElement; permission?: string }
 
 export function MobileNav() {
     const pathname = usePathname()
@@ -28,8 +35,19 @@ export function MobileNav() {
     const { isMenuOpen, setIsMenuOpen } = useMobileNav()
     const [isMoreOpen, setIsMoreOpen] = useState(false)
 
-    const { mobilePrimary, mobileSecondary, mobileMoreItems } = useWorkspaceNav()
+    const { mobilePrimary, mobileSecondary, mobileMoreItems, navGroups } = useWorkspaceNav()
     const { features } = useBusiness()
+    const searchParams = useSearchParams()
+
+    // Resolve a parent's drill-down items: mini-app sub-tabs if the item maps to a
+    // mini app (WhatsApp, Voice, Sales, Developer), otherwise its plain nav children.
+    const getSubmenuItems = (parent: ResolvedNavItem): MoreSubItem[] => {
+        const miniApp = findMiniAppByNavItemId(parent.id)
+        if (miniApp) {
+            return resolveMiniAppItems(miniApp, navGroups).filter((i) => !i.permission || can(i.permission))
+        }
+        return (parent.children ?? []).filter((c) => !c.permission || can(c.permission))
+    }
 
     const handleLogout = () => {
         toast.promise(
@@ -61,7 +79,7 @@ export function MobileNav() {
                     onClick={() => setIsMenuOpen(true)}
                     className="flex size-9 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm active:scale-95"
                 >
-                    <LayoutGrid className="size-4" />
+                    <HugeiconsIcon icon={LayoutGrid} className="size-4" />
                 </button>
             </motion.div>
         )
@@ -79,7 +97,7 @@ export function MobileNav() {
                                     onClick={() => setIsMenuOpen(false)}
                                     className="h-10 w-10 rounded-full bg-black/50 backdrop-blur-md text-white flex items-center justify-center mb-2 active:scale-90 transition-transform"
                                 >
-                                    <X className="h-5 w-5" />
+                                    <HugeiconsIcon icon={X} className="h-5 w-5" />
                                 </button>
                             </div>
                         )}
@@ -98,7 +116,7 @@ export function MobileNav() {
                                             : "hover:scale-105"
                                     )}
                                 >
-                                    <Sparkles className="h-7 w-7" strokeWidth={2.2} />
+                                    <HugeiconsIcon icon={Sparkles} className="h-7 w-7" strokeWidth={2.2} />
                                 </Link>
                             </div>
 
@@ -122,7 +140,7 @@ export function MobileNav() {
                                                     isActive ? "text-foreground" : "text-muted-foreground"
                                                 )}
                                             >
-                                                <item.icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
+                                                <HugeiconsIcon icon={item.icon} className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
                                                 <span className="text-[9px] font-bold uppercase tracking-tighter">{label}</span>
                                             </Link>
                                         )
@@ -143,7 +161,7 @@ export function MobileNav() {
                                                     isActive ? "text-foreground" : "text-muted-foreground"
                                                 )}
                                             >
-                                                <item.icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
+                                                <HugeiconsIcon icon={item.icon} className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
                                                 <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
                                             </Link>
                                         )
@@ -154,7 +172,7 @@ export function MobileNav() {
                                         onClick={() => setIsMoreOpen(true)}
                                         className="flex flex-col items-center gap-1 text-muted-foreground"
                                     >
-                                        <Menu className="h-5 w-5" />
+                                        <HugeiconsIcon icon={Menu} className="h-5 w-5" />
                                         <span className="text-[9px] font-bold uppercase tracking-tighter">More</span>
                                     </button>
                                 </div>
@@ -177,7 +195,7 @@ export function MobileNav() {
                                         onClick={() => setSubmenuParent(null)}
                                         className="h-10 w-10 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center"
                                     >
-                                        <ArrowLeft className="h-6 w-6" />
+                                        <HugeiconsIcon icon={ArrowLeft} className="h-6 w-6" />
                                     </Button>
                                     <span>{submenuParent.label}</span>
                                 </div>
@@ -211,13 +229,13 @@ export function MobileNav() {
                                             "flex h-10 w-10 items-center justify-center rounded-xl",
                                             pathname === submenuParent.href ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
                                         )}>
-                                            <submenuParent.icon className="h-5 w-5" strokeWidth={2} />
+                                            <HugeiconsIcon icon={submenuParent.icon} className="h-5 w-5" strokeWidth={2} />
                                         </div>
                                         <span className="font-semibold">{submenuParent.label}</span>
                                     </Link>
 
-                                    {submenuParent.children?.map((child) => {
-                                        if (child.permission && !can(child.permission)) return null
+                                    {getSubmenuItems(submenuParent).map((child) => {
+                                        const childActive = isMiniAppItemActive(child.href, pathname, searchParams)
                                         return (
                                             <Link
                                                 key={child.href}
@@ -225,16 +243,16 @@ export function MobileNav() {
                                                 onClick={() => handleMoreOpenChange(false)}
                                                 className={cn(
                                                     "flex items-center gap-4 rounded-[20px] p-4 transition-all duration-200 active:scale-95 border",
-                                                    pathname.startsWith(child.href)
+                                                    childActive
                                                         ? "border-brand-green-200 bg-brand-green-50 text-foreground dark:border-brand-green-800/40 dark:bg-brand-green-950/30 dark:text-brand-cream"
                                                         : "border-border bg-zinc-50 text-foreground dark:border-white/5 dark:bg-white/5 dark:text-brand-cream/80"
                                                 )}
                                             >
                                                 <div className={cn(
                                                     "flex h-10 w-10 items-center justify-center rounded-xl",
-                                                    pathname.startsWith(child.href) ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
+                                                    childActive ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
                                                 )}>
-                                                    <child.icon className="h-5 w-5" strokeWidth={2} />
+                                                    <HugeiconsIcon icon={child.icon} className="h-5 w-5" strokeWidth={2} />
                                                 </div>
                                                 <span className="font-semibold">{child.label}</span>
                                             </Link>
@@ -260,11 +278,11 @@ export function MobileNav() {
 
                                                 <div className="relative z-10 flex items-center gap-4">
                                                     <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shrink-0">
-                                                        <Gift className="h-6 w-6" />
+                                                        <HugeiconsIcon icon={Gift} className="h-6 w-6" />
                                                     </div>
                                                     <div>
-                                                        <h4 className="text-lg font-semibold text-foreground dark:text-brand-cream">Refer & Earn</h4>
-                                                        <p className="text-xs text-muted-foreground dark:text-brand-cream/60">Get 10% commission per referral</p>
+                                                        <h4 className="text-lg font-semibold text-brand-cream">Refer & Earn</h4>
+                                                        <p className="text-xs text-brand-cream/60">Get 10% commission per referral</p>
                                                     </div>
                                                 </div>
                                             </Link>
@@ -275,7 +293,7 @@ export function MobileNav() {
                                             if (item.permission && !can(item.permission)) {
                                                 return null
                                             }
-                                            const hasChildren = item.children && item.children.length > 0
+                                            const hasChildren = getSubmenuItems(item).length > 0
                                             return (
                                                 <button
                                                     key={item.id}
@@ -298,11 +316,11 @@ export function MobileNav() {
                                                         "flex h-10 w-10 items-center justify-center rounded-xl shrink-0",
                                                         pathname === item.href ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
                                                     )}>
-                                                        <item.icon className="h-5 w-5" strokeWidth={2} />
+                                                        <HugeiconsIcon icon={item.icon} className="h-5 w-5" strokeWidth={2} />
                                                     </div>
                                                     <span className="font-semibold flex-1">{item.label}</span>
                                                     {hasChildren && (
-                                                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground dark:text-brand-cream/30" />
+                                                        <HugeiconsIcon icon={ChevronRight} className="h-4 w-4 shrink-0 text-muted-foreground dark:text-brand-cream/30" />
                                                     )}
                                                 </button>
                                             )
@@ -315,7 +333,7 @@ export function MobileNav() {
                                             className="flex items-center gap-4 rounded-2xl p-4 bg-red-50 dark:bg-red-500/10 text-red-600 border border-red-200/50 dark:border-red-500/10 active:scale-95 transition-all"
                                         >
                                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-white/10 shadow-sm">
-                                                <LogOut className="h-5 w-5" />
+                                                <HugeiconsIcon icon={LogOut} className="h-5 w-5" />
                                             </div>
                                             <span className="font-semibold">Sign Out</span>
                                         </button>

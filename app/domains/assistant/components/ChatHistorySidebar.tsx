@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState, useRef, useEffect, type ReactElement } from "react"
-import { MessageSquare, Plus, Search, MoreHorizontal, Pencil, Pin, PinOff, Archive, Trash2, Loader2, AlertCircle, Check, X, FileText, Receipt } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Message01Icon as MessageSquare, PlusSignIcon as Plus, Search01Icon as Search, MoreHorizontalIcon as MoreHorizontal, PencilIcon as Pencil, PinIcon as Pin, PinOffIcon as PinOff, ArchiveIcon as Archive, Delete02Icon as Trash2, Loading03Icon as Loader2, AlertCircleIcon as AlertCircle, CheckIcon as Check, Cancel01Icon as X, File01Icon as FileText, Invoice01Icon as Receipt } from "@hugeicons/core-free-icons"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -157,13 +158,13 @@ function ConversationItem({
                             )}
                         >
                             {conv.isPinned ? (
-                                <Pin className="w-4 h-4 text-brand-gold" />
+                                <HugeiconsIcon icon={Pin} className="w-4 h-4 text-brand-gold" />
                             ) : conv.agentType === "proposal" ? (
-                                <FileText className="w-4 h-4 text-emerald-500" />
+                                <HugeiconsIcon icon={FileText} className="w-4 h-4 text-emerald-500" />
                             ) : conv.agentType === "invoice" ? (
-                                <Receipt className="w-4 h-4 text-amber-500" />
+                                <HugeiconsIcon icon={Receipt} className="w-4 h-4 text-amber-500" />
                             ) : (
-                                <MessageSquare className="w-4 h-4" />
+                                <HugeiconsIcon icon={MessageSquare} className="w-4 h-4" />
                             )}
                         </div>
                     )}
@@ -232,7 +233,7 @@ function ConversationItem({
                                         if (input) onFinishRename(input.value.trim())
                                     }}
                                 >
-                                    <Check className="h-4 w-4" />
+                                    <HugeiconsIcon icon={Check} className="h-4 w-4" />
                                 </Button>
                                 <Button
                                     variant="ghost"
@@ -240,7 +241,7 @@ function ConversationItem({
                                     className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 focus-visible:ring-0 focus-visible:ring-offset-0"
                                     onClick={onCancelRename}
                                 >
-                                    <X className="h-4 w-4" />
+                                    <HugeiconsIcon icon={X} className="h-4 w-4" />
                                 </Button>
                             </div>
                         ) : (
@@ -251,7 +252,7 @@ function ConversationItem({
                                         size="icon"
                                         className="h-8 w-8 rounded-xl opacity-40 hover:opacity-100 group-hover:opacity-40 transition-all duration-300 hover:bg-white dark:hover:bg-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
                                     >
-                                        <MoreHorizontal className="h-4 w-4" />
+                                        <HugeiconsIcon icon={MoreHorizontal} className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
@@ -262,14 +263,14 @@ function ConversationItem({
                                         onSelect={() => onStartRename()}
                                         className="rounded-xl flex items-center gap-2 text-sm px-3 py-2 cursor-pointer hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors"
                                     >
-                                        <Pencil className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Pencil} className="w-4 h-4" />
                                         Rename
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onSelect={() => onPin()}
                                         className="rounded-xl flex items-center gap-2 text-sm px-3 py-2 cursor-pointer hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors"
                                     >
-                                        {conv.isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                                        {conv.isPinned ? <HugeiconsIcon icon={PinOff} className="w-4 h-4" /> : <HugeiconsIcon icon={Pin} className="w-4 h-4" />}
                                         {conv.isPinned ? "Unpin" : "Pin"}
                                     </DropdownMenuItem>
                                     {conv.isArchived ? (
@@ -277,7 +278,7 @@ function ConversationItem({
                                             onSelect={() => onUnarchive(conv.id)}
                                             className="rounded-xl flex items-center gap-2 text-sm px-3 py-2 cursor-pointer hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors"
                                         >
-                                            <Archive className="w-4 h-4" />
+                                            <HugeiconsIcon icon={Archive} className="w-4 h-4" />
                                             Restore
                                         </DropdownMenuItem>
                                     ) : (
@@ -285,7 +286,7 @@ function ConversationItem({
                                             onSelect={() => onArchive()}
                                             className="rounded-xl flex items-center gap-2 text-sm px-3 py-2 cursor-pointer hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors"
                                         >
-                                            <Archive className="w-4 h-4" />
+                                            <HugeiconsIcon icon={Archive} className="w-4 h-4" />
                                             Archive
                                         </DropdownMenuItem>
                                     )}
@@ -294,7 +295,7 @@ function ConversationItem({
                                         onSelect={() => onDelete()}
                                         className="rounded-xl flex items-center gap-2 text-sm px-3 py-2 cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                                         Delete
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -354,13 +355,13 @@ export function ChatHistorySidebar({
                     onClick={onNewChat}
                     className="w-full rounded-2xl bg-brand-deep text-brand-cream hover:bg-brand-deep/90 border border-brand-deep/20 h-12 mb-4 transition-all duration-300 shadow-lg dark:bg-white/10 dark:text-brand-cream dark:hover:bg-white/15 dark:border-white/10 focus-visible:ring-0 focus-visible:ring-offset-0"
                 >
-                    <Plus className="w-5 h-5 mr-2" />
+                    <HugeiconsIcon icon={Plus} className="w-5 h-5 mr-2" />
                     New Conversation
                 </Button>
 
                 <div className="flex items-center justify-between mb-6">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 z-10" />
+                        <HugeiconsIcon icon={Search} className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 z-10" />
                         <Input
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
@@ -400,7 +401,7 @@ export function ChatHistorySidebar({
             <div className="flex-1 overflow-y-auto space-y-8 pr-2 scrollbar-hide">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-4 text-brand-accent/40 dark:text-brand-cream/40">
-                        <Loader2 className="h-6 w-6 animate-spin text-brand-gold" />
+                        <HugeiconsIcon icon={Loader2} className="h-6 w-6 animate-spin text-brand-gold" />
                         <span className="text-sm font-medium tracking-wide">Retrieving history...</span>
                     </div>
                 ) : groupedConversations.length === 0 ? (
@@ -409,7 +410,7 @@ export function ChatHistorySidebar({
                         animate={{ opacity: 1 }}
                         className="rounded-3xl border border-dashed border-brand-deep/10 p-10 text-center text-sm text-brand-accent/50 dark:border-white/10 dark:text-brand-cream/50 bg-brand-deep/2 dark:bg-white/2"
                     >
-                        <Search className="h-6 w-6 mx-auto mb-3 opacity-20" />
+                        <HugeiconsIcon icon={Search} className="h-6 w-6 mx-auto mb-3 opacity-20" />
                         No threads found.
                     </motion.div>
                 ) : (
@@ -451,7 +452,7 @@ export function ChatHistorySidebar({
                 <DialogContent className="max-w-md bg-white dark:bg-brand-green border-none shadow-2xl rounded-3xl">
                     <DialogHeader>
                         <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-                            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            <HugeiconsIcon icon={AlertCircle} className="w-6 h-6 text-red-600 dark:text-red-400" />
                         </div>
                         <DialogTitle>Delete Conversation?</DialogTitle>
                         <DialogDescription>

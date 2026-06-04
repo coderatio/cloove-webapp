@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { CalendarIcon, Check, Copy, ExternalLink, Loader2, User, X } from "lucide-react"
-import type { LucideIcon } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { Calendar03Icon as CalendarIcon, CheckIcon as Check, CopyIcon as Copy, ExternalLinkIcon as ExternalLink, Loading03Icon as Loader2, UserIcon as User, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { useDeveloperEvents, useDeveloperUsage } from "@/app/domains/developer/hooks/useDeveloperApiKeys"
 import type { DeveloperApiKeyEvent } from "@/app/domains/developer/hooks/useDeveloperApiKeys"
 import { copy, formatDate } from "@/app/domains/developer/utils/apiKeyFormat"
@@ -39,12 +39,12 @@ const EVENT_TYPE_OPTIONS = [
     { value: "webhook_delivery.resend_requested", label: "Webhook Resend Requested" },
 ]
 
-export function Metric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+export function Metric({ icon: Icon, label, value }: { icon: IconSvgElement; label: string; value: string }) {
     return (
         <div className="rounded-3xl border border-brand-deep/6 bg-white/70 p-4 shadow-sm shadow-brand-deep/[0.025] dark:border-white/8 dark:bg-white/[0.035]">
             <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-brand-deep/5 text-brand-deep dark:bg-white/7 dark:text-brand-cream">
-                    <Icon className="h-4 w-4" />
+                    <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                 </span>
                 {label}
             </div>
@@ -72,7 +72,7 @@ export function UsagePanel() {
                         </tr>
                     ))}</tbody>
                 </table>
-                {usage.isLoading && <div className="py-10 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></div>}
+                {usage.isLoading && <div className="py-10 text-center"><HugeiconsIcon icon={Loader2} className="mx-auto h-5 w-5 animate-spin" /></div>}
                 {!usage.isLoading && rows.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">Usage appears after API requests are made.</p>}
             </div>
         </section>
@@ -124,7 +124,7 @@ export function EventDetailDialog({
                         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Performed by</p>
                         <div className="mt-1 flex items-center gap-2 text-sm">
                             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-deep/5 text-brand-deep dark:bg-white/7 dark:text-brand-cream">
-                                <User className="h-3.5 w-3.5" />
+                                <HugeiconsIcon icon={User} className="h-3.5 w-3.5" />
                             </span>
                             {event.actorName ? (
                                 <span>{event.actorName}</span>
@@ -160,12 +160,12 @@ export function EventDetailDialog({
                                 >
                                     {copied ? (
                                         <>
-                                            <Check className="h-3 w-3 text-emerald-500" />
+                                            <HugeiconsIcon icon={Check} className="h-3 w-3 text-emerald-500" />
                                             <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
                                         </>
                                     ) : (
                                         <>
-                                            <Copy className="h-3 w-3" />
+                                            <HugeiconsIcon icon={Copy} className="h-3 w-3" />
                                             Copy
                                         </>
                                     )}
@@ -213,7 +213,7 @@ export function EventsPanel() {
                             onClick={clearFilters}
                             className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
-                            <X className="h-3 w-3" />
+                            <HugeiconsIcon icon={X} className="h-3 w-3" />
                             Clear filters
                         </button>
                     )}
@@ -244,7 +244,7 @@ export function EventsPanel() {
                                     !startDate && "text-muted-foreground"
                                 )}
                             >
-                                <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                                <HugeiconsIcon icon={CalendarIcon} className="mr-1.5 h-3.5 w-3.5" />
                                 {startDate ? formatDate(startDate.toISOString()) : "Start date"}
                             </Button>
                         </PopoverTrigger>
@@ -270,7 +270,7 @@ export function EventsPanel() {
                                     !endDate && "text-muted-foreground"
                                 )}
                             >
-                                <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                                <HugeiconsIcon icon={CalendarIcon} className="mr-1.5 h-3.5 w-3.5" />
                                 {endDate ? formatDate(endDate.toISOString()) : "End date"}
                             </Button>
                         </PopoverTrigger>
@@ -301,11 +301,11 @@ export function EventsPanel() {
                                     {event.eventType} · {formatDate(event.createdAt)} · {event.ipAddress ?? "No IP"}
                                 </p>
                             </div>
-                            <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <HugeiconsIcon icon={ExternalLink} className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         </div>
                     </button>
                 ))}
-                {events.isLoading && <div className="py-10 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></div>}
+                {events.isLoading && <div className="py-10 text-center"><HugeiconsIcon icon={Loader2} className="mx-auto h-5 w-5 animate-spin" /></div>}
                 {!events.isLoading && (events.data?.pages.flatMap((p) => p.events).length ?? 0) === 0 && (
                     <p className="py-10 text-center text-sm text-muted-foreground">
                         {hasActiveFilters ? "No events match your filters." : "No developer events yet."}
@@ -323,7 +323,7 @@ export function EventsPanel() {
                         >
                             {events.isFetchingNextPage ? (
                                 <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="h-3.5 w-3.5 animate-spin" />
                                     Loading…
                                 </>
                             ) : (

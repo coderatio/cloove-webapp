@@ -1,6 +1,7 @@
 "use client"
 
-import { AlertCircle } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon as AlertCircle } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "../ui/glass-card"
@@ -38,7 +39,7 @@ export function ActionRow({ items, className }: ActionRowProps) {
                                     item.type === 'warning' && "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300",
                                     item.type === 'info' && "border-border bg-muted text-foreground"
                                 )}>
-                                    {item.icon || <AlertCircle className="w-4 h-4" />}
+                                    {item.icon || <HugeiconsIcon icon={AlertCircle} className="w-4 h-4" />}
                                 </span>
                                 <span className="text-2xl font-semibold tracking-tight text-foreground">
                                     {item.count}

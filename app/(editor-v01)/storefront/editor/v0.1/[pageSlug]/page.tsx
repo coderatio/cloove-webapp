@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Trash2, GripVertical, ChevronUp, Settings2, Eye, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Delete02Icon as Trash2, GripVerticalIcon as GripVertical, ChevronUpIcon as ChevronUp, Settings02Icon as Settings2, EyeIcon as Eye, EyeOffIcon as EyeOff } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 
 import { Button } from "@/app/components/ui/button"
@@ -346,7 +347,7 @@ export default function EditorV01Page() {
                     onClick={() => setShowPageSettings((p) => !p)}
                     className={cn("h-9 w-9 rounded-full transition-all duration-300", showPageSettings && "bg-brand-green/10 dark:bg-brand-gold/10")}
                   >
-                    {showPageSettings ? <ChevronUp className="w-4 h-4" /> : <Settings2 className="w-4 h-4" />}
+                    {showPageSettings ? <HugeiconsIcon icon={ChevronUp} className="w-4 h-4" /> : <HugeiconsIcon icon={Settings2} className="w-4 h-4" />}
                   </Button>
                 </>
               )}
@@ -580,7 +581,7 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
           className="h-7 w-7 rounded-full bg-white dark:bg-black border border-brand-deep/10 dark:border-white/10 text-brand-deep/60 dark:text-brand-cream/60 hover:text-brand-deep dark:hover:text-brand-cream"
           title={block.config.hidden ? "Show section" : "Hide section"}
         >
-          {block.config.hidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          {block.config.hidden ? <HugeiconsIcon icon={EyeOff} className="w-3.5 h-3.5" /> : <HugeiconsIcon icon={Eye} className="w-3.5 h-3.5" />}
         </Button>
         <Button
           variant="ghost"
@@ -588,7 +589,7 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
           onClick={(e) => { e.stopPropagation(); onDelete() }}
           className="h-7 w-7 rounded-full bg-white dark:bg-black border border-brand-deep/10 dark:border-white/10 text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
         </Button>
       </div>
 
@@ -643,7 +644,7 @@ function EditableBlock({ block, previewDark, isActive, scrollToBlockId, onClearS
                   className="h-7 rounded-md text-xs gap-1"
                   style={{ color: "var(--sf-text)" }}
                 >
-                  <ChevronUp className="w-3 h-3" /> Close
+                  <HugeiconsIcon icon={ChevronUp} className="w-3 h-3" /> Close
                 </Button>
               </div>
               <BlockEditor block={block} onUpdate={onUpdate} onUpdateConfig={onUpdateConfig} />

@@ -2,7 +2,8 @@
 
 import { GlassCard } from "../ui/glass-card"
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts"
-import { TrendingUp } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { TradeUpIcon as TrendingUp } from "@hugeicons/core-free-icons"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 
@@ -46,7 +47,7 @@ export function SalesVelocity({ data, total, currencyCode = "NGN", className }: 
         <GlassCard className={`p-6 md:p-8 flex flex-col h-full relative overflow-hidden ${className ?? ""}`}>
             <div className="mb-6 z-10">
                 <span className="text-sm font-semibold text-foreground tracking-wide flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <HugeiconsIcon icon={TrendingUp} className="w-4 h-4 text-primary" />
                     Sales Velocity
                 </span>
                 <h3 className="mt-1 text-2xl font-semibold text-foreground">

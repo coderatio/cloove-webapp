@@ -5,7 +5,8 @@ import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import { Copy, Wallet, ArrowUpRight, Clock, CheckCircle2, Building2, ChevronRight, Loader2, Users, Share2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CopyIcon as Copy, Wallet01Icon as Wallet, ArrowUpRight01Icon as ArrowUpRight, Clock01Icon as Clock, CheckmarkCircle02Icon as CheckCircle2, Building02Icon as Building2, ChevronRightIcon as ChevronRight, Loading03Icon as Loader2, UserMultiple02Icon as Users, Share02Icon as Share2 } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { PinVerificationDrawer } from "@/app/components/security/PinVerificationDrawer"
@@ -179,7 +180,7 @@ export function ReferralsView() {
                                         disabled={!stats?.referralCode}
                                         className="hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-xl"
                                     >
-                                        <Copy className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Copy} className="w-4 h-4" />
                                     </Button>
                                 </div>
                                 <div className="flex gap-2">
@@ -203,7 +204,7 @@ export function ReferralsView() {
                     <div className="grid grid-rows-2 gap-6">
                         <GlassCard className="p-6 flex flex-col justify-between relative overflow-hidden rounded-3xl before:rounded-3xl">
                             <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Wallet className="w-12 h-12 text-brand-deep dark:text-brand-cream" />
+                                <HugeiconsIcon icon={Wallet} className="w-12 h-12 text-brand-deep dark:text-brand-cream" />
                             </div>
                             <div className="relative z-10">
                                 <span className="text-xs font-bold uppercase tracking-widest text-brand-accent/60 dark:text-brand-cream/60">Available Balance</span>
@@ -217,15 +218,15 @@ export function ReferralsView() {
                                     disabled={isWithdrawing || !canWithdraw}
                                     className="flex-1 justify-between bg-brand-deep/5 hover:bg-brand-deep/10 dark:bg-white/5 dark:hover:bg-white/10 text-brand-deep dark:text-brand-cream rounded-2xl h-12"
                                 >
-                                    {isWithdrawing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Withdraw Funds"}
-                                    <ArrowUpRight className="w-4 h-4" />
+                                    {isWithdrawing ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" /> : "Withdraw Funds"}
+                                    <HugeiconsIcon icon={ArrowUpRight} className="w-4 h-4" />
                                 </Button>
                                 <Button
                                     onClick={() => setIsAccountsDrawerOpen(true)}
                                     variant="outline"
                                     className="rounded-2xl h-12 border-brand-deep/10 dark:border-white/10 hover:bg-brand-deep/5 dark:hover:bg-white/5"
                                 >
-                                    <Building2 className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Building2} className="w-4 h-4" />
                                 </Button>
                             </div>
                         </GlassCard>
@@ -257,12 +258,12 @@ export function ReferralsView() {
                     <div className="space-y-3">
                         {payoutsLoading ? (
                             <div className="flex items-center justify-center py-8">
-                                <Loader2 className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
+                                <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
                             </div>
                         ) : payouts.length === 0 ? (
                             <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10 rounded-3xl before:rounded-3xl">
                                 <div className="w-14 h-14 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                    <Wallet className="w-7 h-7 text-brand-deep/20 dark:text-white/20" />
+                                    <HugeiconsIcon icon={Wallet} className="w-7 h-7 text-brand-deep/20 dark:text-white/20" />
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">No payouts yet</p>
@@ -276,7 +277,7 @@ export function ReferralsView() {
                                         size="sm"
                                         className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold rounded-xl gap-2"
                                     >
-                                        <ArrowUpRight className="w-4 h-4" />
+                                        <HugeiconsIcon icon={ArrowUpRight} className="w-4 h-4" />
                                         Withdraw Funds
                                     </Button>
                                 )}
@@ -294,7 +295,7 @@ export function ReferralsView() {
                                                 ? "bg-emerald-500/10 text-emerald-500"
                                                 : "bg-amber-500/10 text-amber-500"
                                                 }`}>
-                                                {payout.status === "completed" ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                                {payout.status === "completed" ? <HugeiconsIcon icon={CheckCircle2} className="w-5 h-5" /> : <HugeiconsIcon icon={Clock} className="w-5 h-5" />}
                                             </div>
                                             <div>
                                                 <div className="font-medium text-brand-deep dark:text-brand-cream">Withdrawal</div>
@@ -308,7 +309,7 @@ export function ReferralsView() {
                                                 <CurrencyText value={formatCurrency(payout.amount, payout.currency)} />
                                             </div>
                                             <div className="text-xs text-brand-deep/40 dark:text-brand-cream/40 flex items-center justify-end gap-1">
-                                                View Details <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                View Details <HugeiconsIcon icon={ChevronRight} className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                                             </div>
                                         </div>
                                     </div>
@@ -323,12 +324,12 @@ export function ReferralsView() {
                     <div className="space-y-2">
                         {listLoading ? (
                             <div className="flex items-center justify-center py-6">
-                                <Loader2 className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
+                                <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin text-brand-deep/50 dark:text-brand-cream/50" />
                             </div>
                         ) : referralList.length === 0 ? (
                             <GlassCard className="p-12 flex flex-col items-center justify-center text-center space-y-4 bg-brand-deep/2 dark:bg-white/2 border-dashed border-brand-deep/10 dark:border-white/10 rounded-3xl before:rounded-3xl">
                                 <div className="w-14 h-14 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                    <Users className="w-7 h-7 text-brand-deep/20 dark:text-white/20" />
+                                    <HugeiconsIcon icon={Users} className="w-7 h-7 text-brand-deep/20 dark:text-white/20" />
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">No referrals yet</p>
@@ -342,7 +343,7 @@ export function ReferralsView() {
                                     size="sm"
                                     className="mt-2 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold rounded-xl gap-2"
                                 >
-                                    <Share2 className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Share2} className="w-4 h-4" />
                                     Share Your Code
                                 </Button>
                             </GlassCard>
@@ -405,7 +406,7 @@ export function ReferralsView() {
                                             ? "bg-emerald-500/10 text-emerald-500"
                                             : "bg-amber-500/10 text-amber-500"
                                             }`}>
-                                            {selectedPayout.status === "completed" ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                                            {selectedPayout.status === "completed" ? <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3" /> : <HugeiconsIcon icon={Clock} className="w-3 h-3" />}
                                             {selectedPayout.status}
                                         </div>
                                     </div>
@@ -470,7 +471,7 @@ export function ReferralsView() {
                                 onClick={confirmDeleteBank}
                                 disabled={deletePin.length !== 4 || isDeletingBank}
                             >
-                                {isDeletingBank ? <Loader2 className="w-4 h-4 animate-spin" /> : "Remove"}
+                                {isDeletingBank ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" /> : "Remove"}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

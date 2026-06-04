@@ -4,18 +4,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
-import {
-    LayoutDashboard,
-    UserPlus,
-    Building2,
-    Wallet,
-    LogOut,
-    Settings,
-    User,
-    ShieldCheck,
-    ChevronRight,
-    MoreVerticalIcon
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { DashboardSquare01Icon as LayoutDashboard, UserAdd01Icon as UserPlus, Building02Icon as Building2, Wallet01Icon as Wallet, Logout01Icon as LogOut, Settings01Icon as Settings, UserIcon as User, SecurityCheckIcon as ShieldCheck, ChevronRightIcon as ChevronRight, MoreVerticalIcon } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { motion } from "framer-motion"
 import { useAuth } from "@/app/components/providers/auth-provider"
@@ -68,7 +58,7 @@ export function AgentSidebar() {
                                         : "text-brand-cream/60 hover:text-white hover:bg-white/5"
                                 )}
                             >
-                                <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "text-brand-deep")} />
+                                <HugeiconsIcon icon={item.icon} className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive && "text-brand-deep")} />
                                 <span className="font-medium text-sm">{item.label}</span>
                             </Link>
                         )
@@ -93,7 +83,7 @@ export function AgentSidebar() {
                                         : "text-brand-cream/60 hover:text-white hover:bg-white/5"
                                 )}
                             >
-                                <item.icon className={cn("w-5 h-5", item.iconClass, isActive && "text-brand-deep")} />
+                                <HugeiconsIcon icon={item.icon} className={cn("w-5 h-5", item.iconClass, isActive && "text-brand-deep")} />
                                 <span className="font-medium text-sm">{item.label}</span>
                             </Link>
                         )
@@ -102,7 +92,7 @@ export function AgentSidebar() {
                         onClick={logout}
                         className="flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all w-full group"
                     >
-                        <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                        <HugeiconsIcon icon={LogOut} className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                         <span className="font-medium text-sm">Log Out</span>
                     </button>
                 </div>
@@ -125,7 +115,7 @@ export function AgentSidebar() {
                                 isActive ? "text-brand-gold" : "text-brand-cream/40"
                             )}
                         >
-                            <item.icon className={cn("w-5 h-5 transition-transform duration-300", isActive && "scale-110 -translate-y-0.5")} />
+                            <HugeiconsIcon icon={item.icon} className={cn("w-5 h-5 transition-transform duration-300", isActive && "scale-110 -translate-y-0.5")} />
                             <span className="text-[9px] font-bold">{item.label}</span>
 
                             {isActive && (
@@ -149,7 +139,7 @@ export function AgentSidebar() {
                             : "text-brand-cream/40"
                     )}
                 >
-                    <MoreVerticalIcon className="w-5 h-5 transition-transform duration-300" />
+                    <HugeiconsIcon icon={MoreVerticalIcon} className="w-5 h-5 transition-transform duration-300" />
                     <span className="text-[9px] font-bold uppercase tracking-widest">More</span>
                 </button>
             </nav>
@@ -188,11 +178,11 @@ export function AgentSidebar() {
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                        <Settings className="w-5 h-5" />
+                                        <HugeiconsIcon icon={Settings} className="w-5 h-5" />
                                     </div>
                                     <span>Settings</span>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-white/20" />
+                                <HugeiconsIcon icon={ChevronRight} className="w-5 h-5 text-white/20" />
                             </Link>
                             <Link
                                 href="/field/security"
@@ -201,11 +191,11 @@ export function AgentSidebar() {
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                        <ShieldCheck className="w-5 h-5" />
+                                        <HugeiconsIcon icon={ShieldCheck} className="w-5 h-5" />
                                     </div>
                                     <span>Security</span>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-white/20" />
+                                <HugeiconsIcon icon={ChevronRight} className="w-5 h-5 text-white/20" />
                             </Link>
                             <button
                                 onClick={() => {
@@ -216,11 +206,11 @@ export function AgentSidebar() {
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
-                                        <LogOut className="w-5 h-5" />
+                                        <HugeiconsIcon icon={LogOut} className="w-5 h-5" />
                                     </div>
                                     <span>Log Out</span>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-red-400/20" />
+                                <HugeiconsIcon icon={ChevronRight} className="w-5 h-5 text-red-400/20" />
                             </button>
                         </div>
 

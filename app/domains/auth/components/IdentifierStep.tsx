@@ -1,7 +1,8 @@
 "use client"
 
 import { useRef } from "react"
-import { Mail, Phone, ArrowRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Mail01Icon as Mail, CallIcon as Phone, ArrowRight01Icon as ArrowRight } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { CountrySelector } from "@/app/components/ui/country-selector"
@@ -45,7 +46,7 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
 
                             <div className="relative group flex-1">
                                 <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                    {state.isEmail ? <Mail className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
+                                    {state.isEmail ? <HugeiconsIcon icon={Mail} className="w-4 h-4" /> : <HugeiconsIcon icon={Phone} className="w-4 h-4" />}
                                 </div>
                                 <input
                                     ref={inputRef}
@@ -71,7 +72,7 @@ export function IdentifierStep({ flow }: IdentifierStepProps) {
                         className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45 [&_svg]:text-white"
                     >
                         {state.isLoading ? "Checking..." : state.isLoadingCountries || state.countries.length === 0 ? "Loading..." : "Continue"}
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                        <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4" />
                     </Button>
                 </form>
             </GlassCard>

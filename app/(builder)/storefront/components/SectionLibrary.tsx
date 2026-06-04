@@ -1,19 +1,8 @@
 "use client"
 
 import React from "react"
-import {
-    LayoutTemplate,
-    Layout,
-    Type,
-    Image as ImageIcon,
-    Mail,
-    Plus,
-    Sparkles,
-    Star,
-    MessageSquare,
-    HelpCircle,
-    LayoutDashboard
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { DashboardSquare02Icon as LayoutTemplate, Layout01Icon as Layout, TextFontIcon as Type, Image01Icon as ImageIcon, Mail01Icon as Mail, PlusSignIcon as Plus, SparklesIcon as Sparkles, StarIcon as Star, Message01Icon as MessageSquare, HelpCircleIcon as HelpCircle, DashboardSquare01Icon as LayoutDashboard } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { SectionType } from "../../../domains/storefront/types"
 
@@ -98,7 +87,7 @@ export function SectionLibrary({ onAddSection, onOpenAIAssistant }: SectionLibra
                 >
                     <div className="relative z-10 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md">
-                            <Sparkles className="w-5 h-5 text-brand-gold" />
+                            <HugeiconsIcon icon={Sparkles} className="w-5 h-5 text-brand-gold" />
                         </div>
                         <div className="text-left">
                             <h4 className="text-sm font-bold leading-tight">Generate with AI</h4>
@@ -118,14 +107,14 @@ export function SectionLibrary({ onAddSection, onOpenAIAssistant }: SectionLibra
                             className="group w-full p-3 rounded-xl border border-brand-deep/5 bg-brand-deep/5 hover:bg-white hover:border-brand-green/20 hover:shadow-lg transition-all text-left flex items-center gap-4"
                         >
                             <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110", tpl.color)}>
-                                <tpl.icon className="w-5 h-5" />
+                                <HugeiconsIcon icon={tpl.icon} className="w-5 h-5" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <h4 className="text-xs font-bold text-brand-deep dark:text-brand-cream">{tpl.label}</h4>
                                 <p className="text-[9px] text-brand-accent/60 dark:text-brand-cream/60 line-clamp-1">{tpl.description}</p>
                             </div>
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Plus className="w-4 h-4 text-brand-green" />
+                                <HugeiconsIcon icon={Plus} className="w-4 h-4 text-brand-green" />
                             </div>
                         </button>
                     ))}

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { format } from "date-fns"
 import { cn } from "@/app/lib/utils"
 import type { OrderFilterConfig, OrderFilterState } from "../types"
@@ -81,7 +82,7 @@ export function ActiveFilterChips({ value, config, onChange, onClearAll }: Activ
                         className="flex items-center justify-center w-4 h-4 rounded-full hover:bg-brand-deep/10 dark:hover:bg-white/10 transition-colors"
                         aria-label={`Remove ${chip.label} filter`}
                     >
-                        <X className="w-2.5 h-2.5" />
+                        <HugeiconsIcon icon={X} className="w-2.5 h-2.5" />
                     </button>
                 </span>
             ))}

@@ -20,7 +20,8 @@ import {
 } from "@/app/components/ui/drawer"
 import { cn, formatPhoneNumber } from "@/app/lib/utils"
 import { formatCurrency } from "@/app/lib/formatters"
-import { Loader2, Pencil, Phone, RotateCcw, Sparkles, Star, Unplug } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, PencilIcon as Pencil, CallIcon as Phone, ReloadIcon as RotateCcw, SparklesIcon as Sparkles, StarIcon as Star, ElectricPlugsIcon as Unplug } from "@hugeicons/core-free-icons"
 import {
     useAssignVoiceAiAgentToNumber,
     useVoiceAiAgents,
@@ -93,7 +94,7 @@ export function VoiceNumberCard({
                                         : "bg-slate-100 text-slate-400 dark:bg-white/5 dark:text-slate-500"
                             )}
                         >
-                            <Phone className="h-[18px] w-[18px]" strokeWidth={2} />
+                            <HugeiconsIcon icon={Phone} className="h-[18px] w-[18px]" strokeWidth={2} />
                         </div>
                         <span
                             className={cn(
@@ -120,7 +121,7 @@ export function VoiceNumberCard({
                                             className="inline-flex shrink-0 items-center gap-1 rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                                             title="Default voice number"
                                         >
-                                            <Star className="h-2.5 w-2.5 fill-current" strokeWidth={0} />
+                                            <HugeiconsIcon icon={Star} className="h-2.5 w-2.5 fill-current" strokeWidth={0} />
                                             Default
                                         </span>
                                     ) : null}
@@ -187,7 +188,7 @@ export function VoiceNumberCard({
                             onClick={() => setShowAgentDrawer(true)}
                             className="mt-2 inline-flex max-w-full items-center gap-1.5 truncate rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-200 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
                         >
-                            <Sparkles className="h-3 w-3" />
+                            <HugeiconsIcon icon={Sparkles} className="h-3 w-3" />
                             <span className="truncate">
                                 {activeAgent
                                     ? `${activeAgent.name}${!linkedAgent ? " (default)" : ""}`
@@ -205,7 +206,7 @@ export function VoiceNumberCard({
                         onClick={onEdit}
                         className="h-8 rounded-md px-2.5 text-[13px] font-medium text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-slate-100"
                     >
-                        <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={Pencil} className="mr-1.5 h-3.5 w-3.5" />
                         Edit
                     </Button>
 
@@ -218,7 +219,7 @@ export function VoiceNumberCard({
                             disabled={isUpdating}
                             className="h-8 rounded-md px-2.5 text-[13px] font-medium text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-slate-100"
                         >
-                            <Star className="mr-1.5 h-3.5 w-3.5" />
+                            <HugeiconsIcon icon={Star} className="mr-1.5 h-3.5 w-3.5" />
                             Set default
                         </Button>
                     ) : null}
@@ -232,7 +233,7 @@ export function VoiceNumberCard({
                             disabled={isUpdating}
                             className="h-8 rounded-md px-2.5 text-[13px] font-medium text-slate-600 hover:bg-white hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-slate-100"
                         >
-                            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                            <HugeiconsIcon icon={RotateCcw} className="mr-1.5 h-3.5 w-3.5" />
                             Reconnect
                         </Button>
                     ) : null}
@@ -246,7 +247,7 @@ export function VoiceNumberCard({
                             disabled={isDisconnecting}
                             className="h-8 rounded-md px-2.5 text-[13px] font-medium text-red-600 hover:bg-white hover:text-red-700 dark:text-red-400 dark:hover:bg-red-500/10"
                         >
-                            <Unplug className="mr-1.5 h-3.5 w-3.5" />
+                            <HugeiconsIcon icon={Unplug} className="mr-1.5 h-3.5 w-3.5" />
                             Disconnect
                         </Button>
                     ) : null}
@@ -356,7 +357,7 @@ function AssignAgentDrawer({
                             className="rounded-full"
                         >
                             {assignMutation.isPending ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                             ) : null}
                             Save
                         </Button>

@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Activity, LayoutGrid, ChefHat, GlassWater, RefreshCw, Bell } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Activity03Icon as Activity, LayoutGridIcon as LayoutGrid, ChefHatIcon as ChefHat, GlassWaterIcon as GlassWater, RefreshIcon as RefreshCw, BellIcon as Bell } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import {
   Select,
@@ -44,7 +45,7 @@ export function RestaurantNavTabs() {
                   : "text-brand-accent/60 dark:text-brand-cream/50 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-white/60 dark:hover:bg-white/5"
               )}
             >
-              <Icon className={cn("h-3.5 w-3.5", isActive ? "text-brand-gold" : "opacity-60")} />
+              <HugeiconsIcon icon={Icon} className={cn("h-3.5 w-3.5", isActive ? "text-brand-gold" : "opacity-60")} />
               <span className="hidden sm:inline">{label}</span>
             </Link>
           )
@@ -56,7 +57,7 @@ export function RestaurantNavTabs() {
           <Select value={value} onValueChange={(v) => setValue(v as RefreshIntervalValue)}>
             <SelectTrigger className="h-11 rounded-2xl px-3 w-[140px] bg-white/70 dark:bg-white/5">
               <div className="flex items-center gap-2">
-                <RefreshCw className="h-3.5 w-3.5 text-brand-accent/50" />
+                <HugeiconsIcon icon={RefreshCw} className="h-3.5 w-3.5 text-brand-accent/50" />
                 <SelectValue placeholder="Refresh" />
               </div>
             </SelectTrigger>

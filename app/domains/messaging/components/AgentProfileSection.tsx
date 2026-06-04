@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronDownIcon as ChevronDown, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { Switch } from "@/app/components/ui/switch"
 import { cn } from "@/app/lib/utils"
 import type {
@@ -44,7 +45,7 @@ export function AgentProfileSection({
     return (
         <section className="space-y-4">
             <div className="flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-brand-gold mt-1 shrink-0" />
+                <HugeiconsIcon icon={Sparkles} className="w-5 h-5 text-brand-gold mt-1 shrink-0" />
                 <div>
                     <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
                         Assistant profile
@@ -75,7 +76,7 @@ export function AgentProfileSection({
                 onClick={() => setAdvancedOpen((v) => !v)}
                 className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-deep dark:hover:text-brand-cream transition-colors"
             >
-                <ChevronDown
+                <HugeiconsIcon icon={ChevronDown}
                     className={cn(
                         "w-4 h-4 transition-transform",
                         advancedOpen && "rotate-180"

@@ -8,7 +8,8 @@ import type { Node as PMNode } from "@tiptap/pm/model"
 import type { EditorView } from "@tiptap/pm/view"
 import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
-import { Bold, Italic, Strikethrough, Code, Braces, Eye, PencilLine, CircleHelp } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { TextBoldIcon as Bold, TextItalicIcon as Italic, TextStrikethroughIcon as Strikethrough, CodeIcon as Code, BracesIcon as Braces, EyeIcon as Eye, PencilEdit01Icon as PencilLine, HelpCircleIcon as CircleHelp } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -724,7 +725,7 @@ export function WhatsAppNotificationMessageInput({
                 disabled={disabled}
                 onClick={() => editor.chain().focus().toggleBold().run()}
               >
-                <Bold className="h-3.5 w-3.5" />
+                <HugeiconsIcon icon={Bold} className="h-3.5 w-3.5" />
               </ToolbarIcon>
               <ToolbarIcon
                 title="Italic (_text_)"
@@ -732,7 +733,7 @@ export function WhatsAppNotificationMessageInput({
                 disabled={disabled}
                 onClick={() => editor.chain().focus().toggleItalic().run()}
               >
-                <Italic className="h-3.5 w-3.5" />
+                <HugeiconsIcon icon={Italic} className="h-3.5 w-3.5" />
               </ToolbarIcon>
               <ToolbarIcon
                 title="Strikethrough (~text~)"
@@ -740,7 +741,7 @@ export function WhatsAppNotificationMessageInput({
                 disabled={disabled}
                 onClick={() => editor.chain().focus().toggleStrike().run()}
               >
-                <Strikethrough className="h-3.5 w-3.5" />
+                <HugeiconsIcon icon={Strikethrough} className="h-3.5 w-3.5" />
               </ToolbarIcon>
               <ToolbarIcon
                 title="Monospace (`text`)"
@@ -748,7 +749,7 @@ export function WhatsAppNotificationMessageInput({
                 disabled={disabled}
                 onClick={() => editor.chain().focus().toggleCode().run()}
               >
-                <Code className="h-3.5 w-3.5" />
+                <HugeiconsIcon icon={Code} className="h-3.5 w-3.5" />
               </ToolbarIcon>
               <span className="mx-0.5 h-4 w-px shrink-0 bg-brand-deep/15 dark:bg-white/10" aria-hidden />
             </>
@@ -760,9 +761,9 @@ export function WhatsAppNotificationMessageInput({
             onClick={() => setSamplePreviewOpen((v) => !v)}
           >
             {samplePreviewOpen ? (
-              <PencilLine className="h-3.5 w-3.5" />
+              <HugeiconsIcon icon={PencilLine} className="h-3.5 w-3.5" />
             ) : (
-              <Eye className="h-3.5 w-3.5" />
+              <HugeiconsIcon icon={Eye} className="h-3.5 w-3.5" />
             )}
           </ToolbarIcon>
           {!samplePreviewOpen ? (
@@ -790,7 +791,7 @@ export function WhatsAppNotificationMessageInput({
                       "data-[state=open]:bg-brand-deep/10 data-[state=open]:text-brand-deep dark:data-[state=open]:bg-white/10 dark:data-[state=open]:text-brand-cream"
                     )}
                   >
-                    <Braces className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={Braces} className="h-3.5 w-3.5" />
                     <span className="sr-only">Insert variable</span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -999,7 +1000,7 @@ function WhatsAppMessageHelpPopover({ disabled }: { disabled: boolean }) {
             "h-8 w-8 shrink-0 rounded-lg text-brand-accent/55 hover:bg-brand-deep/5 dark:text-brand-cream/50 dark:hover:bg-white/6"
           )}
         >
-          <CircleHelp className="h-3.5 w-3.5" />
+          <HugeiconsIcon icon={CircleHelp} className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent

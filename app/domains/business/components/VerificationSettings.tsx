@@ -2,10 +2,8 @@
 
 import { useState, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-    ShieldCheck, FileText, MapPin, Briefcase, Home, Loader2, AlertCircle,
-    ChevronDown, User, Building2, Lock, Sparkles, CheckCircle2, Mail, ArrowRight,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SecurityCheckIcon as ShieldCheck, File01Icon as FileText, MapPinIcon as MapPin, Briefcase01Icon as Briefcase, Home01Icon as Home, Loading03Icon as Loader2, AlertCircleIcon as AlertCircle, ChevronDownIcon as ChevronDown, UserIcon as User, Building02Icon as Building2, LockIcon as Lock, SparklesIcon as Sparkles, CheckmarkCircle02Icon as CheckCircle2, Mail01Icon as Mail, ArrowRight01Icon as ArrowRight } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
 import { toast } from "sonner"
@@ -67,7 +65,7 @@ function EmailPrerequisiteCard() {
             className="rounded-3xl border border-brand-gold/40 bg-brand-gold/5 dark:bg-brand-gold/10 p-6 flex items-start gap-5 shadow-lg shadow-brand-gold/5"
         >
             <div className="w-12 h-12 rounded-2xl bg-brand-gold/15 flex items-center justify-center shrink-0">
-                <Mail className="w-5 h-5 text-brand-gold" />
+                <HugeiconsIcon icon={Mail} className="w-5 h-5 text-brand-gold" />
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-brand-deep dark:text-brand-cream mb-1">
@@ -100,7 +98,7 @@ function EmailPrerequisiteCard() {
                             onClick={() => router.push("/settings?tab=profile")}
                         >
                             Add email in Settings
-                            <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                            <HugeiconsIcon icon={ArrowRight} className="w-3.5 h-3.5 ml-1.5" />
                         </Button>
                     )}
                 </div>
@@ -203,7 +201,7 @@ function AccordionItem({
                     "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-110",
                     isVerified ? "bg-emerald-500/10 text-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.1)]" : "bg-brand-gold/10 text-brand-gold shadow-[0_0_20px_rgba(212,175,55,0.1)]"
                 )}>
-                    {isLocked ? <Lock className="w-5 h-5 opacity-40" /> : <Icon className="w-5 h-5 shadow-sm" />}
+                    {isLocked ? <HugeiconsIcon icon={Lock} className="w-5 h-5 opacity-40" /> : <Icon className="w-5 h-5 shadow-sm" />}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -229,7 +227,7 @@ function AccordionItem({
                             "w-8 h-8 rounded-full flex items-center justify-center bg-brand-deep/5 dark:bg-white/5 transition-all duration-300",
                             isOpen && "bg-brand-gold/10 text-brand-gold rotate-180"
                         )}>
-                            <ChevronDown className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronDown} className="w-4 h-4" />
                         </div>
                     )}
                 </div>
@@ -287,7 +285,7 @@ function AccordionItem({
                             {status === "pending" && (
                                 <div className="flex items-start gap-4 p-5 rounded-2xl bg-brand-gold/5 border border-brand-gold/20 shadow-inner">
                                     <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center shrink-0">
-                                        <Loader2 className="w-5 h-5 text-brand-gold animate-spin" />
+                                        <HugeiconsIcon icon={Loader2} className="w-5 h-5 text-brand-gold animate-spin" />
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-serif text-brand-gold mb-1">Under Review</h4>
@@ -440,7 +438,7 @@ export function VerificationSettings() {
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                     className="absolute inset-0 rounded-full border-t-2 border-brand-gold border-r-2 border-r-transparent"
                 />
-                <ShieldCheck className="absolute inset-0 m-auto w-6 h-6 text-brand-gold/40" />
+                <HugeiconsIcon icon={ShieldCheck} className="absolute inset-0 m-auto w-6 h-6 text-brand-gold/40" />
             </div>
             <p className="text-sm font-bold uppercase tracking-widest text-brand-gold/60 animate-pulse">
                 Establishing Secure Session...
@@ -463,14 +461,14 @@ export function VerificationSettings() {
                 <GlassCard className="p-12 w-full">
                     <div className="w-20 h-20 rounded-3xl bg-brand-gold/10 flex items-center justify-center mx-auto mb-8 relative">
                         <div className="absolute inset-0 bg-brand-gold/20 blur-2xl rounded-full" />
-                        <ShieldCheck className="w-10 h-10 text-brand-gold relative z-10" />
+                        <HugeiconsIcon icon={ShieldCheck} className="w-10 h-10 text-brand-gold relative z-10" />
                     </div>
                     <h2 className="text-3xl font-serif text-brand-deep dark:text-brand-cream mb-4">Secure Configuration</h2>
                     <p className="text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed mb-8 font-sans">
                         Our compliance algorithms are currently tailoring your verification journey based on your corporate profile. This usually concludes in a few moments.
                     </p>
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-gold/5 border border-brand-gold/10">
-                        <Loader2 className="w-3 h-3 text-brand-gold animate-spin" />
+                        <HugeiconsIcon icon={Loader2} className="w-3 h-3 text-brand-gold animate-spin" />
                         <span className="text-[10px] font-bold uppercase tracking-widest text-brand-gold">Optimizing Protocol</span>
                     </div>
                 </GlassCard>
@@ -580,7 +578,7 @@ export function VerificationSettings() {
                                 </div>
                                 {allVerified && (
                                     <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[10px] font-bold uppercase tracking-widest">
-                                        <CheckCircle2 className="w-3 h-3" />
+                                        <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3" />
                                         Complete
                                     </div>
                                 )}
@@ -626,7 +624,7 @@ export function VerificationSettings() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10">
                 <GlassCard className="p-8 group">
                     <div className="w-12 h-12 rounded-2xl bg-brand-deep text-brand-gold flex items-center justify-center mb-6 transition-transform duration-500 group-hover:rotate-12">
-                        <ShieldCheck className="w-6 h-6" />
+                        <HugeiconsIcon icon={ShieldCheck} className="w-6 h-6" />
                     </div>
                     <h4 className="text-xl font-serif text-brand-deep dark:text-brand-cream mb-2">Uncompromising Security</h4>
                     <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed font-sans mb-6">
@@ -644,7 +642,7 @@ export function VerificationSettings() {
                 <GlassCard className="p-8 border-brand-green/10 bg-brand-green/5 relative group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 blur-3xl -mr-16 -mt-16 rounded-full" />
                     <div className="w-12 h-12 rounded-2xl bg-white/50 dark:bg-white/5 border border-brand-gold/20 flex items-center justify-center mb-6 text-brand-gold">
-                        <AlertCircle className="w-6 h-6" />
+                        <HugeiconsIcon icon={AlertCircle} className="w-6 h-6" />
                     </div>
                     <h4 className="text-xl font-serif text-brand-deep dark:text-brand-cream mb-2">Concierge Support</h4>
                     <p className="text-sm text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed font-sans mb-8">

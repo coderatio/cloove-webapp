@@ -1,7 +1,8 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { AlertCircle, ChevronRight, History } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon as AlertCircle, ChevronRightIcon as ChevronRight, HistoryIcon as History } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { formatDateTime } from "@/app/lib/date-utils"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -34,7 +35,7 @@ export function VerificationAuditTrail({
             )}>
                 <div className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-                        <AlertCircle className="w-5 h-5 text-red-500" />
+                        <HugeiconsIcon icon={AlertCircle} className="w-5 h-5 text-red-500" />
                     </div>
                     <div className="space-y-1.5">
                         <h4 className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em] leading-none">Security Exception</h4>
@@ -49,9 +50,9 @@ export function VerificationAuditTrail({
                         onClick={onToggleHistory}
                         className="text-[10px] font-bold text-brand-deep/30 dark:text-brand-cream/30 hover:text-brand-gold uppercase tracking-[0.2em] transition-all flex items-center gap-2 group"
                     >
-                        <History className="w-3.5 h-3.5 transition-transform group-hover:-rotate-45" />
+                        <HugeiconsIcon icon={History} className="w-3.5 h-3.5 transition-transform group-hover:-rotate-45" />
                         {showHistory ? "Collapse Lifecycle" : "Examine Lifecycle"}
-                        <ChevronRight className={cn("w-3 h-3 transition-all duration-300", showHistory && "rotate-90 translate-x-1")} />
+                        <HugeiconsIcon icon={ChevronRight} className={cn("w-3 h-3 transition-all duration-300", showHistory && "rotate-90 translate-x-1")} />
                     </button>
                     
                     <span className="text-[9px] font-mono text-brand-deep/20 dark:text-white/10 uppercase">Ref ID: {logs[0]?.id?.slice(0, 8) || "N/A"}</span>

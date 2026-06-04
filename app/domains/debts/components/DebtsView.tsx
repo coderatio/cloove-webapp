@@ -6,7 +6,8 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { AlertCircle, Users, Clock, TrendingUp, ChevronLeft, ChevronRight, MoreHorizontal, Banknote, Bell, FileText, Eye, Download, Send, Link2, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon as AlertCircle, UserMultiple02Icon as Users, Clock01Icon as Clock, TradeUpIcon as TrendingUp, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, MoreHorizontalIcon as MoreHorizontal, BanknoteIcon as Banknote, BellIcon as Bell, File01Icon as FileText, EyeIcon as Eye, Download01Icon as Download, SentIcon as Send, Link02Icon as Link2, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -170,7 +171,7 @@ export function DebtsView() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 rounded-full p-0 hover:bg-muted">
-                            <MoreHorizontal className="h-4 w-4" />
+                            <HugeiconsIcon icon={MoreHorizontal} className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 rounded-2xl border border-border p-2 shadow-2xl">
@@ -182,7 +183,7 @@ export function DebtsView() {
                             className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                         >
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                <Eye className="w-4 h-4" />
+                                <HugeiconsIcon icon={Eye} className="w-4 h-4" />
                             </div>
                             <span className="font-medium">View Details</span>
                         </DropdownMenuItem>
@@ -193,7 +194,7 @@ export function DebtsView() {
                                     className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                 >
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-200">
-                                        <Banknote className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Banknote} className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">Record Payment</span>
                                 </DropdownMenuItem>
@@ -202,7 +203,7 @@ export function DebtsView() {
                                     className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                 >
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-200">
-                                        <Link2 className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Link2} className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">Payment Link</span>
                                 </DropdownMenuItem>
@@ -213,7 +214,7 @@ export function DebtsView() {
                                     className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                 >
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
-                                        <Bell className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Bell} className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">Send Reminder</span>
                                 </DropdownMenuItem>
@@ -226,7 +227,7 @@ export function DebtsView() {
                                     className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                 >
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
-                                        <Download className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Download} className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">{item.invoiceUrl ? "View Invoice" : "Generate Invoice"}</span>
                                 </DropdownMenuItem>
@@ -236,7 +237,7 @@ export function DebtsView() {
                                         className="flex cursor-pointer items-center gap-3 rounded-xl text-foreground focus:bg-muted"
                                     >
                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
-                                            <Send className="w-4 h-4" />
+                                            <HugeiconsIcon icon={Send} className="w-4 h-4" />
                                         </div>
                                         <span className="font-medium">Send Invoice</span>
                                     </DropdownMenuItem>
@@ -361,10 +362,10 @@ export function DebtsView() {
                             : "border-brand-deep/5"
                     )}>
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-rose-500">
-                            <AlertCircle className="w-24 h-24" />
+                            <HugeiconsIcon icon={AlertCircle} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-                            <AlertCircle className="h-6 w-6" />
+                            <HugeiconsIcon icon={AlertCircle} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">
@@ -382,10 +383,10 @@ export function DebtsView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Users className="w-24 h-24" />
+                            <HugeiconsIcon icon={Users} className="w-24 h-24" />
                         </div>
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                            <Users className="h-6 w-6" />
+                            <HugeiconsIcon icon={Users} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -408,13 +409,13 @@ export function DebtsView() {
                             : "border-brand-deep/5"
                     )}>
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-rose-500">
-                            <Clock className="w-24 h-24" />
+                            <HugeiconsIcon icon={Clock} className="w-24 h-24" />
                         </div>
                         <div className={cn(
                             "h-12 w-12 rounded-full flex items-center justify-center",
                             (stats?.overdueCount ?? 0) > 0 ? "bg-rose-500/10 text-rose-500" : "bg-muted text-foreground"
                         )}>
-                            <Clock className="h-6 w-6" />
+                            <HugeiconsIcon icon={Clock} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className={cn(
@@ -443,10 +444,10 @@ export function DebtsView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <TrendingUp className="w-24 h-24" />
+                            <HugeiconsIcon icon={TrendingUp} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                            <TrendingUp className="h-6 w-6" />
+                            <HugeiconsIcon icon={TrendingUp} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/70 dark:text-emerald-300">
@@ -497,7 +498,7 @@ export function DebtsView() {
                     <GlassCard className="p-12 text-center">
                         <div className="flex flex-col items-center space-y-4">
                             <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                <AlertCircle className="h-10 w-10 text-muted-foreground/50" />
+                                <HugeiconsIcon icon={AlertCircle} className="h-10 w-10 text-muted-foreground/50" />
                             </div>
                             <h3 className="text-xl font-semibold text-foreground">
                                 No Debt Records
@@ -512,7 +513,7 @@ export function DebtsView() {
                                     onClick={() => setIsAddOpen(true)}
                                     className="rounded-2xl font-semibold"
                                 >
-                                    <AlertCircle className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={AlertCircle} className="w-4 h-4 mr-2" />
                                     Record Debt
                                 </Button>
                             )}
@@ -561,7 +562,7 @@ export function DebtsView() {
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             className="rounded-xl"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronLeft} className="w-4 h-4" />
                             Previous
                         </Button>
                         <span className="text-sm text-muted-foreground">
@@ -575,7 +576,7 @@ export function DebtsView() {
                             className="rounded-xl"
                         >
                             Next
-                            <ChevronRight className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4" />
                         </Button>
                     </div>
                 )}
@@ -642,9 +643,9 @@ export function DebtsView() {
                                 className="flex-1 h-12 gap-2 rounded-2xl font-semibold"
                             >
                                 {createPaymentLink.isPending ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
                                 ) : (
-                                    <Link2 className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Link2} className="w-4 h-4" />
                                 )}
                                 Generate
                             </Button>

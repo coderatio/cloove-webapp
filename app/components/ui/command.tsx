@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
-import { Search } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon as Search } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/app/lib/utils"
 // import { Dialog, DialogContent } from "@/app/components/ui/dialog"
@@ -31,7 +32,7 @@ const CommandInput = React.forwardRef<
     React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
     <div className="flex items-center px-3" cmdk-input-wrapper="">
-        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-brand-deep dark:text-brand-cream" />
+        <HugeiconsIcon icon={Search} className="mr-2 h-4 w-4 shrink-0 opacity-50 text-brand-deep dark:text-brand-cream" />
         <CommandPrimitive.Input
             ref={ref}
             className={cn(

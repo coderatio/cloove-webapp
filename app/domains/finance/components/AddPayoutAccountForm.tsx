@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import { Building2, Loader2, CheckCircle2, AlertCircle, ChevronsUpDown, ArrowLeft, Lock } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, Loading03Icon as Loader2, CheckmarkCircle02Icon as CheckCircle2, AlertCircleIcon as AlertCircle, UnfoldMoreIcon as ChevronsUpDown, ArrowLeft01Icon as ArrowLeft, LockIcon as Lock } from "@hugeicons/core-free-icons"
 import { BankSelector, Bank } from "@/app/components/shared/BankSelector"
 import { useAddPayoutAccount, useResolveAccount, usePaymentProviders } from "../hooks/useFinance"
 import { cn } from "@/app/lib/utils"
@@ -103,7 +104,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
     if (providersLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                <Loader2 className="w-10 h-10 animate-spin text-brand-gold/40" />
+                <HugeiconsIcon icon={Loader2} className="w-10 h-10 animate-spin text-brand-gold/40" />
                 <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-brand-accent/40">
                     Sourcing providers...
                 </p>
@@ -122,7 +123,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                             onClick={onCancel}
                             className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
                         >
-                            <ArrowLeft className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
+                            <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
                         </Button>
                     )}
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
@@ -145,7 +146,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                                 {provider.logo_url ? (
                                     <img src={provider.logo_url} alt={provider.name} className="w-8 h-8 object-contain" />
                                 ) : (
-                                    <Building2 className="w-6 h-6 text-brand-deep/20 dark:text-white/20" />
+                                    <HugeiconsIcon icon={Building2} className="w-6 h-6 text-brand-deep/20 dark:text-white/20" />
                                 )}
                             </div>
                             <div>
@@ -169,7 +170,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                         onClick={() => setView("form")}
                         className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
                     >
-                        <ArrowLeft className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
+                        <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
                     </Button>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
                         Select Bank
@@ -202,7 +203,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                         onClick={() => (enabledProviders.length > 1 ? setView("provider-selection") : onCancel?.())}
                         className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
                     >
-                        <ArrowLeft className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
+                        <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4 text-brand-deep/60 dark:text-brand-cream/60" />
                     </Button>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-accent/40 dark:text-white/20">
                         {enabledProviders.length > 1 && selectedProvider
@@ -223,7 +224,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                         <span className={details.bankName ? "font-medium" : "text-brand-deep/40 dark:text-brand-cream/40"}>
                             {details.bankName || "Select your bank..."}
                         </span>
-                        <ArrowLeft className="w-4 h-4 rotate-180 opacity-20" />
+                        <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4 rotate-180 opacity-20" />
                     </Button>
                 </div>
 
@@ -244,17 +245,17 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                         <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/80">Account Name</label>
                         {isResolving && (
                             <span className="text-[10px] font-bold text-brand-gold flex items-center gap-1 uppercase tracking-tighter">
-                                <Loader2 className="w-3 h-3 animate-spin" /> Resolving...
+                                <HugeiconsIcon icon={Loader2} className="w-3 h-3 animate-spin" /> Resolving...
                             </span>
                         )}
                         {details.accountName && (
                             <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1 uppercase tracking-tighter">
-                                <CheckCircle2 className="w-3 h-3" /> Verified
+                                <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3" /> Verified
                             </span>
                         )}
                         {resolveError && (
                             <span className="text-[10px] font-bold text-rose-500 flex items-center gap-1 uppercase tracking-tighter">
-                                <AlertCircle className="w-3 h-3" /> {resolveError}
+                                <HugeiconsIcon icon={AlertCircle} className="w-3 h-3" /> {resolveError}
                             </span>
                         )}
                     </div>
@@ -272,7 +273,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                 <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/80 ml-1">Transaction PIN</label>
                     <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/20 dark:text-white/20" />
+                        <HugeiconsIcon icon={Lock} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/20 dark:text-white/20" />
                         <Input
                             type="password"
                             inputMode="numeric"
@@ -308,7 +309,7 @@ export function AddPayoutAccountForm({ onSuccess, onCancel }: AddPayoutAccountFo
                 >
                     {addPayoutAccount.isPending ? (
                         <div className="flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
                             Saving...
                         </div>
                     ) : (

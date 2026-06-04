@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { Sparkles, Wand2, X, Check, RefreshCw, MessageSquare } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SparklesIcon as Sparkles, MagicWand01Icon as Wand2, Cancel01Icon as X, CheckIcon as Check, RefreshIcon as RefreshCw, Message01Icon as MessageSquare } from "@hugeicons/core-free-icons"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -57,12 +58,12 @@ export function MagicGenerator({ isOpen, onClose, onApply, context }: MagicGener
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                        <Wand2 className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Wand2} className="w-4 h-4" />
                                     </div>
                                     <h3 className="font-serif text-xl border-none">Magic Generator</h3>
                                 </div>
                                 <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
-                                    <X className="w-4 h-4" />
+                                    <HugeiconsIcon icon={X} className="w-4 h-4" />
                                 </Button>
                             </div>
 
@@ -84,10 +85,10 @@ export function MagicGenerator({ isOpen, onClose, onApply, context }: MagicGener
                                                 className="absolute right-2 top-2 h-10 rounded-xl bg-brand-deep text-brand-gold font-bold px-4"
                                             >
                                                 {isGenerating ? (
-                                                    <RefreshCw className="w-4 h-4 animate-spin" />
+                                                    <HugeiconsIcon icon={RefreshCw} className="w-4 h-4 animate-spin" />
                                                 ) : (
                                                     <>
-                                                        <Sparkles className="w-3.5 h-3.5 mr-2" />
+                                                        <HugeiconsIcon icon={Sparkles} className="w-3.5 h-3.5 mr-2" />
                                                         Magic
                                                     </>
                                                 )}
@@ -97,7 +98,7 @@ export function MagicGenerator({ isOpen, onClose, onApply, context }: MagicGener
 
                                     <div className="bg-brand-deep/[0.02] p-4 rounded-xl border border-brand-deep/5">
                                         <div className="flex items-center gap-2 text-brand-accent/40 mb-2">
-                                            <MessageSquare className="w-3 h-3" />
+                                            <HugeiconsIcon icon={MessageSquare} className="w-3 h-3" />
                                             <span className="text-[10px] font-bold uppercase tracking-widest">Suggestions</span>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
@@ -117,7 +118,7 @@ export function MagicGenerator({ isOpen, onClose, onApply, context }: MagicGener
                                 <div className="space-y-6">
                                     <div className="space-y-4 p-6 rounded-[1.5rem] bg-brand-deep/[0.02] border border-brand-gold/20 relative overflow-hidden group">
                                         <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                            <Sparkles className="w-12 h-12 text-brand-gold" />
+                                            <HugeiconsIcon icon={Sparkles} className="w-12 h-12 text-brand-gold" />
                                         </div>
                                         <div className="space-y-2 relative z-10">
                                             <h4 className="font-serif text-lg text-brand-deep leading-tight">{result.heading}</h4>
@@ -131,7 +132,7 @@ export function MagicGenerator({ isOpen, onClose, onApply, context }: MagicGener
                                             onClick={() => setResult(null)}
                                             className="flex-1 rounded-full h-12 border-brand-deep/10 text-brand-deep font-bold"
                                         >
-                                            <RefreshCw className="w-4 h-4 mr-2" />
+                                            <HugeiconsIcon icon={RefreshCw} className="w-4 h-4 mr-2" />
                                             Regenerate
                                         </Button>
                                         <Button
@@ -141,7 +142,7 @@ export function MagicGenerator({ isOpen, onClose, onApply, context }: MagicGener
                                             }}
                                             className="flex-1 rounded-full h-12 bg-brand-deep text-brand-gold font-bold shadow-xl hover:scale-105 transition-all"
                                         >
-                                            <Check className="w-4 h-4 mr-2" />
+                                            <HugeiconsIcon icon={Check} className="w-4 h-4 mr-2" />
                                             Apply Suggested
                                         </Button>
                                     </div>

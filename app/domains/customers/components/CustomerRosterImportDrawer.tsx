@@ -14,7 +14,8 @@ import {
 import { Button } from "@/app/components/ui/button"
 import { FileDropZone } from "@/app/components/ui/file-drop-zone"
 import { useCustomerBulkImport } from "../hooks/useCustomerBulkImport"
-import { Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 
 interface CustomerRosterImportDrawerProps {
     open: boolean
@@ -66,7 +67,7 @@ export function CustomerRosterImportDrawer({ open, onOpenChange }: CustomerRoste
                     />
                     {importMutation.isPending ? (
                         <div className="flex items-center gap-2 text-sm text-brand-deep/70 dark:text-brand-cream/70">
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" />
                             Importing…
                         </div>
                     ) : null}

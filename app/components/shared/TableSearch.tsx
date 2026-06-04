@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Search } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon as Search } from "@hugeicons/core-free-icons"
 import { cn } from "../../lib/utils"
 
 interface TableSearchProps {
@@ -20,7 +21,7 @@ export function TableSearch({
     return (
         <div className={cn("relative group flex-1 md:min-w-[300px] min-w-0", className)}>
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search className="w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
+                <HugeiconsIcon icon={Search} className="w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-foreground" />
             </div>
             <input
                 type="text"

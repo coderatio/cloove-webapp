@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Filter, Check } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { FilterIcon as Filter, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { cn } from "../../lib/utils"
 import { Button } from "../ui/button"
 import { useIsMobile } from "@/app/hooks/useMediaQuery"
@@ -84,7 +85,7 @@ export function FilterPopover({
                 activeCount > 0 && !isOpen && "border-primary/25 bg-primary/8"
             )}
         >
-            <Filter className={cn("w-4 h-4 transition-transform", isOpen && "scale-110")} />
+            <HugeiconsIcon icon={Filter} className={cn("w-4 h-4 transition-transform", isOpen && "scale-110")} />
             {activeCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-sm">
                     {activeCount}
@@ -102,7 +103,7 @@ export function FilterPopover({
                 activeCount > 0 && !isOpen && "border-primary/25 bg-primary/8"
             )}
         >
-            <Filter className={cn("w-4 h-4 mr-2 transition-transform", isOpen && "scale-110")} />
+            <HugeiconsIcon icon={Filter} className={cn("w-4 h-4 mr-2 transition-transform", isOpen && "scale-110")} />
             Filter
             {activeCount > 0 && (
                 <span className="ml-2 w-5 h-5 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-sm">
@@ -135,7 +136,7 @@ export function FilterPopover({
                                     )}
                                 >
                                     <span className="text-sm font-medium">{option.label}</span>
-                                    {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                                    {isSelected && <HugeiconsIcon icon={Check} className="h-3.5 w-3.5 text-primary" />}
                                 </Button>
                             )
                         })}

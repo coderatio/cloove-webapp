@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Plus, Mic, Trash2, Loader2, AlertCircle, ChevronRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PlusSignIcon as Plus, Mic01Icon as Mic, Delete02Icon as Trash2, Loading03Icon as Loader2, AlertCircleIcon as AlertCircle, ChevronRightIcon as ChevronRight } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -45,7 +46,7 @@ export function VoiceCloneManager() {
             <GlassCard className="mx-auto max-w-3xl border-brand-gold/20 p-8 md:p-10">
                 <div className="space-y-4 text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold">
-                        <Mic className="h-7 w-7" />
+                        <HugeiconsIcon icon={Mic} className="h-7 w-7" />
                     </div>
                     <div className="space-y-2">
                         <h2 className="font-serif text-2xl text-brand-deep dark:text-brand-cream">
@@ -73,7 +74,7 @@ export function VoiceCloneManager() {
                                 </span>
                             </span>
                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold-300/15 text-brand-gold-300 dark:bg-brand-deep/10 dark:text-brand-deep">
-                                <ChevronRight className="h-4 w-4" />
+                                <HugeiconsIcon icon={ChevronRight} className="h-4 w-4" />
                             </span>
                         </a>
                     </Button>
@@ -92,25 +93,25 @@ export function VoiceCloneManager() {
                     </p>
                 </div>
                 <Button onClick={() => setDialogOpen(true)}>
-                    <Plus className="mr-1.5 h-4 w-4" /> New clone
+                    <HugeiconsIcon icon={Plus} className="mr-1.5 h-4 w-4" /> New clone
                 </Button>
             </div>
 
             {clonesQuery.isLoading ? (
                 <div className="flex items-center justify-center py-16 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" />
                 </div>
             ) : clones.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-brand-deep/12 py-16 text-center dark:border-white/12">
                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gold/10 text-brand-gold">
-                        <Mic className="h-6 w-6" />
+                        <HugeiconsIcon icon={Mic} className="h-6 w-6" />
                     </div>
                     <p className="font-medium text-foreground">No cloned voices yet</p>
                     <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
                         Record or upload a sample to create a custom voice for your agents.
                     </p>
                     <Button className="mt-4" variant="outline" onClick={() => setDialogOpen(true)}>
-                        <Plus className="mr-1.5 h-4 w-4" /> Clone a voice
+                        <HugeiconsIcon icon={Plus} className="mr-1.5 h-4 w-4" /> Clone a voice
                     </Button>
                 </div>
             ) : (
@@ -130,7 +131,7 @@ export function VoiceCloneManager() {
                                 </p>
                                 {clone.status === "failed" && clone.errorMessage && (
                                     <p className="mt-1 flex items-center gap-1 text-xs text-rose-500">
-                                        <AlertCircle className="h-3 w-3" /> {clone.errorMessage}
+                                        <HugeiconsIcon icon={AlertCircle} className="h-3 w-3" /> {clone.errorMessage}
                                     </p>
                                 )}
                             </div>
@@ -141,7 +142,7 @@ export function VoiceCloneManager() {
                                 disabled={deleteClone.isPending}
                                 aria-label="Delete voice clone"
                             >
-                                <Trash2 className="h-4 w-4" />
+                                <HugeiconsIcon icon={Trash2} className="h-4 w-4" />
                             </Button>
                         </li>
                     ))}

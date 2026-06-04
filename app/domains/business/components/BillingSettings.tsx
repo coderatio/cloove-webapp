@@ -11,7 +11,8 @@ import { AddonCard } from "@/app/components/billing/AddonCard"
 import { HorizontalScroller } from "@/app/components/ui/horizontal-scroller"
 import { DotBadge, type DotBadgeTone } from "@/app/components/ui/dot-badge"
 import { Button } from "@/app/components/ui/button"
-import { AlertCircle, Copy, CreditCard, Download, Loader2, FileText, ChevronRight, KeyRound, Lock, MessageCircleMore, PhoneCall, Wallet, X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon as AlertCircle, CopyIcon as Copy, CreditCardIcon as CreditCard, Download01Icon as Download, Loading03Icon as Loader2, File01Icon as FileText, ChevronRightIcon as ChevronRight, Key01Icon as KeyRound, LockIcon as Lock, Comment01Icon as MessageCircleMore, CallingIcon as PhoneCall, Wallet01Icon as Wallet, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { Switch } from "@/app/components/ui/switch"
 import { Progress } from "@/app/components/ui/progress"
 import { cn } from "@/app/lib/utils"
@@ -117,7 +118,6 @@ const getSubscriptionStatusTone = (raw: string): DotBadgeTone => {
             return "neutral"
     }
 }
-
 
 export function BillingSettings() {
     const searchParams = useSearchParams()
@@ -280,7 +280,7 @@ export function BillingSettings() {
     if (isLoadingPlans || isLoadingSub) {
         return (
             <div className="flex flex-col items-center justify-center p-24 space-y-4">
-                <Loader2 className="w-10 h-10 animate-spin text-brand-gold" />
+                <HugeiconsIcon icon={Loader2} className="w-10 h-10 animate-spin text-brand-gold" />
                 <p className="text-sm font-medium text-brand-deep/40 dark:text-brand-cream/40 animate-pulse">Loading Billing Details...</p>
             </div>
         )
@@ -338,7 +338,7 @@ export function BillingSettings() {
                 <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream pl-1">Subscription</h2>
                 {isMultiBusinessRestricted && businesses.length > 1 && (
                     <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 text-sm">
-                        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                        <HugeiconsIcon icon={AlertCircle} className="w-5 h-5 shrink-0 mt-0.5" />
                         <p>
                             Your account is currently limited to your one business on the free plan.
                             Upgrade your subscription to re-enable access to your multiple businesses.
@@ -489,7 +489,7 @@ export function BillingSettings() {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 text-brand-deep dark:text-brand-cream font-medium">
                                     <div className="w-5 h-5 rounded-full bg-brand-gold/20 flex items-center justify-center shrink-0">
-                                        <Wallet className="w-3 h-3 text-brand-gold" />
+                                        <HugeiconsIcon icon={Wallet} className="w-3 h-3 text-brand-gold" />
                                     </div>
                                     <span className="text-sm">Wallet Funding</span>
                                 </div>
@@ -603,7 +603,7 @@ export function BillingSettings() {
                                     )}
                                     onClick={() => setAddFundsOpen(true)}
                                 >
-                                    <Wallet className="w-3.5 h-3.5 mr-2 shrink-0" />
+                                    <HugeiconsIcon icon={Wallet} className="w-3.5 h-3.5 mr-2 shrink-0" />
                                     Fund Wallet
                                 </Button>
                             </div>
@@ -621,7 +621,7 @@ export function BillingSettings() {
                         </p>
                     </div>
                     <div className="hidden md:flex items-center gap-2 rounded-full border border-brand-gold/20 bg-brand-gold/10 px-3 py-1.5 text-[11px] font-semibold text-brand-gold">
-                        <KeyRound className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={KeyRound} className="h-3.5 w-3.5" />
                         Paid unlocks
                     </div>
                 </div>
@@ -644,7 +644,7 @@ export function BillingSettings() {
                                                     presentation.iconClassName
                                                 )}
                                             >
-                                                <Icon className="h-4 w-4" />
+                                                <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                                             </span>
                                             <DotBadge
                                                 tone={getSubscriptionStatusTone(addon.status)}
@@ -718,7 +718,7 @@ export function BillingSettings() {
                     <GlassCard className="p-5 md:p-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-deep/6 text-brand-deep dark:bg-white/8 dark:text-brand-cream">
-                                <Lock className="h-5 w-5" />
+                                <HugeiconsIcon icon={Lock} className="h-5 w-5" />
                             </div>
                             <div className="space-y-2">
                                 <div className="space-y-1">
@@ -756,7 +756,7 @@ export function BillingSettings() {
                         >
                             <div className="flex items-center gap-3">
                                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-gold/12 text-brand-gold">
-                                    <KeyRound className="h-5 w-5" />
+                                    <HugeiconsIcon icon={KeyRound} className="h-5 w-5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center justify-between gap-3">
@@ -780,7 +780,7 @@ export function BillingSettings() {
                                                 </span>
                                             )}
                                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-deep/6 text-brand-deep dark:bg-white/8 dark:text-brand-cream">
-                                                <ChevronRight className="h-4 w-4" />
+                                                <HugeiconsIcon icon={ChevronRight} className="h-4 w-4" />
                                             </div>
                                         </div>
                                     </div>
@@ -858,7 +858,7 @@ export function BillingSettings() {
                         </div>
 
                         <div className="flex items-start gap-3 p-4 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 text-sm">
-                            <AlertCircle className="w-5 h-5 shrink-0" />
+                            <HugeiconsIcon icon={AlertCircle} className="w-5 h-5 shrink-0" />
                             <p>Downgrading your plan may result in loss of access to certain features (e.g., staff accounts, analytics history) at the end of your complete billing cycle.</p>
                         </div>
                     </>
@@ -909,7 +909,7 @@ export function BillingSettings() {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end items-center">
-                                            <ChevronRight className="h-5 w-5 text-brand-deep/20 group-hover:text-brand-gold transition-colors" />
+                                            <HugeiconsIcon icon={ChevronRight} className="h-5 w-5 text-brand-deep/20 group-hover:text-brand-gold transition-colors" />
                                         </div>
                                     </td>
                                 </tr>
@@ -919,7 +919,7 @@ export function BillingSettings() {
                     {!isLoadingHistory && billingHistory.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 px-4 text-center space-y-3">
                             <div className="w-12 h-12 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                <FileText className="w-6 h-6 text-brand-deep/20 dark:text-brand-cream/20" />
+                                <HugeiconsIcon icon={FileText} className="w-6 h-6 text-brand-deep/20 dark:text-brand-cream/20" />
                             </div>
                             <div className="space-y-1">
                                 <p className="text-sm font-medium text-brand-deep/60 dark:text-brand-cream/60">No billing history found</p>
@@ -949,7 +949,7 @@ export function BillingSettings() {
                     ))}
                     {!isLoadingHistory && (!billingHistory || billingHistory.length === 0) && (
                         <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-3 bg-brand-deep/5 dark:bg-white/5 rounded-3xl border border-dashed border-brand-deep/10 dark:border-white/10">
-                            <FileText className="w-8 h-8 text-brand-deep/20 dark:text-brand-cream/20" />
+                            <HugeiconsIcon icon={FileText} className="w-8 h-8 text-brand-deep/20 dark:text-brand-cream/20" />
                             <p className="text-sm font-medium text-brand-deep/40 dark:text-brand-cream/40">No billing history found</p>
                         </div>
                     )}
@@ -990,7 +990,7 @@ export function BillingSettings() {
                     <DrawerBody className="flex-1 overflow-y-auto px-6 md:px-8 pt-2 pb-4">
                         {checkoutQuoteLoading ? (
                             <div className="flex justify-center py-16">
-                                <Loader2 className="w-10 h-10 animate-spin text-brand-gold" />
+                                <HugeiconsIcon icon={Loader2} className="w-10 h-10 animate-spin text-brand-gold" />
                             </div>
                         ) : checkoutQuote ? (
                             <div className="space-y-6">
@@ -1040,7 +1040,7 @@ export function BillingSettings() {
                                                                     aria-label={`Remove ${line.name ?? "add-on"} from checkout`}
                                                                     title={`Remove ${line.name ?? "add-on"}`}
                                                                 >
-                                                                    <X className="h-4 w-4" />
+                                                                    <HugeiconsIcon icon={X} className="h-4 w-4" />
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1078,7 +1078,7 @@ export function BillingSettings() {
                                                 </p>
                                             ) : !user?.hasTransactionPin ? (
                                                 <p className="text-xs text-brand-deep/50 dark:text-brand-cream/50 leading-relaxed flex items-start gap-2">
-                                                    <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-brand-gold" />
+                                                    <HugeiconsIcon icon={Lock} className="w-3.5 h-3.5 shrink-0 mt-0.5 text-brand-gold" />
                                                     <span>
                                                         Set a 4-digit transaction PIN in Security to pay from
                                                         your wallet.{" "}
@@ -1122,7 +1122,7 @@ export function BillingSettings() {
                                 setPinDrawerOpen(true)
                             }}
                         >
-                            <Wallet className="w-4 h-4 mr-2 shrink-0" />
+                            <HugeiconsIcon icon={Wallet} className="w-4 h-4 mr-2 shrink-0" />
                             Pay from wallet
                         </Button>
                         <Button
@@ -1139,7 +1139,7 @@ export function BillingSettings() {
                                 })
                             }}
                         >
-                            <CreditCard className="w-4 h-4 mr-2 shrink-0" />
+                            <HugeiconsIcon icon={CreditCard} className="w-4 h-4 mr-2 shrink-0" />
                             Pay with card / bank
                         </Button>
                     </DrawerFooter>
@@ -1244,7 +1244,7 @@ export function BillingSettings() {
                                                 })
                                             }}
                                         >
-                                            <Copy className="h-4 w-4" aria-hidden />
+                                            <HugeiconsIcon icon={Copy} className="h-4 w-4" aria-hidden />
                                         </button>
                                     </div>
                                 </div>
@@ -1313,7 +1313,7 @@ export function BillingSettings() {
                             onClick={() => selectedInvoice && handleDownloadInvoice(selectedInvoice)}
                             disabled={!selectedInvoice || isDownloadingInvoice(selectedInvoice?.id ?? "")}
                         >
-                            <Download className="h-5 w-5 mr-2" />
+                            <HugeiconsIcon icon={Download} className="h-5 w-5 mr-2" />
                             {isDownloadingInvoice(selectedInvoice?.id ?? "") ? "Preparing..." : "Download Receipt"}
                         </Button>
                         <DrawerClose asChild>

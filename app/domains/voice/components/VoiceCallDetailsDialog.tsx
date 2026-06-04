@@ -1,7 +1,8 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { Bot, PhoneIncoming, PhoneOutgoing, UserRound } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BotIcon as Bot, CallIncoming01Icon as PhoneIncoming, CallOutgoing01Icon as PhoneOutgoing, UserIcon as UserRound } from "@hugeicons/core-free-icons"
 import {
     Dialog,
     DialogContent,
@@ -128,7 +129,7 @@ export function VoiceCallDetailsDialog({ call, open, onOpenChange }: VoiceCallDe
                                                                                 : "border-slate-200 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300"
                                                                         )}
                                                                     >
-                                                                        <SpeakerIcon className="h-4 w-4" />
+                                                                        <HugeiconsIcon icon={SpeakerIcon} className="h-4 w-4" />
                                                                     </span>
                                                                     <div className="min-w-0">
                                                                         <p
@@ -225,7 +226,7 @@ function CallHeaderSummary({ call }: { call: VoiceCall }) {
                 )}
                 aria-hidden
             >
-                <DirectionIcon className="h-5 w-5" />
+                <HugeiconsIcon icon={DirectionIcon} className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">

@@ -1,6 +1,7 @@
 "use client"
 
-import { Lock, Shield, Eye, EyeOff, ArrowRight, MessageCircle, ExternalLink } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { LockIcon as Lock, SecurityIcon as Shield, EyeIcon as Eye, EyeOffIcon as EyeOff, ArrowRight01Icon as ArrowRight, BubbleChatIcon as MessageCircle, ExternalLinkIcon as ExternalLink } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -23,7 +24,7 @@ export function VerifyStep({ flow }: VerifyStepProps) {
         return (
                 <GlassCard className="rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm sm:p-8">
                     <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-emerald-200">
-                        <MessageCircle className="h-7 w-7" aria-hidden />
+                        <HugeiconsIcon icon={MessageCircle} className="h-7 w-7" aria-hidden />
                     </div>
                     <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">
                         Activate your number
@@ -47,7 +48,7 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                                         {BOT_DISPLAY}
                                     </p>
                                 </div>
-                                <ExternalLink className="h-4 w-4 shrink-0 text-white/45" />
+                                <HugeiconsIcon icon={ExternalLink} className="h-4 w-4 shrink-0 text-white/45" />
                             </a>
                         </div>
                     )}
@@ -59,7 +60,7 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                                 className="h-12 w-full rounded-2xl bg-[#25D366] text-white font-semibold hover:bg-[#22c55e]"
                             >
                                 <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
-                                    <MessageCircle className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={MessageCircle} className="w-4 h-4 mr-2" />
                                     Open in WhatsApp
                                 </a>
                             </Button>
@@ -71,7 +72,7 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                             className="h-12 w-full rounded-2xl text-white/60 hover:bg-white/[0.06] hover:text-white"
                         >
                             Back to login
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            <HugeiconsIcon icon={ArrowRight} className="w-4 h-4 ml-2" />
                         </Button>
                     </div>
                 </GlassCard>
@@ -90,13 +91,13 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                             </label>
                             {state.isPinLogin ? (
                                 <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase text-white/55">
-                                    <Shield className="w-3 h-3" /> WhatsApp PIN Login
+                                    <HugeiconsIcon icon={Shield} className="w-3 h-3" /> WhatsApp PIN Login
                                 </span>
                             ) : null}
                         </div>
                         <div className="relative group">
                             <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                <Lock className="w-4 h-4" />
+                                <HugeiconsIcon icon={Lock} className="w-4 h-4" />
                             </div>
                             <input
                                 type={state.showPassword ? "text" : "password"}
@@ -124,7 +125,7 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                                 onClick={() => actions.setShowPassword(!state.showPassword)}
                                 className="absolute inset-y-0 right-4 flex cursor-pointer items-center text-white/35 hover:text-white/70"
                             >
-                                {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {state.showPassword ? <HugeiconsIcon icon={EyeOff} className="w-4 h-4" /> : <HugeiconsIcon icon={Eye} className="w-4 h-4" />}
                             </button>
                         </div>
                         {state.isPinLogin ? (
@@ -149,7 +150,7 @@ export function VerifyStep({ flow }: VerifyStepProps) {
                         className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45 [&_svg]:text-white"
                     >
                         {state.isLoading ? "Verifying..." : "Verify & Login"}
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                        <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4" />
                     </Button>
                 </form>
             </GlassCard>

@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutGrid, Banknote, ShoppingBag, Users, Package } from "lucide-react"
+import { LayoutGridIcon as LayoutGrid, BanknoteIcon as Banknote, ShoppingBag01Icon as ShoppingBag, UserMultiple02Icon as Users, PackageIcon as Package } from "@hugeicons/core-free-icons"
 import type { PresetPageCopy } from "@/app/domains/workspace/copy/preset-page-copy"
 import { usePermission } from "@/app/hooks/usePermission"
 import { ModuleShell } from "./ModuleShell"

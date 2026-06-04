@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react"
 import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronDown, CheckCircle2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronDownIcon as ChevronDown, CheckmarkCircle02Icon as CheckCircle2 } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 export interface CountryDetail {
@@ -150,7 +151,7 @@ export function CountrySelector({
                 {showName && selectedCountry && (
                     <span className="text-sm font-medium truncate">{selectedCountry.name}</span>
                 )}
-                <ChevronDown className={cn(
+                <HugeiconsIcon icon={ChevronDown} className={cn(
                     "w-4 h-4 text-brand-gold transition-transform",
                     isOpen && "rotate-180"
                 )} />
@@ -216,7 +217,7 @@ export function CountrySelector({
                                         </div>
                                     </div>
                                     {selectedCountry?.id === c.id && (
-                                        <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0 ml-4" />
+                                        <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4 text-brand-gold shrink-0 ml-4" />
                                     )}
                                 </button>
                             ))}

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight, Code2, Copy, KeyRound, Plus, Webhook } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronRightIcon as ChevronRight, CodeIcon as Code2, CopyIcon as Copy, Key01Icon as KeyRound, PlusSignIcon as Plus, WebhookIcon as Webhook } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { Button } from "@/app/components/ui/button"
@@ -60,7 +61,7 @@ export function AppsListView() {
             ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-brand-deep/10 bg-white/40 p-16 text-center">
                     <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-brand-deep/5 text-brand-deep dark:bg-white/7 dark:text-brand-cream">
-                        <Code2 className="h-7 w-7" />
+                        <HugeiconsIcon icon={Code2} className="h-7 w-7" />
                     </div>
                     <h3 className="mt-4 text-lg font-semibold">No apps yet</h3>
                     <p className="mt-1 max-w-sm text-sm text-muted-foreground">
@@ -68,7 +69,7 @@ export function AppsListView() {
                     </p>
                     {!search && (
                         <Button className="mt-5 rounded-2xl" onClick={() => setOpen(true)}>
-                            <Plus className="mr-2 h-4 w-4" /> Create your first app
+                            <HugeiconsIcon icon={Plus} className="mr-2 h-4 w-4" /> Create your first app
                         </Button>
                     )}
                 </div>
@@ -93,7 +94,7 @@ export function AppsListView() {
                                         className="mt-1 inline-flex items-center gap-1.5 rounded-lg text-xs text-muted-foreground transition-colors hover:text-foreground"
                                     >
                                         <span className="font-mono">{app.id.slice(0, 8)}…</span>
-                                        <Copy className="h-3 w-3" />
+                                        <HugeiconsIcon icon={Copy} className="h-3 w-3" />
                                     </button>
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         Created {formatDate(app.createdAt)}
@@ -113,11 +114,11 @@ export function AppsListView() {
 
                             <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1.5">
-                                    <KeyRound className="h-3.5 w-3.5" />
+                                    <HugeiconsIcon icon={KeyRound} className="h-3.5 w-3.5" />
                                     <span>Keys</span>
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                    <Webhook className="h-3.5 w-3.5" />
+                                    <HugeiconsIcon icon={Webhook} className="h-3.5 w-3.5" />
                                     <span>Webhooks</span>
                                 </span>
                             </div>
@@ -127,7 +128,7 @@ export function AppsListView() {
                                     <span className={`h-1.5 w-1.5 rounded-full ${app.status === "active" ? "bg-emerald-500" : "bg-muted-foreground/50"}`} />
                                     {app.status === "active" ? "Active" : "Disabled"}
                                 </span>
-                                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                                <HugeiconsIcon icon={ChevronRight} className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                             </div>
                         </Link>
                     ))}
@@ -200,7 +201,7 @@ function CreateAppDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
                             </span>
                         ) : (
                             <span className="flex items-center gap-2">
-                                <Plus className="h-4 w-4" /> Create app
+                                <HugeiconsIcon icon={Plus} className="h-4 w-4" /> Create app
                             </span>
                         )}
                     </Button>

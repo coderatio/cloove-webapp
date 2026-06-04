@@ -1,14 +1,8 @@
 "use client"
 
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-    X,
-    Layers,
-    Trash2,
-    ArrowRight,
-    Clock,
-    ShoppingBag
-} from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Cancel01Icon as X, Layers01Icon as Layers, Delete02Icon as Trash2, ArrowRight01Icon as ArrowRight, Clock01Icon as Clock, ShoppingBag01Icon as ShoppingBag } from "@hugeicons/core-free-icons"
 import { GlassCard } from '@/app/components/ui/glass-card'
 import { CurrencyText } from '@/app/components/shared/CurrencyText'
 import { Button } from '@/app/components/ui/button'
@@ -53,7 +47,7 @@ export function QueuedSalesDrawer({
                         <header className="p-6 border-b border-brand-accent/5 dark:border-white/5 flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="h-12 w-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                    <Layers className="h-6 w-6" />
+                                    <HugeiconsIcon icon={Layers} className="h-6 w-6" />
                                 </div>
                                 <div>
                                     <h2 className="font-serif text-2xl text-brand-deep dark:text-brand-cream">Parked Sales</h2>
@@ -68,7 +62,7 @@ export function QueuedSalesDrawer({
                                 onClick={onClose}
                                 className="h-12 w-12 rounded-2xl hover:bg-rose-500/10 text-brand-accent/40 dark:text-brand-cream/60 hover:text-rose-500 transition-all"
                             >
-                                <X className="h-6 w-6" />
+                                <HugeiconsIcon icon={X} className="h-6 w-6" />
                             </Button>
                         </header>
 
@@ -76,7 +70,7 @@ export function QueuedSalesDrawer({
                             {sales.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
                                     <div className="h-20 w-20 rounded-full border-2 border-dashed border-brand-accent/20 flex items-center justify-center mb-4">
-                                        <ShoppingBag className="h-8 w-8" />
+                                        <HugeiconsIcon icon={ShoppingBag} className="h-8 w-8" />
                                     </div>
                                     <p className="font-medium">No sales parked yet</p>
                                     <p className="text-xs">Parked sales will appear here for later retrieval</p>
@@ -93,7 +87,7 @@ export function QueuedSalesDrawer({
                                             <div className="flex justify-between items-start">
                                                 <div className="space-y-1">
                                                     <div className="flex items-center gap-2 text-brand-accent/40 dark:text-brand-cream/40">
-                                                        <Clock className="h-3 w-3" />
+                                                        <HugeiconsIcon icon={Clock} className="h-3 w-3" />
                                                         <span className="text-[10px] font-bold uppercase tracking-widest leading-none">
                                                             {new Date(sale.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
@@ -129,7 +123,7 @@ export function QueuedSalesDrawer({
                                                     className="flex-1 h-12 rounded-2xl bg-brand-deep dark:bg-brand-accent text-brand-gold hover:scale-[1.02] active:scale-95 transition-all text-xs font-black uppercase tracking-widest border border-brand-gold/20"
                                                 >
                                                     Recall Sale
-                                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                                    <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
@@ -137,7 +131,7 @@ export function QueuedSalesDrawer({
                                                     onClick={() => onRemove(sale.id)}
                                                     className="h-12 w-12 rounded-2xl hover:bg-rose-500/10 text-rose-500/40 dark:text-rose-300 hover:text-rose-500 transition-all border border-brand-accent/5"
                                                 >
-                                                    <Trash2 className="h-5 w-5" />
+                                                    <HugeiconsIcon icon={Trash2} className="h-5 w-5" />
                                                 </Button>
                                             </div>
                                         </GlassCard>

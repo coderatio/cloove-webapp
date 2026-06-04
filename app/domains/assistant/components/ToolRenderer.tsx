@@ -1,7 +1,8 @@
 "use client"
 
 import { cn } from "@/app/lib/utils"
-import { Loader2, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -82,7 +83,7 @@ export function ToolRenderer({ part, addToolResult }: ToolRendererProps) {
                 <div className="p-4">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="h-8 w-8 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold">
-                            <Sparkles className="w-4 h-4" />
+                            <HugeiconsIcon icon={Sparkles} className="w-4 h-4" />
                         </div>
                         <h4 className="text-sm font-serif font-medium text-brand-gold">
                             {isResolved
@@ -188,7 +189,7 @@ export function ToolRenderer({ part, addToolResult }: ToolRendererProps) {
         if (isLoading) {
             return (
                 <div className="flex items-center gap-2 py-2">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-gold" />
+                    <HugeiconsIcon icon={Loader2} className="w-3.5 h-3.5 animate-spin text-brand-gold" />
                     <span className="text-xs text-brand-deep/40 dark:text-brand-cream/40">
                         Looking up your data…
                     </span>

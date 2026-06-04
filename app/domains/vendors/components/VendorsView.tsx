@@ -6,7 +6,8 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { Truck, Users, AlertCircle, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2, Eye, Plus, Banknote } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { TruckIcon as Truck, UserMultiple02Icon as Users, AlertCircleIcon as AlertCircle, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, MoreHorizontalIcon as MoreHorizontal, PencilIcon as Pencil, Delete02Icon as Trash2, EyeIcon as Eye, PlusSignIcon as Plus, BanknoteIcon as Banknote } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -103,7 +104,7 @@ export function VendorsView() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-full">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <HugeiconsIcon icon={MoreHorizontal} className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-brand-deep/5 dark:border-white/5 shadow-2xl">
@@ -115,7 +116,7 @@ export function VendorsView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
-                            <Eye className="w-4 h-4" />
+                            <HugeiconsIcon icon={Eye} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">View Details</span>
                     </DropdownMenuItem>
@@ -124,7 +125,7 @@ export function VendorsView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <Plus className="w-4 h-4" />
+                            <HugeiconsIcon icon={Plus} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">Record Payable</span>
                     </DropdownMenuItem>
@@ -134,7 +135,7 @@ export function VendorsView() {
                             className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                         >
                             <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                <Banknote className="w-4 h-4" />
+                                <HugeiconsIcon icon={Banknote} className="w-4 h-4" />
                             </div>
                             <span className="font-medium">Make Payment</span>
                         </DropdownMenuItem>
@@ -145,7 +146,7 @@ export function VendorsView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
-                            <Pencil className="w-4 h-4" />
+                            <HugeiconsIcon icon={Pencil} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">Edit Vendor</span>
                     </DropdownMenuItem>
@@ -157,7 +158,7 @@ export function VendorsView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer text-rose-500 dark:text-rose-400 dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-rose-500/10 flex items-center justify-center">
-                            <Trash2 className="w-4 h-4" />
+                            <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">Delete Vendor</span>
                     </DropdownMenuItem>
@@ -263,10 +264,10 @@ export function VendorsView() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Truck className="w-24 h-24" />
+                            <HugeiconsIcon icon={Truck} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
-                            <Truck className="h-6 w-6" />
+                            <HugeiconsIcon icon={Truck} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-widest">
@@ -284,10 +285,10 @@ export function VendorsView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Users className="w-24 h-24" />
+                            <HugeiconsIcon icon={Users} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <Users className="h-6 w-6" />
+                            <HugeiconsIcon icon={Users} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-gold/60 dark:text-brand-gold/80 uppercase tracking-widest">
@@ -310,10 +311,10 @@ export function VendorsView() {
                             : "border-brand-deep/5"
                     )}>
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-rose-500">
-                            <AlertCircle className="w-24 h-24" />
+                            <HugeiconsIcon icon={AlertCircle} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-                            <AlertCircle className="h-6 w-6" />
+                            <HugeiconsIcon icon={AlertCircle} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">
@@ -358,7 +359,7 @@ export function VendorsView() {
                             <GlassCard className="p-12 text-center">
                                 <div className="flex flex-col items-center space-y-4">
                                     <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                        <Truck className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
+                                        <HugeiconsIcon icon={Truck} className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
                                     </div>
                                     <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                                         No Vendors Found
@@ -373,7 +374,7 @@ export function VendorsView() {
                                             onClick={() => setIsAddOpen(true)}
                                             className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold"
                                         >
-                                            <Plus className="w-4 h-4 mr-2" />
+                                            <HugeiconsIcon icon={Plus} className="w-4 h-4 mr-2" />
                                             Add Vendor
                                         </Button>
                                     )}
@@ -420,7 +421,7 @@ export function VendorsView() {
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronLeft} className="w-4 h-4" />
                             Previous
                         </Button>
                         <span className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
@@ -434,7 +435,7 @@ export function VendorsView() {
                             className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
                             Next
-                            <ChevronRight className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4" />
                         </Button>
                     </div>
                 )}

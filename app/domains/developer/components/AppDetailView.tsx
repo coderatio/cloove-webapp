@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowLeft, Copy, KeyRound, Settings2, Webhook } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowLeft01Icon as ArrowLeft, CopyIcon as Copy, Key01Icon as KeyRound, Settings02Icon as Settings2, WebhookIcon as Webhook } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { ApiKeysPanel } from "@/app/domains/developer/components/ApiKeysPanel"
@@ -56,7 +57,7 @@ export function AppDetailView() {
                     href="/developer/apps"
                     className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                    <ArrowLeft className="h-4 w-4" /> Back to apps
+                    <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" /> Back to apps
                 </Link>
                 <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-brand-deep/10 bg-white/40 p-16 text-center">
                     <h3 className="text-lg font-semibold">App not found</h3>
@@ -81,7 +82,7 @@ export function AppDetailView() {
                 href="/developer/apps"
                 className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-                <ArrowLeft className="h-4 w-4" /> Apps
+                <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" /> Apps
             </Link>
 
             {/* App header */}
@@ -112,7 +113,7 @@ export function AppDetailView() {
                             className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg text-xs text-muted-foreground transition-colors hover:text-foreground"
                         >
                             <span className="font-mono">{app.id.slice(0, 8)}…</span>
-                            <Copy className="h-3 w-3" />
+                            <HugeiconsIcon icon={Copy} className="h-3 w-3" />
                         </button>
                         <p className="mt-1.5 text-sm text-muted-foreground">
                             {activeKeys.length} active API key{activeKeys.length !== 1 ? "s" : ""}
@@ -139,7 +140,7 @@ export function AppDetailView() {
                                     : "text-muted-foreground hover:text-foreground",
                             )}
                         >
-                            <Icon className="h-4 w-4" />
+                            <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                             {tab.label}
                         </button>
                     )

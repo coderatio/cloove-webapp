@@ -2,19 +2,8 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-    BookOpen,
-    Check,
-    CheckSquare,
-    Copy,
-    Link2,
-    Loader2,
-    Plus,
-    Search,
-    Square,
-    Trash2,
-    X,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BookOpen01Icon as BookOpen, CheckIcon as Check, CheckmarkSquare02Icon as CheckSquare, CopyIcon as Copy, Link02Icon as Link2, Loading03Icon as Loader2, PlusSignIcon as Plus, Search01Icon as Search, SquareIcon as Square, Delete02Icon as Trash2, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { Button } from "@/app/components/ui/button"
@@ -128,7 +117,7 @@ function FeePresetsSection() {
             <div className="flex items-start justify-between gap-4 px-5 py-5 border-b border-brand-deep/5 dark:border-white/8">
                 <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold mt-0.5">
-                        <BookOpen className="h-4 w-4" />
+                        <HugeiconsIcon icon={BookOpen} className="h-4 w-4" />
                     </div>
                     <div>
                         <p className="font-serif text-base text-brand-deep dark:text-brand-cream">
@@ -147,7 +136,7 @@ function FeePresetsSection() {
                         className="rounded-full shrink-0"
                         onClick={() => setShowForm((v) => !v)}
                     >
-                        {showForm ? <X className="h-3.5 w-3.5 mr-1.5" /> : <Plus className="h-3.5 w-3.5 mr-1.5" />}
+                        {showForm ? <HugeiconsIcon icon={X} className="h-3.5 w-3.5 mr-1.5" /> : <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5 mr-1.5" />}
                         {showForm ? "Cancel" : "Add preset"}
                     </Button>
                 )}
@@ -194,7 +183,7 @@ function FeePresetsSection() {
                                     disabled={updateSettings.isPending}
                                     onClick={() => removeTemplate(t.id)}
                                 >
-                                    <Trash2 className="h-3.5 w-3.5" />
+                                    <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
                                 </Button>
                             )}
                         </motion.div>
@@ -259,9 +248,9 @@ function FeePresetsSection() {
                                         disabled={updateSettings.isPending}
                                     >
                                         {updateSettings.isPending ? (
-                                            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                                            <HugeiconsIcon icon={Loader2} className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                                         ) : (
-                                            <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                            <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5 mr-1.5" />
                                         )}
                                         Save preset
                                     </Button>
@@ -325,7 +314,7 @@ function SaleRow({
                     ? "border-brand-green bg-brand-green text-white"
                     : "border-brand-deep/25 dark:border-white/25"
             )}>
-                {selected && <Check className="h-3 w-3" />}
+                {selected && <HugeiconsIcon icon={Check} className="h-3 w-3" />}
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -449,7 +438,7 @@ function BatchLinksSection() {
             {/* Header */}
             <div className="flex items-start gap-3 px-5 py-5 border-b border-brand-deep/5 dark:border-white/8">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold mt-0.5">
-                    <Link2 className="h-4 w-4" />
+                    <HugeiconsIcon icon={Link2} className="h-4 w-4" />
                 </div>
                 <div>
                     <p className="font-serif text-base text-brand-deep dark:text-brand-cream">
@@ -465,7 +454,7 @@ function BatchLinksSection() {
                 {/* Search + select-all row */}
                 <div className="flex items-center gap-2">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-deep/35 dark:text-brand-cream/35 pointer-events-none" />
+                        <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-brand-deep/35 dark:text-brand-cream/35 pointer-events-none" />
                         <Input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -482,9 +471,9 @@ function BatchLinksSection() {
                             className="flex items-center gap-1.5 text-xs text-brand-deep/55 dark:text-brand-cream/55 shrink-0"
                         >
                             {allSelected ? (
-                                <CheckSquare className="h-4 w-4" />
+                                <HugeiconsIcon icon={CheckSquare} className="h-4 w-4" />
                             ) : (
-                                <Square className="h-4 w-4" />
+                                <HugeiconsIcon icon={Square} className="h-4 w-4" />
                             )}
                             {allSelected ? "Deselect all" : "Select all"}
                         </Button>
@@ -494,7 +483,7 @@ function BatchLinksSection() {
                 {/* List */}
                 {isLoading ? (
                     <div className="flex items-center gap-2 text-sm text-brand-deep/55 dark:text-brand-cream/55 py-4">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" />
                         Loading outstanding fees…
                     </div>
                 ) : filtered.length === 0 ? (
@@ -532,9 +521,9 @@ function BatchLinksSection() {
                             onClick={onGenerate}
                         >
                             {batch.isPending ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="h-4 w-4 mr-2 animate-spin" />
                             ) : (
-                                <Link2 className="h-4 w-4 mr-2" />
+                                <HugeiconsIcon icon={Link2} className="h-4 w-4 mr-2" />
                             )}
                             {batch.isPending
                                 ? "Generating…"
@@ -556,7 +545,7 @@ function BatchLinksSection() {
                             <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                     <div className="h-7 w-7 rounded-full bg-brand-green/15 flex items-center justify-center">
-                                        <Check className="h-3.5 w-3.5 text-brand-green" />
+                                        <HugeiconsIcon icon={Check} className="h-3.5 w-3.5 text-brand-green" />
                                     </div>
                                     <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
                                         {results.filter((r) => r.ok).length} link{results.filter((r) => r.ok).length !== 1 ? "s" : ""} ready
@@ -574,7 +563,7 @@ function BatchLinksSection() {
                                     className="rounded-full"
                                     onClick={() => void copyAll()}
                                 >
-                                    <Copy className="h-3.5 w-3.5 mr-1.5" />
+                                    <HugeiconsIcon icon={Copy} className="h-3.5 w-3.5 mr-1.5" />
                                     Copy all URLs
                                 </Button>
                             </div>

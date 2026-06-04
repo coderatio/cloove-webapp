@@ -1,7 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Check, ShieldCheck } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 
 interface Props {
@@ -26,7 +27,7 @@ export function CheckoutSuccessStep({ businessName, businessLogo, amount, curren
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
         >
-          <Check className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
+          <HugeiconsIcon icon={Check} className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
         </motion.div>
 
         <motion.div
@@ -64,7 +65,7 @@ export function CheckoutSuccessStep({ businessName, businessLogo, amount, curren
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
       >
-        <ShieldCheck className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
+        <HugeiconsIcon icon={ShieldCheck} className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
         <p className="text-brand-accent/30 dark:text-white/30 text-xs">
           Secured by Cloove
         </p>

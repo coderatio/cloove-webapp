@@ -3,7 +3,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Compass, MapPin } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CompassIcon as Compass, MapPinIcon as MapPin } from "@hugeicons/core-free-icons"
 import { MagneticButton } from "@/app/components/ui/magnetic-button"
 import { NoiseOverlay } from "@/app/components/ui/noise-overlay"
 
@@ -66,7 +67,7 @@ export default function NotFound() {
                         />
 
                         <div className="relative w-48 h-48 bg-brand-green/20 backdrop-blur-md rounded-full border border-brand-cream/10 flex items-center justify-center shadow-2xl ring-1 ring-brand-cream/5">
-                            <Compass className="w-16 h-16 text-brand-gold opacity-80" strokeWidth={1} />
+                            <HugeiconsIcon icon={Compass} className="w-16 h-16 text-brand-gold opacity-80" strokeWidth={1} />
 
                             {/* Floating pips */}
                             <motion.div
@@ -74,7 +75,7 @@ export default function NotFound() {
                                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 className="absolute top-8 right-8"
                             >
-                                <MapPin className="w-4 h-4 text-brand-cream/40" />
+                                <HugeiconsIcon icon={MapPin} className="w-4 h-4 text-brand-cream/40" />
                             </motion.div>
                         </div>
                     </div>

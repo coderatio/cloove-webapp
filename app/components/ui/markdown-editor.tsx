@@ -6,7 +6,8 @@ import StarterKit from "@tiptap/starter-kit"
 import Placeholder from "@tiptap/extension-placeholder"
 import TurndownService from "turndown"
 import { cn } from "@/app/lib/utils"
-import { Bold, Italic, List, ListOrdered, Sparkles, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { TextBoldIcon as Bold, TextItalicIcon as Italic, LeftToRightListBulletIcon as List, LeftToRightListNumberIcon as ListOrdered, SparklesIcon as Sparkles, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { Popover, PopoverTrigger, PopoverContent } from "@/app/components/ui/popover"
 import { Textarea } from "@/app/components/ui/textarea"
 import { Button } from "@/app/components/ui/button"
@@ -113,14 +114,14 @@ export function MarkdownEditor({
           onClick={() => editor.chain().focus().toggleBold().run()}
           title="Bold"
         >
-          <Bold className="w-3.5 h-3.5" />
+          <HugeiconsIcon icon={Bold} className="w-3.5 h-3.5" />
         </ToolbarButton>
         <ToolbarButton
           active={editor.isActive("italic")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
           title="Italic"
         >
-          <Italic className="w-3.5 h-3.5" />
+          <HugeiconsIcon icon={Italic} className="w-3.5 h-3.5" />
         </ToolbarButton>
         <span className="w-px h-4 bg-brand-deep/10 dark:bg-white/10 mx-1" />
         <ToolbarButton
@@ -128,14 +129,14 @@ export function MarkdownEditor({
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           title="Bullet list"
         >
-          <List className="w-3.5 h-3.5" />
+          <HugeiconsIcon icon={List} className="w-3.5 h-3.5" />
         </ToolbarButton>
         <ToolbarButton
           active={editor.isActive("orderedList")}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           title="Numbered list"
         >
-          <ListOrdered className="w-3.5 h-3.5" />
+          <HugeiconsIcon icon={ListOrdered} className="w-3.5 h-3.5" />
         </ToolbarButton>
         <div className="ml-auto flex items-center gap-1">
           <span className="w-px h-4 bg-brand-deep/10 dark:bg-white/10 mx-1" />
@@ -247,7 +248,7 @@ function AIPopover({
             open && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
           )}
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <HugeiconsIcon icon={Sparkles} className="w-3.5 h-3.5" />
           <span className="text-xs font-medium">AI</span>
         </Button>
       </PopoverTrigger>
@@ -261,7 +262,7 @@ function AIPopover({
         <div className="bg-gradient-to-br from-brand-green/5 to-transparent dark:from-brand-gold/5 p-4 border-b border-brand-deep/5 dark:border-white/5">
           <div className="flex items-center gap-2 mb-3">
              <div className="w-6 h-6 rounded-full bg-brand-green/10 dark:bg-brand-gold/10 flex items-center justify-center">
-               <Sparkles className="w-3.5 h-3.5 text-brand-green dark:text-brand-gold" />
+               <HugeiconsIcon icon={Sparkles} className="w-3.5 h-3.5 text-brand-green dark:text-brand-gold" />
              </div>
              <span className="font-semibold text-sm text-brand-deep dark:text-brand-cream">AI Assistant</span>
           </div>
@@ -286,7 +287,7 @@ function AIPopover({
                   Cancel
                 </Button>
                 <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} size="sm" className="rounded-xl px-5 h-9 bg-brand-green hover:bg-brand-green/90 dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 text-white dark:text-brand-deep shadow-sm">
-                  {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 mr-2" />}
+                  {isGenerating ? <HugeiconsIcon icon={Loader2} className="w-3.5 h-3.5 animate-spin mr-2" /> : <HugeiconsIcon icon={Sparkles} className="w-3.5 h-3.5 mr-2" />}
                   Generate
                 </Button>
               </div>

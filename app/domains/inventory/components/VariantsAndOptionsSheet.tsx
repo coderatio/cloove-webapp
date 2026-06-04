@@ -2,17 +2,8 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-    Plus,
-    Trash2,
-    ChevronDown,
-    Sparkles,
-    Loader2,
-    ListTree,
-    Layers,
-    Tag,
-    Boxes,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PlusSignIcon as Plus, Delete02Icon as Trash2, ChevronDownIcon as ChevronDown, SparklesIcon as Sparkles, Loading03Icon as Loader2, ListTreeIcon as ListTree, Layers01Icon as Layers, Tag01Icon as Tag, BoxesIcon as Boxes } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -247,7 +238,7 @@ const OptionRow = React.memo(function OptionRow({
                     className="sm:col-start-3 sm:row-start-2 h-12 w-full sm:w-12 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center transition-all"
                     aria-label="Remove option"
                 >
-                    <Trash2 className="w-4 h-4" />
+                    <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                 </button>
             </div>
         </GlassCard>
@@ -432,7 +423,7 @@ const VariantEditor = React.memo(function VariantEditor({
                                 {summaryParts.join(" • ")}
                             </span>
                         </div>
-                        <ChevronDown
+                        <HugeiconsIcon icon={ChevronDown}
                             className={cn(
                                 "w-4 h-4 text-brand-deep/40 dark:text-brand-cream/40 transition-transform shrink-0",
                                 expanded && "rotate-180",
@@ -446,7 +437,7 @@ const VariantEditor = React.memo(function VariantEditor({
                             className="w-8 h-8 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 flex items-center justify-center transition-all shrink-0"
                             aria-label="Remove variant"
                         >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
                         </button>
                     )}
                 </div>
@@ -541,7 +532,7 @@ const VariantEditor = React.memo(function VariantEditor({
                                                 }}
                                                 className="text-[9px] font-bold text-brand-gold hover:text-brand-gold/80 transition-colors flex items-center gap-1"
                                             >
-                                                <Sparkles className="w-3 h-3" />
+                                                <HugeiconsIcon icon={Sparkles} className="w-3 h-3" />
                                                 Auto-Generate
                                             </button>
                                         </div>
@@ -605,7 +596,7 @@ const VariantEditor = React.memo(function VariantEditor({
                                                     className="absolute right-3 top-1/2 -translate-y-1/2"
                                                     title="Calculated from stores"
                                                 >
-                                                    <Loader2 className="w-3 h-3 text-brand-gold" />
+                                                    <HugeiconsIcon icon={Loader2} className="w-3 h-3 text-brand-gold" />
                                                 </div>
                                             )}
                                         </div>
@@ -848,11 +839,11 @@ export function VariantsAndOptionsSheet({
                     {/* Quick summary chip row */}
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="default" className="gap-1.5">
-                            <Layers className="w-3 h-3" />
+                            <HugeiconsIcon icon={Layers} className="w-3 h-3" />
                             {productOptions.length} {productOptions.length === 1 ? "option" : "options"}
                         </Badge>
                         <Badge variant="default" className="gap-1.5">
-                            <Boxes className="w-3 h-3" />
+                            <HugeiconsIcon icon={Boxes} className="w-3 h-3" />
                             {totalVariants} {totalVariants === 1 ? "variant" : "variants"}
                         </Badge>
                     </div>
@@ -862,7 +853,7 @@ export function VariantsAndOptionsSheet({
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                    <ListTree className="w-3 h-3" />
+                                    <HugeiconsIcon icon={ListTree} className="w-3 h-3" />
                                     Options
                                 </h3>
                                 <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 mt-1 max-w-md">
@@ -876,7 +867,7 @@ export function VariantsAndOptionsSheet({
                                     onClick={handleAddOption}
                                     className="text-[10px] h-8 font-bold uppercase tracking-widest text-brand-gold hover:bg-brand-gold/5 px-4 rounded-full transition-all"
                                 >
-                                    <Plus className="w-3.5 h-3.5 mr-1" />
+                                    <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5 mr-1" />
                                     Add option
                                 </Button>
                             )}
@@ -912,7 +903,7 @@ export function VariantsAndOptionsSheet({
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                    <Tag className="w-3 h-3" />
+                                    <HugeiconsIcon icon={Tag} className="w-3 h-3" />
                                     Variants
                                 </h3>
                                 <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 mt-1 max-w-md">
@@ -925,7 +916,7 @@ export function VariantsAndOptionsSheet({
                                 onClick={() => handleAddVariant()}
                                 className="text-[10px] h-8 font-bold uppercase tracking-widest text-brand-gold hover:bg-brand-gold/5 px-4 rounded-full transition-all"
                             >
-                                <Plus className="w-3.5 h-3.5 mr-1" />
+                                <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5 mr-1" />
                                 Add variant
                             </Button>
                         </div>

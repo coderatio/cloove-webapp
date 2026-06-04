@@ -16,29 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/pop
 import { ColorPicker } from "@/app/components/ui/color-picker"
 import { Input } from "@/app/components/ui/input"
 import { GOOGLE_FONTS_ALLOWED } from "@/app/domains/storefront/lib/theme-defaults"
-import {
-  Bold,
-  Italic,
-  Heading1,
-  Heading2,
-  Heading3,
-  Type,
-  List,
-  ListOrdered,
-  Quote,
-  Link as LinkIcon,
-  Undo,
-  Redo,
-  Code,
-  Image as ImageIcon,
-  Minus,
-  Palette,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  ChevronDown,
-  MoreHorizontal,
-} from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { TextBoldIcon as Bold, TextItalicIcon as Italic, Heading01Icon as Heading1, Heading02Icon as Heading2, Heading03Icon as Heading3, TextFontIcon as Type, LeftToRightListBulletIcon as List, LeftToRightListNumberIcon as ListOrdered, QuoteDownIcon as Quote, Link01Icon as LinkIcon, UndoIcon as Undo, RedoIcon as Redo, CodeIcon as Code, Image01Icon as ImageIcon, MinusSignIcon as Minus, PaintBoardIcon as Palette, TextAlignLeftIcon as AlignLeft, TextAlignCenterIcon as AlignCenter, TextAlignRightIcon as AlignRight, ChevronDownIcon as ChevronDown, MoreHorizontalIcon as MoreHorizontal } from "@hugeicons/core-free-icons"
 
 const FONT_SIZE_QUICK_OPTIONS = ["12px", "14px", "16px", "18px", "24px", "32px", "48px"]
 
@@ -76,7 +55,6 @@ const ListKeymap = Extension.create({
     }
   },
 })
-
 
 const FontSize = Extension.create({
   name: "fontSize",
@@ -327,7 +305,7 @@ function ToolbarFontFamily({ editor }: { editor: Editor }) {
           <span className="truncate max-w-[80px]">
             {isCustomFont ? current : "Default"}
           </span>
-          <ChevronDown className="w-3 h-3 opacity-50" />
+          <HugeiconsIcon icon={ChevronDown} className="w-3 h-3 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-48 p-0" align="start">
@@ -418,7 +396,7 @@ function ToolbarFontSize({ editor }: { editor: Editor }) {
             className="h-7 w-4 p-0 rounded-none hover:bg-transparent"
             onClick={() => setOpen(!open)}
           >
-            <ChevronDown className="w-3 h-3 opacity-50" />
+            <HugeiconsIcon icon={ChevronDown} className="w-3 h-3 opacity-50" />
           </Button>
         </div>
       </PopoverTrigger>
@@ -474,7 +452,7 @@ function ToolbarFormatting({ editor }: { editor: Editor }) {
           className="h-7 px-2 rounded-md text-xs font-medium gap-1"
         >
           {current.label}
-          <ChevronDown className="w-3 h-3 opacity-50" />
+          <HugeiconsIcon icon={ChevronDown} className="w-3 h-3 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-40 p-1" align="start">
@@ -492,7 +470,7 @@ function ToolbarFormatting({ editor }: { editor: Editor }) {
               opt.active && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
             )}
           >
-            <opt.icon className="w-3.5 h-3.5" />
+            <HugeiconsIcon icon={opt.icon} className="w-3.5 h-3.5" />
             {opt.label}
           </Button>
         ))}
@@ -520,7 +498,7 @@ function ToolbarColorPicker({ editor }: { editor: Editor }) {
             current && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
           )}
         >
-          <Palette className="w-3.5 h-3.5" />
+          <HugeiconsIcon icon={Palette} className="w-3.5 h-3.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2" align="start">
@@ -559,7 +537,7 @@ function ToolbarColorPicker({ editor }: { editor: Editor }) {
   )
 }
 
-function ToolbarButton({ active, onClick, icon: Icon, label, disabled }: { active: boolean; onClick: () => void; icon: React.ComponentType<{ className?: string }>; label: string; disabled?: boolean }) {
+function ToolbarButton({ active, onClick, icon: Icon, label, disabled }: { active: boolean; onClick: () => void; icon: IconSvgElement; label: string; disabled?: boolean }) {
   return (
     <Button
       type="button"
@@ -574,7 +552,7 @@ function ToolbarButton({ active, onClick, icon: Icon, label, disabled }: { activ
         disabled && "opacity-30"
       )}
     >
-      <Icon className="w-3.5 h-3.5" />
+      <HugeiconsIcon icon={Icon} className="w-3.5 h-3.5" />
     </Button>
   )
 }
@@ -604,7 +582,7 @@ function ToolbarMore({ editor, setLink, addImage }: { editor: Editor; setLink: (
           aria-label="More"
           className="h-7 w-7 rounded-md"
         >
-          <MoreHorizontal className="w-3.5 h-3.5" />
+          <HugeiconsIcon icon={MoreHorizontal} className="w-3.5 h-3.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-44 p-1" align="end">
@@ -623,7 +601,7 @@ function ToolbarMore({ editor, setLink, addImage }: { editor: Editor; setLink: (
                 item.active && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
               )}
             >
-              <item.icon className="w-3.5 h-3.5" />
+              <HugeiconsIcon icon={item.icon} className="w-3.5 h-3.5" />
               {item.label}
             </Button>
           ))}
@@ -636,5 +614,4 @@ function ToolbarMore({ editor, setLink, addImage }: { editor: Editor; setLink: (
 function ToolbarSeparator() {
   return <div className="w-px h-5 bg-brand-deep/10 dark:bg-white/10 mx-1" />
 }
-
 

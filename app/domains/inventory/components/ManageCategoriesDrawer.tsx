@@ -12,7 +12,8 @@ import {
     DrawerStickyHeader,
 } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
-import { Plus, Trash2, Loader2, Pencil, Check, X, Tag } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PlusSignIcon as Plus, Delete02Icon as Trash2, Loading03Icon as Loader2, PencilIcon as Pencil, CheckIcon as Check, Cancel01Icon as X, Tag01Icon as Tag } from "@hugeicons/core-free-icons"
 import { useProductCategories, type ProductCategoryRow } from "../hooks/useProductCategories"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { motion, AnimatePresence } from "framer-motion"
@@ -72,7 +73,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                     <DrawerStickyHeader className="text-left px-4 sm:px-8">
                         <div className="flex items-center gap-3 mb-1">
                             <div className="w-8 h-8 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                <Tag className="w-4 h-4" />
+                                <HugeiconsIcon icon={Tag} className="w-4 h-4" />
                             </div>
                             <DrawerTitle className="text-xl font-serif font-medium">Product Categories</DrawerTitle>
                         </div>
@@ -96,7 +97,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                                     disabled={isSubmitting || !newName.trim()}
                                     className="rounded-2xl h-[50px] px-6 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white shadow-lg hover:scale-[1.02] transition-all"
                                 >
-                                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                                    {isSubmitting ? <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" /> : <HugeiconsIcon icon={Plus} className="h-4 w-4" />}
                                     <span className="hidden sm:inline ml-1 uppercase tracking-widest text-[10px] font-bold">Add</span>
                                 </Button>
                             </div>
@@ -147,13 +148,13 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                                                                     disabled={isSubmitting || !editValue.trim()}
                                                                     className="p-1.5 cursor-pointer rounded-lg text-emerald-500 hover:bg-emerald-500/10 transition-colors"
                                                                 >
-                                                                    {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                                                    {isSubmitting ? <HugeiconsIcon icon={Loader2} className="w-3.5 h-3.5 animate-spin" /> : <HugeiconsIcon icon={Check} className="w-3.5 h-3.5" />}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => setEditingId(null)}
                                                                     className="p-1.5 cursor-pointer rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors"
                                                                 >
-                                                                    <X className="w-3.5 h-3.5" />
+                                                                    <HugeiconsIcon icon={X} className="w-3.5 h-3.5" />
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -173,7 +174,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                                                                         setEditValue(c.name)
                                                                     }}
                                                                 >
-                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                    <HugeiconsIcon icon={Pencil} className="h-3.5 w-3.5" />
                                                                 </Button>
                                                                 <Button
                                                                     type="button"
@@ -182,7 +183,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                                                                     className="h-8 w-8 rounded-xl p-0 text-rose-500/50 hover:text-rose-600 hover:bg-rose-500/10"
                                                                     onClick={() => setDeleteTarget(c)}
                                                                 >
-                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                    <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
                                                                 </Button>
                                                             </div>
                                                         </>
@@ -196,7 +197,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                             {!isLoading && categories.length === 0 && (
                                 <div className="py-20 text-center space-y-3">
                                     <div className="w-12 h-12 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mx-auto opacity-40">
-                                        <Tag className="w-6 h-6" />
+                                        <HugeiconsIcon icon={Tag} className="w-6 h-6" />
                                     </div>
                                     <p className="text-xs font-medium text-brand-accent/30 dark:text-brand-cream/40 uppercase tracking-widest italic">
                                         No categories defined yet.

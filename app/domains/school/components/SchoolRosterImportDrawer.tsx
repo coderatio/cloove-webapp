@@ -2,15 +2,8 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-    Sparkles,
-    Loader2,
-    CheckCircle2,
-    ArrowLeft,
-    Trash2,
-    Users,
-    GraduationCap,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SparklesIcon as Sparkles, Loading03Icon as Loader2, CheckmarkCircle02Icon as CheckCircle2, ArrowLeft01Icon as ArrowLeft, Delete02Icon as Trash2, UserMultiple02Icon as Users, GraduationCapIcon as GraduationCap } from "@hugeicons/core-free-icons"
 import {
     Drawer,
     DrawerBody,
@@ -97,7 +90,7 @@ function PersonCard({
                     onClick={() => onRemove(person.id)}
                     aria-label={`Remove ${person.name}`}
                 >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
                 </Button>
             </div>
 
@@ -264,11 +257,11 @@ export function SchoolRosterImportDrawer({ open, onOpenChange }: SchoolRosterImp
                     <div className="flex items-center gap-3 mb-1">
                         <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold shrink-0">
                             {step === "extracting" ? (
-                                <Sparkles className="h-4 w-4" />
+                                <HugeiconsIcon icon={Sparkles} className="h-4 w-4" />
                             ) : step === "success" ? (
-                                <CheckCircle2 className="h-4 w-4" />
+                                <HugeiconsIcon icon={CheckCircle2} className="h-4 w-4" />
                             ) : (
-                                <GraduationCap className="h-4 w-4" />
+                                <HugeiconsIcon icon={GraduationCap} className="h-4 w-4" />
                             )}
                         </div>
                         <DrawerTitle className="font-serif">Import roster</DrawerTitle>
@@ -303,7 +296,7 @@ export function SchoolRosterImportDrawer({ open, onOpenChange }: SchoolRosterImp
                                 />
                                 <div className="rounded-2xl border border-brand-gold/20 bg-brand-gold/5 p-5 space-y-3">
                                     <div className="flex items-center gap-2">
-                                        <Sparkles className="h-4 w-4 text-brand-gold shrink-0" />
+                                        <HugeiconsIcon icon={Sparkles} className="h-4 w-4 text-brand-gold shrink-0" />
                                         <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
                                             AI-powered — no template needed
                                         </p>
@@ -337,7 +330,7 @@ export function SchoolRosterImportDrawer({ open, onOpenChange }: SchoolRosterImp
                                 <div className="relative mb-8">
                                     <div className="absolute inset-0 bg-brand-gold/20 blur-[50px] rounded-full animate-pulse" />
                                     <div className="relative h-20 w-20 rounded-[28px] bg-brand-deep/5 dark:bg-white/5 border border-brand-gold/20 flex items-center justify-center">
-                                        <Loader2 className="h-9 w-9 text-brand-gold animate-spin" />
+                                        <HugeiconsIcon icon={Loader2} className="h-9 w-9 text-brand-gold animate-spin" />
                                     </div>
                                 </div>
                                 <h3 className="font-serif text-xl text-brand-deep dark:text-brand-cream">
@@ -359,7 +352,7 @@ export function SchoolRosterImportDrawer({ open, onOpenChange }: SchoolRosterImp
                                 className="space-y-4"
                             >
                                 <div className="flex items-start gap-3 rounded-2xl border border-brand-gold/20 bg-brand-gold/5 p-4">
-                                    <Users className="h-4 w-4 text-brand-gold mt-0.5 shrink-0" />
+                                    <HugeiconsIcon icon={Users} className="h-4 w-4 text-brand-gold mt-0.5 shrink-0" />
                                     <p className="text-sm text-brand-deep/80 dark:text-brand-cream/80">
                                         Review each record below. Edit any field or remove unwanted rows. Only
                                         records without errors will be imported.
@@ -392,7 +385,7 @@ export function SchoolRosterImportDrawer({ open, onOpenChange }: SchoolRosterImp
                                 className="flex flex-col items-center justify-center py-24 text-center"
                             >
                                 <div className="h-20 w-20 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold mb-8">
-                                    <CheckCircle2 className="h-10 w-10" />
+                                    <HugeiconsIcon icon={CheckCircle2} className="h-10 w-10" />
                                 </div>
                                 <h3 className="font-serif text-2xl text-brand-deep dark:text-brand-cream">
                                     Roster imported
@@ -445,7 +438,7 @@ export function SchoolRosterImportDrawer({ open, onOpenChange }: SchoolRosterImp
                                     setFile(null)
                                 }}
                             >
-                                <ArrowLeft className="h-4 w-4" />
+                                <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" />
                                 Start over
                             </Button>
                         ) : (
@@ -467,9 +460,9 @@ export function SchoolRosterImportDrawer({ open, onOpenChange }: SchoolRosterImp
                                 }
                             >
                                 {importMutation.isPending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin mr-2" />
                                 ) : (
-                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                    <HugeiconsIcon icon={CheckCircle2} className="h-4 w-4 mr-2" />
                                 )}
                                 Import {people.length} record{people.length === 1 ? "" : "s"}
                             </Button>

@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
-import { Camera, RefreshCw, X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Camera01Icon as Camera, RefreshIcon as RefreshCw, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import {
     Dialog,
@@ -129,7 +130,7 @@ export function CameraDialog({ open, onOpenChange, onCapture }: CameraDialogProp
             <DialogContent hideClose className="sm:max-w-2xl p-0 overflow-hidden bg-black border-none rounded-[28px]">
                 <DialogHeader className="absolute top-0 left-0 right-0 z-50 p-6 bg-linear-to-b from-black/60 to-transparent pointer-events-none">
                     <DialogTitle className="text-white font-medium flex items-center gap-2">
-                        <Camera className="h-5 w-5" />
+                        <HugeiconsIcon icon={Camera} className="h-5 w-5" />
                         Capture
                     </DialogTitle>
                 </DialogHeader>
@@ -164,7 +165,7 @@ export function CameraDialog({ open, onOpenChange, onCapture }: CameraDialogProp
                                 variant="ghost"
                                 className="text-white/60 hover:text-white hover:bg-white/10 rounded-full h-12 w-12 p-0"
                             >
-                                <X className="h-6 w-6" />
+                                <HugeiconsIcon icon={X} className="h-6 w-6" />
                             </Button>
                         )}
                     />
@@ -184,7 +185,7 @@ export function CameraDialog({ open, onOpenChange, onCapture }: CameraDialogProp
                         disabled={devices.length <= 1 || isStarting}
                         className="text-white/60 hover:text-white hover:bg-white/10 rounded-full h-12 w-12 p-0 transition-transform active:rotate-180 duration-500"
                     >
-                        <RefreshCw className="h-6 w-6" />
+                        <HugeiconsIcon icon={RefreshCw} className="h-6 w-6" />
                     </Button>
                 </div>
             </DialogContent>

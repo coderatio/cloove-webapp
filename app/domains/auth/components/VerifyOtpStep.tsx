@@ -1,6 +1,7 @@
 "use client"
 
-import { MessageSquare, ArrowRight, Shield } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Message01Icon as MessageSquare, ArrowRight01Icon as ArrowRight, SecurityIcon as Shield } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { LoginBackButton } from "./LoginBackButton"
@@ -25,7 +26,7 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                     <>
                         <div className="mb-6 pt-10 text-center">
                             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
-                                <Shield className="w-6 h-6" />
+                                <HugeiconsIcon icon={Shield} className="w-6 h-6" />
                             </div>
                             <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">Verify your identity</h2>
                             <p className="text-xs leading-relaxed text-white/50">
@@ -44,7 +45,7 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                                 </label>
                                 <div className="relative group">
                                     <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                        <MessageSquare className="w-4 h-4" />
+                                        <HugeiconsIcon icon={MessageSquare} className="w-4 h-4" />
                                     </div>
                                     <input
                                         type="text"
@@ -78,14 +79,14 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                                 className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45 [&_svg]:text-white"
                             >
                                 {state.isLoading ? "Verifying..." : "Confirm & Continue"}
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                                <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4" />
                             </Button>
                         </form>
                     </>
                 ) : useEmailLink ? (
                     <div className="mb-6 pt-10 text-center">
                         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
-                            <Shield className="w-6 h-6" />
+                            <HugeiconsIcon icon={Shield} className="w-6 h-6" />
                         </div>
                         <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">Set your password</h2>
                         <p className="mx-auto max-w-sm text-sm leading-relaxed text-white/60">
@@ -95,7 +96,7 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                 ) : useWhatsappOtp ? (
                     <div className="mb-6 pt-10 text-center">
                         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
-                            <Shield className="w-6 h-6" />
+                            <HugeiconsIcon icon={Shield} className="w-6 h-6" />
                         </div>
                         <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">One quick step</h2>
                         <p className="mx-auto mb-6 max-w-sm text-sm leading-relaxed text-white/60">
@@ -107,13 +108,13 @@ export function VerifyOtpStep({ flow }: VerifyOtpStepProps) {
                             className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white"
                         >
                             Try again
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            <HugeiconsIcon icon={ArrowRight} className="w-4 h-4 ml-2" />
                         </Button>
                     </div>
                 ) : (
                     <div className="mb-6 pt-10 text-center">
                         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
-                            <Shield className="w-6 h-6" />
+                            <HugeiconsIcon icon={Shield} className="w-6 h-6" />
                         </div>
                         <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">Activate your number</h2>
                         <p className="mx-auto max-w-sm text-sm leading-relaxed text-white/60">

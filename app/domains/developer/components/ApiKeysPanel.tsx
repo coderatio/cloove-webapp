@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Copy as CopyIcon, Eye, KeyRound, MoreVertical, RotateCcw, XCircle, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CopyIcon, EyeIcon as Eye, Key01Icon as KeyRound, MoreVerticalIcon as MoreVertical, ReloadIcon as RotateCcw, CancelCircleIcon as XCircle, EyeOffIcon as EyeOff } from "@hugeicons/core-free-icons"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -92,7 +93,7 @@ export function ApiKeysPanel({ keys, isLoading, compact = false, appId }: { keys
             ) : keys.length === 0 ? (
                 <div className="p-10 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-3xl bg-brand-deep/5 text-muted-foreground dark:bg-white/7">
-                        <KeyRound className="h-5 w-5" />
+                        <HugeiconsIcon icon={KeyRound} className="h-5 w-5" />
                     </div>
                     <p className="mt-3 text-sm font-medium">No API keys yet</p>
                     <p className="text-sm text-muted-foreground">Create a test key to start integrating with Cloove APIs.</p>
@@ -126,7 +127,7 @@ export function ApiKeysPanel({ keys, isLoading, compact = false, appId }: { keys
                                                 className="shrink-0 rounded-md p-0.5 text-muted-foreground/50 transition-colors hover:text-foreground"
                                                 title="Copy public key"
                                             >
-                                                <CopyIcon className="h-3 w-3" />
+                                                <HugeiconsIcon icon={CopyIcon} className="h-3 w-3" />
                                             </button>
                                         </div>
                                     </td>
@@ -170,26 +171,26 @@ function ApiKeyActions({ apiKey, isRotating, isRevoking, isViewingSecret, onView
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-2xl text-muted-foreground hover:text-foreground">
-                    <MoreVertical className="h-4 w-4" />
+                    <HugeiconsIcon icon={MoreVertical} className="h-4 w-4" />
                     <span className="sr-only">Open API key actions</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 rounded-2xl border-brand-deep/5 bg-white/95 p-2 shadow-2xl dark:border-white/5 dark:bg-[#021a12]/95">
                 <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5" onSelect={onView}>
-                    <Eye className="mr-3 h-4 w-4 text-muted-foreground" />
+                    <HugeiconsIcon icon={Eye} className="mr-3 h-4 w-4 text-muted-foreground" />
                     <span>View details</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5" disabled={disabled || isViewingSecret || !apiKey.plaintextAvailable} onSelect={onViewSecret}>
-                    <EyeOff className="mr-3 h-4 w-4 text-muted-foreground" />
+                    <HugeiconsIcon icon={EyeOff} className="mr-3 h-4 w-4 text-muted-foreground" />
                     <span>{isViewingSecret ? "Loading..." : apiKey.plaintextAvailable ? "View secret" : "Secret unavailable"}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5" disabled={disabled || isRotating} onSelect={onRotate}>
-                    <RotateCcw className="mr-3 h-4 w-4 text-muted-foreground" />
+                    <HugeiconsIcon icon={RotateCcw} className="mr-3 h-4 w-4 text-muted-foreground" />
                     <span>Rotate</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="my-1 bg-brand-deep/5 dark:bg-white/5" />
                 <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5 text-rose-600 focus:text-rose-700 dark:text-rose-400 dark:focus:text-rose-300" disabled={disabled || isRevoking} onSelect={onRevoke}>
-                    <XCircle className="mr-3 h-4 w-4" />
+                    <HugeiconsIcon icon={XCircle} className="mr-3 h-4 w-4" />
                     <span>Revoke</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
@@ -215,7 +216,7 @@ function ApiKeyDetailsDialog({ apiKey, onOpenChange }: { apiKey: DeveloperApiKey
                                 className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                             >
                                 <span className="font-mono">{apiKey.publicKey.slice(0, 26)}…{apiKey.lastFour}</span>
-                                <CopyIcon className="h-2.5 w-2.5" />
+                                <HugeiconsIcon icon={CopyIcon} className="h-2.5 w-2.5" />
                             </button>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">

@@ -12,7 +12,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/app/components/ui/select"
-import { Loader2, Plus, Trash2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, PlusSignIcon as Plus, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
 import { useSettings, useUpdateBusinessSettings } from "../hooks/useBusinessSettings"
 import { usePaymentProviders } from "@/app/domains/finance/hooks/useFinance"
 import { usePermission } from "@/app/hooks/usePermission"
@@ -333,7 +334,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
     if (isLoading || providersLoading) {
         return (
             <div className="flex items-center justify-center p-12">
-                <Loader2 className="h-8 w-8 animate-spin text-brand-gold" />
+                <HugeiconsIcon icon={Loader2} className="h-8 w-8 animate-spin text-brand-gold" />
             </div>
         )
     }
@@ -613,7 +614,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                 className="h-10 w-full rounded-xl sm:h-9 sm:w-auto"
                                 onClick={addDineInLocation}
                             >
-                                <Plus className="mr-2 h-4 w-4" />
+                                <HugeiconsIcon icon={Plus} className="mr-2 h-4 w-4" />
                                 Add location
                             </Button>
                         </div>
@@ -655,7 +656,7 @@ export function SalesSettings({ onDirtyChange, onSavingChange, saveTrigger }: Sa
                                             className="h-11 w-11 rounded-xl text-brand-accent/70 hover:text-red-600"
                                             onClick={() => removeDineInLocation(index)}
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <HugeiconsIcon icon={Trash2} className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 ))}

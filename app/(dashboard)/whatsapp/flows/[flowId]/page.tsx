@@ -6,7 +6,8 @@ import { useWhatsAppNumbers } from "@/app/domains/messaging/hooks/useWhatsAppSet
 import { useWhatsAppFlows } from "@/app/domains/messaging/hooks/useWhatsAppInbox"
 import { FlowBuilder } from "@/app/domains/messaging/components/FlowBuilder"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 
 export default function EditFlowPage({ params }: { params: Promise<{ flowId: string }> }) {
     const router = useRouter()
@@ -42,7 +43,7 @@ export default function EditFlowPage({ params }: { params: Promise<{ flowId: str
     if (!flowId) {
         return (
             <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <HugeiconsIcon icon={Loader2} className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
         )
     }
@@ -50,7 +51,7 @@ export default function EditFlowPage({ params }: { params: Promise<{ flowId: str
     if (selectedNumberId && flowsLoading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <HugeiconsIcon icon={Loader2} className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
         )
     }

@@ -6,7 +6,8 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { AlertCircle, Users, Trash2, Loader2, ChevronLeft, ChevronRight, UserPenIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon as AlertCircle, UserMultiple02Icon as Users, Delete02Icon as Trash2, Loading03Icon as Loader2, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, UserEdit01Icon as UserPenIcon, MoreHorizontalIcon as MoreHorizontal, CallIcon as Phone, Message01Icon as MessageSquare, Invoice01Icon as Receipt, UserIcon as User, BanIcon as Ban, CheckmarkCircle02Icon as CheckCircle2, TradeUpIcon as TrendingUp, CrownIcon as Crown, StarIcon as Star } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { apiClient } from "@/app/lib/api-client"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
@@ -49,18 +50,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuLabel
 } from "@/app/components/ui/dropdown-menu"
-import {
-    MoreHorizontal,
-    Phone,
-    MessageSquare,
-    Receipt,
-    User,
-    Ban,
-    CheckCircle2,
-    TrendingUp,
-    Crown,
-    Star
-} from "lucide-react"
 import { CustomerProfileDrawer } from "./CustomerProfileDrawer"
 import { RecordPaymentDrawer } from "@/app/domains/orders/components/RecordPaymentDrawer"
 import { toast } from "sonner"
@@ -363,7 +352,7 @@ export function CustomersView() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-full">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <HugeiconsIcon icon={MoreHorizontal} className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-brand-deep/5 dark:border-white/5 shadow-2xl">
@@ -375,7 +364,7 @@ export function CustomersView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
-                            <User className="w-4 h-4" />
+                            <HugeiconsIcon icon={User} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">{cui.actionsMenu.viewProfile}</span>
                     </DropdownMenuItem>
@@ -386,7 +375,7 @@ export function CustomersView() {
                             className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                         >
                             <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                <Receipt className="w-4 h-4" />
+                                <HugeiconsIcon icon={Receipt} className="w-4 h-4" />
                             </div>
                             <span className="font-medium">{cui.actionsMenu.recordPayment}</span>
                         </DropdownMenuItem>
@@ -399,7 +388,7 @@ export function CustomersView() {
                             <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5" asChild>
                                 <a href={`tel:${item.phoneNumber}`}>
                                     <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
-                                        <Phone className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Phone} className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">{cui.actionsMenu.directCall}</span>
                                 </a>
@@ -407,7 +396,7 @@ export function CustomersView() {
                             <DropdownMenuItem className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5" asChild>
                                 <a href={`https://wa.me/${item.phoneNumber.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer">
                                     <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                        <MessageSquare className="w-4 h-4" />
+                                        <HugeiconsIcon icon={MessageSquare} className="w-4 h-4" />
                                     </div>
                                     <span className="font-medium">{cui.actionsMenu.whatsappChat}</span>
                                 </a>
@@ -422,7 +411,7 @@ export function CustomersView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
-                            <UserPenIcon className="w-4 h-4" />
+                            <HugeiconsIcon icon={UserPenIcon} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">{cui.actionsMenu.editProfile}</span>
                     </DropdownMenuItem>
@@ -443,7 +432,7 @@ export function CustomersView() {
                             "h-8 w-8 rounded-full flex items-center justify-center",
                             item.isBlacklisted ? "bg-emerald-500/10" : "bg-rose-500/10"
                         )}>
-                            {item.isBlacklisted ? <CheckCircle2 className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                            {item.isBlacklisted ? <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4" /> : <HugeiconsIcon icon={Ban} className="w-4 h-4" />}
                         </div>
                         <span className="font-medium">{item.isBlacklisted ? cui.actionsMenu.unblacklist : cui.actionsMenu.blacklist}</span>
                     </DropdownMenuItem>
@@ -464,7 +453,7 @@ export function CustomersView() {
                             "h-8 w-8 rounded-full flex items-center justify-center transition-colors",
                             item.isVip ? "bg-brand-accent/10 dark:bg-white/5" : "bg-brand-gold/10"
                         )}>
-                            <Star className={cn("w-4 h-4", item.isVip ? "text-brand-accent fill-brand-accent/20" : "text-brand-gold")} />
+                            <HugeiconsIcon icon={Star} className={cn("w-4 h-4", item.isVip ? "text-brand-accent fill-brand-accent/20" : "text-brand-gold")} />
                         </div>
                         <span>{item.isVip ? cui.actionsMenu.demoteVip : cui.actionsMenu.makeVip}</span>
                     </DropdownMenuItem>
@@ -491,7 +480,7 @@ export function CustomersView() {
                     </span>
                     {item.isVip && (
                         <div className="flex items-center gap-1 mt-1">
-                            <Crown className="w-3 h-3 text-brand-gold fill-brand-gold/20" />
+                            <HugeiconsIcon icon={Crown} className="w-3 h-3 text-brand-gold fill-brand-gold/20" />
                             <span className="text-[9px] font-bold text-brand-gold uppercase tracking-widest">{cui.listCard.statusVip}</span>
                         </div>
                     )}
@@ -591,10 +580,10 @@ export function CustomersView() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Users className="w-24 h-24" />
+                            <HugeiconsIcon icon={Users} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
-                            <Users className="h-6 w-6" />
+                            <HugeiconsIcon icon={Users} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-widest">
@@ -612,10 +601,10 @@ export function CustomersView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <TrendingUp className="w-24 h-24" />
+                            <HugeiconsIcon icon={TrendingUp} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <TrendingUp className="h-6 w-6" />
+                            <HugeiconsIcon icon={TrendingUp} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-gold/60 dark:text-brand-gold/80 uppercase tracking-widest">
@@ -633,10 +622,10 @@ export function CustomersView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <User className="w-24 h-24" />
+                            <HugeiconsIcon icon={User} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                            <User className="h-6 w-6" />
+                            <HugeiconsIcon icon={User} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
@@ -661,10 +650,10 @@ export function CustomersView() {
                         )}
                     >
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-rose-500">
-                            <AlertCircle className="w-24 h-24" />
+                            <HugeiconsIcon icon={AlertCircle} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-                            <AlertCircle className="h-6 w-6" />
+                            <HugeiconsIcon icon={AlertCircle} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-rose-500/60 uppercase tracking-widest">
@@ -717,7 +706,7 @@ export function CustomersView() {
                             <GlassCard className="p-12 text-center border-dashed border-brand-deep/20 dark:border-white/10 bg-transparent">
                                 <div className="flex flex-col items-center gap-3">
                                     <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
-                                        <Users className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                                        <HugeiconsIcon icon={Users} className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
                                     </div>
                                     <h3 className="text-brand-deep dark:text-brand-cream font-medium">{cui.emptyState.title}</h3>
                                     <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
@@ -780,7 +769,7 @@ export function CustomersView() {
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronLeft} className="w-4 h-4" />
                             Previous
                         </Button>
                         <span className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
@@ -794,7 +783,7 @@ export function CustomersView() {
                             className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
                             Next
-                            <ChevronRight className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4" />
                         </Button>
                     </div>
                 )}
@@ -981,7 +970,7 @@ export function CustomersView() {
                                         className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold shadow-xl"
                                     >
                                         {isFormPending ? (
-                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                                         ) : editingItem ? (
                                             cui.drawer.saveChanges
                                         ) : (
@@ -1002,9 +991,9 @@ export function CustomersView() {
                                             className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold text-rose-500/60 hover:text-rose-500 transition-all uppercase tracking-widest disabled:opacity-50"
                                         >
                                             {isDeleting ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
                                             ) : (
-                                                <Trash2 className="w-4 h-4" />
+                                                <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                                             )}
                                             {cui.drawer.removeProfile}
                                         </button>

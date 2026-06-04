@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { AlertTriangle, Check, Globe, Loader2, MoreVertical, Pencil, Plus, Trash2, Webhook } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Alert02Icon as AlertTriangle, CheckIcon as Check, GlobeIcon as Globe, Loading03Icon as Loader2, MoreVerticalIcon as MoreVertical, PencilIcon as Pencil, PlusSignIcon as Plus, Delete02Icon as Trash2, WebhookIcon as Webhook } from "@hugeicons/core-free-icons"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -68,7 +69,7 @@ export function WebhookEndpointsPanel({ appId }: { appId?: string | null }) {
                     <h2 className="text-base font-semibold tracking-tight">Webhook callback URLs</h2>
                     <p className="text-sm text-muted-foreground">Configure URLs where Cloove sends event notifications.</p>
                 </div>
-                <Button className="h-10 rounded-2xl px-4" onClick={openCreateDialog}><Plus className="mr-2 h-4 w-4" /> Add endpoint</Button>
+                <Button className="h-10 rounded-2xl px-4" onClick={openCreateDialog}><HugeiconsIcon icon={Plus} className="mr-2 h-4 w-4" /> Add endpoint</Button>
             </div>
 
             <WebhookEndpointDialog
@@ -80,11 +81,11 @@ export function WebhookEndpointsPanel({ appId }: { appId?: string | null }) {
             />
 
             {isLoading ? (
-                <div className="flex h-40 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                <div className="flex h-40 items-center justify-center"><HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin text-muted-foreground" /></div>
             ) : !endpoints || endpoints.length === 0 ? (
                 <div className="p-10 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-3xl bg-brand-deep/5 text-muted-foreground dark:bg-white/7">
-                        <Webhook className="h-5 w-5" />
+                        <HugeiconsIcon icon={Webhook} className="h-5 w-5" />
                     </div>
                     <p className="mt-3 text-sm font-medium">No webhook endpoints</p>
                     <p className="text-sm text-muted-foreground">Add a callback URL to start receiving webhook events.</p>
@@ -122,7 +123,7 @@ function EndpointRow({ endpoint, onEdit }: { endpoint: DeveloperWebhookEndpoint;
                         </Badge>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
-                        <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <HugeiconsIcon icon={Globe} className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <code className="block truncate font-mono text-xs text-muted-foreground">{endpoint.url}</code>
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -138,7 +139,7 @@ function EndpointRow({ endpoint, onEdit }: { endpoint: DeveloperWebhookEndpoint;
                             : "No deliveries yet"}
                         {endpoint.failureCount > 0 && (
                             <span className="ml-2 inline-flex items-center gap-1 text-rose-500">
-                                <AlertTriangle className="h-3 w-3" />
+                                <HugeiconsIcon icon={AlertTriangle} className="h-3 w-3" />
                                 {endpoint.failureCount} failure{endpoint.failureCount !== 1 ? "s" : ""}
                             </span>
                         )}
@@ -147,13 +148,13 @@ function EndpointRow({ endpoint, onEdit }: { endpoint: DeveloperWebhookEndpoint;
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-2xl text-muted-foreground hover:text-foreground">
-                            <MoreVertical className="h-4 w-4" />
+                            <HugeiconsIcon icon={MoreVertical} className="h-4 w-4" />
                             <span className="sr-only">Actions</span>
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44 rounded-2xl border-brand-deep/5 bg-white/95 p-2 shadow-2xl dark:border-white/5 dark:bg-[#021a12]/95">
                         <DropdownMenuItem className="cursor-pointer rounded-xl px-3 py-2.5" onSelect={onEdit}>
-                            <Pencil className="mr-3 h-4 w-4 text-muted-foreground" />
+                            <HugeiconsIcon icon={Pencil} className="mr-3 h-4 w-4 text-muted-foreground" />
                             <span>Edit</span>
                         </DropdownMenuItem>
                         {isActive && (
@@ -164,7 +165,7 @@ function EndpointRow({ endpoint, onEdit }: { endpoint: DeveloperWebhookEndpoint;
                                     disabled={disable.isPending}
                                     onSelect={() => disable.mutate(endpoint.id)}
                                 >
-                                    <Trash2 className="mr-3 h-4 w-4" />
+                                    <HugeiconsIcon icon={Trash2} className="mr-3 h-4 w-4" />
                                     <span>Disable</span>
                                 </DropdownMenuItem>
                             </>
@@ -296,7 +297,7 @@ function WebhookEndpointDialog({
                 <DialogFooter className="gap-2 border-t border-brand-deep/6 px-6 pt-3 pb-6 dark:border-white/8 sm:px-7">
                     <Button variant="outline" className="h-10 rounded-2xl px-5" onClick={onOpenChange}>Cancel</Button>
                     <Button className="h-10 rounded-2xl px-5" disabled={!isValid || isPending} onClick={() => void submit()}>
-                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                        {isPending ? <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" /> : <HugeiconsIcon icon={Check} className="mr-2 h-4 w-4" />}
                         {isEdit ? "Save" : "Create"}
                     </Button>
                 </DialogFooter>

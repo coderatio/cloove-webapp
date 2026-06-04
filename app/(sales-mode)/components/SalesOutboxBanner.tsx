@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CloudOff, CloudUpload } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CloudOffIcon as CloudOff, CloudUploadIcon as CloudUpload } from "@hugeicons/core-free-icons"
 import { getOutboxEntryCount } from "@/app/lib/offline/sales-outbox"
 import { cn } from "@/app/lib/utils"
 
@@ -46,7 +47,7 @@ export function SalesOutboxBanner() {
                 role="status"
             >
                 <span className="inline-flex items-center justify-center gap-1.5 font-medium">
-                    <CloudOff className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
+                    <HugeiconsIcon icon={CloudOff} className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
                     You are offline. Sales are saved on this device and will sync when you are back online.
                 </span>
             </div>
@@ -64,7 +65,7 @@ export function SalesOutboxBanner() {
             role="status"
         >
             <span className="inline-flex items-center justify-center gap-1.5 font-medium">
-                <CloudUpload className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                <HugeiconsIcon icon={CloudUpload} className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
                 {pending === 1
                     ? "1 sale is waiting to sync with the server."
                     : `${pending} sales are waiting to sync with the server.`}

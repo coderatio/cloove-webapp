@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, startTransition } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Input } from "@/app/components/ui/input"
 import { Switch } from "@/app/components/ui/switch"
-import { Globe, Loader2, Mail } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { GlobeIcon as Globe, Loading03Icon as Loader2, Mail01Icon as Mail } from "@hugeicons/core-free-icons"
 import { useSettings, useUpdateBusinessSettings } from "../hooks/useBusinessSettings"
 
 interface BusinessSettingsProps {
@@ -103,7 +104,7 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
     if (isLoading) {
         return (
             <div className="flex items-center justify-center p-12">
-                <Loader2 className="w-8 h-8 animate-spin text-brand-gold" />
+                <HugeiconsIcon icon={Loader2} className="w-8 h-8 animate-spin text-brand-gold" />
             </div>
         )
     }
@@ -161,7 +162,7 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                     <div className="rounded-2xl border border-brand-deep/10 bg-white/40 p-4 dark:border-white/10 dark:bg-white/5">
                         <div className="mb-4 flex items-start gap-3">
                             <div className="rounded-2xl bg-brand-gold/15 p-2 text-brand-deep dark:text-brand-gold">
-                                <Mail className="h-4 w-4" />
+                                <HugeiconsIcon icon={Mail} className="h-4 w-4" />
                             </div>
                             <div className="space-y-1">
                                 <h3 className="font-medium text-brand-deep dark:text-brand-cream">Transaction Email Alerts</h3>
@@ -267,7 +268,7 @@ export function BusinessSettings({ onDirtyChange, onSavingChange, saveTrigger }:
                         <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Business Currency</label>
                         <div className="flex items-center justify-between p-3 bg-white dark:bg-white/5 rounded-xl border border-brand-deep/5 dark:border-white/10 max-w-md">
                             <span className="font-medium text-brand-deep dark:text-brand-cream">{settingsData?.business?.currency || 'Nigerian Naira (NGN)'}</span>
-                            <Globe className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30" />
+                            <HugeiconsIcon icon={Globe} className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30" />
                         </div>
                         <p className="text-[10px] text-brand-accent/40 dark:text-brand-cream/40 mt-2">Currency is based on your registration country and cannot be changed here.</p>
                     </div>

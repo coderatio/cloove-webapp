@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Loader2, ShoppingBag, Building2, Pencil, X, CheckCircle2, ShieldCheck } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, ShoppingBag01Icon as ShoppingBag, Building02Icon as Building2, PencilIcon as Pencil, Cancel01Icon as X, CheckmarkCircle02Icon as CheckCircle2, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -166,7 +167,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
                         {provider.logo_url ? (
                           <img src={provider.logo_url} alt={provider.name} className="w-5 h-5 rounded" />
                         ) : (
-                          <Building2 className={`w-4 h-4 ${isSelected ? 'text-brand-gold' : 'text-brand-accent/40 dark:text-white/40'}`} />
+                          <HugeiconsIcon icon={Building2} className={`w-4 h-4 ${isSelected ? 'text-brand-gold' : 'text-brand-accent/40 dark:text-white/40'}`} />
                         )}
                       </div>
                       <div className="flex-1 min-w-0 text-left">
@@ -176,7 +177,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
                         <p className="text-brand-accent/25 dark:text-white/25 text-[10px]">Bank Transfer</p>
                       </div>
                       {isSelected && (
-                        <CheckCircle2 className="w-4 h-4 text-brand-green dark:text-brand-gold shrink-0" />
+                        <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4 text-brand-green dark:text-brand-gold shrink-0" />
                       )}
                     </Button>
                   )
@@ -232,7 +233,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
                       onClick={() => { setIsEditingAmount(false); setCustomAmount(0) }}
                       className="w-14 h-14 rounded-2xl shrink-0 dark:hover:bg-white/10"
                     >
-                      <X className="w-6 h-6 text-brand-accent/40 dark:text-white/40" />
+                      <HugeiconsIcon icon={X} className="w-6 h-6 text-brand-accent/40 dark:text-white/40" />
                     </Button>
                   </div>
                   <p className="text-brand-accent/30 dark:text-white/30 text-xs px-1">
@@ -254,7 +255,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
                       className="w-8 h-8 rounded-full bg-accent/5 hover:bg-accent/10 dark:bg-white/10 dark:hover:bg-white/15"
                       title="Pay a different amount"
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <HugeiconsIcon icon={Pencil} className="w-3.5 h-3.5" />
                     </Button>
                   )}
                 </div>
@@ -316,7 +317,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
             {checkout.items && checkout.items.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-brand-accent/40 dark:text-white/40 text-[10px] font-bold uppercase tracking-widest">
-                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <HugeiconsIcon icon={ShoppingBag} className="w-3.5 h-3.5" />
                   <span>What You're Paying For</span>
                 </div>
                 <div className="bg-brand-deep/3 dark:bg-white/3 rounded-2xl border border-brand-deep/5 dark:border-white/5 divide-y divide-brand-deep/5 dark:divide-white/5">
@@ -380,7 +381,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
               >
                 {bankTransfer.isPending ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                     Processing...
                   </>
                 ) : payAmount > 0 ? (
@@ -399,7 +400,7 @@ export function CheckoutDetailsStep({ checkout, reference, onBankTransferReady }
             </form>
 
             <div className="flex items-center justify-center gap-1.5 pt-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
+              <HugeiconsIcon icon={ShieldCheck} className="w-3.5 h-3.5 text-brand-accent/30 dark:text-white/30" />
               <p className="text-brand-accent/30 dark:text-white/30 text-xs text-center">
                 Secured by CloovePay
               </p>

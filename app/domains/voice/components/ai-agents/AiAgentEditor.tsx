@@ -2,19 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import {
-    ArrowLeft,
-    ArrowRight,
-    Brain,
-    CheckCircle2,
-    Loader2,
-    Phone,
-    Play,
-    Search,
-    Sparkles,
-    Sun,
-    Wrench,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowLeft01Icon as ArrowLeft, ArrowRight01Icon as ArrowRight, BrainIcon as Brain, CheckmarkCircle02Icon as CheckCircle2, Loading03Icon as Loader2, CallIcon as Phone, PlayIcon as Play, Search01Icon as Search, SparklesIcon as Sparkles, Sun01Icon as Sun, Wrench01Icon as Wrench } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import {
     Drawer,
@@ -393,7 +382,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                     onClick={goBack}
                                     className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
                                 >
-                                    <ArrowLeft className="h-4 w-4" />
+                                    <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" />
                                 </button>
                             )}
                             <div className="space-y-1">
@@ -429,7 +418,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                     <div className="rounded-2xl border border-brand-deep/5 bg-brand-deep/2.5 px-4 py-3 dark:border-white/10 dark:bg-white/[0.035]">
                                         <div className="flex items-start gap-3">
                                             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
-                                                <Sparkles className="h-4 w-4" />
+                                                <HugeiconsIcon icon={Sparkles} className="h-4 w-4" />
                                             </span>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
@@ -624,7 +613,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                     <div className="rounded-2xl border border-brand-deep/5 bg-brand-deep/2.5 px-4 py-3 dark:border-white/10 dark:bg-white/[0.035]">
                                         <div className="flex items-start gap-3">
                                             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
-                                                <Phone className="h-4 w-4" />
+                                                <HugeiconsIcon icon={Phone} className="h-4 w-4" />
                                             </span>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
@@ -705,7 +694,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                     <div className="rounded-2xl border border-brand-deep/5 bg-brand-deep/2.5 px-4 py-3 dark:border-white/10 dark:bg-white/[0.035]">
                                         <div className="flex items-start gap-3">
                                             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
-                                                <CheckCircle2 className="h-4 w-4" />
+                                                <HugeiconsIcon icon={CheckCircle2} className="h-4 w-4" />
                                             </span>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
@@ -761,13 +750,13 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                     disabled={!canSave || isSaving}
                                     className="rounded-full"
                                 >
-                                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    {isSaving ? <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" /> : null}
                                     Save changes
                                 </Button>
                             ) : step !== "review" ? (
                                 <Button onClick={goNext} className="rounded-full">
                                     Continue
-                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4" />
                                 </Button>
                             ) : (
                                 <>
@@ -784,7 +773,7 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
                                         disabled={!canSave || isSaving}
                                         className="rounded-full"
                                     >
-                                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                        {isSaving ? <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" /> : null}
                                         Create & activate
                                     </Button>
                                 </>
@@ -846,7 +835,7 @@ function StepChips({
                                 : "text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/5"
                         )}
                     >
-                        <Icon className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={Icon} className="h-3.5 w-3.5" />
                         {s.label}
                     </button>
                 )
@@ -902,7 +891,7 @@ function AvailabilityLoader() {
         <div className="space-y-4">
             <div className="rounded-2xl border border-brand-deep/5 bg-brand-deep/2.5 px-4 py-3 dark:border-white/10 dark:bg-white/[0.035]">
                 <div className="flex items-center gap-2 text-sm font-medium text-brand-deep dark:text-brand-cream">
-                    <Loader2 className="h-4 w-4 animate-spin text-brand-gold" />
+                    <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin text-brand-gold" />
                     Loading opening hours
                 </div>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -958,7 +947,7 @@ function OptionCard({
                 <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">{title}</p>
                 <p className="text-xs text-muted-foreground">{description}</p>
             </div>
-            {active && <CheckCircle2 className="h-5 w-5 text-brand-gold" />}
+            {active && <HugeiconsIcon icon={CheckCircle2} className="h-5 w-5 text-brand-gold" />}
         </button>
     )
 }
@@ -983,7 +972,7 @@ function ManualSetupCard({
         >
             <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-deep/5 text-brand-deep dark:bg-white/8 dark:text-brand-cream">
-                    <ArrowRight className="h-4 w-4" />
+                    <HugeiconsIcon icon={ArrowRight} className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
@@ -994,7 +983,7 @@ function ManualSetupCard({
                     </p>
                 </div>
             </div>
-            {active && <CheckCircle2 className="h-5 w-5 shrink-0 text-brand-deep dark:text-brand-cream" />}
+            {active && <HugeiconsIcon icon={CheckCircle2} className="h-5 w-5 shrink-0 text-brand-deep dark:text-brand-cream" />}
         </button>
     )
 }
@@ -1093,7 +1082,7 @@ function SpeechProviderPicker({
             <div className="space-y-2">
                 <label className="px-1 text-sm font-medium">Speech provider</label>
                 <div className="flex items-center gap-2 rounded-2xl border border-brand-deep/5 bg-brand-deep/2.5 px-3 py-3 text-sm text-muted-foreground dark:border-white/10 dark:bg-white/[0.035]">
-                    <Loader2 className="h-4 w-4 animate-spin text-brand-gold" />
+                    <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin text-brand-gold" />
                     Loading voices…
                 </div>
             </div>
@@ -1252,7 +1241,7 @@ function VoiceGrid({
         <div className="space-y-2">
             {showSearch && (
                 <div className="flex items-center gap-2 rounded-2xl border border-brand-deep/8 bg-white/70 px-3 dark:border-white/10 dark:bg-white/5">
-                    <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <HugeiconsIcon icon={Search} className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <Input
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
@@ -1349,7 +1338,7 @@ function VoicePreviewButton({
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-gold-700 text-white shadow-sm shadow-brand-gold/15 hover:bg-brand-gold-600"
             aria-label="Preview voice"
         >
-            {isPlaying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+            {isPlaying ? <HugeiconsIcon icon={Loader2} className="h-3.5 w-3.5 animate-spin" /> : <HugeiconsIcon icon={Play} className="h-3.5 w-3.5" />}
         </button>
     )
 }

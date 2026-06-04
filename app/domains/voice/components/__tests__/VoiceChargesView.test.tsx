@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { CallIncoming01Icon, CallOutgoing01Icon, CallingIcon } from '@hugeicons/core-free-icons'
 
 import {
     formatDuration,
@@ -60,19 +61,16 @@ describe('getChargeDirectionIcon', () => {
     })
 
     it('returns PhoneIncoming for inbound directions', () => {
-        const icon = getChargeDirectionIcon('inbound')
-        expect(icon.displayName).toBe('PhoneIncoming')
+        expect(getChargeDirectionIcon('inbound')).toBe(CallIncoming01Icon)
     })
 
     it('returns PhoneOutgoing for outbound directions', () => {
-        const icon = getChargeDirectionIcon('outbound')
-        expect(icon.displayName).toBe('PhoneOutgoing')
+        expect(getChargeDirectionIcon('outbound')).toBe(CallOutgoing01Icon)
     })
 
     it('returns PhoneCall for other directions', () => {
-        const icon = getChargeDirectionIcon('transfer')
-        expect(icon.displayName).toBe('PhoneCall')
-        expect(getChargeDirectionIcon('').displayName).toBe('PhoneCall')
+        expect(getChargeDirectionIcon('transfer')).toBe(CallingIcon)
+        expect(getChargeDirectionIcon('')).toBe(CallingIcon)
     })
 })
 
@@ -206,29 +204,6 @@ vi.mock('@/app/lib/utils', () => ({
     cn: (...classes: any[]) => classes.filter(Boolean).join(' '),
     formatPhoneNumber: (phone: string) => phone,
 }))
-
-vi.mock('lucide-react', () => {
-    const createMockIcon = (name: string) => {
-        const Icon = (props: any) => (
-            <span data-testid={`icon-${name.toLowerCase()}`} className={props.className}>
-                {name}
-            </span>
-        )
-        Icon.displayName = name
-        return Icon
-    }
-
-    return {
-        PhoneCall: createMockIcon('PhoneCall'),
-        PhoneIncoming: createMockIcon('PhoneIncoming'),
-        PhoneOutgoing: createMockIcon('PhoneOutgoing'),
-        Wallet: createMockIcon('Wallet'),
-        AlertTriangle: createMockIcon('AlertTriangle'),
-        Clock: createMockIcon('Clock'),
-        Loader2: createMockIcon('Loader2'),
-        Receipt: createMockIcon('Receipt'),
-    }
-})
 
 import * as useVoiceModule from '../../hooks/useVoice'
 import * as mediaQueryModule from '@/app/hooks/useMediaQuery'
