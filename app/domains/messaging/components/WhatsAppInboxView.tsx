@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import {
     ArrowLeft,
@@ -38,6 +38,7 @@ import {
     useWhatsAppTemplates,
     type WhatsAppInboxConversation,
     type WhatsAppInboxMessage,
+    type WhatsAppTemplateSummary,
 } from "@/app/domains/messaging/hooks/useWhatsAppInbox"
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -112,6 +113,45 @@ function formatPayloadValue(value: unknown): string {
     if (Array.isArray(value)) return value.map(formatPayloadValue).join(", ")
     if (isRecord(value)) return JSON.stringify(value)
     return ""
+}
+
+type TemplateVariableDefinition = WhatsAppTemplateSummary["variables"][number]
+
+function formatTemplateVariableLabel(variable: TemplateVariableDefinition) {
+    const label = variable.label?.trim()
+    if (label) return label
+    return variable.key
+        .replace(/[_-]+/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function templateVariableInputType(variable: TemplateVariableDefinition) {
+    if (variable.type === "number" || variable.type === "currency") return "number"
+    if (variable.type === "date") return "date"
+    return "text"
+}
+
+function buildTemplateVariableDefaults(template: WhatsAppTemplateSummary | undefined) {
+    if (!template) return {}
+
+    return template.variables.reduce<Record<string, string>>((acc, variable) => {
+        const sample = template.sample_variables?.[variable.key]
+        acc[variable.key] = sample === undefined || sample === null ? "" : String(sample)
+        return acc
+    }, {})
+}
+
+function coerceTemplateVariableValue(value: string, type: string | undefined): unknown {
+    const trimmed = value.trim()
+    if (!trimmed) return ""
+    if (type === "number" || type === "currency") {
+        const numeric = Number(trimmed)
+        return Number.isFinite(numeric) ? numeric : trimmed
+    }
+    if (type === "boolean") {
+        return ["true", "yes", "1"].includes(trimmed.toLowerCase())
+    }
+    return trimmed
 }
 
 function parseReplyFallback(text: string | null) {
@@ -489,7 +529,7 @@ function InboxTab() {
     const [search, setSearch] = useState("")
     const [draft, setDraft] = useState("")
     const [selectedTemplate, setSelectedTemplate] = useState<string>("")
-    const [templateVariables, setTemplateVariables] = useState("{}")
+    const [templateVariableValues, setTemplateVariableValues] = useState<Record<string, string>>({})
     const [sidebarOpen, setSidebarOpen] = useState(true)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -508,7 +548,18 @@ function InboxTab() {
     const assignConversation = useAssignConversation()
     const sendMessage = useSendConversationMessage()
     const sendTemplate = useSendConversationTemplate()
-    const sendableTemplates = (templates.data?.data ?? []).filter((template) => template.can_send)
+    const sendableTemplates = useMemo(
+        () => (templates.data?.data ?? []).filter((template) => template.can_send),
+        [templates.data?.data]
+    )
+    const selectedTemplateDetails = useMemo(
+        () => sendableTemplates.find((template) => template.key === selectedTemplate),
+        [selectedTemplate, sendableTemplates]
+    )
+    const hasMissingTemplateVariables =
+        selectedTemplateDetails?.variables.some(
+            (variable) => variable.required && !templateVariableValues[variable.key]?.trim()
+        ) ?? false
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -541,15 +592,44 @@ function InboxTab() {
         }
     }
 
+    const selectConversation = (conversationId: string | null) => {
+        setSelectedId(conversationId)
+        setSelectedTemplate("")
+        setTemplateVariableValues({})
+    }
+
+    const selectTemplate = (templateKey: string) => {
+        const template = sendableTemplates.find((item) => item.key === templateKey)
+        setSelectedTemplate(templateKey)
+        setTemplateVariableValues(buildTemplateVariableDefaults(template))
+    }
+
     const submitTemplate = async () => {
-        if (!activeConversationId || !selectedTemplate) return
+        if (!activeConversationId || !selectedTemplate || !selectedTemplateDetails) return
+        const missingRequired = selectedTemplateDetails.variables.find(
+            (variable) => variable.required && !templateVariableValues[variable.key]?.trim()
+        )
+        if (missingRequired) {
+            toast.error(`${formatTemplateVariableLabel(missingRequired)} is required`)
+            return
+        }
+
         try {
-            const variables = JSON.parse(templateVariables || "{}") as Record<string, unknown>
+            const variables = selectedTemplateDetails.variables.reduce<Record<string, unknown>>(
+                (acc, variable) => {
+                    const value = templateVariableValues[variable.key] ?? ""
+                    if (!variable.required && !value.trim()) return acc
+                    acc[variable.key] = coerceTemplateVariableValue(value, variable.type)
+                    return acc
+                },
+                {}
+            )
             await sendTemplate.mutateAsync({
                 id: activeConversationId,
                 templateKey: selectedTemplate,
                 variables,
             })
+            setTemplateVariableValues(buildTemplateVariableDefaults(selectedTemplateDetails))
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Template send failed")
         }
@@ -644,7 +724,7 @@ function InboxTab() {
                                     <button
                                         key={conversation.id}
                                         type="button"
-                                        onClick={() => setSelectedId(conversation.id)}
+                                        onClick={() => selectConversation(conversation.id)}
                                         aria-current={isSelected ? "true" : undefined}
                                         className={`group flex w-full items-start gap-3 rounded-[22px] border px-3 py-3 text-left transition-all duration-200 ${
                                             isSelected
@@ -732,7 +812,7 @@ function InboxTab() {
                                 <div className="flex min-w-0 flex-1 items-center gap-3">
                                     <button
                                         type="button"
-                                        onClick={() => setSelectedId(null)}
+                                        onClick={() => selectConversation(null)}
                                         aria-label="Close conversation"
                                         className="flex h-8 w-8 items-center justify-center rounded-2xl text-muted-foreground/50 transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
                                     >
@@ -1030,7 +1110,7 @@ function InboxTab() {
                                             <div className="space-y-2">
                                                 <Select
                                                     value={selectedTemplate}
-                                                    onValueChange={setSelectedTemplate}
+                                                    onValueChange={selectTemplate}
                                                 >
                                                     <SelectTrigger className="h-9 rounded-2xl border-brand-gold/15 text-xs focus:ring-brand-gold/20">
                                                         <SelectValue placeholder="Select template" />
@@ -1055,21 +1135,57 @@ function InboxTab() {
                                                         )}
                                                     </SelectContent>
                                                 </Select>
-                                                <textarea
-                                                    value={templateVariables}
-                                                    onChange={(e) =>
-                                                        setTemplateVariables(e.target.value)
-                                                    }
-                                                    rows={3}
-                                                    placeholder='{"customer_name":"Amina"}'
-                                                    aria-label="Template variables"
-                                                    className="min-h-0 w-full resize-none rounded-2xl border border-border/40 bg-muted/10 px-2.5 py-1.5 font-mono text-[11px] outline-none placeholder:text-muted-foreground/30 focus:border-brand-gold/30 focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5"
-                                                />
+                                                {selectedTemplateDetails && (
+                                                    <div className="space-y-2 rounded-2xl border border-border/40 bg-muted/10 p-2.5 dark:bg-white/5">
+                                                        {selectedTemplateDetails.variables.length > 0 ? (
+                                                            selectedTemplateDetails.variables.map((variable) => (
+                                                                <label
+                                                                    key={variable.key}
+                                                                    className="block space-y-1.5"
+                                                                >
+                                                                    <span className="flex items-center justify-between gap-2 text-[11px] font-medium text-muted-foreground">
+                                                                        <span className="truncate">
+                                                                            {formatTemplateVariableLabel(variable)}
+                                                                        </span>
+                                                                        {variable.required && (
+                                                                            <span className="shrink-0 text-[10px] text-brand-gold">
+                                                                                Required
+                                                                            </span>
+                                                                        )}
+                                                                    </span>
+                                                                    <input
+                                                                        type={templateVariableInputType(variable)}
+                                                                        value={templateVariableValues[variable.key] ?? ""}
+                                                                        onChange={(event) =>
+                                                                            setTemplateVariableValues((current) => ({
+                                                                                ...current,
+                                                                                [variable.key]: event.target.value,
+                                                                            }))
+                                                                        }
+                                                                        placeholder={
+                                                                            selectedTemplateDetails.sample_variables?.[
+                                                                                variable.key
+                                                                            ] || formatTemplateVariableLabel(variable)
+                                                                        }
+                                                                        className="h-9 w-full rounded-2xl border border-brand-gold/15 bg-background/80 px-3 text-xs outline-none transition-colors placeholder:text-muted-foreground/35 focus:border-brand-gold/30 focus:ring-2 focus:ring-brand-gold/10"
+                                                                    />
+                                                                </label>
+                                                            ))
+                                                        ) : (
+                                                            <p className="text-[11px] text-muted-foreground">
+                                                                This template does not need any details.
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={submitTemplate}
                                                     disabled={
-                                                        sendTemplate.isPending || !selectedTemplate
+                                                        sendTemplate.isPending ||
+                                                        !selectedTemplate ||
+                                                        !selectedTemplateDetails ||
+                                                        hasMissingTemplateVariables
                                                     }
                                                     className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-deep px-3 py-2 text-[11px] font-medium text-brand-gold-300 transition-opacity hover:opacity-90 disabled:opacity-40 dark:bg-brand-gold-700 dark:text-white"
                                                 >
