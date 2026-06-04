@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Upload, X, Check } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, Upload01Icon as Upload, Cancel01Icon as X, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import {
     Dialog,
@@ -177,7 +178,7 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
                             disabled={submitting}
                             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-deep/15 py-3 text-sm text-brand-accent/70 transition-all duration-300 hover:border-brand-green/40 hover:bg-brand-green/[0.03] hover:text-brand-deep dark:border-white/15 dark:text-brand-cream/60 dark:hover:border-brand-gold/30"
                         >
-                            <Upload className="h-4 w-4" /> Upload audio file(s)
+                            <HugeiconsIcon icon={Upload} className="h-4 w-4" /> Upload audio file(s)
                         </button>
                         <input
                             ref={fileInputRef}
@@ -203,7 +204,7 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
                                             }
                                             className="text-brand-accent/50 transition-colors hover:text-rose-500"
                                         >
-                                            <X className="h-3.5 w-3.5" />
+                                            <HugeiconsIcon icon={X} className="h-3.5 w-3.5" />
                                         </button>
                                     </li>
                                 ))}
@@ -220,7 +221,7 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
                                     : "border-brand-deep/25 dark:border-white/25"
                             )}
                         >
-                            {consent && <Check className="h-3 w-3" strokeWidth={3} />}
+                            {consent && <HugeiconsIcon icon={Check} className="h-3 w-3" strokeWidth={3} />}
                         </span>
                         <input
                             type="checkbox"
@@ -240,7 +241,7 @@ export function VoiceCloneCreateDialog({ open, onOpenChange }: VoiceCloneCreateD
                         Cancel
                     </Button>
                     <Button onClick={handleSubmit} disabled={!canSubmit}>
-                        {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {submitting && <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />}
                         Create clone
                     </Button>
                 </DialogFooter>

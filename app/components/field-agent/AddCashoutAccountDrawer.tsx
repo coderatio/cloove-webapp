@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Building2, Loader2, CheckCircle2, AlertCircle, ChevronsUpDown, ArrowLeft } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, Loading03Icon as Loader2, CheckmarkCircle02Icon as CheckCircle2, AlertCircleIcon as AlertCircle, UnfoldMoreIcon as ChevronsUpDown, ArrowLeft01Icon as ArrowLeft } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import {
@@ -127,7 +128,7 @@ export function AddCashoutAccountDrawer({
                         onClick={() => setView(enabledProviders.length > 1 ? "provider-selection" : "form")}
                         className="-ml-2 w-10 h-10 rounded-full bg-brand-deep/5 dark:bg-white/5"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <HugeiconsIcon icon={ArrowLeft} className="w-5 h-5" />
                     </Button>
                     <DrawerTitle className="text-2xl">Select Bank</DrawerTitle>
                 </div>
@@ -142,7 +143,7 @@ export function AddCashoutAccountDrawer({
                         onClick={() => setView("provider-selection")}
                         className="-ml-2 w-10 h-10 rounded-full bg-brand-deep/5 dark:bg-white/5"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <HugeiconsIcon icon={ArrowLeft} className="w-5 h-5" />
                     </Button>
                 )}
                 <div>
@@ -170,7 +171,7 @@ export function AddCashoutAccountDrawer({
                         <div className="space-y-4">
                             {providersLoading ? (
                                 <div className="flex flex-col items-center justify-center py-16 gap-4">
-                                    <Loader2 className="w-8 h-8 animate-spin text-brand-gold/50" />
+                                    <HugeiconsIcon icon={Loader2} className="w-8 h-8 animate-spin text-brand-gold/50" />
                                     <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30">Sourcing providers...</p>
                                 </div>
                             ) : (
@@ -189,7 +190,7 @@ export function AddCashoutAccountDrawer({
                                                 {provider.logo_url ? (
                                                     <img src={provider.logo_url} alt={provider.name} className="w-9 h-9 object-contain" />
                                                 ) : (
-                                                    <Building2 className="w-7 h-7 text-brand-deep/20" />
+                                                    <HugeiconsIcon icon={Building2} className="w-7 h-7 text-brand-deep/20" />
                                                 )}
                                             </div>
                                             <div>
@@ -233,7 +234,7 @@ export function AddCashoutAccountDrawer({
                                     <span className={details.bankName ? "font-semibold" : "text-brand-deep/40 dark:text-brand-cream/40"}>
                                         {details.bankName || "Select your bank..."}
                                     </span>
-                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    <HugeiconsIcon icon={ChevronsUpDown} className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                             </div>
 
@@ -257,17 +258,17 @@ export function AddCashoutAccountDrawer({
                                     <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40">Account Name</label>
                                     {isResolving && (
                                         <span className="text-[10px] font-bold text-brand-gold flex items-center gap-1 uppercase tracking-wider">
-                                            <Loader2 className="w-3 h-3 animate-spin" /> Resolving...
+                                            <HugeiconsIcon icon={Loader2} className="w-3 h-3 animate-spin" /> Resolving...
                                         </span>
                                     )}
                                     {details.accountName && !isResolving && (
                                         <span className="text-[10px] font-bold text-green-500 flex items-center gap-1 uppercase tracking-wider">
-                                            <CheckCircle2 className="w-3 h-3" /> Verified
+                                            <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3" /> Verified
                                         </span>
                                     )}
                                     {resolveError && (
                                         <span className="text-[10px] font-bold text-red-500 flex items-center gap-1 uppercase tracking-wider">
-                                            <AlertCircle className="w-3 h-3" /> {resolveError}
+                                            <HugeiconsIcon icon={AlertCircle} className="w-3 h-3" /> {resolveError}
                                         </span>
                                     )}
                                 </div>

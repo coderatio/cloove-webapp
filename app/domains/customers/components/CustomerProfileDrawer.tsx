@@ -11,21 +11,8 @@ import {
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
-import {
-    Phone,
-    MessageSquare,
-    Mail,
-    ShoppingBag,
-    TrendingUp,
-    ShieldAlert,
-    Loader2,
-    Crown,
-    Star,
-    History,
-    Sparkles,
-    Activity,
-    ChevronRight,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CallIcon as Phone, Message01Icon as MessageSquare, Mail01Icon as Mail, ShoppingBag01Icon as ShoppingBag, TradeUpIcon as TrendingUp, SecurityWarningIcon as ShieldAlert, Loading03Icon as Loader2, CrownIcon as Crown, StarIcon as Star, HistoryIcon as History, SparklesIcon as Sparkles, Activity03Icon as Activity, ChevronRightIcon as ChevronRight } from "@hugeicons/core-free-icons"
 import { type Customer, useCustomerTransactions } from "../hooks/useCustomers"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { type Order } from "../../orders/types"
@@ -83,7 +70,7 @@ export function CustomerProfileDrawer({
                             <div className="flex items-center gap-2">
                                 {customer.isVip && (
                                     <Badge className="bg-brand-gold/10 text-brand-gold border-brand-gold/20 flex items-center gap-1.5 uppercase text-[10px] tracking-widest font-bold px-2.5 py-1">
-                                        <Crown className="w-3 h-3 fill-brand-gold/20" />
+                                        <HugeiconsIcon icon={Crown} className="w-3 h-3 fill-brand-gold/20" />
                                         VIP
                                     </Badge>
                                 )}
@@ -109,7 +96,7 @@ export function CustomerProfileDrawer({
                                 )}
                                 onClick={() => onUpdateVip?.(customer.id, !customer.isVip)}
                             >
-                                <Star className={cn("w-3.5 h-3.5", customer.isVip ? "text-brand-accent fill-brand-accent/20 dark:text-brand-cream/60 dark:hover:text-brand-gold" : "text-brand-gold")} />
+                                <HugeiconsIcon icon={Star} className={cn("w-3.5 h-3.5", customer.isVip ? "text-brand-accent fill-brand-accent/20 dark:text-brand-cream/60 dark:hover:text-brand-gold" : "text-brand-gold")} />
                                 {customer.isVip ? "Remove VIP" : "Make VIP"}
                             </Button>
                             <Button
@@ -129,14 +116,14 @@ export function CustomerProfileDrawer({
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                             <div className="absolute -right-2 -top-2 opacity-10 group-hover:opacity-20 transition-opacity transform rotate-12">
-                                <ShoppingBag className="w-20 h-20 text-brand-deep/10 dark:text-white/10" />
+                                <HugeiconsIcon icon={ShoppingBag} className="w-20 h-20 text-brand-deep/10 dark:text-white/10" />
                             </div>
                             <span className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em]">
                                 Total Orders
                             </span>
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-2xl bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
-                                    <ShoppingBag className="w-5 h-5" />
+                                    <HugeiconsIcon icon={ShoppingBag} className="w-5 h-5" />
                                 </div>
                                 <span className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">{customer.orders}</span>
                             </div>
@@ -144,14 +131,14 @@ export function CustomerProfileDrawer({
 
                         <GlassCard className="p-6 flex flex-col gap-3 border-none bg-brand-deep/5 dark:bg-white/5 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                             <div className="absolute -right-2 -top-2 opacity-10 group-hover:opacity-20 transition-opacity transform -rotate-12">
-                                <TrendingUp className="w-20 h-20 text-brand-gold/10" />
+                                <HugeiconsIcon icon={TrendingUp} className="w-20 h-20 text-brand-gold/10" />
                             </div>
                             <span className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em]">
                                 Lifetime Spend
                             </span>
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                                    <TrendingUp className="w-5 h-5" />
+                                    <HugeiconsIcon icon={TrendingUp} className="w-5 h-5" />
                                 </div>
                                 <span className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                                     <CurrencyText value={formatCompactCurrency(customer.totalSpent, { currency: currencyCode })} />
@@ -166,7 +153,7 @@ export function CustomerProfileDrawer({
                                 : "bg-brand-deep/3 dark:bg-white/3"
                         )}>
                             <div className="absolute -right-2 -top-2 opacity-5 group-hover:opacity-10 transition-opacity transform rotate-12">
-                                <ShieldAlert className={cn("w-20 h-20", hasDebt ? "text-rose-500/10" : "text-brand-accent/5")} />
+                                <HugeiconsIcon icon={ShieldAlert} className={cn("w-20 h-20", hasDebt ? "text-rose-500/10" : "text-brand-accent/5")} />
                             </div>
                             <span className={cn(
                                 "text-[10px] font-bold uppercase tracking-[0.2em]",
@@ -179,7 +166,7 @@ export function CustomerProfileDrawer({
                                     "h-10 w-10 rounded-2xl flex items-center justify-center transition-colors",
                                     hasDebt ? "bg-rose-500/10 text-rose-500 dark:text-rose-400" : "bg-brand-accent/10 dark:bg-white/5 text-brand-accent/40 dark:text-brand-cream/40"
                                 )}>
-                                    <ShieldAlert className="w-5 h-5" />
+                                    <HugeiconsIcon icon={ShieldAlert} className="w-5 h-5" />
                                 </div>
                                 <span className={cn(
                                     "text-2xl font-serif font-medium transition-colors",
@@ -212,13 +199,13 @@ export function CustomerProfileDrawer({
                                         >
                                             <a href={`tel:${customer.phoneNumber}`} className="w-full flex items-center gap-4">
                                                 <div className="h-9 w-9 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400 group-hover:bg-brand-green group-hover:text-white transition-all">
-                                                    <Phone className="w-4.5 h-4.5" />
+                                                    <HugeiconsIcon icon={Phone} className="w-4.5 h-4.5" />
                                                 </div>
                                                 <div className="flex flex-col items-start flex-1">
                                                     <span className="text-xs font-bold uppercase tracking-wider text-brand-deep dark:text-brand-cream">Call Customer</span>
                                                     <span className="text-[10px] text-brand-accent/60 dark:text-brand-cream/60">{customer.phoneNumber}</span>
                                                 </div>
-                                                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/20 group-hover:translate-x-0.5 transition-transform" />
+                                                <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/20 group-hover:translate-x-0.5 transition-transform" />
                                             </a>
                                         </Button>
 
@@ -230,13 +217,13 @@ export function CustomerProfileDrawer({
                                             >
                                                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center gap-4">
                                                     <div className="h-9 w-9 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400 group-hover:bg-brand-green group-hover:text-white transition-all">
-                                                        <MessageSquare className="w-4.5 h-4.5" />
+                                                        <HugeiconsIcon icon={MessageSquare} className="w-4.5 h-4.5" />
                                                     </div>
                                                     <div className="flex flex-col items-start flex-1">
                                                         <span className="text-xs font-bold uppercase tracking-wider text-brand-green dark:text-emerald-400">WhatsApp Chat</span>
                                                         <span className="text-[10px] text-brand-green/60 dark:text-emerald-400/60 uppercase tracking-tighter font-medium">Fastest response</span>
                                                     </div>
-                                                    <ChevronRight className="w-4 h-4 text-brand-green/20 dark:text-emerald-400/20 group-hover:translate-x-0.5 transition-transform" />
+                                                    <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-green/20 dark:text-emerald-400/20 group-hover:translate-x-0.5 transition-transform" />
                                                 </a>
                                             </Button>
                                         )}
@@ -251,13 +238,13 @@ export function CustomerProfileDrawer({
                                     >
                                         <a href={`mailto:${customer.email}`} className="w-full flex items-center gap-4">
                                             <div className="h-9 w-9 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold-800 group-hover:text-white transition-all">
-                                                <Mail className="w-4.5 h-4.5" />
+                                                <HugeiconsIcon icon={Mail} className="w-4.5 h-4.5" />
                                             </div>
                                             <div className="flex flex-col items-start flex-1">
                                                 <span className="text-xs font-bold uppercase tracking-wider text-brand-deep dark:text-brand-cream">Send Email</span>
                                                 <span className="text-[10px] text-brand-accent/60 dark:text-brand-cream/60">{customer.email}</span>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/20 group-hover:translate-x-0.5 transition-transform" />
+                                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/20 group-hover:translate-x-0.5 transition-transform" />
                                         </a>
                                     </Button>
                                 )}
@@ -278,14 +265,14 @@ export function CustomerProfileDrawer({
                                 className="text-brand-gold text-[10px] uppercase font-bold tracking-widest h-auto p-0"
                             >
                                 View Full Ledger
-                                <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold group-hover:translate-x-0.5 transition-transform" />
+                                <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-accent/20 dark:text-brand-gold group-hover:translate-x-0.5 transition-transform" />
                             </Button>
                         </div>
 
                         <div className="space-y-4">
                             {isLoadingTx ? (
                                 <div className="flex items-center justify-center py-12">
-                                    <Loader2 className="w-6 h-6 animate-spin text-brand-gold/40" />
+                                    <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin text-brand-gold/40" />
                                 </div>
                             ) : txResponse?.data && txResponse.data.length > 0 ? (
                                 <div className="space-y-3 bg-brand-deep/5 dark:bg-white/5 p-4 rounded-3xl">
@@ -314,15 +301,15 @@ export function CustomerProfileDrawer({
                                     <div className="relative flex flex-col items-center justify-center p-12 rounded-[2.5rem] bg-brand-deep/2 dark:bg-white/2 border border-dashed border-brand-deep/10 dark:border-white/10 text-center overflow-hidden">
                                         {/* Decorative elements */}
                                         <div className="absolute top-0 right-0 p-8 transform translate-x-1/4 -translate-y-1/4 opacity-5">
-                                            <Sparkles className="w-32 h-32 text-brand-gold" />
+                                            <HugeiconsIcon icon={Sparkles} className="w-32 h-32 text-brand-gold" />
                                         </div>
                                         <div className="absolute bottom-0 left-0 p-8 transform -translate-x-1/4 translate-y-1/4 opacity-5">
-                                            <Activity className="w-24 h-24 text-brand-green dark:text-emerald-400" />
+                                            <HugeiconsIcon icon={Activity} className="w-24 h-24 text-brand-green dark:text-emerald-400" />
                                         </div>
 
                                         <div className="w-20 h-20 rounded-full bg-white dark:bg-brand-deep shadow-2xl shadow-brand-gold/10 flex items-center justify-center mb-6 relative">
                                             <div className="absolute inset-0 rounded-full bg-brand-gold/20 animate-ping opacity-20" />
-                                            <History className="w-8 h-8 text-brand-gold" />
+                                            <HugeiconsIcon icon={History} className="w-8 h-8 text-brand-gold" />
                                         </div>
 
                                         <h5 className="text-lg font-serif font-medium text-brand-deep dark:text-brand-cream mb-2">
@@ -342,7 +329,7 @@ export function CustomerProfileDrawer({
 
                             <div className="flex items-center gap-4 p-5 rounded-3xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm">
                                 <div className="h-10 w-10 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
-                                    <ShoppingBag className="w-5 h-5" />
+                                    <HugeiconsIcon icon={ShoppingBag} className="w-5 h-5" />
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 mb-0.5">Registration Status</p>

@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useMemo, useState } from "react"
-import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Loader2, Receipt } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CalendarDaysIcon as CalendarDays, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, Clock01Icon as Clock3, Loading03Icon as Loader2, Invoice01Icon as Receipt } from "@hugeicons/core-free-icons"
 import { format, isSameDay, isToday } from "date-fns"
 import type { DateRange } from "react-day-picker"
 import { useAuth } from "@/app/components/providers/auth-provider"
@@ -90,7 +91,7 @@ export default function SalesModeHistoryPage() {
             <div className="mx-auto max-w-6xl space-y-4">
                 <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-background/70 backdrop-blur p-4 md:p-5">
                     <div className="flex items-center gap-2 text-brand-accent/70 dark:text-brand-cream/70 text-[11px]">
-                        <Clock3 className="h-4 w-4" />
+                        <HugeiconsIcon icon={Clock3} className="h-4 w-4" />
                         <p className="font-bold uppercase tracking-[0.16em]">{dateRange.label}</p>
                     </div>
                     <div className="mt-2">
@@ -150,18 +151,18 @@ export default function SalesModeHistoryPage() {
 
                 <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-background/70 backdrop-blur overflow-hidden">
                     <div className="px-4 md:px-5 py-2.5 border-b border-black/5 dark:border-white/10 flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] font-bold text-brand-accent/45 dark:text-brand-cream/45">
-                        <CalendarDays className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={CalendarDays} className="h-3.5 w-3.5" />
                         Sales Entries
                     </div>
 
                     {isLoading ? (
                         <div className="h-44 flex items-center justify-center text-brand-accent/60 dark:text-brand-cream/60">
-                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                            <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin mr-2" />
                             Loading sales...
                         </div>
                     ) : orders.length === 0 ? (
                         <div className="h-44 flex flex-col items-center justify-center text-center px-4">
-                            <Receipt className="h-8 w-8 text-brand-accent/30 dark:text-brand-cream/30 mb-2" />
+                            <HugeiconsIcon icon={Receipt} className="h-8 w-8 text-brand-accent/30 dark:text-brand-cream/30 mb-2" />
                             <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
                                 No sales found for the selected period.
                             </p>
@@ -205,7 +206,7 @@ export default function SalesModeHistoryPage() {
                             disabled={page === 1}
                             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                         >
-                            <ChevronLeft className="h-4 w-4 mr-1" />
+                            <HugeiconsIcon icon={ChevronLeft} className="h-4 w-4 mr-1" />
                             Previous
                         </Button>
                         <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60 px-2">
@@ -218,7 +219,7 @@ export default function SalesModeHistoryPage() {
                             onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
                         >
                             Next
-                            <ChevronRight className="h-4 w-4 ml-1" />
+                            <HugeiconsIcon icon={ChevronRight} className="h-4 w-4 ml-1" />
                         </Button>
                     </div>
                 )}

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/app/components/ui/button"
-import { Loader2, CheckCircle2, XCircle, ArrowRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, CheckmarkCircle02Icon as CheckCircle2, CancelCircleIcon as XCircle, ArrowRight01Icon as ArrowRight } from "@hugeicons/core-free-icons"
 import { useVerifyPayment } from "../../domains/business/hooks/useBilling"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { toast } from "sonner"
@@ -58,7 +59,7 @@ export default function SubscriptionVerifyPage() {
                 {status === "verifying" && (
                     <>
                         <div className="flex justify-center">
-                            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                            <HugeiconsIcon icon={Loader2} className="h-10 w-10 animate-spin text-primary" />
                         </div>
                         <div className="space-y-2">
                             <h1 className="text-2xl font-semibold tracking-tight text-foreground">Verifying payment</h1>
@@ -72,7 +73,7 @@ export default function SubscriptionVerifyPage() {
                 {status === "success" && (
                     <>
                         <div className="flex justify-center">
-                            <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+                            <HugeiconsIcon icon={CheckCircle2} className="h-12 w-12 text-emerald-500" />
                         </div>
                         <div className="space-y-2">
                             <h1 className="text-2xl font-semibold tracking-tight text-foreground">Payment successful</h1>
@@ -85,7 +86,7 @@ export default function SubscriptionVerifyPage() {
                             onClick={() => router.push("/settings?tab=billing")}
                         >
                             Go to Billing
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            <HugeiconsIcon icon={ArrowRight} className="w-4 h-4 ml-2" />
                         </Button>
                     </>
                 )}
@@ -93,7 +94,7 @@ export default function SubscriptionVerifyPage() {
                 {status === "error" && (
                     <>
                         <div className="flex justify-center">
-                            <XCircle className="h-12 w-12 text-red-500" />
+                            <HugeiconsIcon icon={XCircle} className="h-12 w-12 text-red-500" />
                         </div>
                         <div className="space-y-2">
                             <h1 className="text-2xl font-semibold tracking-tight text-foreground">Verification failed</h1>

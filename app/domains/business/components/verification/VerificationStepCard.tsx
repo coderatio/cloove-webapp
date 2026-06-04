@@ -1,7 +1,8 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { ShieldCheck, Lock, ChevronRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SecurityCheckIcon as ShieldCheck, LockIcon as Lock, ChevronRightIcon as ChevronRight } from "@hugeicons/core-free-icons"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
 import { VerificationLevelConfig } from "@/app/domains/business/hooks/useVerification"
@@ -157,11 +158,11 @@ export function VerificationStepCard({
                                         )}
                                     >
                                         {isLocked ? (
-                                            <span className="flex items-center gap-2 opacity-50 text-xs md:text-sm"><Lock className="w-4 h-4" /> Locked</span>
+                                            <span className="flex items-center gap-2 opacity-50 text-xs md:text-sm"><HugeiconsIcon icon={Lock} className="w-4 h-4" /> Locked</span>
                                         ) : (
                                             <span className="flex items-center gap-2 text-xs md:text-sm">
                                                 {isRejected ? "Resubmit" : "Begin"}
-                                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                                <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                             </span>
                                         )}
                                     </button>

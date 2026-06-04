@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Loader2, Plus, Save, Trash2, Truck } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, PlusSignIcon as Plus, SaveIcon as Save, Delete02Icon as Trash2, TruckIcon as Truck } from "@hugeicons/core-free-icons"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -203,7 +204,7 @@ export function DeliveryFeesSettings() {
         return (
             <PageTransition>
                 <div className="flex min-h-[320px] items-center justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-brand-gold" />
+                    <HugeiconsIcon icon={Loader2} className="h-6 w-6 animate-spin text-brand-gold" />
                 </div>
             </PageTransition>
         )
@@ -228,7 +229,7 @@ export function DeliveryFeesSettings() {
                         <div className="flex flex-col gap-4 border-b border-brand-deep/8 pb-5 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between">
                             <div className="min-w-0 space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <Truck className="h-5 w-5 text-brand-gold" />
+                                    <HugeiconsIcon icon={Truck} className="h-5 w-5 text-brand-gold" />
                                     <h2 className="text-lg font-semibold text-brand-deep dark:text-brand-cream">
                                         Delivery fee rule
                                     </h2>
@@ -354,7 +355,7 @@ export function DeliveryFeesSettings() {
                                             className="h-10 w-10 self-center rounded-xl text-red-600 hover:bg-red-500/10 hover:text-red-700"
                                             aria-label={`Remove ${area.name || "delivery area"}`}
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <HugeiconsIcon icon={Trash2} className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 ))}
@@ -367,7 +368,7 @@ export function DeliveryFeesSettings() {
                                 onClick={addArea}
                                 className="h-10 rounded-full"
                             >
-                                <Plus className="mr-2 h-4 w-4" />
+                                <HugeiconsIcon icon={Plus} className="mr-2 h-4 w-4" />
                                 Add area
                             </Button>
                         </div>
@@ -434,9 +435,9 @@ export function DeliveryFeesSettings() {
                                 className="h-10 rounded-full sm:min-w-40"
                             >
                                 {updateGoSettings.isPending ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    <Save className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={Save} className="mr-2 h-4 w-4" />
                                 )}
                                 Save changes
                             </Button>

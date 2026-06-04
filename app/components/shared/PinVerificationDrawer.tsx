@@ -11,15 +11,8 @@ import {
     DrawerFooter
 } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
-import {
-    ShieldCheck,
-    AlertCircle,
-    Fingerprint,
-    ChevronLeft,
-    Delete,
-    Loader2,
-    Lock
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SecurityCheckIcon as ShieldCheck, AlertCircleIcon as AlertCircle, FingerPrintIcon as Fingerprint, ChevronLeftIcon as ChevronLeft, Delete01Icon as Delete, Loading03Icon as Loader2, LockIcon as Lock } from "@hugeicons/core-free-icons"
 import { apiClient } from "@/app/lib/api-client"
 import { toast } from "sonner"
 import { useAuth } from "@/app/components/providers/auth-provider"
@@ -197,7 +190,7 @@ export function PinVerificationDrawer({
                                     }}
                                     className="flex items-start gap-3 text-red-600 dark:text-red-400 text-[11px] font-semibold tracking-wide bg-red-500/5 dark:bg-red-500/10 px-6 py-4 rounded-[24px] border border-red-500/20 backdrop-blur-xl max-w-[340px] text-left shadow-2xl shadow-red-500/10"
                                 >
-                                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 opacity-80" />
+                                    <HugeiconsIcon icon={AlertCircle} className="w-4 h-4 mt-0.5 shrink-0 opacity-80" />
                                     <span className="leading-relaxed">{error}</span>
                                 </motion.div>
                             )}
@@ -228,7 +221,7 @@ export function PinVerificationDrawer({
                                 disabled={isVerifying || pin.length === 0}
                                 className="flex items-center justify-center p-6 rounded-3xl text-brand-deep/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-all active:scale-90 disabled:opacity-5"
                             >
-                                <Delete className="w-6 h-6" />
+                                <HugeiconsIcon icon={Delete} className="w-6 h-6" />
                             </button>
                         </div>
                     </div>
@@ -254,7 +247,7 @@ export function PinVerificationDrawer({
                                         )}
                                         {isInitializing && (
                                             <div className="flex items-center gap-2">
-                                                <Loader2 className="w-5 h-5 animate-spin text-brand-gold" />
+                                                <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin text-brand-gold" />
                                                 <span className="text-[10px] font-black uppercase tracking-tighter text-brand-gold opacity-60">
                                                     Initializing Secure Tunnel
                                                 </span>

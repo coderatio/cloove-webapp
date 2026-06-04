@@ -18,7 +18,8 @@ import { Calendar } from "@/app/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/app/components/ui/popover"
 import { SearchableSelect } from "@/app/components/ui/searchable-select"
 import { MoneyInput } from "@/app/components/ui/money-input"
-import { CalendarIcon, Clock, Link2, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Calendar03Icon as CalendarIcon, Clock01Icon as Clock, Link02Icon as Link2, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { format } from "date-fns"
 import { cn } from "@/app/lib/utils"
 import { PaymentLink } from "./PaymentLinkTypes"
@@ -192,7 +193,7 @@ export function CreatePaymentLinkDrawer({
                                                         !customDate && "text-brand-accent/30 dark:text-brand-cream/30"
                                                     )}
                                                 >
-                                                    <CalendarIcon className="mr-3 h-4 w-4 opacity-40 shrink-0" />
+                                                    <HugeiconsIcon icon={CalendarIcon} className="mr-3 h-4 w-4 opacity-40 shrink-0" />
                                                     <span className="truncate">
                                                         {customDate ? format(customDate, "PPP") : "Pick a date"}
                                                     </span>
@@ -230,7 +231,7 @@ export function CreatePaymentLinkDrawer({
                                                             variant="outline"
                                                             className="w-full h-14 rounded-2xl justify-between pl-12 pr-4 bg-white/50 dark:bg-white/5 border-brand-deep/10 dark:border-white/10 text-base font-medium relative group"
                                                         >
-                                                            <Clock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/30 dark:text-brand-cream/30 pointer-events-none group-focus:text-brand-gold/60 transition-colors" />
+                                                            <HugeiconsIcon icon={Clock} className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-accent/30 dark:text-brand-cream/30 pointer-events-none group-focus:text-brand-gold/60 transition-colors" />
                                                             <span className="text-brand-deep dark:text-brand-cream">{val || "00"}</span>
                                                             <span className="text-[10px] font-bold text-brand-accent/20 dark:text-brand-cream/20">HR</span>
                                                         </Button>
@@ -272,9 +273,9 @@ export function CreatePaymentLinkDrawer({
                         className="w-full h-14 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold text-base gap-2"
                     >
                         {isPending ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                         ) : (
-                            <Link2 className="w-5 h-5" />
+                            <HugeiconsIcon icon={Link2} className="w-5 h-5" />
                         )}
                         {editingLink ? "Update Payment Link" : "Create Payment Link"}
                     </Button>

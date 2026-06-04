@@ -2,19 +2,8 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-    Barcode,
-    Printer,
-    Minus,
-    Plus,
-    Check,
-    ChevronDown,
-    Layers,
-    Tag,
-    Maximize2,
-    ExternalLink,
-    AlertTriangle,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BarcodeIcon as Barcode, PrinterIcon as Printer, MinusSignIcon as Minus, PlusSignIcon as Plus, CheckIcon as Check, ChevronDownIcon as ChevronDown, Layers01Icon as Layers, Tag01Icon as Tag, Maximize01Icon as Maximize2, ExternalLinkIcon as ExternalLink, Alert02Icon as AlertTriangle, RefreshIcon as RefreshCcw, SaveIcon as Save } from "@hugeicons/core-free-icons"
 import {
     Drawer,
     DrawerContent,
@@ -37,7 +26,6 @@ import { toast } from "sonner"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import type { InventoryItem, ProductVariant } from "../types"
-import { RefreshCcw, Save } from "lucide-react"
 
 // ── Template Definitions ─────────────────────────────────────────────────
 
@@ -53,21 +41,21 @@ const TEMPLATES: Record<LabelTemplate, {
     standard: {
         label: 'Standard',
         description: '2" × 1" — Shelf & retail labels',
-        icon: <Tag className="w-4 h-4" />,
+        icon: <HugeiconsIcon icon={Tag} className="w-4 h-4" />,
         widthMM: 50.8,
         heightMM: 25.4,
     },
     compact: {
         label: 'Compact',
         description: '1.5" × 0.75" — High-density tags',
-        icon: <Barcode className="w-4 h-4" />,
+        icon: <HugeiconsIcon icon={Barcode} className="w-4 h-4" />,
         widthMM: 38.1,
         heightMM: 19.05,
     },
     full: {
         label: 'Full',
         description: '3" × 2" — Premium product tags',
-        icon: <Maximize2 className="w-4 h-4" />,
+        icon: <HugeiconsIcon icon={Maximize2} className="w-4 h-4" />,
         widthMM: 76.2,
         heightMM: 50.8,
     },
@@ -472,14 +460,14 @@ export function LabelPreviewDrawer({
                 <DrawerStickyHeader className="pb-6 px-4 sm:px-8">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold shrink-0">
-                            <Barcode className="w-5 h-5" />
+                            <HugeiconsIcon icon={Barcode} className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
                             <DrawerTitle className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-tight">
                                 {mode === 'bulk' ? 'Bulk Label Print' : 'Product Labels'}
                             </DrawerTitle>
                             <DrawerDescription className="flex items-center gap-2 mt-1">
-                                <Layers className="w-3 h-3" />
+                                <HugeiconsIcon icon={Layers} className="w-3 h-3" />
                                 {singleProduct
                                     ? singleProduct.product
                                     : `${products.length} products selected`
@@ -494,7 +482,7 @@ export function LabelPreviewDrawer({
                         {/* ── Template Selector ────────────────────────────── */}
                         <div className="space-y-4">
                             <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                <Tag className="w-3 h-3" />
+                                <HugeiconsIcon icon={Tag} className="w-3 h-3" />
                                 Label Template
                             </h3>
                             <div className="grid grid-cols-3 gap-3">
@@ -544,7 +532,7 @@ export function LabelPreviewDrawer({
                         {/* ── Barcode Format ───────────────────────────────── */}
                         <div className="space-y-3">
                             <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                <Barcode className="w-3 h-3" />
+                                <HugeiconsIcon icon={Barcode} className="w-3 h-3" />
                                 Barcode Format
                             </h3>
                             <button
@@ -559,7 +547,7 @@ export function LabelPreviewDrawer({
                                         {FORMAT_OPTIONS.find(f => f.value === barcodeFormat)?.description}
                                     </span>
                                 </div>
-                                <ChevronDown className={cn("w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30 transition-transform", showFormatPicker && "rotate-180")} />
+                                <HugeiconsIcon icon={ChevronDown} className={cn("w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30 transition-transform", showFormatPicker && "rotate-180")} />
                             </button>
                             <AnimatePresence>
                                 {showFormatPicker && (
@@ -594,7 +582,7 @@ export function LabelPreviewDrawer({
                                                         </span>
                                                     )}
                                                     {barcodeFormat === opt.value && (
-                                                        <Check className="w-4 h-4 text-brand-gold" />
+                                                        <HugeiconsIcon icon={Check} className="w-4 h-4 text-brand-gold" />
                                                     )}
                                                 </button>
                                             ))}
@@ -608,7 +596,7 @@ export function LabelPreviewDrawer({
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                    <Layers className="w-3 h-3" />
+                                    <HugeiconsIcon icon={Layers} className="w-3 h-3" />
                                     Label Items
                                 </h3>
                                 <Badge variant="default">
@@ -647,7 +635,7 @@ export function LabelPreviewDrawer({
                                                                     : "border-brand-deep/15 dark:border-white/15"
                                                             )}
                                                         >
-                                                            {isSelected && <Check className="w-3.5 h-3.5" />}
+                                                            {isSelected && <HugeiconsIcon icon={Check} className="w-3.5 h-3.5" />}
                                                         </button>
 
                                                         {/* Label info */}
@@ -699,7 +687,7 @@ export function LabelPreviewDrawer({
                                                                     onClick={() => updateQuantity(label._key, -1)}
                                                                     className="w-8 h-8 rounded-lg bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center hover:bg-brand-deep/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
                                                                 >
-                                                                    <Minus className="w-3.5 h-3.5 text-brand-deep/60 dark:text-brand-cream/60" />
+                                                                    <HugeiconsIcon icon={Minus} className="w-3.5 h-3.5 text-brand-deep/60 dark:text-brand-cream/60" />
                                                                 </button>
                                                                 <span className="w-8 text-center text-sm font-bold text-brand-deep dark:text-brand-cream">
                                                                     {qty}
@@ -708,7 +696,7 @@ export function LabelPreviewDrawer({
                                                                     onClick={() => updateQuantity(label._key, 1)}
                                                                     className="w-8 h-8 rounded-lg bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center hover:bg-brand-deep/10 dark:hover:bg-white/10 transition-colors cursor-pointer"
                                                                 >
-                                                                    <Plus className="w-3.5 h-3.5 text-brand-deep/60 dark:text-brand-cream/60" />
+                                                                    <HugeiconsIcon icon={Plus} className="w-3.5 h-3.5 text-brand-deep/60 dark:text-brand-cream/60" />
                                                                 </button>
                                                             </div>
                                                         )}
@@ -728,7 +716,7 @@ export function LabelPreviewDrawer({
                         {unsavedLabels.length > 0 && (
                             <div className="flex items-center justify-between p-3 rounded-xl bg-brand-gold/10 border border-brand-gold/20">
                                 <div className="flex items-center gap-2">
-                                    <RefreshCcw className={cn("w-3.5 h-3.5 text-brand-gold", isSyncing && "animate-spin")} />
+                                    <HugeiconsIcon icon={RefreshCcw} className={cn("w-3.5 h-3.5 text-brand-gold", isSyncing && "animate-spin")} />
                                     <span className="text-[10px] font-bold text-brand-gold uppercase tracking-widest">
                                         {unsavedLabels.length} unsaved barcodes generated
                                     </span>
@@ -748,7 +736,7 @@ export function LabelPreviewDrawer({
                             disabled={totalLabels === 0 || isSyncing}
                             className="w-full rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 dark:text-brand-deep font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest text-xs"
                         >
-                            <Printer className="w-4 h-4 mr-2" />
+                            <HugeiconsIcon icon={Printer} className="w-4 h-4 mr-2" />
                             Print {totalLabels} {totalLabels === 1 ? 'Label' : 'Labels'}
                         </Button>
                     </div>
@@ -797,7 +785,7 @@ function BarcodePreview({
         return (
             <div className="mt-3 py-3 px-4 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 space-y-2">
                 <div className="flex items-start gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                    <HugeiconsIcon icon={AlertTriangle} className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
                     <p className="text-[10px] text-rose-500 font-medium leading-relaxed">
                         {validation.error || `Cannot render barcode — value may be incompatible with ${format} format.`}
                     </p>
@@ -809,7 +797,7 @@ function BarcodePreview({
                         onClick={() => onSwitchFormat(validation.suggestion!)}
                         className="h-7 px-3 rounded-lg text-[10px] bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-400 border border-rose-500/20"
                     >
-                        <ExternalLink className="w-3 h-3 mr-1.5" />
+                        <HugeiconsIcon icon={ExternalLink} className="w-3 h-3 mr-1.5" />
                         Switch to {validation.suggestion}
                     </Button>
                 )}

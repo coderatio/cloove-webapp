@@ -1,20 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import {
-    BadgeCheck,
-    Brain,
-    Copy,
-    MoreVertical,
-    Pause,
-    Phone,
-    Play,
-    Plus,
-    Sparkles,
-    Star,
-    Trash2,
-    Wrench,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BadgeCheckIcon as BadgeCheck, BrainIcon as Brain, CopyIcon as Copy, MoreVerticalIcon as MoreVertical, PauseIcon as Pause, CallIcon as Phone, PlayIcon as Play, PlusSignIcon as Plus, SparklesIcon as Sparkles, StarIcon as Star, Delete02Icon as Trash2, Wrench01Icon as Wrench } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import {
@@ -61,7 +49,7 @@ export function AiAgentsList() {
                 <div className="min-w-0">
                     <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
-                            <Sparkles className="h-5 w-5" />
+                            <HugeiconsIcon icon={Sparkles} className="h-5 w-5" />
                         </div>
                         <h2 className="text-lg font-semibold">AI agents</h2>
                     </div>
@@ -74,7 +62,7 @@ export function AiAgentsList() {
                     onClick={openCreate}
                     className="h-10 rounded-full bg-brand-deep px-3 text-sm font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep sm:px-4"
                 >
-                    <Plus className="h-4 w-4 sm:mr-1.5" />
+                    <HugeiconsIcon icon={Plus} className="h-4 w-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">New agent</span>
                 </Button>
             </div>
@@ -87,14 +75,14 @@ export function AiAgentsList() {
             ) : agents.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-black/10 p-8 text-center dark:border-white/10">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
-                        <Brain className="h-5 w-5 text-muted-foreground" />
+                        <HugeiconsIcon icon={Brain} className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <p className="mt-4 text-sm font-medium">No AI agents yet</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                         Create your first agent to start answering calls with AI.
                     </p>
                     <Button onClick={openCreate} className="mt-4 rounded-full">
-                        <Plus className="mr-1.5 h-4 w-4" />
+                        <HugeiconsIcon icon={Plus} className="mr-1.5 h-4 w-4" />
                         Create agent
                     </Button>
                 </div>
@@ -170,7 +158,7 @@ function AgentCard({
                                 title="Default agent"
                                 className="flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400"
                             >
-                                <Star className="h-3 w-3" />
+                                <HugeiconsIcon icon={Star} className="h-3 w-3" />
                                 Default
                             </span>
                         )}
@@ -186,7 +174,7 @@ function AgentCard({
                             onClick={(e) => e.stopPropagation()}
                             className="rounded-full p-1.5 opacity-0 transition-opacity hover:bg-black/10 group-hover:opacity-100 dark:hover:bg-white/10"
                         >
-                            <MoreVertical className="h-4 w-4" />
+                            <HugeiconsIcon icon={MoreVertical} className="h-4 w-4" />
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -196,24 +184,24 @@ function AgentCard({
                     >
                         {agent.status !== "active" && (
                             <DropdownMenuItem onSelect={() => onSetStatus("active")}>
-                                <Play className="mr-2 h-4 w-4" />
+                                <HugeiconsIcon icon={Play} className="mr-2 h-4 w-4" />
                                 Activate
                             </DropdownMenuItem>
                         )}
                         {agent.status === "active" && (
                             <DropdownMenuItem onSelect={() => onSetStatus("paused")}>
-                                <Pause className="mr-2 h-4 w-4" />
+                                <HugeiconsIcon icon={Pause} className="mr-2 h-4 w-4" />
                                 Pause
                             </DropdownMenuItem>
                         )}
                         {!agent.isDefault && (
                             <DropdownMenuItem onSelect={onSetDefault}>
-                                <Star className="mr-2 h-4 w-4" />
+                                <HugeiconsIcon icon={Star} className="mr-2 h-4 w-4" />
                                 Set as default
                             </DropdownMenuItem>
                         )}
                         <DropdownMenuItem onSelect={onDuplicate}>
-                            <Copy className="mr-2 h-4 w-4" />
+                            <HugeiconsIcon icon={Copy} className="mr-2 h-4 w-4" />
                             Duplicate
                         </DropdownMenuItem>
                         {!agent.isDefault && (
@@ -221,7 +209,7 @@ function AgentCard({
                                 onSelect={onDelete}
                                 className="text-rose-600 focus:text-rose-600"
                             >
-                                <Trash2 className="mr-2 h-4 w-4" />
+                                <HugeiconsIcon icon={Trash2} className="mr-2 h-4 w-4" />
                                 Delete
                             </DropdownMenuItem>
                         )}
@@ -234,11 +222,11 @@ function AgentCard({
                     {agent.status}
                 </span>
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
-                    <Wrench className="h-3 w-3" />
+                    <HugeiconsIcon icon={Wrench} className="h-3 w-3" />
                     {agent.enabledTools.length} tools
                 </span>
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
-                    <Phone className="h-3 w-3" />
+                    <HugeiconsIcon icon={Phone} className="h-3 w-3" />
                     {agent.linkedNumberCount} numbers
                 </span>
                 {agent.behaviourFlags?.aiEnabled === false && (
@@ -248,7 +236,7 @@ function AgentCard({
                 )}
                 {agent.behaviourFlags?.recordingEnabled && (
                     <span className="inline-flex items-center gap-1 text-muted-foreground">
-                        <BadgeCheck className="h-3 w-3" />
+                        <HugeiconsIcon icon={BadgeCheck} className="h-3 w-3" />
                         Recording
                     </span>
                 )}
@@ -263,7 +251,7 @@ function AgentCard({
                     }}
                     className="inline-flex w-fit items-center gap-1.5 rounded-full bg-brand-deep px-3 py-1 text-xs font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                 >
-                    <Play className="h-3 w-3" />
+                    <HugeiconsIcon icon={Play} className="h-3 w-3" />
                     Activate agent
                 </button>
             )}

@@ -2,24 +2,8 @@
 
 import * as React from "react"
 import Image from "next/image"
-import {
-    Package,
-    Store,
-    Tag,
-    BarChart3,
-    Eye,
-    ExternalLink,
-    Globe,
-    MessageSquare,
-    CircleAlert,
-    MapPin,
-    Layers,
-    Boxes,
-    X,
-    Pencil,
-    Trash2,
-    Barcode
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PackageIcon as Package, Store01Icon as Store, Tag01Icon as Tag, BarChartIcon as BarChart3, EyeIcon as Eye, ExternalLinkIcon as ExternalLink, GlobeIcon as Globe, Message01Icon as MessageSquare, AlertCircleIcon as CircleAlert, MapPinIcon as MapPin, Layers01Icon as Layers, BoxesIcon as Boxes, Cancel01Icon as X, PencilIcon as Pencil, Delete02Icon as Trash2, BarcodeIcon as Barcode } from "@hugeicons/core-free-icons"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -95,7 +79,7 @@ export function ProductViewDrawer({
                 <DrawerStickyHeader className="pb-6 px-4 sm:px-8">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold shrink-0">
-                            <Package className="w-5 h-5" />
+                            <HugeiconsIcon icon={Package} className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
                             <DrawerTitle className="text-2xl font-serif font-medium text-brand-deep dark:text-brand-cream leading-tight truncate">
@@ -103,7 +87,7 @@ export function ProductViewDrawer({
                             </DrawerTitle>
                             <div className="flex items-center gap-3 mt-1.5">
                                 <DrawerDescription className="flex items-center gap-2">
-                                    <Tag className="w-3 h-3" />
+                                    <HugeiconsIcon icon={Tag} className="w-3 h-3" />
                                     {item.category}
                                 </DrawerDescription>
                                 <Badge variant={item.status === 'In Stock' ? 'emerald' : 'destructive'}>
@@ -144,7 +128,7 @@ export function ProductViewDrawer({
                         {!canSyncCatalog && syncHint ? (
                             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/8 px-4 py-3">
                                 <div className="flex items-start gap-2">
-                                    <CircleAlert className="w-4 h-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                    <HugeiconsIcon icon={CircleAlert} className="w-4 h-4 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
                                     <div className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
                                         {syncHint}
                                     </div>
@@ -195,7 +179,7 @@ export function ProductViewDrawer({
                         {raw?.description ? (
                             <div className="space-y-4">
                                 <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                    <BarChart3 className="w-3 h-3" />
+                                    <HugeiconsIcon icon={BarChart3} className="w-3 h-3" />
                                     About this Product
                                 </h3>
                                 <div className="p-6 rounded-3xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
@@ -227,7 +211,7 @@ export function ProductViewDrawer({
                         {/* Store Breakdown */}
                         <div className="space-y-4">
                             <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                <MapPin className="w-3 h-3" />
+                                <HugeiconsIcon icon={MapPin} className="w-3 h-3" />
                                 Store Allocation
                             </h3>
                             <div className="grid gap-3">
@@ -235,7 +219,7 @@ export function ProductViewDrawer({
                                     <div key={storeName} className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-lg bg-brand-deep dark:bg-white/10 flex items-center justify-center text-white/60">
-                                                <Store className="w-4 h-4" />
+                                                <HugeiconsIcon icon={Store} className="w-4 h-4" />
                                             </div>
                                             <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">{storeName}</span>
                                         </div>
@@ -257,7 +241,7 @@ export function ProductViewDrawer({
                         {/* Variants Details */}
                         <div className="space-y-4">
                             <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
-                                <Layers className="w-3 h-3" />
+                                <HugeiconsIcon icon={Layers} className="w-3 h-3" />
                                 Variant Configuration
                             </h3>
                             <div className="grid gap-4">
@@ -311,14 +295,14 @@ export function ProductViewDrawer({
                             onOpenChange(false)
                         }}
                     >
-                        <Trash2 className="w-4 h-4" />
+                        <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                     </Button>
                     <Button
                         variant="outline"
                         className="flex-1 h-12 rounded-2xl border-brand-deep/5 dark:border-white/10 text-brand-deep/60 dark:text-brand-cream/60 hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-all uppercase tracking-widest text-[10px] font-bold"
                         onClick={() => setIsLabelDrawerOpen(true)}
                     >
-                        <Barcode className="w-4 h-4 mr-2" />
+                        <HugeiconsIcon icon={Barcode} className="w-4 h-4 mr-2" />
                         Print Label
                     </Button>
                     <DropdownMenu>
@@ -329,9 +313,9 @@ export function ProductViewDrawer({
                                 disabled={!canSyncCatalog || isSyncingWhiteLabel || isSyncingGlobal}
                             >
                                 {(isSyncingWhiteLabel || isSyncingGlobal) ? (
-                                    <Package className="w-4 h-4 mr-2 animate-spin" />
+                                    <HugeiconsIcon icon={Package} className="w-4 h-4 mr-2 animate-spin" />
                                 ) : (
-                                    <ExternalLink className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={ExternalLink} className="w-4 h-4 mr-2" />
                                 )}
                                 {(isSyncingWhiteLabel || isSyncingGlobal) ? 'Syncing...' : 'Sync Catalog'}
                             </Button>
@@ -342,7 +326,7 @@ export function ProductViewDrawer({
                                 onClick={() => onSyncCatalog?.(item, 'whitelabel')}
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream"
                             >
-                                {isSyncingWhiteLabel ? <Package className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                                {isSyncingWhiteLabel ? <HugeiconsIcon icon={Package} className="w-4 h-4 animate-spin" /> : <HugeiconsIcon icon={MessageSquare} className="w-4 h-4" />}
                                 {isSyncingWhiteLabel ? 'Syncing White-label...' : 'Sync White-label'}
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -350,7 +334,7 @@ export function ProductViewDrawer({
                                 onClick={() => onSyncCatalog?.(item, 'global')}
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream"
                             >
-                                {isSyncingGlobal ? <Package className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                                {isSyncingGlobal ? <HugeiconsIcon icon={Package} className="w-4 h-4 animate-spin" /> : <HugeiconsIcon icon={Globe} className="w-4 h-4" />}
                                 {isSyncingGlobal ? 'Syncing Global...' : 'Sync Global'}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -362,7 +346,7 @@ export function ProductViewDrawer({
                             onOpenChange(false)
                         }}
                     >
-                        <Pencil className="w-4 h-4 mr-2" />
+                        <HugeiconsIcon icon={Pencil} className="w-4 h-4 mr-2" />
                         Edit Product
                     </Button>
                 </DrawerFooter>

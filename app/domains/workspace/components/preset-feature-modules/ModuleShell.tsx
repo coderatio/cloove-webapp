@@ -1,13 +1,13 @@
 "use client"
 
 import type { ReactNode } from "react"
-import type { LucideIcon } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Markdown } from "@/app/components/ui/markdown"
 import { cn } from "@/app/lib/utils"
 
 interface ModuleShellProps {
-    icon: LucideIcon
+    icon: IconSvgElement
     title: string
     subtitle?: string
     children: ReactNode
@@ -27,7 +27,7 @@ export function ModuleShell({ icon: Icon, title, subtitle, children, footerMarkd
             <div className="border-b border-brand-deep/5 px-4 py-3 dark:border-white/10 md:px-5 md:py-4">
                 <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold">
-                        <Icon className="h-5 w-5" />
+                        <HugeiconsIcon icon={Icon} className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                         <h2 className="text-lg font-semibold text-foreground">{title}</h2>

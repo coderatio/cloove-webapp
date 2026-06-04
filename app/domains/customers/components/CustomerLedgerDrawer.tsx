@@ -11,11 +11,8 @@ import {
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Badge } from "@/app/components/ui/badge"
-import {
-    Filter,
-    ArrowLeft,
-    Loader2,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { FilterIcon as Filter, ArrowLeft01Icon as ArrowLeft, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { type Customer } from "../hooks/useCustomers"
 import { useOrders } from "../../orders/hooks/useOrders"
 import { type Order, OrderStatus, PaymentStatus } from "../../orders/types"
@@ -128,7 +125,7 @@ export function CustomerLedgerDrawer({
                         <div className="flex items-center gap-4">
                             <DrawerClose asChild>
                                 <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full dark:text-brand-cream hover:dark:bg-white/10">
-                                    <ArrowLeft className="w-5 h-5" />
+                                    <HugeiconsIcon icon={ArrowLeft} className="w-5 h-5" />
                                 </Button>
                             </DrawerClose>
                             <div>
@@ -179,7 +176,7 @@ export function CustomerLedgerDrawer({
                         <div className="space-y-3">
                             {isLoading ? (
                                 <div className="flex items-center justify-center py-20">
-                                    <Loader2 className="w-8 h-8 animate-spin text-brand-gold" />
+                                    <HugeiconsIcon icon={Loader2} className="w-8 h-8 animate-spin text-brand-gold" />
                                 </div>
                             ) : orders.length > 0 ? (
                                 <>
@@ -203,7 +200,7 @@ export function CustomerLedgerDrawer({
                             ) : (
                                 <div className="py-20 text-center space-y-4">
                                     <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-brand-deep/5 dark:bg-white/5">
-                                        <Filter className="w-8 h-8 text-brand-accent/20 dark:text-brand-cream/20" />
+                                        <HugeiconsIcon icon={Filter} className="w-8 h-8 text-brand-accent/20 dark:text-brand-cream/20" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-serif font-medium text-brand-deep dark:text-brand-cream">No records found</p>

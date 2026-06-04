@@ -3,7 +3,8 @@
 import { useQueries } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { format, isSameDay } from "date-fns"
-import { Clock, Package, AlertCircle } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Clock01Icon as Clock, PackageIcon as Package, AlertCircleIcon as AlertCircle } from "@hugeicons/core-free-icons"
 import { useBusiness } from "@/app/components/BusinessProvider"
 import { usePermission } from "@/app/hooks/usePermission"
 import { useStores } from "@/app/domains/stores/providers/StoreProvider"
@@ -260,7 +261,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
                 count: pendingCount,
                 type: "urgent",
                 href: "/orders",
-                icon: <Clock className="w-4 h-4" />,
+                icon: <HugeiconsIcon icon={Clock} className="w-4 h-4" />,
             })
         }
         const lowStock = inventorySummary?.lowStockItems ?? 0
@@ -271,7 +272,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
                 count: lowStock,
                 type: "warning",
                 href: "/inventory",
-                icon: <Package className="w-4 h-4" />,
+                icon: <HugeiconsIcon icon={Package} className="w-4 h-4" />,
             })
         }
         const hasDebt = (summary?.pendingDebtTotal ?? 0) > 0
@@ -282,7 +283,7 @@ export function useDashboardData({ dateRange, storeId }: UseDashboardDataParams)
                 count: 1,
                 type: "urgent",
                 href: "/finance",
-                icon: <AlertCircle className="w-4 h-4" />,
+                icon: <HugeiconsIcon icon={AlertCircle} className="w-4 h-4" />,
             })
         }
 

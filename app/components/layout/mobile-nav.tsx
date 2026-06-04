@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sparkles, Menu, X, LogOut, LayoutGrid, Gift, ArrowLeft, ChevronRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SparklesIcon as Sparkles, Menu01Icon as Menu, Cancel01Icon as X, Logout01Icon as LogOut, LayoutGridIcon as LayoutGrid, GiftIcon as Gift, ArrowLeft01Icon as ArrowLeft, ChevronRightIcon as ChevronRight, Settings02Icon as Settings } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import {
     Drawer,
@@ -15,41 +16,156 @@ import {
 import { usePermission } from "@/app/hooks/usePermission"
 import { useMobileNav } from "../providers/mobile-nav-provider"
 import { useAuth } from "../providers/auth-provider"
-import { Button } from "../ui/button"
 import { toast } from "sonner"
 import { useWorkspaceNav } from "@/app/domains/workspace/hooks/useWorkspaceNav"
 import { useBusiness } from "../BusinessProvider"
+import { findMiniAppByNavItemId, findMiniAppByPathname, resolveMiniAppItems, isMiniAppItemActive } from "./mini-apps"
+import type { ResolvedNavItem } from "@/app/domains/workspace/nav/build-nav-model"
+import type { IconSvgElement } from "@hugeicons/react"
+
+/** A drawer submenu entry — covers both nav children and mini-app sub-tabs. */
+type MoreSubItem = { id?: string; href: string; label: string; icon: IconSvgElement; permission?: string }
+
+/** A single tab in the floating bottom bar. */
+function NavTab({ icon, label, active, href, onClick, hidden }: {
+    icon: IconSvgElement
+    label: string
+    active: boolean
+    href?: string
+    onClick?: () => void
+    hidden?: boolean
+}) {
+    const inner = (
+        <>
+            <HugeiconsIcon
+                icon={icon}
+                className={cn("h-[22px] w-[22px] transition-colors", active ? "text-primary dark:text-brand-gold-300" : "text-muted-foreground")}
+                strokeWidth={active ? 2.3 : 1.8}
+            />
+            <span className={cn(
+                "max-w-[60px] truncate text-[10px] font-medium leading-none tracking-tight transition-colors",
+                active ? "text-primary dark:text-brand-gold-300" : "text-muted-foreground"
+            )}>
+                {label}
+            </span>
+        </>
+    )
+    const cls = cn(
+        "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 transition-transform active:scale-90",
+        hidden && "hidden"
+    )
+    return href
+        ? <Link href={href} className={cls}>{inner}</Link>
+        : <button type="button" onClick={onClick} className={cls}>{inner}</button>
+}
+
+/** A single row in the menu drawer (iOS grouped-list style). */
+function MenuRow({ icon, label, active, hasChildren, href, onClick, destructive, onNavigate }: {
+    icon: IconSvgElement
+    label: string
+    active?: boolean
+    hasChildren?: boolean
+    href?: string
+    onClick?: () => void
+    destructive?: boolean
+    onNavigate?: () => void
+}) {
+    const inner = (
+        <>
+            <span className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors",
+                destructive
+                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                    : active
+                        ? "bg-primary text-primary-foreground dark:bg-brand-gold-700 dark:text-white"
+                        : "bg-primary/10 text-primary dark:bg-brand-gold/12 dark:text-brand-gold-300"
+            )}>
+                <HugeiconsIcon icon={icon} className="h-[18px] w-[18px]" strokeWidth={2} />
+            </span>
+            <span className={cn(
+                "flex-1 truncate text-[15px] font-medium",
+                destructive ? "text-red-600 dark:text-red-400" : active ? "text-primary dark:text-brand-gold-300" : "text-foreground"
+            )}>
+                {label}
+            </span>
+            {hasChildren && <HugeiconsIcon icon={ChevronRight} className="h-4 w-4 shrink-0 text-muted-foreground/40" />}
+        </>
+    )
+    const cls = cn(
+        "flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors active:bg-foreground/[0.05]",
+        active && !destructive && "bg-primary/[0.06] dark:bg-brand-gold/[0.07]"
+    )
+    return href
+        ? <Link href={href} onClick={onNavigate} className={cls}>{inner}</Link>
+        : <button type="button" onClick={onClick} className={cls}>{inner}</button>
+}
+
+const SECTION_CARD = "overflow-hidden rounded-2xl border border-border/60 bg-zinc-50/80 divide-y divide-border/50 dark:border-white/[0.06] dark:bg-white/[0.03] dark:divide-white/[0.05]"
+const SECTION_HEADER = "px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/80 dark:text-brand-cream/45"
 
 export function MobileNav() {
     const pathname = usePathname()
-    const router = useRouter()
     const { logout } = useAuth()
     const isAssistantPage = pathname === "/assistant"
     const { isMenuOpen, setIsMenuOpen } = useMobileNav()
     const [isMoreOpen, setIsMoreOpen] = useState(false)
+    const [submenuParent, setSubmenuParent] = useState<ResolvedNavItem | null>(null)
 
-    const { mobilePrimary, mobileSecondary, mobileMoreItems } = useWorkspaceNav()
+    const { mobilePrimary, mobileSecondary, navGroups } = useWorkspaceNav()
     const { features } = useBusiness()
+    const searchParams = useSearchParams()
+    const { can, role } = usePermission()
+
+    // Resolve a parent's drill-down items: mini-app sub-tabs if the item maps to a
+    // mini app (WhatsApp, Voice, Sales, Developer), otherwise its plain nav children.
+    const getSubmenuItems = (parent: ResolvedNavItem): MoreSubItem[] => {
+        const miniApp = findMiniAppByNavItemId(parent.id)
+        if (miniApp) {
+            return resolveMiniAppItems(miniApp, navGroups).filter((i) => !i.permission || can(i.permission))
+        }
+        return (parent.children ?? []).filter((c) => !c.permission || can(c.permission))
+    }
 
     const handleLogout = () => {
-        toast.promise(
-            logout(),
-            {
-                loading: 'Logging out...',
-                success: 'Logged out successfully',
-                error: 'Failed to logout. Please try again.'
-            }
-        )
+        toast.promise(logout(), {
+            loading: "Logging out...",
+            success: "Logged out successfully",
+            error: "Failed to logout. Please try again.",
+        })
     }
-    const [submenuParent, setSubmenuParent] = useState<typeof mobileMoreItems[0] | null>(null)
-    const { can, role } = usePermission()
 
     const handleMoreOpenChange = (open: boolean) => {
         setIsMoreOpen(open)
         if (!open) setSubmenuParent(null)
     }
 
-    // Zen Mode for Assistant Page
+    const closeDrawer = () => handleMoreOpenChange(false)
+
+    // The parent whose submenu the current route lives under (active mini app or
+    // a parent with an active child) — so opening the drawer lands on it directly.
+    const findActiveParent = (): ResolvedNavItem | null => {
+        const allItems = navGroups.flatMap((g) => g.items)
+        const miniApp = findMiniAppByPathname(pathname)
+        if (miniApp) {
+            const item = allItems.find((i) => i.id === miniApp.navItemId)
+            if (item) return item
+        }
+        for (const item of allItems) {
+            if (findMiniAppByNavItemId(item.id)) continue // mini apps handled above
+            const childActive = (item.children ?? []).some(
+                (c) => pathname === c.href || pathname.startsWith(c.href + "/")
+            )
+            if (childActive) return item
+        }
+        return null
+    }
+
+    const openMore = () => {
+        setSubmenuParent(findActiveParent())
+        setIsMoreOpen(true)
+    }
+
+    // Zen Mode for Assistant Page — collapsed launcher
     if (isAssistantPage && !isMenuOpen) {
         return (
             <motion.div
@@ -61,7 +177,7 @@ export function MobileNav() {
                     onClick={() => setIsMenuOpen(true)}
                     className="flex size-9 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm active:scale-95"
                 >
-                    <LayoutGrid className="size-4" />
+                    <HugeiconsIcon icon={LayoutGrid} className="size-4" />
                 </button>
             </motion.div>
         )
@@ -71,255 +187,222 @@ export function MobileNav() {
         <>
             <AnimatePresence>
                 {(isMenuOpen || !isAssistantPage) && (
-                    <nav className="fixed bottom-6 left-6 right-6 z-50 md:hidden">
+                    <motion.nav
+                        initial={{ y: 80, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 80, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                        className="fixed inset-x-0 bottom-0 z-50 md:hidden"
+                    >
                         {/* Close button for Zen Mode overlay */}
                         {isAssistantPage && (
-                            <div className="absolute -top-14 right-0 flex justify-end">
+                            <div className="absolute -top-14 right-4 flex justify-end">
                                 <button
                                     onClick={() => setIsMenuOpen(false)}
-                                    className="h-10 w-10 rounded-full bg-black/50 backdrop-blur-md text-white flex items-center justify-center mb-2 active:scale-90 transition-transform"
+                                    className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition-transform active:scale-90"
                                 >
-                                    <X className="h-5 w-5" />
+                                    <HugeiconsIcon icon={X} className="h-5 w-5" />
                                 </button>
                             </div>
                         )}
 
-                        <div className="relative flex h-16 w-full items-center rounded-full border border-border bg-background/95 px-2 shadow-lg backdrop-blur">
+                        <div className="relative border-t border-border/60 bg-background/85 backdrop-blur-xl">
+                            {/* Elevated Assistant action */}
+                            <Link
+                                href="/assistant"
+                                onClick={() => isAssistantPage && setIsMenuOpen(false)}
+                                aria-label="Assistant"
+                                className={cn(
+                                    "absolute left-1/2 -top-5 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-4 ring-background transition-transform active:scale-90 dark:bg-brand-gold-700 dark:text-white dark:shadow-brand-gold-700/30",
+                                    isAssistantPage ? "scale-105" : "hover:scale-105"
+                                )}
+                            >
+                                <HugeiconsIcon icon={Sparkles} className="h-6 w-6" strokeWidth={2.2} />
+                            </Link>
 
-                            {/* Prominent Assistant Button */}
-                            <div className="absolute left-1/2 -top-6 -translate-x-1/2">
-                                <Link
-                                    href="/assistant"
-                                    onClick={() => isAssistantPage && setIsMenuOpen(false)}
-                                    className={cn(
-                                        "flex h-16 w-16 items-center justify-center rounded-full border border-primary/12 bg-primary text-primary-foreground shadow-md transition-transform active:scale-90",
-                                        pathname === "/assistant"
-                                            ? "scale-105"
-                                            : "hover:scale-105"
-                                    )}
-                                >
-                                    <Sparkles className="h-7 w-7" strokeWidth={2.2} />
-                                </Link>
-                            </div>
-
-                            {/* Nav Items Split by Assistant Button */}
-                            <div className="flex-1 flex justify-between px-4 w-full">
-                                {/* Left Side */}
-                                <div className="flex gap-6 items-center">
+                            <div className="mx-auto flex max-w-md items-stretch px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+                                {/* Left cluster */}
+                                <div className="flex flex-1 items-center justify-evenly">
                                     {mobilePrimary.map((item) => {
-                                        const isActive =
-                                            item.href === "/"
-                                                ? pathname === "/"
-                                                : pathname === item.href || pathname.startsWith(item.href + "/")
-                                        const label = item.id === "overview" ? "Home" : item.label
+                                        const active = item.href === "/"
+                                            ? pathname === "/"
+                                            : pathname === item.href || pathname.startsWith(item.href + "/")
                                         return (
-                                            <Link
+                                            <NavTab
                                                 key={item.href}
+                                                icon={item.icon}
                                                 href={item.href}
-                                                className={cn(
-                                                    "flex flex-col items-center gap-1 transition-colors",
-                                                    (item.permission && !can(item.permission)) ? "hidden" : "",
-                                                    isActive ? "text-foreground" : "text-muted-foreground"
-                                                )}
-                                            >
-                                                <item.icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
-                                                <span className="text-[9px] font-bold uppercase tracking-tighter">{label}</span>
-                                            </Link>
+                                                label={item.id === "overview" ? "Home" : item.label}
+                                                active={active}
+                                                hidden={!!(item.permission && !can(item.permission))}
+                                            />
                                         )
                                     })}
                                 </div>
 
-                                {/* Right Side */}
-                                <div className="flex gap-6 items-center">
+                                {/* Spacer reserving room for the elevated Assistant */}
+                                <div className="w-16 shrink-0" aria-hidden />
+
+                                {/* Right cluster */}
+                                <div className="flex flex-1 items-center justify-evenly">
                                     {mobileSecondary.map((item) => {
-                                        const isActive = pathname === item.href || pathname.startsWith(item.href)
+                                        const active = pathname === item.href || pathname.startsWith(item.href)
                                         return (
-                                            <Link
+                                            <NavTab
                                                 key={item.href}
+                                                icon={item.icon}
                                                 href={item.href}
-                                                className={cn(
-                                                    "flex flex-col items-center gap-1 transition-colors",
-                                                    (item.permission && !can(item.permission)) ? "hidden" : "",
-                                                    isActive ? "text-foreground" : "text-muted-foreground"
-                                                )}
-                                            >
-                                                <item.icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
-                                                <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
-                                            </Link>
+                                                label={item.label}
+                                                active={active}
+                                                hidden={!!(item.permission && !can(item.permission))}
+                                            />
                                         )
                                     })}
-
-                                    {/* More Menu Switcher */}
-                                    <button
-                                        onClick={() => setIsMoreOpen(true)}
-                                        className="flex flex-col items-center gap-1 text-muted-foreground"
-                                    >
-                                        <Menu className="h-5 w-5" />
-                                        <span className="text-[9px] font-bold uppercase tracking-tighter">More</span>
-                                    </button>
+                                    <NavTab
+                                        icon={Menu}
+                                        label="More"
+                                        active={isMoreOpen}
+                                        onClick={openMore}
+                                    />
                                 </div>
                             </div>
                         </div>
-                    </nav>
+                    </motion.nav>
                 )}
             </AnimatePresence>
 
-            {/* More Menu Drawer */}
+            {/* Menu Drawer */}
             <Drawer open={isMoreOpen} onOpenChange={handleMoreOpenChange}>
                 <DrawerContent>
                     <DrawerStickyHeader>
                         <DrawerTitle>
                             {submenuParent ? (
                                 <div className="flex items-center gap-3">
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
+                                    <button
+                                        type="button"
                                         onClick={() => setSubmenuParent(null)}
-                                        className="h-10 w-10 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center"
+                                        aria-label="Back"
+                                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-foreground transition-colors active:scale-90 dark:bg-white/5"
                                     >
-                                        <ArrowLeft className="h-6 w-6" />
-                                    </Button>
-                                    <span>{submenuParent.label}</span>
+                                        <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
+                                    </button>
+                                    <span className="truncate">{submenuParent.label}</span>
                                 </div>
                             ) : (
                                 "Menu"
                             )}
                         </DrawerTitle>
                     </DrawerStickyHeader>
-                    <div className="p-6 pb-12 overflow-y-auto max-h-[70vh]">
-                        <AnimatePresence mode="wait">
+
+                    <div className="flex-1 overflow-y-auto overscroll-contain px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+                        <AnimatePresence mode="wait" initial={false}>
                             {submenuParent ? (
                                 <motion.div
                                     key="submenu"
-                                    initial={{ opacity: 0, x: 40 }}
+                                    initial={{ opacity: 0, x: 32 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: 40 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="flex flex-col gap-3"
+                                    exit={{ opacity: 0, x: 32 }}
+                                    transition={{ duration: 0.18 }}
                                 >
-                                    <Link
-                                        href={submenuParent.href}
-                                        onClick={() => handleMoreOpenChange(false)}
-                                        className={cn(
-                                            "flex items-center gap-4 rounded-[20px] p-4 transition-all duration-200 active:scale-95 border",
-                                            pathname === submenuParent.href
-                                                ? "border-brand-green-200 bg-brand-green-50 text-foreground dark:border-brand-green-800/40 dark:bg-brand-green-950/30 dark:text-brand-cream"
-                                                : "border-border bg-zinc-50 text-foreground dark:border-white/5 dark:bg-white/5 dark:text-brand-cream/80"
-                                        )}
-                                    >
-                                        <div className={cn(
-                                            "flex h-10 w-10 items-center justify-center rounded-xl",
-                                            pathname === submenuParent.href ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
-                                        )}>
-                                            <submenuParent.icon className="h-5 w-5" strokeWidth={2} />
-                                        </div>
-                                        <span className="font-semibold">{submenuParent.label}</span>
-                                    </Link>
-
-                                    {submenuParent.children?.map((child) => {
-                                        if (child.permission && !can(child.permission)) return null
-                                        return (
-                                            <Link
+                                    <div className={SECTION_CARD}>
+                                        {getSubmenuItems(submenuParent).map((child) => (
+                                            <MenuRow
                                                 key={child.href}
                                                 href={child.href}
-                                                onClick={() => handleMoreOpenChange(false)}
-                                                className={cn(
-                                                    "flex items-center gap-4 rounded-[20px] p-4 transition-all duration-200 active:scale-95 border",
-                                                    pathname.startsWith(child.href)
-                                                        ? "border-brand-green-200 bg-brand-green-50 text-foreground dark:border-brand-green-800/40 dark:bg-brand-green-950/30 dark:text-brand-cream"
-                                                        : "border-border bg-zinc-50 text-foreground dark:border-white/5 dark:bg-white/5 dark:text-brand-cream/80"
-                                                )}
-                                            >
-                                                <div className={cn(
-                                                    "flex h-10 w-10 items-center justify-center rounded-xl",
-                                                    pathname.startsWith(child.href) ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
-                                                )}>
-                                                    <child.icon className="h-5 w-5" strokeWidth={2} />
-                                                </div>
-                                                <span className="font-semibold">{child.label}</span>
-                                            </Link>
-                                        )
-                                    })}
+                                                icon={child.icon}
+                                                label={child.label}
+                                                active={isMiniAppItemActive(child.href, pathname, searchParams)}
+                                                onNavigate={closeDrawer}
+                                            />
+                                        ))}
+                                    </div>
                                 </motion.div>
                             ) : (
                                 <motion.div
                                     key="main"
-                                    initial={{ opacity: 0, x: -40 }}
+                                    initial={{ opacity: 0, x: -32 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -40 }}
-                                    transition={{ duration: 0.2 }}
+                                    exit={{ opacity: 0, x: -32 }}
+                                    transition={{ duration: 0.18 }}
                                 >
-                                    {role === 'OWNER' && features?.module_referrals !== false && (
-                                        <div className="mb-6">
-                                            <Link
-                                                href="/referrals"
-                                                onClick={() => handleMoreOpenChange(false)}
-                                                className="flex items-center justify-between p-4 rounded-3xl bg-linear-to-br from-brand-deep to-black text-brand-cream relative overflow-hidden group shadow-xl"
-                                            >
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 blur-3xl rounded-full -mr-10 -mt-10" />
-
-                                                <div className="relative z-10 flex items-center gap-4">
-                                                    <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shrink-0">
-                                                        <Gift className="h-6 w-6" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="text-lg font-semibold text-foreground dark:text-brand-cream">Refer & Earn</h4>
-                                                        <p className="text-xs text-muted-foreground dark:text-brand-cream/60">Get 10% commission per referral</p>
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        </div>
-                                    )}
-                                    <div className="flex flex-col gap-3">
-                                        {mobileMoreItems.map((item) => {
-                                            if (item.permission && !can(item.permission)) {
-                                                return null
-                                            }
-                                            const hasChildren = item.children && item.children.length > 0
-                                            return (
-                                                <button
-                                                    key={item.id}
-                                                    onClick={() => {
-                                                        if (hasChildren) {
-                                                            setSubmenuParent(item)
-                                                        } else {
-                                                            handleMoreOpenChange(false)
-                                                            router.push(item.href)
-                                                        }
-                                                    }}
-                                                    className={cn(
-                                                        "flex items-center gap-4 rounded-2xl p-4 transition-all duration-200 active:scale-95 text-left border",
-                                                        pathname === item.href
-                                                            ? "border-brand-green-200 bg-brand-green-50 text-foreground dark:border-brand-green-800/40 dark:bg-brand-green-950/30 dark:text-brand-cream"
-                                                            : "border-border bg-zinc-50 text-foreground dark:border-white/5 dark:bg-white/5 dark:text-brand-cream/80"
-                                                    )}
-                                                >
-                                                    <div className={cn(
-                                                        "flex h-10 w-10 items-center justify-center rounded-xl shrink-0",
-                                                        pathname === item.href ? "bg-primary text-primary-foreground" : "bg-white shadow-sm dark:bg-white/10"
-                                                    )}>
-                                                        <item.icon className="h-5 w-5" strokeWidth={2} />
-                                                    </div>
-                                                    <span className="font-semibold flex-1">{item.label}</span>
-                                                    {hasChildren && (
-                                                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground dark:text-brand-cream/30" />
-                                                    )}
-                                                </button>
-                                            )
-                                        })}
-                                        <button
-                                            onClick={() => {
-                                                handleMoreOpenChange(false)
-                                                handleLogout()
-                                            }}
-                                            className="flex items-center gap-4 rounded-2xl p-4 bg-red-50 dark:bg-red-500/10 text-red-600 border border-red-200/50 dark:border-red-500/10 active:scale-95 transition-all"
+                                    {/* Refer & Earn */}
+                                    {role === "OWNER" && features?.module_referrals !== false && (
+                                        <Link
+                                            href="/referrals"
+                                            onClick={closeDrawer}
+                                            className="relative mb-5 flex items-center gap-4 overflow-hidden rounded-2xl bg-linear-to-br from-brand-deep to-black p-4 text-brand-cream shadow-lg transition-transform active:scale-[0.98]"
                                         >
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-white/10 shadow-sm">
-                                                <LogOut className="h-5 w-5" />
+                                            <div className="absolute -mr-10 -mt-10 top-0 right-0 h-32 w-32 rounded-full bg-brand-gold/20 blur-3xl" />
+                                            <div className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
+                                                <HugeiconsIcon icon={Gift} className="h-6 w-6" />
                                             </div>
-                                            <span className="font-semibold">Sign Out</span>
-                                        </button>
-                                    </div>
+                                            <div className="relative z-10 flex-1">
+                                                <h4 className="text-base font-semibold text-brand-cream">Refer & Earn</h4>
+                                                <p className="text-xs text-brand-cream/60">Get 10% commission per referral</p>
+                                            </div>
+                                            <HugeiconsIcon icon={ChevronRight} className="relative z-10 h-5 w-5 shrink-0 text-brand-cream/40" />
+                                        </Link>
+                                    )}
+
+                                    {/* Grouped nav sections */}
+                                    {navGroups.map((group) => {
+                                        const items = group.items.filter((i) => !i.permission || can(i.permission))
+                                        if (items.length === 0) return null
+                                        return (
+                                            <section key={group.label} className="mb-5">
+                                                <h3 className={SECTION_HEADER}>{group.label}</h3>
+                                                <div className={SECTION_CARD}>
+                                                    {items.map((item) => {
+                                                        const hasChildren = getSubmenuItems(item).length > 0
+                                                        const active = isMiniAppItemActive(item.href, pathname, searchParams)
+                                                        return hasChildren ? (
+                                                            <MenuRow
+                                                                key={item.id}
+                                                                icon={item.icon}
+                                                                label={item.label}
+                                                                active={active}
+                                                                hasChildren
+                                                                onClick={() => setSubmenuParent(item)}
+                                                            />
+                                                        ) : (
+                                                            <MenuRow
+                                                                key={item.id}
+                                                                href={item.href}
+                                                                icon={item.icon}
+                                                                label={item.label}
+                                                                active={active}
+                                                                onNavigate={closeDrawer}
+                                                            />
+                                                        )
+                                                    })}
+                                                </div>
+                                            </section>
+                                        )
+                                    })}
+
+                                    {/* Account */}
+                                    <section className="mb-2">
+                                        <h3 className={SECTION_HEADER}>Account</h3>
+                                        <div className={SECTION_CARD}>
+                                            <MenuRow
+                                                href="/settings"
+                                                icon={Settings}
+                                                label="Settings"
+                                                active={pathname === "/settings" || pathname.startsWith("/settings/")}
+                                                hasChildren
+                                                onNavigate={closeDrawer}
+                                            />
+                                            <MenuRow
+                                                icon={LogOut}
+                                                label="Sign out"
+                                                destructive
+                                                onClick={() => {
+                                                    closeDrawer()
+                                                    handleLogout()
+                                                }}
+                                            />
+                                        </div>
+                                    </section>
                                 </motion.div>
                             )}
                         </AnimatePresence>

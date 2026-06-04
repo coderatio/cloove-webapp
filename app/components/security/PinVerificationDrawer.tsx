@@ -4,7 +4,8 @@ import { useState } from "react"
 import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import { Loader2, Lock } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, LockIcon as Lock } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 
@@ -63,7 +64,7 @@ export function PinVerificationDrawer({
                 <div className="mx-auto w-full max-w-sm">
                     <DrawerHeader>
                         <div className="mx-auto bg-brand-deep/5 dark:bg-white/5 p-3 rounded-full w-fit mb-4">
-                            <Lock className="w-6 h-6 text-brand-deep dark:text-brand-cream" />
+                            <HugeiconsIcon icon={Lock} className="w-6 h-6 text-brand-deep dark:text-brand-cream" />
                         </div>
                         <DrawerTitle className="text-center text-xl font-serif text-brand-deep dark:text-brand-cream">
                             {title}
@@ -96,7 +97,7 @@ export function PinVerificationDrawer({
                             className="w-full h-12 bg-brand-deep hover:bg-brand-deep/90 text-brand-cream dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 text-base font-medium rounded-xl"
                         >
                             {isLoading ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                             ) : (
                                 "Verify PIN"
                             )}

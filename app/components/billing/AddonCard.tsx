@@ -3,10 +3,10 @@
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
 import { cn } from "@/app/lib/utils"
-import { type LucideIcon } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 
 interface AddonCardProps {
-    icon: LucideIcon
+    icon: IconSvgElement
     name: string
     description: string | null
     priceLabel: string
@@ -50,7 +50,7 @@ export function AddonCard({
                             "flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-deep/8 text-brand-deep dark:bg-white/8 dark:text-brand-cream",
                             iconClassName
                         )}>
-                            <Icon className="h-4 w-4" />
+                            <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                         </div>
                         <div>
                             <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream">{name}</h3>

@@ -4,7 +4,8 @@ import { useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
-import { FileText, Eye, Edit2, Plus, Info, MessageSquare, ShieldCheck } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { File01Icon as FileText, EyeIcon as Eye, Edit02Icon as Edit2, PlusSignIcon as Plus, InformationCircleIcon as Info, Message01Icon as MessageSquare, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { useStorefrontPages, type StorefrontPageListItem } from "@/app/domains/storefront/hooks/useStorefrontPages"
 import { useStorefront } from "@/app/domains/storefront/hooks/useStorefront"
@@ -83,7 +84,7 @@ export default function StorefrontPages() {
                     onClick={handleCreate}
                     className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep font-bold px-6 h-10 shadow-lg hover:scale-105 transition-all w-full md:w-auto"
                 >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <HugeiconsIcon icon={Plus} className="w-4 h-4 mr-2" />
                     New Page
                 </Button>
             </div>
@@ -94,7 +95,7 @@ export default function StorefrontPages() {
                         <div className="p-12 text-center">
                             <div className="flex flex-col items-center gap-3">
                                 <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
-                                    <FileText className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                                    <HugeiconsIcon icon={FileText} className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
                                 </div>
                                 <h3 className="text-brand-deep dark:text-brand-cream font-medium">No pages yet</h3>
                                 <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
@@ -115,7 +116,7 @@ export default function StorefrontPages() {
                                                 ? "bg-brand-green/10 text-brand-green dark:text-emerald-400 dark:bg-emerald-400/10"
                                                 : "bg-brand-accent/10 text-brand-accent/60 dark:text-brand-cream/60"
                                         )}>
-                                            <Icon className="w-6 h-6" />
+                                            <HugeiconsIcon icon={Icon} className="w-6 h-6" />
                                         </div>
                                         <div>
                                             <h3 className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream">{page.title}</h3>
@@ -138,7 +139,7 @@ export default function StorefrontPages() {
                                             className="h-9 px-3 text-brand-accent/60 hover:text-brand-deep dark:text-white/60 dark:hover:text-white"
                                             onClick={() => storefront?.url && window.open(page.isHome ? storefront.url : `${storefront.url.replace(/\/$/, '')}/${page.slug}`, '_blank')}
                                         >
-                                            <Eye className="w-4 h-4 mr-2" />
+                                            <HugeiconsIcon icon={Eye} className="w-4 h-4 mr-2" />
                                             View
                                         </Button>
                                         <Button
@@ -147,7 +148,7 @@ export default function StorefrontPages() {
                                             onClick={() => router.push(`/storefront/editor/v0.1/${page.slug}`)}
                                             className="h-9 px-4 border-brand-accent/10 hover:bg-white/60 dark:border-white/10 dark:hover:bg-white/10 rounded-lg group/edit"
                                         >
-                                            <Edit2 className="w-3.5 h-3.5 mr-2 group-hover/edit:text-brand-green dark:group-hover/edit:text-emerald-400 transition-colors" />
+                                            <HugeiconsIcon icon={Edit2} className="w-3.5 h-3.5 mr-2 group-hover/edit:text-brand-green dark:group-hover/edit:text-emerald-400 transition-colors" />
                                             Edit
                                         </Button>
                                     </div>

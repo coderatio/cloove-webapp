@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { useEffect, useState, type ComponentType, type ReactNode } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { ChefHat, CookingPot, History, LayoutGrid, LogOut, Receipt, RotateCcw, Table2, Users, Package } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { ChefHatIcon as ChefHat, CookingPotIcon as CookingPot, HistoryIcon as History, LayoutGridIcon as LayoutGrid, Logout01Icon as LogOut, Invoice01Icon as Receipt, ReloadIcon as RotateCcw, Table01Icon as Table2, UserMultiple02Icon as Users, PackageIcon as Package } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { Button } from "@/app/components/ui/button"
@@ -15,7 +16,7 @@ import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCo
 type SalesTab = {
     href: string
     label: string
-    icon: ComponentType<{ className?: string }>
+    icon: IconSvgElement
 }
 
 const RESTAURANT_TABS: SalesTab[] = [
@@ -108,7 +109,7 @@ export function SalesModeNavBar({ children }: { children: ReactNode }) {
                         onClick={() => void salesModeLogout()}
                         aria-label="Log out"
                     >
-                        <LogOut className="w-3.5 h-3.5 sm:mr-1.5" />
+                        <HugeiconsIcon icon={LogOut} className="w-3.5 h-3.5 sm:mr-1.5" />
                         <span className="hidden sm:inline">Logout</span>
                     </Button>
                 </div>
@@ -135,7 +136,7 @@ export function SalesModeNavBar({ children }: { children: ReactNode }) {
                                 active ? "text-brand-gold" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            <Icon className={cn("w-4 h-4", active && "drop-shadow-[0_0_8px_rgba(212,175,55,0.35)]")} />
+                            <HugeiconsIcon icon={Icon} className={cn("w-4 h-4", active && "drop-shadow-[0_0_8px_rgba(212,175,55,0.35)]")} />
                             {tab.label}
                         </Link>
                     )

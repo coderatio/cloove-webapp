@@ -10,14 +10,8 @@ import {
   SideSheetDescription,
 } from "@/app/components/ui/side-sheet"
 import { Button } from "@/app/components/ui/button"
-import {
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  WifiOff,
-  Loader2,
-  type LucideIcon,
-} from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { CheckmarkCircle02Icon as CheckCircle2, AlertCircleIcon as AlertCircle, Clock01Icon as Clock, WifiOff01Icon as WifiOff, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import {
   useWhatsAppNumberVerificationLogs,
   type VerificationLogEntry,
@@ -38,7 +32,7 @@ interface DayGroup {
 
 const OUTCOME_STYLES: Record<
   string,
-  { dot: string; ring: string; icon: LucideIcon; label: string }
+  { dot: string; ring: string; icon: IconSvgElement; label: string }
 > = {
   active: {
     dot: "bg-emerald-500",
@@ -131,7 +125,7 @@ export function WhatsAppNumberLogsSheet({
                     className="rounded-full"
                   >
                     {query.isFetchingNextPage ? (
-                      <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                      <HugeiconsIcon icon={Loader2} className="mr-2 h-3.5 w-3.5 animate-spin" />
                     ) : null}
                     Load older
                   </Button>
@@ -214,7 +208,7 @@ function TimelineEntry({
             {time}
           </span>
           <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-            <Icon className="h-3 w-3" />
+            <HugeiconsIcon icon={Icon} className="h-3 w-3" />
             {style.label}
           </span>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:bg-slate-800 dark:text-slate-400">
@@ -253,7 +247,7 @@ function TimelineEntry({
 function LoadingState() {
   return (
     <div className="flex h-full flex-col items-center justify-center py-16 text-center">
-      <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
+      <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin text-slate-400" />
       <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Loading activity…</p>
     </div>
   )
@@ -263,7 +257,7 @@ function EmptyState() {
   return (
     <div className="flex h-full flex-col items-center justify-center py-16 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-        <Clock className="h-5 w-5 text-slate-400" />
+        <HugeiconsIcon icon={Clock} className="h-5 w-5 text-slate-400" />
       </div>
       <p className="mt-4 text-sm font-medium text-slate-700 dark:text-slate-200">
         No activity yet

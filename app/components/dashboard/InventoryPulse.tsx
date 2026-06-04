@@ -2,7 +2,8 @@
 
 import { GlassCard } from "../ui/glass-card"
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts"
-import { Package, AlertTriangle } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PackageIcon as Package, Alert02Icon as AlertTriangle } from "@hugeicons/core-free-icons"
 
 interface InventoryPulseProps {
     totalItems: number
@@ -43,7 +44,7 @@ export function InventoryPulse({
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                     <div className="rounded-full bg-primary/10 p-2 text-primary">
-                        <Package className="w-4 h-4" />
+                        <HugeiconsIcon icon={Package} className="w-4 h-4" />
                     </div>
                     <span className="text-sm font-semibold tracking-wide text-foreground">{title}</span>
                 </div>
@@ -81,7 +82,7 @@ export function InventoryPulse({
                     {lowStockItems > 0 ? (
                         <div className="space-y-1">
                             <div className="flex items-center gap-2 text-warning">
-                                <AlertTriangle className="w-4 h-4" />
+                                <HugeiconsIcon icon={AlertTriangle} className="w-4 h-4" />
                                 <span className="text-sm font-bold">
                                     {lowStockItems} {lowStockLine}
                                 </span>

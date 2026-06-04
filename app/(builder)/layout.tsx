@@ -1,6 +1,7 @@
 "use client"
 
-import { ArrowLeft, Save, Globe, Sparkles, Monitor, Smartphone } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowLeft01Icon as ArrowLeft, SaveIcon as Save, GlobeIcon as Globe, SparklesIcon as Sparkles, ComputerIcon as Monitor, SmartPhone01Icon as Smartphone } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
 import { BuilderProvider, useBuilder } from "../domains/storefront/context/BuilderContext"
@@ -33,7 +34,7 @@ function BuilderContent({ children }: { children: React.ReactNode }) {
                         onClick={() => router.back()}
                         className="rounded-full hover:bg-brand-deep/5"
                     >
-                        <ArrowLeft className="w-5 h-5 text-brand-deep/60" />
+                        <HugeiconsIcon icon={ArrowLeft} className="w-5 h-5 text-brand-deep/60" />
                     </Button>
                     <div className="h-6 w-px bg-brand-deep/10 mx-2" />
                     <div>
@@ -45,10 +46,10 @@ function BuilderContent({ children }: { children: React.ReactNode }) {
                 {/* Viewport Toggles */}
                 <div className="hidden md:flex items-center bg-brand-deep/5 dark:bg-white/5 p-1 rounded-full border border-brand-deep/5">
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-white dark:bg-white/10 shadow-sm text-brand-green">
-                        <Monitor className="w-4 h-4" />
+                        <HugeiconsIcon icon={Monitor} className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-brand-accent/40 hover:text-brand-deep">
-                        <Smartphone className="w-4 h-4" />
+                        <HugeiconsIcon icon={Smartphone} className="w-4 h-4" />
                     </Button>
                 </div>
 
@@ -58,7 +59,7 @@ function BuilderContent({ children }: { children: React.ReactNode }) {
                         onClick={() => setIsMagicOpen(true)}
                         className="rounded-full text-brand-accent hover:text-brand-deep gap-2 text-xs font-bold"
                     >
-                        <Sparkles className="w-3.5 h-3.5 text-brand-green" />
+                        <HugeiconsIcon icon={Sparkles} className="w-3.5 h-3.5 text-brand-green" />
                         AI Helper
                     </Button>
                     <div className="h-6 w-px bg-brand-deep/10 mx-1" />

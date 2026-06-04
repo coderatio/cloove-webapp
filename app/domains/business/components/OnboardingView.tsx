@@ -2,15 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import {
-    ArrowRight,
-    Check,
-    ChevronLeft,
-    Building2,
-    MapPin,
-    LogOut,
-    X
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowRight01Icon as ArrowRight, CheckIcon as Check, ChevronLeftIcon as ChevronLeft, Building02Icon as Building2, MapPinIcon as MapPin, Logout01Icon as LogOut, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -43,7 +36,7 @@ function OnboardingCancelButton({ className }: { className?: string }) {
             )}
             aria-label="Cancel and return to dashboard"
         >
-            <X className="h-4 w-4 shrink-0" aria-hidden />
+            <HugeiconsIcon icon={X} className="h-4 w-4 shrink-0" aria-hidden />
             <span>Cancel</span>
         </Button>
     )
@@ -283,7 +276,7 @@ export function OnboardingView() {
                                             <span className="flex items-center gap-2">
                                                 {isSelected && (
                                                     <span>
-                                                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                                                        <HugeiconsIcon icon={Check} className="h-3.5 w-3.5" strokeWidth={3} />
                                                     </span>
                                                 )}
                                                 {category.name}
@@ -299,7 +292,7 @@ export function OnboardingView() {
                                 <div className="space-y-4">
                                     <div className="space-y-2">
                                         <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                                            <Building2 className="h-3 w-3" />
+                                            <HugeiconsIcon icon={Building2} className="h-3 w-3" />
                                             Business Name
                                         </label>
                                         <Input
@@ -314,7 +307,7 @@ export function OnboardingView() {
 
                                     <div className="space-y-2">
                                         <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                                            <MapPin className="h-3 w-3" />
+                                            <HugeiconsIcon icon={MapPin} className="h-3 w-3" />
                                             Country
                                         </label>
                                         {isCountriesError ? (
@@ -396,7 +389,7 @@ export function OnboardingView() {
                                 onClick={() => setStep(prev => prev - 1)}
                                 className="flex cursor-pointer items-center gap-2 rounded-2xl text-sm font-semibold text-foreground hover:bg-muted"
                             >
-                                <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden />
+                                <HugeiconsIcon icon={ChevronLeft} className="h-4 w-4 shrink-0" aria-hidden />
                                 <span>Back</span>
                             </Button>
                         ) : isAddBusinessFlow ? (
@@ -408,7 +401,7 @@ export function OnboardingView() {
                                 onClick={logout}
                                 className="flex cursor-pointer items-center gap-2 rounded-2xl text-sm font-semibold text-foreground hover:bg-muted"
                             >
-                                <LogOut className="h-4 w-4 shrink-0" aria-hidden />
+                                <HugeiconsIcon icon={LogOut} className="h-4 w-4 shrink-0" aria-hidden />
                                 <span>Logout</span>
                             </Button>
                         )}
@@ -425,7 +418,7 @@ export function OnboardingView() {
                                 className="h-11 rounded-2xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/92 hover:text-white sm:h-12 sm:px-6"
                             >
                                 Next
-                                <ArrowRight className="ml-2 h-4 w-4 shrink-0" aria-hidden />
+                                <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4 shrink-0" aria-hidden />
                             </Button>
                         ) : isAddBusinessFlow ? (
                             <OnboardingCancelButton className="px-4 sm:px-6 h-11 sm:h-12" />

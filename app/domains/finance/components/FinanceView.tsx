@@ -6,23 +6,8 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import {
-    Wallet,
-    Building2,
-    ArrowUpRight,
-    ArrowDownRight,
-    CheckCircle2,
-    Clock,
-    XCircle,
-    Loader2,
-    ArrowRightLeft,
-    Banknote,
-    Receipt,
-    ChevronLeft,
-    ChevronRight,
-    Eye,
-    EyeOff,
-} from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Wallet01Icon as Wallet, Building02Icon as Building2, ArrowUpRight01Icon as ArrowUpRight, ArrowDownRight01Icon as ArrowDownRight, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, CancelCircleIcon as XCircle, Loading03Icon as Loader2, ArrowDataTransferHorizontalIcon as ArrowRightLeft, BanknoteIcon as Banknote, Invoice01Icon as Receipt, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, EyeIcon as Eye, EyeOffIcon as EyeOff } from "@hugeicons/core-free-icons"
 import { toast } from 'sonner'
 import { cn } from '@/app/lib/utils'
 import { ManagementHeader } from '@/app/components/shared/ManagementHeader'
@@ -372,7 +357,7 @@ export function FinanceView() {
                                 : "bg-rose-500/8 text-rose-600 ring-1 ring-inset ring-rose-500/15 dark:bg-rose-400/10 dark:text-rose-300 dark:ring-rose-400/20"
                         )}
                     >
-                        <Icon className="w-[18px] h-[18px]" strokeWidth={2.25} />
+                        <HugeiconsIcon icon={Icon} className="w-[18px] h-[18px]" strokeWidth={2.25} />
                     </div>
                 )
             }
@@ -576,7 +561,7 @@ export function FinanceView() {
                         <div className="lg:col-span-8 space-y-4">
                             <GlassCard className="p-6 sm:p-8 relative overflow-hidden group border-brand-gold/20 bg-linear-to-br from-white/50 to-brand-gold/5 dark:from-white/5 dark:to-brand-gold/5 min-h-[220px] sm:min-h-[300px] flex flex-col justify-between">
                                 <div className="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-all duration-700 -rotate-12 group-hover:rotate-0">
-                                    <Wallet className="w-32 h-32 sm:w-48 sm:h-48 text-brand-gold" />
+                                    <HugeiconsIcon icon={Wallet} className="w-32 h-32 sm:w-48 sm:h-48 text-brand-gold" />
                                 </div>
 
                                 <div className="relative z-10">
@@ -592,7 +577,7 @@ export function FinanceView() {
                                             onClick={toggleBalance}
                                             disabled={updateSettings.isPending}
                                         >
-                                            {showBalance ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                            {showBalance ? <HugeiconsIcon icon={EyeOff} className="w-3.5 h-3.5" /> : <HugeiconsIcon icon={Eye} className="w-3.5 h-3.5" />}
                                             <span className="sr-only">{showBalance ? "Hide balance" : "Show balance"}</span>
                                         </Button>
                                     </div>
@@ -610,11 +595,11 @@ export function FinanceView() {
 
                                 <div className="relative z-10 flex gap-4">
                                     <Button onClick={() => setIsWithdrawOpen(true)} className="flex-1 h-12 sm:h-16 rounded-2xl bg-brand-deep text-brand-cream dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 dark:text-brand-deep font-bold shadow-2xl flex items-center justify-center gap-3 group/btn hover:scale-[1.02] active:scale-95 transition-all">
-                                        <ArrowUpRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
+                                        <HugeiconsIcon icon={ArrowUpRight} className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
                                         Withdraw
                                     </Button>
                                     <Button onClick={() => setIsAddMoneyOpen(true)} variant="outline" className="flex-1 h-12 sm:h-16 rounded-2xl border-brand-deep/10 bg-white/50 dark:bg-white/5 font-bold flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all">
-                                        <ArrowDownRight className="w-5 h-5 sm:w-6 sm:h-6 text-brand-green dark:text-brand-gold" />
+                                        <HugeiconsIcon icon={ArrowDownRight} className="w-5 h-5 sm:w-6 sm:h-6 text-brand-green dark:text-brand-gold" />
                                         Add Funds
                                     </Button>
                                 </div>
@@ -628,7 +613,7 @@ export function FinanceView() {
                                 >
                                     <GlassCard className="p-6 flex items-center gap-4 border-brand-deep/5 bg-white/40 dark:bg-white/5 backdrop-blur-md">
                                         <div className="h-12 w-12 rounded-2xl bg-brand-green/10 dark:bg-brand-gold/10 flex items-center justify-center text-brand-green dark:text-brand-gold shadow-inner">
-                                            {isFetching ? <Skeleton className="h-6 w-6 rounded" /> : <ArrowRightLeft className="h-6 w-6" />}
+                                            {isFetching ? <Skeleton className="h-6 w-6 rounded" /> : <HugeiconsIcon icon={ArrowRightLeft} className="h-6 w-6" />}
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] mb-1">Total Revenue</p>
@@ -650,7 +635,7 @@ export function FinanceView() {
                                 >
                                     <GlassCard className="p-6 flex items-center gap-4 border-brand-deep/5 bg-white/40 dark:bg-white/5 backdrop-blur-md">
                                         <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-inner">
-                                            {isFetching ? <Skeleton className="h-6 w-6 rounded" /> : <Clock className="h-6 w-6" />}
+                                            {isFetching ? <Skeleton className="h-6 w-6 rounded" /> : <HugeiconsIcon icon={Clock} className="h-6 w-6" />}
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-[0.2em] mb-1">Awaiting confirmation</p>
@@ -673,11 +658,11 @@ export function FinanceView() {
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div className="h-10 w-10 rounded-xl bg-brand-green/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
-                                                    <Receipt className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
+                                                    <HugeiconsIcon icon={Receipt} className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
                                                 </div>
                                                 <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream/80">Tax Report</span>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                                         </Button>
                                         <Button
                                             variant="ghost"
@@ -686,11 +671,11 @@ export function FinanceView() {
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div className="h-10 w-10 rounded-xl bg-brand-green/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
-                                                    <Banknote className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
+                                                    <HugeiconsIcon icon={Banknote} className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
                                                 </div>
                                                 <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream/80">Statements</span>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                                         </Button>
                                         <Button
                                             variant="ghost"
@@ -701,11 +686,11 @@ export function FinanceView() {
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div className="h-10 w-10 rounded-xl bg-brand-green/5 dark:bg-white/5 flex items-center justify-center group-hover:bg-brand-gold/10 transition-colors">
-                                                    <Building2 className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
+                                                    <HugeiconsIcon icon={Building2} className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
                                                 </div>
                                                 <span className="text-sm font-semibold text-brand-deep dark:text-brand-cream/80">Payout Settings</span>
                                             </div>
-                                            <ChevronRight className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-accent/20 dark:text-brand-cream/30 group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                                         </Button>
                                     </div>
                                 </div>
@@ -761,7 +746,7 @@ export function FinanceView() {
                                 <GlassCard className="p-12 text-center border-dashed border-brand-deep/20 dark:border-white/10 bg-transparent">
                                     <div className="flex flex-col items-center gap-3">
                                         <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
-                                            <Receipt className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                                            <HugeiconsIcon icon={Receipt} className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
                                         </div>
                                         <h3 className="text-brand-deep dark:text-brand-cream font-medium">No transactions found</h3>
                                         <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[240px] mx-auto">
@@ -819,7 +804,7 @@ export function FinanceView() {
                                         onClick={() => setCurrentPage((apiMeta.currentPage ?? 1) - 1)}
                                         className="rounded-xl h-10 border-brand-deep/5 dark:border-white/10"
                                     >
-                                        <ChevronLeft className="w-4 h-4 mr-1 dark:text-brand-gold" />
+                                        <HugeiconsIcon icon={ChevronLeft} className="w-4 h-4 mr-1 dark:text-brand-gold" />
                                         Prev
                                     </Button>
                                     <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60">
@@ -833,7 +818,7 @@ export function FinanceView() {
                                         className="rounded-xl h-10 border-brand-deep/5 dark:border-white/10"
                                     >
                                         Next
-                                        <ChevronRight className="w-4 h-4 ml-1 dark:text-brand-gold" />
+                                        <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 ml-1 dark:text-brand-gold" />
                                     </Button>
                                 </div>
                             )}
@@ -869,7 +854,6 @@ export function FinanceView() {
                     isRequerying={isRequerying}
                     onApproveManually={showMockActions ? handleClearManual : undefined}
                 />
-
 
                 <AddFundsDrawer
                     isOpen={isAddMoneyOpen}

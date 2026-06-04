@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, type ReactElement } from "react"
-import { CreditCard, Download, Loader2, Plus, Trash2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CreditCardIcon as CreditCard, Download01Icon as Download, Loading03Icon as Loader2, PlusSignIcon as Plus, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Markdown } from "@/app/components/ui/markdown"
 import { DocumentEditor } from "@/app/components/ui/document-editor"
@@ -90,7 +91,7 @@ export function InvoiceDetailView({
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className="h-10 w-10 rounded-xl bg-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0">
-                                <CreditCard className="w-5 h-5" />
+                                <HugeiconsIcon icon={CreditCard} className="w-5 h-5" />
                             </div>
                             <div className="min-w-0">
                                 <h2 className="text-lg font-serif font-semibold text-brand-deep dark:text-brand-cream truncate">
@@ -166,7 +167,7 @@ export function InvoiceDetailView({
                                                 className="text-brand-deep/20 hover:text-red-400 transition-colors"
                                                 aria-label="Remove item"
                                             >
-                                                <Trash2 className="w-3.5 h-3.5" />
+                                                <HugeiconsIcon icon={Trash2} className="w-3.5 h-3.5" />
                                             </button>
                                         </td>
                                     </tr>
@@ -178,7 +179,7 @@ export function InvoiceDetailView({
                                 onClick={handleAddItem}
                                 className="flex items-center gap-1.5 text-xs text-brand-gold/60 hover:text-brand-gold transition-colors"
                             >
-                                <Plus className="w-3 h-3" />
+                                <HugeiconsIcon icon={Plus} className="w-3 h-3" />
                                 Add item
                             </button>
                         </div>
@@ -227,9 +228,9 @@ export function InvoiceDetailView({
                             className="border border-brand-gold/20 text-brand-gold hover:bg-brand-gold/5"
                         >
                             {isGeneratingPdf ? (
-                                <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-3.5 h-3.5 mr-2 animate-spin" />
                             ) : (
-                                <Download className="w-3.5 h-3.5 mr-2" />
+                                <HugeiconsIcon icon={Download} className="w-3.5 h-3.5 mr-2" />
                             )}
                             Generate PDF
                         </Button>

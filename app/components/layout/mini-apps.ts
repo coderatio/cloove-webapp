@@ -1,31 +1,5 @@
-import type { LucideIcon } from "lucide-react"
-import {
-    AudioLines,
-    MapPinned,
-    PanelsTopLeft,
-    PhoneForwarded,
-    PhoneIncoming,
-    Receipt,
-    Settings2,
-    ShoppingBag,
-    Users,
-    Link2,
-    Code2,
-    LayoutGrid,
-    BarChart3,
-    ListChecks,
-    Sparkles,
-    BookText,
-    MessageSquare,
-    Bot,
-    KeyRound,
-    ClipboardList,
-    Plug,
-    GitBranch,
-    BadgePercent,
-    Truck,
-    Mic,
-} from "lucide-react"
+import type { IconSvgElement } from "@hugeicons/react"
+import { AudioLinesIcon as AudioLines, Location04Icon as MapPinned, BrowserIcon as PanelsTopLeft, CallOutgoing02Icon as PhoneForwarded, CallIncoming01Icon as PhoneIncoming, Invoice01Icon as Receipt, Settings02Icon as Settings2, ShoppingBag01Icon as ShoppingBag, UserMultiple02Icon as Users, Link02Icon as Link2, CodeIcon as Code2, LayoutGridIcon as LayoutGrid, BarChartIcon as BarChart3, CheckListIcon as ListChecks, SparklesIcon as Sparkles, BookTextIcon as BookText, Message01Icon as MessageSquare, WhatsappIcon as WhatsApp, BotIcon as Bot, Key01Icon as KeyRound, ClipboardListIcon as ClipboardList, PlugSocketIcon as Plug, GitBranchIcon as GitBranch, BadgePercentIcon as BadgePercent, TruckIcon as Truck, Mic01Icon as Mic } from "@hugeicons/core-free-icons"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
 import { NAV_GROUPS } from "@/app/domains/workspace/nav/nav-definitions"
 import type { ResolvedNavGroup } from "@/app/domains/workspace/nav/build-nav-model"
@@ -49,7 +23,7 @@ for (const group of NAV_GROUPS) {
 export interface MiniAppItem {
     id: string
     label: string
-    icon: LucideIcon
+    icon: IconSvgElement
     href: string
     permission?: string
 }
@@ -60,7 +34,7 @@ export interface MiniAppDef {
     navItemId: NavRouteId
     title: string
     description?: string
-    icon: LucideIcon
+    icon: IconSvgElement
     items: MiniAppItem[]
     /**
      * IDs of nav items to resolve from the resolved nav tree (preset-aware).
@@ -77,7 +51,7 @@ export const MINI_APPS: MiniAppDef[] = [
         navItemId: "whatsapp",
         title: "WhatsApp",
         description: "Inbox, takeover, templates, and automation",
-        icon: MessageSquare,
+        icon: WhatsApp,
         autoActivatePrefixes: ["/whatsapp"],
         items: [
             { id: "overview", label: "Overview", icon: PanelsTopLeft, href: "/whatsapp?tab=overview" },
@@ -228,7 +202,7 @@ export function resolveMiniAppItems(
     // Build a map of all resolved nav items (including children) by their id
     const itemMap = new Map<
         string,
-        { id: string; href: string; icon: LucideIcon; label: string }
+        { id: string; href: string; icon: IconSvgElement; label: string }
     >()
     for (const group of navGroups) {
         for (const item of group.items) {

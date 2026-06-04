@@ -5,7 +5,8 @@ import { formatReceiptText, formatReceiptCommands, ESC_INIT, ESC_HEAT, DC2_DENSI
 import type { ReceiptData } from "@/app/components/shared/ReceiptTemplate"
 import { STORAGE_KEYS, storage } from "@/app/lib/storage"
 import { PRINTER_PROFILES, DEFAULT_PROFILE_ID, type PrinterProfileId } from "@/app/lib/printer-profiles"
-import { Bluetooth as BluetoothIcon, Printer as PrinterIcon, Smartphone as SmartphoneIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BluetoothIcon, PrinterIcon, SmartPhone01Icon as SmartphoneIcon } from "@hugeicons/core-free-icons"
 import { apiClient } from "@/app/lib/api-client"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import {
@@ -661,7 +662,7 @@ function PrintMethodPicker({
                             >
                                 <div className="flex flex-col items-center text-center p-8 space-y-4">
                                     <div className="w-16 h-16 rounded-2xl bg-blue-500/5 dark:bg-blue-500/10 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:bg-blue-500/10 dark:group-hover:bg-blue-500/20">
-                                        <BluetoothIcon className="w-8 h-8 text-blue-500 transition-transform duration-500 group-hover:rotate-12" />
+                                        <HugeiconsIcon icon={BluetoothIcon} className="w-8 h-8 text-blue-500 transition-transform duration-500 group-hover:rotate-12" />
                                     </div>
                                     <div className="space-y-1.5">
                                         <h4 className="font-sans font-semibold text-lg text-brand-deep dark:text-brand-cream">
@@ -686,7 +687,7 @@ function PrintMethodPicker({
                             >
                                 <div className="flex flex-col items-center text-center p-8 space-y-4">
                                     <div className="w-16 h-16 rounded-2xl bg-purple-500/5 dark:bg-purple-500/10 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:bg-purple-500/10 dark:group-hover:bg-purple-500/20">
-                                        <SmartphoneIcon className="w-8 h-8 text-purple-500 transition-transform duration-500 group-hover:rotate-12" />
+                                        <HugeiconsIcon icon={SmartphoneIcon} className="w-8 h-8 text-purple-500 transition-transform duration-500 group-hover:rotate-12" />
                                     </div>
                                     <div className="space-y-1.5">
                                         <h4 className="font-sans font-semibold text-lg text-brand-deep dark:text-brand-cream">
@@ -707,7 +708,7 @@ function PrintMethodPicker({
                         >
                             <div className="flex flex-col items-center text-center p-8 space-y-4">
                                 <div className="w-16 h-16 rounded-2xl bg-brand-gold/5 dark:bg-brand-gold/10 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:bg-brand-gold/10 dark:group-hover:bg-brand-gold/20">
-                                    <PrinterIcon className="w-8 h-8 text-brand-gold transition-transform duration-500 group-hover:-rotate-12" />
+                                    <HugeiconsIcon icon={PrinterIcon} className="w-8 h-8 text-brand-gold transition-transform duration-500 group-hover:-rotate-12" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <h4 className="font-sans font-semibold text-lg text-brand-deep dark:text-brand-cream">

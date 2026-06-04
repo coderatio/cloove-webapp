@@ -3,16 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import {
-    Archive,
-    ChevronsUpDown,
-    GitBranch,
-    Loader2,
-    Plus,
-    Save,
-    Trash2,
-    X,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArchiveIcon as Archive, UnfoldMoreIcon as ChevronsUpDown, GitBranchIcon as GitBranch, Loading03Icon as Loader2, PlusSignIcon as Plus, SaveIcon as Save, Delete02Icon as Trash2, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Textarea } from "@/app/components/ui/textarea"
@@ -305,7 +297,7 @@ export function FlowBuilder({ editingFlow, selectedNumberId, onNumberChange, onS
                             onClick={() => { clearSession(); onCancel() }}
                             className="flex h-8 w-8 items-center justify-center rounded-xl border border-border/60 bg-muted/30 text-muted-foreground transition hover:bg-muted/50 hover:text-foreground"
                         >
-                            <X className="h-4 w-4" />
+                            <HugeiconsIcon icon={X} className="h-4 w-4" />
                         </button>
                         <div>
                             <h2 className="text-sm font-semibold text-foreground">
@@ -334,9 +326,9 @@ export function FlowBuilder({ editingFlow, selectedNumberId, onNumberChange, onS
                             disabled={!isValid || isSaving}
                         >
                             {isSaving ? (
-                                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                             ) : (
-                                <Save className="mr-1.5 h-3.5 w-3.5" />
+                                <HugeiconsIcon icon={Save} className="mr-1.5 h-3.5 w-3.5" />
                             )}
                             {editingFlow ? "Save" : "Create"}
                         </Button>
@@ -349,7 +341,7 @@ export function FlowBuilder({ editingFlow, selectedNumberId, onNumberChange, onS
                                 disabled={!isValid || publishing || editingFlow.status === "PUBLISHED"}
                             >
                                 {publishing ? (
-                                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                                 ) : null}
                                 {editingFlow.status === "PUBLISHED" ? "Published" : "Publish"}
                             </Button>
@@ -366,7 +358,7 @@ export function FlowBuilder({ editingFlow, selectedNumberId, onNumberChange, onS
                     <GlassCard className="divide-y divide-border/40 p-0">
                         <div className="flex items-center gap-2.5 px-5 pt-4 pb-3">
                             <div className="flex h-6 w-6 items-center justify-center rounded-lg border border-border/60 bg-muted/30">
-                                <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
+                                <HugeiconsIcon icon={GitBranch} className="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
                             <div>
                                 <h3 className="text-sm font-semibold text-foreground">Settings</h3>
@@ -453,7 +445,7 @@ export function FlowBuilder({ editingFlow, selectedNumberId, onNumberChange, onS
                                                         </span>
                                                     ))
                                                 )}
-                                                <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                                                <HugeiconsIcon icon={ChevronsUpDown} className="ml-auto h-4 w-4 shrink-0 opacity-50" />
                                             </div>
                                         )
                                     }}
@@ -553,7 +545,7 @@ export function FlowBuilder({ editingFlow, selectedNumberId, onNumberChange, onS
                                     className="rounded-full text-xs"
                                     onClick={() => addField("text")}
                                 >
-                                    <Plus className="mr-1 h-3 w-3" />
+                                    <HugeiconsIcon icon={Plus} className="mr-1 h-3 w-3" />
                                     Add
                                 </Button>
                             </div>
@@ -574,7 +566,7 @@ export function FlowBuilder({ editingFlow, selectedNumberId, onNumberChange, onS
                                             className="rounded-full text-xs"
                                             onClick={() => addField("text")}
                                         >
-                                            <Plus className="mr-1 h-3 w-3" />
+                                            <HugeiconsIcon icon={Plus} className="mr-1 h-3 w-3" />
                                             Add your first field
                                         </Button>
                                     </motion.div>
@@ -624,7 +616,7 @@ export function FlowBuilder({ editingFlow, selectedNumberId, onNumberChange, onS
                                                                 onClick={() => removeField(index)}
                                                                 className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/40 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
                                                             >
-                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
                                                             </button>
                                                         </div>
                                                     </div>

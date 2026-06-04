@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Upload, FileText, X, CheckCircle2, Loader2, AlertTriangle } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Upload01Icon as Upload, File01Icon as FileText, Cancel01Icon as X, CheckmarkCircle02Icon as CheckCircle2, Loading03Icon as Loader2, Alert02Icon as AlertTriangle } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
 import { uploadService } from "@/app/lib/upload/upload-service"
@@ -111,7 +112,7 @@ export function DocumentUpload({
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-brand-deep/5 dark:bg-white/10 rounded-2xl">
-                                        <FileText className="w-10 h-10 text-brand-gold" />
+                                        <HugeiconsIcon icon={FileText} className="w-10 h-10 text-brand-gold" />
                                     </div>
                                 )}
                                 {!isUploading && (
@@ -119,7 +120,7 @@ export function DocumentUpload({
                                         onClick={removeFile}
                                         className="absolute -top-2 -right-2 p-1.5 bg-rose-500 text-white rounded-full shadow-lg hover:bg-rose-600 transition-colors"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <HugeiconsIcon icon={X} className="w-4 h-4" />
                                     </button>
                                 )}
                             </div>
@@ -133,19 +134,19 @@ export function DocumentUpload({
                             </div>
                             {isUploading && (
                                 <div className="flex items-center justify-center gap-2 text-brand-gold font-medium text-xs">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
                                     Uploading...
                                 </div>
                             )}
                             {uploadedUrl && (
                                 <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-medium text-xs">
-                                    <CheckCircle2 className="w-4 h-4" />
+                                    <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4" />
                                     Uploaded Successfully
                                 </div>
                             )}
                             {uploadError && (
                                 <div className="flex items-center justify-center gap-2 text-red-500 font-medium text-xs">
-                                    <AlertTriangle className="w-4 h-4" />
+                                    <HugeiconsIcon icon={AlertTriangle} className="w-4 h-4" />
                                     {uploadError}
                                 </div>
                             )}
@@ -153,7 +154,7 @@ export function DocumentUpload({
                     ) : (
                         <>
                             <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand-gold/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                                <Upload className="w-8 h-8 text-brand-gold" />
+                                <HugeiconsIcon icon={Upload} className="w-8 h-8 text-brand-gold" />
                             </div>
                             <div className="space-y-1">
                                 <h4 className="text-lg font-serif text-brand-deep dark:text-brand-cream">{label}</h4>

@@ -5,7 +5,8 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Switch } from "@/app/components/ui/switch"
-import { Check, Palette, Smartphone, RefreshCw, Upload, Type, Layout, Sun, Moon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check, PaintBoardIcon as Palette, SmartPhone01Icon as Smartphone, RefreshIcon as RefreshCw, Upload01Icon as Upload, TextFontIcon as Type, Layout01Icon as Layout, Sun01Icon as Sun, MoonIcon as Moon } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { useStorefrontTheme, useUpdateStorefrontTheme, type StorefrontThemeData } from "@/app/domains/storefront/hooks/useStorefrontTheme"
 import { uploadService } from "@/app/lib/upload/upload-service"
@@ -103,7 +104,7 @@ export default function StorefrontCustomization() {
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
                         <div className="p-2 rounded-lg bg-brand-green/10 text-brand-green dark:bg-emerald-400/10 dark:text-emerald-400">
-                            <Palette className="w-5 h-5" />
+                            <HugeiconsIcon icon={Palette} className="w-5 h-5" />
                         </div>
                         <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Brand Identity</h2>
                     </div>
@@ -173,7 +174,7 @@ export default function StorefrontCustomization() {
                                                 logoUploading ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                                             )}
                                         >
-                                            <Upload className="w-4 h-4" />
+                                            <HugeiconsIcon icon={Upload} className="w-4 h-4" />
                                             {logoUploading ? 'Uploading…' : 'Choose File'}
                                         </label>
                                         <span className="text-brand-deep/40 dark:text-brand-cream/40 text-sm self-center">or</span>
@@ -214,7 +215,7 @@ export default function StorefrontCustomization() {
                                     >
                                         {primaryHex?.toLowerCase() === color.hex.toLowerCase() && (
                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                <Check className="w-5 h-5 text-white stroke-[3px]" />
+                                                <HugeiconsIcon icon={Check} className="w-5 h-5 text-white stroke-[3px]" />
                                             </div>
                                         )}
                                     </Button>
@@ -228,7 +229,7 @@ export default function StorefrontCustomization() {
                 {/* Layout & mode */}
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
-                        <Layout className="w-5 h-5 text-brand-green dark:text-emerald-400" />
+                        <HugeiconsIcon icon={Layout} className="w-5 h-5 text-brand-green dark:text-emerald-400" />
                         <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Layout & Mode</h2>
                     </div>
                     <GlassCard className="p-6 space-y-6">
@@ -250,7 +251,7 @@ export default function StorefrontCustomization() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40 flex items-center gap-2">
-                                <Sun className="w-3.5 h-3.5" /> <Moon className="w-3.5 h-3.5" /> Theme mode
+                                <HugeiconsIcon icon={Sun} className="w-3.5 h-3.5" /> <HugeiconsIcon icon={Moon} className="w-3.5 h-3.5" /> Theme mode
                             </label>
                             <div className="flex flex-wrap gap-2">
                                 {THEME_MODES.map((mode) => (
@@ -272,7 +273,7 @@ export default function StorefrontCustomization() {
                 {/* Colors */}
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
-                        <Palette className="w-5 h-5 text-brand-green dark:text-emerald-400" />
+                        <HugeiconsIcon icon={Palette} className="w-5 h-5 text-brand-green dark:text-emerald-400" />
                         <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Colors</h2>
                     </div>
                     <GlassCard className="p-6 space-y-6">
@@ -336,7 +337,7 @@ export default function StorefrontCustomization() {
                 {/* Fonts */}
                 <section className="space-y-4">
                     <div className="flex items-center gap-2">
-                        <Type className="w-5 h-5 text-brand-green dark:text-emerald-400" />
+                        <HugeiconsIcon icon={Type} className="w-5 h-5 text-brand-green dark:text-emerald-400" />
                         <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">Fonts</h2>
                     </div>
                     <GlassCard className="p-6 space-y-4">
@@ -517,7 +518,7 @@ export default function StorefrontCustomization() {
             <div className="w-full lg:w-[380px] shrink-0 lg:sticky lg:top-8 lg:self-start order-first lg:order-none pb-24 lg:pb-0">
                 <div className="flex items-center gap-2 mb-4 justify-center lg:justify-start">
                     <div className="p-2 rounded-lg bg-brand-gold/10 text-brand-gold">
-                        <Smartphone className="w-5 h-5" />
+                        <HugeiconsIcon icon={Smartphone} className="w-5 h-5" />
                     </div>
                     <h2 className="font-serif text-lg text-brand-deep dark:text-brand-cream">Live Preview</h2>
                 </div>

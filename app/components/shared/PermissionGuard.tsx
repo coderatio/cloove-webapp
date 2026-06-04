@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { ShieldOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SecurityBlockIcon as ShieldOff } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { cn } from "@/app/lib/utils"
@@ -44,7 +45,7 @@ function AccessDenied({ permission }: { permission?: string }) {
                         )}
                     >
                         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-brand-gold/25 bg-brand-gold/10 shadow-[0_8px_32px_rgba(212,175,55,0.12)] dark:bg-brand-gold/5">
-                            <ShieldOff
+                            <HugeiconsIcon icon={ShieldOff}
                                 className="h-8 w-8 text-brand-gold dark:text-brand-gold"
                                 strokeWidth={1.5}
                                 aria-hidden

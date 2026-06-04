@@ -8,7 +8,8 @@ import { VerifyStep } from "@/app/domains/auth/components/VerifyStep"
 import { VerifyOtpStep } from "@/app/domains/auth/components/VerifyOtpStep"
 import { SetupPasswordStep } from "@/app/domains/auth/components/SetupPasswordStep"
 import { SuccessStep } from "@/app/domains/auth/components/SuccessStep"
-import { Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { useAuth } from "@/app/components/providers/auth-provider"
 
 export function LoginFlowContainer() {
@@ -35,7 +36,7 @@ export function LoginFlowWrapper() {
     return (
         <Suspense fallback={
             <div className="flex h-64 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] text-white/40">
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" />
             </div>
         }>
             <LoginFlowContainer />

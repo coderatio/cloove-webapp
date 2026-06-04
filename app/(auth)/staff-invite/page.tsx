@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Image from "next/image"
-import { Loader2, CheckCircle2, ArrowRight, ShieldCheck, Briefcase, Mail, Info, LogOut, UserCircle, Lock, Eye, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, CheckmarkCircle02Icon as CheckCircle2, ArrowRight01Icon as ArrowRight, SecurityCheckIcon as ShieldCheck, Briefcase01Icon as Briefcase, Mail01Icon as Mail, InformationCircleIcon as Info, Logout01Icon as LogOut, UserCircleIcon as UserCircle, LockIcon as Lock, EyeIcon as Eye, EyeOffIcon as EyeOff } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { apiClient } from "@/app/lib/api-client"
@@ -206,7 +207,7 @@ export default function StaffInvitePage() {
                 <div className="relative h-12 w-12">
                     <Image src="/images/logo-white.png" alt="Cloove" fill className="object-contain opacity-80" />
                 </div>
-                <Loader2 className="h-5 w-5 animate-spin text-emerald-300" />
+                <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin text-emerald-300" />
                 <p className="text-sm font-medium uppercase tracking-widest text-white/40">
                     Verifying secure link...
                 </p>
@@ -237,7 +238,7 @@ export default function StaffInvitePage() {
                                         </h1>
                                         {inviteData?.invitedEmail && (
                                             <div className="flex items-center justify-center gap-2 text-sm text-white/45">
-                                                <Mail className="w-4 h-4" />
+                                                <HugeiconsIcon icon={Mail} className="w-4 h-4" />
                                                 <span>Invitation sent to {inviteData.invitedEmail}</span>
                                             </div>
                                         )}
@@ -246,14 +247,14 @@ export default function StaffInvitePage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                                         <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
                                             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/20">
-                                                <ShieldCheck className="w-5 h-5 text-emerald-300" />
+                                                <HugeiconsIcon icon={ShieldCheck} className="w-5 h-5 text-emerald-300" />
                                             </div>
                                             <h3 className="mb-1 text-sm font-semibold text-white">Secure access</h3>
                                             <p className="text-xs leading-relaxed text-white/45">Your access is tied to this invitation and business.</p>
                                         </div>
                                         <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
                                             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/20">
-                                                <Briefcase className="w-5 h-5 text-emerald-300" />
+                                                <HugeiconsIcon icon={Briefcase} className="w-5 h-5 text-emerald-300" />
                                             </div>
                                             <h3 className="mb-1 text-sm font-semibold text-white">Business workspace</h3>
                                             <p className="text-xs leading-relaxed text-white/45">After accepting, you&apos;ll continue into the workspace.</p>
@@ -267,13 +268,13 @@ export default function StaffInvitePage() {
                                             className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white disabled:opacity-45"
                                         >
                                             {isAccepting ? (
-                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                                <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" />
                                             ) : inviteData?.hasPassword === false ? (
-                                                <>Set Up Account &amp; Join <ArrowRight className="w-5 h-5" /></>
+                                                <>Set Up Account &amp; Join <HugeiconsIcon icon={ArrowRight} className="w-5 h-5" /></>
                                             ) : !isLoggedIn ? (
-                                                <>Log In &amp; Accept <ArrowRight className="w-5 h-5" /></>
+                                                <>Log In &amp; Accept <HugeiconsIcon icon={ArrowRight} className="w-5 h-5" /></>
                                             ) : (
-                                                <>Accept &amp; Join Team <ArrowRight className="w-5 h-5" /></>
+                                                <>Accept &amp; Join Team <HugeiconsIcon icon={ArrowRight} className="w-5 h-5" /></>
                                             )}
                                         </Button>
                                         <p className="text-center text-[10px] font-semibold uppercase tracking-widest text-white/25">
@@ -290,7 +291,7 @@ export default function StaffInvitePage() {
                                 <div className="space-y-8 relative z-10">
                                     <div className="text-center space-y-3">
                                         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                                            <Lock className="h-6 w-6 text-emerald-300" />
+                                            <HugeiconsIcon icon={Lock} className="h-6 w-6 text-emerald-300" />
                                         </div>
                                         <h1 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
                                             Create your password
@@ -320,7 +321,7 @@ export default function StaffInvitePage() {
                                                     onClick={() => setShowPassword(!showPassword)}
                                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70"
                                                 >
-                                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                    {showPassword ? <HugeiconsIcon icon={EyeOff} className="w-5 h-5" /> : <HugeiconsIcon icon={Eye} className="w-5 h-5" />}
                                                 </button>
                                             </div>
 
@@ -368,7 +369,7 @@ export default function StaffInvitePage() {
                                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70"
                                                 >
-                                                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                    {showConfirmPassword ? <HugeiconsIcon icon={EyeOff} className="w-5 h-5" /> : <HugeiconsIcon icon={Eye} className="w-5 h-5" />}
                                                 </button>
                                             </div>
                                             {confirmPassword.length > 0 && !passwordsMatch && (
@@ -386,9 +387,9 @@ export default function StaffInvitePage() {
                                             className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
                                         >
                                             {isSettingUp ? (
-                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                                <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" />
                                             ) : (
-                                                <>Create Password &amp; Join <ArrowRight className="w-5 h-5" /></>
+                                                <>Create Password &amp; Join <HugeiconsIcon icon={ArrowRight} className="w-5 h-5" /></>
                                             )}
                                         </Button>
                                         <button
@@ -406,7 +407,7 @@ export default function StaffInvitePage() {
                         <div className="w-full">
                             <GlassCard className="space-y-6 rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm md:p-8">
                                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                                    <UserCircle className="h-6 w-6 text-emerald-300" />
+                                    <HugeiconsIcon icon={UserCircle} className="h-6 w-6 text-emerald-300" />
                                 </div>
 
                                 <div className="space-y-3">
@@ -425,7 +426,7 @@ export default function StaffInvitePage() {
                                         onClick={handleSwitchAccount}
                                         className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white"
                                     >
-                                        <LogOut className="w-5 h-5" />
+                                        <HugeiconsIcon icon={LogOut} className="w-5 h-5" />
                                         Switch Account &amp; Accept
                                     </Button>
                                     <Button
@@ -448,7 +449,7 @@ export default function StaffInvitePage() {
                             <GlassCard className="relative overflow-hidden rounded-[28px] border-white/10 bg-white/[0.045] p-8 shadow-sm">
                                 <div className="relative z-10 space-y-8">
                                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-300/10">
-                                        <CheckCircle2 className="h-7 w-7 text-emerald-300" />
+                                        <HugeiconsIcon icon={CheckCircle2} className="h-7 w-7 text-emerald-300" />
                                     </div>
 
                                     <div className="space-y-3">
@@ -463,7 +464,7 @@ export default function StaffInvitePage() {
                                         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-white hover:bg-primary/92 hover:text-white"
                                     >
                                         Proceed to Dashboard
-                                        <ArrowRight className="h-4 w-4" />
+                                        <HugeiconsIcon icon={ArrowRight} className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </GlassCard>
@@ -472,7 +473,7 @@ export default function StaffInvitePage() {
                         <div className="w-full">
                             <GlassCard className="space-y-6 rounded-[28px] border-white/10 bg-white/[0.045] p-8 text-center shadow-sm">
                                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-red-400/10 bg-red-400/10">
-                                    <Info className="h-6 w-6 text-red-300" />
+                                    <HugeiconsIcon icon={Info} className="h-6 w-6 text-red-300" />
                                 </div>
                                 <div className="space-y-3">
                                     <h1 className="text-2xl font-semibold tracking-tight text-white">Invitation expired</h1>

@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo } from "react"
-import { Lock, Shield, CheckCircle2, Eye, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { LockIcon as Lock, SecurityIcon as Shield, CheckmarkCircle02Icon as CheckCircle2, EyeIcon as Eye, EyeOffIcon as EyeOff } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { LoginBackButton } from "./LoginBackButton"
@@ -70,7 +71,7 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
 
                 <div className="mb-6 pt-10 text-center">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-emerald-200">
-                        <Shield className="w-6 h-6" />
+                        <HugeiconsIcon icon={Shield} className="w-6 h-6" />
                     </div>
                     <h2 className="mb-2 text-2xl font-semibold tracking-tight text-white">Secure your account</h2>
                     <p className="text-xs font-semibold uppercase tracking-widest text-white/40">
@@ -86,7 +87,7 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                             </label>
                             <div className="relative group">
                                 <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                    <Lock className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Lock} className="w-4 h-4" />
                                 </div>
                                 <input
                                     type={state.showPassword ? "text" : "password"}
@@ -104,7 +105,7 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                                     onClick={() => actions.setShowPassword(!state.showPassword)}
                                     className="absolute inset-y-0 right-4 flex cursor-pointer items-center text-white/35 hover:text-white/70"
                                 >
-                                    {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    {state.showPassword ? <HugeiconsIcon icon={EyeOff} className="w-4 h-4" /> : <HugeiconsIcon icon={Eye} className="w-4 h-4" />}
                                 </button>
                             </div>
                             <PasswordStrengthBar password={state.newPassword} />
@@ -116,7 +117,7 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                             </label>
                             <div className="relative group">
                                 <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                    <CheckCircle2 className="w-4 h-4" />
+                                    <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4" />
                                 </div>
                                 <input
                                     type={state.showPassword ? "text" : "password"}
@@ -132,7 +133,7 @@ export function SetupPasswordStep({ flow }: SetupPasswordStepProps) {
                                     onClick={() => actions.setShowPassword(!state.showPassword)}
                                     className="absolute inset-y-0 right-4 flex cursor-pointer items-center text-white/35 hover:text-white/70"
                                 >
-                                    {state.showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    {state.showPassword ? <HugeiconsIcon icon={EyeOff} className="w-4 h-4" /> : <HugeiconsIcon icon={Eye} className="w-4 h-4" />}
                                 </button>
                             </div>
                             {state.confirmPassword && !passwordsMatch ? (

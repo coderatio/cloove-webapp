@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Phone, Banknote, Bell, FileText, Clock, Download, Send, Link2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, CallIcon as Phone, BanknoteIcon as Banknote, BellIcon as Bell, File01Icon as FileText, Clock01Icon as Clock, Download01Icon as Download, SentIcon as Send, Link02Icon as Link2 } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -93,7 +94,7 @@ export function DebtDetailDrawer({
                             <p className="text-lg font-semibold text-foreground">{debt.customerName}</p>
                             {debt.customerPhone && (
                                 <a href={`tel:${debt.customerPhone}`} className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
-                                    <Phone className="w-4 h-4" />
+                                    <HugeiconsIcon icon={Phone} className="w-4 h-4" />
                                     {debt.customerPhone}
                                 </a>
                             )}
@@ -126,7 +127,7 @@ export function DebtDetailDrawer({
                                     ? "bg-rose-500/5 text-rose-500 font-medium"
                                     : "text-muted-foreground"
                             )}>
-                                <Clock className={cn("w-4 h-4 shrink-0", isOverdue ? "text-rose-500" : "text-muted-foreground/70")} />
+                                <HugeiconsIcon icon={Clock} className={cn("w-4 h-4 shrink-0", isOverdue ? "text-rose-500" : "text-muted-foreground/70")} />
                                 Due {formatDate(debt.dueAt, "MMM d, yyyy")}
                                 {isOverdue && " — Overdue"}
                             </div>
@@ -146,9 +147,9 @@ export function DebtDetailDrawer({
                                         className="h-12 flex-1 rounded-2xl"
                                     >
                                         {invoiceAction === "generate" ? (
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                            <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin mr-2" />
                                         ) : (
-                                            <Download className="w-4 h-4 mr-2" />
+                                            <HugeiconsIcon icon={Download} className="w-4 h-4 mr-2" />
                                         )}
                                         {hasInvoice ? "View Invoice" : "Generate Invoice"}
                                     </Button>
@@ -160,9 +161,9 @@ export function DebtDetailDrawer({
                                             className="h-12 flex-1 rounded-2xl"
                                         >
                                             {invoiceAction === "send" ? (
-                                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                                <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin mr-2" />
                                             ) : (
-                                                <Send className="w-4 h-4 mr-2" />
+                                                <HugeiconsIcon icon={Send} className="w-4 h-4 mr-2" />
                                             )}
                                             Send to Customer
                                         </Button>
@@ -178,12 +179,12 @@ export function DebtDetailDrawer({
                             </p>
                             {isLoading ? (
                                 <div className="flex items-center justify-center py-8">
-                                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                    <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin text-muted-foreground" />
                                 </div>
                             ) : !detail?.repayments?.length ? (
                                 <GlassCard className="p-8 text-center space-y-3 rounded-3xl before:rounded-3xl">
                                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                                        <Banknote className="h-6 w-6 text-muted-foreground/60" />
+                                        <HugeiconsIcon icon={Banknote} className="h-6 w-6 text-muted-foreground/60" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-muted-foreground">
@@ -199,7 +200,7 @@ export function DebtDetailDrawer({
                                     <GlassCard key={repayment.id} className="p-4 flex items-center justify-between rounded-3xl before:rounded-3xl">
                                         <div className="flex items-center gap-3">
                                             <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                                                <Banknote className="w-4 h-4 text-emerald-500" />
+                                                <HugeiconsIcon icon={Banknote} className="w-4 h-4 text-emerald-500" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium text-foreground">Payment Received</p>
@@ -228,7 +229,7 @@ export function DebtDetailDrawer({
                                 }}
                                 className="h-14 w-full rounded-2xl font-semibold shadow-sm"
                             >
-                                <Banknote className="w-5 h-5 mr-2" />
+                                <HugeiconsIcon icon={Banknote} className="w-5 h-5 mr-2" />
                                 Record Payment
                             </Button>
                             {onGeneratePaymentLink && (
@@ -242,9 +243,9 @@ export function DebtDetailDrawer({
                                     className="h-12 w-full rounded-2xl border-emerald-500/25 bg-emerald-500/5 text-emerald-700 hover:bg-emerald-500/10 dark:border-emerald-400/25 dark:bg-emerald-400/10 dark:text-emerald-200"
                                 >
                                     {isGeneratingPaymentLink ? (
-                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                        <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin mr-2" />
                                     ) : (
-                                        <Link2 className="w-4 h-4 mr-2" />
+                                        <HugeiconsIcon icon={Link2} className="w-4 h-4 mr-2" />
                                     )}
                                     Send Payment Link
                                 </Button>
@@ -256,9 +257,9 @@ export function DebtDetailDrawer({
                                 className="h-12 w-full rounded-2xl"
                             >
                                 {isSendingReminder ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                    <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin mr-2" />
                                 ) : (
-                                    <Bell className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={Bell} className="w-4 h-4 mr-2" />
                                 )}
                                 Send Reminder
                             </Button>

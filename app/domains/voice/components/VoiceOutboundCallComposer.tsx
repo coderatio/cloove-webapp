@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/app/components/ui/textarea"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { formatPhoneNumber } from "@/app/lib/utils"
-import { Bookmark, Info, Loader2, Phone, PhoneCall, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Bookmark01Icon as Bookmark, InformationCircleIcon as Info, Loading03Icon as Loader2, CallIcon as Phone, CallingIcon as PhoneCall, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import type { AiAgentItem, VoiceNumberItem } from "@/app/domains/voice/hooks/useVoice"
 
 const USE_NUMBER_AGENT_VALUE = "__inherit__"
@@ -80,7 +81,7 @@ export function VoiceOutboundCallComposer({
             {!hasLines ? (
                 <div className="rounded-3xl border border-dashed border-black/10 px-5 py-10 text-center dark:border-white/10">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400">
-                        <Phone className="h-5 w-5" />
+                        <HugeiconsIcon icon={Phone} className="h-5 w-5" />
                     </div>
                     <p className="mt-4 text-sm font-medium text-foreground">
                         No calling line connected
@@ -162,7 +163,7 @@ export function VoiceOutboundCallComposer({
                                 <SelectContent className="rounded-2xl">
                                     <SelectItem value={USE_NUMBER_AGENT_VALUE}>
                                         <span className="flex items-center gap-2">
-                                            <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                                            <HugeiconsIcon icon={Sparkles} className="h-3.5 w-3.5 text-muted-foreground" />
                                             Use the number's agent
                                         </span>
                                     </SelectItem>
@@ -183,7 +184,7 @@ export function VoiceOutboundCallComposer({
 
                     <div className="space-y-2.5">
                         <div className="flex items-center gap-1.5">
-                            <Bookmark className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                            <HugeiconsIcon icon={Bookmark} className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-slate-400">
                                 Quick templates
                             </p>
@@ -221,7 +222,7 @@ export function VoiceOutboundCallComposer({
                     </Field>
 
                     <div className="flex items-start gap-2.5 rounded-2xl border border-black/5 bg-slate-50/60 px-4 py-3 text-xs leading-5 text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
-                        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                        <HugeiconsIcon icon={Info} className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
                         <span>
                             The AI will introduce itself, handle the conversation using your configured
                             voice settings, and transfer to staff if needed.
@@ -237,9 +238,9 @@ export function VoiceOutboundCallComposer({
                     className="h-11 rounded-full bg-brand-deep px-6 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 disabled:opacity-50 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                 >
                     {isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                        <PhoneCall className="mr-2 h-4 w-4" />
+                        <HugeiconsIcon icon={PhoneCall} className="mr-2 h-4 w-4" />
                     )}
                     Queue call
                 </Button>
@@ -252,7 +253,7 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Phone; title: string
     return (
         <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
-                <Icon className="h-5 w-5" />
+                <HugeiconsIcon icon={Icon} className="h-5 w-5" />
             </div>
             <h2 className="text-lg font-semibold">{title}</h2>
         </div>

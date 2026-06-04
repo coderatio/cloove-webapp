@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Switch } from "@/app/components/ui/switch"
 import { cn, formatPhoneNumber } from "@/app/lib/utils"
-import { Phone, PhoneForwarded, Plus, UserPlus } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CallIcon as Phone, CallOutgoing02Icon as PhoneForwarded, PlusSignIcon as Plus, UserAdd01Icon as UserPlus } from "@hugeicons/core-free-icons"
 import type { VoiceTransferTarget } from "@/app/domains/voice/hooks/useVoice"
 
 const TRANSFER_ROLE_OPTIONS = [
@@ -166,7 +167,7 @@ export function VoiceTransferTargetsForm({
                             disabled={isCreatePending || !form.label.trim() || !form.phoneNumber.trim()}
                             className="h-10 rounded-full bg-brand-deep px-5 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                         >
-                            <Plus className="mr-1.5 h-4 w-4" />
+                            <HugeiconsIcon icon={Plus} className="mr-1.5 h-4 w-4" />
                             Add target
                         </Button>
                     </div>
@@ -273,7 +274,7 @@ function EmptyState() {
     return (
         <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/40 px-6 py-10 text-center dark:border-white/10 dark:bg-white/[0.02]">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400">
-                <PhoneForwarded className="h-5 w-5" />
+                <HugeiconsIcon icon={PhoneForwarded} className="h-5 w-5" />
             </div>
             <p className="mt-4 text-sm font-medium text-slate-800 dark:text-slate-100">
                 No transfer targets yet
@@ -308,7 +309,7 @@ function SectionHeader({
     return (
         <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
-                <Icon className="h-5 w-5" />
+                <HugeiconsIcon icon={Icon} className="h-5 w-5" />
             </div>
             <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>

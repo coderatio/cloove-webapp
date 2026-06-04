@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
-import { Loader2, Eye, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, EyeIcon as Eye, EyeOffIcon as EyeOff } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { useManualConnectWhatsAppNumber, type WhatsAppNumber } from "../hooks/useWhatsAppSettings"
 
@@ -222,7 +223,7 @@ export function ConnectWhatsAppForm({
               onClick={() => setShowToken(!showToken)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
-              {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showToken ? <HugeiconsIcon icon={EyeOff} className="w-4 h-4" /> : <HugeiconsIcon icon={Eye} className="w-4 h-4" />}
             </button>
           </div>
         </FormField>
@@ -244,7 +245,7 @@ export function ConnectWhatsAppForm({
               onClick={() => setShowAppSecret(!showAppSecret)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             >
-              {showAppSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showAppSecret ? <HugeiconsIcon icon={EyeOff} className="w-4 h-4" /> : <HugeiconsIcon icon={Eye} className="w-4 h-4" />}
             </button>
           </div>
         </FormField>
@@ -284,7 +285,7 @@ export function ConnectWhatsAppForm({
         >
           {connectMutation.isPending ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <HugeiconsIcon icon={Loader2} className="w-4 h-4 mr-2 animate-spin" />
               {isUpdateMode ? "Updating..." : "Connecting..."}
             </>
           ) : (

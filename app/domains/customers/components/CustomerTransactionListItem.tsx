@@ -1,7 +1,8 @@
 "use client"
 
 import React from "react"
-import { ShoppingBag, ChevronRight, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { ShoppingBag01Icon as ShoppingBag, ChevronRightIcon as ChevronRight, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, CancelCircleIcon as XCircle, AlertCircleIcon as AlertCircle } from "@hugeicons/core-free-icons"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
@@ -15,7 +16,7 @@ interface CustomerTransactionListItemProps {
     onClick: () => void
 }
 
-const statusColorMap: Record<string, { label: string, className: string, icon: React.ComponentType<{ className?: string }> }> = {
+const statusColorMap: Record<string, { label: string, className: string, icon: IconSvgElement }> = {
     COMPLETED: {
         label: 'Completed',
         className: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-400/10",
@@ -53,7 +54,7 @@ export function CustomerTransactionListItem({
             className="w-full h-auto flex items-center gap-4 p-4 rounded-3xl bg-white dark:bg-brand-deep/40 border border-brand-deep/5 dark:border-white/5 shadow-sm group hover:border-brand-gold/20 dark:hover:border-brand-gold/20 hover:bg-white dark:hover:bg-brand-deep/60 transition-all text-left justify-start"
         >
             <div className="h-10 w-10 shrink-0 rounded-full bg-brand-gold/5 dark:bg-brand-gold/10 flex items-center justify-center text-brand-gold group-hover:bg-brand-gold-800 group-hover:text-white transition-all">
-                <ShoppingBag className="w-5 h-5" />
+                <HugeiconsIcon icon={ShoppingBag} className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-0.5">
@@ -72,12 +73,12 @@ export function CustomerTransactionListItem({
                         "text-[8px] uppercase tracking-tighter h-4 px-1.5 border-none",
                         config.className
                     )}>
-                        <StatusIcon className="w-2 h-2 mr-1" />
+                        <HugeiconsIcon icon={StatusIcon} className="w-2 h-2 mr-1" />
                         {config.label}
                     </Badge>
                 </div>
             </div>
-            <ChevronRight className="w-4 h-4 shrink-0 text-brand-accent/20 dark:text-brand-cream/20 group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all" />
+            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 shrink-0 text-brand-accent/20 dark:text-brand-cream/20 group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all" />
         </Button>
     )
 }

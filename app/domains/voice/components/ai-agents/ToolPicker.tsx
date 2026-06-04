@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ChevronDown, ChevronRight, ListChecks, Search, Wrench } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronDownIcon as ChevronDown, ChevronRightIcon as ChevronRight, CheckListIcon as ListChecks, Search01Icon as Search, Wrench01Icon as Wrench } from "@hugeicons/core-free-icons"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
 import { Switch } from "@/app/components/ui/switch"
@@ -92,7 +93,7 @@ export function ToolPicker({ selected, onChange }: ToolPickerProps) {
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex min-w-0 items-start gap-3">
                         <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
-                            <Wrench className="h-4 w-4" />
+                            <HugeiconsIcon icon={Wrench} className="h-4 w-4" />
                         </span>
                         <div className="min-w-0">
                             <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
@@ -112,7 +113,7 @@ export function ToolPicker({ selected, onChange }: ToolPickerProps) {
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Search tools..."
                         value={query}
@@ -123,7 +124,7 @@ export function ToolPicker({ selected, onChange }: ToolPickerProps) {
                 {(data?.presets.length ?? 0) > 0 && (
                     <Select onValueChange={applyPreset}>
                         <SelectTrigger className="w-full rounded-2xl border-brand-deep/8 bg-white/70 text-brand-deep shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-brand-cream sm:w-72 [&>span]:flex-1 [&>span]:text-left">
-                            <ListChecks className="mr-2 h-4 w-4 shrink-0" />
+                            <HugeiconsIcon icon={ListChecks} className="mr-2 h-4 w-4 shrink-0" />
                             <SelectValue placeholder="Apply preset" />
                         </SelectTrigger>
                         <SelectContent className="rounded-2xl">
@@ -160,9 +161,9 @@ export function ToolPicker({ selected, onChange }: ToolPickerProps) {
                                 >
                                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/80 text-brand-deep/70 dark:bg-white/5 dark:text-brand-cream/70">
                                         {expanded ? (
-                                            <ChevronDown className="h-4 w-4" />
+                                            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4" />
                                         ) : (
-                                            <ChevronRight className="h-4 w-4" />
+                                            <HugeiconsIcon icon={ChevronRight} className="h-4 w-4" />
                                         )}
                                     </span>
                                     <span className="min-w-0">

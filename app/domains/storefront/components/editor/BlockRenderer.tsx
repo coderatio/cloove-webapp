@@ -1,7 +1,8 @@
 "use client"
 
 import type { BlockSection, FaqItem, TestimonialItem, FeatureItem, CtaButton, SectionBackground, GridLayoutColumn, GridLayoutStyle } from "./block-types"
-import { HelpCircle, ChevronDown, Quote, Star, Image as ImageIcon, ShoppingBag, Tag, Megaphone, Plus } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { HelpCircleIcon as HelpCircle, ChevronDownIcon as ChevronDown, QuoteDownIcon as Quote, StarIcon as Star, Image01Icon as ImageIcon, ShoppingBag01Icon as ShoppingBag, Tag01Icon as Tag, Megaphone01Icon as Megaphone, PlusSignIcon as Plus } from "@hugeicons/core-free-icons"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -440,11 +441,11 @@ function FaqPreview({ data, sectionColor }: { data: Record<string, unknown>; sec
             style={{ borderColor: "color-mix(in srgb, var(--sf-text) 10%, transparent)" }}
           >
             <div className="flex items-center gap-2">
-              <HelpCircle className="w-4 h-4 shrink-0 opacity-40" />
+              <HugeiconsIcon icon={HelpCircle} className="w-4 h-4 shrink-0 opacity-40" />
               <span className="font-medium text-sm" style={{ fontFamily: "var(--sf-font-body)" }}>
                 {item.question || "Question…"}
               </span>
-              <ChevronDown className="w-4 h-4 ml-auto opacity-30" />
+              <HugeiconsIcon icon={ChevronDown} className="w-4 h-4 ml-auto opacity-30" />
             </div>
             {item.answer && (
               <p className="text-xs mt-2 pl-6 opacity-60">{item.answer}</p>
@@ -483,7 +484,7 @@ function TestimonialsPreview({ data, sectionColor }: { data: Record<string, unkn
               backgroundColor: "color-mix(in srgb, var(--sf-background) 95%, var(--sf-text))",
             }}
           >
-            <Quote className="w-5 h-5 mb-2 opacity-20" />
+            <HugeiconsIcon icon={Quote} className="w-5 h-5 mb-2 opacity-20" />
             <p className="text-sm italic mb-3" style={{ fontFamily: "var(--sf-font-body)" }}>
               {item.quote || "Customer quote…"}
             </p>
@@ -518,7 +519,7 @@ function GridFeaturesPreview({ data, sectionColor }: { data: Record<string, unkn
         {items.map((item, i) => (
           <div key={i} className="text-center">
             <div className="w-10 h-10 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: "var(--sf-secondary)", color: "var(--sf-primary)" }}>
-              <Star className="w-5 h-5" />
+              <HugeiconsIcon icon={Star} className="w-5 h-5" />
             </div>
             <h3 className="text-sm font-semibold mb-1" style={{ fontFamily: "var(--sf-font-heading)" }}>
               {item.title || "Feature"}
@@ -579,7 +580,7 @@ function ImageGalleryPreview({ data, sectionColor }: { data: Record<string, unkn
         <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
           {[1, 2, 3].map((i) => (
             <div key={i} className="aspect-square rounded-2xl border-2 border-dashed flex items-center justify-center" style={{ borderColor: "color-mix(in srgb, var(--sf-text) 15%, transparent)" }}>
-              <ImageIcon className="w-8 h-8 opacity-20" />
+              <HugeiconsIcon icon={ImageIcon} className="w-8 h-8 opacity-20" />
             </div>
           ))}
         </div>
@@ -620,7 +621,7 @@ function ProductTile({
           <img src={imgUrl} alt={product.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <ShoppingBag className="w-8 h-8 opacity-30" />
+            <HugeiconsIcon icon={ShoppingBag} className="w-8 h-8 opacity-30" />
           </div>
         )}
       </div>
@@ -670,7 +671,7 @@ function ProductListingPreview({
         <div className={cn("grid gap-3", gridColsClass)}>
           {Array.from({ length: columns }).map((_, i) => (
             <div key={i} className="aspect-square rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-              <ShoppingBag className="w-8 h-8 opacity-30" />
+              <HugeiconsIcon icon={ShoppingBag} className="w-8 h-8 opacity-30" />
             </div>
           ))}
         </div>
@@ -731,7 +732,7 @@ function FeaturedProductsPreview({
         <div className={cn("grid gap-3", gridColsClass)}>
           {Array.from({ length: columns }).map((_, i) => (
             <div key={i} className="aspect-square rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-              <Star className="w-6 h-6 opacity-30" />
+              <HugeiconsIcon icon={Star} className="w-6 h-6 opacity-30" />
             </div>
           ))}
         </div>
@@ -794,7 +795,7 @@ function OnSalePreview({
         <div className={cn("grid gap-3", gridColsClass)}>
           {Array.from({ length: columns }).map((_, i) => (
             <div key={i} className="rounded-xl border border-brand-deep/10 dark:border-white/10 bg-brand-deep/5 dark:bg-white/5 aspect-square flex items-center justify-center">
-              <Tag className="w-6 h-6 opacity-30" />
+              <HugeiconsIcon icon={Tag} className="w-6 h-6 opacity-30" />
             </div>
           ))}
         </div>
@@ -869,7 +870,7 @@ function PlaceholderPreview({ type }: { type: string }) {
 
   return (
     <div className="px-6 py-12 flex flex-col items-center justify-center opacity-30">
-      {icons[type] || <ShoppingBag className="w-8 h-8" />}
+      {icons[type] || <HugeiconsIcon icon={ShoppingBag} className="w-8 h-8" />}
       <span className="text-xs mt-2 font-medium capitalize">{type.replace(/_/g, " ")}</span>
       <span className="text-[10px] mt-1">Data-driven block — configured automatically</span>
     </div>
@@ -903,7 +904,7 @@ function ImagePreview({ data }: { data: Record<string, unknown> }) {
   if (!imageUrl) {
     return (
       <div className="px-6 py-12 flex flex-col items-center justify-center bg-black/5 dark:bg-white/5 rounded-3xl opacity-30">
-        <ImageIcon className="w-8 h-8 mb-2" />
+        <HugeiconsIcon icon={ImageIcon} className="w-8 h-8 mb-2" />
         <span className="text-xs">No image selected</span>
       </div>
     )
@@ -942,7 +943,7 @@ function GridPreview({ data, previewDark }: { data: Record<string, unknown>; pre
         <div key={idx} className="flex flex-col gap-6 min-w-0">
           {col.blocks.length === 0 ? (
             <div className="h-full min-h-[100px] rounded-2xl border-2 border-dashed border-brand-deep/5 dark:border-white/5 flex items-center justify-center opacity-30">
-              <Plus className="w-5 h-5 mr-2" />
+              <HugeiconsIcon icon={Plus} className="w-5 h-5 mr-2" />
               <span className="text-[10px] font-medium uppercase tracking-wider">Empty Column</span>
             </div>
           ) : (

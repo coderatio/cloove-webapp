@@ -12,7 +12,8 @@ import {
   DrawerClose,
   DrawerTrigger,
 } from "@/app/components/ui/drawer"
-import { HelpCircle, ExternalLink, Copy, Check } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { HelpCircleIcon as HelpCircle, ExternalLinkIcon as ExternalLink, CopyIcon as Copy, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { useState } from "react"
 
 export function SetupGuideDrawer() {
@@ -24,7 +25,7 @@ export function SetupGuideDrawer() {
           size="sm"
           className="text-brand-accent/60 dark:text-white/40 hover:text-brand-deep dark:hover:text-white"
         >
-          <HelpCircle className="w-4 h-4 mr-1.5" />
+          <HugeiconsIcon icon={HelpCircle} className="w-4 h-4 mr-1.5" />
           Setup guide
         </Button>
       </DrawerTrigger>
@@ -214,9 +215,9 @@ function CopyableCode({ value }: { value: string }) {
     >
       <code className="break-all">{value}</code>
       {copied ? (
-        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+        <HugeiconsIcon icon={Check} className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
       ) : (
-        <Copy className="w-3.5 h-3.5 text-brand-accent/40 dark:text-white/40 shrink-0" />
+        <HugeiconsIcon icon={Copy} className="w-3.5 h-3.5 text-brand-accent/40 dark:text-white/40 shrink-0" />
       )}
     </button>
   )
@@ -231,7 +232,7 @@ function GuideLink({ href, children }: { href: string; children: React.ReactNode
       className="inline-flex items-center gap-0.5 text-brand-green dark:text-brand-gold underline underline-offset-2 hover:opacity-80"
     >
       {children}
-      <ExternalLink className="w-3 h-3" />
+      <HugeiconsIcon icon={ExternalLink} className="w-3 h-3" />
     </a>
   )
 }

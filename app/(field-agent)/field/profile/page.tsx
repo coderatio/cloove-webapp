@@ -4,16 +4,8 @@ import React, { useRef, useState } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import {
-    User,
-    Mail,
-    Phone,
-    Camera,
-    Edit2,
-    Check,
-    X,
-    Loader2
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { UserIcon as User, Mail01Icon as Mail, CallIcon as Phone, Camera01Icon as Camera, Edit02Icon as Edit2, CheckIcon as Check, Cancel01Icon as X, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import Image from "next/image"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { useFieldAgentStats } from "@/app/domains/field-agent/hooks/useFieldAgentStats"
@@ -132,8 +124,8 @@ export default function ProfilePage() {
                             className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-deep text-brand-cream rounded-2xl border-4 border-brand-cream dark:border-brand-deep flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-60"
                         >
                             {isUploadingAvatar
-                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                : <Camera className="w-5 h-5" />
+                                ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
+                                : <HugeiconsIcon icon={Camera} className="w-5 h-5" />
                             }
                         </button>
                         {user?.avatarUrl && (
@@ -143,8 +135,8 @@ export default function ProfilePage() {
                                 className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full border-2 border-brand-cream dark:border-brand-deep flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-60"
                             >
                                 {isRemovingAvatar
-                                    ? <Loader2 className="w-3 h-3 animate-spin" />
-                                    : <X className="w-3 h-3" />
+                                    ? <HugeiconsIcon icon={Loader2} className="w-3 h-3 animate-spin" />
+                                    : <HugeiconsIcon icon={X} className="w-3 h-3" />
                                 }
                             </button>
                         )}
@@ -177,7 +169,7 @@ export default function ProfilePage() {
                                         size="sm"
                                         className="rounded-xl h-10 px-4 bg-brand-gold-700 text-white font-bold"
                                     >
-                                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                        {isSaving ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" /> : <HugeiconsIcon icon={Check} className="w-4 h-4" />}
                                     </Button>
                                     <Button
                                         onClick={handleCancel}
@@ -186,7 +178,7 @@ export default function ProfilePage() {
                                         variant="outline"
                                         className="rounded-xl h-10 px-4"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <HugeiconsIcon icon={X} className="w-4 h-4" />
                                     </Button>
                                 </div>
                             </div>
@@ -204,7 +196,7 @@ export default function ProfilePage() {
                                     onClick={handleEdit}
                                     className="rounded-2xl px-6 h-11 bg-brand-deep text-brand-cream dark:bg-brand-gold-700 dark:text-white"
                                 >
-                                    <Edit2 className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={Edit2} className="w-4 h-4 mr-2" />
                                     Edit Profile
                                 </Button>
                             </div>
@@ -229,21 +221,21 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40">Full Name</label>
                         <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/30" />
+                            <HugeiconsIcon icon={User} className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/30" />
                             <Input disabled value={user?.fullName ?? ""} className="pl-12 h-12 bg-transparent" />
                         </div>
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40">Email Address</label>
                         <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/30" />
+                            <HugeiconsIcon icon={Mail} className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/30" />
                             <Input disabled value={user?.email ?? ""} className="pl-12 h-12 bg-transparent" />
                         </div>
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-bold uppercase tracking-widest text-brand-deep/40">Phone Number</label>
                         <div className="relative">
-                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/30" />
+                            <HugeiconsIcon icon={Phone} className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/30" />
                             <Input disabled value={user?.phoneNumber ?? ""} className="pl-12 h-12 bg-transparent" />
                         </div>
                     </div>

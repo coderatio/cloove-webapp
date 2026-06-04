@@ -9,15 +9,8 @@ import { Switch } from "@/app/components/ui/switch"
 import { Textarea } from "@/app/components/ui/textarea"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { VoiceScheduleBuilder } from "@/app/domains/voice/components/VoiceScheduleBuilder"
-import {
-    CalendarClock,
-    ChevronDown,
-    Loader2,
-    MessageSquare,
-    ShieldCheck,
-    SlidersHorizontal,
-    UserCircle2,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CalendarClockIcon as CalendarClock, ChevronDownIcon as ChevronDown, Loading03Icon as Loader2, Message01Icon as MessageSquare, SecurityCheckIcon as ShieldCheck, SlidersHorizontalIcon as SlidersHorizontal, UserCircleIcon as UserCircle2 } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 const accordionTriggerClass =
@@ -85,7 +78,7 @@ export function VoiceAgentSettingsForm({
         <GlassCard className="p-0 overflow-hidden">
             <div className="flex items-center gap-3 border-b border-brand-deep/5 px-6 py-5 dark:border-white/5">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-green-50 text-brand-green dark:bg-brand-green-950/40 dark:text-emerald-400">
-                    <ShieldCheck className="h-5 w-5" />
+                    <HugeiconsIcon icon={ShieldCheck} className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
                     <h2 className="font-serif text-xl text-brand-deep dark:text-brand-cream">
@@ -106,10 +99,10 @@ export function VoiceAgentSettingsForm({
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
                             <span className={accordionTriggerIconClass}>
-                                <UserCircle2 className="h-4 w-4" />
+                                <HugeiconsIcon icon={UserCircle2} className="h-4 w-4" />
                             </span>
                             <span className="flex-1">Identity and language</span>
-                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+                            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
                         </Accordion.Trigger>
                     </Accordion.Header>
                     <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
@@ -171,10 +164,10 @@ export function VoiceAgentSettingsForm({
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
                             <span className={accordionTriggerIconClass}>
-                                <MessageSquare className="h-4 w-4" />
+                                <HugeiconsIcon icon={MessageSquare} className="h-4 w-4" />
                             </span>
                             <span className="flex-1">Call prompts</span>
-                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+                            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
                         </Accordion.Trigger>
                     </Accordion.Header>
                     <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
@@ -254,10 +247,10 @@ export function VoiceAgentSettingsForm({
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
                             <span className={accordionTriggerIconClass}>
-                                <CalendarClock className="h-4 w-4" />
+                                <HugeiconsIcon icon={CalendarClock} className="h-4 w-4" />
                             </span>
                             <span className="flex-1">Availability</span>
-                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+                            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
                         </Accordion.Trigger>
                     </Accordion.Header>
                     <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
@@ -282,10 +275,10 @@ export function VoiceAgentSettingsForm({
                     <Accordion.Header>
                         <Accordion.Trigger className={accordionTriggerClass}>
                             <span className={accordionTriggerIconClass}>
-                                <SlidersHorizontal className="h-4 w-4" />
+                                <HugeiconsIcon icon={SlidersHorizontal} className="h-4 w-4" />
                             </span>
                             <span className="flex-1">Automation controls</span>
-                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
+                            <HugeiconsIcon icon={ChevronDown} className="h-4 w-4 shrink-0 transition-transform duration-200 data-panel-open:rotate-180" />
                         </Accordion.Trigger>
                     </Accordion.Header>
                     <Accordion.Panel className={cn("px-5 pb-5", accordionPanelClass)}>
@@ -349,7 +342,7 @@ export function VoiceAgentSettingsForm({
                     disabled={isPending}
                     className="h-10 rounded-full bg-brand-deep px-6 text-sm font-medium text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
                 >
-                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {isPending ? <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Save settings
                 </Button>
             </div>

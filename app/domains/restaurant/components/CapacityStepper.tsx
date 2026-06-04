@@ -3,7 +3,8 @@
 import * as React from "react"
 import { Button } from "@/app/components/ui/button"
 import { cn } from "@/app/lib/utils"
-import { Minus, Plus } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { MinusSignIcon as Minus, PlusSignIcon as Plus } from "@hugeicons/core-free-icons"
 
 type CapacityStepperProps = {
   value: number
@@ -33,7 +34,7 @@ export function CapacityStepper({
         onClick={() => onChange(Math.max(1, value - 1))}
         disabled={disabled}
       >
-        <Minus className="h-3 w-3" />
+        <HugeiconsIcon icon={Minus} className="h-3 w-3" />
       </Button>
       <span className="text-sm font-bold w-7 text-center text-brand-deep dark:text-brand-cream tabular-nums">
         {value}
@@ -46,7 +47,7 @@ export function CapacityStepper({
         onClick={() => onChange(value + 1)}
         disabled={disabled}
       >
-        <Plus className="h-3 w-3" />
+        <HugeiconsIcon icon={Plus} className="h-3 w-3" />
       </Button>
     </div>
   )

@@ -10,22 +10,8 @@ import { CashoutAccountManager } from "@/app/domains/field-agent/components/Cash
 import { formatCurrency } from "@/app/lib/formatters"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
-import {
-    Building2,
-    ArrowRight,
-    CheckCircle2,
-    Loader2,
-    Search,
-    ChevronRight,
-    Clock,
-    Wallet,
-    ArrowUpRight,
-    CreditCard,
-    Plus,
-    Banknote,
-    AlertCircle,
-    Sparkles,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, ArrowRight01Icon as ArrowRight, CheckmarkCircle02Icon as CheckCircle2, Loading03Icon as Loader2, Search01Icon as Search, ChevronRightIcon as ChevronRight, Clock01Icon as Clock, Wallet01Icon as Wallet, ArrowUpRight01Icon as ArrowUpRight, CreditCardIcon as CreditCard, PlusSignIcon as Plus, BanknoteIcon as Banknote, AlertCircleIcon as AlertCircle, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 
@@ -62,7 +48,6 @@ export default function WalletPage() {
     const [selectedAccount, setSelectedAccount] = useState<typeof accounts[0] | null>(null)
     const [showAccountPicker, setShowAccountPicker] = useState(false)
 
-
     const availableBalance = wallet?.availableBalance ?? 0
     const MIN_CASHOUT_THRESHOLD = wallet?.withdrawalThreshold ?? 5000
     const canCashout = availableBalance >= MIN_CASHOUT_THRESHOLD
@@ -86,8 +71,6 @@ export default function WalletPage() {
             setSelectedAccount(accounts.find(a => a.isDefault) ?? accounts[0])
         }
     }, [activeDrawer, accounts])
-
-
 
     const currency = wallet?.currency ?? 'NGN'
     const fmt = (val: number) => formatCurrency(val, { currency })
@@ -145,7 +128,7 @@ export default function WalletPage() {
                     className="w-full md:w-auto bg-brand-deep text-white rounded-[24px] px-8 md:px-12 h-16 md:h-20 font-bold shadow-2xl shadow-brand-deep/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 md:gap-4"
                 >
                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-brand-gold/10 flex items-center justify-center">
-                        <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-brand-gold" />
+                        <HugeiconsIcon icon={ArrowUpRight} className="w-4 h-4 md:w-5 md:h-5 text-brand-gold" />
                     </div>
                     Request Payout
                 </Button>
@@ -191,7 +174,7 @@ export default function WalletPage() {
                             onClick={() => setActiveDrawer('accounts')}
                             className="ml-auto bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 rounded-2xl transition-all border border-brand-gold/20 gap-1.5 h-9 md:h-12 px-3 md:px-6"
                         >
-                            <Building2 className="w-3.5 h-3.5 md:w-5 md:h-5 text-brand-gold shrink-0" />
+                            <HugeiconsIcon icon={Building2} className="w-3.5 h-3.5 md:w-5 md:h-5 text-brand-gold shrink-0" />
                             <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em]">Accounts</span>
                         </Button>
                     </div>
@@ -202,7 +185,7 @@ export default function WalletPage() {
                             ))
                         ) : transactions.length === 0 ? (
                             <div className="py-12 flex flex-col items-center gap-3 text-center">
-                                <Clock className="w-8 h-8 text-brand-deep/20" />
+                                <HugeiconsIcon icon={Clock} className="w-8 h-8 text-brand-deep/20" />
                                 <p className="text-sm font-bold text-brand-deep/40 dark:text-brand-cream/40">No payouts yet</p>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/20">Your withdrawal history will appear here</p>
                             </div>
@@ -226,10 +209,10 @@ export default function WalletPage() {
                                                     : "bg-brand-gold/10 text-brand-gold border-brand-gold/20"
                                         )}>
                                             {txn.status === 'COMPLETED' || txn.status === 'SUCCESS'
-                                                ? <CheckCircle2 className="w-6 h-6" />
+                                                ? <HugeiconsIcon icon={CheckCircle2} className="w-6 h-6" />
                                                 : txn.status === 'FAILED'
-                                                    ? <AlertCircle className="w-6 h-6" />
-                                                    : <Clock className="w-6 h-6" />
+                                                    ? <HugeiconsIcon icon={AlertCircle} className="w-6 h-6" />
+                                                    : <HugeiconsIcon icon={Clock} className="w-6 h-6" />
                                             }
                                         </div>
                                         <div>
@@ -280,7 +263,7 @@ export default function WalletPage() {
                                     <div className="relative z-10 space-y-6">
                                         <div className="flex items-start gap-4">
                                             <div className="w-12 h-12 rounded-2xl bg-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0">
-                                                <AlertCircle className="w-6 h-6" />
+                                                <HugeiconsIcon icon={AlertCircle} className="w-6 h-6" />
                                             </div>
                                             <div>
                                                 <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">Minimum Requirement</h3>
@@ -311,7 +294,7 @@ export default function WalletPage() {
                                 </GlassCard>
 
                                 <div className="p-6 rounded-3xl bg-brand-deep/5 dark:bg-white/5 border border-dashed border-brand-deep/10 dark:border-white/10 flex items-center gap-4 text-brand-deep/40 dark:text-brand-cream/40">
-                                    <Sparkles className="w-5 h-5 shrink-0" />
+                                    <HugeiconsIcon icon={Sparkles} className="w-5 h-5 shrink-0" />
                                     <p className="text-xs font-medium italic">Earnings from activated merchants will automatically boost your reserve.</p>
                                 </div>
                             </div>
@@ -333,7 +316,6 @@ export default function WalletPage() {
                                         />
                                     </div>
 
-
                                     <div className="w-full flex items-center justify-between px-1">
                                         <span className="text-xs font-bold text-brand-deep/40">Available: {fmt(availableBalance)}</span>
                                         <button
@@ -350,7 +332,7 @@ export default function WalletPage() {
                                         onClick={() => { setActiveDrawer('accounts'); setRestoreDrawer('payout') }}
                                         className="p-6 rounded-3xl border-2 border-dashed border-brand-deep/10 dark:border-white/10 flex flex-col items-center gap-3 text-center hover:border-brand-gold/40 hover:bg-brand-gold/5 transition-all cursor-pointer"
                                     >
-                                        <AlertCircle className="w-6 h-6 text-brand-deep/20" />
+                                        <HugeiconsIcon icon={AlertCircle} className="w-6 h-6 text-brand-deep/20" />
                                         <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40">No destination set</p>
                                         <p className="text-[9px] font-black uppercase tracking-widest text-brand-gold">Tap to Add Account</p>
                                     </div>
@@ -383,7 +365,7 @@ export default function WalletPage() {
                                                             "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
                                                             selectedAccount?.id === account.id ? "bg-brand-gold-700 text-white" : "bg-brand-deep/10 dark:bg-white/10 text-brand-deep/40 dark:text-brand-cream/40"
                                                         )}>
-                                                            <Building2 className="w-5 h-5" />
+                                                            <HugeiconsIcon icon={Building2} className="w-5 h-5" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="font-bold text-brand-deep dark:text-brand-cream uppercase tracking-tight text-sm truncate">{account.bankName}</p>
@@ -393,7 +375,7 @@ export default function WalletPage() {
                                                             <span className="text-[9px] font-black bg-brand-gold/10 text-brand-gold px-2 py-1 rounded-full uppercase tracking-wider shrink-0">Default</span>
                                                         )}
                                                         {selectedAccount?.id === account.id && (
-                                                            <CheckCircle2 className="w-4 h-4 text-brand-gold shrink-0" />
+                                                            <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4 text-brand-gold shrink-0" />
                                                         )}
                                                     </button>
                                                 ))}
@@ -404,13 +386,13 @@ export default function WalletPage() {
                                                 className="w-full flex items-center gap-4 p-5 rounded-3xl bg-brand-gold/5 border border-brand-gold/20 hover:bg-brand-gold/10 transition-all text-left"
                                             >
                                                 <div className="w-12 h-12 rounded-2xl bg-brand-deep flex items-center justify-center text-brand-gold shrink-0">
-                                                    <Building2 className="w-6 h-6" />
+                                                    <HugeiconsIcon icon={Building2} className="w-6 h-6" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-serif text-lg font-medium text-brand-deep dark:text-brand-cream truncate">{selectedAccount.bankName} • •••• {selectedAccount.accountNumber.slice(-4)}</p>
                                                     <p className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 mt-0.5">{selectedAccount.accountName}</p>
                                                 </div>
-                                                <ChevronRight className="w-4 h-4 text-brand-deep/20 shrink-0" />
+                                                <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-deep/20 shrink-0" />
                                             </button>
                                         ) : null}
                                     </div>
@@ -427,7 +409,7 @@ export default function WalletPage() {
                                 onClick={handleRequestPayout}
                                 className="w-full h-16 md:h-20 bg-brand-deep text-white rounded-3xl font-bold flex items-center justify-center gap-3 shadow-2xl shadow-brand-deep/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                             >
-                                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowUpRight className="w-5 h-5 text-brand-gold" />}
+                                {isSubmitting ? <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" /> : <HugeiconsIcon icon={ArrowUpRight} className="w-5 h-5 text-brand-gold" />}
                                 Request Cashout
                             </Button>
                         </div>
@@ -491,10 +473,10 @@ export default function WalletPage() {
                                                 : "bg-brand-gold/20 text-brand-gold border-brand-gold/30"
                                     )}>
                                         {selectedTxn.status === 'COMPLETED' || selectedTxn.status === 'SUCCESS'
-                                            ? <CheckCircle2 className="w-10 h-10" />
+                                            ? <HugeiconsIcon icon={CheckCircle2} className="w-10 h-10" />
                                             : selectedTxn.status === 'FAILED'
-                                                ? <AlertCircle className="w-10 h-10" />
-                                                : <Clock className="w-10 h-10" />
+                                                ? <HugeiconsIcon icon={AlertCircle} className="w-10 h-10" />
+                                                : <HugeiconsIcon icon={Clock} className="w-10 h-10" />
                                         }
                                     </div>
                                     <div>
@@ -514,7 +496,7 @@ export default function WalletPage() {
                                     ].map((item, i) => (
                                         <div key={i} className="flex items-center gap-4 px-5 py-4 bg-white/70 dark:bg-white/5 rounded-2xl border border-brand-deep/5 dark:border-white/5">
                                             <div className="w-10 h-10 shrink-0 rounded-xl bg-brand-deep/5 flex items-center justify-center text-brand-deep/30">
-                                                <item.icon className="w-5 h-5" />
+                                                <HugeiconsIcon icon={item.icon} className="w-5 h-5" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-brand-deep/30 leading-none">{item.label}</p>

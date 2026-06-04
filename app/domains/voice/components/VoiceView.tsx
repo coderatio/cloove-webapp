@@ -43,30 +43,8 @@ import {
     SelectValue,
 } from "@/app/components/ui/select"
 import { useSearchParams } from "next/navigation"
-import {
-    AudioLines,
-    CheckCircle2,
-    ChevronRight,
-    Clock,
-    FilterX,
-    Headphones,
-    Inbox,
-    Loader2,
-    MapPinned,
-    PanelsTopLeft,
-    Phone,
-    PhoneCall,
-    PhoneForwarded,
-    PhoneIncoming,
-    PhoneOutgoing,
-    Plus,
-    Radio,
-    Receipt,
-    Settings2,
-    ShieldCheck,
-    Sparkles,
-    XCircle,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AudioLinesIcon as AudioLines, CheckmarkCircle02Icon as CheckCircle2, ChevronRightIcon as ChevronRight, Clock01Icon as Clock, FilterRemoveIcon as FilterX, HeadphonesIcon as Headphones, InboxIcon as Inbox, Loading03Icon as Loader2, Location04Icon as MapPinned, BrowserIcon as PanelsTopLeft, CallIcon as Phone, CallingIcon as PhoneCall, CallOutgoing02Icon as PhoneForwarded, CallIncoming01Icon as PhoneIncoming, CallOutgoing01Icon as PhoneOutgoing, PlusSignIcon as Plus, RadioIcon as Radio, Invoice01Icon as Receipt, Settings02Icon as Settings2, SecurityCheckIcon as ShieldCheck, SparklesIcon as Sparkles, CancelCircleIcon as XCircle } from "@hugeicons/core-free-icons"
 import {
     useCancelVoiceNumberRequest,
     useCreateVoiceNumberRequest,
@@ -199,7 +177,6 @@ const EMPTY_CALL_FORM = {
     context: "",
     aiAgentId: "",
 }
-
 
 function stripDialCode(value: string | null | undefined, phoneCode: string): string {
     if (!value) return ""
@@ -507,7 +484,7 @@ export function VoiceView() {
             <GlassCard className="mx-auto max-w-3xl border-brand-gold/20 p-8 md:p-10">
                 <div className="space-y-4 text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-gold/10 text-brand-gold">
-                        <PhoneCall className="h-7 w-7" />
+                        <HugeiconsIcon icon={PhoneCall} className="h-7 w-7" />
                     </div>
                     <div className="space-y-2">
                         <h2 className="font-serif text-2xl text-brand-deep dark:text-brand-cream">
@@ -533,7 +510,7 @@ export function VoiceView() {
                                 </span>
                             </span>
                             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold-300/15 text-brand-gold-300 dark:bg-brand-deep/10 dark:text-brand-deep">
-                                <ChevronRight className="h-4 w-4" />
+                                <HugeiconsIcon icon={ChevronRight} className="h-4 w-4" />
                             </span>
                         </a>
                     </Button>
@@ -635,7 +612,7 @@ export function VoiceView() {
                                                 className="h-10 rounded-full border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:bg-slate-900 sm:px-4"
                                                 onClick={() => setRequestDrawerOpen(true)}
                                             >
-                                                <PhoneIncoming className="h-4 w-4 sm:mr-1.5" />
+                                                <HugeiconsIcon icon={PhoneIncoming} className="h-4 w-4 sm:mr-1.5" />
                                                 <span className="hidden sm:inline">Request</span>
                                             </Button>
                                             <VoiceNumberRequestWizard
@@ -649,7 +626,7 @@ export function VoiceView() {
                                                 className="h-10 rounded-full bg-brand-deep px-3 text-sm font-medium text-brand-gold-300 shadow-sm hover:bg-brand-deep/92 hover:text-brand-gold-200 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 dark:hover:text-brand-deep sm:px-4"
                                                 onClick={openCreateNumberDrawer}
                                             >
-                                                <Plus className="h-4 w-4 sm:mr-1.5" />
+                                                <HugeiconsIcon icon={Plus} className="h-4 w-4 sm:mr-1.5" />
                                                 <span className="hidden sm:inline">Connect</span>
                                             </Button>
                                         </div>
@@ -755,7 +732,7 @@ export function VoiceView() {
                                                         )}
                                                         aria-hidden
                                                     >
-                                                        <DirectionIcon className="h-4 w-4" />
+                                                        <HugeiconsIcon icon={DirectionIcon} className="h-4 w-4" />
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <p className="truncate text-sm font-medium">
@@ -783,7 +760,7 @@ export function VoiceView() {
                                                             {new Date(call.createdAt).toLocaleDateString()}
                                                         </p>
                                                     </div>
-                                                    <ChevronRight
+                                                    <HugeiconsIcon icon={ChevronRight}
                                                         className="h-4 w-4 shrink-0 text-slate-300 transition-colors group-hover:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400"
                                                         aria-hidden
                                                     />
@@ -901,7 +878,7 @@ export function VoiceView() {
                             className="h-11 w-11 shrink-0 rounded-full border-slate-200 bg-white px-0 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200 dark:hover:bg-slate-900 sm:w-auto sm:gap-2 sm:px-4"
                             onClick={() => setRequestDrawerOpen(true)}
                         >
-                            <PhoneIncoming className="h-4.5 w-4.5" />
+                            <HugeiconsIcon icon={PhoneIncoming} className="h-4.5 w-4.5" />
                             <span className="hidden sm:inline">Request number</span>
                         </Button>
                         <VoiceNumberRequestWizard
@@ -913,7 +890,7 @@ export function VoiceView() {
                     {(approvedRequests.length === 0 && pendingRequests.length === 0 && historyRequests.length === 0) ? (
                         <div className="rounded-3xl border border-dashed border-black/10 px-5 py-10 text-center dark:border-white/10">
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
-                                <PhoneIncoming className="h-5 w-5 text-muted-foreground" />
+                                <HugeiconsIcon icon={PhoneIncoming} className="h-5 w-5 text-muted-foreground" />
                             </div>
                             <p className="mt-4 text-sm font-medium text-foreground">No number requests yet</p>
                             <p className="mt-1 text-sm text-muted-foreground">
@@ -1140,7 +1117,7 @@ export function VoiceView() {
                                     }}
                                     className="h-12 rounded-2xl px-4 text-sm text-slate-600 dark:text-slate-300"
                                 >
-                                    <FilterX className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={FilterX} className="mr-2 h-4 w-4" />
                                     Clear
                                 </Button>
                             )}
@@ -1185,7 +1162,7 @@ export function VoiceView() {
                             return (
                                 <div className="rounded-3xl border border-dashed border-black/10 px-5 py-12 text-center dark:border-white/10">
                                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-black/5 dark:bg-white/5">
-                                        <Headphones className="h-5 w-5 text-muted-foreground" />
+                                        <HugeiconsIcon icon={Headphones} className="h-5 w-5 text-muted-foreground" />
                                     </div>
                                     <p className="mt-4 text-sm font-medium text-foreground">
                                         {isFiltered ? "No calls match the current filters" : "No calls logged yet"}
@@ -1206,7 +1183,7 @@ export function VoiceView() {
                                                 setCallsStatus("all")
                                             }}
                                         >
-                                            <FilterX className="mr-2 h-4 w-4" />
+                                            <HugeiconsIcon icon={FilterX} className="mr-2 h-4 w-4" />
                                             Clear filters
                                         </Button>
                                     ) : null}
@@ -1294,7 +1271,7 @@ function SectionTitle({ icon: Icon, title }: { icon: typeof Phone; title: string
     return (
         <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
-                <Icon className="h-5 w-5" />
+                <HugeiconsIcon icon={Icon} className="h-5 w-5" />
             </div>
             <h2 className="text-lg font-semibold">{title}</h2>
         </div>
@@ -1392,7 +1369,7 @@ function OverviewMetricSegment({
                         styles.iconBg
                     )}
                 >
-                    <Icon className="h-4 w-4" />
+                    <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
                     <p className="text-[11px] font-medium uppercase text-slate-500 dark:text-slate-400">
@@ -1560,7 +1537,7 @@ function ApprovedNumberRequestCard({
         <div className="rounded-[2rem] border border-emerald-200/80 bg-white/85 p-4 dark:border-emerald-500/20 dark:bg-slate-950/30">
             <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
-                    <CheckCircle2 className="h-5 w-5" />
+                    <HugeiconsIcon icon={CheckCircle2} className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1635,7 +1612,7 @@ function NumberRequestRow({
         <div className="rounded-[2rem] border border-black/6 bg-white/40 px-4 py-4 dark:border-white/10 dark:bg-white/[0.02]">
             <div className="flex items-start gap-3">
                 <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full", iconStyles)}>
-                    <StatusIcon className="h-4.5 w-4.5" />
+                    <HugeiconsIcon icon={StatusIcon} className="h-4.5 w-4.5" />
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
@@ -1660,7 +1637,7 @@ function NumberRequestRow({
                                     disabled={isCancelling}
                                     onClick={onCancel}
                                 >
-                                    {isCancelling ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                                    {isCancelling ? <HugeiconsIcon icon={Loader2} className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
                                     Cancel
                                 </Button>
                             ) : null}
@@ -1702,7 +1679,7 @@ function RequestInnerTabButton({
                     : "text-muted-foreground hover:bg-white/70 dark:hover:bg-white/[0.06]"
             )}
         >
-            <Icon className="h-4 w-4" />
+            <HugeiconsIcon icon={Icon} className="h-4 w-4" />
             <span>{label}</span>
             <span
                 className={cn(
@@ -1825,7 +1802,7 @@ function RequestLogTimeline({
                     open && "rounded-b-none"
                 )}
             >
-                <ChevronRight
+                <HugeiconsIcon icon={ChevronRight}
                     aria-hidden
                     className={cn(
                         "mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-200",
@@ -1876,7 +1853,7 @@ function VoiceNumbersEmptyState({ onConnect }: { onConnect: () => void }) {
     return (
         <div className="rounded-3xl border border-brand-green-100/80 bg-linear-to-br from-brand-green-50/80 via-white to-brand-gold-50/40 px-5 py-8 text-center shadow-sm dark:border-brand-green-800/30 dark:from-brand-deep-950/80 dark:via-slate-950/80 dark:to-brand-green-950/50 sm:px-6 sm:py-9">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-brand-green-100 bg-white shadow-[0_1px_0_rgba(11,61,46,0.04)] dark:border-brand-green-800/40 dark:bg-slate-950/60">
-                <Phone className="h-6 w-6 text-brand-green dark:text-emerald-400" />
+                <HugeiconsIcon icon={Phone} className="h-6 w-6 text-brand-green dark:text-emerald-400" />
             </div>
             <h3 className="mt-4 font-serif text-lg text-brand-deep dark:text-brand-cream">
                 Connect your first voice line
@@ -1910,7 +1887,7 @@ function VoiceNumbersEmptyState({ onConnect }: { onConnect: () => void }) {
                 onClick={onConnect}
                 className="mt-6 h-11 rounded-full bg-brand-deep px-6 text-brand-gold-300 hover:bg-brand-deep/90 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800"
             >
-                <Phone className="mr-2 h-4 w-4" />
+                <HugeiconsIcon icon={Phone} className="mr-2 h-4 w-4" />
                 Connect voice number
             </Button>
         </div>

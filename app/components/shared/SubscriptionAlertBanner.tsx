@@ -2,7 +2,8 @@
 
 import { useLayoutEffect, useRef, useState, type ElementType } from "react"
 import Link from "next/link"
-import { AlertTriangle, ChevronRight, CreditCard, FileText, Wallet } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { Alert02Icon as AlertTriangle, ChevronRightIcon as ChevronRight, CreditCardIcon as CreditCard, File01Icon as FileText, Wallet01Icon as Wallet } from "@hugeicons/core-free-icons"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -25,7 +26,7 @@ const PLANS_HREF = "/settings?tab=billing#plans"
 type OptionRowProps = {
     href: string
     external?: boolean
-    icon: ElementType
+    icon: IconSvgElement
     title: string
     description: string
     iconClassName?: string
@@ -46,7 +47,7 @@ function RenewalOptionRow({ href, external, icon: Icon, title, description, icon
                     iconClassName
                 )}
             >
-                <Icon className="h-5 w-5 text-brand-deep/80 dark:text-brand-gold/90" aria-hidden />
+                <HugeiconsIcon icon={Icon} className="h-5 w-5 text-brand-deep/80 dark:text-brand-gold/90" aria-hidden />
             </div>
             <div className="min-w-0 flex-1 py-0.5">
                 <p className="font-semibold text-brand-deep dark:text-brand-cream">{title}</p>
@@ -55,7 +56,7 @@ function RenewalOptionRow({ href, external, icon: Icon, title, description, icon
                 </p>
             </div>
             <div className="flex h-11 w-9 shrink-0 items-center justify-center">
-                <ChevronRight
+                <HugeiconsIcon icon={ChevronRight}
                     className="h-5 w-5 text-brand-deep/30 transition-transform duration-300 group-hover:translate-x-0.5 dark:text-white/35"
                     aria-hidden
                 />
@@ -208,7 +209,7 @@ export function SubscriptionAlertBanner() {
                 )}
             >
                 <div className="flex min-w-0 flex-1 gap-3">
-                    <AlertTriangle
+                    <HugeiconsIcon icon={AlertTriangle}
                         className={cn(
                             "mt-0.5 h-5 w-5 shrink-0",
                             isUrgent

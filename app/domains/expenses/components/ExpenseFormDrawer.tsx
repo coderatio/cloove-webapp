@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Trash2, CalendarIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, Delete02Icon as Trash2, Calendar03Icon as CalendarIcon } from "@hugeicons/core-free-icons"
 import { format } from "date-fns"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -176,7 +177,7 @@ export function ExpenseFormDrawer({
                                             !date && "text-brand-accent/40 dark:text-brand-cream/40"
                                         )}
                                     >
-                                        <CalendarIcon className="mr-3 h-4 w-4 opacity-40" />
+                                        <HugeiconsIcon icon={CalendarIcon} className="mr-3 h-4 w-4 opacity-40" />
                                         {date ? format(date, "MMM d, yyyy") : "Select date"}
                                     </Button>
                                 </PopoverTrigger>
@@ -207,9 +208,9 @@ export function ExpenseFormDrawer({
                                     className="flex items-center justify-center gap-2 w-full py-4 text-xs font-bold text-rose-500/60 hover:text-rose-500 transition-all uppercase tracking-widest disabled:opacity-50"
                                 >
                                     {isDeleting ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
                                     ) : (
-                                        <Trash2 className="w-4 h-4" />
+                                        <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                                     )}
                                     Delete Expense
                                 </button>
@@ -236,7 +237,7 @@ export function ExpenseFormDrawer({
                             className="h-14 flex-1 rounded-2xl font-semibold shadow-sm"
                         >
                             {isSubmitting ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                             ) : editingExpense ? (
                                 "Save Changes"
                             ) : (

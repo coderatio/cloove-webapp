@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
-import { Building2, Loader2, CheckCircle2, AlertCircle, ChevronsUpDown, ArrowLeft, ShieldCheck } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, Loading03Icon as Loader2, CheckmarkCircle02Icon as CheckCircle2, AlertCircleIcon as AlertCircle, UnfoldMoreIcon as ChevronsUpDown, ArrowLeft01Icon as ArrowLeft, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { BankSelector } from "@/app/components/shared/BankSelector"
 import {
     useAddCashoutAccount,
@@ -106,7 +107,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                         >
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                    <Building2 className="w-6 h-6 text-brand-deep/40 dark:text-brand-cream/40" />
+                                    <HugeiconsIcon icon={Building2} className="w-6 h-6 text-brand-deep/40 dark:text-brand-cream/40" />
                                 </div>
                                 <div className="text-left">
                                     <p className="font-bold text-brand-deep dark:text-brand-cream uppercase tracking-tight">{p.name}</p>
@@ -114,7 +115,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                                 </div>
                             </div>
                             <div className="w-8 h-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <ChevronsUpDown className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/40 rotate-90" />
+                                <HugeiconsIcon icon={ChevronsUpDown} className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/40 rotate-90" />
                             </div>
                         </button>
                     ))}
@@ -143,7 +144,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                         onClick={() => setView("provider-selection")}
                         className="h-10 w-10 rounded-full bg-brand-deep/5 dark:bg-white/5"
                     >
-                        <ArrowLeft className="w-4 h-4" />
+                        <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4" />
                     </Button>
                     <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">Select Your Bank</h3>
                 </div>
@@ -175,7 +176,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                         onClick={() => setView("bank-selection")}
                         className="h-10 w-10 rounded-full bg-brand-deep/5 dark:bg-white/5"
                     >
-                        <ArrowLeft className="w-4 h-4" />
+                        <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4" />
                     </Button>
                     <div className="space-y-0.5">
                         <h3 className="text-lg font-serif font-medium text-brand-deep dark:text-brand-cream">Confirm Details</h3>
@@ -192,7 +193,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                             className="w-full flex items-center justify-between bg-brand-deep/5 dark:bg-white/5 border-transparent h-14 rounded-2xl px-5 text-brand-deep dark:text-brand-cream hover:bg-brand-deep/10 transition-all font-bold uppercase tracking-tight"
                         >
                             {details.bankName}
-                            <ArrowLeft className="w-4 h-4 rotate-180 opacity-20" />
+                            <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4 rotate-180 opacity-20" />
                         </button>
                     </div>
 
@@ -213,7 +214,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                             <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/30">Resolved Name</label>
                             {isResolving && (
                                 <span className="text-[10px] font-bold text-brand-gold flex items-center gap-1 uppercase tracking-tighter">
-                                    <Loader2 className="w-3 h-3 animate-spin" /> Resolving...
+                                    <HugeiconsIcon icon={Loader2} className="w-3 h-3 animate-spin" /> Resolving...
                                 </span>
                             )}
                         </div>
@@ -224,11 +225,11 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                         )}>
                             {resolveError ? (
                                 <p className="text-xs font-bold text-rose-500 uppercase tracking-tight flex items-center gap-2">
-                                    <AlertCircle className="w-3.5 h-3.5" /> {resolveError}
+                                    <HugeiconsIcon icon={AlertCircle} className="w-3.5 h-3.5" /> {resolveError}
                                 </p>
                             ) : details.accountName ? (
                                 <p className="text-sm font-bold text-brand-deep dark:text-brand-cream uppercase tracking-tight flex items-center gap-2">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-brand-gold" /> {details.accountName}
+                                    <HugeiconsIcon icon={CheckCircle2} className="w-3.5 h-3.5 text-brand-gold" /> {details.accountName}
                                 </p>
                             ) : (
                                 <p className="text-xs text-brand-accent/20 dark:text-white/10 uppercase tracking-widest">Enter account number...</p>
@@ -243,7 +244,7 @@ export function AddCashoutAccountForm({ onSuccess, onCancel }: AddCashoutAccount
                         disabled={!isValid}
                         className="w-full h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-xs uppercase tracking-widest disabled:opacity-50"
                     >
-                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        <HugeiconsIcon icon={ShieldCheck} className="w-4 h-4 mr-2" />
                         Authorize & Save
                     </Button>
                 </div>

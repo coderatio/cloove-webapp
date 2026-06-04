@@ -1,6 +1,7 @@
 "use client"
 
-import { User, Building2, Check } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { UserIcon as User, Building02Icon as Building2, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 export type BusinessType = 'INDIVIDUAL' | 'REGISTERED'
@@ -50,7 +51,7 @@ export function BusinessTypeSelector({ value, onChange }: BusinessTypeSelectorPr
                                 ? "border-primary/20 bg-primary text-white"
                                 : "border-border bg-muted text-muted-foreground group-hover:text-primary"
                         )}>
-                            <Icon className="h-5 w-5" />
+                            <HugeiconsIcon icon={Icon} className="h-5 w-5" />
                         </div>
 
                         <div className="min-w-0 flex-1 space-y-1.5">
@@ -63,7 +64,7 @@ export function BusinessTypeSelector({ value, onChange }: BusinessTypeSelectorPr
                                 </h3>
                                 {isSelected && (
                                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-white">
-                                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                                        <HugeiconsIcon icon={Check} className="h-3.5 w-3.5" strokeWidth={3} />
                                     </span>
                                 )}
                             </div>

@@ -5,29 +5,8 @@ import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
-import {
-    AlertTriangle,
-    Archive,
-    Bot,
-    CheckCircle2,
-    ChevronDown,
-    ClipboardList,
-    Copy,
-    Info,
-    KeyRound,
-    Loader2,
-    Lock,
-    MessageSquare,
-    PencilLine,
-    Phone,
-    Plus,
-    RefreshCw,
-    Search,
-    ShieldCheck,
-    UserRound,
-    Wifi,
-    X,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Alert02Icon as AlertTriangle, ArchiveIcon as Archive, BotIcon as Bot, CheckmarkCircle02Icon as CheckCircle2, ChevronDownIcon as ChevronDown, ClipboardListIcon as ClipboardList, CopyIcon as Copy, InformationCircleIcon as Info, Key01Icon as KeyRound, Loading03Icon as Loader2, LockIcon as Lock, Message01Icon as MessageSquare, PencilEdit01Icon as PencilLine, CallIcon as Phone, PlusSignIcon as Plus, RefreshIcon as RefreshCw, Search01Icon as Search, SecurityCheckIcon as ShieldCheck, UserIcon as UserRound, Wifi01Icon as Wifi, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { PasswordConfirmDialog } from "@/app/components/shared/PasswordConfirmDialog"
@@ -384,7 +363,7 @@ function OverviewTab() {
                     <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                         <div>
                             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-brand-gold">
-                                <ShieldCheck className="h-4 w-4" />
+                                <HugeiconsIcon icon={ShieldCheck} className="h-4 w-4" />
                                 Command center
                             </div>
                             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
@@ -397,13 +376,13 @@ function OverviewTab() {
                         <div className="flex flex-wrap gap-2">
                             <Button asChild variant="outline" size="sm" className="rounded-full border-brand-gold/25 hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream">
                                 <Link href="/whatsapp?tab=connections">
-                                    <Wifi className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={Wifi} className="mr-2 h-4 w-4" />
                                     Connections
                                 </Link>
                             </Button>
                             <Button asChild size="sm" className="rounded-full bg-brand-deep text-brand-gold-300 hover:bg-brand-deep/92 dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800">
                                 <Link href="/whatsapp?tab=automation">
-                                    <Bot className="mr-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={Bot} className="mr-2 h-4 w-4" />
                                     Automation
                                 </Link>
                             </Button>
@@ -427,7 +406,7 @@ function OverviewTab() {
                                         <div className="flex items-center justify-between gap-3">
                                             <p className="text-sm text-muted-foreground">{metric.label}</p>
                                             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
-                                                <Icon className="h-4 w-4" />
+                                                <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                                             </span>
                                         </div>
                                         <p className="mt-3 text-3xl font-semibold tabular-nums text-foreground">
@@ -493,7 +472,7 @@ function OverviewTab() {
                             })
                         ) : (
                             <div className="rounded-2xl border border-dashed border-border p-5 text-center">
-                                <Phone className="mx-auto h-5 w-5 text-muted-foreground/50" />
+                                <HugeiconsIcon icon={Phone} className="mx-auto h-5 w-5 text-muted-foreground/50" />
                                 <p className="mt-2 text-sm text-muted-foreground">No WhatsApp number connected.</p>
                             </div>
                         )}
@@ -560,7 +539,7 @@ function OverviewTab() {
                             ))
                         ) : (
                             <div className="flex flex-col items-center gap-2 rounded-[22px] border border-dashed border-border px-5 py-10 text-center">
-                                <MessageSquare className="h-6 w-6 text-muted-foreground/40" />
+                                <HugeiconsIcon icon={MessageSquare} className="h-6 w-6 text-muted-foreground/40" />
                                 <p className="text-sm text-muted-foreground">No open WhatsApp conversations yet.</p>
                             </div>
                         )}
@@ -683,7 +662,7 @@ function OtpsTab() {
             {!unlocked ? (
                 <GlassCard className="flex flex-col items-center gap-4 px-6 py-12 text-center">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/20">
-                        <Lock className="h-6 w-6 text-muted-foreground/50" />
+                        <HugeiconsIcon icon={Lock} className="h-6 w-6 text-muted-foreground/50" />
                     </div>
                     <div>
                         <h2 className="text-base font-semibold">Password required</h2>
@@ -693,7 +672,7 @@ function OtpsTab() {
                         </p>
                     </div>
                     <Button className="h-10 rounded-xl px-5" onClick={() => setPasswordOpen(true)}>
-                        <KeyRound className="mr-2 h-4 w-4" />
+                        <HugeiconsIcon icon={KeyRound} className="mr-2 h-4 w-4" />
                         View OTPs
                     </Button>
                 </GlassCard>
@@ -712,7 +691,7 @@ function OtpsTab() {
                             onClick={() => void otps.refetch()}
                             disabled={otps.isFetching}
                         >
-                            <RefreshCw className={`mr-2 h-3.5 w-3.5 ${otps.isFetching ? "animate-spin" : ""}`} />
+                            <HugeiconsIcon icon={RefreshCw} className={`mr-2 h-3.5 w-3.5 ${otps.isFetching ? "animate-spin" : ""}`} />
                             Refresh
                         </Button>
                     </div>
@@ -750,7 +729,7 @@ function OtpsTab() {
                     ) : (
                         <div className="flex flex-col items-center gap-3 px-5 py-12 text-center">
                             <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-muted/20">
-                                <KeyRound className="h-5 w-5 text-muted-foreground/40" />
+                                <HugeiconsIcon icon={KeyRound} className="h-5 w-5 text-muted-foreground/40" />
                             </div>
                             <div>
                                 <p className="text-sm font-medium">No recent OTPs</p>
@@ -787,7 +766,7 @@ function OtpRow({ otp, onCopy }: { otp: WhatsAppOtpCandidate; onCopy: () => void
                         aria-label="Copy OTP"
                         className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 text-muted-foreground transition-colors hover:bg-muted/35 hover:text-foreground"
                     >
-                        <Copy className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={Copy} className="h-3.5 w-3.5" />
                     </button>
                 </div>
             </td>
@@ -1147,7 +1126,7 @@ function TemplatesTab() {
                     <div className="mb-5 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-muted/30">
-                                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                                <HugeiconsIcon icon={ClipboardList} className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div>
                                 <h2 className="text-sm font-semibold text-foreground">Business templates</h2>
@@ -1155,7 +1134,7 @@ function TemplatesTab() {
                             </div>
                         </div>
                         <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={handleNewClick}>
-                            <Plus className="mr-1.5 h-3.5 w-3.5" />
+                            <HugeiconsIcon icon={Plus} className="mr-1.5 h-3.5 w-3.5" />
                             New
                         </Button>
                     </div>
@@ -1176,7 +1155,7 @@ function TemplatesTab() {
                                 </SelectContent>
                             </Select>
                             <div className="relative flex-1">
-                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <HugeiconsIcon icon={Search} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     value={search}
                                     onChange={(e) => {
@@ -1212,7 +1191,7 @@ function TemplatesTab() {
                         {noNumberSelected ? (
                             <GlassCard className="flex flex-col items-center gap-3 px-5 py-12 text-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-muted/30">
-                                    <ClipboardList className="h-6 w-6 text-muted-foreground/50" />
+                                    <HugeiconsIcon icon={ClipboardList} className="h-6 w-6 text-muted-foreground/50" />
                                 </div>
                                 <p className="text-sm font-medium text-foreground">Select a WhatsApp number</p>
                                 <p className="max-w-sm text-xs text-muted-foreground">
@@ -1276,7 +1255,7 @@ function TemplatesTab() {
                                             className="rounded-full text-xs"
                                             onClick={() => startEditing(template)}
                                         >
-                                            <PencilLine className="mr-1.5 h-3.5 w-3.5" />
+                                            <HugeiconsIcon icon={PencilLine} className="mr-1.5 h-3.5 w-3.5" />
                                             Edit
                                         </Button>
                                         {template.status !== "published" || !template.meta_template_name ? (
@@ -1309,7 +1288,7 @@ function TemplatesTab() {
                                                 }}
                                                 disabled={archiveTemplate.isPending}
                                             >
-                                                <Archive className="mr-1.5 h-3.5 w-3.5" />
+                                                <HugeiconsIcon icon={Archive} className="mr-1.5 h-3.5 w-3.5" />
                                                 Archive
                                             </Button>
                                         ) : null}
@@ -1327,7 +1306,7 @@ function TemplatesTab() {
                         )) : (
                             <GlassCard className="flex flex-col items-center gap-3 px-5 py-12 text-center">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-muted/30">
-                                    <ClipboardList className="h-6 w-6 text-muted-foreground/50" />
+                                    <HugeiconsIcon icon={ClipboardList} className="h-6 w-6 text-muted-foreground/50" />
                                 </div>
                                 <p className="text-sm font-medium text-foreground">No templates found</p>
                                 <p className="max-w-sm text-xs text-muted-foreground">
@@ -1361,11 +1340,11 @@ function TemplatesTab() {
                         >
                             <div className="flex items-center gap-2.5">
                                 <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-border/60 bg-muted/30">
-                                    <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <HugeiconsIcon icon={MessageSquare} className="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
                                 <h3 className="text-sm font-semibold">Test / proactive send</h3>
                             </div>
-                            <ChevronDown
+                            <HugeiconsIcon icon={ChevronDown}
                                 className={`h-4 w-4 text-muted-foreground transition-transform ${showTestSend ? "rotate-180" : ""}`}
                             />
                         </button>
@@ -1432,7 +1411,7 @@ function TemplatesTab() {
                                     disabled={sendTemplate.isPending || noNumberSelected || !templateKey || !phone}
                                 >
                                     {sendTemplate.isPending ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                                     ) : null}
                                     Send template
                                 </Button>
@@ -1565,7 +1544,7 @@ function TemplatesTab() {
                                     disabled={noTemplateNumberSelected}
                                 />
                                 <p className="mt-1.5 grid grid-cols-[14px_minmax(0,1fr)] items-start gap-x-1.5 text-xs leading-relaxed text-muted-foreground/70">
-                                    <Info className="mt-0.5 h-3 w-3 shrink-0" />
+                                    <HugeiconsIcon icon={Info} className="mt-0.5 h-3 w-3 shrink-0" />
                                     <span>
                                         Use <code className="rounded bg-muted/60 px-1 font-mono text-[11px]">{`{{variable_name}}`}</code> for placeholders. Cloove converts them to Meta&apos;s numbered format when publishing.
                                     </span>
@@ -1587,7 +1566,7 @@ function TemplatesTab() {
                                     Variables
                                 </label>
                                 <p className="mb-2.5 grid grid-cols-[14px_minmax(0,1fr)] items-start gap-x-1.5 text-xs leading-relaxed text-muted-foreground/70">
-                                    <Info className="mt-0.5 h-3 w-3 shrink-0" />
+                                    <HugeiconsIcon icon={Info} className="mt-0.5 h-3 w-3 shrink-0" />
                                     <span>
                                         Each variable you use in the message body must be listed here. Toggle <strong>Required</strong> for variables that must always be provided.
                                     </span>
@@ -1617,7 +1596,7 @@ function TemplatesTab() {
                                                     : "border-border/60 text-muted-foreground hover:border-border"
                                                     }`}
                                             >
-                                                <CheckCircle2 className={`h-3.5 w-3.5 ${variable.required ? "opacity-100" : "opacity-30"
+                                                <HugeiconsIcon icon={CheckCircle2} className={`h-3.5 w-3.5 ${variable.required ? "opacity-100" : "opacity-30"
                                                     }`} />
                                                 Required
                                             </button>
@@ -1628,7 +1607,7 @@ function TemplatesTab() {
                                                 aria-label="Remove variable"
                                                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/60 text-muted-foreground/50 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-30 dark:hover:border-red-500/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                                             >
-                                                <X className="h-3.5 w-3.5" />
+                                                <HugeiconsIcon icon={X} className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
                                     ))}
@@ -1639,7 +1618,7 @@ function TemplatesTab() {
                                         onClick={addVariableRow}
                                         className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                                     >
-                                        <Plus className="h-3.5 w-3.5" />
+                                        <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5" />
                                         Add variable
                                     </button>
                                 )}
@@ -1749,7 +1728,7 @@ function TemplatesTab() {
                                         disabled={noTemplateNumberSelected}
                                         className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-border hover:text-foreground"
                                     >
-                                        <Plus className="h-3.5 w-3.5" />
+                                        <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5" />
                                         Add button
                                     </button>
                                 </div>
@@ -1800,7 +1779,7 @@ function TemplatesTab() {
                             }
                         >
                             {createTemplate.isPending || updateTemplate.isPending ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                             ) : null}
                             {editingTemplate ? "Save changes" : "Create template"}
                         </Button>

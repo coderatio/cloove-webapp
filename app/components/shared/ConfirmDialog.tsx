@@ -1,6 +1,7 @@
 "use client"
 
-import { AlertTriangle, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Alert02Icon as AlertTriangle, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import {
     Dialog,
     DialogContent,
@@ -69,7 +70,7 @@ export function ConfirmDialog({
                                 )}
                                 aria-hidden
                             >
-                                <AlertTriangle className="h-5 w-5" strokeWidth={2} />
+                                <HugeiconsIcon icon={AlertTriangle} className="h-5 w-5" strokeWidth={2} />
                             </div>
 
                             <div className="min-w-0 space-y-1.5 pt-0.5">
@@ -107,7 +108,7 @@ export function ConfirmDialog({
                         )}
                     >
                         {isLoading ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" />
                         ) : (
                             confirmText
                         )}

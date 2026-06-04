@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 interface HorizontalScrollerProps {
@@ -84,7 +85,7 @@ export function HorizontalScroller({
                     canLeft ? "opacity-100" : "pointer-events-none opacity-0"
                 )}
             >
-                <ChevronLeft className="h-4 w-4" />
+                <HugeiconsIcon icon={ChevronLeft} className="h-4 w-4" />
             </button>
 
             <div
@@ -119,7 +120,7 @@ export function HorizontalScroller({
                     canRight ? "opacity-100" : "pointer-events-none opacity-0"
                 )}
             >
-                <ChevronRight className="h-4 w-4" />
+                <HugeiconsIcon icon={ChevronRight} className="h-4 w-4" />
             </button>
         </div>
     )

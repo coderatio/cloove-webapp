@@ -8,16 +8,8 @@ import DataTable, { Column } from "@/app/components/DataTable"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
-import {
-    Search,
-    Plus,
-    CheckCircle2,
-    Clock,
-    ChevronRight,
-    Calendar,
-    ChevronLeft,
-    User
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon as Search, PlusSignIcon as Plus, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, ChevronRightIcon as ChevronRight, Calendar01Icon as Calendar, ChevronLeftIcon as ChevronLeft, UserIcon as User } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
 import { MerchantDetailsDrawer } from "@/app/components/field-agent/MerchantDetailsDrawer"
@@ -127,7 +119,7 @@ export default function BusinessesPage() {
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
                     <div className="relative w-full sm:flex-1 xl:w-72">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30" />
+                        <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30" />
                         <input
                             type="text"
                             placeholder="Search merchants..."
@@ -138,7 +130,7 @@ export default function BusinessesPage() {
                     </div>
                     <Button className="w-full sm:w-auto bg-brand-gold-700 text-white hover:bg-brand-gold-800 rounded-2xl px-8 h-12 font-bold shadow-lg shadow-brand-gold/10" asChild>
                         <Link href="/field/onboard">
-                            <Plus className="w-4 h-4 mr-2" />
+                            <HugeiconsIcon icon={Plus} className="w-4 h-4 mr-2" />
                             New Merchant
                         </Link>
                     </Button>
@@ -165,7 +157,7 @@ export default function BusinessesPage() {
                                     "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
                                     biz.status === 'active' ? "bg-green-500/10 text-green-600" : "bg-brand-gold/10 text-brand-gold"
                                 )}>
-                                    {biz.status === 'active' ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                                    {biz.status === 'active' ? <HugeiconsIcon icon={CheckCircle2} className="w-5 h-5" /> : <HugeiconsIcon icon={Clock} className="w-5 h-5" />}
                                 </div>
                                 <div>
                                     <h4 className="font-serif font-medium text-lg leading-tight tracking-tight dark:text-brand-cream">{biz.name}</h4>
@@ -181,14 +173,14 @@ export default function BusinessesPage() {
                                     </div>
                                 </div>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-brand-deep/20 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 text-brand-deep/20 dark:text-brand-cream/20 group-hover:text-brand-gold transition-colors" />
                         </div>
 
                         <div className="flex items-end justify-between pt-4 border-t border-brand-deep/5 dark:border-white/5">
                             <div className="space-y-1">
                                 <p className="text-[8px] font-black text-brand-deep/30 dark:text-brand-cream/30 uppercase tracking-[0.2em]">Onboarded On</p>
                                 <p className="text-[10px] font-bold text-brand-deep/60 dark:text-brand-cream/60 flex items-center gap-1.5 leading-none whitespace-nowrap">
-                                    <Calendar className="shrink-0 w-3 h-3 text-brand-deep/20 dark:text-brand-cream/20" />
+                                    <HugeiconsIcon icon={Calendar} className="shrink-0 w-3 h-3 text-brand-deep/20 dark:text-brand-cream/20" />
                                     {formatDate(biz.onboardedAt, 'd MMM yyyy • h:mm a')}
                                 </p>
                             </div>
@@ -205,7 +197,7 @@ export default function BusinessesPage() {
                 {businesses.length === 0 && !isLoading && (
                     <div className="py-24 text-center">
                         <div className="w-16 h-16 bg-brand-deep/5 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Plus className="w-8 h-8 text-brand-deep/10 dark:text-brand-cream/10" />
+                            <HugeiconsIcon icon={Plus} className="w-8 h-8 text-brand-deep/10 dark:text-brand-cream/10" />
                         </div>
                         <h3 className="text-lg font-serif font-medium text-brand-deep/40 dark:text-brand-cream/40 mb-2">No merchants yet</h3>
                         <p className="text-sm text-brand-deep/30 dark:text-brand-cream/30 max-w-[200px] mx-auto">Start onboarding businesses to grow your portfolio.</p>
@@ -239,7 +231,7 @@ export default function BusinessesPage() {
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             className="rounded-xl w-10 h-10 p-0 bg-white/50 dark:bg-white/5 border-brand-deep/5 dark:border-white/5 hover:bg-brand-gold/10 hover:text-brand-gold hover:border-brand-gold/20 disabled:opacity-30 transition-all"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronLeft} className="w-4 h-4" />
                         </Button>
 
                         <div className="flex items-center gap-1.5 px-1">
@@ -266,7 +258,7 @@ export default function BusinessesPage() {
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             className="rounded-xl w-10 h-10 p-0 bg-white/50 dark:bg-white/5 border-brand-deep/5 dark:border-white/5 hover:bg-brand-gold/10 hover:text-brand-gold hover:border-brand-gold/20 disabled:opacity-30 transition-all"
                         >
-                            <ChevronRight className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4" />
                         </Button>
                     </div>
                 </div>

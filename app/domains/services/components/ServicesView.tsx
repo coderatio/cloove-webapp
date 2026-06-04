@@ -5,7 +5,8 @@ import dynamic from "next/dynamic"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
-import { Pencil, Trash2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { PencilIcon as Pencil, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
 import {
     useBusinessServices,
     type BusinessServiceItem,
@@ -147,7 +148,7 @@ export function ServicesView() {
                                     onClick={() => openEdit(service)}
                                     className="text-brand-accent/70 hover:text-brand-deep"
                                 >
-                                    <Pencil className="w-4 h-4 mr-1" /> Edit
+                                    <HugeiconsIcon icon={Pencil} className="w-4 h-4 mr-1" /> Edit
                                 </Button>
                                 <Button
                                     variant="ghost"
@@ -156,7 +157,7 @@ export function ServicesView() {
                                     disabled={isRemoving}
                                     className="text-brand-accent/70 hover:text-red-500"
                                 >
-                                    <Trash2 className="w-4 h-4 mr-1" /> Remove
+                                    <HugeiconsIcon icon={Trash2} className="w-4 h-4 mr-1" /> Remove
                                 </Button>
                             </div>
                         </GlassCard>

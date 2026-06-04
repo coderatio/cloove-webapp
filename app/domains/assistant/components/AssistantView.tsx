@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback, type ReactElement } from "react"
 import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Loader2, Menu } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, Menu01Icon as Menu } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { useAssistantChat } from "../hooks/useAssistantChat"
@@ -181,7 +182,7 @@ export function AssistantView(): ReactElement {
                             className="h-9 w-9 rounded-full flex items-center justify-center border border-brand-deep/10 dark:border-white/10"
                             aria-label="Open chat history"
                         >
-                            <Menu className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
+                            <HugeiconsIcon icon={Menu} className="h-4 w-4 text-brand-deep dark:text-brand-cream" />
                         </button>
                         <h1 className="flex-1 min-w-0 text-sm font-serif font-medium text-brand-deep dark:text-brand-cream truncate">
                             {activeAgent ? `${activeAgent.name} — ${activeChat?.title || "New"}` : activeChat?.title || "New Conversation"}
@@ -225,7 +226,7 @@ export function AssistantView(): ReactElement {
                     {/* Chat Area */}
                     {isLoadingConversation ? (
                         <div className="flex-1 flex items-center justify-center">
-                            <Loader2 className="h-6 w-6 animate-spin text-brand-gold" />
+                            <HugeiconsIcon icon={Loader2} className="h-6 w-6 animate-spin text-brand-gold" />
                         </div>
                     ) : (hasMessages || isWaitingForResponse) ? (
                         <ChatMessageList

@@ -9,7 +9,8 @@ import {
     DrawerDescription,
     DrawerBody,
 } from "@/app/components/ui/drawer"
-import { AlertCircle, Delete, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon as AlertCircle, Delete01Icon as Delete, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface PinInputDrawerProps {
@@ -146,7 +147,7 @@ export function PinInputDrawer({
                                     }}
                                     className="flex items-start gap-3 text-red-600 dark:text-red-400 text-[11px] font-semibold tracking-wide bg-red-500/5 dark:bg-red-500/10 px-6 py-4 rounded-[24px] border border-red-500/20 backdrop-blur-xl max-w-[340px] text-left shadow-2xl shadow-red-500/10"
                                 >
-                                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 opacity-80" />
+                                    <HugeiconsIcon icon={AlertCircle} className="w-4 h-4 mt-0.5 shrink-0 opacity-80" />
                                     <span className="leading-relaxed">{error}</span>
                                 </motion.div>
                             )}
@@ -175,7 +176,7 @@ export function PinInputDrawer({
                                 disabled={isSubmitting || pin.length === 0}
                                 className="flex items-center justify-center p-6 rounded-3xl text-brand-deep/40 dark:text-brand-cream/40 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-all active:scale-90 disabled:opacity-10"
                             >
-                                <Delete className="w-6 h-6" />
+                                <HugeiconsIcon icon={Delete} className="w-6 h-6" />
                             </button>
                         </div>
 
@@ -189,7 +190,7 @@ export function PinInputDrawer({
                                     transition={{ duration: 0.15 }}
                                     className="absolute inset-0 rounded-3xl bg-brand-cream/80 dark:bg-brand-deep/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3"
                                 >
-                                    <Loader2 className="w-8 h-8 animate-spin text-brand-gold" />
+                                    <HugeiconsIcon icon={Loader2} className="w-8 h-8 animate-spin text-brand-gold" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">
                                         Processing...
                                     </span>

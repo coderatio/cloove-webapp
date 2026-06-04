@@ -1,6 +1,7 @@
 "use client"
 
-import { ArrowUpRight, Lock, Plus, Wallet } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowUpRight01Icon as ArrowUpRight, LockIcon as Lock, PlusSignIcon as Plus, Wallet01Icon as Wallet } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "../ui/glass-card"
 import { AddFundsDrawer } from "@/app/components/shared/AddFundsDrawer"
@@ -88,7 +89,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                       : "border-rose-500/20 bg-rose-500/8 text-rose-700 dark:text-rose-300"
                   )}
                 >
-                  <ArrowUpRight
+                  <HugeiconsIcon icon={ArrowUpRight}
                     className={cn("h-3.5 w-3.5", sales.trendDirection === "down" && "rotate-90")}
                   />
                   {sales.trend}
@@ -110,11 +111,11 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
 
                   <div className="flex flex-wrap gap-2 md:justify-end">
                     <Button onClick={() => setIsAddMoneyOpen(true)} size="sm">
-                      <Plus className="mr-2 h-4 w-4" />
+                      <HugeiconsIcon icon={Plus} className="mr-2 h-4 w-4" />
                       Add money
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => setIsWithdrawOpen(true)}>
-                      <Wallet className="mr-2 h-4 w-4" />
+                      <HugeiconsIcon icon={Wallet} className="mr-2 h-4 w-4" />
                       Send
                     </Button>
                   </div>
@@ -123,7 +124,7 @@ export function DashboardHero({ sales, wallet, className }: DashboardHeroProps) 
                 <div className="space-y-5 md:text-right">
                   <div className="flex items-start gap-3 md:flex-col md:items-end">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/50 text-muted-foreground">
-                      <Lock className="h-4.5 w-4.5" />
+                      <HugeiconsIcon icon={Lock} className="h-4.5 w-4.5" />
                     </div>
                     <div className="space-y-2">
                       <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">

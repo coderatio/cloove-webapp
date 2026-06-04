@@ -1,5 +1,6 @@
 import { BusinessOnboardingForm } from "@/app/components/field-agent/BusinessOnboardingForm"
-import { Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 
 export const metadata = {
     title: "Onboard Merchant | Cloove Agents",
@@ -11,7 +12,7 @@ export default function OnboardPage() {
         <div className="space-y-12 pb-24 max-w-4xl mx-auto px-4">
             <header className="text-center space-y-4 pt-4 md:pt-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold">
-                    <Sparkles className="w-3 h-3" />
+                    <HugeiconsIcon icon={Sparkles} className="w-3 h-3" />
                     <span className="text-[10px] font-black uppercase tracking-[0.2em]">Growth Protocol</span>
                 </div>
                 <h1 className="text-4xl md:text-6xl font-serif font-medium tracking-tight text-brand-deep dark:text-brand-cream leading-[1.1]">Expand the Ecosystem</h1>

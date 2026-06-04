@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react'
-import { ChevronsUpDown, Store as StoreIcon } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { UnfoldMoreIcon as ChevronsUpDown, Store01Icon as StoreIcon } from "@hugeicons/core-free-icons"
 import { Button } from '@/app/components/ui/button'
 import { useStores } from '@/app/domains/stores/providers/StoreProvider'
 import { useBusiness } from '@/app/components/BusinessProvider'
@@ -47,7 +48,7 @@ export function StoreSelector({ value = [], onChange, disabled }: StoreSelectorP
                     className="w-full justify-between h-14 rounded-2xl border-brand-deep/10 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/2 text-left font-normal"
                 >
                     <div className="flex items-center gap-2 truncate">
-                        <StoreIcon className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60 shrink-0" />
+                        <HugeiconsIcon icon={StoreIcon} className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/60 shrink-0" />
                         {selectedValues.length === 0 ? (
                             <span className="text-brand-accent/40 dark:text-brand-cream/40 font-normal">
                                 Select stores...
@@ -60,7 +61,7 @@ export function StoreSelector({ value = [], onChange, disabled }: StoreSelectorP
                             </span>
                         )}
                     </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <HugeiconsIcon icon={ChevronsUpDown} className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             )}
         />

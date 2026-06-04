@@ -1,6 +1,7 @@
 "use client"
 
-import { AlertTriangle, RefreshCw, AlertCircle } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Alert02Icon as AlertTriangle, RefreshIcon as RefreshCw, AlertCircleIcon as AlertCircle } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { cn } from "@/app/lib/utils"
@@ -38,7 +39,7 @@ export function ErrorDisplay({
                             <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                             <div className="relative w-16 h-16 rounded-full bg-linear-to-b from-red-500/10 to-transparent border border-red-500/10 flex items-center justify-center p-1">
                                 <div className="w-full h-full rounded-full bg-white/50 dark:bg-black/20 flex items-center justify-center border border-white/40 dark:border-white/5 shadow-inner">
-                                    <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400 drop-shadow-sm" />
+                                    <HugeiconsIcon icon={AlertTriangle} className="w-6 h-6 text-red-600 dark:text-red-400 drop-shadow-sm" />
                                 </div>
                             </div>
 
@@ -63,7 +64,7 @@ export function ErrorDisplay({
                                         onClick={onRetry}
                                         className="h-10 px-6 rounded-full bg-brand-deep text-brand-cream hover:bg-brand-deep/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-white/10"
                                     >
-                                        <RefreshCw className="w-3.5 h-3.5 mr-2 animate-[spin_3s_linear_infinite_paused] hover:animate-[spin_3s_linear_infinite]" />
+                                        <HugeiconsIcon icon={RefreshCw} className="w-3.5 h-3.5 mr-2 animate-[spin_3s_linear_infinite_paused] hover:animate-[spin_3s_linear_infinite]" />
                                         <span className="font-medium tracking-wide text-xs uppercase">Try Again</span>
                                     </Button>
                                 </div>

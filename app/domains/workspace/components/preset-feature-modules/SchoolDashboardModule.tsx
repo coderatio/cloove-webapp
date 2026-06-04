@@ -1,16 +1,6 @@
 "use client"
 
-import {
-    GraduationCap,
-    Users,
-    ShoppingBag,
-    Package,
-    Banknote,
-    Receipt,
-    CalendarRange,
-    Link2,
-    AlertCircle,
-} from "lucide-react"
+import { GraduationCapIcon as GraduationCap, UserMultiple02Icon as Users, ShoppingBag01Icon as ShoppingBag, PackageIcon as Package, BanknoteIcon as Banknote, Invoice01Icon as Receipt, CalendarRangeIcon as CalendarRange, Link02Icon as Link2, AlertCircleIcon as AlertCircle } from "@hugeicons/core-free-icons"
 import type { PresetPageCopy } from "@/app/domains/workspace/copy/preset-page-copy"
 import { usePermission } from "@/app/hooks/usePermission"
 import { ModuleShell } from "./ModuleShell"

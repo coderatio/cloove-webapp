@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight } from "@hugeicons/core-free-icons"
 import { Button } from '@/app/components/ui/button'
 import { cn } from '@/app/lib/utils'
 
@@ -35,7 +36,7 @@ export function Pagination({
                     onClick={() => onPageChange(currentPage - 1)}
                     className="h-10 w-10 p-0 rounded-xl bg-white/50 dark:bg-white/5 border-brand-deep/5 dark:border-white/10 hover:bg-brand-green/5 dark:hover:bg-brand-gold/5 transition-colors"
                 >
-                    <ChevronLeft className={cn("h-4 w-4", isLoading && "opacity-50")} />
+                    <HugeiconsIcon icon={ChevronLeft} className={cn("h-4 w-4", isLoading && "opacity-50")} />
                 </Button>
                 <Button
                     variant="outline"
@@ -44,7 +45,7 @@ export function Pagination({
                     onClick={() => onPageChange(currentPage + 1)}
                     className="h-10 w-10 p-0 rounded-xl bg-white/50 dark:bg-white/5 border-brand-deep/5 dark:border-white/10 hover:bg-brand-green/5 dark:hover:bg-brand-gold/5 transition-colors"
                 >
-                    <ChevronRight className={cn("h-4 w-4", isLoading && "opacity-50")} />
+                    <HugeiconsIcon icon={ChevronRight} className={cn("h-4 w-4", isLoading && "opacity-50")} />
                 </Button>
             </div>
         </div>

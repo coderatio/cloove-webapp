@@ -4,7 +4,8 @@ import { useState } from "react"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import Link from "next/link"
-import { Copy, ExternalLink, QrCode, Share2, Eye, ShoppingCart, X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CopyIcon as Copy, ExternalLinkIcon as ExternalLink, QrCodeIcon as QrCode, Share02Icon as Share2, EyeIcon as Eye, ShoppingCart01Icon as ShoppingCart, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { useStorefront } from "@/app/domains/storefront/hooks/useStorefront"
 import { useStorefrontPages } from "@/app/domains/storefront/hooks/useStorefrontPages"
 import { useStorefrontTheme } from "@/app/domains/storefront/hooks/useStorefrontTheme"
@@ -95,7 +96,7 @@ export default function StorefrontOverview() {
                         className="flex-1 md:flex-none border-brand-accent/10 hover:bg-white/40 dark:border-white/10 dark:hover:bg-white/5 h-12 rounded-xl group/btn"
                         onClick={() => setShowQrModal(true)}
                     >
-                        <QrCode className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                        <HugeiconsIcon icon={QrCode} className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" />
                         QR Code
                     </Button>
                     <a
@@ -105,7 +106,7 @@ export default function StorefrontOverview() {
                         className="flex-1 md:flex-none"
                     >
                         <Button variant="outline" className="w-full border-brand-accent/10 hover:bg-white/40 dark:border-white/10 dark:hover:bg-white/5 h-12 rounded-xl group/btn">
-                            <ExternalLink className="w-4 h-4 mr-2 group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                            <HugeiconsIcon icon={ExternalLink} className="w-4 h-4 mr-2 group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
                             Visit Store
                         </Button>
                     </a>
@@ -116,7 +117,7 @@ export default function StorefrontOverview() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <GlassCard className="p-5 flex flex-col justify-between h-32 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
                     <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Eye className="w-16 h-16" />
+                        <HugeiconsIcon icon={Eye} className="w-16 h-16" />
                     </div>
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Store Views (Today)</p>
                     <div className="space-y-1">
@@ -127,7 +128,7 @@ export default function StorefrontOverview() {
 
                 <GlassCard className="p-5 flex flex-col justify-between h-32 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 border-brand-gold/20">
                     <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-brand-gold">
-                        <ShoppingCart className="w-16 h-16" />
+                        <HugeiconsIcon icon={ShoppingCart} className="w-16 h-16" />
                     </div>
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-gold/60">Active Carts</p>
                     <div className="space-y-1">
@@ -138,7 +139,7 @@ export default function StorefrontOverview() {
 
                 <GlassCard className="p-5 flex flex-col justify-between h-32 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
                     <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Share2 className="w-16 h-16" />
+                        <HugeiconsIcon icon={Share2} className="w-16 h-16" />
                     </div>
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-accent/40 dark:text-white/40">Share Rate</p>
                     <div className="space-y-1">
@@ -194,7 +195,7 @@ export default function StorefrontOverview() {
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream">Store QR Code</h3>
                             <Button variant="ghost" size="icon" className="rounded-full h-9 w-9" onClick={() => setShowQrModal(false)}>
-                                <X className="w-4 h-4" />
+                                <HugeiconsIcon icon={X} className="w-4 h-4" />
                             </Button>
                         </div>
                         <div className="flex justify-center">

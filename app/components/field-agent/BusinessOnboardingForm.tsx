@@ -12,22 +12,8 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/app/components/ui/select"
-import {
-    Building2,
-    User,
-    Phone,
-    Globe,
-    ChevronRight,
-    ChevronLeft,
-    CheckCircle2,
-    Loader2,
-    Shield,
-    Sparkles,
-    ArrowRight,
-    Store,
-    BadgeCheck,
-    Check,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, UserIcon as User, CallIcon as Phone, GlobeIcon as Globe, ChevronRightIcon as ChevronRight, ChevronLeftIcon as ChevronLeft, CheckmarkCircle02Icon as CheckCircle2, Loading03Icon as Loader2, SecurityIcon as Shield, SparklesIcon as Sparkles, ArrowRight01Icon as ArrowRight, Store01Icon as Store, BadgeCheckIcon as BadgeCheck, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { useOnboardBusiness } from "@/app/domains/field-agent/hooks/useOnboardBusiness"
 import { useCountries } from "@/app/hooks/useCountries"
@@ -87,7 +73,7 @@ export function BusinessOnboardingForm() {
     const categoryOptions = categories.map(c => ({
         label: c.name,
         value: c.id,
-        icon: <Building2 className="w-4 h-4 opacity-40" />
+        icon: <HugeiconsIcon icon={Building2} className="w-4 h-4 opacity-40" />
     }))
 
     const handleNext = () => {
@@ -150,7 +136,7 @@ export function BusinessOnboardingForm() {
                                 )}
                                 animate={step === s.id ? { scale: 1.15 } : { scale: 1 }}
                             >
-                                <s.icon className={cn("w-5 h-5 md:w-6 md:h-6 transition-all", step >= s.id ? "scale-110" : "scale-100")} />
+                                <HugeiconsIcon icon={s.icon} className={cn("w-5 h-5 md:w-6 md:h-6 transition-all", step >= s.id ? "scale-110" : "scale-100")} />
 
                                 {step > s.id && (
                                     <motion.div
@@ -158,7 +144,7 @@ export function BusinessOnboardingForm() {
                                         animate={{ opacity: 1, scale: 1 }}
                                         className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-brand-cream dark:border-brand-deep"
                                     >
-                                        <CheckCircle2 className="w-3 h-3 text-white" />
+                                        <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3 text-white" />
                                     </motion.div>
                                 )}
                             </motion.div>
@@ -210,7 +196,7 @@ export function BusinessOnboardingForm() {
                                             animate={{ opacity: formData.businessType ? 1 : 0 }}
                                             className="text-[10px] text-brand-gold font-bold uppercase tracking-widest flex items-center gap-1"
                                         >
-                                            <CheckCircle2 className="w-3 h-3" />
+                                            <HugeiconsIcon icon={CheckCircle2} className="w-3 h-3" />
                                             Selected
                                         </motion.span>
                                     </div>
@@ -249,7 +235,7 @@ export function BusinessOnboardingForm() {
                                                         ? "bg-brand-gold-700 text-white shadow-lg shadow-brand-gold/20"
                                                         : "bg-brand-deep/5 text-brand-deep/30 dark:bg-white/5 dark:text-brand-cream/20 group-hover:scale-110"
                                                 )}>
-                                                    <Icon className="w-5 h-5" />
+                                                    <HugeiconsIcon icon={Icon} className="w-5 h-5" />
                                                 </div>
 
                                                 <div className="relative z-10">
@@ -266,7 +252,7 @@ export function BusinessOnboardingForm() {
                                                         layoutId="check-bubble"
                                                         className="absolute top-4 right-4 w-6 h-6 bg-brand-gold-700 rounded-full flex items-center justify-center"
                                                     >
-                                                        <Check className="w-3.5 h-3.5 text-white stroke-3" />
+                                                        <HugeiconsIcon icon={Check} className="w-3.5 h-3.5 text-white stroke-3" />
                                                     </motion.div>
                                                 )}
                                             </motion.button>
@@ -340,7 +326,7 @@ export function BusinessOnboardingForm() {
                                 <div className="space-y-2 group">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1 group-focus-within:text-brand-gold transition-colors">Legal Full Name</label>
                                     <div className="relative">
-                                        <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
+                                        <HugeiconsIcon icon={User} className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
                                         <Input
                                             placeholder="e.g. Sarah Johnson"
                                             className="h-14 sm:h-14 lg:h-12 pl-14 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20"
@@ -352,7 +338,7 @@ export function BusinessOnboardingForm() {
                                 <div className="space-y-2 group">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30 px-1 group-focus-within:text-brand-gold transition-colors">Direct Contact Line</label>
                                     <div className="relative">
-                                        <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
+                                        <HugeiconsIcon icon={Phone} className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-deep/20 dark:text-brand-cream/20 group-focus-within:text-brand-gold transition-colors" />
                                         <Input
                                             placeholder="e.g. +234 801 234 5678"
                                             className="h-14 sm:h-14 lg:h-12 pl-14 rounded-2xl border-brand-deep/5 bg-brand-deep/3 focus:ring-brand-gold/20 focus:border-brand-gold transition-all font-bold placeholder:text-brand-deep/20 font-mono"
@@ -361,7 +347,7 @@ export function BusinessOnboardingForm() {
                                         />
                                     </div>
                                     <div className="flex items-center gap-2 px-1 mt-2">
-                                        <Sparkles className="w-3 h-3 text-brand-gold animate-pulse" />
+                                        <HugeiconsIcon icon={Sparkles} className="w-3 h-3 text-brand-gold animate-pulse" />
                                         <p className="text-[10px] text-brand-deep/40 dark:text-brand-cream/40 font-bold uppercase tracking-wider">A secure verification invite will be sent.</p>
                                     </div>
                                 </div>
@@ -396,7 +382,7 @@ export function BusinessOnboardingForm() {
                                     <div key={i} className="flex items-center justify-between p-5 bg-white dark:bg-white/5 rounded-3xl border border-brand-deep/5 dark:border-white/5 shadow-sm group hover:scale-[1.02] transition-all">
                                         <div className="flex items-center gap-4">
                                             <div className="p-2.5 bg-brand-deep/5 dark:bg-white/5 rounded-xl text-brand-deep/20 dark:text-brand-cream/20 group-hover:bg-brand-gold/10 group-hover:text-brand-gold transition-colors">
-                                                <item.icon className="w-4 h-4" />
+                                                <HugeiconsIcon icon={item.icon} className="w-4 h-4" />
                                             </div>
                                             <span className="text-[10px] font-black uppercase tracking-widest text-brand-deep/30 dark:text-brand-cream/30">{item.label}</span>
                                         </div>
@@ -419,7 +405,7 @@ export function BusinessOnboardingForm() {
                         disabled={isSubmitting}
                         className="rounded-2xl h-14 px-8 border-brand-deep/5 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-brand-deep/5 dark:hover:bg-white/10 transition-all font-bold text-brand-deep/60 dark:text-brand-cream/60 disabled:opacity-20 translate-y-0 active:translate-y-1"
                     >
-                        <ChevronLeft className="w-5 h-5 mr-2" />
+                        <HugeiconsIcon icon={ChevronLeft} className="w-5 h-5 mr-2" />
                         {step === 1 ? "Cancel" : "Back"}
                     </Button>
 
@@ -430,7 +416,7 @@ export function BusinessOnboardingForm() {
                             className="bg-brand-deep text-white rounded-2xl h-14 px-10 font-bold hover:shadow-2xl hover:shadow-brand-deep/20 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50"
                         >
                             Continue
-                            <ChevronRight className="w-5 h-5 ml-2" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-5 h-5 ml-2" />
                         </Button>
                     ) : (
                         <Button
@@ -439,7 +425,7 @@ export function BusinessOnboardingForm() {
                             className="bg-brand-gold-700 text-white hover:bg-brand-gold-800 rounded-2xl h-14 px-12 font-black uppercase tracking-widest shadow-xl shadow-brand-gold/10 hover:-translate-y-1 active:translate-y-0 transition-all"
                         >
                             {isSubmitting ? (
-                                <Loader2 className="w-6 h-6 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin" />
                             ) : (
                                 "Submit"
                             )}
@@ -458,7 +444,7 @@ export function BusinessOnboardingForm() {
                         disabled={isSubmitting}
                         className="flex-1 rounded-[24px] h-16 border-brand-deep/10 dark:border-white/10 bg-white/50 dark:bg-white/5 active:scale-95 transition-transform font-bold"
                     >
-                        <ChevronLeft className="w-5 h-5 mr-1" />
+                        <HugeiconsIcon icon={ChevronLeft} className="w-5 h-5 mr-1" />
                         {step === 1 ? "Cancel" : "Back"}
                     </Button>
 
@@ -469,7 +455,7 @@ export function BusinessOnboardingForm() {
                             className="flex-2 bg-brand-deep text-white rounded-[24px] h-16 font-bold shadow-2xl shadow-brand-deep/30 active:scale-95 transition-all text-lg disabled:opacity-50"
                         >
                             Continue
-                            <ArrowRight className="w-6 h-6 ml-2" />
+                            <HugeiconsIcon icon={ArrowRight} className="w-6 h-6 ml-2" />
                         </Button>
                     ) : (
                         <Button
@@ -478,7 +464,7 @@ export function BusinessOnboardingForm() {
                             className="flex-2 bg-brand-gold-700 text-white rounded-[24px] h-16 font-black uppercase tracking-widest shadow-2xl shadow-brand-gold/30 active:scale-95 transition-all text-lg"
                         >
                             {isSubmitting ? (
-                                <Loader2 className="w-6 h-6 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin" />
                             ) : (
                                 "Complete Onboarding"
                             )}

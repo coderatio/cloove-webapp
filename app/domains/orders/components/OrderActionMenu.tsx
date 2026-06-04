@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState } from 'react'
-import { MoreVertical, Eye, Check, RefreshCw, Printer, Download, XCircle, Loader2, Link2, ChefHat, Zap, UtensilsCrossed } from 'lucide-react'
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { MoreVerticalIcon as MoreVertical, EyeIcon as Eye, CheckIcon as Check, RefreshIcon as RefreshCw, PrinterIcon as Printer, Download01Icon as Download, CancelCircleIcon as XCircle, Loading03Icon as Loader2, Link02Icon as Link2, ChefHatIcon as ChefHat, ZapIcon as Zap, Restaurant01Icon as UtensilsCrossed } from "@hugeicons/core-free-icons"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -47,7 +48,7 @@ export function OrderActionMenu({
 
     const kitchenNextMap: Record<
         'queued' | 'preparing' | 'ready' | 'served',
-        { status: 'preparing' | 'ready' | 'served'; label: string; icon: React.ComponentType<{ className?: string }> } | null
+        { status: 'preparing' | 'ready' | 'served'; label: string; icon: IconSvgElement } | null
     > = {
         queued:    { status: 'preparing' as const, label: 'Start Preparing', icon: ChefHat },
         preparing: { status: 'ready'     as const, label: 'Mark as Ready',   icon: Zap },
@@ -103,9 +104,9 @@ export function OrderActionMenu({
                     )}
                 >
                     {isProcessing ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-brand-green dark:text-brand-gold" />
+                        <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin text-brand-green dark:text-brand-gold" />
                     ) : (
-                        <MoreVertical className="w-4 h-4" />
+                        <HugeiconsIcon icon={MoreVertical} className="w-4 h-4" />
                     )}
                 </Button>
             </DropdownMenuTrigger>
@@ -115,7 +116,7 @@ export function OrderActionMenu({
                     className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer"
                     disabled={isProcessing}
                 >
-                    <Eye className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
+                    <HugeiconsIcon icon={Eye} className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
                     <span className="font-medium text-sm">View Details</span>
                 </DropdownMenuItem>
 
@@ -125,7 +126,7 @@ export function OrderActionMenu({
                         className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer text-brand-green dark:text-brand-gold"
                         disabled={isProcessing}
                     >
-                        <Check className="w-4 h-4" />
+                        <HugeiconsIcon icon={Check} className="w-4 h-4" />
                         <span className="font-medium text-sm">Record Payment</span>
                     </DropdownMenuItem>
                 )}
@@ -136,7 +137,7 @@ export function OrderActionMenu({
                         className="gap-3 rounded-xl py-2.5 focus:bg-brand-gold/10 cursor-pointer"
                         disabled={isProcessing}
                     >
-                        <Link2 className="w-4 h-4 text-brand-gold" />
+                        <HugeiconsIcon icon={Link2} className="w-4 h-4 text-brand-gold" />
                         <span className="font-medium text-sm">Payment Link</span>
                     </DropdownMenuItem>
                 )}
@@ -150,7 +151,7 @@ export function OrderActionMenu({
                         className="gap-3 rounded-xl py-2.5 focus:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 cursor-pointer"
                         disabled={isProcessing}
                     >
-                        {activeAction === 'paid' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        {activeAction === 'paid' ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" /> : <HugeiconsIcon icon={Check} className="w-4 h-4" />}
                         <span className="font-medium text-sm">Mark as Paid</span>
                     </DropdownMenuItem>
                 )}
@@ -164,7 +165,7 @@ export function OrderActionMenu({
                         className="gap-3 rounded-xl py-2.5 focus:bg-brand-gold/10 cursor-pointer"
                         disabled={isProcessing}
                     >
-                        <RefreshCw className={cn("w-4 h-4 text-brand-gold", activeAction === 'requery' && "animate-spin")} />
+                        <HugeiconsIcon icon={RefreshCw} className={cn("w-4 h-4 text-brand-gold", activeAction === 'requery' && "animate-spin")} />
                         <span className="font-medium text-sm">Requery Payment</span>
                     </DropdownMenuItem>
                 )}
@@ -177,7 +178,7 @@ export function OrderActionMenu({
                     className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer"
                     disabled={isProcessing}
                 >
-                    <Printer className={cn("w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40")} />
+                    <HugeiconsIcon icon={Printer} className={cn("w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40")} />
                     <span className="font-medium text-sm">Print Receipt</span>
                 </DropdownMenuItem>
 
@@ -189,7 +190,7 @@ export function OrderActionMenu({
                     className="gap-3 rounded-xl py-2.5 focus:bg-brand-deep-50 dark:focus:bg-white/10 cursor-pointer"
                     disabled={isProcessing}
                 >
-                    <Download className={cn("w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40", activeAction === 'receipt' && "animate-pulse")} />
+                    <HugeiconsIcon icon={Download} className={cn("w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40", activeAction === 'receipt' && "animate-pulse")} />
                     <span className="font-medium text-sm">Download Receipt</span>
                 </DropdownMenuItem>
 
@@ -207,8 +208,8 @@ export function OrderActionMenu({
                             disabled={isProcessing}
                         >
                             {activeAction === 'kitchen'
-                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                : <kitchenNext.icon className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
+                                ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
+                                : <HugeiconsIcon icon={kitchenNext.icon} className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
                             }
                             <span className="font-medium text-sm">{kitchenNext.label}</span>
                         </DropdownMenuItem>
@@ -227,8 +228,8 @@ export function OrderActionMenu({
                             disabled={isProcessing}
                         >
                             {activeAction === 'send-kitchen'
-                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                : <ChefHat className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
+                                ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
+                                : <HugeiconsIcon icon={ChefHat} className="w-4 h-4 text-brand-accent/60 dark:text-brand-cream/40" />
                             }
                             <span className="font-medium text-sm">Send to Kitchen</span>
                         </DropdownMenuItem>
@@ -246,7 +247,7 @@ export function OrderActionMenu({
                             className="gap-3 rounded-xl py-2.5 focus:bg-red-500/10 text-red-600 dark:text-red-400 cursor-pointer"
                             disabled={isProcessing}
                         >
-                            {activeAction === 'cancel' ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                            {activeAction === 'cancel' ? <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" /> : <HugeiconsIcon icon={XCircle} className="w-4 h-4" />}
                             <span className="font-medium text-sm">{`Cancel ${recordLabel}`}</span>
                         </DropdownMenuItem>
                     </>

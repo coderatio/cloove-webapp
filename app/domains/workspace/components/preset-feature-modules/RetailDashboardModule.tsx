@@ -1,6 +1,6 @@
 "use client"
 
-import { ScanBarcode, Banknote, Package, Link2, Truck, ShoppingBag } from "lucide-react"
+import { BarcodeScanIcon as ScanBarcode, BanknoteIcon as Banknote, PackageIcon as Package, Link02Icon as Link2, TruckIcon as Truck, ShoppingBag01Icon as ShoppingBag } from "@hugeicons/core-free-icons"
 import type { PresetPageCopy } from "@/app/domains/workspace/copy/preset-page-copy"
 import { usePermission } from "@/app/hooks/usePermission"
 import { ModuleShell } from "./ModuleShell"

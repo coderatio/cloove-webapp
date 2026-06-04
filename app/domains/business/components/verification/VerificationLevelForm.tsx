@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { MapPin, Loader2, ShieldCheck, Briefcase, Home, CheckCircle2, AlertTriangle, Fingerprint } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { MapPinIcon as MapPin, Loading03Icon as Loader2, SecurityCheckIcon as ShieldCheck, Briefcase01Icon as Briefcase, Home01Icon as Home, CheckmarkCircle02Icon as CheckCircle2, Alert02Icon as AlertTriangle, FingerPrintIcon as Fingerprint } from "@hugeicons/core-free-icons"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
 import { DocumentUpload } from "./DocumentUpload"
@@ -79,7 +80,7 @@ function LocationPicker({ onCoordinatesChange }: { onCoordinatesChange: (coords:
                         className="flex items-center gap-3"
                     >
                         <div className="w-8 h-8 rounded-full bg-brand-gold/10 flex items-center justify-center shrink-0">
-                            <Loader2 className="w-4 h-4 animate-spin text-brand-gold" />
+                            <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin text-brand-gold" />
                         </div>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-brand-gold">
                             Acquiring Satellite Lock...
@@ -94,7 +95,7 @@ function LocationPicker({ onCoordinatesChange }: { onCoordinatesChange: (coords:
                         className="flex items-center gap-3"
                     >
                         <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                            <MapPin className="w-4 h-4 text-emerald-500" />
+                            <HugeiconsIcon icon={MapPin} className="w-4 h-4 text-emerald-500" />
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600/60 leading-none mb-1">Authenticated Position</span>
@@ -102,7 +103,7 @@ function LocationPicker({ onCoordinatesChange }: { onCoordinatesChange: (coords:
                                 {coords.lat.toFixed(6)}° N, {coords.lng.toFixed(6)}° E
                             </p>
                         </div>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />
+                        <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4 text-emerald-500 ml-auto" />
                     </motion.div>
                 )}
                 {!locating && denied && (
@@ -113,7 +114,7 @@ function LocationPicker({ onCoordinatesChange }: { onCoordinatesChange: (coords:
                         className="flex items-center gap-3 w-full"
                     >
                         <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
-                            <AlertTriangle className="w-4 h-4 text-red-500" />
+                            <HugeiconsIcon icon={AlertTriangle} className="w-4 h-4 text-red-500" />
                         </div>
                         <p className="text-[11px] font-medium text-red-500 uppercase tracking-tight">
                             Geospatial Authorization Denied
@@ -153,7 +154,7 @@ export function VerificationLevelForm({
                 <div className="space-y-6">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <Fingerprint className="w-5 h-5" />
+                            <HugeiconsIcon icon={Fingerprint} className="w-5 h-5" />
                         </div>
                         <div>
                             <h4 className="text-sm font-serif text-brand-deep dark:text-brand-cream">Biometric Node Check</h4>
@@ -195,7 +196,7 @@ export function VerificationLevelForm({
                 <div className="space-y-6">
                     <div className="flex items-center gap-4">
                          <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <MapPin className="w-5 h-5" />
+                            <HugeiconsIcon icon={MapPin} className="w-5 h-5" />
                         </div>
                         <div>
                             <h4 className="text-sm font-serif text-brand-deep dark:text-brand-cream">Corporate Residency</h4>
@@ -220,7 +221,7 @@ export function VerificationLevelForm({
                 <div className="space-y-6">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <Home className="w-5 h-5" />
+                            <HugeiconsIcon icon={Home} className="w-5 h-5" />
                         </div>
                         <div>
                             <h4 className="text-sm font-serif text-brand-deep dark:text-brand-cream">Director Residency</h4>
@@ -254,7 +255,7 @@ export function VerificationLevelForm({
                 <div className="space-y-8">
                     <div className="flex items-center gap-4 border-b border-brand-deep/5 dark:border-white/5 pb-4">
                         <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <Briefcase className="w-5 h-5" />
+                            <HugeiconsIcon icon={Briefcase} className="w-5 h-5" />
                         </div>
                         <div>
                             <h4 className="text-sm font-serif text-brand-deep dark:text-brand-cream">Institutional Artifacts</h4>
@@ -293,7 +294,7 @@ export function VerificationLevelForm({
                 >
                     {isPending ? (
                         <div className="flex items-center justify-center gap-3">
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
                             <span>Validating Credentials...</span>
                         </div>
                     ) : (

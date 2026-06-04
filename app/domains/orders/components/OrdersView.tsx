@@ -6,7 +6,8 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { ShoppingBag, TrendingUp, Trash2, ReceiptText, AlertCircle, RefreshCw, FilterX, CheckCircle2, XCircle, Loader2, Clock, Copy, MoreVertical, Check, Eye, Receipt, UtensilsCrossed, ChefHat, ShoppingCart, User } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ShoppingBag01Icon as ShoppingBag, TradeUpIcon as TrendingUp, Delete02Icon as Trash2, ReceiptTextIcon as ReceiptText, AlertCircleIcon as AlertCircle, RefreshIcon as RefreshCw, FilterRemoveIcon as FilterX, CheckmarkCircle02Icon as CheckCircle2, CancelCircleIcon as XCircle, Loading03Icon as Loader2, Clock01Icon as Clock, CopyIcon as Copy, MoreVerticalIcon as MoreVertical, CheckIcon as Check, EyeIcon as Eye, Invoice01Icon as Receipt, Restaurant01Icon as UtensilsCrossed, ChefHatIcon as ChefHat, ShoppingCart01Icon as ShoppingCart, UserIcon as User } from "@hugeicons/core-free-icons"
 import { Order, OrderStatus, PaymentStatus } from "../types"
 import { OrderFilterPanel } from "./OrderFilterPanel"
 import { ActiveFilterChips } from "./ActiveFilterChips"
@@ -401,19 +402,19 @@ export function OrdersView() {
                                     className="opacity-0 group-hover/id:opacity-100 transition-opacity p-0.5 rounded hover:bg-brand-deep/5 dark:hover:bg-white/10"
                                     title={oui.copyOrderIdTitle}
                                 >
-                                    <Copy className="w-3 h-3 text-brand-accent/40 dark:text-brand-cream/40" />
+                                    <HugeiconsIcon icon={Copy} className="w-3 h-3 text-brand-accent/40 dark:text-brand-cream/40" />
                                 </button>
                             </div>
                             {layoutPreset === "restaurant" && (row.serviceMode || row.kitchenTicketStatus) && (
                                 <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                                     {row.serviceMode === "DINE_IN" ? (
                                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/8 text-blue-700 dark:text-blue-300 text-[9px] font-bold uppercase tracking-wider">
-                                            <UtensilsCrossed className="w-2.5 h-2.5" />
+                                            <HugeiconsIcon icon={UtensilsCrossed} className="w-2.5 h-2.5" />
                                             {row.tableLabel ?? "Dine-In"}
                                         </span>
                                     ) : row.serviceMode === "TAKEAWAY" ? (
                                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/8 text-amber-700 dark:text-amber-300 text-[9px] font-bold uppercase tracking-wider">
-                                            <ShoppingCart className="w-2.5 h-2.5" />
+                                            <HugeiconsIcon icon={ShoppingCart} className="w-2.5 h-2.5" />
                                             Takeaway
                                         </span>
                                     ) : null}
@@ -422,7 +423,7 @@ export function OrdersView() {
                                         if (!cfg) return null
                                         return (
                                             <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
-                                                <ChefHat className="w-2.5 h-2.5" />
+                                                <HugeiconsIcon icon={ChefHat} className="w-2.5 h-2.5" />
                                                 {cfg.label}
                                             </span>
                                         )
@@ -545,14 +546,14 @@ export function OrdersView() {
             <PageTransition>
                 <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
                     <div className="h-16 w-16 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 mb-4">
-                        <AlertCircle className="h-8 w-8" />
+                        <HugeiconsIcon icon={AlertCircle} className="h-8 w-8" />
                     </div>
                     <h2 className="text-xl font-serif font-medium mb-2">{oui.errorLoadTitle}</h2>
                     <p className="text-brand-accent/60 dark:text-brand-cream/60 max-w-sm mb-6">
                         {error.message || oui.errorLoadHint}
                     </p>
                     <Button onClick={() => refetch()} className="rounded-full px-8">
-                        <RefreshCw className="h-4 w-4 mr-2" />
+                        <HugeiconsIcon icon={RefreshCw} className="h-4 w-4 mr-2" />
                         {oui.retry}
                     </Button>
                 </div>
@@ -574,7 +575,7 @@ export function OrdersView() {
                                 className="hidden h-11 rounded-full bg-primary px-5 font-semibold text-white shadow-sm transition-colors hover:bg-primary/92 hover:text-white md:flex [&_svg]:text-white"
                                 onClick={() => setSchoolFeeDrawerOpen(true)}
                             >
-                                <ShoppingBag className="w-4 h-4 mr-2" />
+                                <HugeiconsIcon icon={ShoppingBag} className="w-4 h-4 mr-2" />
                                 {oui.recordSale}
                             </Button>
                         ) : (
@@ -582,7 +583,7 @@ export function OrdersView() {
                                 <Button
                                     className="h-11 rounded-full bg-primary px-5 font-semibold text-white shadow-sm transition-colors hover:bg-primary/92 hover:text-white [&_svg]:text-white"
                                 >
-                                    <ShoppingBag className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={ShoppingBag} className="w-4 h-4 mr-2" />
                                     {oui.recordSale}
                                 </Button>
                             </Link>
@@ -609,7 +610,7 @@ export function OrdersView() {
                         >
                             {/* Decorative ghost icon */}
                             <div className="absolute -right-4 -bottom-4 p-3 opacity-[0.03] group-hover:opacity-[0.08] group-hover:scale-110 transition-all rotate-12 group-hover:rotate-0 duration-1000">
-                                <stat.icon className="w-24 h-24 dark:text-brand-cream" />
+                                <HugeiconsIcon icon={stat.icon} className="w-24 h-24 dark:text-brand-cream" />
                             </div>
 
                             <div className="relative z-10 space-y-4">
@@ -620,7 +621,7 @@ export function OrdersView() {
                                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                                             : "bg-brand-gold/10 text-brand-gold"
                                     )}>
-                                        <stat.icon className="h-5 w-5" />
+                                        <HugeiconsIcon icon={stat.icon} className="h-5 w-5" />
                                     </div>
 
                                     {(stat as any).isPending && (
@@ -689,9 +690,9 @@ export function OrdersView() {
                             <div className="bg-brand-cream/40 dark:bg-white/5 border border-dashed border-brand-accent/10 dark:border-white/10 rounded-3xl flex flex-col items-center justify-center py-24 px-8 text-center text-brand-deep dark:text-brand-cream">
                                 <div className="h-20 w-20 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-6">
                                     {isFiltered ? (
-                                        <FilterX className="h-10 w-10 opacity-20" />
+                                        <HugeiconsIcon icon={FilterX} className="h-10 w-10 opacity-20" />
                                     ) : (
-                                        <ShoppingBag className="h-10 w-10 opacity-20 text-brand-gold" />
+                                        <HugeiconsIcon icon={ShoppingBag} className="h-10 w-10 opacity-20 text-brand-gold" />
                                     )}
                                 </div>
                                 <h3 className="text-xl font-serif font-medium mb-2">
@@ -717,7 +718,7 @@ export function OrdersView() {
                                             variant="outline"
                                             className="rounded-full px-8 h-12 border-brand-accent/20 dark:border-white/20 hover:bg-brand-accent/5 dark:hover:bg-white/5"
                                         >
-                                            <ShoppingBag className="w-4 h-4 mr-2 text-brand-gold" />
+                                            <HugeiconsIcon icon={ShoppingBag} className="w-4 h-4 mr-2 text-brand-gold" />
                                             {oui.recordFirstSale}
                                         </Button>
                                     </Link>
@@ -736,13 +737,13 @@ export function OrdersView() {
                                         <span>{order.id.startsWith('#') ? order.id : `#${order.id.slice(0, 8)}`}</span>
                                         {layoutPreset === "restaurant" && order.serviceMode === "DINE_IN" && (
                                             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-500/8 text-blue-700 dark:text-blue-300 text-[9px] font-bold uppercase tracking-wider">
-                                                <UtensilsCrossed className="w-2.5 h-2.5" />
+                                                <HugeiconsIcon icon={UtensilsCrossed} className="w-2.5 h-2.5" />
                                                 {order.tableLabel ?? "Dine-In"}
                                             </span>
                                         )}
                                         {layoutPreset === "restaurant" && order.serviceMode === "TAKEAWAY" && (
                                             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-500/8 text-amber-700 dark:text-amber-300 text-[9px] font-bold uppercase tracking-wider">
-                                                <ShoppingCart className="w-2.5 h-2.5" />
+                                                <HugeiconsIcon icon={ShoppingCart} className="w-2.5 h-2.5" />
                                                 Takeaway
                                             </span>
                                         )}
@@ -751,7 +752,7 @@ export function OrdersView() {
                                             if (!cfg) return null
                                             return (
                                                 <span className={cn("inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider", cfg.className)}>
-                                                    <ChefHat className="w-2.5 h-2.5" />
+                                                    <HugeiconsIcon icon={ChefHat} className="w-2.5 h-2.5" />
                                                     {cfg.label}
                                                 </span>
                                             )
@@ -914,7 +915,7 @@ export function OrdersView() {
                                                         className="border-t border-brand-deep/10 pt-3 dark:border-white/10"
                                                     >
                                                         <span className="inline-flex items-center gap-2 text-xs leading-relaxed text-brand-accent/50 dark:text-brand-cream/40">
-                                                            <User
+                                                            <HugeiconsIcon icon={User}
                                                                 className="size-3.5 shrink-0 text-brand-accent/45 dark:text-brand-cream/35"
                                                                 aria-hidden
                                                             />
@@ -1036,7 +1037,7 @@ export function OrdersView() {
                                 className="h-14 w-14 rounded-full bg-primary text-white shadow-lg transition-colors hover:bg-primary/92 hover:text-white active:bg-primary/90 [&_svg]:text-white"
                                 onClick={() => setSchoolFeeDrawerOpen(true)}
                             >
-                                <ShoppingBag className="h-6 w-6" />
+                                <HugeiconsIcon icon={ShoppingBag} className="h-6 w-6" />
                             </Button>
                         ) : (
                             <Link href="/orders/sale">
@@ -1044,7 +1045,7 @@ export function OrdersView() {
                                     size="icon"
                                     className="h-14 w-14 rounded-full bg-primary text-white shadow-lg transition-colors hover:bg-primary/92 hover:text-white active:bg-primary/90 [&_svg]:text-white"
                                 >
-                                    <ShoppingBag className="h-6 w-6" />
+                                    <HugeiconsIcon icon={ShoppingBag} className="h-6 w-6" />
                                 </Button>
                             </Link>
                         )}

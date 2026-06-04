@@ -3,7 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Grid3X3, Package, Search, Tag, TrendingUp } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { GridIcon as Grid3X3, PackageIcon as Package, Search01Icon as Search, Tag01Icon as Tag, TradeUpIcon as TrendingUp } from "@hugeicons/core-free-icons"
 import { Input } from "@/app/components/ui/input"
 import { formatCurrency } from "@/app/lib/formatters"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -85,7 +86,7 @@ export default function SalesModeCatalogPage() {
           </div>
 
           <div className="mt-4 relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40" />
+            <HugeiconsIcon icon={Search} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40" />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -141,7 +142,7 @@ export default function SalesModeCatalogPage() {
                   <div>
                     <p className="line-clamp-1 text-base font-semibold text-brand-deep dark:text-brand-cream">{item.product}</p>
                     <p className="mt-1 inline-flex items-center gap-1 text-xs text-brand-accent/60 dark:text-brand-cream/60">
-                      <Tag className="h-3.5 w-3.5" />
+                      <HugeiconsIcon icon={Tag} className="h-3.5 w-3.5" />
                       {item.category}
                     </p>
                   </div>
@@ -153,7 +154,7 @@ export default function SalesModeCatalogPage() {
                     <CurrencyText value={formatCurrency(item.price)} />
                   </p>
                   <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.1em] text-brand-accent/65 dark:text-brand-cream/65">
-                    <Package className="h-3.5 w-3.5" />
+                    <HugeiconsIcon icon={Package} className="h-3.5 w-3.5" />
                     {item.stock}
                   </p>
                 </div>
@@ -174,7 +175,7 @@ function MetricCard({
 }: {
   label: string
   value: React.ReactNode
-  icon: React.ComponentType<{ className?: string }>
+  icon: IconSvgElement
   tone?: "default" | "good" | "warn"
 }) {
   const toneClass = tone === "good"
@@ -188,7 +189,7 @@ function MetricCard({
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-accent/50 dark:text-brand-cream/50">{label}</p>
       <div className="mt-1.5 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">{value}</p>
-        <Icon className={cn("h-4 w-4", toneClass)} />
+        <HugeiconsIcon icon={Icon} className={cn("h-4 w-4", toneClass)} />
       </div>
     </article>
   )

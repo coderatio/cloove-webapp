@@ -6,7 +6,8 @@ import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
-import { Wallet, Building2, ChevronDown, Check } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Wallet01Icon as Wallet, Building02Icon as Building2, ChevronDownIcon as ChevronDown, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 interface WithdrawalDrawerProps {
@@ -46,7 +47,7 @@ export function WithdrawalDrawer({
                 <div className="mx-auto w-full max-w-sm">
                     <DrawerHeader>
                         <div className="mx-auto bg-brand-deep/5 dark:bg-white/5 p-3 rounded-full w-fit mb-4">
-                            <Wallet className="w-6 h-6 text-brand-deep dark:text-brand-cream" />
+                            <HugeiconsIcon icon={Wallet} className="w-6 h-6 text-brand-deep dark:text-brand-cream" />
                         </div>
                         <DrawerTitle className="text-center text-xl font-serif text-brand-deep dark:text-brand-cream">
                             Withdraw Funds
@@ -109,7 +110,7 @@ export function WithdrawalDrawer({
                                             )}
                                         >
                                             <div className="w-10 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center shrink-0 text-brand-deep/60 dark:text-brand-cream/60">
-                                                <Building2 className="w-5 h-5" />
+                                                <HugeiconsIcon icon={Building2} className="w-5 h-5" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="font-medium text-brand-deep dark:text-brand-cream truncate">
@@ -121,7 +122,7 @@ export function WithdrawalDrawer({
                                             </div>
                                             {selectedBank === bank.id && (
                                                 <div className="w-4 h-4 rounded-full bg-brand-deep dark:bg-brand-gold-700 flex items-center justify-center text-brand-gold dark:text-brand-deep">
-                                                    <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                                                    <HugeiconsIcon icon={Check} className="w-2.5 h-2.5" strokeWidth={3} />
                                                 </div>
                                             )}
                                         </button>

@@ -2,7 +2,8 @@
 
 import { type ReactElement } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { FileText, Receipt, X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { File01Icon as FileText, Invoice01Icon as Receipt, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { AGENTS, type AgentDefinition } from "../lib/agent-config"
@@ -16,9 +17,9 @@ interface AgentSelectorProps {
 function AgentIcon({ type, className }: { type: AgentDefinition["iconType"]; className?: string }) {
     switch (type) {
         case "proposal":
-            return <FileText className={className} />
+            return <HugeiconsIcon icon={FileText} className={className} />
         case "invoice":
-            return <Receipt className={className} />
+            return <HugeiconsIcon icon={Receipt} className={className} />
     }
 }
 
@@ -55,7 +56,7 @@ export function AgentSelector({ selectedAgent, onSelect, disabled }: AgentSelect
                             <AgentIcon type={agent.iconType} className="w-3.5 h-3.5" />
                             <span>{agent.shortName}</span>
                             {isSelected && (
-                                <X className="w-3 h-3 ml-0.5 opacity-60" />
+                                <HugeiconsIcon icon={X} className="w-3 h-3 ml-0.5 opacity-60" />
                             )}
                         </motion.button>
                     )

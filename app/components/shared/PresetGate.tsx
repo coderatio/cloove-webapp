@@ -2,20 +2,15 @@
 
 import * as React from "react"
 import Link from "next/link"
-import {
-  ChefHat,
-  ShoppingCart,
-  Pill,
-  GraduationCap,
-  LayoutDashboard,
-} from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { ChefHatIcon as ChefHat, ShoppingCart01Icon as ShoppingCart, PillIcon as Pill, GraduationCapIcon as GraduationCap, DashboardSquare01Icon as LayoutDashboard } from "@hugeicons/core-free-icons"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { useLayoutPresetId } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { LAYOUT_PRESETS, type LayoutPresetId } from "@/app/domains/workspace/nav/layout-presets"
 
-const PRESET_ICONS: Record<LayoutPresetId, React.ElementType> = {
+const PRESET_ICONS: Record<LayoutPresetId, IconSvgElement> = {
   default: LayoutDashboard,
   restaurant: ChefHat,
   retail: ShoppingCart,
@@ -60,7 +55,7 @@ export function PresetGate({
   const resolvedDescription =
     description ??
     `Enable the ${presetDef.title} layout to access ${featureLabel ?? "this feature"}.`
-  const resolvedIcon = icon ?? <Icon className="h-5 w-5" />
+  const resolvedIcon = icon ?? <HugeiconsIcon icon={Icon} className="h-5 w-5" />
   const resolvedAction = action ?? (
     <Button asChild className="rounded-full transition-all duration-300">
       <Link href="/settings?tab=workspace">Open workspace settings</Link>

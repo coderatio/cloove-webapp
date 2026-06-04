@@ -7,7 +7,8 @@ import { useIsMobile } from '@/app/hooks/useMediaQuery'
 import { PageTransition } from '@/app/components/layout/page-transition'
 import { ListCard } from '@/app/components/ui/list-card'
 import { GlassCard } from '@/app/components/ui/glass-card'
-import { AlertTriangle, Package, Trash2, Loader2, Plus, Sparkles, MoreVertical, Copy, Eye, Pencil, ChevronLeft, ChevronRight, Barcode, RefreshCw, PackageX, ListTree, Layers, ChevronRight as ChevronRightIcon } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Alert02Icon as AlertTriangle, PackageIcon as Package, Delete02Icon as Trash2, Loading03Icon as Loader2, PlusSignIcon as Plus, SparklesIcon as Sparkles, MoreVerticalIcon as MoreVertical, CopyIcon as Copy, EyeIcon as Eye, PencilIcon as Pencil, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, BarcodeIcon as Barcode, RefreshIcon as RefreshCw, PackageRemoveIcon as PackageX, ListTreeIcon as ListTree, Layers01Icon as Layers, ChevronRightIcon } from "@hugeicons/core-free-icons"
 import { cn } from '@/app/lib/utils'
 import {
     Select,
@@ -606,7 +607,7 @@ export function InventoryView() {
                                 className="object-cover"
                             />
                         ) : (
-                            <Package className="w-4 h-4 text-brand-deep/20 dark:text-white/20" />
+                            <HugeiconsIcon icon={Package} className="w-4 h-4 text-brand-deep/20 dark:text-white/20" />
                         )}
                     </div>
                     <div className="flex flex-col min-w-0">
@@ -727,7 +728,7 @@ export function InventoryView() {
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0 rounded-full hover:bg-brand-deep/5 dark:hover:bg-white/5">
                                 <span className="sr-only">Open menu</span>
-                                <MoreVertical className="h-4 w-4 text-brand-deep/40 dark:text-brand-cream/40" />
+                                <HugeiconsIcon icon={MoreVertical} className="h-4 w-4 text-brand-deep/40 dark:text-brand-cream/40" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 bg-white/80 dark:bg-[#021a12]/80 backdrop-blur-xl border-brand-deep/5 dark:border-white/5 shadow-2xl">
@@ -738,7 +739,7 @@ export function InventoryView() {
                                 }}
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
                             >
-                                <Eye className="w-4 h-4" />
+                                <HugeiconsIcon icon={Eye} className="w-4 h-4" />
                                 View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -748,7 +749,7 @@ export function InventoryView() {
                                 }}
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
                             >
-                                <Pencil className="w-4 h-4" />
+                                <HugeiconsIcon icon={Pencil} className="w-4 h-4" />
                                 Edit Product
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -758,7 +759,7 @@ export function InventoryView() {
                                 }}
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
                             >
-                                <Barcode className="w-4 h-4" />
+                                <HugeiconsIcon icon={Barcode} className="w-4 h-4" />
                                 Print Labels
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -775,7 +776,7 @@ export function InventoryView() {
                                 }}
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/60 dark:text-brand-cream/60 focus:bg-brand-green/10 focus:text-brand-green dark:focus:bg-brand-gold/10 dark:focus:text-brand-gold cursor-pointer"
                             >
-                                <Copy className="w-4 h-4" />
+                                <HugeiconsIcon icon={Copy} className="w-4 h-4" />
                                 Duplicate
                             </DropdownMenuItem>
                             <DropdownMenuSeparator className="my-1 bg-brand-deep/5 dark:bg-white/5" />
@@ -784,7 +785,7 @@ export function InventoryView() {
                                     disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
                                     className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream data-[state=open]:bg-brand-deep/10 dark:data-[state=open]:bg-white/10 data-[state=open]:text-brand-deep dark:data-[state=open]:text-brand-cream"
                                 >
-                                    <Loader2 className={cn(
+                                    <HugeiconsIcon icon={Loader2} className={cn(
                                         "w-4 h-4",
                                         syncingCatalogState.productId === item.id && "animate-spin"
                                     )} />
@@ -803,7 +804,7 @@ export function InventoryView() {
                                         disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
                                         className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium cursor-pointer"
                                     >
-                                        <Loader2 className={cn("w-4 h-4", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' && "animate-spin")} />
+                                        <HugeiconsIcon icon={Loader2} className={cn("w-4 h-4", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' && "animate-spin")} />
                                         {syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' ? 'Syncing White-label...' : 'Sync White-label'}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -815,7 +816,7 @@ export function InventoryView() {
                                         disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
                                         className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium cursor-pointer"
                                     >
-                                        <Loader2 className={cn("w-4 h-4", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' && "animate-spin")} />
+                                        <HugeiconsIcon icon={Loader2} className={cn("w-4 h-4", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' && "animate-spin")} />
                                         {syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' ? 'Syncing Global...' : 'Sync Global'}
                                     </DropdownMenuItem>
                                 </DropdownMenuSubContent>
@@ -827,9 +828,9 @@ export function InventoryView() {
                                         className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream data-[state=open]:bg-brand-deep/10 dark:data-[state=open]:bg-white/10 data-[state=open]:text-brand-deep dark:data-[state=open]:text-brand-cream"
                                     >
                                         {removingFromCatalogState.productId === item.id ? (
-                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
                                         ) : (
-                                            <PackageX className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/40" />
+                                            <HugeiconsIcon icon={PackageX} className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/40" />
                                         )}
                                         Remove from catalog
                                     </DropdownMenuSubTrigger>
@@ -867,7 +868,7 @@ export function InventoryView() {
                                 }}
                                 className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium text-rose-500 focus:bg-rose-500/10 focus:text-rose-600 cursor-pointer"
                             >
-                                <Trash2 className="w-4 h-4" />
+                                <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                                 Delete
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -906,7 +907,7 @@ export function InventoryView() {
                                 onClick={() => setIsBulkUploadOpen(true)}
                                 className="flex h-12 rounded-full bg-white border border-brand-accent/10 text-brand-deep-800 hover:text-brand-deep dark:bg-white/5 dark:text-brand-cream/80 dark:border dark:border-brand-gold-500/20 dark:hover:text-brand-gold transition-all gap-2"
                             >
-                                <Sparkles className="w-4 h-4" />
+                                <HugeiconsIcon icon={Sparkles} className="w-4 h-4" />
                                 Bulk Import
                             </Button>
                         </div>
@@ -944,10 +945,10 @@ export function InventoryView() {
                 >
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Package className="w-24 h-24 dark:text-brand-cream/10" />
+                            <HugeiconsIcon icon={Package} className="w-24 h-24 dark:text-brand-cream/10" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
-                            {isFetching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-6 w-6" />}
+                            {isFetching ? <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" /> : <HugeiconsIcon icon={Package} className="h-6 w-6" />}
                         </div>
                         <div>
                             <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">{iui.stats.totalUnits}</p>
@@ -957,10 +958,10 @@ export function InventoryView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Plus className="w-24 h-24 dark:text-brand-cream/10" />
+                            <HugeiconsIcon icon={Plus} className="w-24 h-24 dark:text-brand-cream/10" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-deep dark:text-brand-cream">
-                            {isFetching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+                            {isFetching ? <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" /> : <HugeiconsIcon icon={Plus} className="h-5 w-5" />}
                         </div>
                         <div>
                             <p className="text-sm font-medium text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-wider">{iui.stats.products}</p>
@@ -970,10 +971,10 @@ export function InventoryView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group border-brand-gold/20">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-brand-gold">
-                            <AlertTriangle className="w-24 h-24 dark:text-brand-cream/10" />
+                            <HugeiconsIcon icon={AlertTriangle} className="w-24 h-24 dark:text-brand-cream/10" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            {isFetching ? <Loader2 className="h-5 w-5 animate-spin text-brand-gold" /> : <AlertTriangle className="h-6 w-6" />}
+                            {isFetching ? <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin text-brand-gold" /> : <HugeiconsIcon icon={AlertTriangle} className="h-6 w-6" />}
                         </div>
                         <div>
                             <p className="text-sm font-medium text-brand-gold/60 dark:text-brand-gold/70 uppercase tracking-wider">{iui.stats.inventoryValue}</p>
@@ -993,7 +994,7 @@ export function InventoryView() {
                             )}
                         >
                             <div className="absolute right-0 top-0 p-3 opacity-[0.06] group-hover:opacity-[0.1] transition-opacity pointer-events-none">
-                                <ListTree className="w-24 h-24 text-brand-green dark:text-emerald-400/30" />
+                                <HugeiconsIcon icon={ListTree} className="w-24 h-24 text-brand-green dark:text-emerald-400/30" />
                             </div>
                             <div
                                 className={cn(
@@ -1004,9 +1005,9 @@ export function InventoryView() {
                                 )}
                             >
                                 {isFetching ? (
-                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                    <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" />
                                 ) : (
-                                    <RefreshCw className="h-6 w-6" />
+                                    <HugeiconsIcon icon={RefreshCw} className="h-6 w-6" />
                                 )}
                             </div>
                             <div className="relative z-1 flex-1 min-w-0">
@@ -1019,7 +1020,7 @@ export function InventoryView() {
                                             className="absolute -top-1 right-0 h-9 w-9 rounded-full text-brand-deep/45 hover:text-brand-green hover:bg-brand-green/10 dark:text-brand-cream/45 dark:hover:bg-white/10 dark:hover:text-brand-gold"
                                             aria-label={`${iui.stats.catalogListedBreakdown}${catalogPendingTotal > 0 ? ` · ${iui.stats.catalogPendingBreakdown}` : ''}`}
                                         >
-                                            <ListTree className="h-4 w-4" />
+                                            <HugeiconsIcon icon={ListTree} className="h-4 w-4" />
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent align="end" sideOffset={8} className="w-80 p-0 overflow-hidden rounded-2xl">
@@ -1131,7 +1132,7 @@ export function InventoryView() {
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-brand-deep/5 dark:hover:bg-white/5">
-                                                        <MoreVertical className="h-4 w-4" />
+                                                        <HugeiconsIcon icon={MoreVertical} className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48 p-1.5 rounded-2xl bg-white/95 dark:bg-brand-deep-800 backdrop-blur-xl border border-brand-deep/5 dark:border-white/5 shadow-2xl">
@@ -1143,7 +1144,7 @@ export function InventoryView() {
                                                         }}
                                                         className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl focus:bg-brand-green/10 dark:focus:bg-brand-gold/10 transition-colors"
                                                     >
-                                                        <Eye className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                        <HugeiconsIcon icon={Eye} className="w-4 h-4 text-brand-green dark:text-brand-gold" />
                                                         View Details
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
@@ -1154,7 +1155,7 @@ export function InventoryView() {
                                                         }}
                                                         className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl focus:bg-brand-green/10 dark:focus:bg-brand-gold/10 transition-colors"
                                                     >
-                                                        <Pencil className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                        <HugeiconsIcon icon={Pencil} className="w-4 h-4 text-brand-green dark:text-brand-gold" />
                                                         Edit Product
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
@@ -1165,7 +1166,7 @@ export function InventoryView() {
                                                         }}
                                                         className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl focus:bg-brand-green/10 dark:focus:bg-brand-gold/10 transition-colors"
                                                     >
-                                                        <Barcode className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                        <HugeiconsIcon icon={Barcode} className="w-4 h-4 text-brand-green dark:text-brand-gold" />
                                                         Print Labels
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
@@ -1183,7 +1184,7 @@ export function InventoryView() {
                                                         }}
                                                         className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl focus:bg-brand-green/10 dark:focus:bg-brand-gold/10 transition-colors"
                                                     >
-                                                        <Copy className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                        <HugeiconsIcon icon={Copy} className="w-4 h-4 text-brand-green dark:text-brand-gold" />
                                                         Duplicate
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="my-1 bg-brand-deep/5 dark:bg-white/5" />
@@ -1192,7 +1193,7 @@ export function InventoryView() {
                                                             disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
                                                             className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream data-[state=open]:bg-brand-deep/10 dark:data-[state=open]:bg-white/10 data-[state=open]:text-brand-deep dark:data-[state=open]:text-brand-cream transition-colors"
                                                         >
-                                                            <Loader2 className={cn(
+                                                            <HugeiconsIcon icon={Loader2} className={cn(
                                                                 "w-4 h-4 text-brand-green dark:text-brand-gold",
                                                                 syncingCatalogState.productId === item.id && "animate-spin"
                                                             )} />
@@ -1212,7 +1213,7 @@ export function InventoryView() {
                                                                 disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
                                                                 className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors"
                                                             >
-                                                                <Loader2 className={cn("w-4 h-4 text-brand-green dark:text-brand-gold", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' && "animate-spin")} />
+                                                                <HugeiconsIcon icon={Loader2} className={cn("w-4 h-4 text-brand-green dark:text-brand-gold", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' && "animate-spin")} />
                                                                 {syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'whitelabel' ? 'Syncing White-label...' : 'Sync White-label'}
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
@@ -1225,7 +1226,7 @@ export function InventoryView() {
                                                                 disabled={!productSyncEligibility(item).canSync || syncingCatalogState.productId === item.id}
                                                                 className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl transition-colors"
                                                             >
-                                                                <Loader2 className={cn("w-4 h-4 text-brand-green dark:text-brand-gold", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' && "animate-spin")} />
+                                                                <HugeiconsIcon icon={Loader2} className={cn("w-4 h-4 text-brand-green dark:text-brand-gold", syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' && "animate-spin")} />
                                                                 {syncingCatalogState.productId === item.id && syncingCatalogState.scope === 'global' ? 'Syncing Global...' : 'Sync Global'}
                                                             </DropdownMenuItem>
                                                         </DropdownMenuSubContent>
@@ -1237,9 +1238,9 @@ export function InventoryView() {
                                                                 className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-xl text-brand-deep/70 dark:text-brand-cream/80 focus:bg-brand-deep/10 dark:focus:bg-white/10 focus:text-brand-deep dark:focus:text-brand-cream data-[state=open]:bg-brand-deep/10 dark:data-[state=open]:bg-white/10 data-[state=open]:text-brand-deep dark:data-[state=open]:text-brand-cream transition-colors"
                                                             >
                                                                 {removingFromCatalogState.productId === item.id ? (
-                                                                    <Loader2 className="w-4 h-4 animate-spin text-brand-green dark:text-brand-gold" />
+                                                                    <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin text-brand-green dark:text-brand-gold" />
                                                                 ) : (
-                                                                    <PackageX className="w-4 h-4 text-brand-green dark:text-brand-gold" />
+                                                                    <HugeiconsIcon icon={PackageX} className="w-4 h-4 text-brand-green dark:text-brand-gold" />
                                                                 )}
                                                                 Remove from catalog
                                                             </DropdownMenuSubTrigger>
@@ -1284,7 +1285,7 @@ export function InventoryView() {
                                                         }}
                                                         className="flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-rose-500 rounded-xl focus:bg-rose-500/10 dark:focus:bg-rose-500/10 transition-colors"
                                                     >
-                                                        <Trash2 className="w-4 h-4" />
+                                                        <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                                                         Delete Product
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -1295,7 +1296,7 @@ export function InventoryView() {
                             )}
                             {!isFetching && displayItems.length === 0 ? (
                                 <GlassCard className="p-12 text-center">
-                                    <Package className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                                    <HugeiconsIcon icon={Package} className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                     <p className="text-brand-accent/40">No products found</p>
                                 </GlassCard>
                             ) : null}
@@ -1310,7 +1311,7 @@ export function InventoryView() {
                                         onClick={() => setCurrentPage(pageMeta.currentPage - 1)}
                                         className="rounded-xl h-10 border-brand-deep/5 dark:border-white/10"
                                     >
-                                        <ChevronLeft className="h-4 w-4 mr-1 dark:text-brand-gold" />
+                                        <HugeiconsIcon icon={ChevronLeft} className="h-4 w-4 mr-1 dark:text-brand-gold" />
                                         Prev
                                     </Button>
                                     <div className="flex items-center gap-1.5">
@@ -1338,7 +1339,7 @@ export function InventoryView() {
                                         className="rounded-xl h-10 border-brand-deep/5 dark:border-white/10"
                                     >
                                         Next
-                                        <ChevronRight className="h-4 w-4 ml-1 dark:text-brand-gold" />
+                                        <HugeiconsIcon icon={ChevronRight} className="h-4 w-4 ml-1 dark:text-brand-gold" />
                                     </Button>
                                 </div>
                             ) : null}
@@ -1384,7 +1385,7 @@ export function InventoryView() {
                                     {/* Section: Visuals */}
                                     <div className="space-y-4">
                                         <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40 px-1">
-                                            <Sparkles className="w-3 h-3 text-brand-gold" />
+                                            <HugeiconsIcon icon={Sparkles} className="w-3 h-3 text-brand-gold" />
                                             Product Visuals
                                         </h3>
                                         <GlassCard className="p-6 bg-white/50 dark:bg-white/5 border-none shadow-sm ring-1 ring-brand-deep/10 dark:ring-white/5">
@@ -1398,7 +1399,7 @@ export function InventoryView() {
                                     {/* Section: Basic Information */}
                                     <div className="space-y-6">
                                         <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                            <Package className="w-3 h-3" />
+                                            <HugeiconsIcon icon={Package} className="w-3 h-3" />
                                             Basic Information
                                         </h3>
                                         <div className="grid gap-5">
@@ -1410,7 +1411,7 @@ export function InventoryView() {
                                                         onClick={() => setFormData({ ...formData, barcode: autoGenerateBarcode(editingItem?.id || Math.random().toString(36).substring(7), barcodeFormat) })}
                                                         className="text-[9px] font-bold text-brand-gold hover:text-brand-gold/80 transition-colors flex items-center gap-1"
                                                     >
-                                                        <Sparkles className="w-3 h-3" />
+                                                        <HugeiconsIcon icon={Sparkles} className="w-3 h-3" />
                                                         Auto-Generate
                                                     </button>
                                                 </div>
@@ -1467,7 +1468,7 @@ export function InventoryView() {
                                     {/* Section: Inventory & Identification */}
                                     <div className="space-y-6">
                                         <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                            <AlertTriangle className="w-3 h-3" />
+                                            <HugeiconsIcon icon={AlertTriangle} className="w-3 h-3" />
                                             Inventory & Tracking
                                         </h3>
                                         <GlassCard className="p-6 bg-white dark:bg-white/5 border-brand-deep/8 dark:border-white/10 space-y-6">
@@ -1509,7 +1510,7 @@ export function InventoryView() {
                                     {/* Section: Pricing */}
                                     <div className="space-y-6">
                                         <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                            <Sparkles className="w-3 h-3" />
+                                            <HugeiconsIcon icon={Sparkles} className="w-3 h-3" />
                                             Pricing Strategy
                                         </h3>
                                         <div className="grid sm:grid-cols-2 gap-5">
@@ -1545,7 +1546,7 @@ export function InventoryView() {
                                     {/* Section: Availability */}
                                     <div className="space-y-6">
                                         <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                            <MoreVertical className="w-3 h-3" />
+                                            <HugeiconsIcon icon={MoreVertical} className="w-3 h-3" />
                                             Global Availability
                                         </h3>
                                         <div className="space-y-4">
@@ -1597,7 +1598,7 @@ export function InventoryView() {
                                     {/* Section: Variants & Options (opens in side sheet / drawer) */}
                                     <div className="space-y-4 pt-4">
                                         <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-deep/40 dark:text-brand-cream/40">
-                                            <Layers className="w-3 h-3" />
+                                            <HugeiconsIcon icon={Layers} className="w-3 h-3" />
                                             Variants & Options
                                         </h3>
                                         <button
@@ -1625,7 +1626,7 @@ export function InventoryView() {
                                             className="w-full text-left rounded-2xl border border-brand-deep/5 dark:border-white/5 bg-white dark:bg-white/5 hover:border-brand-gold/30 hover:bg-brand-gold/2 transition-all p-5 flex items-center gap-4 group"
                                         >
                                             <div className="shrink-0 w-12 h-12 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
-                                                <Layers className="w-5 h-5" strokeWidth={2.25} />
+                                                <HugeiconsIcon icon={Layers} className="w-5 h-5" strokeWidth={2.25} />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1.5">
@@ -1651,7 +1652,7 @@ export function InventoryView() {
                                                     )}
                                                 </div>
                                             </div>
-                                            <ChevronRightIcon className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30 shrink-0 group-hover:text-brand-gold transition-colors" />
+                                            <HugeiconsIcon icon={ChevronRightIcon} className="w-4 h-4 text-brand-deep/30 dark:text-brand-cream/30 shrink-0 group-hover:text-brand-gold transition-colors" />
                                         </button>
                                     </div>
 
@@ -1672,7 +1673,7 @@ export function InventoryView() {
                                             disabled={isSubmitting}
                                             className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:hover:bg-brand-gold-800 dark:text-brand-deep font-bold shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest text-xs"
                                         >
-                                            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (editingItem ? "Update Changes" : "Create Product")}
+                                            {isSubmitting ? <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" /> : (editingItem ? "Update Changes" : "Create Product")}
                                         </Button>
                                     </div>
 
@@ -1687,7 +1688,7 @@ export function InventoryView() {
                                                 }}
                                                 className="px-6 py-2 text-[10px] font-bold text-rose-500/60 dark:text-rose-400/60 hover:text-rose-500 transition-all uppercase tracking-[0.2em] disabled:opacity-50 inline-flex items-center gap-2"
                                             >
-                                                {isSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                                {isSubmitting ? <HugeiconsIcon icon={Loader2} className="h-3 w-3 animate-spin" /> : <HugeiconsIcon icon={Trash2} className="w-3 h-3" />}
                                                 Permanent Removal
                                             </button>
                                         </div>

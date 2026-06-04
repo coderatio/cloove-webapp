@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import {
     Drawer,
@@ -117,7 +118,7 @@ export function PaySupplierDrawer({
                             className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold shadow-xl"
                         >
                             {isSubmitting ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                             ) : (
                                 "Record Payment"
                             )}

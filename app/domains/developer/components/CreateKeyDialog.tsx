@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { CalendarIcon, Check, ChevronDown, Loader2, Plus } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Calendar03Icon as CalendarIcon, CheckIcon as Check, ChevronDownIcon as ChevronDown, Loading03Icon as Loader2, PlusSignIcon as Plus } from "@hugeicons/core-free-icons"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { Calendar } from "@/app/components/ui/calendar"
@@ -38,7 +39,7 @@ export function CreateKeyButton({ appId }: { appId?: string | null }) {
     const [open, setOpen] = useState(false)
     return (
         <>
-            <Button className="h-10 rounded-2xl px-4" onClick={() => setOpen(true)}><Plus className="mr-2 h-4 w-4" /> Create key</Button>
+            <Button className="h-10 rounded-2xl px-4" onClick={() => setOpen(true)}><HugeiconsIcon icon={Plus} className="mr-2 h-4 w-4" /> Create key</Button>
             <CreateKeyDialog open={open} onOpenChange={setOpen} appId={appId} />
         </>
     )
@@ -130,7 +131,7 @@ function CreateKeyDialog({ open, onOpenChange, appId }: { open: boolean; onOpenC
                     <DialogFooter className="shrink-0 gap-2 border-t border-brand-deep/6 bg-white/95 px-6 pt-3 pb-6 dark:border-white/8 dark:bg-[#121417]/95 sm:px-7">
                         <Button variant="outline" className="h-10 rounded-2xl px-5" onClick={() => requestOpenChange(false)}>Cancel</Button>
                         <Button className="h-10 rounded-2xl px-5" disabled={createKey.isPending || !name.trim() || scopes.length === 0 || (expiryPreset === "custom" && !customExpiryDate)} onClick={() => void submit()}>
-                            {createKey.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                            {createKey.isPending ? <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" /> : <HugeiconsIcon icon={Check} className="mr-2 h-4 w-4" />}
                             Create
                         </Button>
                     </DialogFooter>
@@ -232,7 +233,7 @@ function ScopeSelector({
                                 </span>
                                 <span className="flex shrink-0 items-center gap-2">
                                     <Badge variant="outline">{selectedCount}/{group.scopes.length}</Badge>
-                                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                                    <HugeiconsIcon icon={ChevronDown} className={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
                                 </span>
                             </button>
                             {isOpen && (
@@ -291,7 +292,7 @@ function ExpirySelector({ preset, selectedDate, onPresetChange, onCustomDateChan
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button type="button" variant="outline" className={cn("h-11 w-full justify-start rounded-xl px-4 text-left text-sm font-normal", !selectedDate && "text-muted-foreground")}>
-                            <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                            <HugeiconsIcon icon={CalendarIcon} className="mr-2 h-4 w-4 opacity-50" />
                             {selectedDate ? format(selectedDate, "MMM d, yyyy") : "Select expiry date"}
                         </Button>
                     </PopoverTrigger>

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { CheckCircle2, Clock, XCircle, ArrowDownRight, ArrowUpRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, CancelCircleIcon as XCircle, ArrowDownRight01Icon as ArrowDownRight, ArrowUpRight01Icon as ArrowUpRight } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { CurrencyDisplay } from "@/app/components/shared/CurrencyDisplay"
 import { formatCurrency } from "@/app/lib/formatters"
@@ -61,17 +62,17 @@ export const TransactionReceipt = React.forwardRef<HTMLDivElement, TransactionRe
                                         status === "Cancelled" ? "bg-slate-500 text-white shadow-slate-500/20" :
                                             "bg-amber-500 text-white shadow-amber-500/20"
                             )}>
-                                {status === "Cleared" ? <CheckCircle2 className="w-10 h-10" /> :
-                                    status === "Failed" ? <XCircle className="w-10 h-10" /> :
-                                        status === "Cancelled" ? <XCircle className="w-10 h-10 opacity-90" /> :
-                                            <Clock className="w-10 h-10" />}
+                                {status === "Cleared" ? <HugeiconsIcon icon={CheckCircle2} className="w-10 h-10" /> :
+                                    status === "Failed" ? <HugeiconsIcon icon={XCircle} className="w-10 h-10" /> :
+                                        status === "Cancelled" ? <HugeiconsIcon icon={XCircle} className="w-10 h-10 opacity-90" /> :
+                                            <HugeiconsIcon icon={Clock} className="w-10 h-10" />}
                             </div>
                             <div className="text-center">
                                 <div className={cn(
                                     "px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest inline-flex items-center gap-1.5 mb-2",
                                     isCredit ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
                                 )}>
-                                    {isCredit ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
+                                    {isCredit ? <HugeiconsIcon icon={ArrowDownRight} className="w-3 h-3" /> : <HugeiconsIcon icon={ArrowUpRight} className="w-3 h-3" />}
                                     {isCredit ? "Inbound Payment" : "Outbound Transfer"}
                                 </div>
                                 <h2 className="text-4xl font-serif font-bold text-brand-deep">

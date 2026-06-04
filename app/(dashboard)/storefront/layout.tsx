@@ -4,7 +4,8 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { cn } from "@/app/lib/utils"
-import { LayoutGrid, Palette, FileText, Settings } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { LayoutGridIcon as LayoutGrid, PaintBoardIcon as Palette, File01Icon as FileText, Settings01Icon as Settings } from "@hugeicons/core-free-icons"
 import { PageTransition } from "@/app/components/layout/page-transition"
 
 const tabs = [
@@ -47,7 +48,7 @@ export default function StorefrontLayout({ children }: { children: React.ReactNo
                                         : "text-brand-deep/60 dark:text-brand-cream/60 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
-                                <Icon className={cn("w-4 h-4", isActive ? "stroke-[2.5px]" : "stroke-2")} />
+                                <HugeiconsIcon icon={Icon} className={cn("w-4 h-4", isActive ? "stroke-[2.5px]" : "stroke-2")} />
                                 {tab.name}
                                 {isActive && (
                                     <motion.div

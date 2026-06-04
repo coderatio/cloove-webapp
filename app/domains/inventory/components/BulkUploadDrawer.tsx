@@ -14,7 +14,8 @@ import {
 import { Button } from "@/app/components/ui/button"
 import { FileDropZone } from "@/app/components/ui/file-drop-zone"
 import { ProductExtractionCard, ExtractedProduct } from "./ProductExtractionCard"
-import { Sparkles, Loader2, CheckCircle2, ChevronRight, ArrowLeft, Edit3, Store as StoreIcon, AlertCircle, X } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SparklesIcon as Sparkles, Loading03Icon as Loader2, CheckmarkCircle02Icon as CheckCircle2, ChevronRightIcon as ChevronRight, ArrowLeft01Icon as ArrowLeft, Edit03Icon as Edit3, Store01Icon as StoreIcon, AlertCircleIcon as AlertCircle, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { storage } from '@/app/lib/storage'
@@ -394,7 +395,7 @@ export function BulkUploadDrawer({
                 <DrawerStickyHeader>
                     <div className="flex items-center gap-3 mb-2">
                         <div className="w-8 h-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <Sparkles className="w-4 h-4" />
+                            <HugeiconsIcon icon={Sparkles} className="w-4 h-4" />
                         </div>
                         <DrawerTitle className="font-serif text-2xl">
                             Bulk Product Upload
@@ -421,7 +422,7 @@ export function BulkUploadDrawer({
                                 <div className="mb-8 p-6 rounded-[32px] bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 shadow-sm">
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="w-10 h-10 rounded-2xl bg-brand-green/10 flex items-center justify-center text-brand-green">
-                                            <StoreIcon className="w-5 h-5" />
+                                            <HugeiconsIcon icon={StoreIcon} className="w-5 h-5" />
                                         </div>
                                         <div>
                                             <h4 className="text-sm font-bold text-brand-deep dark:text-brand-cream">Select Destination Store</h4>
@@ -449,7 +450,7 @@ export function BulkUploadDrawer({
                                 </p>
                                 <div className="mt-5 p-6 rounded-[24px] bg-brand-gold/5 border border-brand-gold/30">
                                     <h4 className="text-sm font-bold text-brand-deep-900 uppercase tracking-widest mb-2 flex items-center gap-2">
-                                        <Sparkles className="w-4 h-4" /> Why use AI Bulk Upload?
+                                        <HugeiconsIcon icon={Sparkles} className="w-4 h-4" /> Why use AI Bulk Upload?
                                     </h4>
                                     <ul className="space-y-2 text-xs text-brand-accent/60 dark:text-brand-cream/60">
                                         <li className="flex gap-2">
@@ -480,7 +481,7 @@ export function BulkUploadDrawer({
                                 <div className="relative">
                                     <div className="absolute inset-0 bg-brand-gold/20 blur-[50px] rounded-full animate-pulse" />
                                     <div className="relative w-24 h-24 rounded-[32px] bg-brand-deep/5 dark:bg-white/5 border border-brand-gold/20 flex items-center justify-center">
-                                        <Loader2 className="w-10 h-10 text-brand-gold animate-spin" />
+                                        <HugeiconsIcon icon={Loader2} className="w-10 h-10 text-brand-gold animate-spin" />
                                     </div>
                                 </div>
                                 <div className="mt-8 space-y-2">
@@ -504,7 +505,7 @@ export function BulkUploadDrawer({
                             >
                                 <div className="bg-brand-gold/10 border border-brand-gold/20 rounded-3xl sm:rounded-2xl p-4 flex items-start gap-3">
                                     <div className="p-2 bg-brand-gold/20 rounded-full shrink-0">
-                                        <Edit3 className="w-4 h-4 text-brand-deep dark:text-brand-gold" />
+                                        <HugeiconsIcon icon={Edit3} className="w-4 h-4 text-brand-deep dark:text-brand-gold" />
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-brand-deep dark:text-brand-cream">Review your data</h4>
@@ -541,7 +542,7 @@ export function BulkUploadDrawer({
                                 className="flex flex-col items-center justify-center py-20 text-center"
                             >
                                 <div className="w-20 h-20 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green mb-8">
-                                    <CheckCircle2 className="w-10 h-10" />
+                                    <HugeiconsIcon icon={CheckCircle2} className="w-10 h-10" />
                                 </div>
                                 <div className="space-y-6">
                                     <div className="space-y-2">
@@ -564,7 +565,7 @@ export function BulkUploadDrawer({
                                             className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white px-8 h-12 shadow-lg"
                                         >
                                             Upload More
-                                            <ChevronRight className="w-4 h-4 ml-2" />
+                                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 ml-2" />
                                         </Button>
                                     </div>
                                 </div>
@@ -586,7 +587,7 @@ export function BulkUploadDrawer({
                                 }}
                                 className="flex cursor-pointer items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-accent/40 hover:text-brand-deep dark:text-brand-deep-300 dark:hover:text-brand-deep-400"
                             >
-                                <ArrowLeft className="w-4 h-4" /> Start Over
+                                <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4" /> Start Over
                             </Button>
                             <div className="relative inline-flex">
                                 <Button
@@ -600,9 +601,9 @@ export function BulkUploadDrawer({
                                     className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white px-8 h-12 shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
                                 >
                                     {isUploading || isValidatingImages ? (
-                                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                        <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin mr-2" />
                                     ) : (
-                                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                                        <HugeiconsIcon icon={CheckCircle2} className="w-4 h-4 mr-2" />
                                     )}
                                     <span className="hidden md:inline">
                                         {isValidatingImages
@@ -626,7 +627,7 @@ export function BulkUploadDrawer({
                                                     "focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-brand-deep-800"
                                                 )}
                                             >
-                                                <AlertCircle className="h-4 w-4" strokeWidth={2.5} />
+                                                <HugeiconsIcon icon={AlertCircle} className="h-4 w-4" strokeWidth={2.5} />
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent
@@ -647,7 +648,7 @@ export function BulkUploadDrawer({
                                                     aria-label="Close"
                                                     className="size-6 rounded-lg text-rose-600 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900"
                                                 >
-                                                    <X className="h-4 w-4" />
+                                                    <HugeiconsIcon icon={X} className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                             <ul className="p-3 space-y-2 text-xs text-rose-700/90 dark:text-rose-200/90">

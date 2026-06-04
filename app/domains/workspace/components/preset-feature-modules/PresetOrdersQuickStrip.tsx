@@ -4,7 +4,7 @@ import { GlassCard } from "@/app/components/ui/glass-card"
 import { useLayoutPresetId, usePresetPageCopy } from "@/app/domains/workspace/hooks/usePresetPageCopy"
 import { usePermission } from "@/app/hooks/usePermission"
 import { QuickLinkRow } from "./QuickLinkRow"
-import { ScanBarcode, Package, Pill, Users, GraduationCap, UtensilsCrossed, Banknote, CalendarRange } from "lucide-react"
+import { BarcodeScanIcon as ScanBarcode, PackageIcon as Package, PillIcon as Pill, UserMultiple02Icon as Users, GraduationCapIcon as GraduationCap, Restaurant01Icon as UtensilsCrossed, BanknoteIcon as Banknote, CalendarRangeIcon as CalendarRange } from "@hugeicons/core-free-icons"
 
 /**
  * Secondary preset module on the orders workspace: fast paths without replacing the main table.

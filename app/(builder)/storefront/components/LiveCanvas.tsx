@@ -2,7 +2,8 @@
 
 import React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { GripVertical, Trash2, Copy, EyeOff, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { GripVerticalIcon as GripVertical, Delete02Icon as Trash2, CopyIcon as Copy, EyeOffIcon as EyeOff, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { StorefrontSection, SectionType } from "../../../domains/storefront/types"
 import { Button } from "@/app/components/ui/button"
@@ -35,7 +36,7 @@ export function LiveCanvas({
                         className="flex-1 flex flex-col items-center justify-center p-20 text-center space-y-6"
                     >
                         <div className="w-24 h-24 rounded-3xl bg-brand-green/5 flex items-center justify-center text-brand-green">
-                            <Sparkles className="w-10 h-10 animate-pulse" />
+                            <HugeiconsIcon icon={Sparkles} className="w-10 h-10 animate-pulse" />
                         </div>
                         <div className="space-y-2">
                             <h2 className="font-serif text-3xl text-brand-deep dark:text-brand-cream">Start Your Story</h2>
@@ -101,14 +102,14 @@ function CanvasSectionItem({
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-white/60 hover:text-white" onClick={onToggleVisibility}>
-                            <EyeOff className="w-4 h-4" />
+                            <HugeiconsIcon icon={EyeOff} className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-white/60 hover:text-white" onClick={onDuplicate}>
-                            <Copy className="w-4 h-4" />
+                            <HugeiconsIcon icon={Copy} className="w-4 h-4" />
                         </Button>
                         <div className="w-px h-4 bg-white/20 mx-1" />
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-400 hover:text-rose-300" onClick={onRemove}>
-                            <Trash2 className="w-4 h-4" />
+                            <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                         </Button>
                     </motion.div>
                 )}
@@ -116,7 +117,7 @@ function CanvasSectionItem({
 
             {/* Drag Handle */}
             <div className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-brand-accent/20 cursor-grab active:cursor-grabbing">
-                <GripVertical className="w-4 h-4" />
+                <HugeiconsIcon icon={GripVertical} className="w-4 h-4" />
             </div>
 
             {/* Content Renderer Shell */}
@@ -127,7 +128,7 @@ function CanvasSectionItem({
             {/* AI Badge */}
             {section.settings.aiSuggested && (
                 <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2 py-1 rounded-full bg-brand-gold/20 text-brand-gold text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm">
-                    <Sparkles className="w-3 h-3" />
+                    <HugeiconsIcon icon={Sparkles} className="w-3 h-3" />
                     AI Generated
                 </div>
             )}

@@ -1,22 +1,8 @@
 "use client"
 
 import * as React from "react"
-import {
-    Search,
-    GraduationCap,
-    CheckCircle2,
-    Plus,
-    Trash2,
-    Banknote,
-    Wallet,
-    CreditCard,
-    ArrowLeft,
-    Loader2,
-    Link2,
-    Receipt,
-    User,
-    Check,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Search01Icon as Search, GraduationCapIcon as GraduationCap, CheckmarkCircle02Icon as CheckCircle2, PlusSignIcon as Plus, Delete02Icon as Trash2, BanknoteIcon as Banknote, Wallet01Icon as Wallet, CreditCardIcon as CreditCard, ArrowLeft01Icon as ArrowLeft, Loading03Icon as Loader2, Link02Icon as Link2, Invoice01Icon as Receipt, UserIcon as User, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import {
     Drawer,
     DrawerBody,
@@ -173,7 +159,7 @@ function StudentStep({
         <div className="space-y-5">
             {/* Search */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-deep/30 dark:text-brand-cream/30 pointer-events-none" />
+                <HugeiconsIcon icon={Search} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-deep/30 dark:text-brand-cream/30 pointer-events-none" />
                 <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -186,7 +172,7 @@ function StudentStep({
             {/* Customer list */}
             {isLoadingCustomers ? (
                 <div className="flex items-center gap-2 text-sm text-brand-deep/50 dark:text-brand-cream/50 py-4">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" />
                     Loading…
                 </div>
             ) : (
@@ -230,7 +216,7 @@ function StudentStep({
                                         ) : null}
                                     </div>
                                     {isSelected && (
-                                        <Check className="h-4 w-4 text-brand-gold shrink-0" />
+                                        <HugeiconsIcon icon={Check} className="h-4 w-4 text-brand-gold shrink-0" />
                                     )}
                                 </Button>
                             </li>
@@ -389,7 +375,7 @@ function FeesStep({
                                             ? "bg-brand-gold-700 border-brand-gold"
                                             : "border-brand-deep/20 dark:border-white/15 group-hover:border-brand-gold/40"
                                     )}>
-                                        {isSelected && <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
+                                        {isSelected && <HugeiconsIcon icon={Check} className="h-2.5 w-2.5 text-white" strokeWidth={3} />}
                                     </div>
                                 </Button>
                             )
@@ -408,7 +394,7 @@ function FeesStep({
                             </p>
                             {lastAdded && (
                                 <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                    <CheckCircle2 className="h-3 w-3" />
+                                    <HugeiconsIcon icon={CheckCircle2} className="h-3 w-3" />
                                     &quot;{lastAdded}&quot; added
                                 </span>
                             )}
@@ -462,7 +448,7 @@ function FeesStep({
                                 onClick={handleAddCustom}
                                 disabled={!customLabel.trim() || customAmount <= 0}
                             >
-                                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                                <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5 mr-1.5" />
                                 Add line
                             </Button>
                         </div>
@@ -475,7 +461,7 @@ function FeesStep({
                     className="w-full h-auto whitespace-normal justify-start flex items-center gap-3 rounded-2xl border border-dashed border-brand-deep/15 dark:border-white/15 px-4 py-3 text-sm text-brand-deep/50 dark:text-brand-cream/50 hover:border-brand-gold/30 hover:text-brand-deep dark:hover:text-brand-cream hover:bg-brand-gold/4 group"
                 >
                     <div className="h-7 w-7 rounded-full border border-dashed border-brand-deep/15 dark:border-white/15 group-hover:border-brand-gold/40 group-hover:bg-brand-gold/8 flex items-center justify-center">
-                        <Plus className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={Plus} className="h-3.5 w-3.5" />
                     </div>
                     <span className="font-medium">Add custom fee</span>
                 </Button>
@@ -509,7 +495,7 @@ function FeesStep({
                                         onClick={() => onRemoveItem(f.key)}
                                         aria-label={`Remove ${f.label}`}
                                     >
-                                        <Trash2 className="h-3.5 w-3.5" />
+                                        <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
                                     </Button>
                                 </div>
                             </div>
@@ -654,7 +640,7 @@ function PaymentStep({
                                         : "border-brand-deep/8 dark:border-white/8 hover:border-brand-gold/20 hover:bg-brand-gold/5"
                                 )}
                             >
-                                <Icon
+                                <HugeiconsIcon icon={Icon}
                                     className={cn(
                                         "h-5 w-5",
                                         isSelected ? "text-brand-gold" : "text-brand-deep/50 dark:text-brand-cream/50"
@@ -670,7 +656,7 @@ function PaymentStep({
                                 </span>
                                 {isSelected && (
                                     <div className="absolute top-1.5 right-1.5">
-                                        <CheckCircle2 className="h-3 w-3 text-brand-gold" />
+                                        <HugeiconsIcon icon={CheckCircle2} className="h-3 w-3 text-brand-gold" />
                                     </div>
                                 )}
                             </Button>
@@ -793,7 +779,7 @@ function SuccessStep({
     return (
         <div className="flex flex-col items-center py-8 text-center space-y-6">
             <div className="h-20 w-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                <CheckCircle2 className="h-10 w-10" />
+                <HugeiconsIcon icon={CheckCircle2} className="h-10 w-10" />
             </div>
 
             <div className="space-y-1">
@@ -843,9 +829,9 @@ function SuccessStep({
                             disabled={linkLoading}
                         >
                             {linkLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin mr-2" />
                             ) : (
-                                <Link2 className="h-4 w-4 mr-2 text-brand-gold" />
+                                <HugeiconsIcon icon={Link2} className="h-4 w-4 mr-2 text-brand-gold" />
                             )}
                             Generate payment link
                         </Button>
@@ -1007,7 +993,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                 <DrawerStickyHeader>
                     <div className="flex items-center gap-3 mb-0.5">
                         <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold shrink-0">
-                            <GraduationCap className="h-4 w-4" />
+                            <HugeiconsIcon icon={GraduationCap} className="h-4 w-4" />
                         </div>
                         <DrawerTitle className="font-serif">
                             {STEP_TITLES[step]}
@@ -1021,7 +1007,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                     {/* Context breadcrumb after student is picked */}
                     {(step === "fees" || step === "payment") && (
                         <div className="mt-3 flex items-center gap-2 text-xs text-brand-deep/55 dark:text-brand-cream/55">
-                            <User className="h-3.5 w-3.5" />
+                            <HugeiconsIcon icon={User} className="h-3.5 w-3.5" />
                             <span>{customerName}</span>
                             {step === "payment" && feeItems.length > 0 && (
                                 <>
@@ -1100,7 +1086,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                             onClick={() => setStep("fees")}
                         >
                             Continue
-                            <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+                            <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4 ml-2 rotate-180" />
                         </Button>
                     </DrawerFooter>
                 )}
@@ -1112,7 +1098,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                             className="rounded-full gap-2 text-brand-deep/45 dark:text-brand-cream/45"
                             onClick={() => setStep("student")}
                         >
-                            <ArrowLeft className="h-4 w-4" />
+                            <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" />
                             Back
                         </Button>
                         <Button
@@ -1122,7 +1108,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                             onClick={() => setStep("payment")}
                         >
                             Continue
-                            <ArrowLeft className="h-4 w-4 ml-2 rotate-180" />
+                            <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4 ml-2 rotate-180" />
                         </Button>
                     </DrawerFooter>
                 )}
@@ -1135,7 +1121,7 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                             onClick={() => setStep("fees")}
                             disabled={isRecording}
                         >
-                            <ArrowLeft className="h-4 w-4" />
+                            <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" />
                             Back
                         </Button>
                         <Button
@@ -1145,9 +1131,9 @@ export function SchoolFeeRecordDrawer({ open, onOpenChange }: SchoolFeeRecordDra
                             disabled={isRecording || amountPaid <= 0}
                         >
                             {isRecording ? (
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin mr-2" />
                             ) : (
-                                <Receipt className="h-4 w-4 mr-2" />
+                                <HugeiconsIcon icon={Receipt} className="h-4 w-4 mr-2" />
                             )}
                             {amountPaid >= totalAmount ? "Record full payment" : "Record partial payment"}
                         </Button>

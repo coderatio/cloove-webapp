@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { FileText, Shield, Loader2, ChevronRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { File01Icon as FileText, SecurityIcon as Shield, Loading03Icon as Loader2, ChevronRightIcon as ChevronRight } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import {
     Drawer,
@@ -63,7 +64,7 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
                     <DrawerStickyHeader showClose={false}>
                         <div className="flex items-center gap-3">
                             <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-brand-deep/6 dark:bg-brand-gold/10">
-                                <Shield className="size-5 text-brand-deep/70 dark:text-brand-gold" aria-hidden />
+                                <HugeiconsIcon icon={Shield} className="size-5 text-brand-deep/70 dark:text-brand-gold" aria-hidden />
                             </div>
                             <div>
                                 <DrawerTitle>Terms &amp; Privacy Policy</DrawerTitle>
@@ -98,13 +99,13 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
                                     )}
                                 >
                                     <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-brand-deep/6 dark:bg-white/8">
-                                        <Icon className="size-5 text-brand-deep/70 dark:text-brand-gold/80" aria-hidden />
+                                        <HugeiconsIcon icon={Icon} className="size-5 text-brand-deep/70 dark:text-brand-gold/80" aria-hidden />
                                     </div>
                                     <div className="min-w-0 flex-1">
                                         <p className="font-semibold text-brand-deep dark:text-brand-cream">{label}</p>
                                         <p className="mt-0.5 text-xs text-brand-deep/50 dark:text-brand-cream/50">{description}</p>
                                     </div>
-                                    <ChevronRight className="size-4 shrink-0 text-brand-deep/30 transition-transform duration-200 group-hover:translate-x-0.5 dark:text-white/30" aria-hidden />
+                                    <HugeiconsIcon icon={ChevronRight} className="size-4 shrink-0 text-brand-deep/30 transition-transform duration-200 group-hover:translate-x-0.5 dark:text-white/30" aria-hidden />
                                 </a>
                             ))}
                         </div>
@@ -163,7 +164,7 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
                             className="w-full h-12 rounded-2xl bg-brand-gold-700 font-bold text-brand-deep hover:bg-brand-gold-800 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             {isSubmitting ? (
-                                <Loader2 className="size-4 animate-spin" />
+                                <HugeiconsIcon icon={Loader2} className="size-4 animate-spin" />
                             ) : (
                                 "Accept & Continue"
                             )}

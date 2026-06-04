@@ -3,7 +3,8 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ChevronRight, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronRightIcon as ChevronRight, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { FilterPopover } from "@/app/components/shared/FilterPopover"
@@ -95,7 +96,7 @@ function ActivityRow({
                             {item.amount}
                         </span>
                     )}
-                    <ChevronRight className="w-3.5 h-3.5 text-brand-accent/15 dark:text-brand-gold/20 group-hover:text-brand-green dark:group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all duration-300 shrink-0" />
+                    <HugeiconsIcon icon={ChevronRight} className="w-3.5 h-3.5 text-brand-accent/15 dark:text-brand-gold/20 group-hover:text-brand-green dark:group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all duration-300 shrink-0" />
                 </div>
             </div>
         </button>
@@ -183,7 +184,7 @@ function ActivityTable({
                                 </span>
                             </td>
                             <td className="py-3.5 px-4 w-12">
-                                <ChevronRight className="w-3.5 h-3.5 text-brand-accent/15 dark:text-brand-gold/20 group-hover:text-brand-green dark:group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all duration-300 inline-block" />
+                                <HugeiconsIcon icon={ChevronRight} className="w-3.5 h-3.5 text-brand-accent/15 dark:text-brand-gold/20 group-hover:text-brand-green dark:group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all duration-300 inline-block" />
                             </td>
                         </motion.tr>
                     ))}
@@ -225,7 +226,7 @@ function ActivityEmptyState({ hasFilters }: { hasFilters: boolean }) {
             className="flex flex-col items-center justify-center py-16 px-8 text-center"
         >
             <div className="h-20 w-20 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-6">
-                <Sparkles className="w-10 h-10 text-brand-gold/50" />
+                <HugeiconsIcon icon={Sparkles} className="w-10 h-10 text-brand-gold/50" />
             </div>
             <h3 className="font-serif text-xl text-brand-deep dark:text-brand-cream mb-2">
                 {hasFilters ? "No activities match your filters" : "No activity yet"}

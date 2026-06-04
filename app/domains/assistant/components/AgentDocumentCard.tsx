@@ -1,5 +1,6 @@
 import { memo } from "react"
-import { FileText, Receipt, ExternalLink } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { File01Icon as FileText, Invoice01Icon as Receipt, ExternalLinkIcon as ExternalLink } from "@hugeicons/core-free-icons"
 import { motion } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -31,7 +32,7 @@ export const AgentDocumentCard = memo(function AgentDocumentCard({
         >
             {/* Icon */}
             <div className={cn("flex items-center justify-center h-9 w-9 rounded-xl shrink-0", agent.colors.bg)}>
-                <Icon className={cn("h-4 w-4", agent.colors.text)} />
+                <HugeiconsIcon icon={Icon} className={cn("h-4 w-4", agent.colors.text)} />
             </div>
 
             {/* Label + status */}
@@ -67,7 +68,7 @@ export const AgentDocumentCard = memo(function AgentDocumentCard({
                     agent.colors.bgHover,
                 )}
             >
-                <ExternalLink className="h-3 w-3" />
+                <HugeiconsIcon icon={ExternalLink} className="h-3 w-3" />
                 Open
             </Button>
         </motion.div>

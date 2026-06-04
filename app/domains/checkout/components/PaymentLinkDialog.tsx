@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, Share2, Check, Link2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CopyIcon as Copy, Share02Icon as Share2, CheckIcon as Check, Link02Icon as Link2 } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -49,7 +50,7 @@ export function PaymentLinkDialog({ isOpen, onClose, link, isLoading }: Props) {
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center">
-              <Link2 className="w-5 h-5 text-brand-gold" />
+              <HugeiconsIcon icon={Link2} className="w-5 h-5 text-brand-gold" />
             </div>
             <div>
               <DialogTitle className="font-serif text-lg text-brand-deep dark:text-brand-cream">
@@ -74,7 +75,7 @@ export function PaymentLinkDialog({ isOpen, onClose, link, isLoading }: Props) {
                 onClick={copyLink}
                 className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold gap-2"
               >
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? <HugeiconsIcon icon={Check} className="w-4 h-4" /> : <HugeiconsIcon icon={Copy} className="w-4 h-4" />}
                 {copied ? "Copied" : "Copy"}
               </Button>
               <Button
@@ -82,7 +83,7 @@ export function PaymentLinkDialog({ isOpen, onClose, link, isLoading }: Props) {
                 onClick={shareLink}
                 className="flex-1 h-12 rounded-2xl font-semibold gap-2"
               >
-                <Share2 className="w-4 h-4" />
+                <HugeiconsIcon icon={Share2} className="w-4 h-4" />
                 Share
               </Button>
             </div>

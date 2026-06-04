@@ -2,7 +2,8 @@
 
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
-import { WifiOff, RefreshCw, Home } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { WifiOff01Icon as WifiOff, RefreshIcon as RefreshCw, Home01Icon as Home } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
@@ -18,7 +19,7 @@ export default function OfflinePage() {
                     <div className="relative inline-block mb-8">
                         <div className="absolute inset-0 bg-brand-gold/20 blur-3xl rounded-full" />
                         <div className="relative h-24 w-24 rounded-full bg-brand-gold/10 flex items-center justify-center border border-brand-gold/20">
-                            <WifiOff className="w-10 h-10 text-brand-gold" />
+                            <HugeiconsIcon icon={WifiOff} className="w-10 h-10 text-brand-gold" />
                         </div>
                     </div>
 
@@ -35,12 +36,12 @@ export default function OfflinePage() {
                                 variant="outline"
                                 className="h-12 border-white/10 hover:bg-white/5 text-brand-cream hover:text-brand-cream/80 text-xs"
                             >
-                                <RefreshCw className="w-4 h-4 mr-2" />
+                                <HugeiconsIcon icon={RefreshCw} className="w-4 h-4 mr-2" />
                                 Retry
                             </Button>
                             <Link href="/">
                                 <Button className="w-full h-12 bg-brand-gold-700 hover:bg-brand-gold-800 text-brand-deep font-bold text-xs shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
-                                    <Home className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={Home} className="w-4 h-4 mr-2" />
                                     Home
                                 </Button>
                             </Link>

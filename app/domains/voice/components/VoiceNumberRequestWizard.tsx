@@ -2,20 +2,8 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { AnimatePresence, motion } from "framer-motion"
-import {
-    AlertTriangle,
-    ArrowLeft,
-    ArrowRight,
-    CheckCircle2,
-    ChevronRight,
-    Clock,
-    Loader2,
-    PackageCheck,
-    Phone,
-    ShieldCheck,
-    Sparkles,
-    Wallet,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Alert02Icon as AlertTriangle, ArrowLeft01Icon as ArrowLeft, ArrowRight01Icon as ArrowRight, CheckmarkCircle02Icon as CheckCircle2, ChevronRightIcon as ChevronRight, Clock01Icon as Clock, Loading03Icon as Loader2, PackageDeliveredIcon as PackageCheck, CallIcon as Phone, SecurityCheckIcon as ShieldCheck, SparklesIcon as Sparkles, Wallet01Icon as Wallet } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import {
     Drawer,
@@ -192,7 +180,7 @@ export function VoiceNumberRequestWizard({
                                     onClick={goBack}
                                     className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/5 transition-all hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10"
                                 >
-                                    <ArrowLeft className="h-4 w-4" />
+                                    <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" />
                                 </button>
                             )}
                             <div className="space-y-1">
@@ -310,7 +298,7 @@ export function VoiceNumberRequestWizard({
                                     className="rounded-full"
                                 >
                                     Continue
-                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                    <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4" />
                                 </Button>
                             ) : (
                                 <Button
@@ -319,7 +307,7 @@ export function VoiceNumberRequestWizard({
                                     className="rounded-full"
                                 >
                                     {createRequest.isPending ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" />
                                     ) : null}
                                     {availableStock > 0 ? "Confirm & pay" : "Join waitlist"}
                                 </Button>
@@ -424,7 +412,7 @@ function GateCard({
                         : "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
                 )}
             >
-                {satisfied ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                {satisfied ? <HugeiconsIcon icon={CheckCircle2} className="h-5 w-5" /> : <HugeiconsIcon icon={Icon} className="h-5 w-5" />}
             </div>
             <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex items-center justify-between gap-2">
@@ -454,7 +442,7 @@ function GateCard({
                         }}
                     >
                         {cta.label}
-                        <ChevronRight className="ml-1 h-4 w-4" />
+                        <HugeiconsIcon icon={ChevronRight} className="ml-1 h-4 w-4" />
                     </Button>
                 )}
             </div>
@@ -605,7 +593,7 @@ function StockIndicator({ available, isLoading }: { available: number; isLoading
     if (available > 0) {
         return (
             <div className="flex items-start gap-3 rounded-2xl border border-brand-green/20 bg-brand-green/[0.045] p-4 dark:border-brand-green/25 dark:bg-brand-green/[0.08]">
-                <PackageCheck className="mt-0.5 h-5 w-5 text-brand-green dark:text-brand-green-300" />
+                <HugeiconsIcon icon={PackageCheck} className="mt-0.5 h-5 w-5 text-brand-green dark:text-brand-green-300" />
                 <div className="space-y-0.5">
                     <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
                         {available} {available === 1 ? "number" : "numbers"} ready to assign
@@ -619,7 +607,7 @@ function StockIndicator({ available, isLoading }: { available: number; isLoading
     }
     return (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
-            <Clock className="mt-0.5 h-5 w-5 text-amber-600" />
+            <HugeiconsIcon icon={Clock} className="mt-0.5 h-5 w-5 text-amber-600" />
             <div className="space-y-0.5">
                 <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">
                     None in stock right now
@@ -672,7 +660,7 @@ function PricingStep({
     if (error || !pricing) {
         return (
             <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <HugeiconsIcon icon={AlertTriangle} className="h-5 w-5 text-amber-600" />
                 <div className="space-y-1">
                     <h3 className="text-sm font-semibold">No pricing configured</h3>
                     <p className="text-sm text-muted-foreground">
@@ -834,7 +822,7 @@ function AgentOption({
                 <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">{title}</p>
                 <p className="text-xs text-muted-foreground">{subtitle}</p>
             </div>
-            {active && <CheckCircle2 className="h-5 w-5 text-brand-green dark:text-brand-green-300" />}
+            {active && <HugeiconsIcon icon={CheckCircle2} className="h-5 w-5 text-brand-green dark:text-brand-green-300" />}
         </button>
     )
 }
@@ -922,7 +910,7 @@ function SectionHeader({
         <div className="rounded-2xl border border-brand-deep/5 bg-brand-deep/[0.025] px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.035]">
             <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300">
-                    <Icon className="h-5 w-5" />
+                    <HugeiconsIcon icon={Icon} className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
                     <h2 className="text-base font-semibold text-brand-deep dark:text-brand-cream">{title}</h2>

@@ -6,15 +6,8 @@ import { motion } from "framer-motion"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { useBusiness } from "@/app/components/BusinessProvider"
-import {
-    MapPin,
-    Plus,
-    Settings2,
-    Store as StoreIcon,
-    ChevronRight,
-    LocateFixed,
-    Loader2,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { MapPinIcon as MapPin, PlusSignIcon as Plus, Settings02Icon as Settings2, Store01Icon as StoreIcon, ChevronRightIcon as ChevronRight, Gps01Icon as LocateFixed, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { ActivityStream } from "@/app/components/dashboard/ActivityStream"
@@ -204,7 +197,7 @@ export function StoresView() {
                         onClick={() => setIsAddOpen(true)}
                         className="rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white dark:hover:bg-brand-gold-800 hover:scale-105 transition-all shadow-lg"
                     >
-                        <Plus className="w-4 h-4 mr-2" />
+                        <HugeiconsIcon icon={Plus} className="w-4 h-4 mr-2" />
                         Add New Store
                     </Button>
                 </div>
@@ -230,7 +223,7 @@ export function StoresView() {
                                 <div className="flex items-start justify-between mb-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-brand-green/10 dark:bg-brand-gold/10 flex items-center justify-center text-brand-green dark:text-brand-gold group-hover:scale-110 transition-transform">
-                                            <StoreIcon className="w-6 h-6" />
+                                            <HugeiconsIcon icon={StoreIcon} className="w-6 h-6" />
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
@@ -238,7 +231,7 @@ export function StoresView() {
                                             </h3>
                                             <div className="flex flex-col gap-0.5 text-xs text-brand-accent/60 dark:text-brand-cream/60">
                                                 <div className="flex items-center gap-1.5">
-                                                    <MapPin className="w-3 h-3 shrink-0" />
+                                                    <HugeiconsIcon icon={MapPin} className="w-3 h-3 shrink-0" />
                                                     <span>{store.location || "Location not set"}</span>
                                                 </div>
                                                 {store.latitude != null &&
@@ -281,7 +274,7 @@ export function StoresView() {
                                         onClick={() => openEdit(store)}
                                         className="flex-1 rounded-xl border-brand-accent/10 hover:bg-brand-accent/5 dark:border-white/10 dark:hover:bg-white/5 transition-all text-sm font-semibold"
                                     >
-                                        <Settings2 className="w-4 h-4 mr-2" />
+                                        <HugeiconsIcon icon={Settings2} className="w-4 h-4 mr-2" />
                                         Settings
                                     </Button>
                                     <Button
@@ -290,7 +283,7 @@ export function StoresView() {
                                         title="View Activity Feed"
                                         className="rounded-xl hover:bg-brand-green/5 text-brand-green dark:hover:bg-brand-gold/5 dark:text-brand-gold p-2 transition-all"
                                     >
-                                        <ChevronRight className="w-5 h-5" />
+                                        <HugeiconsIcon icon={ChevronRight} className="w-5 h-5" />
                                     </Button>
                                 </div>
                             </GlassCard>
@@ -307,7 +300,7 @@ export function StoresView() {
                     >
                         <div className="h-full min-h-[220px] rounded-[30px] border-2 border-dashed border-brand-accent/10 dark:border-white/10 flex flex-col items-center justify-center gap-4 hover:border-brand-green/40 dark:hover:border-brand-gold/40 hover:bg-white/40 dark:hover:bg-white/5 transition-all group-active:scale-[0.98]">
                             <div className="w-12 h-12 rounded-full bg-brand-accent/5 dark:bg-white/5 flex items-center justify-center text-brand-accent/40 dark:text-brand-cream/60 group-hover:bg-brand-green/10 group-hover:text-brand-green transition-all">
-                                <Plus className="w-6 h-6" />
+                                <HugeiconsIcon icon={Plus} className="w-6 h-6" />
                             </div>
                             <span className="text-brand-accent/40 dark:text-brand-cream/40 font-medium group-hover:text-brand-deep dark:group-hover:text-brand-cream transition-colors">
                                 Add Another Branch
@@ -380,9 +373,9 @@ export function StoresView() {
                                                 className="h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-[10px] font-bold uppercase tracking-wider text-brand-deep/75 dark:text-brand-cream/75 hover:bg-brand-deep/[0.06] dark:hover:bg-white/10"
                                             >
                                                 {isCapturingLocation ? (
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                                                    <HugeiconsIcon icon={Loader2} className="h-3.5 w-3.5 animate-spin" aria-hidden />
                                                 ) : (
-                                                    <LocateFixed className="h-3.5 w-3.5" aria-hidden />
+                                                    <HugeiconsIcon icon={LocateFixed} className="h-3.5 w-3.5" aria-hidden />
                                                 )}
                                                 {isCapturingLocation ? "Fixing…" : "Use device"}
                                             </Button>

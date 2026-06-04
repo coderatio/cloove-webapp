@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { CalendarRange, GraduationCap, Upload } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CalendarRangeIcon as CalendarRange, GraduationCapIcon as GraduationCap, Upload01Icon as Upload } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
@@ -34,7 +35,7 @@ function RosterImportTrigger() {
                 className="rounded-full transition-all duration-300"
                 onClick={() => setOpen(true)}
             >
-                <Upload className="h-4 w-4 mr-2 opacity-80" />
+                <HugeiconsIcon icon={Upload} className="h-4 w-4 mr-2 opacity-80" />
                 Import roster
             </Button>
             <SchoolRosterImportDrawer open={open} onOpenChange={setOpen} />
@@ -68,7 +69,7 @@ export function SchoolCalendarView() {
                             <div className="border-b border-brand-deep/5 px-4 py-4 dark:border-white/10 md:px-6 md:py-5">
                                 <div className="flex items-start gap-3">
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-gold/15 text-brand-gold">
-                                        <GraduationCap className="h-5 w-5" />
+                                        <HugeiconsIcon icon={GraduationCap} className="h-5 w-5" />
                                     </div>
                                     <div className="min-w-0">
                                         <h2 className="font-serif text-lg text-brand-deep dark:text-brand-cream">
@@ -119,7 +120,7 @@ export function SchoolCalendarView() {
                 >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-gold/15 text-brand-gold border border-brand-gold/20">
-                            <CalendarRange className="h-5 w-5" />
+                            <HugeiconsIcon icon={CalendarRange} className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="font-serif text-base text-brand-deep dark:text-brand-cream">

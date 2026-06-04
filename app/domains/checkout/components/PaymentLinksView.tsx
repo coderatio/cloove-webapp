@@ -6,7 +6,8 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { Link2, CheckCircle2, Clock, XCircle, ChevronLeft, ChevronRight, MoreHorizontal, Copy, Check, ExternalLink, Loader2, Eye, Pencil, Trash2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Link02Icon as Link2, CheckmarkCircle02Icon as CheckCircle2, Clock01Icon as Clock, CancelCircleIcon as XCircle, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, MoreHorizontalIcon as MoreHorizontal, CopyIcon as Copy, CheckIcon as Check, ExternalLinkIcon as ExternalLink, Loading03Icon as Loader2, EyeIcon as Eye, PencilIcon as Pencil, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -149,7 +150,7 @@ export function PaymentLinksView() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-full">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <HugeiconsIcon icon={MoreHorizontal} className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-brand-deep/5 dark:border-white/5 shadow-2xl">
@@ -161,7 +162,7 @@ export function PaymentLinksView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-                            <Eye className="w-4 h-4" />
+                            <HugeiconsIcon icon={Eye} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">View Details</span>
                     </DropdownMenuItem>
@@ -173,7 +174,7 @@ export function PaymentLinksView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <Pencil className="w-4 h-4" />
+                            <HugeiconsIcon icon={Pencil} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">Edit Link</span>
                     </DropdownMenuItem>
@@ -182,7 +183,7 @@ export function PaymentLinksView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-green/10 dark:bg-emerald-500/10 flex items-center justify-center text-brand-green dark:text-emerald-400">
-                            {copiedId === item.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            {copiedId === item.id ? <HugeiconsIcon icon={Check} className="w-4 h-4" /> : <HugeiconsIcon icon={Copy} className="w-4 h-4" />}
                         </div>
                         <span className="font-medium">{copiedId === item.id ? "Copied!" : "Copy Link"}</span>
                     </DropdownMenuItem>
@@ -191,7 +192,7 @@ export function PaymentLinksView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
-                            <ExternalLink className="w-4 h-4" />
+                            <HugeiconsIcon icon={ExternalLink} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">Open Link</span>
                     </DropdownMenuItem>
@@ -201,7 +202,7 @@ export function PaymentLinksView() {
                             className="rounded-xl flex items-center gap-3 cursor-pointer text-rose-500 dark:focus:bg-white/5"
                         >
                             <div className="h-8 w-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-                                <XCircle className="w-4 h-4" />
+                                <HugeiconsIcon icon={XCircle} className="w-4 h-4" />
                             </div>
                             <span className="font-medium">Cancel Link</span>
                         </DropdownMenuItem>
@@ -332,10 +333,10 @@ export function PaymentLinksView() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Link2 className="w-24 h-24" />
+                            <HugeiconsIcon icon={Link2} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-deep/10 dark:bg-white/10 flex items-center justify-center text-brand-deep dark:text-brand-cream">
-                            <Link2 className="h-6 w-6" />
+                            <HugeiconsIcon icon={Link2} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-widest">
@@ -353,10 +354,10 @@ export function PaymentLinksView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-brand-green">
-                            <CheckCircle2 className="w-24 h-24" />
+                            <HugeiconsIcon icon={CheckCircle2} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-green">
-                            <CheckCircle2 className="h-6 w-6" />
+                            <HugeiconsIcon icon={CheckCircle2} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-widest">
@@ -374,10 +375,10 @@ export function PaymentLinksView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-blue-500">
-                            <CheckCircle2 className="w-24 h-24" />
+                            <HugeiconsIcon icon={CheckCircle2} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-                            <CheckCircle2 className="h-6 w-6" />
+                            <HugeiconsIcon icon={CheckCircle2} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-blue-500/60 uppercase tracking-widest">
@@ -395,10 +396,10 @@ export function PaymentLinksView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity text-amber-500">
-                            <Clock className="w-24 h-24" />
+                            <HugeiconsIcon icon={Clock} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
-                            <Clock className="h-6 w-6" />
+                            <HugeiconsIcon icon={Clock} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-amber-500/60 uppercase tracking-widest">
@@ -451,7 +452,7 @@ export function PaymentLinksView() {
                     <GlassCard className="p-12 text-center">
                         <div className="flex flex-col items-center space-y-4">
                             <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                <Link2 className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
+                                <HugeiconsIcon icon={Link2} className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
                             </div>
                             <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                                 No Payment Links
@@ -466,7 +467,7 @@ export function PaymentLinksView() {
                                     onClick={() => setIsCreateOpen(true)}
                                     className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold"
                                 >
-                                    <Link2 className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={Link2} className="w-4 h-4 mr-2" />
                                     Create Payment Link
                                 </Button>
                             )}
@@ -527,7 +528,7 @@ export function PaymentLinksView() {
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronLeft} className="w-4 h-4" />
                             Previous
                         </Button>
                         <span className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
@@ -541,7 +542,7 @@ export function PaymentLinksView() {
                             className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
                             Next
-                            <ChevronRight className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4" />
                         </Button>
                     </div>
                 )}

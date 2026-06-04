@@ -3,7 +3,8 @@
 import { cn } from "@/app/lib/utils"
 import { motion } from "framer-motion"
 import Image from "next/image"
-import { ChevronRight, Package } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { ChevronRightIcon as ChevronRight, PackageIcon as Package } from "@hugeicons/core-free-icons"
 
 interface ListCardProps {
     title: string
@@ -14,7 +15,7 @@ interface ListCardProps {
     value?: React.ReactNode
     valueLabel?: string
     image?: string
-    icon?: React.ElementType
+    icon?: IconSvgElement
     iconClassName?: string
     actions?: React.ReactNode
     onClick?: () => void
@@ -66,9 +67,9 @@ export function ListCard({
                                 className="object-cover"
                             />
                         ) : Icon ? (
-                            <Icon className={cn("h-6 w-6", iconClassName || "text-foreground/60")} />
+                            <HugeiconsIcon icon={Icon} className={cn("h-6 w-6", iconClassName || "text-foreground/60")} />
                         ) : (
-                            <Package className="h-6 w-6 text-muted-foreground/40" />
+                            <HugeiconsIcon icon={Package} className="h-6 w-6 text-muted-foreground/40" />
                         )}
                     </div>
 
@@ -103,7 +104,7 @@ export function ListCard({
             {/* Subtle decorative arrow for interactivity hint */}
             {onClick && (
                 <div className="absolute bottom-3 right-3 opacity-0 transition-opacity group-hover:opacity-100">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                    <HugeiconsIcon icon={ChevronRight} className="h-4 w-4 text-muted-foreground/50" />
                 </div>
             )}
         </motion.div>

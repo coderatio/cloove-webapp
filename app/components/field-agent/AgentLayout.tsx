@@ -7,17 +7,8 @@ import { FieldAgentProvider } from "@/app/domains/field-agent/providers/FieldAge
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
 import { PageTransition } from "@/app/components/layout/page-transition"
-import {
-    Bell,
-    Search,
-    User,
-    Settings,
-    ShieldCheck,
-    LogOut,
-    ChevronDown,
-    Sun,
-    Moon,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BellIcon as Bell, Search01Icon as Search, UserIcon as User, Settings01Icon as Settings, SecurityCheckIcon as ShieldCheck, Logout01Icon as LogOut, ChevronDownIcon as ChevronDown, Sun01Icon as Sun, MoonIcon as Moon } from "@hugeicons/core-free-icons"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { cn } from "@/app/lib/utils"
@@ -92,7 +83,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                 {/* Notifications commented out for now */}
                                 {/* 
                             <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/10 dark:border-white/5 hover:border-brand-gold/50 transition-all group">
-                                <Bell className="w-5 h-5 text-brand-deep/60 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
+                                <HugeiconsIcon icon={Bell} className="w-5 h-5 text-brand-deep/60 dark:text-brand-cream/60 group-hover:text-brand-gold transition-colors" />
                                 <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-gold-700 rounded-full border-2 border-brand-cream dark:border-brand-deep" />
                             </button> 
                             */}
@@ -112,7 +103,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                             ) : initials}
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                                         </div>
-                                        <ChevronDown className={cn("w-4 h-4 text-brand-deep/30 dark:text-brand-cream/50 transition-transform", showProfileMenu && "rotate-180")} />
+                                        <HugeiconsIcon icon={ChevronDown} className={cn("w-4 h-4 text-brand-deep/30 dark:text-brand-cream/50 transition-transform", showProfileMenu && "rotate-180")} />
                                     </button>
 
                                     <AnimatePresence>
@@ -139,7 +130,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                             className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
                                                             onClick={() => setShowProfileMenu(false)}
                                                         >
-                                                            <User className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
+                                                            <HugeiconsIcon icon={User} className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
                                                             <span className="text-sm font-medium">My Profile</span>
                                                         </Link>
                                                     </div>
@@ -153,8 +144,8 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                             className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-brand-deep/5 dark:hover:bg-white/5 transition-colors group"
                                                         >
                                                             {theme === "dark"
-                                                                ? <Sun className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
-                                                                : <Moon className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
+                                                                ? <HugeiconsIcon icon={Sun} className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
+                                                                : <HugeiconsIcon icon={Moon} className="w-4 h-4 text-brand-deep/40 dark:text-brand-cream/60 group-hover:text-brand-gold" />
                                                             }
                                                             <span className="text-sm font-medium">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
                                                         </button>
@@ -162,7 +153,7 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
                                                             onClick={() => logout()}
                                                             className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl text-red-500 hover:bg-red-500/5 transition-colors group"
                                                         >
-                                                            <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                                            <HugeiconsIcon icon={LogOut} className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                                                             <span className="text-sm font-bold">Sign Out</span>
                                                         </button>
                                                     </div>

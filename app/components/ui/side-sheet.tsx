@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { Drawer as VaulDrawer } from "vaul"
-import { X } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { useIsMobile } from "@/app/hooks/useMediaQuery"
 
@@ -107,7 +108,7 @@ const SideSheetStickyHeader = ({
                             aria-label="Close"
                             className="shrink-0 rounded-full bg-slate-100 p-2 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
                         >
-                            <X className="h-5 w-5" />
+                            <HugeiconsIcon icon={X} className="h-5 w-5" />
                         </button>
                     </SideSheetClose>
                 )}

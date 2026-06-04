@@ -1,22 +1,8 @@
 import { useState, useCallback, memo, type ReactElement } from "react"
 
 import { motion } from "framer-motion"
-import {
-    File,
-    FileSpreadsheet,
-    FileText,
-    Image,
-    Copy,
-    RotateCcw,
-    ThumbsUp,
-    MoreHorizontal,
-    Check,
-    FileCode,
-    FileType,
-    ChevronLeft,
-    ChevronRight,
-    Sparkles,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { File01Icon as File, FileSpreadsheetIcon as FileSpreadsheet, File01Icon as FileText, Image01Icon as Image, CopyIcon as Copy, ReloadIcon as RotateCcw, ThumbsUpIcon as ThumbsUp, MoreHorizontalIcon as MoreHorizontal, CheckIcon as Check, FileCodeIcon as FileCode, FileTypeIcon as FileType, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
 import { Markdown } from "@/app/components/ui/markdown"
@@ -66,15 +52,15 @@ function formatFileSize(size: number): string {
 function getFileIcon(file: FileAttachment): ReactElement {
     const ext = file.name.split(".").pop()?.toLowerCase()
     if (file.fileType.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp"].includes(ext || "")) {
-        return <Image className="h-4 w-4" />
+        return <HugeiconsIcon icon={Image} className="h-4 w-4" />
     }
     if (["csv", "xlsx", "xls"].includes(ext || "")) {
-        return <FileSpreadsheet className="h-4 w-4" />
+        return <HugeiconsIcon icon={FileSpreadsheet} className="h-4 w-4" />
     }
     if (ext === "pdf") {
-        return <FileText className="h-4 w-4" />
+        return <HugeiconsIcon icon={FileText} className="h-4 w-4" />
     }
-    return <File className="h-4 w-4" />
+    return <HugeiconsIcon icon={File} className="h-4 w-4" />
 }
 
 export const ChatMessage = memo(function ChatMessage({
@@ -233,7 +219,7 @@ export const ChatMessage = memo(function ChatMessage({
                         // ── Inline regeneration streaming view ──────────────────────────
                         <>
                             <div className="flex items-center gap-1.5 mb-2 text-xs text-brand-deep/40 dark:text-brand-cream/40">
-                                <Sparkles className="w-3 h-3 animate-pulse text-brand-green/70" />
+                                <HugeiconsIcon icon={Sparkles} className="w-3 h-3 animate-pulse text-brand-green/70" />
                                 <span>Generating new version...</span>
                             </div>
                             {pendingRegenText === "" ? (
@@ -323,7 +309,7 @@ export const ChatMessage = memo(function ChatMessage({
                                     onClick={handleCopy}
                                     className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
                                 >
-                                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                                    {copied ? <HugeiconsIcon icon={Check} className="w-3.5 h-3.5 text-emerald-500" /> : <HugeiconsIcon icon={Copy} className="w-3.5 h-3.5" />}
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>Copy message</TooltipContent>
@@ -340,7 +326,7 @@ export const ChatMessage = memo(function ChatMessage({
                                         feedback === "up" && "text-emerald-500 bg-emerald-500/5 select-none"
                                     )}
                                 >
-                                    <ThumbsUp className="w-3.5 h-3.5" />
+                                    <HugeiconsIcon icon={ThumbsUp} className="w-3.5 h-3.5" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>Helpful</TooltipContent>
@@ -366,7 +352,7 @@ export const ChatMessage = memo(function ChatMessage({
                                         onClick={onRegenerate}
                                         className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors"
                                     >
-                                        <RotateCcw className="w-3.5 h-3.5" />
+                                        <HugeiconsIcon icon={RotateCcw} className="w-3.5 h-3.5" />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>Regenerate</TooltipContent>
@@ -383,7 +369,7 @@ export const ChatMessage = memo(function ChatMessage({
                                     disabled={versionInfo.currentIndex === 0}
                                     className="h-6 w-6 rounded-md hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 disabled:opacity-30 transition-colors"
                                 >
-                                    <ChevronLeft className="w-3 h-3" />
+                                    <HugeiconsIcon icon={ChevronLeft} className="w-3 h-3" />
                                 </Button>
                                 <span className="text-xs text-brand-deep/40 dark:text-brand-cream/40 tabular-nums px-0.5">
                                     {versionInfo.currentIndex + 1}/{versionInfo.versions.length}
@@ -395,7 +381,7 @@ export const ChatMessage = memo(function ChatMessage({
                                     disabled={versionInfo.currentIndex === versionInfo.versions.length - 1}
                                     className="h-6 w-6 rounded-md hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 disabled:opacity-30 transition-colors"
                                 >
-                                    <ChevronRight className="w-3 h-3" />
+                                    <HugeiconsIcon icon={ChevronRight} className="w-3 h-3" />
                                 </Button>
                             </div>
                         )}
@@ -409,7 +395,7 @@ export const ChatMessage = memo(function ChatMessage({
                                             size="icon"
                                             className="h-8 w-8 rounded-lg hover:bg-brand-deep/5 dark:hover:bg-white/5 text-brand-deep/40 dark:text-brand-cream/40 transition-colors focus-visible:ring-0 focus-visible:ring-offset-0"
                                         >
-                                            <MoreHorizontal className="w-3.5 h-3.5" />
+                                            <HugeiconsIcon icon={MoreHorizontal} className="w-3.5 h-3.5" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                 </TooltipTrigger>
@@ -417,11 +403,11 @@ export const ChatMessage = memo(function ChatMessage({
                             </Tooltip>
                             <DropdownMenuContent align="start" className="w-48 rounded-xl bg-white/80 dark:bg-black/80 backdrop-blur-xl border-brand-deep/5">
                                 <DropdownMenuItem onClick={() => handleExport("md")} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
-                                    <FileCode className="w-4 h-4" />
+                                    <HugeiconsIcon icon={FileCode} className="w-4 h-4" />
                                     <span>Export as Markdown</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleExport("pdf")} className="gap-2 focus:bg-brand-deep/5 dark:focus:bg-white/5 rounded-lg cursor-pointer">
-                                    <FileType className="w-4 h-4" />
+                                    <HugeiconsIcon icon={FileType} className="w-4 h-4" />
                                     <span>Export as PDF</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>

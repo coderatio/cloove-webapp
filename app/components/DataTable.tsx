@@ -1,5 +1,6 @@
 import * as React from "react"
-import { ChevronRight, ChevronLeft } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ChevronRightIcon as ChevronRight, ChevronLeftIcon as ChevronLeft } from "@hugeicons/core-free-icons"
 import { cn } from "../lib/utils"
 import { Button } from "./ui/button"
 
@@ -84,7 +85,7 @@ export default function DataTable<T extends { id: string | number }>({
         return (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card px-8 py-20 text-center">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground/40">
-                    <ChevronRight className="h-8 w-8 opacity-100" />
+                    <HugeiconsIcon icon={ChevronRight} className="h-8 w-8 opacity-100" />
                 </div>
                 <h3 className="mb-2 text-xl font-semibold text-foreground/70">
                     {emptyMessage}
@@ -164,7 +165,7 @@ export default function DataTable<T extends { id: string | number }>({
                                     ))}
                                     {onRowClick && (
                                         <td className="px-6 py-5 text-right w-12">
-                                            <ChevronRight className="inline-block h-4 w-4 text-muted-foreground/50 transition-colors group-hover:text-foreground/80" />
+                                            <HugeiconsIcon icon={ChevronRight} className="inline-block h-4 w-4 text-muted-foreground/50 transition-colors group-hover:text-foreground/80" />
                                         </td>
                                     )}
                                 </tr>
@@ -191,7 +192,7 @@ export default function DataTable<T extends { id: string | number }>({
                             onClick={() => setCurrentPage(currentPage - 1)}
                             className="h-8 w-8 rounded-lg p-0"
                         >
-                            <ChevronLeft className="h-4 w-4" />
+                            <HugeiconsIcon icon={ChevronLeft} className="h-4 w-4" />
                         </Button>
                         <div className="flex items-center gap-1">
                             {getPageNumbers(currentPage, totalPages).map((page, i) =>
@@ -222,7 +223,7 @@ export default function DataTable<T extends { id: string | number }>({
                             onClick={() => setCurrentPage(currentPage + 1)}
                             className="h-8 w-8 rounded-lg p-0"
                         >
-                            <ChevronRight className="h-4 w-4" />
+                            <HugeiconsIcon icon={ChevronRight} className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react'
-import { UploadCloud, FileText } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CloudUploadIcon as UploadCloud, File01Icon as FileText } from "@hugeicons/core-free-icons"
 import { cn } from '@/app/lib/utils'
 import { toast } from 'sonner'
 
@@ -95,7 +96,7 @@ export function FileDropZone({
                         ? "bg-brand-gold-700 text-white scale-110 rotate-3"
                         : "bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60 group-hover:scale-110 group-hover:-rotate-3"
                 )}>
-                    {isDragging ? <UploadCloud className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
+                    {isDragging ? <HugeiconsIcon icon={UploadCloud} className="w-8 h-8" /> : <HugeiconsIcon icon={FileText} className="w-8 h-8" />}
                 </div>
 
                 <div className="space-y-1">

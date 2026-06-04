@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useMemo, useRef, useEffect, type ReactElement } from "react"
-import { Check, X, Plus, MessageSquare, Pin, MoreHorizontal, Pencil, PinOff, Archive, Trash2, Loader2, Search, AlertCircle, FileText, Receipt } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check, Cancel01Icon as X, PlusSignIcon as Plus, Message01Icon as MessageSquare, PinIcon as Pin, MoreHorizontalIcon as MoreHorizontal, PencilIcon as Pencil, PinOffIcon as PinOff, ArchiveIcon as Archive, Delete02Icon as Trash2, Loading03Icon as Loader2, Search01Icon as Search, AlertCircleIcon as AlertCircle, File01Icon as FileText, Invoice01Icon as Receipt } from "@hugeicons/core-free-icons"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
@@ -97,7 +98,6 @@ export function ChatHistoryDrawer({
         })
     }, [filtered])
 
-
     const handleDeleteConfirm = async () => {
         if (deleteConfirmId) {
             await onDelete(deleteConfirmId)
@@ -120,13 +120,13 @@ export function ChatHistoryDrawer({
                                 }}
                                 className="rounded-2xl bg-brand-deep text-brand-cream font-bold px-6 h-10 transition-all duration-300 dark:bg-brand-cream dark:text-brand-deep shadow-lg"
                             >
-                                <Plus className="w-5 h-5 mr-1.5" />
+                                <HugeiconsIcon icon={Plus} className="w-5 h-5 mr-1.5" />
                                 New
                             </Button>
                         </div>
 
                         <div className="relative mb-6">
-                            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 overflow-hidden z-10" />
+                            <HugeiconsIcon icon={Search} className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40 overflow-hidden z-10" />
                             <Input
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
@@ -166,12 +166,12 @@ export function ChatHistoryDrawer({
                         <div className="space-y-3">
                             {isLoading ? (
                                 <div className="flex flex-col items-center justify-center py-20 gap-4 text-brand-accent/40 dark:text-brand-cream/40">
-                                    <Loader2 className="h-6 w-6 animate-spin text-brand-gold" />
+                                    <HugeiconsIcon icon={Loader2} className="h-6 w-6 animate-spin text-brand-gold" />
                                     <span className="text-sm font-medium tracking-wide">Syncing history...</span>
                                 </div>
                             ) : sorted.length === 0 ? (
                                 <div className="rounded-3xl border border-dashed border-brand-deep/10 p-12 text-center text-sm text-brand-accent/50 dark:border-white/10 dark:text-brand-cream/50 bg-brand-deep/2 dark:bg-white/2">
-                                    <Search className="h-8 w-8 mx-auto mb-4 opacity-10" />
+                                    <HugeiconsIcon icon={Search} className="h-8 w-8 mx-auto mb-4 opacity-10" />
                                     {query ? "No matches found." : "Your history is empty."}
                                 </div>
                             ) : (
@@ -206,13 +206,13 @@ export function ChatHistoryDrawer({
                                                         )}
                                                     >
                                                         {conv.isPinned ? (
-                                                            <Pin className="w-4 h-4 text-brand-gold fill-brand-gold/10" />
+                                                            <HugeiconsIcon icon={Pin} className="w-4 h-4 text-brand-gold fill-brand-gold/10" />
                                                         ) : conv.agentType === "proposal" ? (
-                                                            <FileText className="w-4 h-4 text-emerald-500" />
+                                                            <HugeiconsIcon icon={FileText} className="w-4 h-4 text-emerald-500" />
                                                         ) : conv.agentType === "invoice" ? (
-                                                            <Receipt className="w-4 h-4 text-amber-500" />
+                                                            <HugeiconsIcon icon={Receipt} className="w-4 h-4 text-amber-500" />
                                                         ) : (
-                                                            <MessageSquare className="w-4 h-4" />
+                                                            <HugeiconsIcon icon={MessageSquare} className="w-4 h-4" />
                                                         )}
                                                     </div>
                                                 )}
@@ -261,7 +261,7 @@ export function ChatHistoryDrawer({
                                                                     if (input) onRename(conv.id, input.value.trim()).then(() => setRenamingId(null))
                                                                 }}
                                                             >
-                                                                <Check className="h-4.5 w-4.5" />
+                                                                <HugeiconsIcon icon={Check} className="h-4.5 w-4.5" />
                                                             </Button>
                                                             <Button
                                                                 variant="ghost"
@@ -269,7 +269,7 @@ export function ChatHistoryDrawer({
                                                                 className="h-9 w-9 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
                                                                 onClick={() => setRenamingId(null)}
                                                             >
-                                                                <X className="h-4.5 w-4.5" />
+                                                                <HugeiconsIcon icon={X} className="h-4.5 w-4.5" />
                                                             </Button>
                                                         </div>
                                                     ) : (
@@ -280,7 +280,7 @@ export function ChatHistoryDrawer({
                                                                     size="icon"
                                                                     className="h-10 w-10 -mr-2 opacity-40 hover:opacity-100 transition-opacity active:scale-95 bg-white dark:bg-white/10 shadow-sm rounded-xl"
                                                                 >
-                                                                    <MoreHorizontal className="h-5 w-5" />
+                                                                    <HugeiconsIcon icon={MoreHorizontal} className="h-5 w-5" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent
@@ -291,14 +291,14 @@ export function ChatHistoryDrawer({
                                                                     onSelect={() => setRenamingId(conv.id)}
                                                                     className="rounded-xl flex items-center gap-3 text-base px-4 py-3 cursor-pointer hover:bg-brand-deep/5 dark:hover:bg-white/5 font-medium transition-colors"
                                                                 >
-                                                                    <Pencil className="w-4 h-4" />
+                                                                    <HugeiconsIcon icon={Pencil} className="w-4 h-4" />
                                                                     Rename
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem
                                                                     onSelect={() => onPin(conv.id, !conv.isPinned)}
                                                                     className="rounded-xl flex items-center gap-3 text-base px-4 py-3 cursor-pointer hover:bg-brand-deep/5 dark:hover:bg-white/5 font-medium transition-colors"
                                                                 >
-                                                                    {conv.isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                                                                    {conv.isPinned ? <HugeiconsIcon icon={PinOff} className="w-4 h-4" /> : <HugeiconsIcon icon={Pin} className="w-4 h-4" />}
                                                                     {conv.isPinned ? "Unpin" : "Pin"}
                                                                 </DropdownMenuItem>
                                                                 {conv.isArchived ? (
@@ -306,7 +306,7 @@ export function ChatHistoryDrawer({
                                                                         onSelect={() => onUnarchive(conv.id)}
                                                                         className="rounded-xl flex items-center gap-3 text-base px-4 py-3 cursor-pointer hover:bg-brand-deep/5 dark:hover:bg-white/5 font-medium transition-colors"
                                                                     >
-                                                                        <Archive className="w-4 h-4" />
+                                                                        <HugeiconsIcon icon={Archive} className="w-4 h-4" />
                                                                         Restore
                                                                     </DropdownMenuItem>
                                                                 ) : (
@@ -314,7 +314,7 @@ export function ChatHistoryDrawer({
                                                                         onSelect={() => onArchive(conv.id)}
                                                                         className="rounded-xl flex items-center gap-3 text-base px-4 py-3 cursor-pointer hover:bg-brand-deep/5 dark:hover:bg-white/5 font-medium transition-colors"
                                                                     >
-                                                                        <Archive className="w-4 h-4" />
+                                                                        <HugeiconsIcon icon={Archive} className="w-4 h-4" />
                                                                         Archive
                                                                     </DropdownMenuItem>
                                                                 )}
@@ -323,7 +323,7 @@ export function ChatHistoryDrawer({
                                                                     onSelect={() => setDeleteConfirmId(conv.id)}
                                                                     className="rounded-xl flex items-center gap-3 text-base px-4 py-3 cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 font-bold transition-colors"
                                                                 >
-                                                                    <Trash2 className="w-4 h-4" />
+                                                                    <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                                                                     Delete
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
@@ -345,7 +345,7 @@ export function ChatHistoryDrawer({
                 <DrawerContent className="max-h-[50vh] bg-white dark:bg-brand-green border-none shadow-2xl rounded-t-3xl">
                     <DrawerStickyHeader className="pb-2">
                         <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
-                            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            <HugeiconsIcon icon={AlertCircle} className="w-6 h-6 text-red-600 dark:text-red-400" />
                         </div>
                         <DrawerTitle className="text-2xl">Delete Permanently?</DrawerTitle>
                         <DrawerDescription className="text-brand-accent/60 dark:text-brand-cream/60 mt-2">

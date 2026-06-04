@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from 'react'
-import { Building2, Store as StoreIcon, ChevronsUpDown } from 'lucide-react'
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Building02Icon as Building2, Store01Icon as StoreIcon, UnfoldMoreIcon as ChevronsUpDown } from "@hugeicons/core-free-icons"
 import { cn } from '@/app/lib/utils'
 import { useStores } from '@/app/domains/stores/providers/StoreProvider'
 import { SearchableSelect, SearchableSelectOption } from '@/app/components/ui/searchable-select'
@@ -21,7 +22,7 @@ export function StoreContextSelector({ value, onChange, className, compact = fal
         const storeOptions = stores.map(store => ({
             label: store.name,
             value: store.id,
-            icon: <StoreIcon className="h-4 w-4" />
+            icon: <HugeiconsIcon icon={StoreIcon} className="h-4 w-4" />
         }))
 
         if (stores.length <= 1) return storeOptions
@@ -30,7 +31,7 @@ export function StoreContextSelector({ value, onChange, className, compact = fal
             {
                 label: 'All Stores',
                 value: 'all-stores',
-                icon: <Building2 className="h-4 w-4" />
+                icon: <HugeiconsIcon icon={Building2} className="h-4 w-4" />
             },
             ...storeOptions
         ]
@@ -72,9 +73,9 @@ export function StoreContextSelector({ value, onChange, className, compact = fal
                             )}
                         >
                             {currValue === "all-stores" ? (
-                                <Building2 className={compact ? "h-3.5 w-3.5" : "h-3.5 w-3.5"} />
+                                <HugeiconsIcon icon={Building2} className={compact ? "h-3.5 w-3.5" : "h-3.5 w-3.5"} />
                             ) : (
-                                <StoreIcon className={compact ? "h-3.5 w-3.5" : "h-3.5 w-3.5"} />
+                                <HugeiconsIcon icon={StoreIcon} className={compact ? "h-3.5 w-3.5" : "h-3.5 w-3.5"} />
                             )}
                         </div>
                         <div
@@ -98,7 +99,7 @@ export function StoreContextSelector({ value, onChange, className, compact = fal
                             </span>
                         </div>
                     </div>
-                    <ChevronsUpDown
+                    <HugeiconsIcon icon={ChevronsUpDown}
                         className={cn(
                             "shrink-0 opacity-40 dark:opacity-60",
                             compact ? "ml-0 h-3.5 w-3.5" : "ml-2 h-4 w-4"

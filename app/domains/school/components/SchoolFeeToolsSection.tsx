@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Link2, Plus, Trash2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Link02Icon as Link2, PlusSignIcon as Plus, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -140,7 +141,7 @@ export function SchoolFeeToolsSection() {
                                             aria-label={`Remove ${t.label}`}
                                             onClick={() => removeTemplate(t.id)}
                                         >
-                                            <Trash2 className="h-3.5 w-3.5" />
+                                            <HugeiconsIcon icon={Trash2} className="h-3.5 w-3.5" />
                                         </Button>
                                     </li>
                                 ))}
@@ -190,7 +191,7 @@ export function SchoolFeeToolsSection() {
                                         onClick={() => addTemplate()}
                                         disabled={updateSettings.isPending}
                                     >
-                                        <Plus className="h-4 w-4 mr-2" />
+                                        <HugeiconsIcon icon={Plus} className="h-4 w-4 mr-2" />
                                         Add preset
                                     </Button>
                                 </div>
@@ -214,7 +215,7 @@ export function SchoolFeeToolsSection() {
                             className="rounded-full shrink-0"
                             onClick={() => setBatchOpen(true)}
                         >
-                            <Link2 className="h-4 w-4 mr-2" />
+                            <HugeiconsIcon icon={Link2} className="h-4 w-4 mr-2" />
                             Open batch generator
                         </Button>
                     </div>

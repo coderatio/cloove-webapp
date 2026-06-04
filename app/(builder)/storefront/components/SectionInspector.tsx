@@ -1,18 +1,8 @@
 "use client"
 
 import React from "react"
-import {
-    Settings,
-    Type,
-    Palette,
-    Layout,
-    Maximize,
-    AlignLeft,
-    AlignCenter,
-    AlignRight,
-    Sparkles,
-    Check
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Settings01Icon as Settings, TextFontIcon as Type, PaintBoardIcon as Palette, Layout01Icon as Layout, Maximize01Icon as Maximize, TextAlignLeftIcon as AlignLeft, TextAlignCenterIcon as AlignCenter, TextAlignRightIcon as AlignRight, SparklesIcon as Sparkles, CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { StorefrontSection } from "../../../domains/storefront/types"
 import { Input } from "@/app/components/ui/input"
@@ -31,7 +21,7 @@ export function SectionInspector({ section, onUpdate, onGenerateAI }: SectionIns
         return (
             <div className="flex-1 p-8 text-center flex flex-col items-center justify-center space-y-4 opacity-40 grayscale">
                 <div className="w-16 h-16 rounded-2xl bg-brand-deep/5 flex items-center justify-center border-2 border-dashed border-brand-deep/20">
-                    <Settings className="w-8 h-8 text-brand-deep/20" />
+                    <HugeiconsIcon icon={Settings} className="w-8 h-8 text-brand-deep/20" />
                 </div>
                 <p className="text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-[160px]">
                     Select a section on the canvas to edit its properties
@@ -58,7 +48,7 @@ export function SectionInspector({ section, onUpdate, onGenerateAI }: SectionIns
             <div className="p-6 border-b border-brand-deep/5 dark:border-white/5 bg-brand-deep/[0.02] flex items-center justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <Layout className="w-3.5 h-3.5 text-brand-green" />
+                        <HugeiconsIcon icon={Layout} className="w-3.5 h-3.5 text-brand-green" />
                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40">Inspector</h3>
                     </div>
                     <h2 className="text-sm font-bold text-brand-deep dark:text-brand-cream truncate max-w-[140px]">
@@ -67,7 +57,7 @@ export function SectionInspector({ section, onUpdate, onGenerateAI }: SectionIns
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                        <Sparkles className="w-4 h-4 text-brand-gold" />
+                        <HugeiconsIcon icon={Sparkles} className="w-4 h-4 text-brand-gold" />
                     </Button>
                 </div>
             </div>
@@ -77,7 +67,7 @@ export function SectionInspector({ section, onUpdate, onGenerateAI }: SectionIns
                 {/* AI Assist Section */}
                 <div className="p-4 rounded-2xl bg-brand-green/5 border border-brand-green/10 space-y-3">
                     <div className="flex items-center gap-2 text-brand-green">
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <HugeiconsIcon icon={Sparkles} className="w-3.5 h-3.5" />
                         <span className="text-[10px] font-bold uppercase tracking-widest">AI Content Assistant</span>
                     </div>
                     <p className="text-[10px] text-brand-accent/60 leading-relaxed">
@@ -95,7 +85,7 @@ export function SectionInspector({ section, onUpdate, onGenerateAI }: SectionIns
                 {/* Content Configuration */}
                 <div className="space-y-6">
                     <div className="flex items-center gap-2 opacity-40">
-                        <Type className="w-3.5 h-3.5" />
+                        <HugeiconsIcon icon={Type} className="w-3.5 h-3.5" />
                         <span className="text-[10px] font-bold uppercase tracking-widest">Content</span>
                     </div>
 
@@ -123,7 +113,7 @@ export function SectionInspector({ section, onUpdate, onGenerateAI }: SectionIns
                 {/* Style Settings */}
                 <div className="space-y-6">
                     <div className="flex items-center gap-2 opacity-40">
-                        <Palette className="w-3.5 h-3.5" />
+                        <HugeiconsIcon icon={Palette} className="w-3.5 h-3.5" />
                         <span className="text-[10px] font-bold uppercase tracking-widest">Style & Layout</span>
                     </div>
 
@@ -162,7 +152,7 @@ export function SectionInspector({ section, onUpdate, onGenerateAI }: SectionIns
             {/* Sticky Actions */}
             <div className="absolute bottom-0 left-0 right-0 p-6 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-t border-brand-deep/5 dark:border-white/5">
                 <Button className="w-full rounded-full bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold h-12 shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
-                    <Check className="w-4 h-4 mr-2" />
+                    <HugeiconsIcon icon={Check} className="w-4 h-4 mr-2" />
                     Save Settings
                 </Button>
             </div>

@@ -3,7 +3,8 @@
 import * as React from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { motion } from "framer-motion"
-import { X } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import {
     Drawer,
@@ -16,7 +17,7 @@ import {
 export interface TabItem {
     id: string
     label: string
-    icon: React.ElementType
+    icon: IconSvgElement
 }
 
 interface PersistedTabsProps {
@@ -94,7 +95,7 @@ export function PersistedTabs({
                             className="fixed bottom-28 right-6 z-40 inline-flex h-12 max-w-[70vw] items-center gap-2 rounded-full bg-brand-deep px-5 text-sm font-semibold text-brand-cream shadow-xl shadow-brand-deep/20 transition-colors active:scale-95 lg:hidden dark:bg-brand-gold-700 dark:text-white"
                             aria-label={`Open ${mobileSheetTitle.toLowerCase()}`}
                         >
-                            {ActiveIcon && <ActiveIcon className="h-4 w-4 shrink-0" />}
+                            {ActiveIcon && <HugeiconsIcon icon={ActiveIcon} className="h-4 w-4 shrink-0" />}
                             <span className="truncate">
                                 {activeTabItem?.label ?? mobileSheetTitle}
                             </span>
@@ -112,7 +113,7 @@ export function PersistedTabs({
                                     className="rounded-full bg-slate-100 p-2 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
                                     aria-label="Close menu"
                                 >
-                                    <X className="h-4 w-4" />
+                                    <HugeiconsIcon icon={X} className="h-4 w-4" />
                                 </button>
                             </DrawerClose>
                         </div>
@@ -133,7 +134,7 @@ export function PersistedTabs({
                                             )}
                                             aria-current={isActive ? "page" : undefined}
                                         >
-                                            <tab.icon className="h-4 w-4 shrink-0" />
+                                            <HugeiconsIcon icon={tab.icon} className="h-4 w-4 shrink-0" />
                                             <span>{tab.label}</span>
                                         </button>
                                     )
@@ -184,7 +185,7 @@ export function PersistedTabs({
                                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                 />
                             )}
-                            <tab.icon className={cn("relative z-10", compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
+                            <HugeiconsIcon icon={tab.icon} className={cn("relative z-10", compact ? "h-3.5 w-3.5" : "h-4 w-4")} />
                             <span className="relative z-10">{tab.label}</span>
                         </button>
                     ))}

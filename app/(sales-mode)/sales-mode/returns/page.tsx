@@ -3,7 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Receipt, RotateCcw, Search, ShieldCheck } from "lucide-react"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import { ArrowRight01Icon as ArrowRight, Invoice01Icon as Receipt, ReloadIcon as RotateCcw, Search01Icon as Search, SecurityCheckIcon as ShieldCheck } from "@hugeicons/core-free-icons"
 import { Input } from "@/app/components/ui/input"
 import { Button } from "@/app/components/ui/button"
 import { CurrencyText } from "@/app/components/shared/CurrencyText"
@@ -77,7 +78,7 @@ export default function SalesModeReturnsPage() {
           </div>
 
           <div className="mt-4 relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40" />
+            <HugeiconsIcon icon={Search} className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-accent/40 dark:text-brand-cream/40" />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -153,7 +154,7 @@ export default function SalesModeReturnsPage() {
             className="mt-3 h-9 rounded-lg"
           >
             Continue To History
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <HugeiconsIcon icon={ArrowRight} className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -177,7 +178,7 @@ function MetricCard({
 }: {
   label: string
   value: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: IconSvgElement
   tone?: "default" | "good" | "warn"
 }) {
   const iconClass = tone === "good"
@@ -191,7 +192,7 @@ function MetricCard({
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-brand-accent/50 dark:text-brand-cream/50">{label}</p>
       <div className="mt-1.5 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-brand-deep dark:text-brand-cream">{value}</p>
-        <Icon className={cn("h-4 w-4", iconClass)} />
+        <HugeiconsIcon icon={Icon} className={cn("h-4 w-4", iconClass)} />
       </div>
     </article>
   )

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Check } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CheckIcon as Check } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 export interface CheckboxProps
@@ -27,7 +28,7 @@ const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
                 )}
                 {...props}
             >
-                {checked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                {checked && <HugeiconsIcon icon={Check} className="h-3.5 w-3.5 stroke-[3]" />}
             </button>
         )
     }

@@ -3,7 +3,8 @@
 import { useBusiness, type Business } from "@/app/components/BusinessProvider"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { useRouter, useSearchParams } from "next/navigation"
-import { LayoutGrid, ArrowRight, LogOut, Lock, Sparkles } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { LayoutGridIcon as LayoutGrid, ArrowRight01Icon as ArrowRight, Logout01Icon as LogOut, LockIcon as Lock, SparklesIcon as Sparkles } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
@@ -62,7 +63,7 @@ function SelectBusinessContent() {
                 {/* Plan restriction banner */}
                 {isMultiBusinessRestricted && (
                     <div className="flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-amber-700 dark:text-amber-400">
-                        <Lock className="h-4 w-4 shrink-0 mt-0.5" />
+                        <HugeiconsIcon icon={Lock} className="h-4 w-4 shrink-0 mt-0.5" />
                         <div className="space-y-1 min-w-0">
                             <p className="text-sm font-bold">Multiple businesses require a paid plan</p>
                             <p className="text-xs opacity-80 leading-relaxed">
@@ -88,7 +89,7 @@ function SelectBusinessContent() {
                     {businesses.length === 0 && businessesLoadFailed ? (
                         <GlassCard className="space-y-5 rounded-[28px] border-border bg-card p-6 text-center shadow-sm sm:p-8">
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10">
-                                <LayoutGrid className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                                <HugeiconsIcon icon={LayoutGrid} className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                             </div>
                             <div className="space-y-2">
                                 <h3 className="text-xl font-semibold text-foreground">Couldn&apos;t load businesses</h3>
@@ -108,7 +109,7 @@ function SelectBusinessContent() {
                     ) : businesses.length === 0 ? (
                         <GlassCard className="space-y-5 rounded-[28px] border-border bg-card p-6 text-center shadow-sm sm:p-8">
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-                                <LayoutGrid className="h-6 w-6 text-primary" />
+                                <HugeiconsIcon icon={LayoutGrid} className="h-6 w-6 text-primary" />
                             </div>
                             <div className="space-y-2">
                                 <h3 className="text-xl font-semibold text-foreground">No businesses found</h3>
@@ -147,8 +148,8 @@ function SelectBusinessContent() {
                                                     : "bg-primary/10 text-primary"
                                             )}>
                                                 {locked
-                                                    ? <Lock className="h-5 w-5 sm:h-6 sm:w-6 text-white/30" />
-                                                    : <LayoutGrid className="h-6 w-6 sm:h-8 sm:w-8" />
+                                                    ? <HugeiconsIcon icon={Lock} className="h-5 w-5 sm:h-6 sm:w-6 text-white/30" />
+                                                    : <HugeiconsIcon icon={LayoutGrid} className="h-6 w-6 sm:h-8 sm:w-8" />
                                                 }
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -174,8 +175,8 @@ function SelectBusinessContent() {
                                                     : "border-primary/20 text-primary"
                                             )}>
                                                 {locked
-                                                    ? <Sparkles className="h-4 w-4" />
-                                                    : <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                                                    ? <HugeiconsIcon icon={Sparkles} className="h-4 w-4" />
+                                                    : <HugeiconsIcon icon={ArrowRight} className="h-4 w-4 sm:h-5 sm:w-5" />
                                                 }
                                             </div>
                                         </GlassCard>
@@ -191,7 +192,7 @@ function SelectBusinessContent() {
                         onClick={() => logout()}
                         className="flex items-center gap-2 text-sm font-bold text-red-500/60 dark:text-red-400 hover:text-red-500 transition-colors uppercase tracking-widest"
                     >
-                        <LogOut className="h-4 w-4" />
+                        <HugeiconsIcon icon={LogOut} className="h-4 w-4" />
                         Sign Out
                     </button>
                 </div>

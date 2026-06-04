@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Loader2, Lock, ShieldCheck, AlertCircle, Eye, EyeOff } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, LockIcon as Lock, SecurityCheckIcon as ShieldCheck, AlertCircleIcon as AlertCircle, EyeIcon as Eye, EyeOffIcon as EyeOff } from "@hugeicons/core-free-icons"
 import { apiClient, ApiError } from "@/app/lib/api-client"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -89,7 +90,7 @@ function PasswordResetContent() {
     if (isValidating) {
         return (
             <div className="flex flex-col items-center justify-center p-12">
-                <Loader2 className="w-8 h-8 animate-spin text-brand-gold mb-4" />
+                <HugeiconsIcon icon={Loader2} className="w-8 h-8 animate-spin text-brand-gold mb-4" />
                 <p className="text-brand-cream/60 text-sm">Verifying reset token...</p>
             </div>
         )
@@ -100,7 +101,7 @@ function PasswordResetContent() {
             {status === "success" ? (
                     <GlassCard className="rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
                         <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-300/10 text-emerald-300">
-                            <ShieldCheck className="h-6 w-6" />
+                            <HugeiconsIcon icon={ShieldCheck} className="h-6 w-6" />
                         </div>
                         <h2 className="mb-3 text-xl font-semibold tracking-tight text-white">Password updated</h2>
                         <p className="mb-6 text-sm leading-relaxed text-white/60">
@@ -115,7 +116,7 @@ function PasswordResetContent() {
             ) : status === "error" ? (
                     <GlassCard className="rounded-[28px] border-white/10 bg-white/[0.045] p-6 text-center shadow-sm">
                         <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-red-400/10 text-red-300">
-                            <AlertCircle className="h-6 w-6" />
+                            <HugeiconsIcon icon={AlertCircle} className="h-6 w-6" />
                         </div>
                         <h2 className="mb-3 text-xl font-semibold tracking-tight text-white">Link invalid</h2>
                         <p className="mb-6 text-sm leading-relaxed text-white/60">
@@ -137,7 +138,7 @@ function PasswordResetContent() {
                                 </p>
                             </div>
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-emerald-200">
-                                <Lock className="w-5 h-5" />
+                                <HugeiconsIcon icon={Lock} className="w-5 h-5" />
                             </div>
                         </div>
 
@@ -149,7 +150,7 @@ function PasswordResetContent() {
                                     </label>
                                     <div className="relative group">
                                         <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                            <Lock className="w-4 h-4" />
+                                            <HugeiconsIcon icon={Lock} className="w-4 h-4" />
                                         </div>
                                         <input
                                             type={showPassword ? "text" : "password"}
@@ -166,7 +167,7 @@ function PasswordResetContent() {
                                             onClick={() => setShowPassword(!showPassword)}
                                             className="absolute inset-y-0 right-4 flex items-center text-white/35 hover:text-white/70"
                                         >
-                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            {showPassword ? <HugeiconsIcon icon={EyeOff} className="w-4 h-4" /> : <HugeiconsIcon icon={Eye} className="w-4 h-4" />}
                                         </button>
                                     </div>
                                 </div>
@@ -177,7 +178,7 @@ function PasswordResetContent() {
                                     </label>
                                     <div className="relative group">
                                         <div className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-white/45 group-focus-within:text-white/70">
-                                            <Lock className="w-4 h-4" />
+                                            <HugeiconsIcon icon={Lock} className="w-4 h-4" />
                                         </div>
                                         <input
                                             type="password"
@@ -204,11 +205,11 @@ function PasswordResetContent() {
                                     className="h-12 w-full rounded-2xl bg-primary text-white font-semibold hover:bg-primary/92 hover:text-white disabled:opacity-45 [&_svg]:text-white"
                                 >
                                     {isResetting ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin" />
                                     ) : (
                                         <>
                                             Reset Password
-                                            <ShieldCheck className="ml-2 h-4 w-4" />
+                                            <HugeiconsIcon icon={ShieldCheck} className="ml-2 h-4 w-4" />
                                         </>
                                     )}
                                 </Button>
@@ -247,7 +248,7 @@ export default function PasswordResetPage() {
 
                 <Suspense fallback={
                     <div className="flex h-64 items-center justify-center rounded-[28px] border border-white/10 bg-white/[0.04] text-white/40">
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" />
                     </div>
                 }>
                     <PasswordResetContent />

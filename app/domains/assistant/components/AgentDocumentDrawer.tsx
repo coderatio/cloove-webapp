@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from "react"
-import { FileText, Receipt, Copy, Check, Download } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { File01Icon as FileText, Invoice01Icon as Receipt, CopyIcon as Copy, CheckIcon as Check, Download01Icon as Download } from "@hugeicons/core-free-icons"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { cn } from "@/app/lib/utils"
@@ -72,7 +73,7 @@ export const AgentDocumentDrawer = memo(function AgentDocumentDrawer({
                 <DrawerStickyHeader>
                     <div className="flex items-center gap-3">
                         <div className={cn("flex items-center justify-center h-9 w-9 rounded-xl shrink-0", agent.colors.bg)}>
-                            <Icon className={cn("h-4 w-4", agent.colors.text)} />
+                            <HugeiconsIcon icon={Icon} className={cn("h-4 w-4", agent.colors.text)} />
                         </div>
                         <div className="flex flex-col min-w-0">
                             <DrawerTitle className="text-xl">{agent.name}</DrawerTitle>
@@ -124,7 +125,7 @@ export const AgentDocumentDrawer = memo(function AgentDocumentDrawer({
                         disabled={isStreaming || !finalContent}
                         className="gap-1.5 rounded-xl"
                     >
-                        {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copied ? <HugeiconsIcon icon={Check} className="h-3.5 w-3.5 text-emerald-500" /> : <HugeiconsIcon icon={Copy} className="h-3.5 w-3.5" />}
                         Copy
                     </Button>
                     <Button
@@ -134,7 +135,7 @@ export const AgentDocumentDrawer = memo(function AgentDocumentDrawer({
                         disabled={isStreaming || !finalContent}
                         className="gap-1.5 rounded-xl"
                     >
-                        <Download className="h-3.5 w-3.5" />
+                        <HugeiconsIcon icon={Download} className="h-3.5 w-3.5" />
                         Export Markdown
                     </Button>
                 </DrawerFooter>

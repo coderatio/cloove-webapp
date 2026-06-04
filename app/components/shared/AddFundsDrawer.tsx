@@ -2,24 +2,8 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import {
-    ShieldCheck,
-    Lock,
-    Copy,
-    Check,
-    Share2,
-    QrCode,
-    ChevronRight,
-    Building2,
-    AlertCircle,
-    ArrowRight,
-    ArrowLeft,
-    Link2,
-    Mail,
-    MailCheck,
-    Clock,
-    RefreshCw,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SecurityCheckIcon as ShieldCheck, LockIcon as Lock, CopyIcon as Copy, CheckIcon as Check, Share02Icon as Share2, QrCodeIcon as QrCode, ChevronRightIcon as ChevronRight, Building02Icon as Building2, AlertCircleIcon as AlertCircle, ArrowRight01Icon as ArrowRight, ArrowLeft01Icon as ArrowLeft, Link02Icon as Link2, Mail01Icon as Mail, MailValidation01Icon as MailCheck, Clock01Icon as Clock, RefreshIcon as RefreshCw } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -106,7 +90,7 @@ export function AddFundsDrawer({ isOpen, onOpenChange, currencyCode }: AddFundsD
                                     onClick={() => setActiveView('method-select')}
                                     className="h-9 w-9 rounded-xl bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 flex items-center justify-center transition-all"
                                 >
-                                    <ArrowLeft className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
+                                    <HugeiconsIcon icon={ArrowLeft} className="w-4 h-4 text-brand-deep dark:text-brand-cream" />
                                 </button>
                             )}
                             <div className="space-y-1">
@@ -227,7 +211,7 @@ function MethodSelectView({ onSelect }: { onSelect: (view: DrawerView) => void }
                         >
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center shrink-0">
-                                    <method.icon className="w-6 h-6 text-brand-gold" />
+                                    <HugeiconsIcon icon={method.icon} className="w-6 h-6 text-brand-gold" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-base font-serif font-medium text-brand-deep dark:text-brand-cream">
@@ -237,7 +221,7 @@ function MethodSelectView({ onSelect }: { onSelect: (view: DrawerView) => void }
                                         {method.description}
                                     </p>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-brand-accent/30 dark:text-brand-cream/30 shrink-0" />
+                                <HugeiconsIcon icon={ChevronRight} className="w-5 h-5 text-brand-accent/30 dark:text-brand-cream/30 shrink-0" />
                             </div>
                         </GlassCard>
                     </motion.div>
@@ -331,7 +315,7 @@ function PaymentLinkView({ businessName }: { businessName: string }) {
                     transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
                     className="w-20 h-20 rounded-3xl bg-brand-green/10 flex items-center justify-center"
                 >
-                    <Link2 className="w-10 h-10 text-brand-green" />
+                    <HugeiconsIcon icon={Link2} className="w-10 h-10 text-brand-green" />
                 </motion.div>
 
                 <div className="space-y-2">
@@ -352,7 +336,7 @@ function PaymentLinkView({ businessName }: { businessName: string }) {
                         onClick={handleCopy}
                         className="flex-1 h-12 rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold gap-2"
                     >
-                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copied ? <HugeiconsIcon icon={Check} className="w-4 h-4" /> : <HugeiconsIcon icon={Copy} className="w-4 h-4" />}
                         {copied ? "Copied" : "Copy"}
                     </Button>
                     <Button
@@ -360,7 +344,7 @@ function PaymentLinkView({ businessName }: { businessName: string }) {
                         onClick={handleShare}
                         className="flex-1 h-12 rounded-2xl font-semibold gap-2"
                     >
-                        <Share2 className="w-4 h-4" />
+                        <HugeiconsIcon icon={Share2} className="w-4 h-4" />
                         Share
                     </Button>
                 </div>
@@ -439,7 +423,7 @@ function QrCodeView({ accounts }: { accounts: DepositAccount[] }) {
                 className="flex flex-col items-center text-center max-w-md mx-auto space-y-6 py-8"
             >
                 <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                    <QrCode className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
+                    <HugeiconsIcon icon={QrCode} className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
                 </div>
                 <div className="space-y-2">
                     <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
@@ -477,7 +461,7 @@ function QrCodeView({ accounts }: { accounts: DepositAccount[] }) {
                             {/* Bank Name Header */}
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                    <Building2 className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60" />
+                                    <HugeiconsIcon icon={Building2} className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60" />
                                 </div>
                                 <p className="text-base font-serif font-medium text-brand-deep dark:text-brand-cream">
                                     {account.bankName}
@@ -533,7 +517,7 @@ function EmailMissingView({ onGoToProfile }: { onGoToProfile: () => void }) {
         >
             <div className="relative">
                 <div className="w-24 h-24 rounded-3xl bg-brand-gold/10 flex items-center justify-center">
-                    <Mail className="w-12 h-12 text-brand-gold" />
+                    <HugeiconsIcon icon={Mail} className="w-12 h-12 text-brand-gold" />
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-brand-deep dark:bg-brand-cream flex items-center justify-center shadow-lg">
                     <span className="text-brand-gold dark:text-brand-deep font-bold text-lg leading-none">+</span>
@@ -582,7 +566,7 @@ function EmailMissingView({ onGoToProfile }: { onGoToProfile: () => void }) {
                 className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
             >
                 Go to Profile Settings
-                <ArrowRight className="w-5 h-5" />
+                <HugeiconsIcon icon={ArrowRight} className="w-5 h-5" />
             </Button>
         </motion.div>
     )
@@ -617,10 +601,10 @@ function EmailUnverifiedView({ email }: { email: string }) {
         >
             <div className="relative">
                 <div className="w-24 h-24 rounded-3xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
-                    <MailCheck className="w-12 h-12 text-blue-500" />
+                    <HugeiconsIcon icon={MailCheck} className="w-12 h-12 text-blue-500" />
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-white dark:bg-brand-deep border border-brand-deep/5 dark:border-white/10 flex items-center justify-center shadow-lg">
-                    <Clock className="w-5 h-5 text-amber-500" />
+                    <HugeiconsIcon icon={Clock} className="w-5 h-5 text-amber-500" />
                 </div>
             </div>
 
@@ -629,7 +613,7 @@ function EmailUnverifiedView({ email }: { email: string }) {
                     Verify Your Email
                 </h3>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-deep/5 dark:bg-white/5 border border-brand-deep/5 dark:border-white/10">
-                    <Mail className="w-3.5 h-3.5 text-brand-accent/50 dark:text-brand-cream/50" />
+                    <HugeiconsIcon icon={Mail} className="w-3.5 h-3.5 text-brand-accent/50 dark:text-brand-cream/50" />
                     <span className="text-sm font-medium text-brand-deep dark:text-brand-cream">{email}</span>
                 </div>
                 <p className="text-sm text-brand-accent/60 dark:text-brand-cream/60 leading-relaxed max-w-[300px] mx-auto">
@@ -643,7 +627,7 @@ function EmailUnverifiedView({ email }: { email: string }) {
                     animate={{ opacity: 1, scale: 1 }}
                     className="w-full flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-500/20"
                 >
-                    <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <HugeiconsIcon icon={Check} className="w-4 h-4 text-green-600 dark:text-green-400" />
                     <span className="text-sm font-medium text-green-700 dark:text-green-400">
                         Verification email sent! Check your inbox.
                     </span>
@@ -655,9 +639,9 @@ function EmailUnverifiedView({ email }: { email: string }) {
                     className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70"
                 >
                     {resendState === 'loading' ? (
-                        <><RefreshCw className="w-5 h-5 animate-spin" /> Sending…</>
+                        <><HugeiconsIcon icon={RefreshCw} className="w-5 h-5 animate-spin" /> Sending…</>
                     ) : (
-                        <><RefreshCw className="w-5 h-5" /> Resend Verification Email</>
+                        <><HugeiconsIcon icon={RefreshCw} className="w-5 h-5" /> Resend Verification Email</>
                     )}
                 </Button>
             )}
@@ -697,10 +681,10 @@ function VerificationRequiredView({
             {/* Shield Icon */}
             <div className="relative">
                 <div className="w-24 h-24 rounded-3xl bg-brand-gold/10 flex items-center justify-center">
-                    <ShieldCheck className="w-12 h-12 text-brand-gold" />
+                    <HugeiconsIcon icon={ShieldCheck} className="w-12 h-12 text-brand-gold" />
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-xl bg-brand-deep dark:bg-brand-cream flex items-center justify-center shadow-lg">
-                    <Lock className="w-5 h-5 text-brand-gold dark:text-brand-deep" />
+                    <HugeiconsIcon icon={Lock} className="w-5 h-5 text-brand-gold dark:text-brand-deep" />
                 </div>
             </div>
 
@@ -749,7 +733,7 @@ function VerificationRequiredView({
                             className="flex items-start gap-3"
                         >
                             <div className="w-5 h-5 rounded-md bg-brand-gold/10 flex items-center justify-center shrink-0 mt-0.5">
-                                <Check className="w-3 h-3 text-brand-gold" />
+                                <HugeiconsIcon icon={Check} className="w-3 h-3 text-brand-gold" />
                             </div>
                             <p className="text-sm text-brand-deep/80 dark:text-brand-cream/80 text-left leading-snug">
                                 {benefit}
@@ -765,7 +749,7 @@ function VerificationRequiredView({
                 className="w-full h-14 rounded-2xl bg-brand-gold-700 text-white font-bold text-base shadow-xl shadow-brand-gold/20 hover:bg-brand-gold-800 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
             >
                 Start Verification
-                <ArrowRight className="w-5 h-5" />
+                <HugeiconsIcon icon={ArrowRight} className="w-5 h-5" />
             </Button>
         </motion.div>
     )
@@ -787,7 +771,7 @@ function NoAccountsView({ onStartVerification }: { onStartVerification: () => vo
             className="flex flex-col items-center text-center max-w-md mx-auto space-y-6 py-8"
         >
             <div className="w-20 h-20 rounded-3xl bg-amber-500/10 flex items-center justify-center">
-                <AlertCircle className="w-10 h-10 text-amber-500" />
+                <HugeiconsIcon icon={AlertCircle} className="w-10 h-10 text-amber-500" />
             </div>
             <div className="space-y-2">
                 <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
@@ -806,7 +790,7 @@ function NoAccountsView({ onStartVerification }: { onStartVerification: () => vo
                     className="h-12 rounded-2xl border-brand-deep/10 dark:border-white/10 px-6"
                 >
                     Contact Support
-                    <ChevronRight className="w-4 h-4 ml-2" />
+                    <HugeiconsIcon icon={ChevronRight} className="w-4 h-4 ml-2" />
                 </Button>
             ) : (
                 <Button
@@ -933,7 +917,7 @@ function DepositAccountCard({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                            <Building2 className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60" />
+                            <HugeiconsIcon icon={Building2} className="w-5 h-5 text-brand-accent/40 dark:text-brand-cream/60" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40">
@@ -967,9 +951,9 @@ function DepositAccountCard({
                             className="h-9 w-9 rounded-xl bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 transition-all"
                         >
                             {copiedField === "Account number" ? (
-                                <Check className="w-4 h-4 text-brand-green" />
+                                <HugeiconsIcon icon={Check} className="w-4 h-4 text-brand-green" />
                             ) : (
-                                <Copy className="w-4 h-4" />
+                                <HugeiconsIcon icon={Copy} className="w-4 h-4" />
                             )}
                         </Button>
                     </div>
@@ -996,9 +980,9 @@ function DepositAccountCard({
                         className="flex-1 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-xs font-bold uppercase tracking-wider"
                     >
                         {copiedField === "Details" ? (
-                            <Check className="w-3.5 h-3.5 mr-2 text-brand-green" />
+                            <HugeiconsIcon icon={Check} className="w-3.5 h-3.5 mr-2 text-brand-green" />
                         ) : (
-                            <Copy className="w-3.5 h-3.5 mr-2" />
+                            <HugeiconsIcon icon={Copy} className="w-3.5 h-3.5 mr-2" />
                         )}
                         Copy All
                     </Button>
@@ -1007,7 +991,7 @@ function DepositAccountCard({
                         onClick={handleShare}
                         className="flex-1 h-10 rounded-xl bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10 text-xs font-bold uppercase tracking-wider"
                     >
-                        <Share2 className="w-3.5 h-3.5 mr-2" />
+                        <HugeiconsIcon icon={Share2} className="w-3.5 h-3.5 mr-2" />
                         Share
                     </Button>
                     <Button
@@ -1020,7 +1004,7 @@ function DepositAccountCard({
                                 : "bg-brand-deep/5 dark:bg-white/5 hover:bg-brand-deep/10 dark:hover:bg-white/10"
                         )}
                     >
-                        <QrCode className="w-4 h-4" />
+                        <HugeiconsIcon icon={QrCode} className="w-4 h-4" />
                     </Button>
                 </div>
 

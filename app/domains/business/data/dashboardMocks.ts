@@ -1,4 +1,5 @@
-import { Clock, Package, AlertCircle } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Clock01Icon as Clock, PackageIcon as Package, AlertCircleIcon as AlertCircle } from "@hugeicons/core-free-icons"
 import React from "react"
 
 // Mock Data structure per store
@@ -6,8 +7,8 @@ export const storeData: Record<string, any> = {
     '1': { // Main Store
         sales: { value: "₦850,000", trend: "+15% vs last week", trendDirection: "up", label: "Total Sales (Main Store)" },
         actions: [
-            { label: "Pending Orders", count: 2, type: "urgent", href: "/orders", icon: React.createElement(Clock, { className: "w-4 h-4" }) },
-            { label: "Low Stock", count: 1, type: "warning", href: "/inventory", icon: React.createElement(Package, { className: "w-4 h-4" }) },
+            { label: "Pending Orders", count: 2, type: "urgent", href: "/orders", icon: React.createElement(HugeiconsIcon, { icon: Clock, className: "w-4 h-4" }) },
+            { label: "Low Stock", count: 1, type: "warning", href: "/inventory", icon: React.createElement(HugeiconsIcon, { icon: Package, className: "w-4 h-4" }) },
         ],
         activities: [
             { id: "s1-1", type: "sale", description: "Rice Bag (50kg)", amount: "₦12,000", timeAgo: "2m ago", customer: "Walk-in", href: "/orders" },
@@ -18,8 +19,8 @@ export const storeData: Record<string, any> = {
     '2': { // Ikeja Branch
         sales: { value: "₦320,000", trend: "+8% vs last week", trendDirection: "up", label: "Total Sales (Ikeja)" },
         actions: [
-            { label: "Pending Orders", count: 1, type: "urgent", href: "/orders", icon: React.createElement(Clock, { className: "w-4 h-4" }) },
-            { label: "Low Stock", count: 4, type: "warning", href: "/inventory", icon: React.createElement(Package, { className: "w-4 h-4" }) },
+            { label: "Pending Orders", count: 1, type: "urgent", href: "/orders", icon: React.createElement(HugeiconsIcon, { icon: Clock, className: "w-4 h-4" }) },
+            { label: "Low Stock", count: 4, type: "warning", href: "/inventory", icon: React.createElement(HugeiconsIcon, { icon: Package, className: "w-4 h-4" }) },
         ],
         activities: [
             { id: "s2-1", type: "sale", description: "Vegetable Oil", amount: "₦8,500", timeAgo: "15m ago", customer: "Bode", href: "/orders" },
@@ -29,7 +30,7 @@ export const storeData: Record<string, any> = {
     '3': { // Abuja Store
         sales: { value: "₦180,000", trend: "-5% vs last week", trendDirection: "down", label: "Total Sales (Abuja)" },
         actions: [
-            { label: "Overdue Debts", count: 3, type: "urgent", href: "/customers", icon: React.createElement(AlertCircle, { className: "w-4 h-4" }) },
+            { label: "Overdue Debts", count: 3, type: "urgent", href: "/customers", icon: React.createElement(HugeiconsIcon, { icon: AlertCircle, className: "w-4 h-4" }) },
         ],
         activities: [
             { id: "s3-1", type: "debt", description: "New Debt Recorded", amount: "₦2,500", timeAgo: "3h ago", customer: "Mama Nkechi", href: "/finance" },

@@ -1,27 +1,5 @@
-import type { LucideIcon } from "lucide-react"
-import {
-    Activity,
-    AlertCircle,
-    Banknote,
-    BookOpen,
-    CalendarRange,
-    ChefHat,
-    GlassWater,
-    Home,
-    LayoutGrid,
-    Link2,
-    Code2,
-    MessageSquare,
-    Package,
-    Phone,
-    Receipt,
-    ShieldCheck,
-    ShoppingBag,
-    Sparkles,
-    Store,
-    Truck,
-    Users,
-} from "lucide-react"
+import type { IconSvgElement } from "@hugeicons/react"
+import { Activity03Icon as Activity, AlertCircleIcon as AlertCircle, BanknoteIcon as Banknote, BookOpen01Icon as BookOpen, CalendarRangeIcon as CalendarRange, ChefHatIcon as ChefHat, GlassWaterIcon as GlassWater, Home01Icon as Home, LayoutGridIcon as LayoutGrid, Link02Icon as Link2, CodeIcon as Code2, WhatsappIcon as WhatsApp, PackageIcon as Package, CallIcon as Phone, Invoice01Icon as Receipt, SecurityCheckIcon as ShieldCheck, ShoppingBag01Icon as ShoppingBag, SparklesIcon as Sparkles, Store01Icon as Store, TruckIcon as Truck, UserMultiple02Icon as Users } from "@hugeicons/core-free-icons"
 
 /** Stable ids for nav entries and preset overrides */
 export type NavRouteId =
@@ -72,7 +50,7 @@ export type ModuleFeatureKey =
 export interface NavItemDef {
     id: NavRouteId
     href: string
-    icon: LucideIcon
+    icon: IconSvgElement
     defaultLabel: string
     permission?: string
     /** When set, require `features[key] === true` (plan-gated) */
@@ -195,7 +173,7 @@ export const NAV_GROUPS: NavGroupDef[] = [
             {
                 id: "whatsapp",
                 href: "/whatsapp",
-                icon: MessageSquare,
+                icon: WhatsApp,
                 defaultLabel: "WhatsApp",
                 permission: "VIEW_WHATSAPP_CONVERSATIONS",
                 planFeatureKey: "hasWhitelabelWhatsapp",

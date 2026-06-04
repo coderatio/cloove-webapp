@@ -16,16 +16,8 @@ import {
     DrawerStickyHeader,
     DrawerTitle,
 } from "@/app/components/ui/drawer"
-import {
-    PhoneCall,
-    PhoneIncoming,
-    PhoneOutgoing,
-    Wallet,
-    AlertTriangle,
-    Clock,
-    Loader2,
-    Receipt,
-} from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { CallingIcon as PhoneCall, CallIncoming01Icon as PhoneIncoming, CallOutgoing01Icon as PhoneOutgoing, Wallet01Icon as Wallet, Alert02Icon as AlertTriangle, Clock01Icon as Clock, Loading03Icon as Loader2, Invoice01Icon as Receipt } from "@hugeicons/core-free-icons"
 import { cn, formatPhoneNumber } from "@/app/lib/utils"
 import DataTable, { type Column } from "@/app/components/DataTable"
 import {
@@ -61,7 +53,7 @@ export function ChargeStatusBadge({ charge }: { charge: VoiceCallCharge }) {
     if (hasShortfall) {
         return (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200">
-                <AlertTriangle className="h-3 w-3" />
+                <HugeiconsIcon icon={AlertTriangle} className="h-3 w-3" />
                 Partial
             </span>
         )
@@ -86,7 +78,7 @@ export function DebtStatusBadge({ debt }: { debt: WalletDebtItem }) {
     }
     return (
         <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/25 bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-700 dark:border-rose-400/25 dark:bg-rose-400/10 dark:text-rose-200">
-            <AlertTriangle className="h-3 w-3" />
+            <HugeiconsIcon icon={AlertTriangle} className="h-3 w-3" />
             Outstanding
         </span>
     )
@@ -131,7 +123,7 @@ export function VoiceChargesView() {
                                 : "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300"
                         )}
                     >
-                        <Icon className="h-4 w-4" />
+                        <HugeiconsIcon icon={Icon} className="h-4 w-4" />
                     </div>
                 )
             },
@@ -251,10 +243,10 @@ export function VoiceChargesView() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl border-brand-deep/8">
                     <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Receipt className="w-24 h-24" />
+                        <HugeiconsIcon icon={Receipt} className="w-24 h-24" />
                     </div>
                     <div className="h-12 w-12 rounded-2xl bg-sky-500/10 flex items-center justify-center text-sky-600 dark:bg-sky-500/10 dark:text-sky-300">
-                        <PhoneCall className="h-6 w-6" />
+                        <HugeiconsIcon icon={PhoneCall} className="h-6 w-6" />
                     </div>
                     <div>
                         <p className="text-[10px] font-bold uppercase text-brand-accent/40 dark:text-brand-cream/40">
@@ -272,10 +264,10 @@ export function VoiceChargesView() {
 
                 <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl border-brand-deep/8">
                     <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Clock className="w-24 h-24" />
+                        <HugeiconsIcon icon={Clock} className="w-24 h-24" />
                     </div>
                     <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
-                        <Clock className="h-6 w-6" />
+                        <HugeiconsIcon icon={Clock} className="h-6 w-6" />
                     </div>
                     <div>
                         <p className="text-[10px] font-bold uppercase text-brand-accent/40 dark:text-brand-cream/40">
@@ -298,7 +290,7 @@ export function VoiceChargesView() {
                         : "border-brand-deep/8"
                 )}>
                     <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <AlertTriangle className="w-24 h-24" />
+                        <HugeiconsIcon icon={AlertTriangle} className="w-24 h-24" />
                     </div>
                     <div className={cn(
                         "h-12 w-12 rounded-2xl flex items-center justify-center",
@@ -307,11 +299,11 @@ export function VoiceChargesView() {
                             : "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300"
                     )}>
                         {debtsLoading ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin" />
                         ) : (debtsMeta?.totalOutstanding ?? 0) > 0 ? (
-                            <AlertTriangle className="h-6 w-6" />
+                            <HugeiconsIcon icon={AlertTriangle} className="h-6 w-6" />
                         ) : (
-                            <Wallet className="h-6 w-6" />
+                            <HugeiconsIcon icon={Wallet} className="h-6 w-6" />
                         )}
                     </div>
                     <div>
@@ -343,7 +335,7 @@ export function VoiceChargesView() {
                 <GlassCard className="rounded-2xl border-rose-500/15 bg-rose-500/3 p-5 space-y-4">
                     <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
-                            <AlertTriangle className="h-5 w-5" />
+                            <HugeiconsIcon icon={AlertTriangle} className="h-5 w-5" />
                         </div>
                         <div>
                             <h3 className="text-base font-semibold text-brand-deep dark:text-brand-cream">
@@ -393,7 +385,7 @@ export function VoiceChargesView() {
                 <GlassCard className="p-12 text-center border-dashed border-brand-deep/20 dark:border-white/10 bg-transparent">
                     <div className="flex flex-col items-center gap-3">
                         <div className="h-16 w-16 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mb-2">
-                            <PhoneCall className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
+                            <HugeiconsIcon icon={PhoneCall} className="w-8 h-8 text-brand-deep/20 dark:text-white/20" />
                         </div>
                         <h3 className="text-brand-deep dark:text-brand-cream font-medium">No call charges yet</h3>
                         <p className="text-xs text-brand-accent/40 dark:text-brand-cream/40 max-w-[280px] mx-auto">
@@ -517,7 +509,7 @@ function ChargeDetailContent({ charge, currencyCode }: { charge: VoiceCallCharge
                         ? "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300"
                         : "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300"
                 )}>
-                    <DirIcon className="h-7 w-7" />
+                    <HugeiconsIcon icon={DirIcon} className="h-7 w-7" />
                 </div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/40 dark:text-brand-cream/40 mb-2">
                     Amount Charged
@@ -527,7 +519,7 @@ function ChargeDetailContent({ charge, currencyCode }: { charge: VoiceCallCharge
                 </p>
                 {hasShortfall && charge.metadata?.shortfall ? (
                     <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-500/5 dark:bg-amber-400/5 rounded-full px-3 py-1">
-                        <AlertTriangle className="h-3 w-3" />
+                        <HugeiconsIcon icon={AlertTriangle} className="h-3 w-3" />
                         {formatCurrency(charge.metadata.shortfall, { currency: chargeCurrency })} shortfall covered
                     </p>
                 ) : null}

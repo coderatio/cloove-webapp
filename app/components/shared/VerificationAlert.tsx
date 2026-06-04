@@ -1,6 +1,7 @@
 "use client"
 
-import { AlertCircle, ExternalLink, ArrowRight } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { AlertCircleIcon as AlertCircle, ExternalLinkIcon as ExternalLink, ArrowRight01Icon as ArrowRight } from "@hugeicons/core-free-icons"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { cn } from "@/app/lib/utils"
 import { apiClient } from "@/app/lib/api-client"
@@ -57,7 +58,7 @@ export function VerificationAlert() {
             role="alert"
             className="mb-8 rounded-3xl border border-brand-gold/30 bg-brand-gold/5 dark:bg-brand-gold/10 px-6 py-4 flex items-center gap-4 shadow-xl shadow-brand-gold/5 backdrop-blur-md transition-all duration-300 group hover:border-brand-gold/50"
         >
-            <AlertCircle
+            <HugeiconsIcon icon={AlertCircle}
                 className="w-5 h-5 text-brand-gold-600 dark:text-brand-gold-400 shrink-0 group-hover:scale-110 transition-transform duration-300"
                 aria-hidden
             />
@@ -70,7 +71,7 @@ export function VerificationAlert() {
                             className="underline font-semibold text-brand-deep-600 dark:text-brand-gold hover:text-brand-deep-800 dark:hover:text-brand-gold-300 cursor-pointer inline-flex items-center gap-1"
                         >
                             Add one in Settings
-                            <ArrowRight className="w-3 h-3" />
+                            <HugeiconsIcon icon={ArrowRight} className="w-3 h-3" />
                         </button>
                     </p>
                 )}
@@ -111,7 +112,7 @@ export function VerificationAlert() {
                         "active:scale-95 transition-all duration-200"
                     )}
                 >
-                    <ExternalLink className="w-5 h-5" aria-hidden />
+                    <HugeiconsIcon icon={ExternalLink} className="w-5 h-5" aria-hidden />
                 </a>
             )}
         </div>

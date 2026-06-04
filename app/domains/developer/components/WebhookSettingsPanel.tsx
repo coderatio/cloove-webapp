@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { EyeOff, KeyRound, Loader2 } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { EyeOffIcon as EyeOff, Key01Icon as KeyRound, Loading03Icon as Loader2 } from "@hugeicons/core-free-icons"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -81,13 +82,13 @@ export function WebhookSettingsPanel({ appId }: { appId?: string | null }) {
                                 <p className="mt-3 font-mono text-xs text-muted-foreground">{setting.signingSecretPrefix}...</p>
                                 <p className="mt-1 text-xs text-muted-foreground">Rotated {formatDate(setting.lastRotatedAt)}</p>
                             </div>
-                            <KeyRound className="h-5 w-5 text-muted-foreground" />
+                            <HugeiconsIcon icon={KeyRound} className="h-5 w-5 text-muted-foreground" />
                         </div>                            <div className="mt-4 flex items-center gap-2">
                                 <Button className="rounded-2xl" variant="outline" size="sm" disabled={rotateSecret.isPending} onClick={() => void rotate(setting.environment)}>
                                     Rotate secret
                                 </Button>
                                 <Button className="rounded-2xl" variant="outline" size="sm" disabled={viewSecretMutation.isPending || !setting.plaintextAvailable} onClick={() => void viewSecret(setting.environment)}>
-                                    <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+                                    <HugeiconsIcon icon={EyeOff} className="mr-1.5 h-3.5 w-3.5" />
                                     {viewSecretMutation.isPending ? "Loading..." : setting.plaintextAvailable ? "View secret" : "Unavailable"}
                                 </Button>
                             </div>
@@ -95,7 +96,7 @@ export function WebhookSettingsPanel({ appId }: { appId?: string | null }) {
                 ))}
                 {settings.isLoading && (
                     <div className="flex items-center justify-center p-8">
-                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                        <HugeiconsIcon icon={Loader2} className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
                 )}
             </div>

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { DrawerPreview as BaseDrawerPrimitive } from "@base-ui/react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X } from "lucide-react"
+import { Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 const Drawer = BaseDrawerPrimitive.Root

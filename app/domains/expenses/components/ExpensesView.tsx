@@ -6,7 +6,8 @@ import { useIsMobile } from "@/app/hooks/useMediaQuery"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { ListCard } from "@/app/components/ui/list-card"
 import { GlassCard } from "@/app/components/ui/glass-card"
-import { Banknote, TrendingDown, Calculator, Trash2, Loader2, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Receipt, CalendarIcon } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { BanknoteIcon as Banknote, TradeDownIcon as TrendingDown, CalculatorIcon as Calculator, Delete02Icon as Trash2, Loading03Icon as Loader2, ChevronLeftIcon as ChevronLeft, ChevronRightIcon as ChevronRight, MoreHorizontalIcon as MoreHorizontal, PencilIcon as Pencil, Invoice01Icon as Receipt, Calendar03Icon as CalendarIcon } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { useBusiness } from "@/app/components/BusinessProvider"
@@ -186,7 +187,7 @@ export function ExpensesView() {
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-brand-deep/5 dark:hover:bg-white/5 rounded-full">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <HugeiconsIcon icon={MoreHorizontal} className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 border-brand-deep/5 dark:border-white/5 shadow-2xl">
@@ -195,7 +196,7 @@ export function ExpensesView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer dark:text-brand-cream dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center text-brand-accent dark:text-brand-cream">
-                            <Pencil className="w-4 h-4" />
+                            <HugeiconsIcon icon={Pencil} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">Edit</span>
                     </DropdownMenuItem>
@@ -208,7 +209,7 @@ export function ExpensesView() {
                         className="rounded-xl flex items-center gap-3 cursor-pointer text-rose-500 dark:text-rose-400 dark:focus:bg-white/5"
                     >
                         <div className="h-8 w-8 rounded-full bg-rose-500/10 flex items-center justify-center">
-                            <Trash2 className="w-4 h-4" />
+                            <HugeiconsIcon icon={Trash2} className="w-4 h-4" />
                         </div>
                         <span className="font-medium">Delete</span>
                     </DropdownMenuItem>
@@ -307,10 +308,10 @@ export function ExpensesView() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Banknote className="w-24 h-24" />
+                            <HugeiconsIcon icon={Banknote} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-deep dark:text-brand-cream">
-                            <Banknote className="h-6 w-6" />
+                            <HugeiconsIcon icon={Banknote} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/60 uppercase tracking-widest">
@@ -328,10 +329,10 @@ export function ExpensesView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <TrendingDown className="w-24 h-24" />
+                            <HugeiconsIcon icon={TrendingDown} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                            <TrendingDown className="h-6 w-6" />
+                            <HugeiconsIcon icon={TrendingDown} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-gold/60 dark:text-brand-gold/80 uppercase tracking-widest">
@@ -349,10 +350,10 @@ export function ExpensesView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Calculator className="w-24 h-24" />
+                            <HugeiconsIcon icon={Calculator} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                            <Calculator className="h-6 w-6" />
+                            <HugeiconsIcon icon={Calculator} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-brand-accent/40 dark:text-brand-cream/40 uppercase tracking-widest">
@@ -370,10 +371,10 @@ export function ExpensesView() {
 
                     <GlassCard className="p-5 flex items-center gap-4 relative overflow-hidden group rounded-3xl before:rounded-3xl">
                         <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Banknote className="w-24 h-24" />
+                            <HugeiconsIcon icon={Banknote} className="w-24 h-24" />
                         </div>
                         <div className="h-12 w-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                            <Banknote className="h-6 w-6" />
+                            <HugeiconsIcon icon={Banknote} className="h-6 w-6" />
                         </div>
                         <div>
                             <p className="text-[10px] font-bold text-indigo-500/60 uppercase tracking-widest">
@@ -426,7 +427,7 @@ export function ExpensesView() {
                                             !startDateValue && "text-brand-accent/40 dark:text-brand-cream/40"
                                         )}
                                     >
-                                        <CalendarIcon className="mr-2 h-4 w-4 opacity-40" />
+                                        <HugeiconsIcon icon={CalendarIcon} className="mr-2 h-4 w-4 opacity-40" />
                                         {startDateValue ? formatDate(startDateValue, "MMM d, yyyy") : "Start date"}
                                     </Button>
                                 </PopoverTrigger>
@@ -458,7 +459,7 @@ export function ExpensesView() {
                                             !endDateValue && "text-brand-accent/40 dark:text-brand-cream/40"
                                         )}
                                     >
-                                        <CalendarIcon className="mr-2 h-4 w-4 opacity-40" />
+                                        <HugeiconsIcon icon={CalendarIcon} className="mr-2 h-4 w-4 opacity-40" />
                                         {endDateValue ? formatDate(endDateValue, "MMM d, yyyy") : "End date"}
                                     </Button>
                                 </PopoverTrigger>
@@ -683,7 +684,7 @@ export function ExpensesView() {
                     <GlassCard className="p-12 text-center">
                         <div className="flex flex-col items-center space-y-4">
                             <div className="w-20 h-20 rounded-3xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center">
-                                <Banknote className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
+                                <HugeiconsIcon icon={Banknote} className="w-10 h-10 text-brand-accent/30 dark:text-brand-cream/30" />
                             </div>
                             <h3 className="text-xl font-serif font-medium text-brand-deep dark:text-brand-cream">
                                 No Expense Records
@@ -710,7 +711,7 @@ export function ExpensesView() {
                                     onClick={() => setIsAddOpen(true)}
                                     className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white hover:bg-brand-deep/90 dark:hover:bg-brand-gold-800 font-semibold"
                                 >
-                                    <Banknote className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={Banknote} className="w-4 h-4 mr-2" />
                                     Record Expense
                                 </Button>
                             )}
@@ -756,7 +757,7 @@ export function ExpensesView() {
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
-                            <ChevronLeft className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronLeft} className="w-4 h-4" />
                             Previous
                         </Button>
                         <span className="text-sm text-brand-accent/60 dark:text-brand-cream/60">
@@ -770,7 +771,7 @@ export function ExpensesView() {
                             className="rounded-xl dark:border-white/5 dark:text-brand-cream hover:dark:bg-white/5"
                         >
                             Next
-                            <ChevronRight className="w-4 h-4" />
+                            <HugeiconsIcon icon={ChevronRight} className="w-4 h-4" />
                         </Button>
                     </div>
                 )}

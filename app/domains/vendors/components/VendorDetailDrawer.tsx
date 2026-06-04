@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { motion } from "framer-motion"
-import { Loader2, Phone, Mail, MapPin, FileText, Plus, Banknote } from "lucide-react"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Loading03Icon as Loader2, CallIcon as Phone, Mail01Icon as Mail, MapPinIcon as MapPin, File01Icon as FileText, PlusSignIcon as Plus, BanknoteIcon as Banknote } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 import { Button } from "@/app/components/ui/button"
 import {
@@ -73,7 +74,7 @@ export function VendorDetailDrawer({
                                         onClick={() => onEdit(vendor)}
                                         className="h-6 px-2 text-[10px] font-bold uppercase tracking-widest bg-brand-green/10 dark:bg-brand-gold/10 text-brand-green dark:text-brand-gold hover:bg-brand-green/5 dark:hover:bg-brand-gold/5 rounded-lg"
                                     >
-                                        <Plus className="w-4 h-4 mr-2" />
+                                        <HugeiconsIcon icon={Plus} className="w-4 h-4 mr-2" />
                                         Add Details
                                     </Button>
                                 )}
@@ -91,7 +92,7 @@ export function VendorDetailDrawer({
                                         {vendor.phoneNumber && (
                                             <a href={`tel:${vendor.phoneNumber}`} className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream hover:text-brand-green transition-colors">
                                                 <div className="h-8 w-8 rounded-full bg-brand-green/10 flex items-center justify-center">
-                                                    <Phone className="w-4 h-4 text-brand-green" />
+                                                    <HugeiconsIcon icon={Phone} className="w-4 h-4 text-brand-green" />
                                                 </div>
                                                 {vendor.phoneNumber}
                                             </a>
@@ -99,7 +100,7 @@ export function VendorDetailDrawer({
                                         {vendor.email && (
                                             <a href={`mailto:${vendor.email}`} className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream hover:text-brand-green transition-colors">
                                                 <div className="h-8 w-8 rounded-full bg-brand-gold/10 flex items-center justify-center">
-                                                    <Mail className="w-4 h-4 text-brand-gold" />
+                                                    <HugeiconsIcon icon={Mail} className="w-4 h-4 text-brand-gold" />
                                                 </div>
                                                 {vendor.email}
                                             </a>
@@ -107,7 +108,7 @@ export function VendorDetailDrawer({
                                         {vendor.address && (
                                             <div className="flex items-center gap-3 text-sm text-brand-deep dark:text-brand-cream">
                                                 <div className="h-8 w-8 rounded-full bg-brand-accent/10 flex items-center justify-center">
-                                                    <MapPin className="w-4 h-4 text-brand-accent" />
+                                                    <HugeiconsIcon icon={MapPin} className="w-4 h-4 text-brand-accent" />
                                                 </div>
                                                 {vendor.address}
                                             </div>
@@ -115,7 +116,7 @@ export function VendorDetailDrawer({
                                         {vendor.notes && (
                                             <div className="flex items-start gap-3 text-sm text-brand-accent/60 dark:text-brand-cream/60">
                                                 <div className="h-8 w-8 rounded-full bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center shrink-0">
-                                                    <FileText className="w-4 h-4" />
+                                                    <HugeiconsIcon icon={FileText} className="w-4 h-4" />
                                                 </div>
                                                 {vendor.notes}
                                             </div>
@@ -146,7 +147,7 @@ export function VendorDetailDrawer({
                                     onClick={() => onRecordPayable(vendor)}
                                     className="rounded-2xl bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold"
                                 >
-                                    <Plus className="w-4 h-4 mr-2" />
+                                    <HugeiconsIcon icon={Plus} className="w-4 h-4 mr-2" />
                                     Record Payable
                                 </Button>
                             )}
@@ -159,7 +160,7 @@ export function VendorDetailDrawer({
                             </p>
                             {isLoadingPayables ? (
                                 <div className="flex items-center justify-center py-8">
-                                    <Loader2 className="w-5 h-5 animate-spin text-brand-accent/40" />
+                                    <HugeiconsIcon icon={Loader2} className="w-5 h-5 animate-spin text-brand-accent/40" />
                                 </div>
                             ) : payables.length === 0 ? (
                                 <motion.div
@@ -168,7 +169,7 @@ export function VendorDetailDrawer({
                                     className="p-10 text-center space-y-3 rounded-3xl border border-dashed border-brand-deep/5 dark:border-white/5"
                                 >
                                     <div className="h-12 w-12 rounded-2xl bg-brand-deep/5 dark:bg-white/5 flex items-center justify-center mx-auto mb-2">
-                                        <Banknote className="w-6 h-6 text-brand-deep/20 dark:text-white/20" />
+                                        <HugeiconsIcon icon={Banknote} className="w-6 h-6 text-brand-deep/20 dark:text-white/20" />
                                     </div>
                                     <p className="text-sm font-medium text-brand-deep/40 dark:text-brand-cream/40">
                                         No payables recorded yet.
@@ -220,7 +221,7 @@ export function VendorDetailDrawer({
                                                         onClick={() => onPayPayable(payable)}
                                                         className="rounded-xl text-xs border-brand-green/20 text-brand-green dark:text-brand-cream hover:bg-brand-green/10"
                                                     >
-                                                        <Banknote className="w-3 h-3 mr-1" />
+                                                        <HugeiconsIcon icon={Banknote} className="w-3 h-3 mr-1" />
                                                         Pay
                                                     </Button>
                                                 )}
@@ -249,7 +250,7 @@ export function VendorDetailDrawer({
                             onClick={() => onRecordPayable(vendor)}
                             className="flex-1 rounded-2xl h-14 bg-brand-deep text-brand-gold dark:bg-brand-gold-700 dark:text-white font-bold shadow-xl"
                         >
-                            <Plus className="w-4 h-4 mr-2" />
+                            <HugeiconsIcon icon={Plus} className="w-4 h-4 mr-2" />
                             Record Payable
                         </Button>
                     </div>
