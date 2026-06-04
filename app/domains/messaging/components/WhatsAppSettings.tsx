@@ -255,6 +255,7 @@ export function WhatsAppSettings({
 
   const [localSettings, setLocalSettings] = useState<Partial<GoSettings>>({
     display_name: "",
+    bot_name: "",
     welcome_message: "",
     fallback_message: "",
     tone: "professional",
@@ -313,6 +314,7 @@ export function WhatsAppSettings({
       const s = goSettingsData as GoSettings
       setLocalSettings({
         display_name: s.display_name ?? "",
+        bot_name: s.bot_name ?? "",
         welcome_message: s.welcome_message ?? "",
         fallback_message: s.fallback_message ?? "",
         tone: s.tone ?? "professional",
@@ -773,12 +775,12 @@ export function WhatsAppSettings({
                         Bot Name
                       </label>
                       <Input
-                        value={localSettings.display_name ?? ""}
-                        onChange={(e) => handleChange("display_name", e.target.value)}
-                        placeholder="e.g. Scoops assistant"
+                        value={localSettings.bot_name ?? ""}
+                        onChange={(e) => handleChange("bot_name", e.target.value)}
+                        placeholder="e.g. Bola"
                       />
                       <p className="text-sm text-slate-500 dark:text-slate-300">
-                        Used in customer-facing bot copy and fallbacks.
+                        The assistant name customers see in WhatsApp, for example: Bola.
                       </p>
                     </div>
 

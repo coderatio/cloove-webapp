@@ -94,6 +94,7 @@ export interface GoSettings {
   business_id: string
   store_id: string | null
   display_name: string | null
+  bot_name: string | null
   welcome_message: string | null
   fallback_message: string | null
   tone: string
@@ -157,6 +158,7 @@ export interface ManualConnectPayload {
   catalog_id?: string
   catalog_name?: string
   display_name?: string | null
+  bot_name?: string | null
   store_id?: string | null
 }
 
