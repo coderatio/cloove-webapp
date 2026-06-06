@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowLeft01Icon as ArrowLeft, BotIcon as Bot, CheckmarkCircle02Icon as CheckCircle2, ClipboardListIcon as ClipboardList, File01Icon as FileText, GitBranchIcon as GitBranch, InboxIcon as Inbox, Loading03Icon as Loader2, Message01Icon as MessageSquare, Cursor02Icon as MousePointerClick, PackageDeliveredIcon as PackageCheck, PanelRightCloseIcon as PanelRightClose, PanelRightOpenIcon as PanelRightOpen, Search01Icon as Search, SentIcon as SendHorizonal, UserIcon as UserRound, Cancel01Icon as X } from "@hugeicons/core-free-icons"
+import { ArrowDown01Icon as ArrowDown, ArrowLeft01Icon as ArrowLeft, ArrowUp01Icon as ArrowUp, BotIcon as Bot, CheckmarkCircle02Icon as CheckCircle2, ClipboardListIcon as ClipboardList, File01Icon as FileText, GitBranchIcon as GitBranch, InboxIcon as Inbox, Loading03Icon as Loader2, Message01Icon as MessageSquare, MoreVerticalIcon as MoreVertical, Cursor02Icon as MousePointerClick, PackageDeliveredIcon as PackageCheck, PanelRightCloseIcon as PanelRightClose, PanelRightOpenIcon as PanelRightOpen, Search01Icon as Search, SentIcon as SendHorizonal, UserIcon as UserRound, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select"
+import { SideSheet, SideSheetBody, SideSheetContent, SideSheetStickyHeader, SideSheetTitle } from "@/app/components/ui/side-sheet"
 import { Skeleton } from "@/app/components/ui/skeleton"
 import { useAuth } from "@/app/components/providers/auth-provider"
 import { usePermission } from "@/app/hooks/usePermission"
@@ -514,7 +515,26 @@ function InboxTab() {
     const [selectedTemplate, setSelectedTemplate] = useState<string>("")
     const [templateVariableValues, setTemplateVariableValues] = useState<Record<string, string>>({})
     const [sidebarOpen, setSidebarOpen] = useState(true)
+    const [detailsOpen, setDetailsOpen] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const messagesScrollRef = useRef<HTMLDivElement>(null)
+    const replyRef = useRef<HTMLTextAreaElement>(null)
+    const [showScrollTop, setShowScrollTop] = useState(false)
+    const [showScrollBottom, setShowScrollBottom] = useState(false)
+
+    const updateScrollButtons = useCallback(() => {
+        const el = messagesScrollRef.current
+        if (!el) return
+        const { scrollTop, scrollHeight, clientHeight } = el
+        setShowScrollTop(scrollTop > 200)
+        setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 200)
+    }, [])
+
+    const scrollMessagesTo = (position: "top" | "bottom") => {
+        const el = messagesScrollRef.current
+        if (!el) return
+        el.scrollTo({ top: position === "top" ? 0 : el.scrollHeight, behavior: "smooth" })
+    }
 
     const activeConversationId = selectedId ?? conversations?.[0]?.id ?? null
     const detail = useWhatsAppConversation(activeConversationId)
@@ -546,7 +566,21 @@ function InboxTab() {
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, [selected?.messages])
+        updateScrollButtons()
+    }, [selected?.messages, updateScrollButtons])
+
+    // Recompute when switching conversations (content height changes).
+    useEffect(() => {
+        updateScrollButtons()
+    }, [activeConversationId, updateScrollButtons])
+
+    // Auto-grow the reply composer up to a cap, then let it scroll internally.
+    useEffect(() => {
+        const el = replyRef.current
+        if (!el) return
+        el.style.height = "auto"
+        el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+    }, [draft])
 
     const sortedConversations = [...(conversations ?? [])].sort(
         (a, b) => latestConversationActivity(b) - latestConversationActivity(a)
@@ -618,12 +652,232 @@ function InboxTab() {
         }
     }
 
+    const detailsPanel = selected ? (
+        <>
+            {/* Quick actions (drawer only — desktop has these in the header) */}
+            {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
+                <div className="mb-2.5 grid grid-cols-2 gap-2 xl:hidden">
+                    {selected.mode === "ai" ? (
+                        <button
+                            type="button"
+                            onClick={() => takeover.mutate({ id: selected.id })}
+                            className="flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-brand-gold/20 bg-background/80 px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
+                        >
+                            <HugeiconsIcon icon={UserRound} className="h-4 w-4" />
+                            Take over
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => returnToAi.mutate({ id: selected.id })}
+                            className="flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-brand-gold/20 bg-background/80 px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
+                        >
+                            <HugeiconsIcon icon={Bot} className="h-4 w-4" />
+                            AI mode
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => resolveConversation.mutate({ id: selected.id })}
+                        className="flex h-10 items-center justify-center gap-1.5 rounded-2xl border border-border/50 bg-background/80 px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                    >
+                        <HugeiconsIcon icon={CheckCircle2} className="h-4 w-4" />
+                        Resolve
+                    </button>
+                </div>
+            )}
+
+            {/* Details card */}
+            <div className="rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
+                <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
+                    Details
+                </h4>
+                <dl className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                        <dt className="text-muted-foreground/60">Status</dt>
+                        <dd>
+                            <span
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                    selected.status === "open" ||
+                                    selected.status === "pending_customer"
+                                        ? "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                                        : selected.status === "resolved"
+                                          ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                          : "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
+                                }`}
+                            >
+                                {(selected.status === "open" ||
+                                    selected.status ===
+                                        "pending_customer") && (
+                                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                                )}
+                                {selected.status.replace("_", " ")}
+                            </span>
+                        </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 border-t border-border/15 pt-2">
+                        <dt className="text-muted-foreground/60">Mode</dt>
+                        <dd
+                            className={`text-xs font-medium capitalize ${
+                                selected.mode === "human"
+                                    ? "text-brand-gold dark:text-brand-gold-300"
+                                    : "text-emerald-600 dark:text-emerald-400"
+                            }`}
+                        >
+                            {selected.mode}
+                        </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 border-t border-border/15 pt-2">
+                        <dt className="text-muted-foreground/60">
+                            Assigned
+                        </dt>
+                        <dd className="text-xs font-medium text-muted-foreground/80">
+                            {selected.assigned_to_name || "Unassigned"}
+                        </dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 border-t border-border/15 pt-2">
+                        <dt className="text-muted-foreground/60">Unread</dt>
+                        <dd
+                            className={`text-xs font-medium ${
+                                selected.unread_count > 0
+                                    ? "text-foreground"
+                                    : "text-muted-foreground/50"
+                            }`}
+                        >
+                            {selected.unread_count}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+
+            {/* Assign to me */}
+            {can("MANAGE_WHATSAPP_CONVERSATIONS") &&
+                selected.assigned_to_user_id !== user?.id &&
+                user?.id && (
+                    <button
+                        type="button"
+                        onClick={() =>
+                            assignConversation.mutate({
+                                id: selected.id,
+                                userId: user.id,
+                            })
+                        }
+                        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-brand-gold/20 bg-background/80 px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
+                    >
+                        <HugeiconsIcon icon={UserRound} className="h-3.5 w-3.5" />
+                        Assign to me
+                    </button>
+                )}
+
+            {/* Template sender */}
+            {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
+                <div className="mt-2.5 rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
+                    <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+                        <HugeiconsIcon icon={ClipboardList} className="h-3.5 w-3.5 text-brand-gold" />
+                        Send template
+                    </h4>
+                    <div className="space-y-2">
+                        <Select
+                            value={selectedTemplate}
+                            onValueChange={selectTemplate}
+                        >
+                            <SelectTrigger className="h-9 rounded-2xl border-brand-gold/15 text-xs focus:ring-brand-gold/20">
+                                <SelectValue placeholder="Select template" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sendableTemplates.length ? (
+                                    sendableTemplates.map((template) => (
+                                        <SelectItem
+                                            key={template.key}
+                                            value={template.key}
+                                        >
+                                            {template.name}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <SelectItem
+                                        value="__none__"
+                                        disabled
+                                    >
+                                        No templates available
+                                    </SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                        {selectedTemplateDetails && (
+                            <div className="space-y-2 rounded-2xl border border-border/40 bg-muted/10 p-2.5 dark:bg-white/5">
+                                {selectedTemplateDetails.variables.length > 0 ? (
+                                    selectedTemplateDetails.variables.map((variable) => (
+                                        <label
+                                            key={variable.key}
+                                            className="block space-y-1.5"
+                                        >
+                                            <span className="flex items-center justify-between gap-2 text-[11px] font-medium text-muted-foreground">
+                                                <span className="truncate">
+                                                    {formatTemplateVariableLabel(variable)}
+                                                </span>
+                                                {variable.required && (
+                                                    <span className="shrink-0 text-[10px] text-brand-gold">
+                                                        Required
+                                                    </span>
+                                                )}
+                                            </span>
+                                            <input
+                                                type={templateVariableInputType(variable)}
+                                                value={templateVariableValues[variable.key] ?? ""}
+                                                onChange={(event) =>
+                                                    setTemplateVariableValues((current) => ({
+                                                        ...current,
+                                                        [variable.key]: event.target.value,
+                                                    }))
+                                                }
+                                                placeholder={
+                                                    selectedTemplateDetails.sample_variables?.[
+                                                        variable.key
+                                                    ] || formatTemplateVariableLabel(variable)
+                                                }
+                                                className="h-9 w-full rounded-2xl border border-brand-gold/15 bg-background/80 px-3 text-xs outline-none transition-colors placeholder:text-muted-foreground/35 focus:border-brand-gold/30 focus:ring-2 focus:ring-brand-gold/10"
+                                            />
+                                        </label>
+                                    ))
+                                ) : (
+                                    <p className="text-[11px] text-muted-foreground">
+                                        This template does not need any details.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        <button
+                            type="button"
+                            onClick={submitTemplate}
+                            disabled={
+                                sendTemplate.isPending ||
+                                !selectedTemplate ||
+                                !selectedTemplateDetails ||
+                                hasMissingTemplateVariables
+                            }
+                            className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-deep px-3 py-2 text-[11px] font-medium text-brand-gold-300 transition-opacity hover:opacity-90 disabled:opacity-40 dark:bg-brand-gold-700 dark:text-white"
+                        >
+                            {sendTemplate.isPending ? (
+                                <HugeiconsIcon icon={Loader2} className="h-3 w-3 animate-spin" />
+                            ) : (
+                                <HugeiconsIcon icon={SendHorizonal} className="h-3 w-3" />
+                            )}
+                            Send template
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
+    ) : null
+
     return (
         <div className="flex h-full min-h-0 overflow-hidden rounded-[32px] border border-brand-gold/15 bg-linear-to-br from-white via-white to-brand-gold/[0.035] shadow-[0_24px_80px_-44px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.02] dark:border-brand-gold/20 dark:from-white/[0.04] dark:via-white/[0.02] dark:to-brand-gold/[0.08]">
             {/* ── Conversation list ──────────────────────────────────── */}
             <section
-                className={`flex h-full min-h-0 flex-col overflow-hidden border-r border-brand-gold/10 bg-white/75 transition-all duration-300 dark:bg-slate-950/55 ${
-                    selected ? "hidden xl:flex xl:w-[380px]" : "flex-1 xl:w-[380px]"
+                className={`flex h-full min-h-0 flex-col overflow-hidden border-r border-brand-gold/10 bg-white/75 transition-all duration-300 dark:bg-slate-950/55 xl:w-[380px] xl:flex-none ${
+                    selectedId ? "hidden xl:flex" : "flex-1"
                 }`}
             >
                 {/* Header */}
@@ -771,7 +1025,11 @@ function InboxTab() {
             </section>
 
             {/* ── Message detail ─────────────────────────────────────── */}
-            <section className="flex flex-1 flex-col overflow-hidden bg-background/70">
+            <section
+                className={`flex-1 flex-col overflow-hidden bg-background/70 ${
+                    selectedId ? "flex" : "hidden xl:flex"
+                }`}
+            >
                 {!selected ? (
                     <div className="flex h-full items-center justify-center p-8">
                         <div className="max-w-xs space-y-3 text-center">
@@ -790,71 +1048,67 @@ function InboxTab() {
                 ) : (
                     <>
                         {/* ── Conversation header ──────────────────── */}
-                        <div className="shrink-0 border-b border-brand-gold/10 bg-white/85 px-4 py-3 backdrop-blur dark:bg-slate-950/70">
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="flex min-w-0 flex-1 items-center gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => selectConversation(null)}
-                                        aria-label="Close conversation"
-                                        className="flex h-8 w-8 items-center justify-center rounded-2xl text-muted-foreground/50 transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
-                                    >
-                                        <HugeiconsIcon icon={ArrowLeft} className="h-4 w-4" />
-                                    </button>
-                                    <ConversationAvatar
-                                        name={selected.customer_name || selected.customer_phone}
-                                        mode={selected.mode}
-                                        unreadCount={selected.unread_count}
-                                        size="lg"
-                                    />
-                                    <div className="min-w-0">
-                                        <h3 className="truncate text-sm font-semibold leading-tight">
+                        <div className="shrink-0 border-b border-brand-gold/10 bg-white/85 px-3 py-2.5 backdrop-blur dark:bg-slate-950/70 sm:px-4 sm:py-3">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                {/* Back to list (single-pane only) */}
+                                <button
+                                    type="button"
+                                    onClick={() => selectConversation(null)}
+                                    aria-label="Back to conversations"
+                                    className="-ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
+                                >
+                                    <HugeiconsIcon icon={ArrowLeft} className="h-5 w-5" />
+                                </button>
+
+                                {/* Identity */}
+                                <ConversationAvatar
+                                    name={selected.customer_name || selected.customer_phone}
+                                    mode={selected.mode}
+                                    unreadCount={selected.unread_count}
+                                    size="lg"
+                                />
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="truncate text-[15px] font-semibold leading-tight text-foreground">
                                             {selected.customer_name || selected.customer_phone}
                                         </h3>
-                                        <div className="mt-1 flex min-w-0 items-center gap-1.5">
-                                            <ModePill mode={selected.mode} />
-                                            <span className="truncate text-[11px] text-muted-foreground/60">
-                                                {selected.number_label || selected.customer_phone}
-                                            </span>
-                                        </div>
+                                        <ModePill mode={selected.mode} />
                                     </div>
+                                    <p className="mt-0.5 truncate text-[11px] text-muted-foreground/60">
+                                        {selected.number_label || selected.customer_phone}
+                                    </p>
                                 </div>
 
-                                <div className="flex items-center gap-1">
+                                {/* Desktop quick actions */}
+                                <div className="hidden items-center gap-1.5 xl:flex">
                                     {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
                                         <>
                                             {selected.mode === "ai" ? (
                                                 <button
                                                     type="button"
-                                                    onClick={() =>
-                                                        takeover.mutate({ id: selected.id })
-                                                    }
+                                                    onClick={() => takeover.mutate({ id: selected.id })}
                                                     className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
                                                     <HugeiconsIcon icon={UserRound} className="h-3.5 w-3.5" />
-                                                    <span className="hidden sm:inline">Take over</span>
+                                                    Take over
                                                 </button>
                                             ) : (
                                                 <button
                                                     type="button"
-                                                    onClick={() =>
-                                                        returnToAi.mutate({ id: selected.id })
-                                                    }
+                                                    onClick={() => returnToAi.mutate({ id: selected.id })}
                                                     className="flex h-9 items-center gap-1.5 rounded-full border border-brand-gold/20 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
                                                 >
                                                     <HugeiconsIcon icon={Bot} className="h-3.5 w-3.5" />
-                                                    <span className="hidden sm:inline">AI mode</span>
+                                                    AI mode
                                                 </button>
                                             )}
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    resolveConversation.mutate({ id: selected.id })
-                                                }
+                                                onClick={() => resolveConversation.mutate({ id: selected.id })}
                                                 className="flex h-9 items-center gap-1.5 rounded-full border border-border/50 bg-background px-3 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
                                             >
                                                 <HugeiconsIcon icon={CheckCircle2} className="h-3.5 w-3.5" />
-                                                <span className="hidden sm:inline">Resolve</span>
+                                                Resolve
                                             </button>
                                         </>
                                     )}
@@ -862,7 +1116,7 @@ function InboxTab() {
                                         type="button"
                                         onClick={() => setSidebarOpen((p) => !p)}
                                         aria-label={sidebarOpen ? "Close details panel" : "Open details panel"}
-                                        className={`hidden h-9 w-9 items-center justify-center rounded-full border transition-colors xl:flex ${
+                                        className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
                                             sidebarOpen
                                                 ? "border-brand-gold/20 bg-brand-gold/10 text-brand-gold"
                                                 : "border-border/50 bg-background text-muted-foreground hover:bg-brand-gold/10 hover:text-brand-gold"
@@ -871,6 +1125,16 @@ function InboxTab() {
                                         {sidebarOpen ? <HugeiconsIcon icon={PanelRightClose} className="h-3.5 w-3.5" /> : <HugeiconsIcon icon={PanelRightOpen} className="h-3.5 w-3.5" />}
                                     </button>
                                 </div>
+
+                                {/* Mobile / tablet: single overflow → details + actions sheet */}
+                                <button
+                                    type="button"
+                                    onClick={() => setDetailsOpen(true)}
+                                    aria-label="Conversation details and actions"
+                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/50 bg-background text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-gold xl:hidden"
+                                >
+                                    <HugeiconsIcon icon={MoreVertical} className="h-4 w-4" />
+                                </button>
                             </div>
                         </div>
 
@@ -904,7 +1168,11 @@ function InboxTab() {
                             }`}
                         >
                             {/* Messages */}
-                            <div className="min-h-0 space-y-2 overflow-y-auto bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.045),transparent_34%),radial-gradient(circle_at_1px_1px,rgba(11,61,46,0.055)_1px,transparent_0),linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.24))] bg-[length:auto,22px_22px,auto] px-4 py-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.08),transparent_34%),radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.045)_1px,transparent_0),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))]">
+                            <div className="relative min-h-0 overflow-hidden">
+                            <div
+                                ref={messagesScrollRef}
+                                onScroll={updateScrollButtons}
+                                className="h-full space-y-2 overflow-y-auto bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.045),transparent_34%),radial-gradient(circle_at_1px_1px,rgba(11,61,46,0.055)_1px,transparent_0),linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.24))] bg-[length:auto,22px_22px,auto] px-4 py-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.08),transparent_34%),radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.045)_1px,transparent_0),linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))]">
                                 {selected.messages.map((message, idx) => {
                                     const isOutbound = message.direction === "outbound"
                                     const previousMessage = selected.messages[idx - 1]
@@ -997,207 +1265,54 @@ function InboxTab() {
                                 <div ref={messagesEndRef} />
                             </div>
 
-                            {/* ── Sidebar ────────────────────────────── */}
+                            {/* Scroll controls — sit just above the input, both axes */}
+                            <div className="pointer-events-none absolute bottom-3 right-3 flex flex-col gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => scrollMessagesTo("top")}
+                                    aria-label="Scroll to top"
+                                    tabIndex={showScrollTop ? 0 : -1}
+                                    className={`flex h-9 w-9 items-center justify-center rounded-full border border-brand-gold/15 bg-white/90 text-muted-foreground shadow-md shadow-slate-950/10 backdrop-blur transition-all duration-200 hover:bg-brand-gold/10 hover:text-brand-gold dark:bg-slate-900/90 dark:hover:bg-brand-gold/15 ${
+                                        showScrollTop ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"
+                                    }`}
+                                >
+                                    <HugeiconsIcon icon={ArrowUp} className="h-4 w-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => scrollMessagesTo("bottom")}
+                                    aria-label="Scroll to latest"
+                                    tabIndex={showScrollBottom ? 0 : -1}
+                                    className={`flex h-9 w-9 items-center justify-center rounded-full border border-brand-gold/15 bg-white/90 text-muted-foreground shadow-md shadow-slate-950/10 backdrop-blur transition-all duration-200 hover:bg-brand-gold/10 hover:text-brand-gold dark:bg-slate-900/90 dark:hover:bg-brand-gold/15 ${
+                                        showScrollBottom ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-1 opacity-0"
+                                    }`}
+                                >
+                                    <HugeiconsIcon icon={ArrowDown} className="h-4 w-4" />
+                                </button>
+                            </div>
+                            </div>
+
+                            {/* ── Sidebar (desktop, inline) ──────────── */}
                             {sidebarOpen && (
-                                <aside className="min-h-0 overflow-y-auto border-t border-brand-gold/10 bg-white/65 p-3 dark:bg-slate-950/45 xl:border-l xl:border-t-0">
-                                    {/* Details card */}
-                                    <div className="rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
-                                        <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
-                                            Details
-                                        </h4>
-                                        <dl className="space-y-2 text-xs">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <dt className="text-muted-foreground/60">Status</dt>
-                                                <dd>
-                                                    <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                                            selected.status === "open" ||
-                                                            selected.status === "pending_customer"
-                                                                ? "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
-                                                                : selected.status === "resolved"
-                                                                  ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                                                                  : "bg-brand-gold/10 text-brand-gold dark:bg-brand-gold/15 dark:text-brand-gold-300"
-                                                        }`}
-                                                    >
-                                                        {(selected.status === "open" ||
-                                                            selected.status ===
-                                                                "pending_customer") && (
-                                                            <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                                                        )}
-                                                        {selected.status.replace("_", " ")}
-                                                    </span>
-                                                </dd>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-2 border-t border-border/15 pt-2">
-                                                <dt className="text-muted-foreground/60">Mode</dt>
-                                                <dd
-                                                    className={`text-xs font-medium capitalize ${
-                                                        selected.mode === "human"
-                                                            ? "text-brand-gold dark:text-brand-gold-300"
-                                                            : "text-emerald-600 dark:text-emerald-400"
-                                                    }`}
-                                                >
-                                                    {selected.mode}
-                                                </dd>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-2 border-t border-border/15 pt-2">
-                                                <dt className="text-muted-foreground/60">
-                                                    Assigned
-                                                </dt>
-                                                <dd className="text-xs font-medium text-muted-foreground/80">
-                                                    {selected.assigned_to_name || "Unassigned"}
-                                                </dd>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-2 border-t border-border/15 pt-2">
-                                                <dt className="text-muted-foreground/60">Unread</dt>
-                                                <dd
-                                                    className={`text-xs font-medium ${
-                                                        selected.unread_count > 0
-                                                            ? "text-foreground"
-                                                            : "text-muted-foreground/50"
-                                                    }`}
-                                                >
-                                                    {selected.unread_count}
-                                                </dd>
-                                            </div>
-                                        </dl>
-                                    </div>
-
-                                    {/* Assign to me */}
-                                    {can("MANAGE_WHATSAPP_CONVERSATIONS") &&
-                                        selected.assigned_to_user_id !== user?.id &&
-                                        user?.id && (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    assignConversation.mutate({
-                                                        id: selected.id,
-                                                        userId: user.id,
-                                                    })
-                                                }
-                                                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-brand-gold/20 bg-background/80 px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-brand-gold/10 hover:text-brand-deep dark:hover:text-brand-cream"
-                                            >
-                                                <HugeiconsIcon icon={UserRound} className="h-3.5 w-3.5" />
-                                                Assign to me
-                                            </button>
-                                        )}
-
-                                    {/* Template sender */}
-                                    {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
-                                        <div className="mt-2.5 rounded-[22px] border border-brand-gold/15 bg-background/80 p-3">
-                                            <h4 className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-                                                <HugeiconsIcon icon={ClipboardList} className="h-3.5 w-3.5 text-brand-gold" />
-                                                Send template
-                                            </h4>
-                                            <div className="space-y-2">
-                                                <Select
-                                                    value={selectedTemplate}
-                                                    onValueChange={selectTemplate}
-                                                >
-                                                    <SelectTrigger className="h-9 rounded-2xl border-brand-gold/15 text-xs focus:ring-brand-gold/20">
-                                                        <SelectValue placeholder="Select template" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {sendableTemplates.length ? (
-                                                            sendableTemplates.map((template) => (
-                                                                <SelectItem
-                                                                    key={template.key}
-                                                                    value={template.key}
-                                                                >
-                                                                    {template.name}
-                                                                </SelectItem>
-                                                            ))
-                                                        ) : (
-                                                            <SelectItem
-                                                                value="__none__"
-                                                                disabled
-                                                            >
-                                                                No templates available
-                                                            </SelectItem>
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                                {selectedTemplateDetails && (
-                                                    <div className="space-y-2 rounded-2xl border border-border/40 bg-muted/10 p-2.5 dark:bg-white/5">
-                                                        {selectedTemplateDetails.variables.length > 0 ? (
-                                                            selectedTemplateDetails.variables.map((variable) => (
-                                                                <label
-                                                                    key={variable.key}
-                                                                    className="block space-y-1.5"
-                                                                >
-                                                                    <span className="flex items-center justify-between gap-2 text-[11px] font-medium text-muted-foreground">
-                                                                        <span className="truncate">
-                                                                            {formatTemplateVariableLabel(variable)}
-                                                                        </span>
-                                                                        {variable.required && (
-                                                                            <span className="shrink-0 text-[10px] text-brand-gold">
-                                                                                Required
-                                                                            </span>
-                                                                        )}
-                                                                    </span>
-                                                                    <input
-                                                                        type={templateVariableInputType(variable)}
-                                                                        value={templateVariableValues[variable.key] ?? ""}
-                                                                        onChange={(event) =>
-                                                                            setTemplateVariableValues((current) => ({
-                                                                                ...current,
-                                                                                [variable.key]: event.target.value,
-                                                                            }))
-                                                                        }
-                                                                        placeholder={
-                                                                            selectedTemplateDetails.sample_variables?.[
-                                                                                variable.key
-                                                                            ] || formatTemplateVariableLabel(variable)
-                                                                        }
-                                                                        className="h-9 w-full rounded-2xl border border-brand-gold/15 bg-background/80 px-3 text-xs outline-none transition-colors placeholder:text-muted-foreground/35 focus:border-brand-gold/30 focus:ring-2 focus:ring-brand-gold/10"
-                                                                    />
-                                                                </label>
-                                                            ))
-                                                        ) : (
-                                                            <p className="text-[11px] text-muted-foreground">
-                                                                This template does not need any details.
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    onClick={submitTemplate}
-                                                    disabled={
-                                                        sendTemplate.isPending ||
-                                                        !selectedTemplate ||
-                                                        !selectedTemplateDetails ||
-                                                        hasMissingTemplateVariables
-                                                    }
-                                                    className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-brand-deep px-3 py-2 text-[11px] font-medium text-brand-gold-300 transition-opacity hover:opacity-90 disabled:opacity-40 dark:bg-brand-gold-700 dark:text-white"
-                                                >
-                                                    {sendTemplate.isPending ? (
-                                                        <HugeiconsIcon icon={Loader2} className="h-3 w-3 animate-spin" />
-                                                    ) : (
-                                                        <HugeiconsIcon icon={SendHorizonal} className="h-3 w-3" />
-                                                    )}
-                                                    Send template
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                                <aside className="hidden min-h-0 overflow-y-auto border-brand-gold/10 bg-white/65 p-3 dark:bg-slate-950/45 xl:block xl:border-l">
+                                    {detailsPanel}
                                 </aside>
                             )}
                         </div>
 
-                        {/* ── Reply form ─────────────────────────────── */}
+                        {/* ── Reply composer ─────────────────────────── */}
                         {can("MANAGE_WHATSAPP_CONVERSATIONS") && (
-                            <div className="shrink-0 border-t border-brand-gold/10 bg-white/85 px-4 py-3 backdrop-blur dark:bg-slate-950/75">
-                                <div className="mx-auto flex max-w-3xl items-end gap-2">
-                                    <div className="relative flex-1">
+                            <div className="shrink-0 border-t border-brand-gold/10 bg-white/85 px-3 py-3 backdrop-blur dark:bg-slate-950/75 sm:px-4">
+                                <div className="mx-auto max-w-3xl">
+                                    <div className="flex items-end gap-1.5 rounded-[26px] border border-border/60 bg-muted/15 py-1.5 pl-3.5 pr-1.5 shadow-sm transition-colors focus-within:border-brand-gold/40 focus-within:bg-background focus-within:ring-2 focus-within:ring-brand-gold/10 dark:bg-white/5 dark:focus-within:bg-white/[0.07]">
                                         <textarea
+                                            ref={replyRef}
                                             value={draft}
                                             onChange={(e) => setDraft(e.target.value)}
                                             placeholder="Type a reply…"
                                             rows={1}
                                             aria-label="Reply message"
-                                            className="min-h-[46px] w-full resize-none rounded-2xl border border-border/50 bg-muted/10 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/40 focus:border-brand-gold/30 focus:bg-background focus:ring-2 focus:ring-brand-gold/10 dark:bg-white/5"
+                                            className="max-h-40 min-h-[24px] flex-1 resize-none self-center bg-transparent py-2 text-sm leading-6 outline-none placeholder:text-muted-foreground/40"
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter" && !e.shiftKey) {
                                                     e.preventDefault()
@@ -1205,22 +1320,38 @@ function InboxTab() {
                                                 }
                                             }}
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={submitMessage}
+                                            disabled={sendMessage.isPending || !draft.trim()}
+                                            aria-label="Send reply"
+                                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-deep text-white shadow-sm shadow-brand-deep/20 transition-all hover:opacity-90 disabled:scale-95 disabled:bg-muted-foreground/20 disabled:text-muted-foreground/50 disabled:shadow-none dark:bg-brand-gold-700"
+                                        >
+                                            {sendMessage.isPending ? (
+                                                <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <HugeiconsIcon icon={SendHorizonal} className="h-4 w-4" />
+                                            )}
+                                        </button>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={submitMessage}
-                                        disabled={sendMessage.isPending || !draft.trim()}
-                                        className="flex h-[46px] w-[46px] shrink-0 items-center justify-center self-center rounded-2xl bg-brand-deep text-brand-gold-300 transition-all hover:opacity-90 disabled:opacity-30 dark:bg-brand-gold-700 dark:text-white"
-                                    >
-                                        {sendMessage.isPending ? (
-                                            <HugeiconsIcon icon={Loader2} className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <HugeiconsIcon icon={SendHorizonal} className="h-4 w-4" />
-                                        )}
-                                    </button>
+                                    <p className="mt-1.5 hidden px-3 text-[10px] text-muted-foreground/45 sm:block">
+                                        <kbd className="font-sans font-medium text-muted-foreground/70">Enter</kbd> to send ·{" "}
+                                        <kbd className="font-sans font-medium text-muted-foreground/70">Shift</kbd> +{" "}
+                                        <kbd className="font-sans font-medium text-muted-foreground/70">Enter</kbd> for a new line
+                                    </p>
                                 </div>
                             </div>
                         )}
+
+                        {/* ── Details drawer (mobile / tablet) ───────── */}
+                        <SideSheet open={detailsOpen} onOpenChange={setDetailsOpen}>
+                            <SideSheetContent className="xl:hidden">
+                                <SideSheetStickyHeader>
+                                    <SideSheetTitle>Conversation details</SideSheetTitle>
+                                </SideSheetStickyHeader>
+                                <SideSheetBody>{detailsPanel}</SideSheetBody>
+                            </SideSheetContent>
+                        </SideSheet>
                     </>
                 )}
             </section>
@@ -1232,7 +1363,7 @@ function InboxTab() {
 
 export function WhatsAppInboxPageView() {
     return (
-        <div className="mx-auto h-[calc(100svh-2rem)] max-w-[1540px] overflow-hidden">
+        <div className="mx-auto h-[calc(100svh-10.5rem)] max-w-[1540px] overflow-hidden md:h-[calc(100svh-2rem)]">
             <InboxTab />
         </div>
     )

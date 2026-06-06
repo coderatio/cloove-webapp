@@ -180,7 +180,7 @@ export function OrderDetailsDrawer({
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/30 dark:text-brand-cream/30 mb-2">Status</p>
                                     <div className="flex">
                                         <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10 whitespace-nowrap", config.className)}>
-                                            <StatusIcon className="w-3 h-3" />
+                                            <HugeiconsIcon icon={StatusIcon} className="w-3 h-3" />
                                             <span className="text-[10px] font-bold uppercase tracking-wider">
                                                 {config.label}
                                             </span>
