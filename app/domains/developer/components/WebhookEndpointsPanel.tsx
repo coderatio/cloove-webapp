@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Alert02Icon as AlertTriangle, CheckIcon as Check, GlobeIcon as Globe, Loading03Icon as Loader2, MoreVerticalIcon as MoreVertical, PencilIcon as Pencil, PlusSignIcon as Plus, Delete02Icon as Trash2, WebhookIcon as Webhook } from "@hugeicons/core-free-icons"
+import { Alert02Icon as AlertTriangle, CheckIcon as Check, ChevronDownIcon as ChevronDown, GlobeIcon as Globe, Loading03Icon as Loader2, MoreVerticalIcon as MoreVertical, PencilIcon as Pencil, PlusSignIcon as Plus, Delete02Icon as Trash2, WebhookIcon as Webhook } from "@hugeicons/core-free-icons"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -23,7 +23,6 @@ import {
     DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu"
 import {
-    DEVELOPER_WEBHOOK_EVENTS,
     type DeveloperWebhookEndpoint,
     type DeveloperApiKeyEnvironment,
     type DeveloperWebhookEvent,
@@ -32,15 +31,9 @@ import {
     useUpdateDeveloperWebhookEndpoint,
     useDisableDeveloperWebhookEndpoint,
 } from "@/app/domains/developer/hooks/useDeveloperApiKeys"
+import { WEBHOOK_EVENT_GROUPS, WEBHOOK_EVENT_LABELS } from "@/app/domains/developer/utils/apiKeyConfig"
 import { formatDate } from "@/app/domains/developer/utils/apiKeyFormat"
-
-const WEBHOOK_EVENT_LABELS: Record<DeveloperWebhookEvent, string> = {
-    "vox.call.started": "Call started",
-    "vox.call.completed": "Call completed",
-    "vox.call.failed": "Call failed",
-    "vox.recording.ready": "Recording ready",
-    "vox.agent.updated": "Agent updated",
-}
+import { cn } from "@/app/lib/utils"
 
 export function WebhookEndpointsPanel({ appId }: { appId?: string | null }) {
     const { data: endpoints, isLoading } = useDeveloperWebhookEndpoints(appId)
@@ -195,6 +188,7 @@ function WebhookEndpointDialog({
     const [url, setUrl] = useState(endpoint?.url ?? "")
     const [environment, setEnvironment] = useState<DeveloperApiKeyEnvironment>(endpoint?.environment ?? "test")
     const [selectedEvents, setSelectedEvents] = useState<DeveloperWebhookEvent[]>(endpoint?.events ?? ["vox.call.completed"])
+    const [openEventGroup, setOpenEventGroup] = useState(WEBHOOK_EVENT_GROUPS[0]?.id ?? "")
 
     const isEdit = endpoint !== null
     const isPending = create.isPending || update.isPending
@@ -233,8 +227,8 @@ function WebhookEndpointDialog({
 
     return (
         <Dialog open={open} onOpenChange={(next) => { if (!next) onOpenChange() }}>
-            <DialogContent className="max-w-md gap-0 p-0">
-                <DialogHeader className="px-6 pt-6 pb-3 sm:px-7 sm:pt-7">
+            <DialogContent className="max-h-[84vh] max-w-md gap-0 p-0 sm:max-h-[86vh]">
+                <DialogHeader className="shrink-0 px-6 pt-6 pb-3 sm:px-7 sm:pt-7">
                     <DialogTitle className="text-xl font-semibold">
                         {isEdit ? "Edit webhook endpoint" : "Add webhook endpoint"}
                     </DialogTitle>
@@ -244,7 +238,7 @@ function WebhookEndpointDialog({
                             : "Configure a URL to receive webhook events from Cloove."}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 px-6 py-3 sm:px-7">
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-3 sm:px-7">
                     <Input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -278,23 +272,43 @@ function WebhookEndpointDialog({
                     )}
                     <div className="space-y-2">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Subscribed events</p>
-                        <div className="grid gap-1.5">
-                            {DEVELOPER_WEBHOOK_EVENTS.map((event) => (
-                                <label
-                                    key={event}
-                                    className="flex min-h-9 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm transition-colors hover:bg-brand-deep/[0.03] dark:hover:bg-white/[0.055]"
-                                >
-                                    <Checkbox
-                                        checked={selectedEvents.includes(event as DeveloperWebhookEvent)}
-                                        onCheckedChange={() => toggleEvent(event as DeveloperWebhookEvent)}
-                                    />
-                                    {WEBHOOK_EVENT_LABELS[event as DeveloperWebhookEvent]}
-                                </label>
-                            ))}
+                        <div className="space-y-2">
+                            {WEBHOOK_EVENT_GROUPS.map((group) => {
+                                const isOpen = openEventGroup === group.id
+                                const selectedCount = group.events.filter((event) => selectedEvents.includes(event)).length
+
+                                return (
+                                    <div key={group.id} className="overflow-hidden rounded-2xl border border-brand-deep/8 bg-white/60 dark:border-white/10 dark:bg-white/[0.035]">
+                                        <button type="button" className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors hover:bg-white/70 dark:hover:bg-white/[0.045]" aria-expanded={isOpen} onClick={() => setOpenEventGroup(isOpen ? "" : group.id)}>
+                                            <span>
+                                                <span className="block text-sm font-semibold text-foreground">{group.title}</span>
+                                                <span className="block text-xs text-muted-foreground">{group.description}</span>
+                                            </span>
+                                            <span className="flex shrink-0 items-center gap-2">
+                                                <Badge variant="outline">{selectedCount}/{group.events.length}</Badge>
+                                                <HugeiconsIcon icon={ChevronDown} className={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                                            </span>
+                                        </button>
+                                        {isOpen && (
+                                            <div className="grid gap-2 border-t border-brand-deep/6 p-2 dark:border-white/8 sm:grid-cols-2">
+                                                {group.events.map((event) => (
+                                                    <label key={event} className="flex min-h-10 cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-sm transition-colors hover:bg-white dark:hover:bg-white/[0.055]">
+                                                        <Checkbox
+                                                            checked={selectedEvents.includes(event)}
+                                                            onCheckedChange={() => toggleEvent(event)}
+                                                        />
+                                                        {WEBHOOK_EVENT_LABELS[event]}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </div>
                     </div>
                 </div>
-                <DialogFooter className="gap-2 border-t border-brand-deep/6 px-6 pt-3 pb-6 dark:border-white/8 sm:px-7">
+                <DialogFooter className="shrink-0 gap-2 border-t border-brand-deep/6 px-6 pt-3 pb-6 dark:border-white/8 sm:px-7">
                     <Button variant="outline" className="h-10 rounded-2xl px-5" onClick={onOpenChange}>Cancel</Button>
                     <Button className="h-10 rounded-2xl px-5" disabled={!isValid || isPending} onClick={() => void submit()}>
                         {isPending ? <HugeiconsIcon icon={Loader2} className="mr-2 h-4 w-4 animate-spin" /> : <HugeiconsIcon icon={Check} className="mr-2 h-4 w-4" />}

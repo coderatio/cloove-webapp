@@ -5,17 +5,41 @@ import { toast } from "sonner"
 import { apiClient } from "@/app/lib/api-client"
 import { useBusiness } from "@/app/components/BusinessProvider"
 
+// Keep in sync with api/app/domains/developer/scopes.ts (also served at
+// GET /api/developer/scopes).
 export const DEVELOPER_API_KEY_SCOPES = [
     "vox:read",
     "vox:calls:read",
     "vox:calls:create",
     "vox:agents:read",
     "vox:numbers:read",
+    "messaging:read",
+    "messaging:conversations:read",
+    "messaging:messages:read",
+    "messaging:messages:send",
+    "contacts:read",
+    "contacts:write",
+    "products:read",
+    "products:write",
+    "orders:read",
+    "orders:write",
+    "wallet:read",
+    "payouts:read",
+    "payouts:write",
+    "wallet:withdrawals:read",
+    "wallet:withdrawals:create",
     "webhooks:read",
     "webhooks:write",
 ] as const
 
 export type DeveloperApiKeyScope = (typeof DEVELOPER_API_KEY_SCOPES)[number]
+
+export interface DeveloperApiKeyWithdrawalPolicy {
+    maxPerTransaction: number
+    maxPerDay: number
+    currency: string
+    allowedPayoutAccountIds: string[]
+}
 export type DeveloperApiKeyEnvironment = "test" | "live"
 export type DeveloperApiKeyStatus = "active" | "revoked"
 
@@ -49,6 +73,7 @@ export interface DeveloperApiKey {
     lastRotatedAt: string | null
     revokedAt: string | null
     expiresAt: string | null
+    withdrawalPolicy: DeveloperApiKeyWithdrawalPolicy | null
     createdAt: string
     updatedAt: string | null
     plaintext: string | null
@@ -80,12 +105,33 @@ export interface DeveloperUsageRow {
     totalLatencyMs: number
 }
 
+// Keep in sync with api/app/domains/developer/webhook_events.ts (also served at
+// GET /api/developer/webhook-events).
 export const DEVELOPER_WEBHOOK_EVENTS = [
     "vox.call.started",
     "vox.call.completed",
     "vox.call.failed",
     "vox.recording.ready",
     "vox.agent.updated",
+    "messaging.message.received",
+    "messaging.message.sent",
+    "messaging.message.delivery_updated",
+    "messaging.conversation.assigned",
+    "order.created",
+    "order.updated",
+    "order.cancelled",
+    "order.refunded",
+    "product.created",
+    "product.updated",
+    "inventory.low_stock",
+    "inventory.out_of_stock",
+    "contact.created",
+    "contact.updated",
+    "payment.received",
+    "wallet.withdrawal.requested",
+    "wallet.withdrawal.completed",
+    "wallet.withdrawal.failed",
+    "wallet.deposit",
 ] as const
 
 export type DeveloperWebhookEvent = (typeof DEVELOPER_WEBHOOK_EVENTS)[number]

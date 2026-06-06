@@ -5,19 +5,11 @@ import { Loading03Icon as Loader2, ReloadIcon as RotateCcw, SentIcon as Send } f
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import {
-    type DeveloperWebhookEvent,
     useDeveloperWebhookDeliveries,
     useResendDeveloperWebhookDelivery,
 } from "@/app/domains/developer/hooks/useDeveloperApiKeys"
+import { WEBHOOK_EVENT_LABELS } from "@/app/domains/developer/utils/apiKeyConfig"
 import { formatDate } from "@/app/domains/developer/utils/apiKeyFormat"
-
-const WEBHOOK_EVENT_LABELS: Record<DeveloperWebhookEvent, string> = {
-    "vox.call.started": "Call started",
-    "vox.call.completed": "Call completed",
-    "vox.call.failed": "Call failed",
-    "vox.recording.ready": "Recording ready",
-    "vox.agent.updated": "Agent updated",
-}
 
 export function WebhookDeliveriesPanel({ appId }: { appId?: string | null }) {
     const deliveries = useDeveloperWebhookDeliveries(appId)
