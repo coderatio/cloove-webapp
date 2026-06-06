@@ -467,7 +467,7 @@ export function OrdersView() {
 
                     return (
                         <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-current/10 whitespace-nowrap", config.className)}>
-                            <StatusIcon className="w-3 h-3" />
+                            <HugeiconsIcon icon={StatusIcon} className="w-3 h-3" />
                             <span className="text-[10px] font-bold uppercase tracking-wider">
                                 {config.label}
                             </span>
