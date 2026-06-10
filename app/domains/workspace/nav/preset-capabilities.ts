@@ -32,6 +32,7 @@ const PRESET_CAPABILITIES: Record<LayoutPresetId, PresetCapabilities> = {
   },
   pharmacy: DEFAULT_CAPABILITIES,
   school: DEFAULT_CAPABILITIES,
+  hotel: DEFAULT_CAPABILITIES,
 }
 
 export function getPresetCapabilities(

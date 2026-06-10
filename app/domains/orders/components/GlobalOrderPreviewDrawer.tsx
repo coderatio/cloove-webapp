@@ -22,6 +22,7 @@ import {
 } from "@/app/components/ui/select"
 import { formatCurrency } from "@/app/lib/formatters"
 import { Order } from "@/app/domains/orders/types"
+import { resolveRecordCopy } from "@/app/domains/orders/lib/order-alert-copy"
 import { type KitchenTicket } from "@/app/domains/restaurant/hooks/useRestaurantOps"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ExternalLinkIcon as ExternalLink, Store01Icon as Store, Restaurant01Icon as UtensilsCrossed } from "@hugeicons/core-free-icons"
@@ -45,7 +46,9 @@ interface GlobalOrderPreviewDrawerProps {
   order: Order | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onViewOrders: () => void
+  onViewOrders: (href: string) => void
+  /** Workspace preset; drives preset-aware vocabulary. */
+  layoutPreset?: string | null
   isRestaurantPreset: boolean
   allowSendToKitchen?: boolean
   isSendingToKitchen: boolean
@@ -57,6 +60,7 @@ export function GlobalOrderPreviewDrawer({
   open,
   onOpenChange,
   onViewOrders,
+  layoutPreset = null,
   isRestaurantPreset,
   allowSendToKitchen = true,
   isSendingToKitchen,
@@ -75,6 +79,7 @@ export function GlobalOrderPreviewDrawer({
 
   if (!order) return null
 
+  const copy = resolveRecordCopy(layoutPreset, order)
   const currency = order.currency ?? "NGN"
   const topItems = order.items?.slice(0, 4) ?? []
   const remainingItems = Math.max(0, (order.items?.length ?? 0) - topItems.length)
@@ -85,10 +90,10 @@ export function GlobalOrderPreviewDrawer({
       <DrawerContent className="max-w-xl">
         <DrawerStickyHeader>
           <DrawerTitle>
-            New order{order.shortCode ? ` #${order.shortCode}` : ""}
+            New {copy.recordLabel.toLowerCase()}{order.shortCode ? ` #${order.shortCode}` : ""}
           </DrawerTitle>
           <DrawerDescription>
-            Preview the order here, then open Orders only if you need the full workflow.
+            Preview the {copy.recordLabel.toLowerCase()} here, then {copy.openLabel.toLowerCase()} only if you need the full workflow.
           </DrawerDescription>
         </DrawerStickyHeader>
 
@@ -132,7 +137,7 @@ export function GlobalOrderPreviewDrawer({
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
               <HugeiconsIcon icon={Store} className="h-4 w-4" />
-              Order items
+              {copy.itemsLabel}
             </div>
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800">
               {topItems.map((item, index) => (
@@ -241,9 +246,9 @@ export function GlobalOrderPreviewDrawer({
 
         <DrawerFooter className="flex-row flex-wrap justify-between gap-2">
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={onViewOrders} className="rounded-full">
+            <Button variant="outline" onClick={() => onViewOrders(copy.openHref)} className="rounded-full">
               <HugeiconsIcon icon={ExternalLink} className="mr-2 h-4 w-4" />
-              Open Orders
+              {copy.openLabel}
             </Button>
           </div>
           <div className="flex flex-wrap justify-end gap-2">

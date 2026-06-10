@@ -23,6 +23,7 @@ import {
     DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu"
 import {
+    WebhookEvent,
     type DeveloperWebhookEndpoint,
     type DeveloperApiKeyEnvironment,
     type DeveloperWebhookEvent,
@@ -187,7 +188,7 @@ function WebhookEndpointDialog({
     const [name, setName] = useState(endpoint?.name ?? "")
     const [url, setUrl] = useState(endpoint?.url ?? "")
     const [environment, setEnvironment] = useState<DeveloperApiKeyEnvironment>(endpoint?.environment ?? "test")
-    const [selectedEvents, setSelectedEvents] = useState<DeveloperWebhookEvent[]>(endpoint?.events ?? ["vox.call.completed"])
+    const [selectedEvents, setSelectedEvents] = useState<DeveloperWebhookEvent[]>(endpoint?.events ?? [WebhookEvent.VOX_CALL_COMPLETED])
     const [openEventGroup, setOpenEventGroup] = useState(WEBHOOK_EVENT_GROUPS[0]?.id ?? "")
 
     const isEdit = endpoint !== null

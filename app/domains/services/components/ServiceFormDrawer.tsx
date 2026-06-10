@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
     Drawer,
     DrawerContent,
@@ -15,6 +15,17 @@ import { Textarea } from "@/app/components/ui/textarea"
 import { Button } from "@/app/components/ui/button"
 import { Switch } from "@/app/components/ui/switch"
 import { Label } from "@/app/components/ui/label"
+import { ImageUpload } from "@/app/components/ui/image-upload"
+import { MoneyInput } from "@/app/components/ui/money-input"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/app/components/ui/select"
+import { buildCurrencyOptions, currencySymbol } from "@/app/lib/currencies"
+import { useCurrencies } from "@/app/hooks/useCurrencies"
 import type {
     BusinessServiceItem,
     CreateBusinessServicePayload,
@@ -36,6 +47,11 @@ interface FormState {
     deliverables: string
     durationLabel: string
     priceLabel: string
+    priceMin: string
+    priceMax: string
+    currency: string
+    imageUrls: string[]
+    catalogSyncEnabled: boolean
     isActive: boolean
 }
 
@@ -47,6 +63,11 @@ const EMPTY: FormState = {
     deliverables: "",
     durationLabel: "",
     priceLabel: "",
+    priceMin: "",
+    priceMax: "",
+    currency: "NGN",
+    imageUrls: [],
+    catalogSyncEnabled: true,
     isActive: true,
 }
 
@@ -60,6 +81,11 @@ function fromService(service: BusinessServiceItem | null): FormState {
         deliverables: (service.deliverables ?? []).join("\n"),
         durationLabel: service.durationLabel ?? "",
         priceLabel: service.priceLabel ?? "",
+        priceMin: service.priceMin == null ? "" : String(service.priceMin),
+        priceMax: service.priceMax == null ? "" : String(service.priceMax),
+        currency: service.currency ?? "NGN",
+        imageUrls: (service.images ?? []).map((image) => image.url),
+        catalogSyncEnabled: service.catalogSyncEnabled,
         isActive: service.isActive,
     }
 }
@@ -71,11 +97,11 @@ export function ServiceFormDrawer({
     onSubmit,
     submitting,
 }: ServiceFormDrawerProps) {
-    const [form, setForm] = useState<FormState>(fromService(initial))
-
-    useEffect(() => {
-        setForm(fromService(initial))
-    }, [initial, open])
+    // Initialised once per mount; the parent passes a `key` tied to the edited
+    // id so opening a different service remounts with fresh state (avoids
+    // syncing props into state via an effect).
+    const [form, setForm] = useState<FormState>(() => fromService(initial))
+    const currencies = useCurrencies()
 
     const isEditing = !!initial
 
@@ -95,6 +121,16 @@ export function ServiceFormDrawer({
                 .filter(Boolean),
             durationLabel: form.durationLabel.trim() || null,
             priceLabel: form.priceLabel.trim() || null,
+            priceMin: form.priceMin ? Number(form.priceMin) : null,
+            priceMax: form.priceMax ? Number(form.priceMax) : null,
+            currency: form.currency.trim() || "NGN",
+            images: form.imageUrls.map((url, index) => ({
+                id: initial?.images?.find((image) => image.url === url)?.id ?? crypto.randomUUID(),
+                url,
+                isPrimary: index === 0,
+                alt: `${form.name.trim()} image ${index + 1}`,
+            })),
+            catalogSyncEnabled: form.catalogSyncEnabled,
             isActive: form.isActive,
         }
         await onSubmit(payload)
@@ -110,7 +146,7 @@ export function ServiceFormDrawer({
                         {isEditing ? "Edit service" : "Add a service"}
                     </DrawerTitle>
                     <DrawerDescription>
-                        Only services listed here can be discussed by the white-label assistant.
+                        Only services you add here can be offered by your AI assistant.
                     </DrawerDescription>
                 </DrawerStickyHeader>
 
@@ -124,6 +160,50 @@ export function ServiceFormDrawer({
                             placeholder="e.g. Brand strategy sprint"
                             maxLength={200}
                         />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="service-price-min">Starting price</Label>
+                            <MoneyInput
+                                id="service-price-min"
+                                value={form.priceMin}
+                                onChange={(value) => update("priceMin", value > 0 ? String(value) : "")}
+                                currencySymbol={currencySymbol(form.currency, currencies)}
+                                className="h-[46px] rounded-xl"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="service-price-max">Maximum price</Label>
+                            <MoneyInput
+                                id="service-price-max"
+                                value={form.priceMax}
+                                onChange={(value) => update("priceMax", value > 0 ? String(value) : "")}
+                                currencySymbol={currencySymbol(form.currency, currencies)}
+                                className="h-[46px] rounded-xl"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Currency</Label>
+                            <Select value={form.currency} onValueChange={(value) => update("currency", value)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Currency" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {buildCurrencyOptions(currencies, form.currency).map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Service images</Label>
+                        <ImageUpload value={form.imageUrls} onChange={(urls) => update("imageUrls", urls)} maxFiles={5} />
+                        <p className="text-xs text-muted-foreground">The first photo is the one shown on WhatsApp.</p>
                     </div>
 
                     <div className="space-y-2">
@@ -183,7 +263,7 @@ export function ServiceFormDrawer({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="service-deliverables">Deliverables (one per line)</Label>
+                        <Label htmlFor="service-deliverables">What&apos;s included (one per line)</Label>
                         <Textarea
                             id="service-deliverables"
                             value={form.deliverables}
@@ -196,10 +276,10 @@ export function ServiceFormDrawer({
                     <div className="flex items-center justify-between rounded-2xl border border-brand-deep/5 dark:border-white/5 bg-white/40 dark:bg-white/5 px-4 py-3">
                         <div>
                             <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">
-                                Active
+                                Available to offer
                             </p>
                             <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60">
-                                Hidden services are excluded from the assistant catalog.
+                                Turn off to stop offering this service to customers.
                             </p>
                         </div>
                         <Switch
@@ -207,16 +287,25 @@ export function ServiceFormDrawer({
                             onCheckedChange={(value) => update("isActive", value)}
                         />
                     </div>
+                    <div className="flex items-center justify-between rounded-2xl border border-brand-deep/5 dark:border-white/5 bg-white/40 dark:bg-white/5 px-4 py-3">
+                        <div>
+                            <p className="text-sm font-medium text-brand-deep dark:text-brand-cream">Show on WhatsApp</p>
+                            <p className="text-xs text-brand-accent/60 dark:text-brand-cream/60">Let customers browse and book this on WhatsApp. Needs a starting price and a photo.</p>
+                        </div>
+                        <Switch checked={form.catalogSyncEnabled} onCheckedChange={(value) => update("catalogSyncEnabled", value)} />
+                    </div>
                 </div>
 
-                <DrawerFooter>
+                <DrawerFooter className="gap-2 sm:flex-row sm:items-center">
                     <DrawerClose asChild>
-                        <Button variant="outline">Cancel</Button>
+                        <Button variant="ghost" className="h-11 w-full rounded-2xl sm:w-auto">
+                            Cancel
+                        </Button>
                     </DrawerClose>
                     <Button
                         onClick={handleSubmit}
                         disabled={!canSubmit}
-                        className="font-semibold"
+                        className="h-11 w-full rounded-2xl font-semibold sm:flex-1"
                     >
                         {submitting ? "Saving..." : isEditing ? "Save changes" : "Add service"}
                     </Button>

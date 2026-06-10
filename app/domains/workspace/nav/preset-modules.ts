@@ -12,6 +12,7 @@ export const PRESET_RECOMMENDED_MODULES: Record<LayoutPresetId, ModuleFeatureKey
     retail: ["module_vendors", "module_storefront", "module_debts"],
     pharmacy: ["module_debts", "module_expenses", "module_storefront"],
     school: ["module_storefront", "module_staff", "module_debts"],
+    hotel: ["module_voice", "module_staff", "module_storefront", "module_expenses"],
 }
 
 export interface RecommendedModuleMeta {

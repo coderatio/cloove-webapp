@@ -38,6 +38,7 @@ export interface WhatsAppNumber {
   catalog_bootstrap_status: WhatsAppCatalogSyncStatus | null
   catalog_bootstrap_error: string | null
   catalog_bootstrap_failed_at: string | null
+  catalog_bootstrap_permanent: boolean
   created_at: string
   updated_at: string | null
 }
@@ -60,6 +61,12 @@ export interface AgentCapabilitiesSummary {
   booking: boolean
   qrOrdering: boolean
   humanHandoff: boolean
+  rooms: boolean
+  foodOrdering: boolean
+  hotelServices: boolean
+  roomService: boolean
+  publicFoodOrdering: boolean
+  roomCharge: boolean
 }
 
 export type RestaurantOrderStage = "queued" | "preparing" | "ready" | "served"
@@ -127,6 +134,9 @@ export interface GoSettings {
   agent_profile?: AgentProfile
   capabilities?: AgentCapabilitiesSummary
   capabilities_overrides?: Partial<AgentCapabilitiesSummary> | null
+  experience_preset?: string
+  experience_mode?: "commerce" | "service" | "hotel"
+  quick_actions?: Array<{ id: string; title: string }>
   order_notifications?: OrderNotificationsSettings | null
   created_at?: string
   updated_at?: string | null
@@ -175,6 +185,10 @@ export interface WhatsAppCatalogStatus {
   whatsapp_number_id: string
   waba_id: string
   meta_catalog_id: string
+  catalog_preset: string
+  catalog_name: string | null
+  catalog_managed: boolean
+  item_families: string[]
   sync_status: WhatsAppCatalogSyncStatus
   last_synced_at: string | null
   last_error: string | null
@@ -182,6 +196,11 @@ export interface WhatsAppCatalogStatus {
   synced_products_count: number
   variants_count: number
   synced_variants_count: number
+  room_types_count: number
+  synced_room_types_count: number
+  services_count: number
+  synced_services_count: number
+  excluded_missing_image_count: number
 }
 
 export type GoSettingsContentField =
@@ -521,6 +540,32 @@ export function useUpdateWhatsAppNumber() {
     },
     onError: () => {
       toast.error("Failed to update credentials")
+    },
+  })
+}
+
+export function useSetDefaultWhatsAppNumber() {
+  const queryClient = useQueryClient()
+  const { activeBusiness } = useBusiness()
+  const businessId = activeBusiness?.id
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient.post<{ message: string; data: WhatsAppNumber }>(
+        `/whatsapp-numbers/${id}/set-default`,
+        {},
+        { fullResponse: true }
+      ),
+    onSuccess: (data, id) => {
+      toast.success(data?.message || "Default number updated")
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.numbers(businessId) })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.catalog(businessId) })
+      queryClient.invalidateQueries({
+        queryKey: ["whatsapp-numbers", id, "catalog", businessId].filter(Boolean),
+      })
+    },
+    onError: () => {
+      toast.error("Could not set the default number. Please try again.")
     },
   })
 }

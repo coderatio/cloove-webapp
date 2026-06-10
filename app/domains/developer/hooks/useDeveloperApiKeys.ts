@@ -6,33 +6,39 @@ import { apiClient } from "@/app/lib/api-client"
 import { useBusiness } from "@/app/components/BusinessProvider"
 
 // Keep in sync with api/app/domains/developer/scopes.ts (also served at
-// GET /api/developer/scopes).
-export const DEVELOPER_API_KEY_SCOPES = [
-    "vox:read",
-    "vox:calls:read",
-    "vox:calls:create",
-    "vox:agents:read",
-    "vox:numbers:read",
-    "messaging:read",
-    "messaging:conversations:read",
-    "messaging:messages:read",
-    "messaging:messages:send",
-    "contacts:read",
-    "contacts:write",
-    "products:read",
-    "products:write",
-    "orders:read",
-    "orders:write",
-    "wallet:read",
-    "payouts:read",
-    "payouts:write",
-    "wallet:withdrawals:read",
-    "wallet:withdrawals:create",
-    "webhooks:read",
-    "webhooks:write",
-] as const
+// GET /api/developer/scopes). Reference scopes by their DeveloperScope member.
+export enum DeveloperScope {
+    VOX_READ = "vox:read",
+    VOX_CALLS_READ = "vox:calls:read",
+    VOX_CALLS_CREATE = "vox:calls:create",
+    VOX_AGENTS_READ = "vox:agents:read",
+    VOX_NUMBERS_READ = "vox:numbers:read",
+    MESSAGING_READ = "messaging:read",
+    MESSAGING_CONVERSATIONS_READ = "messaging:conversations:read",
+    MESSAGING_MESSAGES_READ = "messaging:messages:read",
+    MESSAGING_MESSAGES_SEND = "messaging:messages:send",
+    CONTACTS_READ = "contacts:read",
+    CONTACTS_WRITE = "contacts:write",
+    PRODUCTS_READ = "products:read",
+    PRODUCTS_WRITE = "products:write",
+    ORDERS_READ = "orders:read",
+    ORDERS_WRITE = "orders:write",
+    WALLET_READ = "wallet:read",
+    PAYOUTS_READ = "payouts:read",
+    PAYOUTS_WRITE = "payouts:write",
+    WALLET_WITHDRAWALS_READ = "wallet:withdrawals:read",
+    WALLET_WITHDRAWALS_CREATE = "wallet:withdrawals:create",
+    HOTEL_READ = "hotel:read",
+    HOTEL_ROOMS_READ = "hotel:rooms:read",
+    HOTEL_ROOMS_WRITE = "hotel:rooms:write",
+    HOTEL_RESERVATIONS_READ = "hotel:reservations:read",
+    HOTEL_RESERVATIONS_WRITE = "hotel:reservations:write",
+    WEBHOOKS_READ = "webhooks:read",
+    WEBHOOKS_WRITE = "webhooks:write",
+}
 
-export type DeveloperApiKeyScope = (typeof DEVELOPER_API_KEY_SCOPES)[number]
+export type DeveloperApiKeyScope = `${DeveloperScope}`
+export const DEVELOPER_API_KEY_SCOPES: DeveloperApiKeyScope[] = Object.values(DeveloperScope)
 
 export interface DeveloperApiKeyWithdrawalPolicy {
     maxPerTransaction: number
@@ -106,35 +112,41 @@ export interface DeveloperUsageRow {
 }
 
 // Keep in sync with api/app/domains/developer/webhook_events.ts (also served at
-// GET /api/developer/webhook-events).
-export const DEVELOPER_WEBHOOK_EVENTS = [
-    "vox.call.started",
-    "vox.call.completed",
-    "vox.call.failed",
-    "vox.recording.ready",
-    "vox.agent.updated",
-    "messaging.message.received",
-    "messaging.message.sent",
-    "messaging.message.delivery_updated",
-    "messaging.conversation.assigned",
-    "order.created",
-    "order.updated",
-    "order.cancelled",
-    "order.refunded",
-    "product.created",
-    "product.updated",
-    "inventory.low_stock",
-    "inventory.out_of_stock",
-    "contact.created",
-    "contact.updated",
-    "payment.received",
-    "wallet.withdrawal.requested",
-    "wallet.withdrawal.completed",
-    "wallet.withdrawal.failed",
-    "wallet.deposit",
-] as const
+// GET /api/developer/webhook-events). Reference events by their WebhookEvent member.
+export enum WebhookEvent {
+    VOX_CALL_STARTED = "vox.call.started",
+    VOX_CALL_COMPLETED = "vox.call.completed",
+    VOX_CALL_FAILED = "vox.call.failed",
+    VOX_RECORDING_READY = "vox.recording.ready",
+    VOX_AGENT_UPDATED = "vox.agent.updated",
+    MESSAGING_MESSAGE_RECEIVED = "messaging.message.received",
+    MESSAGING_MESSAGE_SENT = "messaging.message.sent",
+    MESSAGING_MESSAGE_DELIVERY_UPDATED = "messaging.message.delivery_updated",
+    MESSAGING_CONVERSATION_ASSIGNED = "messaging.conversation.assigned",
+    ORDER_CREATED = "order.created",
+    ORDER_UPDATED = "order.updated",
+    ORDER_CANCELLED = "order.cancelled",
+    ORDER_REFUNDED = "order.refunded",
+    PRODUCT_CREATED = "product.created",
+    PRODUCT_UPDATED = "product.updated",
+    INVENTORY_LOW_STOCK = "inventory.low_stock",
+    INVENTORY_OUT_OF_STOCK = "inventory.out_of_stock",
+    CONTACT_CREATED = "contact.created",
+    CONTACT_UPDATED = "contact.updated",
+    PAYMENT_RECEIVED = "payment.received",
+    WALLET_WITHDRAWAL_REQUESTED = "wallet.withdrawal.requested",
+    WALLET_WITHDRAWAL_COMPLETED = "wallet.withdrawal.completed",
+    WALLET_WITHDRAWAL_FAILED = "wallet.withdrawal.failed",
+    WALLET_DEPOSIT = "wallet.deposit",
+    HOTEL_RESERVATION_CREATED = "hotel.reservation.created",
+    HOTEL_RESERVATION_CHECKED_IN = "hotel.reservation.checked_in",
+    HOTEL_RESERVATION_CHECKED_OUT = "hotel.reservation.checked_out",
+    HOTEL_RESERVATION_CANCELLED = "hotel.reservation.cancelled",
+    HOTEL_SERVICE_REQUEST_CREATED = "hotel.service_request.created",
+}
 
-export type DeveloperWebhookEvent = (typeof DEVELOPER_WEBHOOK_EVENTS)[number]
+export type DeveloperWebhookEvent = `${WebhookEvent}`
+export const DEVELOPER_WEBHOOK_EVENTS: DeveloperWebhookEvent[] = Object.values(WebhookEvent)
 export type DeveloperWebhookEndpointStatus = "active" | "disabled"
 
 export interface DeveloperWebhookEndpoint {

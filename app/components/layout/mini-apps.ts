@@ -1,5 +1,5 @@
 import type { IconSvgElement } from "@hugeicons/react"
-import { AudioLinesIcon as AudioLines, Location04Icon as MapPinned, BrowserIcon as PanelsTopLeft, CallOutgoing02Icon as PhoneForwarded, CallIncoming01Icon as PhoneIncoming, Invoice01Icon as Receipt, Settings02Icon as Settings2, ShoppingBag01Icon as ShoppingBag, UserMultiple02Icon as Users, Link02Icon as Link2, CodeIcon as Code2, LayoutGridIcon as LayoutGrid, BarChartIcon as BarChart3, CheckListIcon as ListChecks, SparklesIcon as Sparkles, BookTextIcon as BookText, Message01Icon as MessageSquare, WhatsappIcon as WhatsApp, BotIcon as Bot, Key01Icon as KeyRound, ClipboardListIcon as ClipboardList, PlugSocketIcon as Plug, GitBranchIcon as GitBranch, BadgePercentIcon as BadgePercent, TruckIcon as Truck, Mic01Icon as Mic } from "@hugeicons/core-free-icons"
+import { AudioLinesIcon as AudioLines, Location04Icon as MapPinned, BrowserIcon as PanelsTopLeft, CallOutgoing02Icon as PhoneForwarded, CallIncoming01Icon as PhoneIncoming, Invoice01Icon as Receipt, Settings02Icon as Settings2, ShoppingBag01Icon as ShoppingBag, UserMultiple02Icon as Users, Link02Icon as Link2, CodeIcon as Code2, LayoutGridIcon as LayoutGrid, BarChartIcon as BarChart3, CheckListIcon as ListChecks, SparklesIcon as Sparkles, BookTextIcon as BookText, Message01Icon as MessageSquare, WhatsappIcon as WhatsApp, BotIcon as Bot, Key01Icon as KeyRound, ClipboardListIcon as ClipboardList, PlugSocketIcon as Plug, GitBranchIcon as GitBranch, BadgePercentIcon as BadgePercent, TruckIcon as Truck, Mic01Icon as Mic, Building02Icon as Building2, CalendarRangeIcon as CalendarRange, Activity03Icon as Activity, ConciergeBellIcon as ConciergeBell } from "@hugeicons/core-free-icons"
 import type { NavRouteId } from "@/app/domains/workspace/nav/nav-definitions"
 import { NAV_GROUPS } from "@/app/domains/workspace/nav/nav-definitions"
 import type { ResolvedNavGroup } from "@/app/domains/workspace/nav/build-nav-model"
@@ -104,6 +104,27 @@ export const MINI_APPS: MiniAppDef[] = [
             "restaurant_kitchen",
             "restaurant_bar",
             "school_fee_tools",
+        ],
+    },
+    {
+        id: "hotel",
+        navItemId: "hotel_rooms",
+        title: "Front desk",
+        description: "Rooms, reservations, guest requests, and services",
+        icon: Building2,
+        autoActivatePrefixes: ["/hotel"],
+        items: [
+            { id: "hotel_rooms", label: "Rooms", icon: Building2, href: "/hotel/rooms", permission: "VIEW_HOTEL_ROOMS" },
+            { id: "hotel_reservations", label: "Reservations", icon: CalendarRange, href: "/hotel/reservations", permission: "VIEW_HOTEL_RESERVATIONS" },
+            { id: "hotel_requests", label: "Guest requests", icon: Activity, href: "/hotel/requests", permission: "VIEW_HOTEL_SERVICE_REQUESTS" },
+            { id: "hotel_services", label: "Services", icon: ConciergeBell, href: "/hotel/services", permission: "VIEW_PRODUCTS" },
+        ],
+        /** Preset-aware resolution from the nav tree; static items above are the fallback. */
+        navChildIds: [
+            "hotel_rooms",
+            "hotel_reservations",
+            "hotel_requests",
+            "hotel_services",
         ],
     },
     {

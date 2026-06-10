@@ -20,6 +20,8 @@ export interface BusinessServiceItem {
     currency: string | null
     isActive: boolean
     sortOrder: number
+    images: Array<{ id: string; url: string; isPrimary: boolean; alt?: string }>
+    catalogSyncEnabled: boolean
     createdAt: string
     updatedAt: string | null
 }
@@ -38,6 +40,8 @@ export interface CreateBusinessServicePayload {
     currency?: string | null
     isActive?: boolean
     sortOrder?: number
+    images?: Array<{ id: string; url: string; isPrimary: boolean; alt?: string }>
+    catalogSyncEnabled?: boolean
 }
 
 export type UpdateBusinessServicePayload = Partial<CreateBusinessServicePayload>

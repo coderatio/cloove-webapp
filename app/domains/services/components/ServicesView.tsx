@@ -1,12 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import dynamic from "next/dynamic"
 import { GlassCard } from "@/app/components/ui/glass-card"
 import { Button } from "@/app/components/ui/button"
 import { ManagementHeader } from "@/app/components/shared/ManagementHeader"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { PencilIcon as Pencil, Delete02Icon as Trash2 } from "@hugeicons/core-free-icons"
+import { PencilIcon as Pencil, Delete02Icon as Trash2, FileImportIcon as Import, PlusSignIcon as Plus } from "@hugeicons/core-free-icons"
 import {
     useBusinessServices,
     type BusinessServiceItem,
@@ -20,7 +20,24 @@ const ServiceFormDrawer = dynamic(
     { ssr: false }
 )
 
-export function ServicesView() {
+const ServiceImportDrawer = dynamic(
+    () =>
+        import("@/app/domains/services/components/ServiceImportDrawer").then(
+            (mod) => mod.ServiceImportDrawer
+        ),
+    { ssr: false }
+)
+
+export function ServicesView({
+    title = "Services",
+    description = "The services you offer, with prices. Your AI assistant only mentions what's listed here.",
+    tabsSlot,
+}: {
+    title?: string
+    description?: string
+    /** Optional content rendered directly under the header (e.g. preset sub-tabs). */
+    tabsSlot?: ReactNode
+} = {}) {
     const {
         services,
         isLoading,
@@ -35,6 +52,7 @@ export function ServicesView() {
     const [search, setSearch] = useState("")
     const [editing, setEditing] = useState<BusinessServiceItem | null>(null)
     const [drawerOpen, setDrawerOpen] = useState(false)
+    const [importOpen, setImportOpen] = useState(false)
 
     const filtered = useMemo(() => {
         const term = search.trim().toLowerCase()
@@ -61,14 +79,31 @@ export function ServicesView() {
     return (
         <div className="space-y-8">
             <ManagementHeader
-                title="Services"
-                description="The catalog your white-label assistant uses as the only source of truth."
+                title={title}
+                description={description}
                 searchValue={search}
                 onSearchChange={setSearch}
                 searchPlaceholder="Search services..."
-                addButtonLabel="Add service"
-                onAddClick={openCreate}
+                extraActions={
+                    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+                        <Button
+                            variant="outline"
+                            className="h-9 w-full rounded-full px-4 sm:w-auto"
+                            onClick={() => setImportOpen(true)}
+                        >
+                            <HugeiconsIcon icon={Import} className="mr-1.5 h-4 w-4" /> Import
+                        </Button>
+                        <Button
+                            onClick={openCreate}
+                            className="h-9 w-full rounded-full px-4 font-semibold text-white shadow-sm hover:text-white [&_svg]:text-white sm:w-auto"
+                        >
+                            <HugeiconsIcon icon={Plus} className="mr-1.5 h-4 w-4" /> Add service
+                        </Button>
+                    </div>
+                }
             />
+
+            {tabsSlot}
 
             {isLoading ? (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -82,7 +117,7 @@ export function ServicesView() {
                         No services yet
                     </h3>
                     <p className="text-brand-accent/60 dark:text-brand-cream/60 mb-6 max-w-md mx-auto">
-                        Add the consultations, packages, or engagements you offer. The white-label assistant will refuse to invent any that aren&apos;t listed here.
+                        Add the services you offer, with prices. Your AI assistant will only mention the ones listed here.
                     </p>
                     <Button
                         onClick={openCreate}
@@ -100,6 +135,10 @@ export function ServicesView() {
                             className="p-5 flex flex-col gap-4"
                             style={{ contentVisibility: "auto", containIntrinsicSize: "260px" }}
                         >
+                            {service.images?.[0]?.url && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={service.images[0].url} alt={service.images[0].alt ?? service.name} className="h-36 w-full rounded-xl object-cover" />
+                            )}
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <h3 className="font-serif text-lg text-brand-deep dark:text-brand-cream truncate">
@@ -142,6 +181,11 @@ export function ServicesView() {
                             </dl>
 
                             <div className="flex items-center justify-end gap-2 pt-2 border-t border-brand-deep/5 dark:border-white/5">
+                                <span className="mr-auto text-xs text-muted-foreground">
+                                    {service.catalogSyncEnabled && service.isActive && service.priceMin && service.images?.length
+                                        ? "Shown on WhatsApp"
+                                        : "Not on WhatsApp"}
+                                </span>
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -167,6 +211,7 @@ export function ServicesView() {
 
             {drawerOpen && (
                 <ServiceFormDrawer
+                    key={editing?.id ?? "new"}
                     open={drawerOpen}
                     onOpenChange={setDrawerOpen}
                     initial={editing}
@@ -180,6 +225,10 @@ export function ServicesView() {
                     }}
                     submitting={isCreating || isUpdating}
                 />
+            )}
+
+            {importOpen && (
+                <ServiceImportDrawer open={importOpen} onOpenChange={setImportOpen} />
             )}
         </div>
     )

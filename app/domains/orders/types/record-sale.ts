@@ -15,7 +15,7 @@ export interface RecordSalePayload {
     customerId?: string
     customerName?: string
     tags?: string[]
-    serviceMode?: "DINE_IN" | "TAKEAWAY"
+    serviceMode?: "DINE_IN" | "TAKEAWAY" | "ROOM_SERVICE"
     tableLabel?: string
     covers?: number
     kitchenStation?: string

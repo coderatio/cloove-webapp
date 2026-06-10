@@ -35,7 +35,7 @@ export interface Order {
         session?: { id: string; name: string }
     }
     isAutomated?: boolean
-    serviceMode?: 'DINE_IN' | 'TAKEAWAY' | null
+    serviceMode?: 'DINE_IN' | 'TAKEAWAY' | 'ROOM_SERVICE' | null
     tableSessionId?: string | null
     tableLabel?: string | null
     kitchenTicketId?: string | null

@@ -18,10 +18,11 @@ import {
   preloadRestaurantNewOrderSound,
 } from "@/app/domains/restaurant/lib/new-order-sound"
 import { GlobalOrderPreviewDrawer } from "@/app/domains/orders/components/GlobalOrderPreviewDrawer"
+import { getAggregateAlertCopy, resolveRecordCopy } from "@/app/domains/orders/lib/order-alert-copy"
 import { Button } from "@/app/components/ui/button"
 import { Badge } from "@/app/components/ui/badge"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { BellRingIcon as BellRing, ChevronRightIcon as ChevronRight, EyeIcon as Eye, FlaskConicalIcon as FlaskConical, ShoppingBag01Icon as ShoppingBag, Restaurant01Icon as UtensilsCrossed, Cancel01Icon as X } from "@hugeicons/core-free-icons"
+import { BellRingIcon as BellRing, ChevronRightIcon as ChevronRight, EyeIcon as Eye, FlaskConicalIcon as FlaskConical, Restaurant01Icon as UtensilsCrossed, Cancel01Icon as X } from "@hugeicons/core-free-icons"
 import { cn } from "@/app/lib/utils"
 
 const CHANNEL_NAME = "cloove-global-order-alerts"
@@ -143,6 +144,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
   const businessId = activeBusiness?.id ?? null
   const isDevPreviewEnabled = process.env.NODE_ENV !== "production"
   const isRestaurantPreset = activeBusiness?.layoutPreset === "restaurant"
+  const layoutPreset = activeBusiness?.layoutPreset ?? null
   const { data: goSettings } = useGoSettings()
   const sound = goSettings?.order_notifications?.restaurant.new_order_sound ?? "chime"
   const customSoundUrl = goSettings?.order_notifications?.restaurant.new_order_sound_url ?? null
@@ -205,10 +207,13 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
     if (sound === "custom") preloadRestaurantNewOrderSound(customSoundUrl)
   }, [customSoundUrl, sound])
 
-  const handleViewOrders = React.useCallback(() => {
-    setPreviewOrderId(null)
-    router.push("/orders")
-  }, [router])
+  const handleViewOrders = React.useCallback(
+    (href: string) => {
+      setPreviewOrderId(null)
+      router.push(href)
+    },
+    [router]
+  )
 
   const sendOrderToKitchen = React.useCallback(
     async (
@@ -333,6 +338,11 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
       })
   }, [orders, previewOrderId, queuedOrders])
 
+  const headerCopy = React.useMemo(
+    () => getAggregateAlertCopy(layoutPreset, visibleQueuedOrders),
+    [layoutPreset, visibleQueuedOrders]
+  )
+
   React.useEffect(() => {
     if (visibleQueuedOrders.length === 0) {
       toast.dismiss(GLOBAL_NEW_ORDERS_TOAST_ID)
@@ -367,14 +377,14 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-semibold text-slate-950 dark:text-slate-100">
-                    New orders
+                    {headerCopy.alertTitle}
                   </p>
                   <Badge variant="secondary" className="rounded-full px-2 py-0 text-[11px]">
                     {visibleQueuedOrders.length}
                   </Badge>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  Review recent incoming orders without leaving this page.
+                  {headerCopy.alertDescription}
                 </p>
               </div>
             </div>
@@ -383,6 +393,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
           <div className="p-2">
             <div className="space-y-1.5">
               {displayedOrders.map((order) => {
+                const record = resolveRecordCopy(layoutPreset, order)
                 const total = formatCurrency(Number(order.totalAmount || 0), {
                   currency: order.currency ?? activeBusiness?.currency ?? "NGN",
                 })
@@ -409,7 +420,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-emerald-600 dark:text-emerald-300">
-                            <HugeiconsIcon icon={ShoppingBag} className="h-4.5 w-4.5" />
+                            <HugeiconsIcon icon={record.icon} className="h-4.5 w-4.5" />
                           </div>
                         )}
                       </div>
@@ -417,7 +428,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-2">
                           <p className="truncate text-sm font-semibold text-slate-950 dark:text-slate-100">
-                            Order{order.shortCode ? ` #${order.shortCode}` : ""}
+                            {record.recordLabel}{order.shortCode ? ` #${order.shortCode}` : ""}
                           </p>
                           {order.serviceMode ? (
                             <Badge variant="outline" className="hidden shrink-0 rounded-full px-2 py-0 text-[10px] uppercase tracking-normal sm:inline-flex">
@@ -437,7 +448,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
                       <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
                         <Button
                           size="sm"
-                          aria-label={`Preview order${order.shortCode ? ` #${order.shortCode}` : ""}`}
+                          aria-label={`Preview ${record.recordLabel.toLowerCase()}${order.shortCode ? ` #${order.shortCode}` : ""}`}
                           title="Preview"
                           className="h-9 w-9 rounded-full bg-emerald-600 px-0 text-xs text-white hover:bg-emerald-700 sm:h-8 sm:w-auto sm:px-3"
                           onClick={() => {
@@ -491,7 +502,11 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
 
             {remainingCount > 0 ? (
               <p className="px-2.5 pb-1.5 pt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                +{remainingCount} more order{remainingCount === 1 ? "" : "s"} waiting
+                +{remainingCount} more{" "}
+                {remainingCount === 1
+                  ? headerCopy.recordLabel.toLowerCase()
+                  : headerCopy.recordPluralLower}{" "}
+                waiting
               </p>
             ) : null}
           </div>
@@ -511,6 +526,8 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
   }, [
     activeBusiness?.currency,
     clearQueuedOrders,
+    headerCopy,
+    layoutPreset,
     customSoundUrl,
     isRestaurantPreset,
     openPreview,
@@ -543,6 +560,7 @@ export function GlobalOrderAlertProvider({ children }: { children: React.ReactNo
         open={!!previewOrderId}
         onOpenChange={(open) => !open && setPreviewOrderId(null)}
         onViewOrders={handleViewOrders}
+        layoutPreset={layoutPreset}
         isRestaurantPreset={isRestaurantPreset}
         allowSendToKitchen={!isDevPreviewOrder(previewOrder)}
         isSendingToKitchen={kitchenAction.create.isPending}

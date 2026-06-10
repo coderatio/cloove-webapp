@@ -117,7 +117,7 @@ function LocationPicker({ onCoordinatesChange }: { onCoordinatesChange: (coords:
                             <HugeiconsIcon icon={AlertTriangle} className="w-4 h-4 text-red-500" />
                         </div>
                         <p className="text-[11px] font-medium text-red-500 uppercase tracking-tight">
-                            Geospatial Authorization Denied
+                            Location access denied
                         </p>
                         <Button 
                             variant="ghost" 
@@ -210,7 +210,7 @@ export function VerificationLevelForm({
                         <Input
                             value={address}
                             onChange={(e) => onAddressChange(e.target.value)}
-                            placeholder="Full Operational Address"
+                            placeholder="Full business address"
                             className="h-16 pl-6 bg-brand-deep/[0.02] dark:bg-white/[0.04] border-brand-gold/10 rounded-[20px] focus:ring-brand-gold/5 focus:border-brand-gold/60 transition-all duration-500 font-sans text-base shadow-inner"
                         />
                     </div>
@@ -286,28 +286,28 @@ export function VerificationLevelForm({
                 </div>
             )}
 
-            <div className="flex flex-col md:flex-row items-center gap-4 pt-6">
+            <div className="flex flex-col md:flex-row items-center gap-3 pt-6">
                 <Button
                     onClick={onSubmit}
                     disabled={isPending}
-                    className="w-full md:flex-1 h-14 rounded-2xl bg-brand-gold-700 px-8 hover:bg-brand-gold-800 text-brand-deep font-bold uppercase tracking-[0.2em] text-[11px] shadow-[0_8px_32px_rgba(212,175,55,0.15)] hover:shadow-[0_12px_48px_rgba(212,175,55,0.3)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-500"
+                    className="w-full md:flex-1 h-12 rounded-2xl bg-brand-gold-700 px-8 hover:bg-brand-gold-800 text-white font-semibold text-sm shadow-sm transition-all duration-300 active:scale-[0.99]"
                 >
                     {isPending ? (
-                        <div className="flex items-center justify-center gap-3">
+                        <div className="flex items-center justify-center gap-2.5">
                             <HugeiconsIcon icon={Loader2} className="w-4 h-4 animate-spin" />
-                            <span>Validating Credentials...</span>
+                            <span>Submitting…</span>
                         </div>
                     ) : (
-                        "Submit Verification"
+                        "Submit verification"
                     )}
                 </Button>
                 <Button
                     variant="ghost"
                     onClick={onCancel}
                     disabled={isPending}
-                    className="w-full md:w-auto h-14 px-8 rounded-2xl text-brand-deep/30 dark:text-brand-cream/30 hover:bg-brand-deep/5 dark:hover:bg-white/5 font-bold uppercase tracking-widest text-[10px] transition-all duration-300"
+                    className="w-full md:w-auto h-12 px-8 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted font-semibold text-sm transition-colors"
                 >
-                    Return
+                    Cancel
                 </Button>
             </div>
         </div>

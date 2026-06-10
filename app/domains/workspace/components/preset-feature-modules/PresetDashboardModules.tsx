@@ -6,6 +6,7 @@ import { RetailDashboardModule } from "./RetailDashboardModule"
 import { PharmacyDashboardModule } from "./PharmacyDashboardModule"
 import { SchoolDashboardModule } from "./SchoolDashboardModule"
 import { RestaurantDashboardModule } from "./RestaurantDashboardModule"
+import { HotelDashboardModule } from "./HotelDashboardModule"
 
 /**
  * Preset-specific dashboard feature surface: real navigation modules, not copy-only hints.
@@ -24,6 +25,8 @@ export function PresetDashboardModules() {
             return <SchoolDashboardModule pageCopy={pageCopy} />
         case "restaurant":
             return <RestaurantDashboardModule pageCopy={pageCopy} />
+        case "hotel":
+            return <HotelDashboardModule pageCopy={pageCopy} />
         default:
             return <DefaultDashboardModule pageCopy={pageCopy} />
     }

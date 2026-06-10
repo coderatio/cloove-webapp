@@ -1,5 +1,5 @@
 import type { IconSvgElement } from "@hugeicons/react"
-import { Activity03Icon as Activity, AlertCircleIcon as AlertCircle, BanknoteIcon as Banknote, BookOpen01Icon as BookOpen, CalendarRangeIcon as CalendarRange, ChefHatIcon as ChefHat, GlassWaterIcon as GlassWater, Home01Icon as Home, LayoutGridIcon as LayoutGrid, Link02Icon as Link2, CodeIcon as Code2, WhatsappIcon as WhatsApp, PackageIcon as Package, CallIcon as Phone, Invoice01Icon as Receipt, SecurityCheckIcon as ShieldCheck, ShoppingBag01Icon as ShoppingBag, SparklesIcon as Sparkles, Store01Icon as Store, TruckIcon as Truck, UserMultiple02Icon as Users } from "@hugeicons/core-free-icons"
+import { Activity03Icon as Activity, AlertCircleIcon as AlertCircle, BanknoteIcon as Banknote, BookOpen01Icon as BookOpen, CalendarRangeIcon as CalendarRange, ChefHatIcon as ChefHat, GlassWaterIcon as GlassWater, Home01Icon as Home, LayoutGridIcon as LayoutGrid, Link02Icon as Link2, CodeIcon as Code2, WhatsappIcon as WhatsApp, PackageIcon as Package, CallIcon as Phone, Invoice01Icon as Receipt, SecurityCheckIcon as ShieldCheck, ShoppingBag01Icon as ShoppingBag, SparklesIcon as Sparkles, Store01Icon as Store, TruckIcon as Truck, UserMultiple02Icon as Users, Building02Icon as Building2, ConciergeBellIcon as ConciergeBell } from "@hugeicons/core-free-icons"
 
 /** Stable ids for nav entries and preset overrides */
 export type NavRouteId =
@@ -13,6 +13,10 @@ export type NavRouteId =
     | "restaurant_tables"
     | "restaurant_kitchen"
     | "restaurant_bar"
+    | "hotel_reservations"
+    | "hotel_rooms"
+    | "hotel_requests"
+    | "hotel_services"
     | "finance"
     | "payment_links"
     | "voice"
@@ -137,6 +141,38 @@ export const NAV_GROUPS: NavGroupDef[] = [
                         visibleForPresets: ["restaurant"],
                     },
                 ],
+            },
+            {
+                id: "hotel_rooms",
+                href: "/hotel/rooms",
+                icon: Building2,
+                defaultLabel: "Rooms",
+                permission: "VIEW_HOTEL_ROOMS",
+                visibleForPresets: ["hotel"],
+            },
+            {
+                id: "hotel_reservations",
+                href: "/hotel/reservations",
+                icon: CalendarRange,
+                defaultLabel: "Reservations",
+                permission: "VIEW_HOTEL_RESERVATIONS",
+                visibleForPresets: ["hotel"],
+            },
+            {
+                id: "hotel_requests",
+                href: "/hotel/requests",
+                icon: Activity,
+                defaultLabel: "Guest requests",
+                permission: "VIEW_HOTEL_SERVICE_REQUESTS",
+                visibleForPresets: ["hotel"],
+            },
+            {
+                id: "hotel_services",
+                href: "/hotel/services",
+                icon: ConciergeBell,
+                defaultLabel: "Services",
+                permission: "VIEW_PRODUCTS",
+                visibleForPresets: ["hotel"],
             },
             {
                 id: "school_calendar",
