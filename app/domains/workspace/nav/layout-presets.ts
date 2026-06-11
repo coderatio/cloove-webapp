@@ -108,7 +108,7 @@ const hotelPreset: LayoutPreset = {
     labelOverrides: {
         customers: "Guests",
         orders: "Charges & orders",
-        inventory: "Menu & supplies",
+        inventory: "Menu & products",
         stores: "Properties",
         hotel_reservations: "Reservations",
         hotel_rooms: "Rooms",

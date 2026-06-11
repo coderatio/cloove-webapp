@@ -17,10 +17,17 @@ interface ImageUploadProps {
 export function ImageUpload({ value = [], onChange, disabled, maxFiles = 5 }: ImageUploadProps) {
     const [isUploading, setIsUploading] = React.useState(false)
     const [progress, setProgress] = React.useState(0)
+    const [isDragging, setIsDragging] = React.useState(false)
     const fileInputRef = React.useRef<HTMLInputElement>(null)
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || [])
+        await processFiles(Array.from(e.target.files || []))
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+        }
+    }
+
+    const processFiles = async (files: File[]) => {
         if (files.length === 0) return
 
         if (value.length + files.length > maxFiles) {
@@ -73,15 +80,36 @@ export function ImageUpload({ value = [], onChange, disabled, maxFiles = 5 }: Im
             toast.error('Something went wrong during upload')
         } finally {
             setIsUploading(false)
-            if (fileInputRef.current) {
-                fileInputRef.current.value = ''
-            }
             setTimeout(() => setProgress(0), 500)
         }
     }
 
     const removeImage = (indexToRemove: number) => {
         onChange(value.filter((_, index) => index !== indexToRemove))
+    }
+
+    const canAcceptDrop = !disabled && !isUploading && value.length < maxFiles
+
+    const handleDragOver = (e: React.DragEvent) => {
+        if (!canAcceptDrop) return
+        e.preventDefault()
+        if (!isDragging) setIsDragging(true)
+    }
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault()
+        // Only clear when leaving the drop zone itself, not its children
+        if (e.currentTarget === e.target) setIsDragging(false)
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        setIsDragging(false)
+        if (!canAcceptDrop) return
+        const files = Array.from(e.dataTransfer.files || []).filter((f) =>
+            f.type.startsWith('image/')
+        )
+        if (files.length > 0) void processFiles(files)
     }
 
     return (
@@ -92,7 +120,9 @@ export function ImageUpload({ value = [], onChange, disabled, maxFiles = 5 }: Im
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={url}
-                            alt={`Product image ${index + 1}`}
+                            alt={`Image ${index + 1}`}
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
                             className="w-full h-full object-cover"
                         />
                         <button
@@ -110,10 +140,14 @@ export function ImageUpload({ value = [], onChange, disabled, maxFiles = 5 }: Im
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
                         disabled={disabled || isUploading}
                         className={cn(
                             "relative cursor-pointer aspect-square rounded-xl border-2 border-dashed border-brand-deep/10 dark:border-white/10 flex flex-col items-center justify-center gap-2 transition-all hover:bg-brand-deep/2 hover:border-brand-deep/20 dark:hover:border-white/20",
-                            isUploading && "opacity-50 cursor-not-allowed"
+                            isUploading && "opacity-50 cursor-not-allowed",
+                            isDragging && "border-brand-green/60 bg-brand-green/5 dark:border-brand-gold/60 dark:bg-brand-gold/5"
                         )}
                     >
                         {isUploading ? (
@@ -123,12 +157,15 @@ export function ImageUpload({ value = [], onChange, disabled, maxFiles = 5 }: Im
                             </>
                         ) : (
                             <>
-                                <div className="p-2.5 rounded-full bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60">
+                                <div className={cn(
+                                    "p-2.5 rounded-full bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60 transition-colors pointer-events-none",
+                                    isDragging && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
+                                )}>
                                     <HugeiconsIcon icon={UploadCloud} className="w-5 h-5" />
                                 </div>
-                                <div className="text-center px-2">
+                                <div className="text-center px-2 pointer-events-none">
                                     <span className="text-xs font-medium text-brand-deep/70 dark:text-brand-cream/70">
-                                        Upload
+                                        {isDragging ? "Drop to upload" : "Upload or drop"}
                                     </span>
                                 </div>
                             </>

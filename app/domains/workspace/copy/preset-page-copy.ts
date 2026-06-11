@@ -547,8 +547,8 @@ const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
             description: "Guest profiles, contact details, and stay history.",
         },
         inventory: {
-            title: "Menu & supplies",
-            description: "Manage room-service menu items and hotel supplies.",
+            title: "Menu & products",
+            description: "Manage room-service menu items and other sellable products.",
         },
         dashboard: {
             verticalHint:

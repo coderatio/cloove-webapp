@@ -11,6 +11,10 @@ export enum Permission {
     // Products
     MANAGE_PRODUCTS = 'MANAGE_PRODUCTS',
 
+    // Supplies / internal stock
+    VIEW_SUPPLIES = 'VIEW_SUPPLIES',
+    MANAGE_SUPPLIES = 'MANAGE_SUPPLIES',
+
     // Customers
     VIEW_CUSTOMERS = 'VIEW_CUSTOMERS',
     UPDATE_CUSTOMER = 'UPDATE_CUSTOMER',

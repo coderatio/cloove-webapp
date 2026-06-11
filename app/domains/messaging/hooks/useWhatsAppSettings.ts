@@ -138,6 +138,27 @@ export interface GoSettings {
   experience_mode?: "commerce" | "service" | "hotel"
   quick_actions?: Array<{ id: string; title: string }>
   order_notifications?: OrderNotificationsSettings | null
+  hotel_guest_experience?: {
+    proactive_checkout_reminders_enabled?: boolean
+    standard_checkout_time?: string | null
+    late_checkout_auto_approve_enabled?: boolean
+    late_checkout_auto_approve_until?: string | null
+    review_strategy?: "private_first" | "direct_public" | "private_only"
+    public_review_url?: string | null
+    return_offer_message?: string | null
+    voice_departure_follow_up_enabled?: boolean
+    template_bindings?: {
+      checkout_reminder_evening_template_key?: string | null
+      checkout_reminder_morning_template_key?: string | null
+      checkout_final_notice_template_key?: string | null
+      late_checkout_approved_template_key?: string | null
+      late_checkout_pending_template_key?: string | null
+      checkout_complete_template_key?: string | null
+      feedback_request_template_key?: string | null
+      review_invite_template_key?: string | null
+      return_offer_template_key?: string | null
+    } | null
+  } | null
   created_at?: string
   updated_at?: string | null
 }

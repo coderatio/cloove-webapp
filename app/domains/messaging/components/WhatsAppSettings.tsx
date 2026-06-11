@@ -52,6 +52,10 @@ import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { OperatingHoursBuilder } from "@/app/components/shared/OperatingHoursBuilder"
 import { uploadService } from "@/app/lib/upload/upload-service"
 import { toast } from "sonner"
+import {
+  useWhatsAppTemplates,
+  type WhatsAppTemplateSummary,
+} from "@/app/domains/messaging/hooks/useWhatsAppInbox"
 
 interface WhatsAppSettingsProps {
   onDirtyChange?: (isDirty: boolean) => void
@@ -151,6 +155,28 @@ const DEFAULT_ORDER_NOTIFICATIONS: OrderNotificationsSettings = {
   },
 }
 
+const DEFAULT_HOTEL_GUEST_EXPERIENCE = {
+  proactive_checkout_reminders_enabled: true,
+  standard_checkout_time: "12:00",
+  late_checkout_auto_approve_enabled: true,
+  late_checkout_auto_approve_until: "14:00",
+  review_strategy: "private_first" as const,
+  public_review_url: "",
+  return_offer_message: "",
+  voice_departure_follow_up_enabled: false,
+  template_bindings: {
+    checkout_reminder_evening_template_key: "",
+    checkout_reminder_morning_template_key: "",
+    checkout_final_notice_template_key: "",
+    late_checkout_approved_template_key: "",
+    late_checkout_pending_template_key: "",
+    checkout_complete_template_key: "",
+    feedback_request_template_key: "",
+    review_invite_template_key: "",
+    return_offer_template_key: "",
+  },
+}
+
 const NEW_ORDER_SOUND_OPTIONS: Array<{
   value: RestaurantNewOrderSound
   label: string
@@ -220,6 +246,14 @@ export function WhatsAppSettings({
     livingNumbers.find((n) => n.status === WhatsAppNumberStatusValue.ACTIVE) ??
     livingNumbers[0] ??
     null
+  const hotelTemplateQuery = useWhatsAppTemplates({
+    businessWhatsappNumberId: primaryActiveNumber?.id ?? null,
+    status: "published",
+    limit: 100,
+  })
+  const hotelTemplateOptions = (hotelTemplateQuery.data?.data ?? []).filter(
+    (template) => template.can_send
+  )
 
   const resyncConfig = useResyncWhatsAppConfig()
   const syncNumberCatalog = useSyncWhatsAppNumberCatalog()
@@ -254,6 +288,7 @@ export function WhatsAppSettings({
     agent_profile: "commerce",
     capabilities_overrides: null,
     order_notifications: DEFAULT_ORDER_NOTIFICATIONS,
+    hotel_guest_experience: DEFAULT_HOTEL_GUEST_EXPERIENCE,
   })
 
   type SettingsTab = "connections" | "general" | "notifications" | "ai"
@@ -313,6 +348,14 @@ export function WhatsAppSettings({
         agent_profile: s.agent_profile ?? "commerce",
         capabilities_overrides: s.capabilities_overrides ?? null,
         order_notifications: mergeOrderNotifications(s.order_notifications),
+        hotel_guest_experience: {
+          ...DEFAULT_HOTEL_GUEST_EXPERIENCE,
+          ...(s.hotel_guest_experience ?? {}),
+          template_bindings: {
+            ...DEFAULT_HOTEL_GUEST_EXPERIENCE.template_bindings,
+            ...(s.hotel_guest_experience?.template_bindings ?? {}),
+          },
+        },
       })
       setIsDirty(false)
       onDirtyChange?.(false)
@@ -365,6 +408,39 @@ export function WhatsAppSettings({
     setLocalSettings((prev) => ({ ...prev, [key]: value }))
     setIsDirty(true)
     onDirtyChange?.(true)
+  }
+
+  const handleHotelExperienceChange = (
+    key: keyof NonNullable<GoSettings["hotel_guest_experience"]>,
+    value: unknown
+  ) => {
+    const current = {
+      ...DEFAULT_HOTEL_GUEST_EXPERIENCE,
+      ...(localSettings.hotel_guest_experience ?? {}),
+      template_bindings: {
+        ...DEFAULT_HOTEL_GUEST_EXPERIENCE.template_bindings,
+        ...(localSettings.hotel_guest_experience?.template_bindings ?? {}),
+      },
+    }
+    handleChange("hotel_guest_experience", { ...current, [key]: value })
+  }
+
+  const handleHotelTemplateBindingChange = (
+    key: keyof NonNullable<NonNullable<GoSettings["hotel_guest_experience"]>["template_bindings"]>,
+    value: string
+  ) => {
+    const current = {
+      ...DEFAULT_HOTEL_GUEST_EXPERIENCE,
+      ...(localSettings.hotel_guest_experience ?? {}),
+      template_bindings: {
+        ...DEFAULT_HOTEL_GUEST_EXPERIENCE.template_bindings,
+        ...(localSettings.hotel_guest_experience?.template_bindings ?? {}),
+      },
+    }
+    handleHotelExperienceChange("template_bindings", {
+      ...current.template_bindings,
+      [key]: value,
+    })
   }
 
   const buildSettingsPayload = () => {
@@ -984,6 +1060,284 @@ export function WhatsAppSettings({
                   </SettingsCard>
                 </section>
 
+                {layoutPresetId === "hotel" ? (
+                  <section className="space-y-4">
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                      Hotel departure concierge
+                    </h3>
+                    <SettingsCard className="space-y-6">
+                      <SettingToggle
+                        label="Proactive checkout reminders"
+                        description="Send reminder nudges as checkout approaches."
+                        checked={
+                          localSettings.hotel_guest_experience
+                            ?.proactive_checkout_reminders_enabled ?? true
+                        }
+                        onChange={(value) =>
+                          handleHotelExperienceChange(
+                            "proactive_checkout_reminders_enabled",
+                            value,
+                          )
+                        }
+                      />
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Standard checkout time
+                          </label>
+                          <Input
+                            value={
+                              localSettings.hotel_guest_experience?.standard_checkout_time ??
+                              "12:00"
+                            }
+                            onChange={(e) =>
+                              handleHotelExperienceChange(
+                                "standard_checkout_time",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="12:00"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Auto-approve late checkout until
+                          </label>
+                          <Input
+                            value={
+                              localSettings.hotel_guest_experience
+                                ?.late_checkout_auto_approve_until ?? "14:00"
+                            }
+                            onChange={(e) =>
+                              handleHotelExperienceChange(
+                                "late_checkout_auto_approve_until",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="14:00"
+                          />
+                        </div>
+                      </div>
+
+                      <SettingToggle
+                        label="Auto-approve late checkout"
+                        description="Approve late checkout instantly until the configured cut-off time."
+                        checked={
+                          localSettings.hotel_guest_experience
+                            ?.late_checkout_auto_approve_enabled ?? true
+                        }
+                        onChange={(value) =>
+                          handleHotelExperienceChange(
+                            "late_checkout_auto_approve_enabled",
+                            value,
+                          )
+                        }
+                      />
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Review strategy
+                          </label>
+                          <Select
+                            value={
+                              localSettings.hotel_guest_experience?.review_strategy ??
+                              "private_first"
+                            }
+                            onValueChange={(value) =>
+                              handleHotelExperienceChange("review_strategy", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="private_first">Private first</SelectItem>
+                              <SelectItem value="direct_public">Direct public review</SelectItem>
+                              <SelectItem value="private_only">Private only</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Public review URL
+                          </label>
+                          <Input
+                            value={
+                              localSettings.hotel_guest_experience?.public_review_url ?? ""
+                            }
+                            onChange={(e) =>
+                              handleHotelExperienceChange(
+                                "public_review_url",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="https://..."
+                          />
+                        </div>
+                      </div>
+
+                      <SettingTextarea
+                        label="Return offer message"
+                        placeholder="Invite checked-out guests back with a short offer or return message."
+                        value={
+                          localSettings.hotel_guest_experience?.return_offer_message ?? ""
+                        }
+                        onChange={(value) =>
+                          handleHotelExperienceChange("return_offer_message", value)
+                        }
+                        rows={3}
+                      />
+
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                            WABA template slots
+                          </h4>
+                          <p className="text-sm text-slate-500 dark:text-slate-300">
+                            Choose approved business templates for outbound hotel reminders and follow-ups.
+                          </p>
+                        </div>
+                        {!primaryActiveNumber ? (
+                          <p className="text-sm text-amber-700 dark:text-amber-300">
+                            Connect an active WhatsApp number first to assign hotel template slots.
+                          </p>
+                        ) : (
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <HotelTemplateBindingField
+                              label="Evening checkout reminder"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.checkout_reminder_evening_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "checkout_reminder_evening_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                            <HotelTemplateBindingField
+                              label="Morning checkout reminder"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.checkout_reminder_morning_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "checkout_reminder_morning_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                            <HotelTemplateBindingField
+                              label="Final checkout notice"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.checkout_final_notice_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "checkout_final_notice_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                            <HotelTemplateBindingField
+                              label="Late checkout approved"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.late_checkout_approved_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "late_checkout_approved_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                            <HotelTemplateBindingField
+                              label="Late checkout pending review"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.late_checkout_pending_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "late_checkout_pending_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                            <HotelTemplateBindingField
+                              label="Checkout complete"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.checkout_complete_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "checkout_complete_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                            <HotelTemplateBindingField
+                              label="Feedback request"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.feedback_request_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "feedback_request_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                            <HotelTemplateBindingField
+                              label="Public review invite"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.review_invite_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "review_invite_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                            <HotelTemplateBindingField
+                              label="Return offer"
+                              value={
+                                localSettings.hotel_guest_experience?.template_bindings
+                                  ?.return_offer_template_key ?? ""
+                              }
+                              templates={hotelTemplateOptions}
+                              onChange={(value) =>
+                                handleHotelTemplateBindingChange(
+                                  "return_offer_template_key",
+                                  value,
+                                )
+                              }
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </SettingsCard>
+                  </section>
+                ) : null}
+
                 <section className="space-y-4">
                   <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
                     Restrictions
@@ -1070,6 +1424,37 @@ function EmbeddedSignupConfigNotice({
     >
       <HugeiconsIcon icon={AlertCircle} className="mt-0.5 h-4 w-4 shrink-0" />
       <p>{message}</p>
+    </div>
+  )
+}
+
+function HotelTemplateBindingField({
+  label,
+  value,
+  templates,
+  onChange,
+}: {
+  label: string
+  value: string
+  templates: WhatsAppTemplateSummary[]
+  onChange: (value: string) => void
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
+      <Select value={value || "__none__"} onValueChange={(next) => onChange(next === "__none__" ? "" : next)}>
+        <SelectTrigger>
+          <SelectValue placeholder="No template selected" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__">No template</SelectItem>
+          {templates.map((template) => (
+            <SelectItem key={template.id} value={template.key}>
+              {template.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }

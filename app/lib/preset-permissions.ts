@@ -35,6 +35,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         // Products
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         // Customers
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
@@ -67,6 +69,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         Permission.DELETE_SALE,
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
         Permission.UPDATE_CUSTOMER,
@@ -96,6 +100,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         Permission.DELETE_SALE,
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
         Permission.UPDATE_CUSTOMER,
@@ -138,6 +144,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         // Resources & stock
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         // Expenses & debts
         Permission.VIEW_EXPENSES,
         Permission.RECORD_EXPENSE,
@@ -171,6 +179,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         // Products (menu & stock)
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         // Customers (guests)
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
@@ -212,6 +222,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         Permission.DELETE_SALE,
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
         Permission.UPDATE_CUSTOMER,

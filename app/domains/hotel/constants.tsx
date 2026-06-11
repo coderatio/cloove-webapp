@@ -98,6 +98,12 @@ export const REQUEST_CATEGORY_META: Record<string, CategoryMeta> = {
   laundry: { label: "Laundry", icon: WashingMachine },
   spa: { label: "Spa", icon: Flower },
   airport_pickup: { label: "Airport pickup", icon: Taxi },
+  airport_dropoff: { label: "Airport drop-off", icon: Taxi },
+  late_checkout: { label: "Late checkout", icon: Clock },
+  stay_extension: { label: "Stay extension", icon: Hourglass },
+  checkout_help: { label: "Checkout help", icon: HelpCircle },
+  luggage_assistance: { label: "Luggage assistance", icon: Sparkles },
+  wake_up_call: { label: "Wake-up call", icon: Clock },
   maintenance: { label: "Maintenance", icon: Wrench },
   other: { label: "Other", icon: HelpCircle },
 };

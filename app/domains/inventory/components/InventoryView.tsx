@@ -889,7 +889,7 @@ export function InventoryView() {
                     title={pageCopy.inventory.title}
                     description={pageCopy.inventory.description}
                     extraActions={
-                        <div className="w-full flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="w-full sm:w-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                             <StoreContextSelector
                                 value={selectedStoreId}
                                 onChange={setSelectedStoreId}

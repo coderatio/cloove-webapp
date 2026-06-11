@@ -6,30 +6,28 @@ import {
     DrawerContent,
     DrawerTitle,
     DrawerDescription,
-    DrawerHeader,
     DrawerBody,
-    DrawerClose,
     DrawerStickyHeader,
 } from "@/app/components/ui/drawer"
 import { Button } from "@/app/components/ui/button"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PlusSignIcon as Plus, Delete02Icon as Trash2, Loading03Icon as Loader2, PencilIcon as Pencil, CheckIcon as Check, Cancel01Icon as X, Tag01Icon as Tag } from "@hugeicons/core-free-icons"
-import { useProductCategories, type ProductCategoryRow } from "../hooks/useProductCategories"
+import { useSupplyCategories, type SupplyCategoryRow } from "../hooks/useSupplyCategories"
 import { ConfirmDialog } from "@/app/components/shared/ConfirmDialog"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/app/lib/utils"
 import { GlassCard } from "@/app/components/ui/glass-card"
 
-interface ManageCategoriesDrawerProps {
+interface ManageSupplyCategoriesDrawerProps {
     open: boolean
     onOpenChange: (open: boolean) => void
 }
 
-export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesDrawerProps) {
-    const { categories, createCategory, updateCategory, deleteCategory, isLoading } = useProductCategories()
+export function ManageSupplyCategoriesDrawer({ open, onOpenChange }: ManageSupplyCategoriesDrawerProps) {
+    const { categories, createCategory, updateCategory, deleteCategory, isLoading } = useSupplyCategories()
     const [newName, setNewName] = React.useState("")
     const [isSubmitting, setIsSubmitting] = React.useState(false)
-    const [deleteTarget, setDeleteTarget] = React.useState<ProductCategoryRow | null>(null)
+    const [deleteTarget, setDeleteTarget] = React.useState<SupplyCategoryRow | null>(null)
     const [editingId, setEditingId] = React.useState<string | null>(null)
     const [editValue, setEditValue] = React.useState("")
 
@@ -75,9 +73,9 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                             <div className="w-8 h-8 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold">
                                 <HugeiconsIcon icon={Tag} className="w-4 h-4" />
                             </div>
-                            <DrawerTitle className="text-xl font-serif font-medium">Product Categories</DrawerTitle>
+                            <DrawerTitle className="text-xl font-serif font-medium">Supply Categories</DrawerTitle>
                         </div>
-                        <DrawerDescription className="text-sm">Organize your offerings with elegant categorizations.</DrawerDescription>
+                        <DrawerDescription className="text-sm">Group your internal stock so it's easy to find and report on.</DrawerDescription>
                     </DrawerStickyHeader>
                     <DrawerBody className="px-4 sm:px-8 pb-12 overflow-y-auto">
                         <form onSubmit={handleAdd} className="space-y-3 mb-8">
@@ -89,7 +87,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                                     autoFocus
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
-                                    placeholder="e.g. Handmade Lace"
+                                    placeholder="e.g. Cooking, Packaging"
                                     className="flex-1 px-5 py-3.5 rounded-2xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 text-brand-deep dark:text-brand-cream text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/20 transition-all font-sans"
                                 />
                                 <Button
@@ -216,7 +214,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                 }}
                 isLoading={isSubmitting}
                 title="Delete category?"
-                description={deleteTarget ? `"${deleteTarget.name}" will be removed. Products in this category will have no category.` : ''}
+                description={deleteTarget ? `"${deleteTarget.name}" will be removed. Supplies in this category will have no category.` : ''}
                 confirmText="Delete"
                 variant="destructive"
             />

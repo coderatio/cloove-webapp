@@ -59,6 +59,13 @@ export interface HotelReservation {
   amountPaid?: number;
   balance?: number;
   holdExpiresAt?: string | null;
+  departure?: {
+    reminders?: Record<string, string>;
+    feedbackRating?: "good" | "neutral" | "bad" | null;
+    feedbackCapturedAt?: string | null;
+    reviewInviteSentAt?: string | null;
+    lateCheckoutApprovedUntil?: string | null;
+  } | null;
   status: HotelReservationStatus;
   customer?: { id: string; name: string };
   roomType?: HotelRoomType;
