@@ -163,7 +163,7 @@ export function ManageCategoriesDrawer({ open, onOpenChange }: ManageCategoriesD
                                                             <span className="text-sm font-medium text-brand-deep dark:text-brand-cream font-sans">
                                                                 {c.name}
                                                             </span>
-                                                            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                            <div className="flex items-center gap-1 opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity">
                                                                 <Button
                                                                     type="button"
                                                                     variant="ghost"

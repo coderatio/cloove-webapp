@@ -7,6 +7,7 @@ export type LayoutPresetId =
     | "retail"
     | "pharmacy"
     | "school"
+    | "hotel"
 
 export interface LayoutPreset {
     id: LayoutPresetId
@@ -99,12 +100,32 @@ const schoolPreset: LayoutPreset = {
     mobileSecondaryIds: ["orders"],
 }
 
+const hotelPreset: LayoutPreset = {
+    id: "hotel",
+    title: "Hotel & lodging",
+    description: "AI front desk, room availability, reservations, guest requests, and room service.",
+    groupOrder: ["main", "sales_finance", "operations", "staff_management"],
+    labelOverrides: {
+        customers: "Guests",
+        orders: "Charges & orders",
+        inventory: "Menu & products",
+        stores: "Properties",
+        hotel_reservations: "Reservations",
+        hotel_rooms: "Rooms",
+        hotel_requests: "Guest requests",
+        hotel_services: "Services & amenities",
+    },
+    mobilePrimaryIds: ["overview", "hotel_rooms"],
+    mobileSecondaryIds: ["hotel_requests"],
+}
+
 export const LAYOUT_PRESETS: Record<LayoutPresetId, LayoutPreset> = {
     default: defaultPreset,
     restaurant: restaurantPreset,
     retail: retailPreset,
     pharmacy: pharmacyPreset,
     school: schoolPreset,
+    hotel: hotelPreset,
 }
 
 export const LAYOUT_PRESET_LIST: LayoutPreset[] = [
@@ -113,6 +134,7 @@ export const LAYOUT_PRESET_LIST: LayoutPreset[] = [
     retailPreset,
     pharmacyPreset,
     schoolPreset,
+    hotelPreset,
 ]
 
 export function getLayoutPreset(id: string | null | undefined): LayoutPreset {

@@ -537,6 +537,24 @@ const DEFAULT_PAGE_COPY: PresetPageCopy = {
 
 /** Partial nested overrides; merged with DEFAULT_PAGE_COPY in getPresetPageCopy */
 const PRESET_OVERRIDES: Partial<Record<LayoutPresetId, any>> = {
+    hotel: {
+        orders: {
+            title: "Charges & orders",
+            description: "Track room-service orders and guest charges.",
+        },
+        customers: {
+            title: "Guests",
+            description: "Guest profiles, contact details, and stay history.",
+        },
+        inventory: {
+            title: "Menu & products",
+            description: "Manage room-service menu items and other sellable products.",
+        },
+        dashboard: {
+            verticalHint:
+                "Use Cloove Go and Vox as one shared AI front desk for guest conversations.",
+        },
+    },
     restaurant: {
         activity: {
             title: "Activity",

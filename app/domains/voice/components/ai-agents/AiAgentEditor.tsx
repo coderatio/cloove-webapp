@@ -57,6 +57,7 @@ const TEMPLATES = [
     { key: "support", label: "Support assistant", description: "Order status, returns, FAQs." },
     { key: "restaurant", label: "Restaurant host", description: "Menu, table bookings." },
     { key: "service", label: "Service consultant", description: "Bookings, follow-ups, transfers." },
+    { key: "hotel", label: "Hotel Front Desk", description: "Rooms, reservations, concierge requests." },
 ] as const
 
 const DEFAULT_BEHAVIOUR_FLAGS = {
@@ -315,6 +316,10 @@ export function AiAgentEditor({ open, onOpenChange, agent }: AiAgentEditorProps)
             case "service":
                 setGreeting("Hi, I'm your assistant. How can I help with your appointment or service today?")
                 setName((prev) => prev || "Service Consultant")
+                break
+            case "hotel":
+                setGreeting("Welcome! I can help with room availability, reservations, or anything you need during your stay.")
+                setName((prev) => prev || "Hotel Front Desk")
                 break
             default:
                 break
@@ -1396,6 +1401,7 @@ function findPresetForTemplate(templateKey: string, presets: VoiceToolPreset[]) 
         support: ["support", "customer", "faq", "help"],
         restaurant: ["restaurant", "menu", "table", "booking"],
         service: ["service", "appointment", "booking", "consultant"],
+        hotel: ["hotel", "front desk", "room", "reservation", "concierge"],
     }
     const keywords = keywordsByTemplate[templateKey] ?? [templateKey]
     return presets.find((preset) => {

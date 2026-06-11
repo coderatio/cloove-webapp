@@ -20,6 +20,8 @@ export interface BusinessServiceItem {
     currency: string | null
     isActive: boolean
     sortOrder: number
+    images: Array<{ id: string; url: string; isPrimary: boolean; alt?: string }>
+    catalogSyncEnabled: boolean
     createdAt: string
     updatedAt: string | null
 }
@@ -38,30 +40,21 @@ export interface CreateBusinessServicePayload {
     currency?: string | null
     isActive?: boolean
     sortOrder?: number
+    images?: Array<{ id: string; url: string; isPrimary: boolean; alt?: string }>
+    catalogSyncEnabled?: boolean
 }
 
 export type UpdateBusinessServicePayload = Partial<CreateBusinessServicePayload>
-
-interface ServicesResponse {
-    success: boolean
-    data: BusinessServiceItem[]
-}
-
-interface ServiceResponse {
-    success: boolean
-    data: BusinessServiceItem
-    message?: string
-}
 
 export function useBusinessServices(activeOnly: boolean = false) {
     const queryClient = useQueryClient()
     const { activeBusiness } = useBusiness()
     const businessId = activeBusiness?.id
 
-    const query = useQuery<ServicesResponse>({
+    const query = useQuery<BusinessServiceItem[]>({
         queryKey: ["services", businessId, { activeOnly }],
         queryFn: () =>
-            apiClient.get<ServicesResponse>("/services", {
+            apiClient.get<BusinessServiceItem[]>("/services", {
                 ...(activeOnly ? { activeOnly: "true" } : {}),
             }),
         enabled: !!businessId,
@@ -69,7 +62,7 @@ export function useBusinessServices(activeOnly: boolean = false) {
 
     const createMutation = useMutation({
         mutationFn: (payload: CreateBusinessServicePayload) =>
-            apiClient.post<ServiceResponse>("/services", payload),
+            apiClient.post<BusinessServiceItem>("/services", payload),
         onSuccess: () => {
             toast.success("Service added")
             void queryClient.invalidateQueries({ queryKey: ["services", businessId] })
@@ -81,23 +74,22 @@ export function useBusinessServices(activeOnly: boolean = false) {
 
     const updateMutation = useMutation({
         mutationFn: ({ id, payload }: { id: string; payload: UpdateBusinessServicePayload }) =>
-            apiClient.patch<ServiceResponse>(`/services/${id}`, payload),
+            apiClient.patch<BusinessServiceItem>(`/services/${id}`, payload),
         onMutate: async ({ id, payload }) => {
             await queryClient.cancelQueries({ queryKey: ["services", businessId] })
-            const previous = queryClient.getQueryData<ServicesResponse>([
+            const previous = queryClient.getQueryData<BusinessServiceItem[]>([
                 "services",
                 businessId,
                 { activeOnly },
             ])
             if (previous) {
-                queryClient.setQueryData<ServicesResponse>(
+                queryClient.setQueryData<BusinessServiceItem[]>(
                     ["services", businessId, { activeOnly }],
-                    {
-                        ...previous,
-                        data: previous.data.map((service) =>
-                            service.id === id ? { ...service, ...payload } as BusinessServiceItem : service
-                        ),
-                    }
+                    previous.map((service) =>
+                        service.id === id
+                            ? ({ ...service, ...payload } as BusinessServiceItem)
+                            : service
+                    )
                 )
             }
             return { previous }
@@ -129,7 +121,7 @@ export function useBusinessServices(activeOnly: boolean = false) {
     })
 
     return {
-        services: query.data?.data ?? [],
+        services: query.data ?? [],
         isLoading: query.isPending,
         error: query.error,
         createService: createMutation.mutateAsync,

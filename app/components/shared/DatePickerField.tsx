@@ -33,6 +33,8 @@ export interface DatePickerFieldProps {
     disabled?: boolean
     className?: string
     id?: string
+    /** Earliest selectable date (inclusive). Dates before this are disabled. */
+    minDate?: Date
     /** Id of a separate element that labels this control (not the control’s own `id`). Omit when using `<Label htmlFor={id}>`. */
     "aria-labelledby"?: string
 }
@@ -50,11 +52,13 @@ export function DatePickerField({
     disabled,
     className,
     id,
+    minDate,
     "aria-labelledby": ariaLabelledBy,
 }: DatePickerFieldProps) {
     const isMobile = useIsMobile()
     const [open, setOpen] = React.useState(false)
     const selected = parseLocalDate(value)
+    const disabledDays = minDate ? { before: minDate } : undefined
 
     const label = selected ? format(selected, "LLL dd, y") : null
 
@@ -104,9 +108,10 @@ export function DatePickerField({
                     <DrawerBody className="flex justify-center p-0">
                         <Calendar
                             mode="single"
-                            defaultMonth={selected ?? new Date()}
+                            defaultMonth={selected ?? minDate ?? new Date()}
                             selected={selected}
                             onSelect={handleSelect}
+                            disabled={disabledDays}
                             initialFocus
                             className="p-6"
                         />
@@ -135,9 +140,10 @@ export function DatePickerField({
             >
                 <Calendar
                     mode="single"
-                    defaultMonth={selected ?? new Date()}
+                    defaultMonth={selected ?? minDate ?? new Date()}
                     selected={selected}
                     onSelect={handleSelect}
+                    disabled={disabledDays}
                     initialFocus
                 />
             </PopoverContent>

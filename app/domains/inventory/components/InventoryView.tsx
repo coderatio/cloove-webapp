@@ -17,6 +17,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/app/components/ui/select"
+import { useUnits } from "@/app/hooks/useUnits"
+import { ManageUnitsDrawer } from "@/app/components/shared/ManageUnitsDrawer"
 import { Switch } from "@/app/components/ui/switch"
 import {
     DropdownMenu,
@@ -174,6 +176,7 @@ export function InventoryView() {
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
 
     const { options: categoryOptions } = useProductCategories()
+    const { options: unitOptions } = useUnits()
     const storeFilterOptions = React.useMemo(
         () => stores.map((s) => ({ label: s.name, value: s.id })),
         [stores]
@@ -226,6 +229,7 @@ export function InventoryView() {
     const [isAddDrawerOpen, setIsAddDrawerOpen] = React.useState(false)
     const [isBulkUploadOpen, setIsBulkUploadOpen] = React.useState(false)
     const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = React.useState(false)
+    const [isUnitsDrawerOpen, setIsUnitsDrawerOpen] = React.useState(false)
     const [editingItem, setEditingItem] = React.useState<InventoryItem | null>(null)
     const [viewItem, setViewItem] = React.useState<InventoryItem | null>(null)
     const [isViewDrawerOpen, setIsViewDrawerOpen] = React.useState(false)
@@ -889,7 +893,7 @@ export function InventoryView() {
                     title={pageCopy.inventory.title}
                     description={pageCopy.inventory.description}
                     extraActions={
-                        <div className="w-full flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="w-full sm:w-auto flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                             <StoreContextSelector
                                 value={selectedStoreId}
                                 onChange={setSelectedStoreId}
@@ -1372,7 +1376,12 @@ export function InventoryView() {
                             }
                         }}
                     >
-                        <DrawerContent>
+                        {/* Block accidental dismissal (overlay click / Esc) so unsaved data isn't
+                            lost — the explicit Cancel and ✕ buttons (inside) still close it. */}
+                        <DrawerContent
+                            onInteractOutside={(e) => e.preventDefault()}
+                            onEscapeKeyDown={(e) => e.preventDefault()}
+                        >
                             <DrawerStickyHeader>
                                 <DrawerTitle className="text-2xl font-serif">{editingItem ? "Edit Product" : "Add New Product"}</DrawerTitle>
                                 <DrawerDescription className="mt-1">
@@ -1484,13 +1493,32 @@ export function InventoryView() {
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Unit</label>
-                                                    <input
-                                                        value={formData.unit}
-                                                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                                                        placeholder="e.g. pcs, kg"
-                                                        className="w-full px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-brand-deep/5 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/20 text-xs transition-all"
-                                                    />
+                                                    <div className="flex items-center justify-between ml-1">
+                                                        <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40">Unit</label>
+                                                        {canManageProducts && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setIsUnitsDrawerOpen(true)}
+                                                                className="text-[10px] font-bold uppercase tracking-widest text-brand-gold hover:underline"
+                                                            >
+                                                                Manage
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <Select
+                                                        value={formData.unit || "none"}
+                                                        onValueChange={(val) => setFormData({ ...formData, unit: val === "none" ? "" : val })}
+                                                    >
+                                                        <SelectTrigger className="w-full rounded-xl bg-white dark:bg-white/5 border-brand-deep/5 dark:border-white/10 px-4 text-xs focus:ring-brand-gold/20 font-sans">
+                                                            <SelectValue placeholder="Select unit" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="none">No unit</SelectItem>
+                                                            {unitOptions.map((u) => (
+                                                                <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-[10px] font-bold uppercase tracking-widest text-brand-deep/40 dark:text-brand-cream/40 ml-1">Reorder Level</label>
@@ -1713,6 +1741,7 @@ export function InventoryView() {
                         }
                     />
                     <ManageCategoriesDrawer open={isCategoriesDrawerOpen} onOpenChange={setIsCategoriesDrawerOpen} />
+                    <ManageUnitsDrawer open={isUnitsDrawerOpen} onOpenChange={setIsUnitsDrawerOpen} />
                     <BulkUploadDrawer
                         isOpen={isBulkUploadOpen}
                         onOpenChange={setIsBulkUploadOpen}

@@ -63,7 +63,7 @@ export function ManagementHeader({
                 {(extraActions || (addButtonLabel && onAddClick)) && (
                     <div className={cn(
                         "shrink-0 items-center gap-2",
-                        mobileFloatingAction && isMobile ? "w-full block md:w-auto" : "flex"
+                        mobileFloatingAction && isMobile ? "w-full block md:w-auto" : "flex flex-wrap"
                     )}>
                         {extraActions}
                         {addButtonLabel && onAddClick && (

@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
-import { ChefHatIcon as ChefHat, ShoppingCart01Icon as ShoppingCart, PillIcon as Pill, GraduationCapIcon as GraduationCap, DashboardSquare01Icon as LayoutDashboard } from "@hugeicons/core-free-icons"
+import { ChefHatIcon as ChefHat, ShoppingCart01Icon as ShoppingCart, PillIcon as Pill, GraduationCapIcon as GraduationCap, DashboardSquare01Icon as LayoutDashboard, Building02Icon as Building2 } from "@hugeicons/core-free-icons"
 import { PageTransition } from "@/app/components/layout/page-transition"
 import { Button } from "@/app/components/ui/button"
 import { GlassCard } from "@/app/components/ui/glass-card"
@@ -16,6 +16,7 @@ const PRESET_ICONS: Record<LayoutPresetId, IconSvgElement> = {
   retail: ShoppingCart,
   pharmacy: Pill,
   school: GraduationCap,
+  hotel: Building2,
 }
 
 type PresetGateProps = {

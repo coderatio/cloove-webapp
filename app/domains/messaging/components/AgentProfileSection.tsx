@@ -12,6 +12,7 @@ import type {
 
 interface AgentProfileSectionProps {
     profile: AgentProfile
+    preset?: string
     overrides: Partial<AgentCapabilitiesSummary> | null | undefined
     onProfileChange: (profile: AgentProfile) => void
     onOverridesChange: (overrides: Partial<AgentCapabilitiesSummary> | null) => void
@@ -30,10 +31,20 @@ const CAPABILITY_LABELS: Array<{
         { key: "storefrontLink", label: "Storefront link", description: "Share the online store URL." },
         { key: "services", label: "Services", description: "Service catalog and consultation booking." },
         { key: "inquiries", label: "Inquiries", description: "Capture leads from chat." },
-    ]
+]
+
+const HOTEL_CAPABILITY_LABELS: typeof CAPABILITY_LABELS = [
+    { key: "rooms", label: "Room bookings", description: "Browse rooms, check availability, and manage reservations." },
+    { key: "foodOrdering", label: "Restaurant ordering", description: "Browse food products and place restaurant orders." },
+    { key: "hotelServices", label: "Hotel services", description: "Laundry, spa, pickup, housekeeping, and guest requests." },
+    { key: "roomService", label: "Room service", description: "Allow checked-in guests to link food orders to their room." },
+    { key: "publicFoodOrdering", label: "Public food ordering", description: "Allow takeaway, pickup, or delivery without a hotel stay." },
+    { key: "roomCharge", label: "Charge to room", description: "Allow validated checked-in guests to charge room-service orders." },
+]
 
 export function AgentProfileSection({
     profile,
+    preset,
     overrides,
     onProfileChange,
     onOverridesChange,
@@ -41,6 +52,8 @@ export function AgentProfileSection({
     const [advancedOpen, setAdvancedOpen] = useState(false)
 
     const isService = profile === "service"
+    const isHotel = preset === "hotel"
+    const capabilityLabels = isHotel ? HOTEL_CAPABILITY_LABELS : CAPABILITY_LABELS
 
     return (
         <section className="space-y-4">
@@ -48,15 +61,17 @@ export function AgentProfileSection({
                 <HugeiconsIcon icon={Sparkles} className="w-5 h-5 text-brand-gold mt-1 shrink-0" />
                 <div>
                     <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">
-                        Assistant profile
+                        {isHotel ? "Hotel assistant modules" : "Assistant profile"}
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Choose what the assistant is allowed to talk about and which tools it can call.
+                        {isHotel
+                            ? "The hotel preset combines room bookings, restaurant ordering, and guest services."
+                            : "Choose what the assistant is allowed to talk about and which tools it can call."}
                     </p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {!isHotel && <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <ProfileCard
                     active={!isService}
                     title="Commerce"
@@ -69,7 +84,7 @@ export function AgentProfileSection({
                     description="Consultancy, agency, clinic. Discuss services and capture inquiries — no products or carts."
                     onClick={() => onProfileChange("service")}
                 />
-            </div>
+            </div>}
 
             <button
                 type="button"
@@ -82,12 +97,12 @@ export function AgentProfileSection({
                         advancedOpen && "rotate-180"
                     )}
                 />
-                Advanced capability overrides
+                {isHotel ? "Hotel module controls" : "Advanced capability overrides"}
             </button>
 
             {advancedOpen && (
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 p-2 divide-y divide-slate-100 dark:divide-slate-800/60">
-                    {CAPABILITY_LABELS.map(({ key, label, description }) => {
+                    {capabilityLabels.map(({ key, label, description }) => {
                         const override = overrides?.[key]
                         return (
                             <div
@@ -103,7 +118,7 @@ export function AgentProfileSection({
                                     </p>
                                 </div>
                                 <Switch
-                                    checked={override ?? defaultsFor(profile, key)}
+                                    checked={override ?? defaultsFor(profile, key, isHotel)}
                                     onCheckedChange={(value) => {
                                         const next: Partial<AgentCapabilitiesSummary> = {
                                             ...(overrides ?? {}),
@@ -123,8 +138,19 @@ export function AgentProfileSection({
 
 function defaultsFor(
     profile: AgentProfile,
-    key: keyof AgentCapabilitiesSummary
+    key: keyof AgentCapabilitiesSummary,
+    isHotel = false
 ): boolean {
+    if (isHotel) {
+        return [
+            "rooms",
+            "foodOrdering",
+            "hotelServices",
+            "roomService",
+            "publicFoodOrdering",
+            "roomCharge",
+        ].includes(key)
+    }
     if (profile === "service") {
         return key === "services" || key === "inquiries" || key === "storefrontLink"
     }

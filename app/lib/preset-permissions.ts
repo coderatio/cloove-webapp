@@ -6,6 +6,7 @@ export type LayoutPresetId =
     | "retail"
     | "pharmacy"
     | "school"
+    | "hotel"
 
 /**
  * Defines which permissions are available/meaningful for each layout preset.
@@ -34,6 +35,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         // Products
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         // Customers
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
@@ -66,6 +69,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         Permission.DELETE_SALE,
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
         Permission.UPDATE_CUSTOMER,
@@ -95,6 +100,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         Permission.DELETE_SALE,
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
         Permission.UPDATE_CUSTOMER,
@@ -137,6 +144,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         // Resources & stock
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         // Expenses & debts
         Permission.VIEW_EXPENSES,
         Permission.RECORD_EXPENSE,
@@ -170,6 +179,8 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         // Products (menu & stock)
         Permission.VIEW_PRODUCTS,
         Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
         // Customers (guests)
         Permission.VIEW_CUSTOMERS,
         Permission.CREATE_CUSTOMER,
@@ -181,6 +192,42 @@ export const PRESET_AVAILABLE_PERMISSIONS: Record<LayoutPresetId, Permission[]> 
         Permission.RECORD_PAYABLE,
         Permission.PAY_SUPPLIER,
         // Expenses & debts
+        Permission.VIEW_EXPENSES,
+        Permission.RECORD_EXPENSE,
+        Permission.RECORD_REPAYMENT,
+    ],
+    hotel: [
+        Permission.VIEW_DASHBOARD,
+        Permission.VIEW_FINANCIALS,
+        Permission.VIEW_STAFF,
+        Permission.MANAGE_STAFF,
+        Permission.VIEW_STORES,
+        Permission.MANAGE_STORES,
+        Permission.MANAGE_SUBSCRIPTION,
+        Permission.MANAGE_PAYOUTS,
+        Permission.MANAGE_BUSINESS_CONFIG,
+        Permission.VIEW_HOTEL_ROOMS,
+        Permission.MANAGE_HOTEL_ROOMS,
+        Permission.VIEW_HOTEL_RESERVATIONS,
+        Permission.MANAGE_HOTEL_RESERVATIONS,
+        Permission.VIEW_HOTEL_SERVICE_REQUESTS,
+        Permission.MANAGE_HOTEL_SERVICE_REQUESTS,
+        Permission.VIEW_KITCHEN_TICKETS,
+        Permission.MANAGE_KITCHEN_TICKETS,
+        Permission.VIEW_BAR_TICKETS,
+        Permission.MANAGE_BAR_TICKETS,
+        Permission.VIEW_SALES,
+        Permission.RECORD_SALE,
+        Permission.UPDATE_SALE,
+        Permission.DELETE_SALE,
+        Permission.VIEW_PRODUCTS,
+        Permission.MANAGE_PRODUCTS,
+        Permission.VIEW_SUPPLIES,
+        Permission.MANAGE_SUPPLIES,
+        Permission.VIEW_CUSTOMERS,
+        Permission.CREATE_CUSTOMER,
+        Permission.UPDATE_CUSTOMER,
+        Permission.DELETE_CUSTOMER,
         Permission.VIEW_EXPENSES,
         Permission.RECORD_EXPENSE,
         Permission.RECORD_REPAYMENT,
@@ -290,6 +337,37 @@ const PRESET_ROLE_PERMISSIONS: Partial<Record<LayoutPresetId, Partial<Record<str
             'RECORD_REPAYMENT',
             'VIEW_CUSTOMERS',
             'VIEW_SUPPLIERS',
+            'VIEW_STAFF',
+        ],
+    },
+    hotel: {
+        STAFF: [
+            'VIEW_DASHBOARD',
+            'VIEW_HOTEL_ROOMS',
+            'VIEW_HOTEL_RESERVATIONS',
+            'MANAGE_HOTEL_RESERVATIONS',
+            'VIEW_HOTEL_SERVICE_REQUESTS',
+            'MANAGE_HOTEL_SERVICE_REQUESTS',
+            'VIEW_KITCHEN_TICKETS',
+            'VIEW_BAR_TICKETS',
+            'VIEW_SALES',
+            'RECORD_SALE',
+            'VIEW_CUSTOMERS',
+            'CREATE_CUSTOMER',
+            'UPDATE_CUSTOMER',
+            'VIEW_PRODUCTS',
+        ],
+        ACCOUNTANT: [
+            'VIEW_DASHBOARD',
+            'VIEW_FINANCIALS',
+            'VIEW_HOTEL_ROOMS',
+            'VIEW_HOTEL_RESERVATIONS',
+            'VIEW_HOTEL_SERVICE_REQUESTS',
+            'VIEW_SALES',
+            'VIEW_EXPENSES',
+            'RECORD_EXPENSE',
+            'RECORD_REPAYMENT',
+            'VIEW_CUSTOMERS',
             'VIEW_STAFF',
         ],
     },
