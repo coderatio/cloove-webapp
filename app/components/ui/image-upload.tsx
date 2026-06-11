@@ -145,31 +145,31 @@ export function ImageUpload({ value = [], onChange, disabled, maxFiles = 5 }: Im
                         onDrop={handleDrop}
                         disabled={disabled || isUploading}
                         className={cn(
-                            "relative cursor-pointer aspect-square rounded-xl border-2 border-dashed border-brand-deep/10 dark:border-white/10 flex flex-col items-center justify-center gap-2 transition-all hover:bg-brand-deep/2 hover:border-brand-deep/20 dark:hover:border-white/20",
+                            "relative cursor-pointer aspect-square overflow-hidden rounded-xl border-2 border-dashed border-brand-deep/10 dark:border-white/10 transition-all hover:bg-brand-deep/2 hover:border-brand-deep/20 dark:hover:border-white/20",
                             isUploading && "opacity-50 cursor-not-allowed",
                             isDragging && "border-brand-green/60 bg-brand-green/5 dark:border-brand-gold/60 dark:bg-brand-gold/5"
                         )}
                     >
-                        {isUploading ? (
-                            <>
-                                <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin text-brand-accent/60" />
-                                <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60 font-medium">{progress}%</span>
-                            </>
-                        ) : (
-                            <>
-                                <div className={cn(
-                                    "p-2.5 rounded-full bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60 transition-colors pointer-events-none",
-                                    isDragging && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
-                                )}>
-                                    <HugeiconsIcon icon={UploadCloud} className="w-5 h-5" />
-                                </div>
-                                <div className="text-center px-2 pointer-events-none">
-                                    <span className="text-xs font-medium text-brand-deep/70 dark:text-brand-cream/70">
+                        <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-2 text-center pointer-events-none">
+                            {isUploading ? (
+                                <>
+                                    <HugeiconsIcon icon={Loader2} className="w-6 h-6 animate-spin text-brand-accent/60" />
+                                    <span className="text-xs text-brand-accent/60 dark:text-brand-cream/60 font-medium">{progress}%</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className={cn(
+                                        "p-2.5 rounded-full bg-brand-deep/5 dark:bg-white/5 text-brand-deep/60 dark:text-brand-cream/60 transition-colors",
+                                        isDragging && "bg-brand-green/10 text-brand-green dark:bg-brand-gold/10 dark:text-brand-gold"
+                                    )}>
+                                        <HugeiconsIcon icon={UploadCloud} className="w-5 h-5" />
+                                    </span>
+                                    <span className="text-xs font-medium leading-tight text-brand-deep/70 dark:text-brand-cream/70">
                                         {isDragging ? "Drop to upload" : "Upload or drop"}
                                     </span>
-                                </div>
-                            </>
-                        )}
+                                </>
+                            )}
+                        </span>
                     </button>
                 )}
             </div>

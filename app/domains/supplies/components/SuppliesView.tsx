@@ -61,12 +61,9 @@ import { formatCurrency } from "@/app/lib/formatters"
 import { useSupplies } from "../hooks/useSupplies"
 import { useSupplyCategories } from "../hooks/useSupplyCategories"
 import { ManageSupplyCategoriesDrawer } from "./ManageSupplyCategoriesDrawer"
+import { useUnits } from "@/app/hooks/useUnits"
+import { ManageUnitsDrawer } from "@/app/components/shared/ManageUnitsDrawer"
 import { Supply, CreateSupplyPayload, AdjustStockMode } from "../types"
-
-const PRODUCT_UNITS = [
-    "PIECE", "BOX", "PACK", "CARTON", "DOZEN",
-    "KG", "G", "LB", "OZ", "L", "ML", "M", "CM", "OTHER",
-] as const
 
 const ALL_STORES = "all-stores"
 const PAGE_SIZE = 10
@@ -119,8 +116,10 @@ export function SuppliesView() {
     const canManage = can("MANAGE_SUPPLIES")
     const { stores } = useStores()
     const { options: categoryOptions } = useSupplyCategories()
+    const { options: unitOptions } = useUnits()
 
     const [search, setSearch] = React.useState("")
+    const [unitsDrawerOpen, setUnitsDrawerOpen] = React.useState(false)
     const [selectedFilters, setSelectedFilters] = React.useState<string[]>([])
     const [storeFilter, setStoreFilter] = React.useState<string>(ALL_STORES)
     const [page, setPage] = React.useState(1)
@@ -551,7 +550,18 @@ export function SuppliesView() {
                                 </Select>
                             </div>
                             <div className="space-y-1.5">
-                                <Label>Unit</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label>Unit</Label>
+                                    {canManage ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setUnitsDrawerOpen(true)}
+                                            className="text-xs font-medium text-brand-green hover:underline dark:text-brand-gold"
+                                        >
+                                            Manage
+                                        </button>
+                                    ) : null}
+                                </div>
                                 <Select
                                     value={form.unit}
                                     onValueChange={(v) => setForm((f) => ({ ...f, unit: v }))}
@@ -560,9 +570,9 @@ export function SuppliesView() {
                                         <SelectValue placeholder="Select unit" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {PRODUCT_UNITS.map((u) => (
-                                            <SelectItem key={u} value={u}>
-                                                {u}
+                                        {unitOptions.map((u) => (
+                                            <SelectItem key={u.value} value={u.value}>
+                                                {u.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -717,6 +727,7 @@ export function SuppliesView() {
                 open={categoriesDrawerOpen}
                 onOpenChange={setCategoriesDrawerOpen}
             />
+            <ManageUnitsDrawer open={unitsDrawerOpen} onOpenChange={setUnitsDrawerOpen} />
         </PageTransition>
     )
 }
